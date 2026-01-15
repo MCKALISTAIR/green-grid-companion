@@ -42,6 +42,23 @@ export interface ForecastData {
   };
 }
 
+export const UK_REGIONS = [
+  { name: 'North Scotland', postcode: 'AB' },
+  { name: 'South Scotland', postcode: 'EH' },
+  { name: 'North West England', postcode: 'M' },
+  { name: 'North East England', postcode: 'NE' },
+  { name: 'Yorkshire', postcode: 'LS' },
+  { name: 'North Wales & Merseyside', postcode: 'LL' },
+  { name: 'South Wales', postcode: 'CF' },
+  { name: 'West Midlands', postcode: 'B' },
+  { name: 'East Midlands', postcode: 'NG' },
+  { name: 'East England', postcode: 'CB' },
+  { name: 'South West England', postcode: 'BS' },
+  { name: 'South England', postcode: 'SO' },
+  { name: 'London', postcode: 'SW' },
+  { name: 'South East England', postcode: 'BN' },
+];
+
 // Get current national intensity
 export async function getCurrentIntensity(): Promise<IntensityData> {
   const response = await fetch(`${BASE_URL}/intensity`);
@@ -74,6 +91,41 @@ export async function getRegionalForecast(postcode: string): Promise<ForecastDat
   return json.data?.data || [];
 }
 
+// Get 48hr forecast for a region ID
+export async function getRegionalForecastById(regionId: number): Promise<ForecastData[]> {
+  const now = new Date().toISOString();
+  // Valid endpoint format: /regional/intensity/{from}/fw48h/regionid/{regionid}
+  const response = await fetch(`${BASE_URL}/regional/intensity/${now}/fw48h/regionid/${regionId}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch forecast: ${response.status}`);
+  }
+  const json = await response.json();
+  // Response: { data: { regionid, ... data: [] } }
+  return json.data?.data || [];
+}
+
+// Get 48hr forecast + history for a region ID
+export async function getRegionalHistoryAndForecast(regionId: number, from: string, to: string): Promise<ForecastData[]> {
+  // Endpoint: /regional/intensity/{from}/{to}/regionid/{regionid}
+  const response = await fetch(`${BASE_URL}/regional/intensity/${from}/${to}/regionid/${regionId}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch history/forecast: ${response.status}`);
+  }
+  const json = await response.json();
+  // Response: { data: { regionid, ... data: [] } }
+  return json.data?.data || [];
+}
+
+// Get intensity for a specific region ID
+export async function getRegionalIntensityById(regionId: number): Promise<RegionalData> {
+  const response = await fetch(`${BASE_URL}/regional/regionid/${regionId}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch regional data: ${response.status}`);
+  }
+  const data = await response.json();
+  return data.data[0];
+}
+
 // Get national generation mix
 export async function getGenerationMix(): Promise<GenerationMix[]> {
   const response = await fetch(`${BASE_URL}/generation`);
@@ -81,11 +133,23 @@ export async function getGenerationMix(): Promise<GenerationMix[]> {
   return data.data.generationmix;
 }
 
+// Interface for items in the /regional endpoint
+export interface RegionListItem {
+  regionid: number;
+  dnoregion: string;
+  shortname: string;
+  intensity: {
+    forecast: number;
+    index: 'very low' | 'low' | 'moderate' | 'high' | 'very high';
+  };
+  generationmix: GenerationMix[];
+}
+
 // Get all regions
-export async function getAllRegions(): Promise<RegionalData[]> {
+export async function getAllRegions(): Promise<RegionListItem[]> {
   const response = await fetch(`${BASE_URL}/regional`);
   const data = await response.json();
-  return data.data;
+  return data.data[0]?.regions || [];
 }
 
 // Helper to get intensity color class

@@ -1,4 +1,6 @@
 import { GenerationMix } from '@/lib/carbonApi';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { DEFINITIONS } from '@/lib/definitions';
 
 interface GenerationMixBarProps {
   mix: GenerationMix[];
@@ -46,7 +48,7 @@ export function GenerationMixBar({ mix }: GenerationMixBarProps) {
           {renewables.toFixed(0)}% Renewable
         </span>
       </div>
-      
+
       {/* Bar visualization */}
       <div className="h-4 rounded-full overflow-hidden flex shadow-inner bg-muted/30">
         {sortedMix.map((item) => (
@@ -61,16 +63,30 @@ export function GenerationMixBar({ mix }: GenerationMixBarProps) {
 
       {/* Legend */}
       <div className="flex flex-wrap gap-2">
-        {sortedMix.slice(0, 6).map((item) => (
-          <div 
-            key={item.fuel}
-            className="flex items-center gap-1.5 text-xs text-muted-foreground"
-          >
-            <div className={`w-2.5 h-2.5 rounded-full ${fuelColors[item.fuel.toLowerCase()] || 'bg-gen-other'}`} />
-            <span>{item.fuel}</span>
-            <span className="font-medium text-foreground">{item.perc.toFixed(0)}%</span>
-          </div>
-        ))}
+        {sortedMix.slice(0, 6).map((item) => {
+          const fuelKey = item.fuel.charAt(0).toUpperCase() + item.fuel.slice(1);
+          const definition = DEFINITIONS[fuelKey as keyof typeof DEFINITIONS] || DEFINITIONS['Other'];
+
+          return (
+            <Tooltip key={item.fuel}>
+              <TooltipTrigger asChild>
+                <div
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-help hover:text-foreground transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Show definition for ${item.fuel}`}
+                >
+                  <div className={`w-2.5 h-2.5 rounded-full ${fuelColors[item.fuel.toLowerCase()] || 'bg-gen-other'}`} aria-hidden="true" />
+                  <span className="capitalize">{item.fuel}</span>
+                  <span className="font-medium text-foreground">{item.perc.toFixed(0)}%</span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="w-[180px] text-xs">{definition}</p>
+              </TooltipContent>
+            </Tooltip>
+          );
+        })}
       </div>
     </div>
   );

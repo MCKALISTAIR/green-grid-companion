@@ -35,7 +35,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
     if (saved) {
       setPrefs(JSON.parse(saved));
     }
-    
+
     // Check notification support
     if (!('Notification' in window)) {
       setNotificationsSupported(false);
@@ -54,7 +54,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
 
     const result = await Notification.requestPermission();
     setPermission(result);
-    
+
     if (result === 'granted') {
       toast.success('Notifications enabled! 🎉', {
         description: "You'll be notified when carbon intensity is low.",
@@ -91,9 +91,9 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-foreground">Notifications</h2>
         {permission !== 'granted' && (
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             onClick={requestPermission}
             className="gap-2"
           >
@@ -128,7 +128,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
               </p>
             </div>
           </div>
-          <Switch 
+          <Switch
             checked={prefs.lowIntensityEnabled}
             onCheckedChange={handleLowIntensityToggle}
           />
@@ -147,13 +147,13 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
             <Slider
               value={[prefs.lowIntensityThreshold]}
               onValueChange={([value]) => savePrefs({ ...prefs, lowIntensityThreshold: value })}
-              min={50}
+              min={0}
               max={200}
-              step={10}
+              step={1}
               className="w-full"
             />
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>50g (Very Low)</span>
+              <span>0g (Very Low)</span>
               <span>200g (Moderate)</span>
             </div>
           </div>
@@ -174,7 +174,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
               </p>
             </div>
           </div>
-          <Switch 
+          <Switch
             checked={prefs.dailyForecastEnabled}
             onCheckedChange={handleDailyForecastToggle}
           />
