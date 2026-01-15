@@ -1,9 +1,102 @@
 import { useMemo } from 'react';
-import { Wind, Sun, Cloud, Zap, Factory, Bird, Leaf, Flame, Waves } from 'lucide-react';
+import { Sun, Cloud, Factory, Leaf, Flame, Droplets } from 'lucide-react';
 
 interface IntensitySceneProps {
   intensity: number;
   index: string;
+}
+
+// Custom SVG components for better animations
+function FlyingBird({ delay, duration, startX }: { delay: number; duration: number; startX: number }) {
+  return (
+    <svg 
+      className="absolute w-8 h-8 animate-bird-fly"
+      style={{ 
+        animationDelay: `${delay}s`, 
+        animationDuration: `${duration}s`,
+        left: `${startX}%`,
+        top: `${15 + Math.random() * 20}%`
+      }}
+      viewBox="0 0 24 24" 
+      fill="none"
+    >
+      <path 
+        d="M2 12 C6 8, 10 10, 12 12 C14 10, 18 8, 22 12" 
+        stroke="currentColor" 
+        strokeWidth="2" 
+        strokeLinecap="round"
+        className="text-foreground/60 animate-bird-wings"
+        style={{ animationDuration: '0.3s' }}
+      />
+    </svg>
+  );
+}
+
+function WindTurbine({ scale = 1, speed = 4 }: { scale?: number; speed?: number }) {
+  return (
+    <div className="relative" style={{ transform: `scale(${scale})` }}>
+      {/* Turbine pole */}
+      <div className="w-1.5 h-20 bg-card/90 mx-auto rounded-sm" />
+      {/* Nacelle (hub) */}
+      <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-2 bg-card rounded-full" />
+      {/* Rotating blades */}
+      <svg 
+        className="absolute -top-6 left-1/2 -translate-x-1/2 w-16 h-16 animate-spin"
+        style={{ animationDuration: `${speed}s`, animationTimingFunction: 'linear' }}
+        viewBox="0 0 48 48"
+      >
+        {/* Three blades at 120° intervals */}
+        <g className="fill-card/90">
+          <ellipse cx="24" cy="8" rx="2.5" ry="14" />
+          <ellipse cx="24" cy="8" rx="2.5" ry="14" transform="rotate(120 24 24)" />
+          <ellipse cx="24" cy="8" rx="2.5" ry="14" transform="rotate(240 24 24)" />
+        </g>
+        {/* Center hub */}
+        <circle cx="24" cy="24" r="3" className="fill-card" />
+      </svg>
+    </div>
+  );
+}
+
+function SmokeParticle({ delay, x }: { delay: number; x: number }) {
+  return (
+    <div 
+      className="absolute animate-smoke-rise"
+      style={{ 
+        left: `${x}%`,
+        animationDelay: `${delay}s`,
+        bottom: '70px'
+      }}
+    >
+      <div className="w-6 h-6 rounded-full bg-secondary/40 blur-sm" />
+    </div>
+  );
+}
+
+function RainDrop({ delay, x }: { delay: number; x: number }) {
+  return (
+    <div 
+      className="absolute w-0.5 h-4 bg-gen-hydro/60 rounded-full animate-rain"
+      style={{ 
+        left: `${x}%`,
+        animationDelay: `${delay}s`,
+        animationDuration: '0.8s'
+      }}
+    />
+  );
+}
+
+function SunRay({ angle, delay }: { angle: number; delay: number }) {
+  return (
+    <div 
+      className="absolute top-0 right-0 w-2 h-32 bg-gradient-to-b from-accent/40 to-transparent animate-sun-ray"
+      style={{ 
+        transform: `rotate(${angle}deg)`,
+        transformOrigin: 'top right',
+        animationDelay: `${delay}s`
+      }}
+    />
+  );
 }
 
 export function IntensityScene({ intensity, index }: IntensitySceneProps) {
@@ -16,10 +109,13 @@ export function IntensityScene({ intensity, index }: IntensitySceneProps) {
       skyGradient: getSkyGradient(index),
       showRenewables: cleanliness > 0.5,
       showFactories: cleanliness < 0.5,
-      showBirds: cleanliness > 0.7,
+      showBirds: cleanliness > 0.6,
       showSmoke: cleanliness < 0.4,
-      turbineCount: Math.floor(cleanliness * 3),
+      showRain: cleanliness < 0.35,
+      showSunRays: cleanliness > 0.7,
+      turbineCount: Math.floor(cleanliness * 3) + 1,
       solarBrightness: cleanliness,
+      birdCount: Math.floor(cleanliness * 4) + 1,
     };
   }, [intensity, index]);
 
@@ -28,155 +124,217 @@ export function IntensityScene({ intensity, index }: IntensitySceneProps) {
       className="relative w-full h-80 overflow-hidden rounded-b-3xl"
       style={{ background: sceneConfig.skyGradient }}
     >
-      {/* Sun/Moon based on cleanliness */}
+      {/* Sun Rays for clean energy */}
+      {sceneConfig.showSunRays && (
+        <div className="absolute top-0 right-0 overflow-hidden w-48 h-48">
+          {[...Array(5)].map((_, i) => (
+            <SunRay key={i} angle={20 + i * 15} delay={i * 0.3} />
+          ))}
+        </div>
+      )}
+
+      {/* Sun with glow */}
       <div 
         className="absolute top-8 right-8 transition-all duration-1000"
         style={{ opacity: sceneConfig.cleanliness * 0.3 + 0.7 }}
       >
-        <Sun 
-          className="w-16 h-16 text-accent animate-pulse-glow" 
+        <div 
+          className="relative"
           style={{ 
             filter: `brightness(${sceneConfig.solarBrightness + 0.5})`,
           }}
-        />
+        >
+          {/* Sun glow effect */}
+          <div className="absolute inset-0 w-20 h-20 -translate-x-2 -translate-y-2 bg-accent/30 rounded-full blur-xl animate-pulse" />
+          <Sun className="w-16 h-16 text-accent animate-pulse-glow relative z-10" />
+        </div>
       </div>
 
-      {/* Clouds - more for moderate, fewer for clean */}
+      {/* Rain effect for dirty energy */}
+      {sceneConfig.showRain && (
+        <div className="absolute inset-0 overflow-hidden">
+          {[...Array(20)].map((_, i) => (
+            <RainDrop 
+              key={i} 
+              delay={Math.random() * 2} 
+              x={5 + (i * 4.5)}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Clouds with parallax movement */}
       <Cloud 
-        className="absolute top-12 left-8 w-20 h-12 text-card/80 animate-drift"
-        style={{ animationDelay: '0s', animationDuration: '25s' }}
+        className="absolute top-12 w-24 h-14 text-card/80 animate-cloud-drift"
+        style={{ animationDelay: '0s', animationDuration: '35s' }}
       />
       <Cloud 
-        className="absolute top-20 left-1/4 w-16 h-10 text-card/60 animate-drift"
-        style={{ animationDelay: '-10s', animationDuration: '30s' }}
+        className="absolute top-20 w-16 h-10 text-card/60 animate-cloud-drift"
+        style={{ animationDelay: '-12s', animationDuration: '45s' }}
       />
+      <Cloud 
+        className="absolute top-6 w-20 h-12 text-card/70 animate-cloud-drift"
+        style={{ animationDelay: '-25s', animationDuration: '40s' }}
+      />
+      
+      {/* Extra pollution clouds for dirty energy */}
       {sceneConfig.showSmoke && (
         <>
           <Cloud 
-            className="absolute top-8 left-1/2 w-24 h-14 text-secondary/50 animate-drift"
-            style={{ animationDelay: '-5s', animationDuration: '20s' }}
+            className="absolute top-8 w-28 h-16 text-secondary/50 animate-cloud-drift"
+            style={{ animationDelay: '-5s', animationDuration: '25s' }}
           />
           <Cloud 
-            className="absolute top-16 right-1/4 w-20 h-12 text-secondary/40 animate-drift"
-            style={{ animationDelay: '-15s', animationDuration: '22s' }}
+            className="absolute top-14 w-24 h-14 text-secondary/40 animate-cloud-drift"
+            style={{ animationDelay: '-18s', animationDuration: '28s' }}
           />
         </>
       )}
 
-      {/* Birds for clean energy */}
+      {/* Flying birds for clean energy */}
       {sceneConfig.showBirds && (
-        <>
-          <Bird 
-            className="absolute top-24 left-1/3 w-6 h-6 text-foreground/70 animate-float"
-            style={{ animationDelay: '0s' }}
-          />
-          <Bird 
-            className="absolute top-28 left-[40%] w-4 h-4 text-foreground/60 animate-float"
-            style={{ animationDelay: '0.5s' }}
-          />
-          <Bird 
-            className="absolute top-20 left-[45%] w-5 h-5 text-foreground/65 animate-float"
-            style={{ animationDelay: '1s' }}
-          />
-        </>
+        <div className="absolute inset-0 overflow-hidden">
+          {[...Array(sceneConfig.birdCount)].map((_, i) => (
+            <FlyingBird 
+              key={i} 
+              delay={i * 3} 
+              duration={8 + Math.random() * 4}
+              startX={-10}
+            />
+          ))}
+        </div>
       )}
 
       {/* Ground/Landscape */}
       <div className="absolute bottom-0 left-0 right-0">
-        {/* Hills */}
+        {/* Hills with gradient */}
         <svg 
           viewBox="0 0 400 100" 
-          className="w-full h-24"
+          className="w-full h-28"
           preserveAspectRatio="none"
         >
+          <defs>
+            <linearGradient id="hillGradient1" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" className={sceneConfig.cleanliness > 0.5 ? 'stop-color-primary-light' : 'stop-color-secondary-light'} stopColor={sceneConfig.cleanliness > 0.5 ? 'hsl(142 40% 50%)' : 'hsl(30 25% 45%)'} />
+              <stop offset="100%" className={sceneConfig.cleanliness > 0.5 ? 'stop-color-primary' : 'stop-color-secondary'} stopColor={sceneConfig.cleanliness > 0.5 ? 'hsl(142 50% 35%)' : 'hsl(30 30% 35%)'} />
+            </linearGradient>
+          </defs>
           <path 
-            d="M0,100 L0,60 Q50,30 100,50 Q150,70 200,45 Q250,20 300,55 Q350,80 400,40 L400,100 Z"
-            className={sceneConfig.cleanliness > 0.5 ? 'fill-primary/40' : 'fill-secondary/60'}
+            d="M0,100 L0,55 Q40,25 100,45 Q160,65 220,40 Q280,15 340,50 Q380,75 400,35 L400,100 Z"
+            fill="url(#hillGradient1)"
+            opacity="0.5"
           />
           <path 
-            d="M0,100 L0,70 Q80,50 150,65 Q220,80 280,60 Q340,40 400,70 L400,100 Z"
-            className={sceneConfig.cleanliness > 0.5 ? 'fill-primary/60' : 'fill-secondary/70'}
+            d="M0,100 L0,65 Q60,45 130,60 Q200,75 270,55 Q340,35 400,65 L400,100 Z"
+            fill="url(#hillGradient1)"
+            opacity="0.7"
           />
           <path 
-            d="M0,100 L0,80 Q100,70 200,85 Q300,100 400,75 L400,100 Z"
-            className={sceneConfig.cleanliness > 0.5 ? 'fill-primary/80' : 'fill-secondary/80'}
+            d="M0,100 L0,78 Q80,68 180,82 Q280,96 400,72 L400,100 Z"
+            fill="url(#hillGradient1)"
+            opacity="0.9"
           />
         </svg>
 
         {/* Wind Turbines for clean energy */}
         {sceneConfig.showRenewables && (
-          <div className="absolute bottom-16 left-0 right-0 flex justify-around px-8">
+          <div className="absolute bottom-20 left-0 right-0 flex justify-around px-12">
             {Array.from({ length: sceneConfig.turbineCount }).map((_, i) => (
-              <div key={i} className="relative" style={{ animationDelay: `${i * 0.3}s` }}>
-                {/* Turbine pole */}
-                <div className="w-1 h-16 bg-card/80 mx-auto" />
-                {/* Turbine blades */}
-                <div className="absolute -top-1 left-1/2 -translate-x-1/2">
-                  <Wind 
-                    className="w-10 h-10 text-card animate-spin-slow"
-                    style={{ animationDuration: `${4 + i}s` }}
-                  />
-                </div>
-              </div>
+              <WindTurbine 
+                key={i} 
+                scale={0.7 + (i % 2) * 0.2} 
+                speed={3 + i * 0.8}
+              />
             ))}
           </div>
         )}
 
-        {/* Solar panels for clean energy */}
+        {/* Solar panels with reflection animation */}
         {sceneConfig.showRenewables && (
-          <div className="absolute bottom-4 right-8 flex gap-1">
-            {Array.from({ length: 3 }).map((_, i) => (
+          <div className="absolute bottom-6 right-6 flex gap-1.5">
+            {Array.from({ length: 4 }).map((_, i) => (
               <div 
                 key={i} 
-                className="w-6 h-4 bg-gen-solar/80 rounded-sm transform -skew-x-12 shadow-md"
+                className="relative w-7 h-5 bg-gen-solar/80 rounded-sm transform -skew-x-12 shadow-md overflow-hidden"
                 style={{ opacity: 0.7 + (sceneConfig.cleanliness * 0.3) }}
-              />
+              >
+                {/* Reflection shimmer */}
+                <div 
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer"
+                  style={{ animationDelay: `${i * 0.5}s` }}
+                />
+                {/* Panel grid lines */}
+                <div className="absolute inset-0 grid grid-cols-2 gap-px opacity-50">
+                  <div className="border-r border-gen-solar/50" />
+                </div>
+              </div>
             ))}
           </div>
         )}
 
         {/* Factories for dirty energy */}
         {sceneConfig.showFactories && (
-          <div className="absolute bottom-12 left-8 flex gap-4">
+          <div className="absolute bottom-14 left-6 flex gap-6">
             <div className="relative">
-              <Factory className="w-16 h-16 text-secondary" />
+              <Factory className="w-18 h-18 text-secondary" style={{ width: '4.5rem', height: '4.5rem' }} />
+              {/* Animated smoke stacks */}
               {sceneConfig.showSmoke && (
-                <div className="absolute -top-4 left-1/2">
-                  <div className="w-4 h-4 rounded-full bg-secondary/50 animate-smoke" />
-                  <div className="w-3 h-3 rounded-full bg-secondary/40 animate-smoke" style={{ animationDelay: '0.5s' }} />
-                </div>
+                <>
+                  <SmokeParticle delay={0} x={35} />
+                  <SmokeParticle delay={0.8} x={40} />
+                  <SmokeParticle delay={1.6} x={45} />
+                  <SmokeParticle delay={0.4} x={60} />
+                  <SmokeParticle delay={1.2} x={65} />
+                </>
               )}
             </div>
             {sceneConfig.cleanliness < 0.3 && (
               <div className="relative">
-                <Factory className="w-12 h-12 text-secondary" />
+                <Factory className="w-14 h-14 text-secondary/90" />
                 {sceneConfig.showSmoke && (
-                  <div className="absolute -top-3 left-1/2">
-                    <div className="w-3 h-3 rounded-full bg-secondary/40 animate-smoke" style={{ animationDelay: '0.3s' }} />
-                  </div>
+                  <>
+                    <SmokeParticle delay={0.3} x={35} />
+                    <SmokeParticle delay={1.1} x={45} />
+                    <SmokeParticle delay={0.7} x={55} />
+                  </>
                 )}
               </div>
             )}
           </div>
         )}
 
-        {/* Leaves floating for very clean */}
-        {sceneConfig.cleanliness > 0.8 && (
+        {/* Floating leaves for very clean */}
+        {sceneConfig.cleanliness > 0.75 && (
           <>
-            <Leaf className="absolute bottom-20 left-[20%] w-4 h-4 text-primary animate-float" style={{ animationDelay: '0.2s' }} />
-            <Leaf className="absolute bottom-24 right-[30%] w-3 h-3 text-primary/80 animate-float" style={{ animationDelay: '0.8s' }} />
+            <Leaf 
+              className="absolute bottom-24 left-[25%] w-5 h-5 text-primary animate-leaf-float" 
+              style={{ animationDelay: '0s' }} 
+            />
+            <Leaf 
+              className="absolute bottom-28 right-[35%] w-4 h-4 text-primary/80 animate-leaf-float" 
+              style={{ animationDelay: '1.5s' }} 
+            />
+            <Leaf 
+              className="absolute bottom-20 left-[50%] w-3 h-3 text-primary/70 animate-leaf-float" 
+              style={{ animationDelay: '3s' }} 
+            />
           </>
         )}
 
-        {/* Fire/flames for very dirty */}
+        {/* Fire/flames for very dirty with flicker */}
         {sceneConfig.cleanliness < 0.2 && (
-          <Flame className="absolute bottom-8 left-20 w-6 h-6 text-destructive animate-pulse" />
+          <div className="absolute bottom-10 left-24 flex gap-2">
+            <Flame className="w-7 h-7 text-destructive animate-flame" />
+            <Flame className="w-5 h-5 text-destructive/80 animate-flame" style={{ animationDelay: '0.15s' }} />
+          </div>
         )}
       </div>
 
-      {/* Water waves at bottom for hydro when clean */}
+      {/* Water/hydro indicator for clean energy */}
       {sceneConfig.cleanliness > 0.6 && (
-        <Waves className="absolute bottom-2 right-24 w-8 h-8 text-gen-hydro/50 animate-float" />
+        <div className="absolute bottom-3 right-20">
+          <Droplets className="w-6 h-6 text-gen-hydro/60 animate-water-ripple" />
+        </div>
       )}
     </div>
   );
