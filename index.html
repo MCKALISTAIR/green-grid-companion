@@ -5,21 +5,59 @@
   <meta charset="UTF-8" />
   <meta name="viewport"
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  
+  <!-- iOS / Apple specific -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="GridSense" />
+  <link rel="apple-touch-icon" href="/icon-192.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/icon-192.png" />
+  
+  <!-- Theme color for mobile browsers -->
+  <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  
+  <!-- Prevent text size adjustment on orientation change -->
+  <meta name="format-detection" content="telephone=no" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  
   <title>GridSense</title>
-  <meta name="description" content="Track UK carbon intensity and generation mix." />
+  <meta name="description" content="Track UK carbon intensity and find the best times to use clean energy." />
   <meta name="author" content="GridSense" />
   <link rel="manifest" href="/manifest.json" />
 
   <meta property="og:title" content="GridSense" />
-  <meta property="og:description" content="Track UK carbon intensity and generation mix." />
+  <meta property="og:description" content="Track UK carbon intensity and find the best times to use clean energy." />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="/icon-512.png" />
 
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:site" content="@GreenGrid" />
+  <meta name="twitter:site" content="@GridSense" />
   <meta name="twitter:image" content="/icon-512.png" />
+
+  <!-- Capacitor / iOS safe area handling -->
+  <style>
+    :root {
+      --sat: env(safe-area-inset-top);
+      --sar: env(safe-area-inset-right);
+      --sab: env(safe-area-inset-bottom);
+      --sal: env(safe-area-inset-left);
+    }
+    
+    /* Prevent overscroll bounce on iOS */
+    html, body {
+      overscroll-behavior: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Ensure app takes full screen */
+    html, body, #root {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+    }
+  </style>
 </head>
 
 <body>
