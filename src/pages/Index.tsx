@@ -51,7 +51,7 @@ const Index = () => {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-background flex flex-col animate-in fade-in duration-700">
+      <div className="min-h-screen min-h-[100dvh] bg-background flex flex-col animate-in fade-in duration-700 pb-[env(safe-area-inset-bottom)]">
         {/* Header with scene */}
         <div className="relative">
           {/* Animated scene */}

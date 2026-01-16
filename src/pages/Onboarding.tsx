@@ -77,7 +77,7 @@ const Onboarding = () => {
     };
 
     return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="min-h-screen min-h-[100dvh] bg-background flex items-center justify-center p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
             <Card className="w-full max-w-md shadow-xl border-border/50 bg-card/50 backdrop-blur-sm">
                 <CardHeader className="text-center space-y-2">
                     <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-2">
