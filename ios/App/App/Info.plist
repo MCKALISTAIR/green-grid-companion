@@ -47,5 +47,10 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>We need your location to show you the local energy grid intensity.</string>
+    <key>NSLocationAlwaysUsageDescription</key>
+    <string>We need your location to show you the local energy grid intensity.</string>
 </dict>
 </plist>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, Navigation, ArrowRight, Loader2 } from 'lucide-react';
+import { Geolocation as CapacitorGeolocation } from '@capacitor/geolocation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -11,53 +12,47 @@ const Onboarding = () => {
     const [isLoadingLocation, setIsLoadingLocation] = useState(false);
     const [manualPostcode, setManualPostcode] = useState('');
 
-    const handleEnableLocation = () => {
-        if (!navigator.geolocation) {
-            toast.error("Geolocation is not supported by your browser");
-            return;
-        }
-
+    const handleEnableLocation = async () => {
         setIsLoadingLocation(true);
 
-        navigator.geolocation.getCurrentPosition(
-            async (position) => {
-                try {
-                    const { latitude, longitude } = position.coords;
+        try {
+            const permissionStatus = await CapacitorGeolocation.checkPermissions();
 
-                    // Use postcodes.io to reverse geocode
-                    const response = await fetch(`https://api.postcodes.io/postcodes?lon=${longitude}&lat=${latitude}`);
-                    const data = await response.json();
-
-                    if (data.status === 200 && data.result && data.result.length > 0) {
-                        // Get the first result's outward code (e.g., M1 from M1 1AA) or just use the full postcode
-                        // The existing app seems to use partials like 'SW', 'M', etc. or full postcodes.
-                        // Let's store the full postcode or the outcode. The Index page currently uses 'SW' default.
-                        // Let's use the outcode if available, or just the first part.
-                        const postcode = data.result[0].outcode; // e.g., "SW1A"
-
-                        localStorage.setItem('gridgreen-postcode', postcode);
-                        toast.success(`Location set to ${postcode}`);
-                        navigate('/');
-                    } else {
-                        throw new Error("Could not determine postcode from location");
-                    }
-                } catch (error) {
-                    console.error("Geocoding error:", error);
-                    toast.error("Failed to determine location. Please enter postcode manually.");
-                } finally {
+            if (permissionStatus.location === 'denied') {
+                const request = await CapacitorGeolocation.requestPermissions();
+                if (request.location === 'denied') {
+                    toast.error("Location permission denied. Please enter postcode manually.");
                     setIsLoadingLocation(false);
+                    return;
                 }
-            },
-            (error) => {
-                console.error("Geolocation error:", error);
-                let errorMessage = "Failed to get location.";
-                if (error.code === error.PERMISSION_DENIED) {
-                    errorMessage = "Location permission denied. Please enter postcode manually.";
-                }
-                toast.error(errorMessage);
-                setIsLoadingLocation(false);
             }
-        );
+
+            const position = await CapacitorGeolocation.getCurrentPosition();
+            const { latitude, longitude } = position.coords;
+
+            // Use postcodes.io to reverse geocode
+            const response = await fetch(`https://api.postcodes.io/postcodes?lon=${longitude}&lat=${latitude}`);
+            const data = await response.json();
+
+            if (data.status === 200 && data.result && data.result.length > 0) {
+                const postcode = data.result[0].outcode; // e.g., "SW1A"
+
+                localStorage.setItem('gridgreen-postcode', postcode);
+                toast.success(`Location set to ${postcode}`);
+                navigate('/');
+            } else {
+                throw new Error("Could not determine postcode from location");
+            }
+        } catch (error) {
+            console.error("Geolocation error:", error);
+            let errorMessage = "Failed to get location.";
+            if (error instanceof Error && error.message.includes('denied')) {
+                errorMessage = "Location permission denied. Please enter postcode manually.";
+            }
+            toast.error(errorMessage);
+        } finally {
+            setIsLoadingLocation(false);
+        }
     };
 
     const handleManualSubmit = (e: React.FormEvent) => {

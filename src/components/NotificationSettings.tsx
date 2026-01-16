@@ -13,7 +13,7 @@ interface NotificationSettingsProps {
 
 export function NotificationSettings({ onClose }: NotificationSettingsProps) {
   const postcode = localStorage.getItem('gridgreen-postcode') || '';
-  
+
   const {
     isNative,
     isRegistered,
@@ -24,19 +24,23 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
   } = usePushNotifications(postcode);
 
   const handleLowIntensityToggle = async (enabled: boolean) => {
+    let tokenOverride: string | undefined;
     if (enabled && permissionStatus !== 'granted') {
-      const granted = await requestPermission();
-      if (!granted) return;
+      const token = await requestPermission();
+      if (!token) return; // Permission denied or failed
+      tokenOverride = token;
     }
-    updatePreference('lowIntensityEnabled', enabled);
+    updatePreference('lowIntensityEnabled', enabled, tokenOverride);
   };
 
   const handleDailyForecastToggle = async (enabled: boolean) => {
+    let tokenOverride: string | undefined;
     if (enabled && permissionStatus !== 'granted') {
-      const granted = await requestPermission();
-      if (!granted) return;
+      const token = await requestPermission();
+      if (!token) return;
+      tokenOverride = token;
     }
-    updatePreference('dailyForecastEnabled', enabled);
+    updatePreference('dailyForecastEnabled', enabled, tokenOverride);
   };
 
   return (

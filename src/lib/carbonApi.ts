@@ -38,6 +38,7 @@ export interface ForecastData {
   to: string;
   intensity: {
     forecast: number;
+    actual?: number | null;
     index: 'very low' | 'low' | 'moderate' | 'high' | 'very high';
   };
 }

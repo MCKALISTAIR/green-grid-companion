@@ -108,42 +108,66 @@ export function usePushNotifications(postcode: string) {
     };
   }, [isNative, loadPreferences]);
 
-  // Request permission and register
-  const requestPermission = useCallback(async () => {
+  // Request permission and get token
+  const requestPermission = useCallback(async (): Promise<string | null> => {
     if (!isNative) {
       toast.error('Push notifications require the native app');
-      return false;
+      return null;
     }
 
     try {
       const permStatus = await PushNotifications.requestPermissions();
-      
+
       if (permStatus.receive === 'granted') {
+        // Create a promise that resolves when registration event fires
+        const tokenPromise = new Promise<string>((resolve) => {
+          const handler = PushNotifications.addListener('registration', (token: Token) => {
+            handler.then(h => h.remove()); // Cleanup immediately
+            resolve(token.value);
+          });
+        });
+
         await PushNotifications.register();
         setPermissionStatus('granted');
         toast.success('Push notifications enabled! 🎉');
-        return true;
+
+        // Wait for the token (with timeout safety)
+        const token = await Promise.race([
+          tokenPromise,
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000))
+        ]);
+
+        return token;
       } else {
         setPermissionStatus('denied');
         toast.error('Notification permission denied');
-        return false;
+        return null;
       }
     } catch (error) {
       console.error('Permission request error:', error);
       toast.error('Failed to request permission');
-      return false;
+      return null;
     }
   }, [isNative]);
 
   // Save preferences to database
-  const savePreferences = useCallback(async (newPrefs: PushNotificationPrefs) => {
-    if (!deviceToken || !postcode) return;
+  const savePreferences = useCallback(async (newPrefs: PushNotificationPrefs, tokenOverride?: string) => {
+    const token = tokenOverride || deviceToken;
+
+    if (!token || !postcode) {
+      // Even if we can't save to DB yet, we update local state
+      setPrefs(newPrefs);
+      return;
+    }
 
     try {
+      // Optimistic update
+      setPrefs(newPrefs);
+
       const { error } = await supabase
         .from('push_subscriptions')
         .upsert({
-          device_token: deviceToken,
+          device_token: token,
           postcode: postcode,
           low_intensity_enabled: newPrefs.lowIntensityEnabled,
           low_intensity_threshold: newPrefs.lowIntensityThreshold,
@@ -155,14 +179,11 @@ export function usePushNotifications(postcode: string) {
         });
 
       if (error) {
-        console.error('Error saving preferences:', error);
-        toast.error('Failed to save notification settings');
-        return;
+        throw error;
       }
 
-      setPrefs(newPrefs);
       setIsRegistered(true);
-      toast.success('Notification settings saved!');
+      if (token !== deviceToken) setDeviceToken(token); // Ensure state is consistent
     } catch (error) {
       console.error('Error saving preferences:', error);
       toast.error('Failed to save notification settings');
@@ -172,10 +193,11 @@ export function usePushNotifications(postcode: string) {
   // Update a single preference
   const updatePreference = useCallback(<K extends keyof PushNotificationPrefs>(
     key: K,
-    value: PushNotificationPrefs[K]
+    value: PushNotificationPrefs[K],
+    tokenOverride?: string
   ) => {
     const newPrefs = { ...prefs, [key]: value };
-    savePreferences(newPrefs);
+    savePreferences(newPrefs, tokenOverride);
   }, [prefs, savePreferences]);
 
   // Unregister device

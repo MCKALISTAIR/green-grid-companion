@@ -1,73 +1,92 @@
 # GridSense
 
-## Project info
+GridSense is a mobile-first companion app designed to help UK (and future) energy consumers make smarter decisions about their electricity usage. By tracking real-time and forecast carbon intensity data, it empowers users to shift their energy consumption to greener times, reducing their carbon footprint.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## 🌟 Key Features
 
-## How can I edit this code?
+### 🏠 Dynamic Home Screen
+*   **Real-time Carbon Intensity**: Visualises the current grid status.
+*   **Immersive Scenes**: A dynamic background that changes based on air quality/cleanliness (e.g., from a dirty, smoky factory scene to a clean, sunny eco-landscape).
+*   **Pull-to-Refresh**: Seamlessly integrated "sky" refresh experience.
+*   **Data Highlights**: Quick view of generation mix (Wind, Solar, Gas, Nuclear) and current intensity index (Low, Moderate, High).
 
-There are several ways of editing your application.
+### ⚡ Power Planner
+*   **Smart Scheduling**: Select an appliance (EV, Washing Machine, Dishwasher, Tumble Dryer).
+*   **Carbon Savings**: See exactly how much carbon you save by waiting for a greener time slot.
+*   **Optimal Windows**: The app analyzes the next 48 hours of forecast data to find the absolute best time to run your high-energy devices.
 
-**Use Lovable**
+### 🗺️ National Map
+*   **Regional View**: Explore carbon intensity across all UK regions.
+*   **Live Rankings**: See which areas are currently the greenest (e.g., North Scotland vs. London).
+*   **Color-Coded**: Instant visual feedback on regional performance.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+### ⚙️ User Preferences
+*   **Region Selection**: Customize data for your specific postcode area.
+*   **Notifications**: Set alerts for "Greener than usual" times to get nudged when it's best to use power.
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🛠️ Technology Stack
 
-**Use your preferred IDE**
+*   **Framework**: [React](https://react.dev/) + [Vite](https://vitejs.dev/)
+*   **Language**: [TypeScript](https://www.typescriptlang.org/)
+*   **Mobile Engine**: [Capacitor](https://capacitorjs.com/) (iOS & Android)
+*   **UI Components**: [shadcn/ui](https://ui.shadcn.com/) (Radix Primitives)
+*   **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+*   **Icons**: [Lucide React](https://lucide.dev/)
+*   **Data Source**: [Carbon Intensity API](https://carbon-intensity.github.io/api-definitions/) (National Grid ESO)
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 🚀 Getting Started
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Prerequisites
+*   Node.js & npm (Install via [nvm](https://github.com/nvm-sh/nvm))
+*   Xcode (for iOS development)
+*   CocoaPods (for native iOS dependencies)
 
-Follow these steps:
+### Installation
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+1.  **Clone the repository**
+    ```sh
+    git clone <YOUR_GIT_URL>
+    cd green-grid-companion
+    ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+2.  **Install web dependencies**
+    ```sh
+    npm install
+    ```
 
-# Step 3: Install the necessary dependencies.
-npm i
+3.  **Run the web development server**
+    ```sh
+    npm run dev
+    ```
+    Visit `http://localhost:8080` to see the app in your browser.
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+### Mobile Development (iOS)
 
-**Edit a file directly in GitHub**
+1.  **Sync web assets to native**
+    After making changes to the React code, build and sync:
+    ```sh
+    npm run build
+    npx cap sync ios
+    ```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+2.  **Open in Xcode**
+    ```sh
+    npx cap open ios
+    ```
 
-**Use GitHub Codespaces**
+3.  **Run on Device/Simulator**
+    *   Select your target device in Xcode.
+    *   Press **Play** (Cmd+R).
+    *   *Note: Native plugins (like Notifications) require running on a real device or compiled simulator build.*
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 📱 Developer Structure
 
-## What technologies are used for this project?
+*   `src/pages`: Main application screens (Index, Planner, Map, Onboarding).
+*   `src/components`: Reusable UI blocks (IntensityScene, ForecastChart, etc.).
+*   `src/lib/carbonApi.ts`: Types and fetchers for the Carbon Intensity API.
+*   `src/hooks`: Custom React hooks (useCarbonData, useCapacitor).
+*   `ios/`: Native iOS project generated by Capacitor.
 
-This project is built with:
+## 📄 License
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+This project is open-source and available under the MIT License.

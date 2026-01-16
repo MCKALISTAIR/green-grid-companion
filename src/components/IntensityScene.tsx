@@ -131,7 +131,7 @@ export function IntensityScene({ intensity, index }: IntensitySceneProps) {
 
   return (
     <div
-      className="relative w-full h-80 overflow-hidden rounded-b-3xl"
+      className="relative w-full h-[45vh] min-h-96 overflow-hidden rounded-b-3xl"
       style={{ background: sceneConfig.skyGradient }}
     >
       {/* Sun Rays for clean energy */}
@@ -359,7 +359,19 @@ export function IntensityScene({ intensity, index }: IntensitySceneProps) {
   );
 }
 
-function getSkyGradient(index: string): string {
+const SKY_START_COLORS: Record<string, string> = {
+  'very low': 'hsl(195 90% 55%)',
+  'low': 'hsl(200 70% 60%)',
+  'moderate': 'hsl(200 40% 65%)',
+  'high': 'hsl(40 40% 60%)',
+  'very high': 'hsl(25 35% 50%)',
+};
+
+export function getSkyStartColor(index: string): string {
+  return SKY_START_COLORS[index] || SKY_START_COLORS['moderate'];
+}
+
+export function getSkyGradient(index: string): string {
   const gradients: Record<string, string> = {
     'very low': 'linear-gradient(180deg, hsl(195 90% 55%) 0%, hsl(195 80% 70%) 40%, hsl(150 60% 75%) 100%)',
     'low': 'linear-gradient(180deg, hsl(200 70% 60%) 0%, hsl(190 60% 70%) 40%, hsl(140 50% 75%) 100%)',

@@ -8,14 +8,14 @@ export function useCapacitor() {
     const initCapacitor = async () => {
       if (Capacitor.isNativePlatform()) {
         try {
-          // Configure status bar for iOS
-          await StatusBar.setStyle({ style: Style.Light });
-          
           // On iOS, make status bar overlay the webview for edge-to-edge design
           if (Capacitor.getPlatform() === 'ios') {
             await StatusBar.setOverlaysWebView({ overlay: true });
           }
-          
+
+          // Configure status bar style
+          await StatusBar.setStyle({ style: Style.Light });
+
           // Hide splash screen once app is ready
           await SplashScreen.hide();
         } catch (error) {

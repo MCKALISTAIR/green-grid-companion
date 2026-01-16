@@ -19,10 +19,10 @@ export function RegionSelector({ value, onChange }: RegionSelectorProps) {
 
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="w-auto gap-2 bg-card/80 backdrop-blur-sm border-border/50 shadow-md">
-        <MapPin className="w-4 h-4 text-primary" />
-        <SelectValue placeholder="Select region">
-          {selectedRegion?.name || 'Select region'}
+      <SelectTrigger className="w-auto max-w-[180px] gap-2 bg-card/80 backdrop-blur-sm border-border/50 shadow-md">
+        <MapPin className="w-4 h-4 text-primary shrink-0" />
+        <SelectValue placeholder="Select region" className="truncate">
+          <span className="truncate">{selectedRegion?.name || 'Select region'}</span>
         </SelectValue>
       </SelectTrigger>
       <SelectContent className="bg-card border-border">
