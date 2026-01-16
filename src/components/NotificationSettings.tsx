@@ -1,115 +1,99 @@
 import { useState, useEffect } from 'react';
-import { Bell, BellOff, Clock, Zap } from 'lucide-react';
+import { Bell, BellOff, Clock, Zap, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Card } from '@/components/ui/card';
-import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 interface NotificationSettingsProps {
   onClose?: () => void;
 }
 
-interface NotificationPrefs {
-  lowIntensityEnabled: boolean;
-  lowIntensityThreshold: number;
-  dailyForecastEnabled: boolean;
-  dailyForecastTime: string;
-}
-
-const DEFAULT_PREFS: NotificationPrefs = {
-  lowIntensityEnabled: false,
-  lowIntensityThreshold: 100,
-  dailyForecastEnabled: false,
-  dailyForecastTime: '07:00',
-};
-
 export function NotificationSettings({ onClose }: NotificationSettingsProps) {
-  const [prefs, setPrefs] = useState<NotificationPrefs>(DEFAULT_PREFS);
-  const [notificationsSupported, setNotificationsSupported] = useState(true);
-  const [permission, setPermission] = useState<NotificationPermission>('default');
+  const postcode = localStorage.getItem('gridgreen-postcode') || '';
+  
+  const {
+    isNative,
+    isRegistered,
+    permissionStatus,
+    prefs,
+    requestPermission,
+    updatePreference,
+  } = usePushNotifications(postcode);
 
-  useEffect(() => {
-    // Load saved preferences
-    const saved = localStorage.getItem('gridgreen-notifications');
-    if (saved) {
-      setPrefs(JSON.parse(saved));
+  const handleLowIntensityToggle = async (enabled: boolean) => {
+    if (enabled && permissionStatus !== 'granted') {
+      const granted = await requestPermission();
+      if (!granted) return;
     }
-
-    // Check notification support
-    if (!('Notification' in window)) {
-      setNotificationsSupported(false);
-    } else {
-      setPermission(Notification.permission);
-    }
-  }, []);
-
-  const requestPermission = async () => {
-    if (!notificationsSupported) {
-      toast.error('Notifications not supported', {
-        description: 'Your browser does not support push notifications.',
-      });
-      return;
-    }
-
-    const result = await Notification.requestPermission();
-    setPermission(result);
-
-    if (result === 'granted') {
-      toast.success('Notifications enabled! 🎉', {
-        description: "You'll be notified when carbon intensity is low.",
-      });
-    } else if (result === 'denied') {
-      toast.error('Notifications blocked', {
-        description: 'Please enable notifications in your browser settings.',
-      });
-    }
+    updatePreference('lowIntensityEnabled', enabled);
   };
 
-  const savePrefs = (newPrefs: NotificationPrefs) => {
-    setPrefs(newPrefs);
-    localStorage.setItem('gridgreen-notifications', JSON.stringify(newPrefs));
-    toast.success('Settings saved!');
-  };
-
-  const handleLowIntensityToggle = (enabled: boolean) => {
-    if (enabled && permission !== 'granted') {
-      requestPermission();
+  const handleDailyForecastToggle = async (enabled: boolean) => {
+    if (enabled && permissionStatus !== 'granted') {
+      const granted = await requestPermission();
+      if (!granted) return;
     }
-    savePrefs({ ...prefs, lowIntensityEnabled: enabled });
-  };
-
-  const handleDailyForecastToggle = (enabled: boolean) => {
-    if (enabled && permission !== 'granted') {
-      requestPermission();
-    }
-    savePrefs({ ...prefs, dailyForecastEnabled: enabled });
+    updatePreference('dailyForecastEnabled', enabled);
   };
 
   return (
     <div className="space-y-6 p-1">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-foreground">Notifications</h2>
-        {permission !== 'granted' && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={requestPermission}
-            className="gap-2"
-          >
-            <Bell className="w-4 h-4" />
-            Enable
-          </Button>
+        {isNative && permissionStatus === 'granted' && (
+          <Badge variant="secondary" className="gap-1">
+            <Smartphone className="w-3 h-3" />
+            Native
+          </Badge>
         )}
       </div>
 
-      {!notificationsSupported && (
+      {!isNative && (
+        <Card className="p-4 bg-accent/30 border-accent/50">
+          <div className="flex items-center gap-3">
+            <Smartphone className="w-5 h-5 text-accent-foreground" />
+            <div>
+              <p className="text-sm font-medium text-foreground">Native app required</p>
+              <p className="text-xs text-muted-foreground">
+                Install GridSense on your device for push notifications.
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {isNative && permissionStatus === 'denied' && (
         <Card className="p-4 bg-destructive/10 border-destructive/30">
           <div className="flex items-center gap-3">
             <BellOff className="w-5 h-5 text-destructive" />
-            <p className="text-sm text-destructive">
-              Notifications are not supported in your browser.
-            </p>
+            <div>
+              <p className="text-sm font-medium text-destructive">Notifications blocked</p>
+              <p className="text-xs text-muted-foreground">
+                Please enable notifications in your device settings.
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {isNative && permissionStatus === 'prompt' && (
+        <Card className="p-4 bg-primary/10 border-primary/30">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Bell className="w-5 h-5 text-primary" />
+              <div>
+                <p className="text-sm font-medium text-foreground">Enable notifications</p>
+                <p className="text-xs text-muted-foreground">
+                  Get alerts when carbon intensity is low.
+                </p>
+              </div>
+            </div>
+            <Button size="sm" onClick={requestPermission}>
+              Enable
+            </Button>
           </div>
         </Card>
       )}
@@ -131,6 +115,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
           <Switch
             checked={prefs.lowIntensityEnabled}
             onCheckedChange={handleLowIntensityToggle}
+            disabled={!isNative}
           />
         </div>
 
@@ -146,10 +131,10 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
             </div>
             <Slider
               value={[prefs.lowIntensityThreshold]}
-              onValueChange={([value]) => savePrefs({ ...prefs, lowIntensityThreshold: value })}
+              onValueCommit={([value]) => updatePreference('lowIntensityThreshold', value)}
               min={0}
               max={200}
-              step={1}
+              step={10}
               className="w-full"
             />
             <div className="flex justify-between text-xs text-muted-foreground">
@@ -177,6 +162,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
           <Switch
             checked={prefs.dailyForecastEnabled}
             onCheckedChange={handleDailyForecastToggle}
+            disabled={!isNative}
           />
         </div>
 
@@ -189,7 +175,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
               <input
                 type="time"
                 value={prefs.dailyForecastTime}
-                onChange={(e) => savePrefs({ ...prefs, dailyForecastTime: e.target.value })}
+                onChange={(e) => updatePreference('dailyForecastTime', e.target.value)}
                 className="px-3 py-1.5 rounded-md border border-input bg-background text-foreground text-sm"
               />
             </div>
@@ -197,9 +183,17 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
         )}
       </Card>
 
-      <p className="text-xs text-center text-muted-foreground">
-        Note: For push notifications to work, this app needs to remain installed as a PWA or the browser needs to stay running in the background.
-      </p>
+      {isNative && isRegistered && (
+        <p className="text-xs text-center text-muted-foreground">
+          Your device is registered for push notifications. You'll receive alerts even when the app is closed.
+        </p>
+      )}
+
+      {!isNative && (
+        <p className="text-xs text-center text-muted-foreground">
+          Push notifications require the native iOS/Android app. Settings are saved locally for now.
+        </p>
+      )}
     </div>
   );
 }
