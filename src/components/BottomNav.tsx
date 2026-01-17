@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Map, Calendar, Settings } from 'lucide-react';
+import { Home, ListOrdered, Calendar, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
 import { NotificationSettings } from '@/components/NotificationSettings';
@@ -45,8 +45,8 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
                         className={`flex flex-col items-center gap-1 h-auto py-2 px-1 hover:bg-transparent ${isActive('/map') ? 'text-primary' : 'text-muted-foreground'}`}
                         onClick={() => navigate('/map')}
                     >
-                        <Map className="w-5 h-5" />
-                        <span className="text-[10px] font-medium">Map</span>
+                        <ListOrdered className="w-5 h-5" />
+                        <span className="text-[10px] font-medium">Leaderboard</span>
                     </Button>
 
                     <Button
@@ -58,22 +58,14 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
                         <span className="text-[10px] font-medium">Plan</span>
                     </Button>
 
-                    <Sheet>
-                        <SheetTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                className="flex flex-col items-center gap-1 h-auto py-2 px-1 hover:bg-transparent text-muted-foreground hover:text-foreground"
-                            >
-                                <Settings className="w-5 h-6" />
-                                <span className="text-[10px] font-medium">Settings</span>
-                            </Button>
-                        </SheetTrigger>
-                        <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl border-t-0 bg-card p-0">
-                            <div className="h-full overflow-y-auto p-6 pb-[max(2rem,env(safe-area-inset-bottom))]">
-                                <NotificationSettings />
-                            </div>
-                        </SheetContent>
-                    </Sheet>
+                    <Button
+                        variant="ghost"
+                        className={`flex flex-col items-center gap-1 h-auto py-2 px-1 hover:bg-transparent ${isActive('/settings') ? 'text-primary' : 'text-muted-foreground'}`}
+                        onClick={() => navigate('/settings')}
+                    >
+                        <Settings className="w-5 h-6" />
+                        <span className="text-[10px] font-medium">Settings</span>
+                    </Button>
 
                 </div>
             </div>

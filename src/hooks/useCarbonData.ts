@@ -26,8 +26,8 @@ export function useCarbonData(postcode: string) {
   const regionalListQuery = useQuery<RegionListItem[]>({
     queryKey: ['regional', 'all'],
     queryFn: getAllRegions,
-    refetchInterval: 30000,
-    staleTime: 15000,
+    refetchInterval: 1000 * 60 * 5, // Check every 5 minutes
+    staleTime: 1000 * 60 * 5,
     retry: 2,
   });
 
@@ -120,12 +120,23 @@ export function useCarbonData(postcode: string) {
     error: regionalListQuery.error ?? regionalDataQuery.error ?? nationalQuery.error,
 
     // Refetch
-    refetch: () => {
-      nationalQuery.refetch();
-      regionalListQuery.refetch();
-      regionalDataQuery.refetch();
-      forecastQuery.refetch();
-      generationQuery.refetch();
+    refetch: async () => {
+      await Promise.all([
+        nationalQuery.refetch(),
+        regionalListQuery.refetch(),
+        regionalDataQuery.refetch(),
+        forecastQuery.refetch(),
+        generationQuery.refetch(),
+      ]);
     },
+
+    // Helper to calculate next expected update time (HH:00 or HH:30)
+    getNextUpdate: (lastUpdatedStr?: string) => {
+      if (!lastUpdatedStr) return null;
+      const last = new Date(lastUpdatedStr);
+      // Add 30 minutes to the 'from' time of the current period
+      const next = new Date(last.getTime() + 30 * 60000);
+      return next;
+    }
   };
 }

@@ -65,23 +65,11 @@ npx cap sync ios
 
 ## Step 4: Open in Xcode
 
-Launch the native project in Xcode. This command automatically opens the `App.xcworkspace` file located in your `ios` folder.
+Launch the native project in Xcode.
 
 ```bash
 npx cap open ios
 ```
-
-**Alternative Manual Method:**
-If the command fails or you prefer to use Finder:
-1.  Navigate to your project folder in Finder.
-2.  Go to `ios/App`.
-3.  Double-click **`App.xcworkspace`** (white icon).
-    *   *Important: Do not open the blue `App.xcodeproj` file, as it won't load the CocoaPods dependencies correctly.*
-
-**What to expect in Xcode:**
-*   Xcode will launch and index your project (this may take a moment).
-*   On the left sidebar is the **Project Navigator**.
-*   The top-level item **"App"** (blue icon) is where you configure app-wide settings like Version, Display Name, and Signing.
 
 ## Step 5: Configure Signing (First Time Only)
 

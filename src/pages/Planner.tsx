@@ -2,7 +2,10 @@ import { useState, useEffect } from 'react';
 import { useCarbonData } from '@/hooks/useCarbonData';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { WashingMachine, Car, Utensils, Zap } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { WashingMachine, Car, Utensils, Zap, Plus, PenLine } from 'lucide-react';
 import { getIntensityColor, getIntensityTextColor } from '@/lib/carbonApi';
 import { format, parseISO, addHours } from 'date-fns';
 import { PullToRefresh } from '@/components/PullToRefresh';
@@ -17,21 +20,44 @@ const APPLIANCES = [
 
 export default function Planner() {
     const [selectedAppliance, setSelectedAppliance] = useState(APPLIANCES[0]);
+    const [customEvent, setCustomEvent] = useState({ name: '', duration: '1', power: '1.0' });
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+
     const postcode = localStorage.getItem('gridgreen-postcode') || '';
     const { forecast, refetch, isLoading } = useCarbonData(postcode);
+
+    const handleCustomSubmit = () => {
+        const duration = Math.max(0.5, parseFloat(customEvent.duration) || 1);
+        const power = parseFloat(customEvent.power) || 1.0;
+        const name = customEvent.name || 'Custom Task';
+
+        setSelectedAppliance({
+            id: 'custom',
+            name: name,
+            icon: PenLine,
+            power: power,
+            duration: duration,
+            label: `Custom (${duration}h)`
+        });
+        setIsDialogOpen(false);
+    };
 
     const findBestTime = () => {
         if (!forecast || forecast.length === 0) return null;
 
         // Simple algorithm: find sliding window of lowest average intensity
+        // Adjust for floating point duration if needed, but forecast is 30min slots.
+        // Assuming duration is in Hours. slots needed = duration * 2.
+        const slotsNeeded = Math.ceil(selectedAppliance.duration * 2);
+
         let bestStart = 0;
         let minAvgIntensity = Infinity;
 
-        for (let i = 0; i <= forecast.length - selectedAppliance.duration; i++) {
+        for (let i = 0; i <= forecast.length - slotsNeeded; i++) {
             let sum = 0;
             let valid = true;
-            for (let j = 0; j < selectedAppliance.duration; j++) {
-                if (forecast[i + j].intensity.forecast === null) {
+            for (let j = 0; j < slotsNeeded; j++) {
+                if (!forecast[i + j] || forecast[i + j].intensity.forecast === null) {
                     valid = false;
                     break;
                 }
@@ -39,7 +65,7 @@ export default function Planner() {
             }
 
             if (valid) {
-                const avg = sum / selectedAppliance.duration;
+                const avg = sum / slotsNeeded;
                 if (avg < minAvgIntensity) {
                     minAvgIntensity = avg;
                     bestStart = i;
@@ -60,7 +86,7 @@ export default function Planner() {
     const savings = bestSlot ? Math.round((currentIntensity - bestSlot.avgIntensity) * selectedAppliance.power * selectedAppliance.duration) : 0;
 
     return (
-        <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
+        <div className="h-[100dvh] overflow-hidden bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
             <PullToRefresh onRefresh={async () => { await refetch(); }}>
                 <div className="p-4 space-y-6 pt-[max(2rem,env(safe-area-inset-top))]">
                     <div>
@@ -83,6 +109,69 @@ export default function Planner() {
                                 </div>
                             </Button>
                         ))}
+
+                        {/* Custom Event Button */}
+                        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                            <DialogTrigger asChild>
+                                <Button
+                                    variant={selectedAppliance.id === 'custom' ? "default" : "outline"}
+                                    className="h-auto py-4 flex flex-col gap-2 border-dashed"
+                                    onClick={() => {
+                                        // If already active, just reopen edit? or select?
+                                        // Let's open dialog always on click for now to allow editing
+                                    }}
+                                >
+                                    <Plus className={`w-8 h-8 ${selectedAppliance.id === 'custom' ? 'text-primary-foreground' : 'text-primary'}`} />
+                                    <div className="text-center">
+                                        <div className="font-semibold">{selectedAppliance.id === 'custom' ? selectedAppliance.name : 'Custom'}</div>
+                                        <div className="text-[10px] opacity-70 font-normal">{selectedAppliance.id === 'custom' ? 'Tap to edit' : 'Add your own'}</div>
+                                    </div>
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-md top-[20%] translate-y-0">
+                                <DialogHeader>
+                                    <DialogTitle>Add Custom Event</DialogTitle>
+                                </DialogHeader>
+                                <div className="grid gap-4 py-4">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="name">Event Name</Label>
+                                        <Input
+                                            id="name"
+                                            placeholder="e.g. Bake Cake"
+                                            value={customEvent.name}
+                                            onChange={(e) => setCustomEvent({ ...customEvent, name: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="duration">Duration (Hours)</Label>
+                                            <Input
+                                                id="duration"
+                                                type="number"
+                                                step="0.5"
+                                                value={customEvent.duration}
+                                                onChange={(e) => setCustomEvent({ ...customEvent, duration: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="power">Power (kW)</Label>
+                                            <Input
+                                                id="power"
+                                                type="number"
+                                                step="0.1"
+                                                value={customEvent.power}
+                                                onChange={(e) => setCustomEvent({ ...customEvent, power: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                                <DialogFooter className="sm:justify-start">
+                                    <Button type="button" onClick={handleCustomSubmit} className="w-full">
+                                        Calculate Best Time
+                                    </Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
                     </div>
 
                     {isLoading ? (

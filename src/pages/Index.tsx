@@ -12,6 +12,7 @@ import { RegionSelector } from '@/components/RegionSelector';
 import { NotificationSettings } from '@/components/NotificationSettings';
 import { BestTimeCard } from '@/components/BestTimeCard';
 import { useCarbonData } from '@/hooks/useCarbonData';
+import { useToast } from '@/hooks/use-toast';
 import { TooltipProvider } from '@/components/ui/tooltip'; // Keep Provider for others if needed, or remove if unused. Wrapped whole app in it.
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DEFINITIONS } from '@/lib/definitions';
@@ -48,8 +49,41 @@ const Index = () => {
     }
   }, [postcode]);
 
+  /* import { useToast } from "@/hooks/use-toast" - assume we have this or similar, otherwise use alert or custom UI */
+  // It seems we should check if we have a toast component. 
+  // Checking imports...
+  const { toast } = useToast();
+
   const handleRefresh = async () => {
     await refetch();
+    // Simple feedback logic:
+    // If the data hasn't changed (checked via lastUpdated timestamp comparison or just assume usually valid),
+    // and the last update was recent, we inform the user.
+    // For now, simpler approach:
+
+    if (lastUpdated) {
+      // Calculate next expected update time
+      const last = new Date(lastUpdated).getTime();
+      const next = last + (30 * 60 * 1000); // +30 mins
+      const now = new Date().getTime();
+
+      // If next update is in the future, we still have valid data
+      if (next > now) {
+        const timeStr = new Date(next).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        toast({
+          title: "Up to date",
+          description: `Next Grid data update expected around ${timeStr}.`,
+          duration: 3000,
+        });
+      } else {
+        // Maybe API IS just lagging, still show 'refreshed'
+        toast({
+          title: "Checked for updates",
+          description: "No new data from National Grid yet.",
+          duration: 2000,
+        });
+      }
+    }
   };
 
   const scrollToTop = () => {
@@ -140,6 +174,22 @@ const Index = () => {
 
             {/* Content cards */}
             <div className="flex-1 px-4 py-6 space-y-4 -mt-4 relative z-10 bg-background">
+
+              {/* Energy Insights (formerly Tip of the day) */}
+              <Card className="p-4 shadow-lg bg-accent/30 border-accent/50">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                    <Zap className="w-4 h-4 text-accent-foreground" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-foreground">Energy Insights</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {getSmartTip(intensity, forecast)}
+                    </p>
+                  </div>
+                </div>
+              </Card>
+
               {/* Generation Mix */}
               <Card className="p-4 shadow-lg">
                 <GenerationMixBar mix={generationMix} />
@@ -161,21 +211,6 @@ const Index = () => {
               {forecast.length > 0 && (
                 <ForecastSummary forecast={forecast} />
               )}
-
-              {/* Tip of the day */}
-              <Card className="p-4 shadow-lg bg-accent/30 border-accent/50">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
-                    <Zap className="w-4 h-4 text-accent-foreground" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-foreground">Tip of the day</h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {getTipForIndex(index)}
-                    </p>
-                  </div>
-                </div>
-              </Card>
             </div>
           </div>
         </PullToRefresh>
@@ -186,37 +221,47 @@ const Index = () => {
   );
 };
 
-function getTipForIndex(index: string): string {
-  const tips: Record<string, string[]> = {
-    'very low': [
-      "Perfect time to charge your EV or run energy-intensive appliances!",
-      "Grid is running clean - great time for laundry or dishwasher.",
-      "Renewable energy is abundant right now. Use it while you can!",
-    ],
-    'low': [
-      "Good time to use electricity - carbon intensity is below average.",
-      "Consider starting any scheduled charges now.",
-      "The grid is relatively clean - a good time for everyday tasks.",
-    ],
-    'moderate': [
-      "Average carbon levels - consider delaying non-essential usage.",
-      "Check the forecast for a better time to run heavy appliances.",
-      "If possible, wait a few hours for cleaner energy.",
-    ],
-    'high': [
-      "High carbon period - best to reduce electricity usage if possible.",
-      "Avoid charging EVs or running large appliances now.",
-      "Check when the next low period is and schedule tasks then.",
-    ],
-    'very high': [
-      "Very high carbon intensity - minimize electricity use.",
-      "Gas and coal are dominating the grid right now.",
-      "The best time to save energy is now - every kWh counts!",
-    ],
-  };
 
-  const indexTips = tips[index] || tips['moderate'];
-  return indexTips[Math.floor(Math.random() * indexTips.length)];
+import { ForecastData } from '@/lib/carbonApi';
+
+function getSmartTip(current: number, forecast: ForecastData[]): string {
+  if (!forecast || forecast.length < 12) {
+    return "Check back later for a more tailored energy tip.";
+  }
+
+  // Filter for next 12 hours (approx 24 slots)
+  const now = new Date();
+  const future = forecast.filter(f => new Date(f.from) > now).slice(0, 24);
+
+  if (future.length === 0) return "Keep an eye on your energy usage today.";
+
+  const avg = future.reduce((acc, f) => acc + f.intensity.forecast, 0) / future.length;
+  const min = future.reduce((min, f) => f.intensity.forecast < min.intensity.forecast ? f : min, future[0]);
+  const max = future.reduce((max, f) => f.intensity.forecast > max.intensity.forecast ? f : max, future[0]);
+
+  // Scenario 1: Currently much cleaner than average (Good time!)
+  if (current < avg - 30) {
+    return `It's much greener than usual right now! Great time to run your appliances before levels rise.`;
+  }
+
+  // Scenario 2: High now, but significantly better later
+  if (current > min.intensity.forecast + 40) {
+    const bestTime = new Date(min.from).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    return `Intensity is high right now. If you can, wait until around ${bestTime} for much cleaner energy.`;
+  }
+
+  // Scenario 3: Generally Low all day
+  if (avg < 100) {
+    return "Great news! The grid is running very green today. Feel free to use energy as needed.";
+  }
+
+  // Scenario 4: Generally High all day
+  if (avg > 250) {
+    return "Carbon intensity is high throughout the day. Every bit of energy saved counts today!";
+  }
+
+  // Default: Stable/Moderate
+  return "Carbon levels are stable. Check the 'Best Time' chart for specific charging slots.";
 }
 
 export default Index;

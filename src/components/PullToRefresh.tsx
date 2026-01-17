@@ -80,7 +80,7 @@ export function PullToRefresh({ onRefresh, children, disabled = false }: PullToR
         >
             {/* Refresh Indicator */}
             <div
-                className="fixed top-0 left-0 right-0 flex justify-center pointer-events-none z-40 transition-all duration-300"
+                className="fixed top-0 left-0 right-0 flex justify-center pointer-events-none z-50 transition-all duration-300 pt-[env(safe-area-inset-top)]"
                 style={{
                     transform: `translateY(${Math.max(pullDistance, isRefreshing ? THRESHOLD : 0) - 60}px)`,
                     opacity: Math.min(pullDistance / (THRESHOLD * 0.5), 1)

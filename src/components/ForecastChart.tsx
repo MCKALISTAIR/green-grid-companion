@@ -19,7 +19,10 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
     if (scrollContainerRef.current && currentHourRef.current) {
       const container = scrollContainerRef.current;
       const element = currentHourRef.current;
-      const scrollLeft = element.offsetLeft - 20;
+
+      // Center the element: (element left offset) - (container width / 2) + (element width / 2)
+      const scrollLeft = element.offsetLeft - (container.clientWidth / 2) + (element.clientWidth / 2);
+
       container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
     }
   };
@@ -31,7 +34,7 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
     const container = scrollContainerRef.current;
     const scrollLeft = container.scrollLeft;
     const itemWidth = 56; // approximate width of item + gap
-    const index = Math.floor(scrollLeft / itemWidth);
+    const index = Math.floor((scrollLeft + container.clientWidth / 2) / itemWidth); // Update index calculation to be center-based
 
     if (forecast[index]) {
       const date = parseISO(forecast[index].from);
@@ -44,7 +47,10 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
     if (scrollContainerRef.current && currentHourRef.current) {
       const container = scrollContainerRef.current;
       const element = currentHourRef.current;
-      const scrollLeft = element.offsetLeft - 20;
+
+      // Center the element
+      const scrollLeft = element.offsetLeft - (container.clientWidth / 2) + (element.clientWidth / 2);
+
       container.scrollLeft = scrollLeft;
     }
   }, [forecast]);
@@ -82,7 +88,7 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-muted-foreground/20"
+        className="overflow-x-auto pb-4 pt-4 -mt-2 scrollbar-thin scrollbar-thumb-muted-foreground/20"
       >
         <div className="flex gap-2 min-w-max px-4">
           {forecast.map((item, i) => {

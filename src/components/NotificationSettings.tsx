@@ -33,6 +33,13 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
     updatePreference('lowIntensityEnabled', enabled, tokenOverride);
   };
 
+  // Local state for slider to ensure smooth dragging without excessive DB writes
+  const [localThreshold, setLocalThreshold] = useState(prefs.lowIntensityThreshold);
+
+  useEffect(() => {
+    setLocalThreshold(prefs.lowIntensityThreshold);
+  }, [prefs.lowIntensityThreshold]);
+
   const handleDailyForecastToggle = async (enabled: boolean) => {
     let tokenOverride: string | undefined;
     if (enabled && permissionStatus !== 'granted') {
@@ -130,11 +137,12 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
                 Alert when below:
               </span>
               <span className="font-medium text-primary">
-                {prefs.lowIntensityThreshold} gCO₂/kWh
+                {localThreshold} gCO₂/kWh
               </span>
             </div>
             <Slider
-              value={[prefs.lowIntensityThreshold]}
+              value={[localThreshold]}
+              onValueChange={([value]) => setLocalThreshold(value)}
               onValueCommit={([value]) => updatePreference('lowIntensityThreshold', value)}
               min={0}
               max={200}

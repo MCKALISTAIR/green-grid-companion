@@ -6,23 +6,22 @@ GridSense is a mobile-first companion app designed to help UK (and future) energ
 
 ### 🏠 Dynamic Home Screen
 *   **Real-time Carbon Intensity**: Visualises the current grid status.
-*   **Immersive Scenes**: A dynamic background that changes based on air quality/cleanliness (e.g., from a dirty, smoky factory scene to a clean, sunny eco-landscape).
-*   **Pull-to-Refresh**: Seamlessly integrated "sky" refresh experience.
-*   **Data Highlights**: Quick view of generation mix (Wind, Solar, Gas, Nuclear) and current intensity index (Low, Moderate, High).
+*   **Energy Insights**: Smart, data-driven advice at the top of the feed (e.g. "Wait until 2pm for cleaner energy").
+*   **Immersive Scenes**: A dynamic background that changes based on air quality/cleanliness.
+*   **Pull-to-Refresh**: Seamlessly integrated "sky" refresh experience with smart feedback.
 
 ### ⚡ Power Planner
-*   **Smart Scheduling**: Select an appliance (EV, Washing Machine, Dishwasher, Tumble Dryer).
-*   **Carbon Savings**: See exactly how much carbon you save by waiting for a greener time slot.
-*   **Optimal Windows**: The app analyzes the next 48 hours of forecast data to find the absolute best time to run your high-energy devices.
+*   **Smart Scheduling**: Plan usage for EVs, Washing Machines, and custom appliances.
+*   **Carbon Savings**: Quantified impact (e.g. "Save 120g CO₂ vs Now").
+*   **Fixed View**: Distraction-free, single-screen experience.
 
-### 🗺️ National Map
-*   **Regional View**: Explore carbon intensity across all UK regions.
-*   **Live Rankings**: See which areas are currently the greenest (e.g., North Scotland vs. London).
-*   **Color-Coded**: Instant visual feedback on regional performance.
+### 🏆 Leaderboard (formerly Map)
+*   **Regional Ranking**: See a live leaderboard of the greenest UK regions.
+*   **Dot Map**: An interactive, geographically accurate dot map (toggleable) showing real-time intensity across the country.
 
-### ⚙️ User Preferences
-*   **Region Selection**: Customize data for your specific postcode area.
-*   **Notifications**: Set alerts for "Greener than usual" times to get nudged when it's best to use power.
+### ⚙️ Settings & Integrations
+*   **Smart Alerts**: Configurable push notifications for low-carbon windows.
+*   **Integrations**: Link **Octopus Energy** and **Tesla** accounts for personalized insights and automation (Coming Soon).
 
 ## 🛠️ Technology Stack
 

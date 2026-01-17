@@ -10,12 +10,18 @@ interface BestTimeCardProps {
 export function BestTimeCard({ forecast }: BestTimeCardProps) {
   if (forecast.length < 4) return null;
 
+  // Filter for future times only (or current window)
+  const now = new Date();
+  const futureForecast = forecast.filter(f => new Date(f.to) > now);
+
+  if (futureForecast.length < 4) return null;
+
   // Find the 4-hour window with lowest average intensity
   let minSum = Infinity;
   let minStartIndex = 0;
 
-  for (let i = 0; i <= forecast.length - 4; i++) {
-    const sum = forecast.slice(i, i + 4).reduce((acc, f) => acc + f.intensity.forecast, 0);
+  for (let i = 0; i <= futureForecast.length - 4; i++) {
+    const sum = futureForecast.slice(i, i + 4).reduce((acc, f) => acc + f.intensity.forecast, 0);
     if (sum < minSum) {
       minSum = sum;
       minStartIndex = i;
@@ -26,18 +32,18 @@ export function BestTimeCard({ forecast }: BestTimeCardProps) {
   let maxSum = 0;
   let maxStartIndex = 0;
 
-  for (let i = 0; i <= forecast.length - 4; i++) {
-    const sum = forecast.slice(i, i + 4).reduce((acc, f) => acc + f.intensity.forecast, 0);
+  for (let i = 0; i <= futureForecast.length - 4; i++) {
+    const sum = futureForecast.slice(i, i + 4).reduce((acc, f) => acc + f.intensity.forecast, 0);
     if (sum > maxSum) {
       maxSum = sum;
       maxStartIndex = i;
     }
   }
 
-  const bestStart = parseISO(forecast[minStartIndex].from);
-  const bestEnd = parseISO(forecast[minStartIndex + 3].to);
-  const worstStart = parseISO(forecast[maxStartIndex].from);
-  const worstEnd = parseISO(forecast[maxStartIndex + 3].to);
+  const bestStart = parseISO(futureForecast[minStartIndex].from);
+  const bestEnd = parseISO(futureForecast[minStartIndex + 3].to);
+  const worstStart = parseISO(futureForecast[maxStartIndex].from);
+  const worstEnd = parseISO(futureForecast[maxStartIndex + 3].to);
 
   return (
     <div className="space-y-3">
