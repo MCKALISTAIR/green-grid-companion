@@ -146,7 +146,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
               onValueCommit={([value]) => updatePreference('lowIntensityThreshold', value)}
               min={0}
               max={200}
-              step={10}
+              step={1}
               className="w-full"
             />
             <div className="flex justify-between text-xs text-muted-foreground">

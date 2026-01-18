@@ -5,6 +5,22 @@ import { Badge } from '@/components/ui/badge';
 import { PlugZap, Car, Check, ExternalLink, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
+const OctopusLogo = ({ className }: { className?: string }) => (
+    <img
+        src="/octopus_logo.png"
+        alt="Octopus Energy Logo"
+        className={`${className} object-contain`}
+    />
+);
+
+const TeslaLogo = ({ className }: { className?: string }) => (
+    <img
+        src="/tesla_logo.png"
+        alt="Tesla Logo"
+        className={`${className} object-contain`}
+    />
+);
+
 export function Integrations() {
     // Simple local mock state for now. In a real app this would come from a backend/hook.
     const [octopusLinked, setOctopusLinked] = useState(false);
@@ -35,31 +51,23 @@ export function Integrations() {
             <Card className="p-4 flex items-center justify-between border-purple-500/20 bg-purple-500/5">
                 <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                        <PlugZap className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                        <OctopusLogo className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                     </div>
                     <div>
                         <div className="flex items-center gap-2">
                             <h3 className="font-medium text-foreground">Octopus Energy</h3>
-                            {octopusLinked && <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100">Linked</Badge>}
                         </div>
                         <p className="text-xs text-muted-foreground max-w-[200px]">
-                            Sync tariffs and usage for smart charging insights.
+                            Track the impact of charging using energy at the greenest times.
                         </p>
                     </div>
                 </div>
                 <Button
-                    variant={octopusLinked ? "outline" : "default"}
+                    variant="outline"
                     size="sm"
-                    onClick={() => handleLink('octopus')}
-                    disabled={!!isLoading}
+                    disabled={true}
                 >
-                    {isLoading === 'octopus' ? (
-                        <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                    ) : octopusLinked ? (
-                        'Disconnect'
-                    ) : (
-                        'Connect'
-                    )}
+                    Coming Soon
                 </Button>
             </Card>
 
@@ -67,31 +75,23 @@ export function Integrations() {
             <Card className="p-4 flex items-center justify-between border-red-500/20 bg-red-500/5">
                 <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-                        <Car className="w-6 h-6 text-red-600 dark:text-red-400" />
+                        <TeslaLogo className="w-6 h-6 text-red-600 dark:text-red-400" />
                     </div>
                     <div>
                         <div className="flex items-center gap-2">
                             <h3 className="font-medium text-foreground">Tesla</h3>
-                            {teslaLinked && <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100">Linked</Badge>}
                         </div>
                         <p className="text-xs text-muted-foreground max-w-[200px]">
-                            Control charging directly based on grid intensity.
+                            Track the impact of charging using energy at the greenest times.
                         </p>
                     </div>
                 </div>
                 <Button
-                    variant={teslaLinked ? "outline" : "default"}
+                    variant="outline"
                     size="sm"
-                    onClick={() => handleLink('tesla')}
-                    disabled={!!isLoading}
+                    disabled={true}
                 >
-                    {isLoading === 'tesla' ? (
-                        <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                    ) : teslaLinked ? (
-                        'Disconnect'
-                    ) : (
-                        'Connect'
-                    )}
+                    Coming Soon
                 </Button>
             </Card>
 

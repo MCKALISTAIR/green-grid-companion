@@ -113,16 +113,17 @@ const Onboarding = () => {
                             </div>
                         </div>
 
-                        <form onSubmit={handleManualSubmit} className="space-y-2">
+                        <form onSubmit={handleManualSubmit} className="space-y-2" role="form" aria-label="Manual Postcode Entry">
                             <div className="flex gap-2">
                                 <Input
                                     placeholder="Enter Postcode (e.g. SW1)"
                                     value={manualPostcode}
                                     onChange={(e) => setManualPostcode(e.target.value)}
                                     className="bg-background/50"
+                                    aria-label="Enter your postcode"
                                 />
-                                <Button type="submit" variant="secondary" disabled={!manualPostcode.trim()}>
-                                    <ArrowRight className="w-4 h-4" />
+                                <Button type="submit" variant="secondary" disabled={!manualPostcode.trim()} aria-label="Submit postcode">
+                                    <ArrowRight className="w-4 h-4" aria-hidden="true" />
                                 </Button>
                             </div>
                         </form>

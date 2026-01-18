@@ -48,9 +48,27 @@ export function UKMap({ regions, onRegionSelect, selectedRegionId }: UKMapProps)
     return (
         <div className="relative w-full aspect-[3/4.5] max-w-sm mx-auto my-4 select-none">
             {/* Background Silhouette (This acts as the simplified map) */}
-            <div className="absolute inset-4 bg-accent/5 rounded-[3rem] border border-border/30 -z-10 group overflow-hidden">
-                {/* We could add an actual SVG path here for the UK outline if available */}
-                <div className="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-foreground to-transparent" />
+            <div className="absolute inset-4 -z-10 group overflow-hidden">
+                <svg viewBox="0 0 100 100" className="w-full h-full opacity-20 drop-shadow-lg" aria-hidden="true">
+                    <defs>
+                        <linearGradient id="ukGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" className="stop-color-muted-foreground/40" />
+                            <stop offset="100%" className="stop-color-muted-foreground/20" />
+                        </linearGradient>
+                    </defs>
+                    {/* Great Britain (simplified) */}
+                    <path
+                        d="M25,2 C30,15 35,15 30,15 C33,20 27,30 29,35 C40,40 50,40 55,42 C62,50 62,55 70,60 C80,65 95,70 96,70 C96,75 80,85 80,88 C70,88 65,85 57,86 C50,88 30,95 6,100 C5,95 15,95 20,90 C20,90 30,85 40,85 C40,80 30,80 25,75 C20,70 15,75 15,70 C15,65 30,65 35,60 C40,55 35,55 30,48 C25,40 25,40 20,35 C15,30 15,20 15,15 C15,10 20,5 25,2 Z"
+                        className="fill-muted-foreground stroke-border stroke-[0.5]"
+                        fill="url(#ukGradient)"
+                    />
+                    {/* Northern Ireland (simplified) */}
+                    <path
+                        d="M2,45 C8,45 10,48 10,50 C10,55 5,55 5,52 C2,50 0,55 0,50 Z"
+                        className="fill-muted-foreground stroke-border stroke-[0.5]"
+                        fill="url(#ukGradient)"
+                    />
+                </svg>
             </div>
 
             <div className="absolute bottom-2 right-4 text-[10px] text-muted-foreground/40 font-medium">

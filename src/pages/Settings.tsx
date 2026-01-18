@@ -13,6 +13,15 @@ export default function Settings() {
 
                 <Integrations />
                 <NotificationSettings />
+
+                <div className="text-xs text-muted-foreground text-center space-y-2 pt-8 pb-4">
+                    <p>
+                        Developed by <a href="https://alistair-mckay.lovable.app" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">Alistair McKay</a>
+                    </p>
+                    <p>
+                        Data sourced from <a href="https://www.carbonintensity.org.uk/" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">National Grid ESO</a>
+                    </p>
+                </div>
             </div>
             <BottomNav />
         </div>

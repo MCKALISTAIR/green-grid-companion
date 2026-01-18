@@ -21,7 +21,7 @@ function FlyingBird({ delay, duration, startX }: { delay: number; duration: numb
     <motion.svg
       className="absolute w-8 h-8"
       initial={{ x: `${startX}%`, opacity: 0 }}
-      animate={{ 
+      animate={{
         x: ['0%', '120%'],
         opacity: [0, 1, 1, 0],
       }}
@@ -61,8 +61,8 @@ function FlyingBird({ delay, duration, startX }: { delay: number; duration: numb
 
 function WindTurbine({ scale = 1, speed = 4 }: { scale?: number; speed?: number }) {
   return (
-    <motion.div 
-      className="relative" 
+    <motion.div
+      className="relative w-8 h-20 flex flex-col items-center justify-end z-10"
       style={{ transform: `scale(${scale})` }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -70,39 +70,40 @@ function WindTurbine({ scale = 1, speed = 4 }: { scale?: number; speed?: number 
       transition={{ duration: 0.6 }}
     >
       {/* Turbine pole */}
-      <div className="w-1.5 h-20 bg-card/90 mx-auto rounded-sm" />
+      <div className="w-1.5 h-20 bg-card/90 rounded-sm" />
       {/* Nacelle (hub) */}
-      <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-2 bg-card rounded-full" />
+      <div className="absolute top-0 w-3 h-2 bg-card rounded-full translate-y-[-50%]" />
       {/* Red warning light for night */}
       <motion.div
-        className="absolute -top-2 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-destructive rounded-full"
+        className="absolute top-0 w-1.5 h-1.5 bg-destructive rounded-full translate-y-[-100%]"
         animate={{ opacity: [0.3, 1, 0.3] }}
         transition={{ duration: 2, repeat: Infinity }}
       />
       {/* Rotating blades */}
       <svg
-        className="absolute -top-8 left-1/2 -translate-x-1/2 w-16 h-16"
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-24 -translate-y-1/2 overflow-visible"
         viewBox="0 0 48 48"
         aria-hidden="true"
       >
-        <motion.g
-          animate={{ rotate: 360 }}
-          transition={{
-            duration: speed,
-            repeat: Infinity,
-            ease: 'linear',
-          }}
-          style={{ transformOrigin: '24px 24px' }}
-        >
-          {/* Three blades at 120° intervals */}
-          <g className="fill-card/90">
-            <ellipse cx="24" cy="8" rx="2.5" ry="14" />
-            <ellipse cx="24" cy="8" rx="2.5" ry="14" transform="rotate(120 24 24)" />
-            <ellipse cx="24" cy="8" rx="2.5" ry="14" transform="rotate(240 24 24)" />
-          </g>
-          {/* Center hub */}
-          <circle cx="24" cy="24" r="3" className="fill-card" />
-        </motion.g>
+        <g transform="translate(24 24)">
+          <motion.g
+            animate={{ rotate: 360 }}
+            transition={{
+              duration: speed,
+              repeat: Infinity,
+              ease: 'linear',
+            }}
+          >
+            {/* Three blades at 120° intervals, centered at 0,0 */}
+            <g className="fill-card/90">
+              <ellipse cx="0" cy="-14" rx="2" ry="16" />
+              <ellipse cx="0" cy="-14" rx="2" ry="16" transform="rotate(120)" />
+              <ellipse cx="0" cy="-14" rx="2" ry="16" transform="rotate(240)" />
+            </g>
+            {/* Center hub at 0,0 */}
+            <circle cx="0" cy="0" r="3" className="fill-card" />
+          </motion.g>
+        </g>
       </svg>
     </motion.div>
   );
@@ -173,7 +174,7 @@ export function IntensityScene({ intensity, index }: IntensitySceneProps) {
     // Weather modifiers for scene elements
     const weatherReducesBirds = weather.isRaining || weather.isSnowing || weather.isThunderstorm;
     const weatherReducesButterflies = weather.isRaining || weather.isSnowing || weather.isFoggy || weather.isThunderstorm;
-    
+
     return {
       cleanliness,
       skyGradient: getSkyGradient(index, timeOfDay, cleanliness, weather),
@@ -199,6 +200,8 @@ export function IntensityScene({ intensity, index }: IntensitySceneProps) {
       className="relative w-full h-[45vh] min-h-96 overflow-hidden rounded-b-3xl"
       animate={{ background: sceneConfig.skyGradient }}
       transition={{ duration: 2, ease: 'easeInOut' }}
+      role="img"
+      aria-label={`Animated landscape representing ${index} carbon intensity`}
     >
       {/* Weather Effects Layer (fog, rain, snow, lightning) */}
       <WeatherEffects weather={weather} isNight={isNight} />
@@ -217,7 +220,7 @@ export function IntensityScene({ intensity, index }: IntensitySceneProps) {
       {/* Sun Rays for clean energy */}
       <AnimatePresence>
         {sceneConfig.showSunRays && (
-          <motion.div 
+          <motion.div
             className="absolute top-0 right-0 overflow-hidden w-48 h-48"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -237,7 +240,7 @@ export function IntensityScene({ intensity, index }: IntensitySceneProps) {
           <motion.div
             className="absolute top-8 right-8"
             initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ 
+            animate={{
               opacity: sceneConfig.cleanliness * 0.3 + 0.7,
               scale: 1,
             }}
@@ -248,7 +251,7 @@ export function IntensityScene({ intensity, index }: IntensitySceneProps) {
             }}
           >
             {/* Sun glow effect */}
-            <motion.div 
+            <motion.div
               className="absolute inset-0 w-20 h-20 -translate-x-2 -translate-y-2 bg-accent/30 rounded-full blur-xl"
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
@@ -261,7 +264,7 @@ export function IntensityScene({ intensity, index }: IntensitySceneProps) {
       {/* Rain effect for dirty energy */}
       <AnimatePresence>
         {sceneConfig.showRain && (
-          <motion.div 
+          <motion.div
             className="absolute inset-0 overflow-hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -320,7 +323,7 @@ export function IntensityScene({ intensity, index }: IntensitySceneProps) {
       {/* Flying birds for clean energy */}
       <AnimatePresence>
         {sceneConfig.showBirds && (
-          <motion.div 
+          <motion.div
             className="absolute inset-0 overflow-hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -363,13 +366,13 @@ export function IntensityScene({ intensity, index }: IntensitySceneProps) {
         >
           <defs>
             <linearGradient id="hillGradient1" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop 
-                offset="0%" 
-                stopColor={sceneConfig.cleanliness > 0.5 ? 'hsl(142 40% 50%)' : 'hsl(30 25% 45%)'} 
+              <stop
+                offset="0%"
+                stopColor={sceneConfig.cleanliness > 0.5 ? 'hsl(142 40% 50%)' : 'hsl(30 25% 45%)'}
               />
-              <stop 
-                offset="100%" 
-                stopColor={sceneConfig.cleanliness > 0.5 ? 'hsl(142 50% 35%)' : 'hsl(30 30% 35%)'} 
+              <stop
+                offset="100%"
+                stopColor={sceneConfig.cleanliness > 0.5 ? 'hsl(142 50% 35%)' : 'hsl(30 30% 35%)'}
               />
             </linearGradient>
           </defs>
@@ -399,7 +402,7 @@ export function IntensityScene({ intensity, index }: IntensitySceneProps) {
         {/* Wind Turbines for clean energy */}
         <AnimatePresence>
           {sceneConfig.showRenewables && (
-            <motion.div 
+            <motion.div
               className="absolute bottom-20 left-0 right-0 flex justify-around px-12"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -425,7 +428,7 @@ export function IntensityScene({ intensity, index }: IntensitySceneProps) {
         {/* Solar panels with reflection animation */}
         <AnimatePresence>
           {sceneConfig.showRenewables && !isNight && (
-            <motion.div 
+            <motion.div
               className="absolute bottom-6 right-6 flex gap-1.5"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -461,7 +464,7 @@ export function IntensityScene({ intensity, index }: IntensitySceneProps) {
         {/* Factories for dirty energy */}
         <AnimatePresence>
           {sceneConfig.showFactories && (
-            <motion.div 
+            <motion.div
               className="absolute bottom-14 left-6 flex gap-6"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -489,7 +492,7 @@ export function IntensityScene({ intensity, index }: IntensitySceneProps) {
                 )}
               </div>
               {sceneConfig.cleanliness < 0.3 && (
-                <motion.div 
+                <motion.div
                   className="relative"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -547,7 +550,7 @@ export function IntensityScene({ intensity, index }: IntensitySceneProps) {
         {/* Fire/flames for very dirty with flicker */}
         <AnimatePresence>
           {sceneConfig.cleanliness < 0.2 && (
-            <motion.div 
+            <motion.div
               className="absolute bottom-10 left-24 flex gap-2"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -574,7 +577,7 @@ export function IntensityScene({ intensity, index }: IntensitySceneProps) {
       {/* Water/hydro indicator for clean energy */}
       <AnimatePresence>
         {sceneConfig.cleanliness > 0.6 && (
-          <motion.div 
+          <motion.div
             className="absolute bottom-3 right-20"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -617,7 +620,7 @@ const INTENSITY_ADJUSTMENTS: Record<string, { satMod: number; lightMod: number }
 function getSkyGradient(index: string, timeOfDay: TimeOfDay, cleanliness: number, weather?: WeatherData): string {
   const timeColors = TIME_SKY_COLORS[timeOfDay];
   const adjustment = INTENSITY_ADJUSTMENTS[index] || INTENSITY_ADJUSTMENTS['moderate'];
-  
+
   // Weather modifies sky colors
   if (weather) {
     // Overcast/cloudy weather makes sky grayer
@@ -628,7 +631,7 @@ function getSkyGradient(index: string, timeOfDay: TimeOfDay, cleanliness: number
         hsl(220 ${15 - grayFactor * 10}% ${55 + grayFactor * 5}%) 40%, 
         hsl(220 ${10 - grayFactor * 5}% ${60}%) 100%)`;
     }
-    
+
     // Foggy weather
     if (weather.isFoggy) {
       return `linear-gradient(180deg, 
@@ -636,7 +639,7 @@ function getSkyGradient(index: string, timeOfDay: TimeOfDay, cleanliness: number
         hsl(0 0% 80%) 40%, 
         hsl(0 0% 85%) 100%)`;
     }
-    
+
     // Thunderstorm - dark dramatic sky
     if (weather.isThunderstorm) {
       return `linear-gradient(180deg, 
@@ -644,7 +647,7 @@ function getSkyGradient(index: string, timeOfDay: TimeOfDay, cleanliness: number
         hsl(250 25% 35%) 40%, 
         hsl(260 20% 40%) 100%)`;
     }
-    
+
     // Snowy weather - lighter, whiter sky
     if (weather.isSnowing) {
       return `linear-gradient(180deg, 
@@ -653,10 +656,11 @@ function getSkyGradient(index: string, timeOfDay: TimeOfDay, cleanliness: number
         hsl(210 10% 85%) 100%)`;
     }
   }
-  
-  // Default: blend time-based colors with cleanliness factor
+
+  // Blend time-based colors with cleanliness factor
+  // Lower cleanliness = more muted, brownish tones
   const pollutionFactor = 1 - cleanliness;
-  
+
   return `linear-gradient(180deg, ${timeColors.start} 0%, ${timeColors.mid} 40%, ${timeColors.end} 100%)`;
 }
 

@@ -5,7 +5,7 @@ export const DEFINITIONS = {
     'Coal': "A fossil fuel with high carbon emissions.",
     'Gas': "Natural gas, a fossil fuel often used to balance the grid.",
     'Hydro': "Clean energy generated from flowing water.",
-    'Imports': "Electricity imported from other countries via subsea cables.",
+    'Imports': "Electricity imported via subsea cables from France, Netherlands, Belgium, Norway, Denmark, and Ireland.",
     'Nuclear': "Low-carbon energy generated via nuclear fission.",
     'Solar': "Clean energy generated from sunlight.",
     'Wind': "Clean energy generated from wind turbines.",

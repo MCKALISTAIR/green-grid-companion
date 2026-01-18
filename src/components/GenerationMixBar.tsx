@@ -1,6 +1,14 @@
 import { GenerationMix } from '@/lib/carbonApi';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { DEFINITIONS } from '@/lib/definitions';
+import { ChevronRight } from 'lucide-react';
 
 interface GenerationMixBarProps {
   mix: GenerationMix[];
@@ -18,18 +26,6 @@ const fuelColors: Record<string, string> = {
   other: 'bg-gen-other',
 };
 
-const fuelLabels: Record<string, string> = {
-  wind: '💨 Wind',
-  solar: '☀️ Solar',
-  nuclear: '⚛️ Nuclear',
-  gas: '🔥 Gas',
-  coal: '⬛ Coal',
-  hydro: '💧 Hydro',
-  biomass: '🌿 Biomass',
-  imports: '🔌 Imports',
-  other: '❓ Other',
-};
-
 export function GenerationMixBar({ mix }: GenerationMixBarProps) {
   // Filter out zero values and sort by percentage
   const sortedMix = [...mix]
@@ -41,53 +37,87 @@ export function GenerationMixBar({ mix }: GenerationMixBarProps) {
     .reduce((acc, m) => acc + m.perc, 0);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-foreground">Generation Mix</h3>
-        <span className="text-xs text-primary font-medium">
-          {renewables.toFixed(0)}% Renewable
-        </span>
-      </div>
+    <Dialog>
+      <DialogTrigger asChild>
+        <div className="space-y-4 cursor-pointer hover:opacity-80 transition-opacity" role="button" aria-label="View generation mix details">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
+              Generation Mix
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </h3>
+            <span className="text-xs text-primary font-medium">
+              {renewables.toFixed(0)}% Renewable
+            </span>
+          </div>
 
-      {/* Bar visualization */}
-      <div className="h-4 rounded-full overflow-hidden flex shadow-inner bg-muted/30">
-        {sortedMix.map((item) => (
-          <div
-            key={item.fuel}
-            className={`${fuelColors[item.fuel.toLowerCase()] || 'bg-gen-other'} transition-all duration-500`}
-            style={{ width: `${item.perc}%` }}
-            title={`${item.fuel}: ${item.perc.toFixed(1)}%`}
-          />
-        ))}
-      </div>
+          {/* Bar visualization */}
+          <div className="h-4 rounded-full overflow-hidden flex shadow-inner bg-muted/30">
+            {sortedMix.map((item) => (
+              <div
+                key={item.fuel}
+                className={`${fuelColors[item.fuel.toLowerCase()] || 'bg-gen-other'} transition-all duration-500`}
+                style={{ width: `${item.perc}%` }}
+              />
+            ))}
+          </div>
 
-      {/* Legend */}
-      <div className="flex flex-wrap gap-2">
-        {sortedMix.slice(0, 6).map((item) => {
-          const fuelKey = item.fuel.charAt(0).toUpperCase() + item.fuel.slice(1);
-          const definition = DEFINITIONS[fuelKey as keyof typeof DEFINITIONS] || DEFINITIONS['Other'];
+          {/* Legend Preview (Top 6) */}
+          <div className="flex flex-wrap gap-2">
+            {sortedMix.slice(0, 6).map((item) => (
+              <div
+                key={item.fuel}
+                className="flex items-center gap-1.5 text-xs text-muted-foreground"
+              >
+                <div className={`w-2.5 h-2.5 rounded-full ${fuelColors[item.fuel.toLowerCase()] || 'bg-gen-other'}`} />
+                <span className="capitalize">{item.fuel}</span>
+                <span className="font-medium text-foreground">{item.perc.toFixed(0)}%</span>
+              </div>
+            ))}
+            {sortedMix.length > 6 && (
+              <span className="text-xs text-muted-foreground self-center">+{sortedMix.length - 6} more</span>
+            )}
+          </div>
+        </div>
+      </DialogTrigger>
 
-          return (
-            <Tooltip key={item.fuel}>
-              <TooltipTrigger asChild>
-                <div
-                  className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-help hover:text-foreground transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
-                  role="button"
-                  tabIndex={0}
-                  aria-label={`Show definition for ${item.fuel}`}
-                >
-                  <div className={`w-2.5 h-2.5 rounded-full ${fuelColors[item.fuel.toLowerCase()] || 'bg-gen-other'}`} aria-hidden="true" />
-                  <span className="capitalize">{item.fuel}</span>
-                  <span className="font-medium text-foreground">{item.perc.toFixed(0)}%</span>
+      <DialogContent className="max-w-md max-h-[85vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle>Generation Mix Breakdown</DialogTitle>
+        </DialogHeader>
+        <ScrollArea className="flex-1 pr-4 -mr-4">
+          <div className="space-y-4 py-4">
+            {sortedMix.map((item) => {
+              const fuelKey = item.fuel.charAt(0).toUpperCase() + item.fuel.slice(1);
+              const definition = DEFINITIONS[fuelKey as keyof typeof DEFINITIONS] || DEFINITIONS['Other'];
+
+              return (
+                <div key={item.fuel} className="space-y-2 p-3 rounded-lg bg-accent/20 border border-border/50">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-4 h-4 rounded-full ${fuelColors[item.fuel.toLowerCase()] || 'bg-gen-other'}`} />
+                      <span className="font-medium capitalize text-lg">{item.fuel}</span>
+                    </div>
+                    <span className="text-xl font-bold">{item.perc.toFixed(1)}%</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground pl-6 leading-relaxed">
+                    {definition}
+                  </p>
+
+                  {item.fuel === 'imports' && (
+                    <div className="pl-6 pt-2 flex flex-wrap gap-2">
+                      {['France', 'Netherlands', 'Belgium', 'Norway', 'Denmark', 'Ireland'].map(country => (
+                        <span key={country} className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-muted text-muted-foreground ring-1 ring-inset ring-border/50">
+                          {country}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className="w-[180px] text-xs">{definition}</p>
-              </TooltipContent>
-            </Tooltip>
-          );
-        })}
-      </div>
-    </div>
+              );
+            })}
+          </div>
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
   );
 }
