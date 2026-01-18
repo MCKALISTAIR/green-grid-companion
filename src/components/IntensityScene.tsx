@@ -2,11 +2,13 @@ import { useMemo } from 'react';
 import { Sun, Cloud, Factory, Leaf, Flame, Droplets } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTimeOfDay, TimeOfDay } from '@/hooks/useTimeOfDay';
+import { useWeatherData, WeatherData } from '@/hooks/useWeatherData';
 import { Stars } from './scene/Stars';
 import { Moon } from './scene/Moon';
 import { Mountains } from './scene/Mountains';
 import { Grass } from './scene/Grass';
 import { Butterfly } from './scene/Butterfly';
+import { WeatherEffects } from './scene/WeatherEffects';
 
 interface IntensitySceneProps {
   intensity: number;
@@ -163,28 +165,34 @@ function SunRay({ angle, delay }: { angle: number; delay: number }) {
 
 export function IntensityScene({ intensity, index }: IntensitySceneProps) {
   const { timeOfDay, isNight, sunPosition } = useTimeOfDay();
+  const { weather } = useWeatherData();
 
   const sceneConfig = useMemo(() => {
     const cleanliness = Math.max(0, Math.min(1, 1 - (intensity - 50) / 300));
 
+    // Weather modifiers for scene elements
+    const weatherReducesBirds = weather.isRaining || weather.isSnowing || weather.isThunderstorm;
+    const weatherReducesButterflies = weather.isRaining || weather.isSnowing || weather.isFoggy || weather.isThunderstorm;
+    
     return {
       cleanliness,
-      skyGradient: getSkyGradient(index, timeOfDay, cleanliness),
+      skyGradient: getSkyGradient(index, timeOfDay, cleanliness, weather),
       showRenewables: cleanliness > 0.5,
       showFactories: cleanliness < 0.5,
-      showBirds: cleanliness > 0.6 && !isNight,
+      showBirds: cleanliness > 0.6 && !isNight && !weatherReducesBirds,
       showSmoke: cleanliness < 0.4,
-      showRain: cleanliness < 0.35,
-      showSunRays: cleanliness > 0.7 && !isNight,
-      showStars: isNight && cleanliness > 0.3,
-      showMoon: isNight,
-      showButterflies: cleanliness > 0.8 && !isNight,
+      showRain: cleanliness < 0.35 && !weather.isRaining, // Don't double up on rain
+      showSunRays: cleanliness > 0.7 && !isNight && weather.cloudCover < 60 && !weather.isRaining,
+      showStars: isNight && cleanliness > 0.3 && weather.cloudCover < 70,
+      showMoon: isNight && weather.cloudCover < 80,
+      showButterflies: cleanliness > 0.8 && !isNight && !weatherReducesButterflies,
       turbineCount: Math.floor(cleanliness * 3) + 1,
-      solarBrightness: cleanliness,
+      solarBrightness: cleanliness * (weather.cloudCover < 50 ? 1 : 0.6),
       birdCount: Math.floor(cleanliness * 4) + 1,
-      starVisibility: cleanliness, // Pollution obscures stars
+      starVisibility: cleanliness * (1 - weather.cloudCover / 100), // Clouds obscure stars
+      windSpeed: weather.windSpeed, // Pass wind speed for turbine animation
     };
-  }, [intensity, index, timeOfDay, isNight]);
+  }, [intensity, index, timeOfDay, isNight, weather]);
 
   return (
     <motion.div
@@ -192,6 +200,8 @@ export function IntensityScene({ intensity, index }: IntensitySceneProps) {
       animate={{ background: sceneConfig.skyGradient }}
       transition={{ duration: 2, ease: 'easeInOut' }}
     >
+      {/* Weather Effects Layer (fog, rain, snow, lightning) */}
+      <WeatherEffects weather={weather} isNight={isNight} />
       {/* Stars for night time */}
       <AnimatePresence>
         {sceneConfig.showStars && (
@@ -396,13 +406,18 @@ export function IntensityScene({ intensity, index }: IntensitySceneProps) {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.5, staggerChildren: 0.1 }}
             >
-              {Array.from({ length: sceneConfig.turbineCount }).map((_, i) => (
-                <WindTurbine
-                  key={i}
-                  scale={0.7 + (i % 2) * 0.2}
-                  speed={3 + i * 0.8}
-                />
-              ))}
+              {Array.from({ length: sceneConfig.turbineCount }).map((_, i) => {
+                // Wind speed affects turbine rotation (faster wind = faster spin)
+                // Base speed 5s for 0 wind, down to 1.5s for 30+ km/h wind
+                const baseSpeed = Math.max(1.5, 5 - (sceneConfig.windSpeed / 10));
+                return (
+                  <WindTurbine
+                    key={i}
+                    scale={0.7 + (i % 2) * 0.2}
+                    speed={baseSpeed + i * 0.3}
+                  />
+                );
+              })}
             </motion.div>
           )}
         </AnimatePresence>
@@ -599,12 +614,47 @@ const INTENSITY_ADJUSTMENTS: Record<string, { satMod: number; lightMod: number }
   'very high': { satMod: 0.4, lightMod: 0.85 },
 };
 
-function getSkyGradient(index: string, timeOfDay: TimeOfDay, cleanliness: number): string {
+function getSkyGradient(index: string, timeOfDay: TimeOfDay, cleanliness: number, weather?: WeatherData): string {
   const timeColors = TIME_SKY_COLORS[timeOfDay];
   const adjustment = INTENSITY_ADJUSTMENTS[index] || INTENSITY_ADJUSTMENTS['moderate'];
   
-  // Blend time-based colors with cleanliness factor
-  // Lower cleanliness = more muted, brownish tones
+  // Weather modifies sky colors
+  if (weather) {
+    // Overcast/cloudy weather makes sky grayer
+    if (weather.cloudCover > 70 || weather.isRaining) {
+      const grayFactor = Math.min(weather.cloudCover / 100, 0.8);
+      return `linear-gradient(180deg, 
+        hsl(220 ${20 - grayFactor * 15}% ${45 + grayFactor * 10}%) 0%, 
+        hsl(220 ${15 - grayFactor * 10}% ${55 + grayFactor * 5}%) 40%, 
+        hsl(220 ${10 - grayFactor * 5}% ${60}%) 100%)`;
+    }
+    
+    // Foggy weather
+    if (weather.isFoggy) {
+      return `linear-gradient(180deg, 
+        hsl(0 0% 75%) 0%, 
+        hsl(0 0% 80%) 40%, 
+        hsl(0 0% 85%) 100%)`;
+    }
+    
+    // Thunderstorm - dark dramatic sky
+    if (weather.isThunderstorm) {
+      return `linear-gradient(180deg, 
+        hsl(240 30% 25%) 0%, 
+        hsl(250 25% 35%) 40%, 
+        hsl(260 20% 40%) 100%)`;
+    }
+    
+    // Snowy weather - lighter, whiter sky
+    if (weather.isSnowing) {
+      return `linear-gradient(180deg, 
+        hsl(210 20% 70%) 0%, 
+        hsl(210 15% 80%) 40%, 
+        hsl(210 10% 85%) 100%)`;
+    }
+  }
+  
+  // Default: blend time-based colors with cleanliness factor
   const pollutionFactor = 1 - cleanliness;
   
   return `linear-gradient(180deg, ${timeColors.start} 0%, ${timeColors.mid} 40%, ${timeColors.end} 100%)`;
