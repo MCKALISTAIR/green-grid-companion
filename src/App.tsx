@@ -13,6 +13,8 @@ import Onboarding from "./pages/Onboarding";
 import Planner from "./pages/Planner";
 import MapPage from "./pages/Map";
 import Settings from "./pages/Settings";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import HistoryPage from "./pages/History";
 import ScrollToTop from "@/components/ScrollToTop";
 import NotFound from "./pages/NotFound";
 
@@ -70,6 +72,8 @@ function AppContent() {
           <Route path="/map" element={<MapPage />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/history" element={<HistoryPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

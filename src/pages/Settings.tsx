@@ -11,7 +11,8 @@ export default function Settings() {
                     <p className="text-muted-foreground">Manage notifications and preferences.</p>
                 </div>
 
-                <Integrations />
+                {/* Integrations commented out for App Store compliance (Guideline 2.2) until fully functional */}
+                {/* <Integrations /> */}
                 <NotificationSettings />
 
                 <div className="text-xs text-muted-foreground text-center space-y-2 pt-8 pb-4">
@@ -20,6 +21,9 @@ export default function Settings() {
                     </p>
                     <p>
                         Data sourced from <a href="https://www.carbonintensity.org.uk/" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">National Grid ESO</a>
+                    </p>
+                    <p>
+                        <a href="/privacy" className="underline hover:text-foreground transition-colors">Privacy Policy</a>
                     </p>
                 </div>
             </div>

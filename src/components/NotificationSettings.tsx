@@ -5,35 +5,30 @@ import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { useNotifications } from '@/hooks/useNotifications';
 
 interface NotificationSettingsProps {
   onClose?: () => void;
 }
 
 export function NotificationSettings({ onClose }: NotificationSettingsProps) {
-  const postcode = localStorage.getItem('gridgreen-postcode') || '';
-
   const {
     isNative,
-    isRegistered,
     permissionStatus,
     prefs,
     requestPermission,
     updatePreference,
-  } = usePushNotifications(postcode);
+  } = useNotifications();
 
   const handleLowIntensityToggle = async (enabled: boolean) => {
-    let tokenOverride: string | undefined;
     if (enabled && permissionStatus !== 'granted') {
-      const token = await requestPermission();
-      if (!token) return; // Permission denied or failed
-      tokenOverride = token;
+      const granted = await requestPermission();
+      if (!granted) return;
     }
-    updatePreference('lowIntensityEnabled', enabled, tokenOverride);
+    updatePreference('lowIntensityEnabled', enabled);
   };
 
-  // Local state for slider to ensure smooth dragging without excessive DB writes
+  // Local state for slider to ensure smooth dragging without constant storage writes
   const [localThreshold, setLocalThreshold] = useState(prefs.lowIntensityThreshold);
 
   useEffect(() => {
@@ -41,13 +36,11 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
   }, [prefs.lowIntensityThreshold]);
 
   const handleDailyForecastToggle = async (enabled: boolean) => {
-    let tokenOverride: string | undefined;
     if (enabled && permissionStatus !== 'granted') {
-      const token = await requestPermission();
-      if (!token) return;
-      tokenOverride = token;
+      const granted = await requestPermission();
+      if (!granted) return;
     }
-    updatePreference('dailyForecastEnabled', enabled, tokenOverride);
+    updatePreference('dailyForecastEnabled', enabled);
   };
 
   return (
@@ -149,16 +142,34 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
               step={1}
               className="w-full"
             />
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>0g (Very Low)</span>
-              <span>200g (Moderate)</span>
+
+
+            <div className="pt-4 mt-4 border-t border-border/50">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5 pr-4">
+                  <div className="text-sm font-medium">Live Accuracy Mode</div>
+                  <p className="text-[10px] text-muted-foreground">
+                    Periodically checks live data in background instead of relying on forecast.
+                  </p>
+                </div>
+                <Switch
+                  checked={prefs.useBackgroundFetch}
+                  onCheckedChange={(checked) => updatePreference('useBackgroundFetch', checked)}
+                />
+              </div>
             </div>
+            {prefs.useBackgroundFetch && (
+              <p className="text-[10px] text-amber-500/80 pt-2 flex items-center gap-1">
+                <Zap className="w-3 h-3" /> May use slightly more battery.
+              </p>
+            )}
           </div>
-        )}
-      </Card>
+        )
+        }
+      </Card >
 
       {/* Daily Forecast */}
-      <Card className="p-4 space-y-4">
+      < Card className="p-4 space-y-4" >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-accent/50 flex items-center justify-center">
@@ -178,34 +189,38 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
           />
         </div>
 
-        {prefs.dailyForecastEnabled && (
-          <div className="space-y-3 pt-2 border-t border-border">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
-                Send at:
-              </span>
-              <input
-                type="time"
-                value={prefs.dailyForecastTime}
-                onChange={(e) => updatePreference('dailyForecastTime', e.target.value)}
-                className="px-3 py-1.5 rounded-md border border-input bg-background text-foreground text-sm"
-              />
+        {
+          prefs.dailyForecastEnabled && (
+            <div className="space-y-3 pt-2 border-t border-border">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">
+                  Send at:
+                </span>
+                <input
+                  type="time"
+                  value={prefs.dailyForecastTime}
+                  onChange={(e) => updatePreference('dailyForecastTime', e.target.value)}
+                  className="px-3 py-1.5 rounded-md border border-input bg-background text-foreground text-sm"
+                />
+              </div>
             </div>
-          </div>
-        )}
-      </Card>
+          )
+        }
+      </Card >
 
-      {isNative && isRegistered && (
+      {isNative && permissionStatus === 'granted' && prefs.lowIntensityEnabled && (
         <p className="text-xs text-center text-muted-foreground">
-          Your device is registered for push notifications. You'll receive alerts even when the app is closed.
+          You'll receive alerts on this device when grid intensity is favorable.
         </p>
       )}
 
-      {!isNative && (
-        <p className="text-xs text-center text-muted-foreground">
-          Push notifications require the native iOS/Android app. Settings are saved locally for now.
-        </p>
-      )}
-    </div>
+      {
+        !isNative && (
+          <p className="text-xs text-center text-muted-foreground">
+            Notifications require the native iOS/Android app. Settings are saved locally.
+          </p>
+        )
+      }
+    </div >
   );
 }

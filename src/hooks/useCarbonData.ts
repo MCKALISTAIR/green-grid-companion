@@ -46,9 +46,10 @@ export function useCarbonData(postcode: string) {
   const regionId = foundRegion?.regionid;
 
   // Fetch detailed regional data by ID (avoids CORS issues with postcode endpoint)
-  const regionalDataQuery = useQuery<RegionalData>({
+  // Fetch detailed regional data by ID (avoids CORS issues with postcode endpoint)
+  const regionalDataQuery = useQuery<RegionalData | null>({
     queryKey: ['regional', regionId],
-    queryFn: () => regionId ? getRegionalIntensityById(regionId) : Promise.resolve(null as any),
+    queryFn: () => regionId ? getRegionalIntensityById(regionId) : Promise.resolve(null),
     enabled: !!regionId,
     refetchInterval: 30000,
     retry: 2,
@@ -100,6 +101,7 @@ export function useCarbonData(postcode: string) {
     intensity,
     index,
     region,
+    regionId, // Export regionId for use in other hooks/pages
     lastUpdated: regionalData?.from || nationalQuery.data?.from,
 
     // Generation mix

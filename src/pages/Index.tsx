@@ -12,6 +12,7 @@ import { RegionSelector } from '@/components/RegionSelector';
 import { NotificationSettings } from '@/components/NotificationSettings';
 import { BestTimeCard } from '@/components/BestTimeCard';
 import { useCarbonData } from '@/hooks/useCarbonData';
+import { useNotifications } from '@/hooks/useNotifications';
 import { useToast } from '@/hooks/use-toast';
 import { TooltipProvider } from '@/components/ui/tooltip'; // Keep Provider for others if needed, or remove if unused. Wrapped whole app in it.
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -24,6 +25,8 @@ const Index = () => {
   const [postcode, setPostcode] = useState(() => {
     return localStorage.getItem('gridgreen-postcode') || '';
   });
+
+  const { scheduleGreenAlerts } = useNotifications();
 
   useEffect(() => {
     if (!postcode) {
@@ -42,6 +45,13 @@ const Index = () => {
     refetch
   } = useCarbonData(postcode);
 
+  // Auto-schedule notifications when forecast updates
+  useEffect(() => {
+    if (forecast && forecast.length > 0) {
+      scheduleGreenAlerts(forecast);
+    }
+  }, [forecast, scheduleGreenAlerts]);
+
   // Save postcode preference
   useEffect(() => {
     if (postcode) {
@@ -49,9 +59,6 @@ const Index = () => {
     }
   }, [postcode]);
 
-  /* import { useToast } from "@/hooks/use-toast" - assume we have this or similar, otherwise use alert or custom UI */
-  // It seems we should check if we have a toast component. 
-  // Checking imports...
   const { toast } = useToast();
 
   const handleRefresh = async () => {

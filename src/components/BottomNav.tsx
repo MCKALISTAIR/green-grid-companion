@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, ListOrdered, Calendar, Settings } from 'lucide-react';
+import { Home, ListOrdered, Calendar, Settings, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
 import { NotificationSettings } from '@/components/NotificationSettings';
@@ -29,7 +29,7 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
 
             {/* Nav Bar */}
             <div className="pointer-events-auto pb-[env(safe-area-inset-bottom)] bg-background/80 backdrop-blur-lg border-t border-border/40">
-                <div className="grid grid-cols-4 h-16 max-w-md mx-auto px-2">
+                <div className="grid grid-cols-5 h-16 max-w-md mx-auto px-1">
 
                     <Button
                         variant="ghost"
@@ -42,20 +42,29 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
 
                     <Button
                         variant="ghost"
-                        className={`flex flex-col items-center gap-1 h-auto py-2 px-1 hover:bg-transparent ${isActive('/map') ? 'text-primary' : 'text-muted-foreground'}`}
-                        onClick={() => navigate('/map')}
-                    >
-                        <ListOrdered className="w-5 h-5" />
-                        <span className="text-[10px] font-medium">Leaderboard</span>
-                    </Button>
-
-                    <Button
-                        variant="ghost"
                         className={`flex flex-col items-center gap-1 h-auto py-2 px-1 hover:bg-transparent ${isActive('/planner') ? 'text-primary' : 'text-muted-foreground'}`}
                         onClick={() => navigate('/planner')}
                     >
                         <Calendar className="w-5 h-5" />
                         <span className="text-[10px] font-medium">Plan</span>
+                    </Button>
+
+                    <Button
+                        variant="ghost"
+                        className={`flex flex-col items-center gap-1 h-auto py-2 px-1 hover:bg-transparent ${isActive('/history') ? 'text-primary' : 'text-muted-foreground'}`}
+                        onClick={() => navigate('/history')}
+                    >
+                        <Clock className="w-5 h-5" />
+                        <span className="text-[10px] font-medium">History</span>
+                    </Button>
+
+                    <Button
+                        variant="ghost"
+                        className={`flex flex-col items-center gap-1 h-auto py-2 px-1 hover:bg-transparent ${isActive('/map') ? 'text-primary' : 'text-muted-foreground'}`}
+                        onClick={() => navigate('/map')}
+                    >
+                        <ListOrdered className="w-5 h-5" />
+                        <span className="text-[10px] font-medium">Rank</span>
                     </Button>
 
                     <Button
