@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { Geolocation } from '@capacitor/geolocation';
 
 // Weather condition types based on WMO codes
@@ -107,19 +108,39 @@ export function useWeatherData() {
         // Check for cached coordinates first
         const cached = localStorage.getItem('gridgreen-coords');
         if (cached) {
-          const parsed = JSON.parse(cached);
-          if (parsed.lat && parsed.lon) {
-            setCoords(parsed);
-            return;
+          try {
+            const parsed = JSON.parse(cached);
+            if (parsed.lat && parsed.lon) {
+              setCoords(parsed);
+              return;
+            }
+          } catch {
+            // Invalid cached data, continue to get new location
           }
         }
 
-        // Try to get current position
-        const position = await Geolocation.getCurrentPosition({ timeout: 5000 });
-        const newCoords = {
-          lat: position.coords.latitude,
-          lon: position.coords.longitude,
-        };
+        // Try to get current position - use browser API in web, Capacitor on native
+        let latitude: number;
+        let longitude: number;
+
+        if (Capacitor.isNativePlatform()) {
+          // Native: use Capacitor Geolocation
+          const position = await Geolocation.getCurrentPosition({ timeout: 5000 });
+          latitude = position.coords.latitude;
+          longitude = position.coords.longitude;
+        } else if ('geolocation' in navigator) {
+          // Web: use browser Geolocation API
+          const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
+          });
+          latitude = position.coords.latitude;
+          longitude = position.coords.longitude;
+        } else {
+          // No geolocation available, use default
+          throw new Error('Geolocation not available');
+        }
+
+        const newCoords = { lat: latitude, lon: longitude };
         localStorage.setItem('gridgreen-coords', JSON.stringify(newCoords));
         setCoords(newCoords);
       } catch (error) {
