@@ -62,51 +62,59 @@ function FlyingBird({ delay, duration, startX }: { delay: number; duration: numb
 function WindTurbine({ scale = 1, speed = 4 }: { scale?: number; speed?: number }) {
   return (
     <motion.div
-      className="relative w-8 h-20 flex flex-col items-center justify-end z-10"
+      className="relative w-8 h-20 z-10"
       style={{ transform: `scale(${scale})` }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
       transition={{ duration: 0.6 }}
     >
-      {/* Turbine pole */}
-      <div className="w-1.5 h-20 bg-card/90 rounded-sm" />
-      {/* Nacelle (hub) */}
-      <div className="absolute top-0 w-3 h-2 bg-card rounded-full translate-y-[-50%]" />
-      {/* Red warning light for night */}
-      <motion.div
-        className="absolute top-0 w-1.5 h-1.5 bg-destructive rounded-full translate-y-[-100%]"
-        animate={{ opacity: [0.3, 1, 0.3] }}
-        transition={{ duration: 2, repeat: Infinity }}
-      />
-      {/* Rotating blades */}
+      {/*
+        Single-SVG turbine so the rotor pivot is in the SAME coordinate space as the tower.
+        This avoids CSS/SVG transform-origin edge cases that can make the blades appear to orbit.
+      */}
       <svg
-        className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-24 -translate-y-1/2 overflow-visible"
-        viewBox="0 0 48 48"
+        className="absolute inset-0 w-full h-full overflow-visible"
+        viewBox="0 0 48 96"
         aria-hidden="true"
       >
-        <g transform="translate(24 24)">
-          {/* IMPORTANT: transformOrigin must be '0 0' because we're inside a 
-              <g transform="translate(24 24)"> which shifts the local coordinate origin.
-              The hub is at (0,0) in this local coordinate space, so rotation must pivot there. */}
-          <motion.g
-            animate={{ rotate: 360 }}
-            transition={{
-              duration: speed,
-              repeat: Infinity,
-              ease: 'linear',
-            }}
-            style={{ transformOrigin: '0 0' }}
-          >
-            {/* Three blades at 120° intervals, centered at 0,0 */}
-            <g className="fill-card/90">
-              <ellipse cx="0" cy="-14" rx="2" ry="16" />
-              <ellipse cx="0" cy="-14" rx="2" ry="16" transform="rotate(120)" />
-              <ellipse cx="0" cy="-14" rx="2" ry="16" transform="rotate(240)" />
-            </g>
-            {/* Center hub at 0,0 */}
-            <circle cx="0" cy="0" r="3" className="fill-card" />
-          </motion.g>
+        {/* Tower */}
+        <rect x="22.5" y="24" width="3" height="68" rx="1" className="fill-card/90" />
+
+        {/* Nacelle */}
+        <rect x="20" y="18" width="8" height="4" rx="2" className="fill-card" />
+
+        {/* Warning light */}
+        <motion.circle
+          cx="24"
+          cy="16"
+          r="1.4"
+          className="fill-destructive"
+          animate={{ opacity: [0.3, 1, 0.3] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        />
+
+        {/* Rotor (native SVG rotation around hub at 24,22) */}
+        <g>
+          <animateTransform
+            attributeName="transform"
+            attributeType="XML"
+            type="rotate"
+            from="0 24 22"
+            to="360 24 22"
+            dur={`${speed}s`}
+            repeatCount="indefinite"
+          />
+
+          {/* Three blades */}
+          <g className="fill-card/90">
+            <ellipse cx="24" cy="8" rx="2" ry="16" />
+            <ellipse cx="24" cy="8" rx="2" ry="16" transform="rotate(120 24 22)" />
+            <ellipse cx="24" cy="8" rx="2" ry="16" transform="rotate(240 24 22)" />
+          </g>
+
+          {/* Hub */}
+          <circle cx="24" cy="22" r="3" className="fill-card" />
         </g>
       </svg>
     </motion.div>
