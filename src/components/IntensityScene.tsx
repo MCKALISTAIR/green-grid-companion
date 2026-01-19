@@ -86,6 +86,9 @@ function WindTurbine({ scale = 1, speed = 4 }: { scale?: number; speed?: number 
         aria-hidden="true"
       >
         <g transform="translate(24 24)">
+          {/* IMPORTANT: transformOrigin must match the visual center (24px 24px) 
+              because the SVG viewBox is 48x48 and blades are translated to center.
+              Without this, Framer Motion uses bounding-box center, causing orbit instead of spin. */}
           <motion.g
             animate={{ rotate: 360 }}
             transition={{
@@ -93,6 +96,7 @@ function WindTurbine({ scale = 1, speed = 4 }: { scale?: number; speed?: number 
               repeat: Infinity,
               ease: 'linear',
             }}
+            style={{ transformOrigin: '24px 24px' }}
           >
             {/* Three blades at 120° intervals, centered at 0,0 */}
             <g className="fill-card/90">
