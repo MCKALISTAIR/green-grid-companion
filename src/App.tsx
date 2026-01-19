@@ -17,6 +17,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import HistoryPage from "./pages/History";
 import ScrollToTop from "@/components/ScrollToTop";
 import NotFound from "./pages/NotFound";
+import TurbineTest from "./pages/TurbineTest";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -74,6 +75,9 @@ function AppContent() {
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/history" element={<HistoryPage />} />
+          {import.meta.env.DEV && (
+            <Route path="/__turbine-test" element={<TurbineTest />} />
+          )}
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
