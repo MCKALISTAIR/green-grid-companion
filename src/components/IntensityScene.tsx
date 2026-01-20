@@ -78,43 +78,104 @@ function WindTurbine({ scale = 1, speed = 4 }: { scale?: number; speed?: number 
         viewBox="0 0 48 96"
         aria-hidden="true"
       >
-        {/* Tower */}
-        <rect x="22.5" y="24" width="3" height="68" rx="1" className="fill-card/90" />
+        {/* Gradient definitions for shading */}
+        <defs>
+          {/* Tower gradient - darker at edges */}
+          <linearGradient id="towerGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="hsl(var(--card))" stopOpacity="0.6" />
+            <stop offset="50%" stopColor="hsl(var(--card))" stopOpacity="0.95" />
+            <stop offset="100%" stopColor="hsl(var(--card))" stopOpacity="0.7" />
+          </linearGradient>
+          
+          {/* Nacelle gradient - subtle 3D effect */}
+          <linearGradient id="nacelleGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="hsl(var(--card))" stopOpacity="1" />
+            <stop offset="100%" stopColor="hsl(var(--card))" stopOpacity="0.75" />
+          </linearGradient>
+          
+          {/* Blade gradient - lighter towards tip */}
+          <linearGradient id="bladeGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="hsl(var(--card))" stopOpacity="0.95" />
+            <stop offset="70%" stopColor="hsl(var(--card))" stopOpacity="0.85" />
+            <stop offset="100%" stopColor="hsl(var(--card))" stopOpacity="0.6" />
+          </linearGradient>
+          
+          {/* Hub radial gradient for 3D sphere effect */}
+          <radialGradient id="hubGradient" cx="35%" cy="35%" r="60%">
+            <stop offset="0%" stopColor="hsl(var(--card))" stopOpacity="1" />
+            <stop offset="100%" stopColor="hsl(var(--card))" stopOpacity="0.7" />
+          </radialGradient>
+        </defs>
 
-        {/* Nacelle */}
-        <rect x="20" y="18" width="8" height="4" rx="2" className="fill-card" />
+        {/* Tower - tapered slightly, with shading */}
+        <polygon 
+          points="21.5,24 26.5,24 25,92 23,92" 
+          fill="url(#towerGradient)"
+        />
+        {/* Tower highlight stripe */}
+        <rect x="23.5" y="26" width="1" height="64" rx="0.5" className="fill-card/30" />
 
-        {/* Warning light */}
+        {/* Nacelle - larger, more realistic proportions */}
+        <rect x="18" y="17" width="12" height="6" rx="2" fill="url(#nacelleGradient)" />
+        {/* Nacelle detail line */}
+        <rect x="19" y="19" width="10" height="1" rx="0.5" className="fill-card/20" />
+
+        {/* Warning light with glow */}
         <motion.circle
           cx="24"
-          cy="16"
-          r="1.4"
+          cy="15"
+          r="1.2"
           className="fill-destructive"
-          animate={{ opacity: [0.3, 1, 0.3] }}
-          transition={{ duration: 2, repeat: Infinity }}
+          animate={{ opacity: [0.4, 1, 0.4] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+        />
+        {/* Light glow effect */}
+        <motion.circle
+          cx="24"
+          cy="15"
+          r="2.5"
+          className="fill-destructive/30"
+          animate={{ opacity: [0.1, 0.4, 0.1], scale: [0.9, 1.1, 0.9] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
         />
 
-        {/* Rotor (native SVG rotation around hub at 24,22) */}
+        {/* Rotor (native SVG rotation around hub at 24,20) */}
         <g>
           <animateTransform
             attributeName="transform"
             attributeType="XML"
             type="rotate"
-            from="0 24 22"
-            to="360 24 22"
+            from="0 24 20"
+            to="360 24 20"
             dur={`${speed}s`}
             repeatCount="indefinite"
           />
 
-          {/* Three blades */}
-          <g className="fill-card/90">
-            <ellipse cx="24" cy="8" rx="2" ry="16" />
-            <ellipse cx="24" cy="8" rx="2" ry="16" transform="rotate(120 24 22)" />
-            <ellipse cx="24" cy="8" rx="2" ry="16" transform="rotate(240 24 22)" />
+          {/* Three blades - more aerodynamic shape */}
+          <g>
+            {/* Blade 1 - pointing up */}
+            <path 
+              d="M24,20 L22.5,18 L22,8 Q24,2 26,8 L25.5,18 Z" 
+              fill="url(#bladeGradient)"
+            />
+            {/* Blade 2 - 120° */}
+            <path 
+              d="M24,20 L22.5,18 L22,8 Q24,2 26,8 L25.5,18 Z" 
+              fill="url(#bladeGradient)"
+              transform="rotate(120 24 20)"
+            />
+            {/* Blade 3 - 240° */}
+            <path 
+              d="M24,20 L22.5,18 L22,8 Q24,2 26,8 L25.5,18 Z" 
+              fill="url(#bladeGradient)"
+              transform="rotate(240 24 20)"
+            />
           </g>
 
-          {/* Hub */}
-          <circle cx="24" cy="22" r="3" className="fill-card" />
+          {/* Hub - larger with 3D shading */}
+          <circle cx="24" cy="20" r="4" fill="url(#hubGradient)" />
+          {/* Hub center detail */}
+          <circle cx="24" cy="20" r="1.5" className="fill-card/50" />
         </g>
       </svg>
     </motion.div>
