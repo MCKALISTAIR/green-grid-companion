@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, RefreshCw, Zap, Info } from 'lucide-react';
+import { Settings, RefreshCw, Zap, Info, Leaf, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -11,10 +11,12 @@ import { ForecastSummary } from '@/components/ForecastSummary';
 import { RegionSelector } from '@/components/RegionSelector';
 import { NotificationSettings } from '@/components/NotificationSettings';
 import { BestTimeCard } from '@/components/BestTimeCard';
+import { FootprintView } from '@/components/FootprintView';
 import { useCarbonData } from '@/hooks/useCarbonData';
+import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useToast } from '@/hooks/use-toast';
-import { TooltipProvider } from '@/components/ui/tooltip'; // Keep Provider for others if needed, or remove if unused. Wrapped whole app in it.
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DEFINITIONS } from '@/lib/definitions';
 import { BottomNav } from '@/components/BottomNav';
@@ -25,8 +27,10 @@ const Index = () => {
   const [postcode, setPostcode] = useState(() => {
     return localStorage.getItem('gridgreen-postcode') || '';
   });
+  const [viewMode, setViewMode] = useState<'intensity' | 'footprint'>('intensity');
 
   const { scheduleGreenAlerts } = useNotifications();
+  const { isLinked: isOctopusLinked } = useOctopusEnergy();
 
   useEffect(() => {
     if (!postcode) {
@@ -182,41 +186,72 @@ const Index = () => {
             {/* Content cards */}
             <div className="flex-1 px-4 py-6 space-y-4 -mt-4 relative z-10 bg-background">
 
-              {/* Energy Insights (formerly Tip of the day) */}
-              <Card className="p-4 shadow-lg bg-accent/30 border-accent/50">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
-                    <Zap className="w-4 h-4 text-accent-foreground" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-foreground">Energy Insights</h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {getSmartTip(intensity, forecast)}
-                    </p>
-                  </div>
+              {/* View Toggle - Only show if Octopus is linked */}
+              {isOctopusLinked && (
+                <div className="flex gap-2 p-1 bg-muted rounded-lg">
+                  <Button
+                    variant={viewMode === 'intensity' ? 'default' : 'ghost'}
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => setViewMode('intensity')}
+                  >
+                    <Activity className="w-4 h-4 mr-2" />
+                    Grid Intensity
+                  </Button>
+                  <Button
+                    variant={viewMode === 'footprint' ? 'default' : 'ghost'}
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => setViewMode('footprint')}
+                  >
+                    <Leaf className="w-4 h-4 mr-2" />
+                    My Footprint
+                  </Button>
                 </div>
-              </Card>
-
-              {/* Generation Mix */}
-              <Card className="p-4 shadow-lg">
-                <GenerationMixBar mix={generationMix} />
-              </Card>
-
-              {/* Best/Worst Times */}
-              {forecast.length > 0 && (
-                <BestTimeCard forecast={forecast} />
               )}
 
-              {/* Hourly Forecast */}
-              {forecast.length > 0 && (
-                <Card className="p-4 shadow-lg">
-                  <ForecastChart forecast={forecast} showNext={12} />
-                </Card>
-              )}
+              {/* Footprint View */}
+              {viewMode === 'footprint' && isOctopusLinked ? (
+                <FootprintView />
+              ) : (
+                <>
+                  {/* Energy Insights (formerly Tip of the day) */}
+                  <Card className="p-4 shadow-lg bg-accent/30 border-accent/50">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                        <Zap className="w-4 h-4 text-accent-foreground" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-foreground">Energy Insights</h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {getSmartTip(intensity, forecast)}
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
 
-              {/* Daily Summary */}
-              {forecast.length > 0 && (
-                <ForecastSummary forecast={forecast} />
+                  {/* Generation Mix */}
+                  <Card className="p-4 shadow-lg">
+                    <GenerationMixBar mix={generationMix} />
+                  </Card>
+
+                  {/* Best/Worst Times */}
+                  {forecast.length > 0 && (
+                    <BestTimeCard forecast={forecast} />
+                  )}
+
+                  {/* Hourly Forecast */}
+                  {forecast.length > 0 && (
+                    <Card className="p-4 shadow-lg">
+                      <ForecastChart forecast={forecast} showNext={12} />
+                    </Card>
+                  )}
+
+                  {/* Daily Summary */}
+                  {forecast.length > 0 && (
+                    <ForecastSummary forecast={forecast} />
+                  )}
+                </>
               )}
             </div>
           </div>

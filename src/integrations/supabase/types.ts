@@ -14,6 +14,102 @@ export type Database = {
   }
   public: {
     Tables: {
+      carbon_footprint: {
+        Row: {
+          carbon_g: number
+          consumption_kwh: number
+          created_at: string
+          id: string
+          intensity_gco2_kwh: number
+          intensity_index: string
+          interval_end: string
+          interval_start: string
+          mpan: string
+        }
+        Insert: {
+          carbon_g: number
+          consumption_kwh: number
+          created_at?: string
+          id?: string
+          intensity_gco2_kwh: number
+          intensity_index: string
+          interval_end: string
+          interval_start: string
+          mpan: string
+        }
+        Update: {
+          carbon_g?: number
+          consumption_kwh?: number
+          created_at?: string
+          id?: string
+          intensity_gco2_kwh?: number
+          intensity_index?: string
+          interval_end?: string
+          interval_start?: string
+          mpan?: string
+        }
+        Relationships: []
+      }
+      octopus_consumption: {
+        Row: {
+          consumption_kwh: number
+          created_at: string
+          id: string
+          interval_end: string
+          interval_start: string
+          mpan: string
+          serial_number: string
+        }
+        Insert: {
+          consumption_kwh: number
+          created_at?: string
+          id?: string
+          interval_end: string
+          interval_start: string
+          mpan: string
+          serial_number: string
+        }
+        Update: {
+          consumption_kwh?: number
+          created_at?: string
+          id?: string
+          interval_end?: string
+          interval_start?: string
+          mpan?: string
+          serial_number?: string
+        }
+        Relationships: []
+      }
+      octopus_meters: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          last_sync_at: string | null
+          mpan: string
+          serial_number: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_sync_at?: string | null
+          mpan: string
+          serial_number: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_sync_at?: string | null
+          mpan?: string
+          serial_number?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       push_subscriptions: {
         Row: {
           created_at: string

@@ -1,5 +1,5 @@
 import { NotificationSettings } from '@/components/NotificationSettings';
-import { Integrations } from '@/components/Integrations';
+import { OctopusIntegration } from '@/components/OctopusIntegration';
 import { BottomNav } from '@/components/BottomNav';
 
 export default function Settings() {
@@ -11,8 +11,7 @@ export default function Settings() {
                     <p className="text-muted-foreground">Manage notifications and preferences.</p>
                 </div>
 
-                {/* Integrations commented out for App Store compliance (Guideline 2.2) until fully functional */}
-                {/* <Integrations /> */}
+                <OctopusIntegration />
                 <NotificationSettings />
 
                 <div className="text-xs text-muted-foreground text-center space-y-2 pt-8 pb-4">
