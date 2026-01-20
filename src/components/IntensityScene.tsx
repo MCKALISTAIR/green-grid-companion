@@ -105,7 +105,22 @@ function WindTurbine({ scale = 1, speed = 4 }: { scale?: number; speed?: number 
             <stop offset="0%" stopColor="hsl(var(--card))" stopOpacity="1" />
             <stop offset="100%" stopColor="hsl(var(--card))" stopOpacity="0.7" />
           </radialGradient>
+          
+          {/* Shadow gradient for ground effect */}
+          <radialGradient id="towerShadow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="hsl(var(--foreground))" stopOpacity="0.25" />
+            <stop offset="100%" stopColor="hsl(var(--foreground))" stopOpacity="0" />
+          </radialGradient>
         </defs>
+
+        {/* Ground shadow - ellipse at base of tower */}
+        <ellipse 
+          cx="24" 
+          cy="94" 
+          rx="8" 
+          ry="2" 
+          fill="url(#towerShadow)"
+        />
 
         {/* Tower - tapered slightly, with shading */}
         <polygon 
