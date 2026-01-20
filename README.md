@@ -17,7 +17,8 @@ GridSense is a mobile-first companion app designed to help UK (and future) energ
 
 ### 📊 Data History
 *   **Comprehensive Charts**: View carbon intensity trends over the last **24 hours** or **7 days**.
-*   **Stats**: Track average intensity and performance trends.
+*   **Energy Overlay**: Overlay your actual **Octopus Energy** consumption (kWh) and Total Carbon Mass (gCO2) directly onto the intensity graph.
+*   **Stats**: Track average intensity, total footprint, and performance trends.
 
 ### 🏆 Leaderboard (formerly Map)
 *   **Regional Ranking**: See a live leaderboard of the greenest UK regions.
@@ -26,7 +27,8 @@ GridSense is a mobile-first companion app designed to help UK (and future) energ
 ### ⚙️ Settings & Integrations
 *   **Smart Alerts**: Configurable notifications for low-carbon windows.
 *   **Live Accuracy Mode**: Optional **Background Fetch** support to check real-time grid data periodically (offline-first by default).
-*   **Integrations**: Link **Octopus Energy** and **Tesla** accounts for personalized insights and automation (Coming Soon).
+*   **Integrations**: Link **Octopus Energy** account to sync smart meter data, calculate your actual carbon footprint, and visualize usage history.
+*   **Tesla Integration**: Coming Soon.
 
 ## 🛠️ Technology Stack
 

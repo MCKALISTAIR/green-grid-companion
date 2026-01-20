@@ -10,8 +10,15 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { DEFINITIONS } from '@/lib/definitions';
 import { ChevronRight } from 'lucide-react';
 
+export interface MixItem {
+  fuel: string;
+  perc: number;
+  mw?: number;
+}
+
 interface GenerationMixBarProps {
-  mix: GenerationMix[];
+  mix: MixItem[];
+  showMW?: boolean;
 }
 
 const fuelColors: Record<string, string> = {
@@ -26,7 +33,7 @@ const fuelColors: Record<string, string> = {
   other: 'bg-gen-other',
 };
 
-export function GenerationMixBar({ mix }: GenerationMixBarProps) {
+export function GenerationMixBar({ mix, showMW = false }: GenerationMixBarProps) {
   // Filter out zero values and sort by percentage
   const sortedMix = [...mix]
     .filter(m => m.perc > 0)
@@ -46,7 +53,7 @@ export function GenerationMixBar({ mix }: GenerationMixBarProps) {
               <ChevronRight className="w-4 h-4 text-muted-foreground" />
             </h3>
             <span className="text-xs text-primary font-medium">
-              {renewables.toFixed(0)}% Renewable
+              {showMW ? `Total ${(mix.reduce((a, b) => a + (b.mw || 0), 0) / 1000).toFixed(1)} GW` : `${renewables.toFixed(0)}% Renewable`}
             </span>
           </div>
 
@@ -70,7 +77,11 @@ export function GenerationMixBar({ mix }: GenerationMixBarProps) {
               >
                 <div className={`w-2.5 h-2.5 rounded-full ${fuelColors[item.fuel.toLowerCase()] || 'bg-gen-other'}`} />
                 <span className="capitalize">{item.fuel}</span>
-                <span className="font-medium text-foreground">{item.perc.toFixed(0)}%</span>
+                <span className="font-medium text-foreground">
+                  {showMW && item.mw
+                    ? `${(item.mw / 1000).toFixed(1)}GW`
+                    : `${item.perc.toFixed(0)}%`}
+                </span>
               </div>
             ))}
             {sortedMix.length > 6 && (
@@ -97,7 +108,16 @@ export function GenerationMixBar({ mix }: GenerationMixBarProps) {
                       <div className={`w-4 h-4 rounded-full ${fuelColors[item.fuel.toLowerCase()] || 'bg-gen-other'}`} />
                       <span className="font-medium capitalize text-lg">{item.fuel}</span>
                     </div>
-                    <span className="text-xl font-bold">{item.perc.toFixed(1)}%</span>
+                    <div className="text-right">
+                      <span className="block text-xl font-bold">
+                        {showMW && item.mw
+                          ? `${(item.mw / 1000).toFixed(2)} GW`
+                          : `${item.perc.toFixed(1)}%`}
+                      </span>
+                      {showMW && (
+                        <span className="text-sm text-muted-foreground">{item.perc.toFixed(1)}%</span>
+                      )}
+                    </div>
                   </div>
                   <p className="text-sm text-muted-foreground pl-6 leading-relaxed">
                     {definition}

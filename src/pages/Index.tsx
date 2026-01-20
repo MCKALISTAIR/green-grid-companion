@@ -12,6 +12,7 @@ import { RegionSelector } from '@/components/RegionSelector';
 import { NotificationSettings } from '@/components/NotificationSettings';
 import { BestTimeCard } from '@/components/BestTimeCard';
 import { FootprintView } from '@/components/FootprintView';
+import { DemandView } from '@/components/DemandView';
 import { useCarbonData } from '@/hooks/useCarbonData';
 import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -27,7 +28,7 @@ const Index = () => {
   const [postcode, setPostcode] = useState(() => {
     return localStorage.getItem('gridgreen-postcode') || '';
   });
-  const [viewMode, setViewMode] = useState<'intensity' | 'footprint'>('intensity');
+  const [viewMode, setViewMode] = useState<'intensity' | 'footprint' | 'demand'>('intensity');
 
   const { scheduleGreenAlerts } = useNotifications();
   const { isLinked: isOctopusLinked } = useOctopusEnergy();
@@ -122,96 +123,109 @@ const Index = () => {
                 {/* Right side buttons removed */}
               </div>
 
-              {/* Current intensity display */}
-              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-center w-auto max-w-[90%]">
-                <div className="bg-white/30 backdrop-blur-md rounded-2xl p-4 shadow-sm border border-white/20">
-                  <div className="flex items-center justify-center gap-1.5 mb-1">
-                    <p className="text-card/90 text-sm font-medium uppercase tracking-wide">
-                      {isLoading ? 'Loading...' : region || 'Select a region'}
-                    </p>
-                    {!isLoading && region && (
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full p-0 hover:bg-transparent" aria-label="More info about Carbon Intensity">
-                            <Info className="w-3.5 h-3.5 text-card/70 cursor-help" aria-hidden="true" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[240px] p-3 text-xs bg-card border-border backdrop-blur-xl">
-                          <p>{DEFINITIONS['Carbon Intensity']}</p>
-                        </PopoverContent>
-                      </Popover>
-                    )}
-                  </div>
-
-                  <div className="flex items-baseline justify-center gap-2">
-                    {isLoading ? (
-                      <RefreshCw className="w-10 h-10 text-card animate-spin" aria-label="Loading data" />
-                    ) : (
-                      <>
-                        <span className="text-6xl font-bold text-card drop-shadow-md">
-                          {intensity}
-                        </span>
-                        <div className="flex items-center gap-1">
-                          <span className="text-card/90 text-lg font-medium">gCO₂/kWh</span>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full p-0 hover:bg-transparent" aria-label="More info about gCO2/kWh">
-                                <Info className="w-4 h-4 text-card/70 cursor-help" aria-hidden="true" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-[240px] p-3 text-xs bg-card border-border backdrop-blur-xl">
-                              <p>{DEFINITIONS['gCO2/kWh']}</p>
-                            </PopoverContent>
-                          </Popover>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                  {!isLoading && (
-                    <div className="inline-block mt-2 px-3 py-1 rounded-full bg-white/40 shadow-sm">
-                      <p className="text-lg font-semibold capitalize text-card">
-                        {index}
+              {/* Current intensity display - Only show if NOT in demand mode (DemandView has its own header) */}
+              {viewMode !== 'demand' && (
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-center w-auto max-w-[90%]">
+                  <div className="bg-white/30 backdrop-blur-md rounded-2xl p-4 shadow-sm border border-white/20">
+                    <div className="flex items-center justify-center gap-1.5 mb-1">
+                      <p className="text-card/90 text-sm font-medium uppercase tracking-wide">
+                        {isLoading ? 'Loading...' : region || 'Select a region'}
                       </p>
+                      {!isLoading && region && (
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full p-0 hover:bg-transparent" aria-label="More info about Carbon Intensity">
+                              <Info className="w-3.5 h-3.5 text-card/70 cursor-help" aria-hidden="true" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[240px] p-3 text-xs bg-card border-border backdrop-blur-xl">
+                            <p>{DEFINITIONS['Carbon Intensity']}</p>
+                          </PopoverContent>
+                        </Popover>
+                      )}
                     </div>
-                  )}
-                  {!isLoading && lastUpdated && (
-                    <p className="text-xs text-card/80 mt-1 font-medium">
-                      Updated {new Date(lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                  )}
+
+                    <div className="flex items-baseline justify-center gap-2">
+                      {isLoading ? (
+                        <RefreshCw className="w-10 h-10 text-card animate-spin" aria-label="Loading data" />
+                      ) : (
+                        <>
+                          <span className="text-6xl font-bold text-card drop-shadow-md">
+                            {intensity}
+                          </span>
+                          <div className="flex items-center gap-1">
+                            <span className="text-card/90 text-lg font-medium">gCO₂/kWh</span>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full p-0 hover:bg-transparent" aria-label="More info about gCO2/kWh">
+                                  <Info className="w-4 h-4 text-card/70 cursor-help" aria-hidden="true" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-[240px] p-3 text-xs bg-card border-border backdrop-blur-xl">
+                                <p>{DEFINITIONS['gCO2/kWh']}</p>
+                              </PopoverContent>
+                            </Popover>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                    {!isLoading && (
+                      <div className="inline-block mt-2 px-3 py-1 rounded-full bg-white/40 shadow-sm">
+                        <p className="text-lg font-semibold capitalize text-card">
+                          {index}
+                        </p>
+                      </div>
+                    )}
+                    {!isLoading && lastUpdated && (
+                      <p className="text-xs text-card/80 mt-1 font-medium">
+                        Updated {new Date(lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Content cards */}
             <div className="flex-1 px-4 py-6 space-y-4 -mt-4 relative z-10 bg-background">
 
-              {/* View Toggle - Only show if Octopus is linked */}
-              {isOctopusLinked && (
-                <div className="flex gap-2 p-1 bg-muted rounded-lg">
-                  <Button
-                    variant={viewMode === 'intensity' ? 'default' : 'ghost'}
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => setViewMode('intensity')}
-                  >
-                    <Activity className="w-4 h-4 mr-2" />
-                    Grid Intensity
-                  </Button>
+              {/* View Toggle - Always show, simplified if no Octopus */}
+              <div className="flex gap-2 p-1 bg-muted rounded-lg overflow-x-auto scrollbar-none">
+                <Button
+                  variant={viewMode === 'intensity' ? 'default' : 'ghost'}
+                  size="sm"
+                  className="flex-1 min-w-[100px]"
+                  onClick={() => setViewMode('intensity')}
+                >
+                  <Activity className="w-4 h-4 mr-2" />
+                  Intensity
+                </Button>
+                <Button
+                  variant={viewMode === 'demand' ? 'default' : 'ghost'}
+                  size="sm"
+                  className="flex-1 min-w-[100px]"
+                  onClick={() => setViewMode('demand')}
+                >
+                  <Zap className="w-4 h-4 mr-2" />
+                  Demand
+                </Button>
+                {isOctopusLinked && (
                   <Button
                     variant={viewMode === 'footprint' ? 'default' : 'ghost'}
                     size="sm"
-                    className="flex-1"
+                    className="flex-1 min-w-[100px]"
                     onClick={() => setViewMode('footprint')}
                   >
                     <Leaf className="w-4 h-4 mr-2" />
-                    My Footprint
+                    Footprint
                   </Button>
-                </div>
-              )}
+                )}
+              </div>
 
-              {/* Footprint View */}
-              {viewMode === 'footprint' && isOctopusLinked ? (
+              {/* Render View */}
+              {viewMode === 'demand' ? (
+                <DemandView />
+              ) : viewMode === 'footprint' && isOctopusLinked ? (
                 <FootprintView />
               ) : (
                 <>

@@ -44,6 +44,10 @@ export interface ForecastData {
 }
 
 export const UK_REGIONS = [
+  { name: 'National', postcode: 'GB' },
+  { name: 'Scotland', postcode: 'Scotland' },
+  { name: 'England', postcode: 'England' },
+  { name: 'Wales', postcode: 'Wales' },
   { name: 'North Scotland', postcode: 'AB' },
   { name: 'South Scotland', postcode: 'EH' },
   { name: 'North West England', postcode: 'M' },
@@ -120,8 +124,18 @@ export async function getRegionalHistoryAndForecast(regionId: number, from: stri
     throw new Error(`Failed to fetch history/forecast: ${response.status}`);
   }
   const json = await response.json();
-  // Response: { data: { regionid, ... data: [] } }
-  return json.data?.data || [];
+  const data: ForecastData[] = json.data?.data || [];
+
+  // Backfill 'actual' if missing, using generation mix
+  return data.map(item => {
+    if (item.intensity.actual === undefined || item.intensity.actual === null) {
+      const mix = (item as any).generationmix as GenerationMix[];
+      if (mix) {
+        item.intensity.actual = calculateIntensityFromMix(mix);
+      }
+    }
+    return item;
+  });
 }
 
 // Get intensity for a specific region ID
@@ -197,4 +211,30 @@ export function getFuelColor(fuel: string): string {
     'other': 'bg-gen-other',
   };
   return colors[fuel.toLowerCase()] || 'bg-muted';
+}
+
+// Carbon Intensity Factors (gCO2/kWh)
+export const CARBON_FACTORS: Record<string, number> = {
+  biomass: 120,
+  coal: 820,
+  imports: 250, // Average estimate
+  gas: 390,
+  nuclear: 0,
+  other: 300,
+  hydro: 0,
+  solar: 0,
+  wind: 0,
+};
+
+export function calculateIntensityFromMix(mix: GenerationMix[]): number {
+  if (!mix || mix.length === 0) return 0;
+
+  let totalIntensity = 0;
+  mix.forEach(source => {
+    const factor = CARBON_FACTORS[source.fuel] ?? 0;
+    // perc is 0-100
+    totalIntensity += (source.perc / 100) * factor;
+  });
+
+  return Math.round(totalIntensity);
 }

@@ -16,13 +16,13 @@ interface IntensitySceneProps {
 }
 
 // Custom SVG components for better animations
-function FlyingBird({ delay, duration, startX }: { delay: number; duration: number; startX: number }) {
+function FlyingBird({ delay, duration, startX, top, scale }: { delay: number; duration: number; startX: number; top: number; scale: number }) {
   return (
     <motion.svg
       className="absolute w-8 h-8"
       initial={{ x: `${startX}%`, opacity: 0 }}
       animate={{
-        x: ['0%', '120%'],
+        x: [`${startX}%`, '120%'],
         opacity: [0, 1, 1, 0],
       }}
       transition={{
@@ -31,7 +31,10 @@ function FlyingBird({ delay, duration, startX }: { delay: number; duration: numb
         repeat: Infinity,
         ease: 'linear',
       }}
-      style={{ top: `${15 + Math.random() * 20}%` }}
+      style={{
+        top: `${top}%`,
+        transform: `scale(${scale})` // Use transform style for scaling to avoid conflicting with framer-motion props if any
+      }}
       viewBox="0 0 24 24"
       fill="none"
       aria-hidden="true"
@@ -58,6 +61,8 @@ function FlyingBird({ delay, duration, startX }: { delay: number; duration: numb
     </motion.svg>
   );
 }
+
+
 
 function WindTurbine({ scale = 1, speed = 4 }: { scale?: number; speed?: number }) {
   return (
@@ -86,26 +91,26 @@ function WindTurbine({ scale = 1, speed = 4 }: { scale?: number; speed?: number 
             <stop offset="50%" stopColor="hsl(var(--card))" stopOpacity="0.95" />
             <stop offset="100%" stopColor="hsl(var(--card))" stopOpacity="0.7" />
           </linearGradient>
-          
+
           {/* Nacelle gradient - subtle 3D effect */}
           <linearGradient id="nacelleGradient" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="hsl(var(--card))" stopOpacity="1" />
             <stop offset="100%" stopColor="hsl(var(--card))" stopOpacity="0.75" />
           </linearGradient>
-          
+
           {/* Blade gradient - lighter towards tip */}
           <linearGradient id="bladeGradient" x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor="hsl(var(--card))" stopOpacity="0.95" />
             <stop offset="70%" stopColor="hsl(var(--card))" stopOpacity="0.85" />
             <stop offset="100%" stopColor="hsl(var(--card))" stopOpacity="0.6" />
           </linearGradient>
-          
+
           {/* Hub radial gradient for 3D sphere effect */}
           <radialGradient id="hubGradient" cx="35%" cy="35%" r="60%">
             <stop offset="0%" stopColor="hsl(var(--card))" stopOpacity="1" />
             <stop offset="100%" stopColor="hsl(var(--card))" stopOpacity="0.7" />
           </radialGradient>
-          
+
           {/* Shadow gradient for ground effect */}
           <radialGradient id="towerShadow" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="hsl(var(--foreground))" stopOpacity="0.25" />
@@ -114,17 +119,17 @@ function WindTurbine({ scale = 1, speed = 4 }: { scale?: number; speed?: number 
         </defs>
 
         {/* Ground shadow - ellipse at base of tower */}
-        <ellipse 
-          cx="24" 
-          cy="94" 
-          rx="8" 
-          ry="2" 
+        <ellipse
+          cx="24"
+          cy="94"
+          rx="8"
+          ry="2"
           fill="url(#towerShadow)"
         />
 
         {/* Tower - tapered slightly, with shading */}
-        <polygon 
-          points="21.5,24 26.5,24 25,92 23,92" 
+        <polygon
+          points="21.5,24 26.5,24 25,92 23,92"
           fill="url(#towerGradient)"
         />
         {/* Tower highlight stripe */}
@@ -169,19 +174,19 @@ function WindTurbine({ scale = 1, speed = 4 }: { scale?: number; speed?: number 
           {/* Three blades - more aerodynamic shape */}
           <g>
             {/* Blade 1 - pointing up */}
-            <path 
-              d="M24,20 L22.5,18 L22,8 Q24,2 26,8 L25.5,18 Z" 
+            <path
+              d="M24,20 L22.5,18 L22,8 Q24,2 26,8 L25.5,18 Z"
               fill="url(#bladeGradient)"
             />
             {/* Blade 2 - 120° */}
-            <path 
-              d="M24,20 L22.5,18 L22,8 Q24,2 26,8 L25.5,18 Z" 
+            <path
+              d="M24,20 L22.5,18 L22,8 Q24,2 26,8 L25.5,18 Z"
               fill="url(#bladeGradient)"
               transform="rotate(120 24 20)"
             />
             {/* Blade 3 - 240° */}
-            <path 
-              d="M24,20 L22.5,18 L22,8 Q24,2 26,8 L25.5,18 Z" 
+            <path
+              d="M24,20 L22.5,18 L22,8 Q24,2 26,8 L25.5,18 Z"
               fill="url(#bladeGradient)"
               transform="rotate(240 24 20)"
             />
@@ -255,6 +260,17 @@ function SunRay({ angle, delay }: { angle: number; delay: number }) {
 export function IntensityScene({ intensity, index }: IntensitySceneProps) {
   const { timeOfDay, isNight, sunPosition } = useTimeOfDay();
   const { weather } = useWeatherData();
+
+  const birdConfig = useMemo(() => {
+    // Generate stable config for max possible birds (e.g. 5) to avoid re-gen on count change
+    return Array.from({ length: 5 }).map((_, i) => ({
+      id: i,
+      top: 10 + Math.random() * 30, // Random top between 10-40%
+      delay: i * 5, // Staggered delay
+      duration: 15 + Math.random() * 10, // Slower duration (15-25s)
+      scale: 0.6 + Math.random() * 0.4 // Random scale for depth
+    }));
+  }, []); // Empty deps = truly stable
 
   const sceneConfig = useMemo(() => {
     const cleanliness = Math.max(0, Math.min(1, 1 - (intensity - 50) / 300));
@@ -412,18 +428,20 @@ export function IntensityScene({ intensity, index }: IntensitySceneProps) {
       <AnimatePresence>
         {sceneConfig.showBirds && (
           <motion.div
-            className="absolute inset-0 overflow-hidden"
+            className="absolute inset-0 overflow-hidden pointer-events-none"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
           >
-            {[...Array(sceneConfig.birdCount)].map((_, i) => (
+            {birdConfig.slice(0, sceneConfig.birdCount).map((bird) => (
               <FlyingBird
-                key={i}
-                delay={i * 3}
-                duration={8 + Math.random() * 4}
+                key={bird.id}
+                delay={bird.delay}
+                duration={bird.duration}
                 startX={-10}
+                top={bird.top}
+                scale={bird.scale}
               />
             ))}
           </motion.div>

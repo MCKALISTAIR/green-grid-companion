@@ -34,7 +34,12 @@ export function useCarbonData(postcode: string) {
   // Find matching region in API data first
   // Normalize strings to handle potential differences (e.g. & vs and)
   const normalize = (s?: string) => (s || '').toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '');
-  const targetRegionName = UK_REGIONS.find(r => r.postcode === postcode)?.name;
+
+  // Find region by matching postcode prefix (e.g. "EH1..." matches "EH")
+  // We sort by length descending to ensure "BS" matches "BS" before "B" matches "B" (if both existed and overlapped)
+  const targetRegionName = UK_REGIONS
+    .filter(r => postcode.toUpperCase().startsWith(r.postcode))
+    .sort((a, b) => b.postcode.length - a.postcode.length)[0]?.name;
 
 
   const foundRegion = regionalListQuery.data?.find(r => {
@@ -43,7 +48,14 @@ export function useCarbonData(postcode: string) {
     return normalize(r.shortname) === target || normalize(r.dnoregion) === target;
   });
 
-  const regionId = foundRegion?.regionid;
+  // Handle aggregate regions explicitly since they might not be in the /regional list
+  let regionId = foundRegion?.regionid;
+  if (!regionId) {
+    if (postcode === 'Scotland') regionId = 16;
+    if (postcode === 'England') regionId = 15;
+    if (postcode === 'Wales') regionId = 17;
+    // GB/National falls through to undefined, handled by fallback
+  }
 
   // Fetch detailed regional data by ID (avoids CORS issues with postcode endpoint)
   // Fetch detailed regional data by ID (avoids CORS issues with postcode endpoint)

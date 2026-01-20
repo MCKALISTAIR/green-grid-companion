@@ -1,16 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getRegionalHistoryAndForecast, ForecastData, getIntensityColor, getIntensityTextColor } from '@/lib/carbonApi';
+import { getRegionalHistoryAndForecast, ForecastData } from '@/lib/carbonApi';
 import { useCarbonData } from '@/hooks/useCarbonData';
+import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { BottomNav } from '@/components/BottomNav';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { format, parseISO, subDays, startOfDay } from 'date-fns';
-import { Loader2, CalendarRange, TrendingDown, TrendingUp } from 'lucide-react';
+import { ComposedChart, Line, Area, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { format, parseISO, subDays, isSameHour, isSameDay } from 'date-fns';
+import { Loader2, TrendingDown, TrendingUp, Zap } from 'lucide-react';
 
 export default function HistoryPage() {
     const postcode = localStorage.getItem('gridgreen-postcode') || '';
     const { regionId, region, isLoading: isRegionLoading } = useCarbonData(postcode);
+    const { footprint, isLinked } = useOctopusEnergy();
 
     const [timeRange, setTimeRange] = useState<'24h' | '7d'>('7d');
 
@@ -24,7 +26,7 @@ export default function HistoryPage() {
             return getRegionalHistoryAndForecast(regionId, from, to);
         },
         enabled: !!regionId,
-        refetchInterval: false, // Don't auto refetch history too often
+        refetchInterval: false,
         staleTime: 1000 * 60 * 30, // 30 mins
     });
 
@@ -35,16 +37,45 @@ export default function HistoryPage() {
         ? Math.round(data.reduce((acc, curr) => acc + curr.intensity.forecast, 0) / data.length)
         : 0;
 
-    const maxIntensity = data.length > 0 ? Math.max(...data.map(d => d.intensity.forecast)) : 0;
-    const minIntensity = data.length > 0 ? Math.min(...data.map(d => d.intensity.forecast)) : 0;
+    // Merge consumption data
+    const chartData = useMemo(() => {
+        return data.map(item => {
+            const itemDate = parseISO(item.from);
 
-    const chartData = data.map(item => ({
-        time: item.from,
-        intensity: item.intensity.forecast,
-        formattedTime: format(parseISO(item.from), timeRange === '24h' ? 'HH:mm' : 'dd MMM HH:mm'),
-    }));
+            // Find matching consumption record (approximate match to hour/30min slot)
+            // Octopus data is typically 30m slots. 
+            // We'll try to find a record that starts within the same 30m window.
+            const consumptionRecord = footprint?.records.find(r => {
+                const rDate = parseISO(r.interval_start);
+                // Use date-fns for robust comparison (handles ISO format differences)
+                return rDate.getTime() === itemDate.getTime();
+            });
 
-    // Find if we are trending up or down compared to start of period
+            // Fallback: Group by hour if slots don't align perfectly? 
+            // For now, strict match or null.
+
+            return {
+                time: item.from,
+                forecast: item.intensity.forecast,
+                actual: item.intensity.actual ?? null,
+                consumption: consumptionRecord ? consumptionRecord.consumption_kwh : null,
+                carbonMass: consumptionRecord ? consumptionRecord.carbon_g : null,
+                formattedTime: format(itemDate, timeRange === '24h' ? 'HH:mm' : 'dd MMM HH:mm'),
+            };
+        });
+    }, [data, footprint]);
+
+    // Compute consumption stats if available
+    const totalConsumption = useMemo(() => {
+        return chartData.reduce((acc, curr) => acc + (curr.consumption || 0), 0);
+    }, [chartData]);
+
+    // Compute total carbon mass
+    const totalCarbonMass = useMemo(() => {
+        return chartData.reduce((acc, curr) => acc + (curr.carbonMass || 0), 0);
+    }, [chartData]);
+
+
     const startVal = data[0]?.intensity.forecast || 0;
     const endVal = data[data.length - 1]?.intensity.forecast || 0;
     const trend = endVal < startVal ? 'improving' : 'worsening';
@@ -74,20 +105,34 @@ export default function HistoryPage() {
                                 <div className="text-2xl font-bold mt-1">{avgIntensity}g</div>
                                 <div className="text-xs text-muted-foreground mt-1">Last {timeRange === '7d' ? '7 Days' : '24 Hours'}</div>
                             </Card>
-                            <Card className="p-4 border-muted">
-                                <div className="text-muted-foreground text-xs uppercase font-bold tracking-wider">Trend</div>
-                                <div className="flex items-center gap-2 mt-1">
-                                    {trend === 'improving' ? (
-                                        <TrendingDown className="w-6 h-6 text-green-500" />
-                                    ) : (
-                                        <TrendingUp className="w-6 h-6 text-red-500" />
-                                    )}
-                                    <span className={`text-sm font-bold ${trend === 'improving' ? 'text-green-600' : 'text-red-600'}`}>
-                                        {Math.abs(endVal - startVal)}g
-                                    </span>
-                                </div>
-                                <div className="text-xs text-muted-foreground mt-1">Currently {trend === 'improving' ? 'lower' : 'higher'} than start</div>
-                            </Card>
+                            {isLinked && totalConsumption > 0 ? (
+                                <Card className="p-4 border-muted">
+                                    <div className="text-muted-foreground text-xs uppercase font-bold tracking-wider">Footprint</div>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <Zap className="w-6 h-6 text-yellow-500" />
+                                        <div className="flex flex-col">
+                                            <span className="text-xl font-bold">{(totalCarbonMass / 1000).toFixed(2)}kg</span>
+                                            <span className="text-xs text-muted-foreground">{totalConsumption.toFixed(1)} kWh used</span>
+                                        </div>
+                                    </div>
+                                    <div className="text-xs text-muted-foreground mt-1">Total carbon footprint</div>
+                                </Card>
+                            ) : (
+                                <Card className="p-4 border-muted">
+                                    <div className="text-muted-foreground text-xs uppercase font-bold tracking-wider">Trend</div>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        {trend === 'improving' ? (
+                                            <TrendingDown className="w-6 h-6 text-green-500" />
+                                        ) : (
+                                            <TrendingUp className="w-6 h-6 text-red-500" />
+                                        )}
+                                        <span className={`text-sm font-bold ${trend === 'improving' ? 'text-green-600' : 'text-red-600'}`}>
+                                            {Math.abs(endVal - startVal)}g
+                                        </span>
+                                    </div>
+                                    <div className="text-xs text-muted-foreground mt-1">Currently {trend === 'improving' ? 'lower' : 'higher'} than start</div>
+                                </Card>
+                            )}
                         </div>
 
                         {/* Chart */}
@@ -96,7 +141,21 @@ export default function HistoryPage() {
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <CardTitle>{timeRange === '24h' ? '24 Hour' : '7 Day'} View</CardTitle>
-                                        <CardDescription>Intensity (gCO2/kWh)</CardDescription>
+                                        <CardDescription>
+                                            <div className="flex items-center gap-3 text-xs mt-1 flex-wrap">
+                                                <span className="flex items-center gap-1">
+                                                    <span className="w-2 h-2 rounded-full bg-blue-500"></span> Forecast
+                                                </span>
+                                                <span className="flex items-center gap-1">
+                                                    <span className="w-2 h-2 rounded-full bg-green-500"></span> Actual
+                                                </span>
+                                                {isLinked && (
+                                                    <span className="flex items-center gap-1">
+                                                        <span className="w-2 h-2 rounded-full bg-yellow-400"></span> Usage (kWh)
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </CardDescription>
                                     </div>
                                     <div className="flex bg-muted rounded-md p-1">
                                         <button
@@ -116,11 +175,15 @@ export default function HistoryPage() {
                             </CardHeader>
                             <div className="h-[300px] w-full">
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={chartData}>
+                                    <ComposedChart data={chartData}>
                                         <defs>
-                                            <linearGradient id="colorIntensity" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
-                                                <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                            <linearGradient id="colorForecast" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                                            </linearGradient>
+                                            <linearGradient id="colorActual" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} />
+                                                <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
                                             </linearGradient>
                                         </defs>
                                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
@@ -132,10 +195,19 @@ export default function HistoryPage() {
                                             minTickGap={30}
                                         />
                                         <YAxis
+                                            yAxisId="left"
                                             tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
                                             tickLine={false}
                                             axisLine={false}
                                             tickFormatter={(val) => `${val}g`}
+                                        />
+                                        <YAxis
+                                            yAxisId="right"
+                                            orientation="right"
+                                            tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                                            tickLine={false}
+                                            axisLine={false}
+                                            tickFormatter={(val) => `${val}k`}
                                         />
                                         <Tooltip
                                             contentStyle={{
@@ -145,16 +217,54 @@ export default function HistoryPage() {
                                                 fontSize: '12px'
                                             }}
                                             labelFormatter={(label) => <span className="font-semibold text-foreground">{label}</span>}
+                                            formatter={(value: any, name: any, props: any) => {
+                                                if (name === 'Actual' || name === 'Forecast') return [`${value} gCO2/kWh`, name];
+                                                if (name === 'Usage (kWh)') {
+                                                    const carbonMass = props.payload.carbonMass;
+                                                    return [
+                                                        <div key="usage">
+                                                            <div>{value} kWh</div>
+                                                            {carbonMass && <div className="text-yellow-600 font-bold mt-1">Total: {carbonMass} gCO2</div>}
+                                                        </div>,
+                                                        ""
+                                                    ];
+                                                }
+                                                return [value, name];
+                                            }}
+                                        />
+                                        {/* Energy Usage Bar */}
+                                        <Bar
+                                            yAxisId="right"
+                                            dataKey="consumption"
+                                            name="Usage (kWh)"
+                                            fill="#facc15"
+                                            opacity={0.6}
+                                            barSize={8}
+                                            radius={[2, 2, 0, 0]}
+                                        />
+                                        {/* Intensity Areas */}
+                                        <Area
+                                            yAxisId="left"
+                                            type="monotone"
+                                            dataKey="forecast"
+                                            name="Forecast"
+                                            stroke="#3b82f6"
+                                            fillOpacity={1}
+                                            fill="url(#colorForecast)"
+                                            strokeWidth={2}
+                                            strokeDasharray="4 4"
                                         />
                                         <Area
+                                            yAxisId="left"
                                             type="monotone"
-                                            dataKey="intensity"
-                                            stroke="#10b981"
+                                            dataKey="actual"
+                                            name="Actual"
+                                            stroke="#22c55e"
                                             fillOpacity={1}
-                                            fill="url(#colorIntensity)"
+                                            fill="url(#colorActual)"
                                             strokeWidth={2}
                                         />
-                                    </AreaChart>
+                                    </ComposedChart>
                                 </ResponsiveContainer>
                             </div>
                         </Card>
