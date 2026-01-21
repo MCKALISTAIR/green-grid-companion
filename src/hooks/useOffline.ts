@@ -56,6 +56,21 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
     return null;
   }
 
+  // In development, a service worker can cache Vite's module graph and cause
+  // hard-to-debug runtime issues (including hooks crashing and HTTP 412 pages).
+  // Ensure no SW is controlling the page while developing.
+  if (import.meta.env.DEV) {
+    try {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map((r) => r.unregister()));
+      await clearCaches();
+      console.log('[SW] Dev mode: service workers unregistered and caches cleared');
+    } catch (error) {
+      console.warn('[SW] Dev mode: failed to unregister/clear caches', error);
+    }
+    return null;
+  }
+
   try {
     const registration = await navigator.serviceWorker.register('/sw.js', {
       scope: '/',
