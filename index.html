@@ -63,6 +63,38 @@
 
 <body>
   <div id="root"></div>
+
+  <script>
+    // Prevent stale Service Worker caches from breaking the dev preview.
+    // Some browsers can keep an old SW controlling the page, serving outdated
+    // JS chunks which leads to React hook crashes and even "HTTP ERROR 412".
+    (function () {
+      try {
+        var host = window.location.hostname || '';
+        var isDevPreview = host.endsWith('.lovableproject.com') || host === 'localhost' || host === '127.0.0.1';
+        if (!isDevPreview) return;
+        if (!('serviceWorker' in navigator)) return;
+
+        var key = 'gridsense_sw_cleared_v1';
+        if (sessionStorage.getItem(key)) return;
+
+        Promise.all([
+          navigator.serviceWorker.getRegistrations().then(function (regs) {
+            return Promise.all(regs.map(function (r) { return r.unregister(); }));
+          }),
+          ('caches' in window)
+            ? caches.keys().then(function (names) { return Promise.all(names.map(function (n) { return caches.delete(n); })); })
+            : Promise.resolve(),
+        ]).finally(function () {
+          sessionStorage.setItem(key, '1');
+          window.location.reload();
+        });
+      } catch (e) {
+        // no-op
+      }
+    })();
+  </script>
+
   <script type="module" src="/src/main.tsx"></script>
 </body>
 
