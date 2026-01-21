@@ -16,15 +16,14 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      // Force a single React instance across all dependencies
-      react: path.resolve(__dirname, "node_modules/react"),
-      "react-dom": path.resolve(__dirname, "node_modules/react-dom"),
-      "react/jsx-runtime": path.resolve(__dirname, "node_modules/react/jsx-runtime"),
-      "react/jsx-dev-runtime": path.resolve(__dirname, "node_modules/react/jsx-dev-runtime"),
     },
+    // Ensure Vite doesn't bundle multiple copies of React
     dedupe: ["react", "react-dom", "react-router", "react-router-dom", "@tanstack/react-query"],
+    preserveSymlinks: false,
   },
   optimizeDeps: {
     include: ["react", "react-dom", "react-router-dom", "@tanstack/react-query"],
+    // Force re-optimizing dependencies (helps when Vite cache gets corrupted)
+    force: true,
   },
 }));
