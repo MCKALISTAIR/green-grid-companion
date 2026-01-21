@@ -115,7 +115,7 @@ export function useOctopusEnergy() {
       }
 
       const data = await response.json();
-      
+
       if (data.meters?.length > 0) {
         toast.success(`Linked ${data.meters.length} meter(s) successfully!`);
         await refetchStatus();
@@ -124,8 +124,9 @@ export function useOctopusEnergy() {
       }
 
       return data;
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to link meter');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to link meter';
+      toast.error(message);
       throw error;
     } finally {
       setIsSyncing(false);
@@ -153,11 +154,12 @@ export function useOctopusEnergy() {
 
       const data = await response.json();
       toast.success(`Synced ${data.readings_synced} consumption readings`);
-      
+
       await refetchStatus();
       return data;
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to sync consumption');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to sync consumption';
+      toast.error(message);
       throw error;
     } finally {
       setIsSyncing(false);
@@ -185,11 +187,12 @@ export function useOctopusEnergy() {
 
       const data = await response.json();
       toast.success(`Calculated carbon footprint for ${data.records_calculated} periods`);
-      
+
       await refetchFootprint();
       return data;
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to calculate footprint');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to calculate footprint';
+      toast.error(message);
       throw error;
     } finally {
       setIsSyncing(false);

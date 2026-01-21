@@ -8,6 +8,7 @@ GridSense is a mobile-first companion app designed to help UK (and future) energ
 *   **Real-time Carbon Intensity**: Visualises the current grid status.
 *   **Energy Insights**: Smart, data-driven advice at the top of the feed (e.g. "Wait until 2pm for cleaner energy").
 *   **Immersive Scenes**: A dynamic background that changes based on air quality/cleanliness.
+*   **System Dark Mode**: Fully supported dark theme that respects your device settings.
 *   **iOS Home Screen Widget**: Check live carbon intensity directly from your home screen.
 
 ### ⚡ Power Planner

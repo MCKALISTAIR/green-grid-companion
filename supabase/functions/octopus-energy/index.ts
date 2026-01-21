@@ -32,7 +32,17 @@ interface IntensityData {
   };
 }
 
-Deno.serve(async (req) => {
+interface FootprintRecord {
+  interval_start: string;
+  interval_end: string;
+  consumption_kwh: number;
+  intensity_gco2_kwh: number;
+  carbon_g: number;
+  intensity_index: string;
+  mpan: string;
+}
+
+Deno.serve(async (req: Request) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -65,7 +75,7 @@ Deno.serve(async (req) => {
       // Fetch account details to get meter information
       const accountUrl = `https://api.octopus.energy/v1/accounts/${OCTOPUS_ACCOUNT_NUMBER}/`;
       console.log(`Fetching account from: ${accountUrl}`);
-      
+
       const response = await fetch(accountUrl, {
         headers: { 'Authorization': authHeader }
       });
@@ -84,7 +94,7 @@ Deno.serve(async (req) => {
 
       // Extract electricity meters from all properties
       const meters: { mpan: string; serial_number: string }[] = [];
-      
+
       for (const property of accountData.properties || []) {
         for (const meterPoint of property.electricity_meter_points || []) {
           for (const meter of meterPoint.meters || []) {
@@ -140,7 +150,7 @@ Deno.serve(async (req) => {
       }
 
       const { mpan, serial_number } = meterData;
-      
+
       // Calculate date range - last 7 days by default, or use query params
       const daysBack = parseInt(url.searchParams.get('days') || '7');
       const periodTo = new Date();
@@ -148,7 +158,7 @@ Deno.serve(async (req) => {
       periodFrom.setDate(periodFrom.getDate() - daysBack);
 
       const consumptionUrl = `https://api.octopus.energy/v1/electricity-meter-points/${mpan}/meters/${serial_number}/consumption/?period_from=${periodFrom.toISOString()}&period_to=${periodTo.toISOString()}&page_size=25000`;
-      
+
       console.log(`Fetching consumption from: ${consumptionUrl}`);
 
       const response = await fetch(consumptionUrl, {
@@ -166,7 +176,7 @@ Deno.serve(async (req) => {
 
       const consumptionData = await response.json();
       const readings: OctopusConsumption[] = consumptionData.results || [];
-      
+
       console.log(`Received ${readings.length} consumption readings`);
 
       // Store consumption data
@@ -194,8 +204,8 @@ Deno.serve(async (req) => {
       console.log(`Stored ${insertedCount} consumption readings`);
 
       return new Response(
-        JSON.stringify({ 
-          success: true, 
+        JSON.stringify({
+          success: true,
           readings_synced: insertedCount,
           period_from: periodFrom.toISOString(),
           period_to: periodTo.toISOString()
@@ -223,21 +233,21 @@ Deno.serve(async (req) => {
       console.log(`Processing ${consumption.length} consumption records for footprint`);
 
       let calculatedCount = 0;
-      const footprintRecords: any[] = [];
+      const footprintRecords: FootprintRecord[] = [];
 
       // Group consumption by date for API efficiency
       for (const record of consumption) {
         const intervalStart = new Date(record.interval_start);
-        
+
         // Fetch intensity for this specific time from Carbon Intensity API
         const intensityUrl = `https://api.carbonintensity.org.uk/intensity/${intervalStart.toISOString()}`;
-        
+
         try {
           const intensityResponse = await fetch(intensityUrl);
           if (intensityResponse.ok) {
             const intensityJson = await intensityResponse.json();
             const intensityData: IntensityData = intensityJson.data?.[0];
-            
+
             if (intensityData) {
               const intensity = intensityData.intensity.actual || intensityData.intensity.forecast;
               const carbonG = record.consumption_kwh * intensity;
@@ -264,7 +274,7 @@ Deno.serve(async (req) => {
           const { error } = await supabase
             .from('carbon_footprint')
             .upsert(record, { onConflict: 'mpan,interval_start' });
-          
+
           if (!error) calculatedCount++;
         }
       }
@@ -272,9 +282,9 @@ Deno.serve(async (req) => {
       console.log(`Calculated footprint for ${calculatedCount} records`);
 
       return new Response(
-        JSON.stringify({ 
-          success: true, 
-          records_calculated: calculatedCount 
+        JSON.stringify({
+          success: true,
+          records_calculated: calculatedCount
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -300,10 +310,10 @@ Deno.serve(async (req) => {
       }
 
       // Calculate summary stats
-      const totalCarbonG = footprint?.reduce((sum, r) => sum + Number(r.carbon_g), 0) || 0;
-      const totalKwh = footprint?.reduce((sum, r) => sum + Number(r.consumption_kwh), 0) || 0;
-      const avgIntensity = footprint?.length 
-        ? footprint.reduce((sum, r) => sum + r.intensity_gco2_kwh, 0) / footprint.length 
+      const totalCarbonG = footprint?.reduce((sum: number, r: FootprintRecord) => sum + Number(r.carbon_g), 0) || 0;
+      const totalKwh = footprint?.reduce((sum: number, r: FootprintRecord) => sum + Number(r.consumption_kwh), 0) || 0;
+      const avgIntensity = footprint?.length
+        ? footprint.reduce((sum: number, r: FootprintRecord) => sum + r.intensity_gco2_kwh, 0) / footprint.length
         : 0;
 
       // Count by intensity level

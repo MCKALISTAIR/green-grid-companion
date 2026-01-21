@@ -27,7 +27,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { UK_REGIONS } from '@/lib/carbonApi';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { useSavedLocations } from '@/hooks/useSavedLocations';
 
 interface LocationManagerProps {
@@ -41,7 +41,6 @@ export function LocationManager({ value, onChange, showPostcode = true }: Locati
   const [loadingLocation, setLoadingLocation] = React.useState(false);
   const [saveDialogOpen, setSaveDialogOpen] = React.useState(false);
   const [locationName, setLocationName] = React.useState('');
-  const { toast } = useToast();
 
   const {
     savedLocations,
@@ -64,10 +63,8 @@ export function LocationManager({ value, onChange, showPostcode = true }: Locati
 
   const handleMyLocation = () => {
     if (!navigator.geolocation) {
-      toast({
-        title: 'Geolocation not supported',
+      toast.error('Geolocation not supported', {
         description: 'Your browser does not support geolocation.',
-        variant: 'destructive',
       });
       return;
     }
@@ -92,24 +89,19 @@ export function LocationManager({ value, onChange, showPostcode = true }: Locati
 
             if (matchedRegion) {
               handleSelectLocation(matchedRegion.postcode);
-              toast({
-                title: 'Location Updated',
+              toast.success('Location Updated', {
                 description: `Set region to ${matchedRegion.name}`,
               });
             } else {
-              toast({
-                title: 'Region not found',
+              toast.error('Region not found', {
                 description: 'Could not match your location to a supported region.',
-                variant: 'destructive',
               });
             }
           }
         } catch (error) {
           console.error('Location error:', error);
-          toast({
-            title: 'Location Error',
+          toast.error('Location Error', {
             description: 'Failed to detect your region. Please select manually.',
-            variant: 'destructive',
           });
         } finally {
           setLoadingLocation(false);
@@ -117,10 +109,8 @@ export function LocationManager({ value, onChange, showPostcode = true }: Locati
       },
       () => {
         setLoadingLocation(false);
-        toast({
-          title: 'Location Access Denied',
+        toast.error('Location Access Denied', {
           description: 'Please enable location access to use this feature.',
-          variant: 'destructive',
         });
       }
     );
@@ -128,10 +118,8 @@ export function LocationManager({ value, onChange, showPostcode = true }: Locati
 
   const handleSaveLocation = () => {
     if (!locationName.trim()) {
-      toast({
-        title: 'Name required',
+      toast.error('Name required', {
         description: 'Please enter a name for this location.',
-        variant: 'destructive',
       });
       return;
     }
@@ -139,8 +127,7 @@ export function LocationManager({ value, onChange, showPostcode = true }: Locati
     saveLocation(locationName, value);
     setSaveDialogOpen(false);
     setLocationName('');
-    toast({
-      title: 'Location Saved',
+    toast.success('Location Saved', {
       description: `"${locationName}" has been saved.`,
     });
   };
@@ -148,8 +135,7 @@ export function LocationManager({ value, onChange, showPostcode = true }: Locati
   const handleRemoveSaved = (id: string, name: string, e: React.MouseEvent) => {
     e.stopPropagation();
     removeLocation(id);
-    toast({
-      title: 'Location Removed',
+    toast.info('Location Removed', {
       description: `"${name}" has been removed.`,
     });
   };

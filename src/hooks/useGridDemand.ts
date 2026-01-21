@@ -26,7 +26,7 @@ export function useGridDemand() {
 
             // Allow for graceful handling if mix is missing or needs mapping
             if (data?.mix) {
-                data.mix = data.mix.map((item: any) => ({
+                data.mix = data.mix.map((item: Partial<GenerationSourceMW>) => ({
                     ...item,
                     fuel: item.fuel || item.name // Ensure fuel is present for UI components
                 }));

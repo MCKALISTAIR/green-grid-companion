@@ -41,6 +41,7 @@ export interface ForecastData {
     actual?: number | null;
     index: 'very low' | 'low' | 'moderate' | 'high' | 'very high';
   };
+  generationmix?: GenerationMix[];
 }
 
 export const UK_REGIONS = [
@@ -129,7 +130,7 @@ export async function getRegionalHistoryAndForecast(regionId: number, from: stri
   // Backfill 'actual' if missing, using generation mix
   return data.map(item => {
     if (item.intensity.actual === undefined || item.intensity.actual === null) {
-      const mix = (item as any).generationmix as GenerationMix[];
+      const mix = item.generationmix;
       if (mix) {
         item.intensity.actual = calculateIntensityFromMix(mix);
       }

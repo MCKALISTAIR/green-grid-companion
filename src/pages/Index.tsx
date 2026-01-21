@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RefreshCw, Zap, Info, Leaf, Activity } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { IntensityScene, getSkyStartColor } from '@/components/IntensityScene';
@@ -14,7 +15,7 @@ import { DemandView } from '@/components/DemandView';
 import { useCarbonData } from '@/hooks/useCarbonData';
 import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
 import { useNotifications } from '@/hooks/useNotifications';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DEFINITIONS } from '@/lib/definitions';
@@ -64,7 +65,7 @@ const Index = () => {
     }
   }, [postcode]);
 
-  const { toast } = useToast();
+
 
   const handleRefresh = async () => {
     await refetch();
@@ -82,17 +83,13 @@ const Index = () => {
       // If next update is in the future, we still have valid data
       if (next > now) {
         const timeStr = new Date(next).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        toast({
-          title: "Up to date",
+        toast.info("Up to date", {
           description: `Next Grid data update expected around ${timeStr}.`,
-          duration: 3000,
         });
       } else {
         // Maybe API IS just lagging, still show 'refreshed'
-        toast({
-          title: "Checked for updates",
+        toast.info("Checked for updates", {
           description: "No new data from National Grid yet.",
-          duration: 2000,
         });
       }
     }
@@ -223,50 +220,61 @@ const Index = () => {
               </div>
 
               {/* Render View */}
-              {viewMode === 'demand' ? (
-                <DemandView />
-              ) : viewMode === 'footprint' && isOctopusLinked ? (
-                <FootprintView />
-              ) : (
-                <>
-                  {/* Energy Insights (formerly Tip of the day) */}
-                  <Card className="p-4 shadow-lg bg-accent/30 border-accent/50">
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
-                        <Zap className="w-4 h-4 text-accent-foreground" />
-                      </div>
-                      <div>
-                        <h3 className="font-medium text-foreground">Energy Insights</h3>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {getSmartTip(intensity, forecast)}
-                        </p>
-                      </div>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={viewMode}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className="w-full"
+                >
+                  {viewMode === 'demand' ? (
+                    <DemandView />
+                  ) : viewMode === 'footprint' && isOctopusLinked ? (
+                    <FootprintView />
+                  ) : (
+                    <div className="space-y-4">
+                      {/* Energy Insights (formerly Tip of the day) */}
+                      <Card className="p-4 shadow-lg bg-accent/30 border-accent/50">
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                            <Zap className="w-4 h-4 text-accent-foreground" />
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-foreground">Energy Insights</h3>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {getSmartTip(intensity, forecast)}
+                            </p>
+                          </div>
+                        </div>
+                      </Card>
+
+                      {/* Generation Mix */}
+                      <Card className="p-4 shadow-lg">
+                        <GenerationMixBar mix={generationMix} />
+                      </Card>
+
+                      {/* Best/Worst Times */}
+                      {forecast.length > 0 && (
+                        <BestTimeCard forecast={forecast} />
+                      )}
+
+                      {/* Hourly Forecast */}
+                      {forecast.length > 0 && (
+                        <Card className="p-4 shadow-lg">
+                          <ForecastChart forecast={forecast} showNext={12} />
+                        </Card>
+                      )}
+
+                      {/* Daily Summary */}
+                      {forecast.length > 0 && (
+                        <ForecastSummary forecast={forecast} />
+                      )}
                     </div>
-                  </Card>
-
-                  {/* Generation Mix */}
-                  <Card className="p-4 shadow-lg">
-                    <GenerationMixBar mix={generationMix} />
-                  </Card>
-
-                  {/* Best/Worst Times */}
-                  {forecast.length > 0 && (
-                    <BestTimeCard forecast={forecast} />
                   )}
-
-                  {/* Hourly Forecast */}
-                  {forecast.length > 0 && (
-                    <Card className="p-4 shadow-lg">
-                      <ForecastChart forecast={forecast} showNext={12} />
-                    </Card>
-                  )}
-
-                  {/* Daily Summary */}
-                  {forecast.length > 0 && (
-                    <ForecastSummary forecast={forecast} />
-                  )}
-                </>
-              )}
+                </motion.div>
+              </AnimatePresence>
             </div>
           </div>
         </PullToRefresh>

@@ -217,7 +217,7 @@ export default function HistoryPage() {
                                                 fontSize: '12px'
                                             }}
                                             labelFormatter={(label) => <span className="font-semibold text-foreground">{label}</span>}
-                                            formatter={(value: any, name: any, props: any) => {
+                                            formatter={(value: number | string, name: string, props: { payload: { carbonMass?: number } }) => {
                                                 if (name === 'Actual' || name === 'Forecast') return [`${value} gCO2/kWh`, name];
                                                 if (name === 'Usage (kWh)') {
                                                     const carbonMass = props.payload.carbonMass;

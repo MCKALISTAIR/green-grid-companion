@@ -156,6 +156,7 @@
 }
 
 /* Custom animations */
+/* Custom animations */
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-10px); }
@@ -304,61 +305,76 @@
 }
 
 .animate-float {
-  animation: float 3s ease-in-out infinite;
+  will-change: transform;
+  animation: float 3s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
 
 .animate-drift {
+  will-change: transform;
   animation: drift 20s linear infinite;
 }
 
 .animate-smoke {
-  animation: smoke 3s ease-out infinite;
+  will-change: transform, opacity;
+  animation: smoke 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 .animate-spin-slow {
+  will-change: transform;
   animation: spin-slow 8s linear infinite;
 }
 
 .animate-pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
+  will-change: filter;
+  animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 .animate-bird-fly {
+  will-change: transform, opacity;
   animation: bird-fly 12s linear infinite;
 }
 
 .animate-bird-wings {
-  animation: bird-wings 0.3s ease-in-out infinite;
+  will-change: d;
+  animation: bird-wings 0.3s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
 
 .animate-cloud-drift {
+  will-change: transform;
   animation: cloud-drift 40s linear infinite;
 }
 
 .animate-smoke-rise {
-  animation: smoke-rise 4s ease-out infinite;
+  will-change: transform, opacity;
+  animation: smoke-rise 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 .animate-rain {
+  will-change: transform, opacity;
   animation: rain 1s linear infinite;
 }
 
 .animate-sun-ray {
-  animation: sun-ray 3s ease-in-out infinite;
+  will-change: opacity, transform;
+  animation: sun-ray 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 .animate-leaf-float {
-  animation: leaf-float 6s ease-in-out infinite;
+  will-change: transform;
+  animation: leaf-float 6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 .animate-flame {
-  animation: flame 0.4s ease-in-out infinite;
+  will-change: transform, opacity;
+  animation: flame 0.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 .animate-shimmer {
-  animation: shimmer 3s ease-in-out infinite;
+  will-change: transform;
+  animation: shimmer 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 .animate-water-ripple {
-  animation: water-ripple 2s ease-in-out infinite;
+  will-change: transform, opacity;
+  animation: water-ripple 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }

@@ -4,7 +4,7 @@ import { Capacitor } from '@capacitor/core';
 import { Geolocation } from '@capacitor/geolocation';
 
 // Weather condition types based on WMO codes
-export type WeatherCondition = 
+export type WeatherCondition =
   | 'clear'
   | 'partly-cloudy'
   | 'cloudy'
@@ -50,11 +50,21 @@ function mapWMOCodeToCondition(code: number): WeatherCondition {
   return 'cloudy';
 }
 
-function parseWeatherResponse(data: any): WeatherData {
+interface WeatherApiResponse {
+  current: {
+    weather_code: number;
+    temperature_2m: number;
+    relative_humidity_2m: number;
+    wind_speed_10m: number;
+    cloud_cover: number;
+  };
+}
+
+function parseWeatherResponse(data: WeatherApiResponse): WeatherData {
   const current = data.current;
   const code = current.weather_code;
   const condition = mapWMOCodeToCondition(code);
-  
+
   // Calculate precipitation intensity based on weather code
   let precipitationIntensity = 0;
   if (code >= 51 && code <= 55) precipitationIntensity = 0.2 + (code - 51) * 0.1;
@@ -86,12 +96,12 @@ async function fetchWeather(lat: number, lon: number): Promise<WeatherData> {
   });
 
   const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
-  
+
   if (!response.ok) {
     throw new Error('Failed to fetch weather data');
   }
-  
-  const data = await response.json();
+
+  const data = await response.json() as WeatherApiResponse;
   return parseWeatherResponse(data);
 }
 
