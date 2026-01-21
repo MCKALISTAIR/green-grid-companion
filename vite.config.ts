@@ -18,11 +18,29 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
     // Ensure Vite doesn't bundle multiple copies of React
-    dedupe: ["react", "react-dom", "react-router", "react-router-dom", "@tanstack/react-query"],
+    // Include React subpath entries too (some deps import these directly)
+    dedupe: [
+      "react",
+      "react-dom",
+      "react/jsx-runtime",
+      "react/jsx-dev-runtime",
+      "scheduler",
+      "react-router",
+      "react-router-dom",
+      "@tanstack/react-query",
+    ],
     preserveSymlinks: false,
   },
   optimizeDeps: {
-    include: ["react", "react-dom", "react-router-dom", "@tanstack/react-query"],
+    include: [
+      "react",
+      "react-dom",
+      "react/jsx-runtime",
+      "react/jsx-dev-runtime",
+      "scheduler",
+      "react-router-dom",
+      "@tanstack/react-query",
+    ],
     // Force re-optimizing dependencies (helps when Vite cache gets corrupted)
     force: true,
   },
