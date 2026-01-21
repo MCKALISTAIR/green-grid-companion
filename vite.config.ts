@@ -17,19 +17,22 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
+    // IMPORTANT: use exact-match aliases for React.
+    // A plain string key like `react: ...` also matches `react/*` and can
+    // accidentally rewrite `react/jsx-runtime` into `.../react/index.js/jsx-runtime`.
+    alias: [
+      { find: "@", replacement: path.resolve(__dirname, "./src") },
 
       // Hard-pin React to a single resolved path.
       // This prevents multiple React copies from being loaded (which causes
       // `useEffect`/`useContext` to crash with "Cannot read properties of null").
-      react: require.resolve("react"),
-      "react-dom": require.resolve("react-dom"),
-      "react-dom/client": require.resolve("react-dom/client"),
-      "react/jsx-runtime": require.resolve("react/jsx-runtime"),
-      "react/jsx-dev-runtime": require.resolve("react/jsx-dev-runtime"),
-      scheduler: require.resolve("scheduler"),
-    },
+      { find: /^react$/, replacement: require.resolve("react") },
+      { find: /^react-dom$/, replacement: require.resolve("react-dom") },
+      { find: /^react-dom\/client$/, replacement: require.resolve("react-dom/client") },
+      { find: /^react\/jsx-runtime$/, replacement: require.resolve("react/jsx-runtime") },
+      { find: /^react\/jsx-dev-runtime$/, replacement: require.resolve("react/jsx-dev-runtime") },
+      { find: /^scheduler$/, replacement: require.resolve("scheduler") },
+    ],
     // Ensure Vite doesn't bundle multiple copies of React
     // Include React subpath entries too (some deps import these directly)
     dedupe: [
