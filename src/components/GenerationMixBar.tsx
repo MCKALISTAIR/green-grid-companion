@@ -58,7 +58,7 @@ export function GenerationMixBar({ mix, showMW = false }: GenerationMixBarProps)
           </div>
 
           {/* Bar visualization */}
-          <div className="h-4 rounded-full overflow-hidden flex shadow-inner bg-muted/30">
+          <div className="h-4 md:h-6 rounded-full overflow-hidden flex shadow-inner bg-muted/30">
             {sortedMix.map((item) => (
               <div
                 key={item.fuel}
@@ -68,25 +68,48 @@ export function GenerationMixBar({ mix, showMW = false }: GenerationMixBarProps)
             ))}
           </div>
 
-          {/* Legend Preview (Top 6) */}
-          <div className="flex flex-wrap gap-2">
-            {sortedMix.slice(0, 6).map((item) => (
+          {/* Legend - Responsive Grid */}
+          <div className="block md:hidden">
+            {/* Mobile: Compact Flex Wrap (Top 6) */}
+            <div className="flex flex-wrap gap-2">
+              {sortedMix.slice(0, 6).map((item) => (
+                <div
+                  key={item.fuel}
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground"
+                >
+                  <div className={`w-2.5 h-2.5 rounded-full ${fuelColors[item.fuel.toLowerCase()] || 'bg-gen-other'}`} />
+                  <span className="capitalize">{item.fuel}</span>
+                  <span className="font-medium text-foreground">
+                    {showMW && item.mw
+                      ? `${(item.mw / 1000).toFixed(1)}GW`
+                      : `${item.perc.toFixed(0)}%`}
+                  </span>
+                </div>
+              ))}
+              {sortedMix.length > 6 && (
+                <span className="text-xs text-muted-foreground self-center">+{sortedMix.length - 6} more</span>
+              )}
+            </div>
+          </div>
+
+          <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-y-2 gap-x-4 pt-2">
+            {/* Desktop: Full Grid showing all items */}
+            {sortedMix.map((item) => (
               <div
                 key={item.fuel}
-                className="flex items-center gap-1.5 text-xs text-muted-foreground"
+                className="flex items-center justify-between text-sm"
               >
-                <div className={`w-2.5 h-2.5 rounded-full ${fuelColors[item.fuel.toLowerCase()] || 'bg-gen-other'}`} />
-                <span className="capitalize">{item.fuel}</span>
-                <span className="font-medium text-foreground">
+                <div className="flex items-center gap-2">
+                  <div className={`w-3 h-3 rounded-full ${fuelColors[item.fuel.toLowerCase()] || 'bg-gen-other'}`} />
+                  <span className="capitalize text-muted-foreground">{item.fuel}</span>
+                </div>
+                <span className="font-semibold tabular-nums">
                   {showMW && item.mw
-                    ? `${(item.mw / 1000).toFixed(1)}GW`
-                    : `${item.perc.toFixed(0)}%`}
+                    ? `${(item.mw / 1000).toFixed(2)} GW`
+                    : `${item.perc}%`}
                 </span>
               </div>
             ))}
-            {sortedMix.length > 6 && (
-              <span className="text-xs text-muted-foreground self-center">+{sortedMix.length - 6} more</span>
-            )}
           </div>
         </div>
       </DialogTrigger>
@@ -138,6 +161,6 @@ export function GenerationMixBar({ mix, showMW = false }: GenerationMixBarProps)
           </div>
         </ScrollArea>
       </DialogContent>
-    </Dialog>
+    </Dialog >
   );
 }

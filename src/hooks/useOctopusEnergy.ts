@@ -50,73 +50,41 @@ export function useOctopusEnergy(days: number = 30) {
   const { data: status, isLoading: statusLoading, refetch: refetchStatus } = useQuery({
     queryKey: ['octopus-status'],
     queryFn: async (): Promise<OctopusStatus> => {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/octopus-energy?action=get-status`,
-        {
-          headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const { data, error } = await supabase.functions.invoke('octopus-energy', {
+        body: { action: 'get-status' }
+      });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to fetch status');
-      }
-
-      return response.json();
+      if (error) throw new Error(error.message || 'Failed to fetch status');
+      return data;
     },
-    staleTime: 30000, // 30 seconds
+    staleTime: 30000,
   });
 
   // Fetch footprint data with dynamic range
   const { data: footprint, isLoading: footprintLoading, refetch: refetchFootprint } = useQuery({
     queryKey: ['octopus-footprint', days],
     queryFn: async (): Promise<FootprintData> => {
-      // Ensure we request at least 1 day
       const safeDays = Math.max(1, days);
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/octopus-energy?action=get-footprint&days=${safeDays}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const { data, error } = await supabase.functions.invoke('octopus-energy', {
+        body: { action: 'get-footprint', days: safeDays }
+      });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to fetch footprint');
-      }
-
-      return response.json();
+      if (error) throw new Error(error.message || 'Failed to fetch footprint');
+      return data;
     },
     enabled: status?.is_linked ?? false,
-    staleTime: 60000, // 1 minute
+    staleTime: 60000,
   });
 
   // Link meter (fetch from Octopus API)
   const linkMeter = useCallback(async () => {
     setIsSyncing(true);
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/octopus-energy?action=get-meters`,
-        {
-          headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const { data, error } = await supabase.functions.invoke('octopus-energy', {
+        body: { action: 'get-meters' }
+      });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to link meter');
-      }
-
-      const data = await response.json();
+      if (error) throw new Error(error.message || 'Failed to link meter');
 
       if (data.meters?.length > 0) {
         toast.success(`Linked ${data.meters.length} meter(s) successfully!`);
@@ -139,24 +107,13 @@ export function useOctopusEnergy(days: number = 30) {
   const syncConsumption = useCallback(async (syncDays: number = 7) => {
     setIsSyncing(true);
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/octopus-energy?action=sync-consumption&days=${syncDays}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const { data, error } = await supabase.functions.invoke('octopus-energy', {
+        body: { action: 'sync-consumption', days: syncDays }
+      });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to sync consumption');
-      }
+      if (error) throw new Error(error.message || 'Failed to sync consumption');
 
-      const data = await response.json();
       toast.success(`Synced ${data.readings_synced} consumption readings`);
-
       await refetchStatus();
       return data;
     } catch (error: unknown) {
@@ -172,24 +129,13 @@ export function useOctopusEnergy(days: number = 30) {
   const calculateFootprint = useCallback(async () => {
     setIsSyncing(true);
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/octopus-energy?action=calculate-footprint`,
-        {
-          headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const { data, error } = await supabase.functions.invoke('octopus-energy', {
+        body: { action: 'calculate-footprint' }
+      });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to calculate footprint');
-      }
+      if (error) throw new Error(error.message || 'Failed to calculate footprint');
 
-      const data = await response.json();
       toast.success(`Calculated carbon footprint for ${data.records_calculated} periods`);
-
       await refetchFootprint();
       return data;
     } catch (error: unknown) {

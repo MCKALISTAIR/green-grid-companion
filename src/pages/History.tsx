@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getRegionalHistoryAndForecast, ForecastData } from '@/lib/carbonApi';
+import { getRegionalHistoryAndForecast, getNationalHistoryAndForecast, ForecastData } from '@/lib/carbonApi';
 import { useCarbonData } from '@/hooks/useCarbonData';
 import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -19,13 +19,17 @@ export default function HistoryPage() {
     const historyQuery = useQuery<ForecastData[]>({
         queryKey: ['history', regionId, timeRange],
         queryFn: () => {
-            if (!regionId) return Promise.resolve([]);
             const now = new Date();
             const from = subDays(now, timeRange === '24h' ? 1 : 7).toISOString();
             const to = now.toISOString();
-            return getRegionalHistoryAndForecast(regionId, from, to);
+
+            if (regionId) {
+                return getRegionalHistoryAndForecast(regionId, from, to);
+            } else {
+                return getNationalHistoryAndForecast(from, to);
+            }
         },
-        enabled: !!regionId,
+        enabled: true, // Always fetch (National or Regional)
         refetchInterval: false,
         staleTime: 1000 * 60 * 30, // 30 mins
     });

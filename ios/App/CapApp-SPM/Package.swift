@@ -19,6 +19,7 @@ let package = Package(
         .package(name: "CapacitorPushNotifications", path: "../../../node_modules/@capacitor/push-notifications"),
         .package(name: "CapacitorSplashScreen", path: "../../../node_modules/@capacitor/splash-screen"),
         .package(name: "CapacitorStatusBar", path: "../../../node_modules/@capacitor/status-bar"),
+        .package(name: "SentryCapacitor", path: "../../../node_modules/@sentry/capacitor"),
         .package(name: "TransistorsoftCapacitorBackgroundFetch", path: "../../../node_modules/@transistorsoft/capacitor-background-fetch")
     ],
     targets: [
@@ -34,6 +35,7 @@ let package = Package(
                 .product(name: "CapacitorPushNotifications", package: "CapacitorPushNotifications"),
                 .product(name: "CapacitorSplashScreen", package: "CapacitorSplashScreen"),
                 .product(name: "CapacitorStatusBar", package: "CapacitorStatusBar"),
+                .product(name: "SentryCapacitor", package: "SentryCapacitor"),
                 .product(name: "TransistorsoftCapacitorBackgroundFetch", package: "TransistorsoftCapacitorBackgroundFetch")
             ]
         )

@@ -1,0 +1,230 @@
+import { useMemo } from 'react';
+import { motion } from 'framer-motion';
+
+export interface LandscapeProps {
+    cleanliness: number;
+    isNight: boolean;
+    synthwaveMode: boolean;
+    isSnowing?: boolean;
+    isChristmas?: boolean;
+    skipIntro?: boolean;
+}
+
+// 🌲 Stylized Pine Tree with Shading
+function PineTree({ x, y, scale = 1, colorPrimary, colorShadow, isSnowing, isChristmas }: { x: number; y: number; scale?: number; colorPrimary: string; colorShadow: string; isSnowing?: boolean; isChristmas?: boolean }) {
+    return (
+        <g transform={`translate(${x}, ${y}) scale(${scale})`}>
+            {/* Trunk */}
+            <rect x="-2" y="0" width="4" height="10" fill="rgba(60, 40, 20, 0.4)" />
+
+            {/* Bottom Tier */}
+            <path d="M0,-25 L15,-5 L0,-5 Z" fill={colorShadow} />
+            <path d="M0,-25 L-15,-5 L0,-5 Z" fill={colorPrimary} />
+
+            {/* Middle Tier */}
+            <path d="M0,-40 L12,-20 L0,-20 Z" fill={colorShadow} />
+            <path d="M0,-40 L-12,-20 L0,-20 Z" fill={colorPrimary} />
+
+            {/* Top Tier */}
+            <path d="M0,-50 L8,-35 L0,-35 Z" fill={colorShadow} />
+            <path d="M0,-50 L-8,-35 L0,-35 Z" fill={colorPrimary} />
+
+            {/* Christmas Decorations 🎄 */}
+            {isChristmas && (
+                <g>
+                    {/* Baubles */}
+                    <circle cx="-6" cy="-12" r="1.5" fill="#ef4444" /> {/* Red */}
+                    <circle cx="5" cy="-18" r="1.5" fill="#fbbf24" /> {/* Gold */}
+                    <circle cx="0" cy="-28" r="1.5" fill="#3b82f6" /> {/* Blue */}
+                    <circle cx="-3" cy="-38" r="1.5" fill="#ef4444" /> {/* Red */}
+                    {/* Star on top */}
+                    <circle cx="0" cy="-50" r="2" fill="#fbbf24" filter="drop-shadow(0 0 2px #fcd34d)" />
+                </g>
+            )}
+
+            {/* Snow cap on top (if snowing) */}
+            {isSnowing && (
+                <path d="M0,-50 L4,-42 L-4,-42 Z" fill="#ffffff" opacity="0.9" />
+            )}
+        </g>
+    );
+}
+
+// ⛰️ Rolling Hill Layer (Generic)
+function HillLayer({
+    d,
+    fill,
+    trees = [],
+    treeColors,
+    delay = 0,
+    isSnowing,
+    isChristmas,
+    skipIntro
+}: {
+    d: string;
+    fill: string;
+    trees?: { x: number, y: number, scale: number }[];
+    treeColors?: { primary: string, shadow: string };
+    delay?: number;
+    isSnowing?: boolean;
+    isChristmas?: boolean;
+    skipIntro?: boolean;
+}) {
+    return (
+        <motion.g
+            initial={skipIntro ? { y: 0, opacity: 1 } : { y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={skipIntro ? { duration: 0 } : { duration: 1.5, delay, ease: "easeOut" }}
+        >
+            <path d={d} fill={fill} />
+
+            {/* Snow layer on top of hill curve if snowing */}
+            {isSnowing && (
+                <path d={d} fill="white" fillOpacity="0.3" stroke="white" strokeWidth="2" strokeOpacity="0.5" strokeDasharray="10 20" />
+            )}
+
+            {trees.map((tree, i) => (
+                <PineTree
+                    key={i}
+                    x={tree.x}
+                    y={tree.y}
+                    scale={tree.scale}
+                    colorPrimary={treeColors?.primary || '#4ade80'}
+                    colorShadow={treeColors?.shadow || '#22c55e'}
+                    isSnowing={isSnowing}
+                    isChristmas={isChristmas}
+                />
+            ))}
+        </motion.g>
+    );
+}
+
+// 🎨 Palette Hook
+export function useLandscapePalette(cleanliness: number, isNight: boolean, synthwaveMode: boolean, isSnowing?: boolean) {
+    return useMemo(() => {
+        if (synthwaveMode) {
+            return {
+                backHill: '#240046', midHill: '#3c096c', frontHill: '#5a189a',
+                treePrimary: '#e0aaff', treeShadow: '#9d4edd',
+            };
+        }
+        if (isSnowing) {
+            return {
+                backHill: isNight ? '#1e293b' : '#cbd5e1',
+                midHill: isNight ? '#334155' : '#e2e8f0',
+                frontHill: isNight ? '#475569' : '#f1f5f9',
+                treePrimary: isNight ? '#0f172a' : '#14532d',
+                treeShadow: isNight ? '#020617' : '#052e16',
+            };
+        }
+        if (isNight) {
+            return {
+                backHill: '#0f172a', midHill: '#1e293b', frontHill: '#334155',
+                treePrimary: '#475569', treeShadow: '#0f172a',
+            };
+        }
+        const isClean = cleanliness > 0.5;
+        return {
+            backHill: isClean ? '#14532d' : '#422006',
+            midHill: isClean ? '#166534' : '#713f12',
+            frontHill: isClean ? '#15803d' : '#854d0e',
+            treePrimary: isClean ? '#4ade80' : '#a16207',
+            treeShadow: isClean ? '#16a34a' : '#854d0e',
+        };
+    }, [cleanliness, isNight, synthwaveMode, isSnowing]);
+}
+
+// --- Independent Layer Components ---
+
+export function LandscapeBack(props: LandscapeProps) {
+    const palette = useLandscapePalette(props.cleanliness, props.isNight, props.synthwaveMode, props.isSnowing);
+    // 0,80 -> 200,80 via 100,20 | 200,80 -> 400,60 via 300,140
+    const getBackY = (x: number) => (x < 200 ? 80 + (x / 200) * 20 : 80);
+    const backTrees = [20, 80, 150, 220, 290, 360].map(x => ({ x, y: 85, scale: 0.6 }));
+
+    return (
+        <>
+            <defs>
+                <linearGradient id="gradBack" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={palette.backHill} stopOpacity="0.8" />
+                    <stop offset="100%" stopColor={palette.backHill} />
+                </linearGradient>
+            </defs>
+            <HillLayer
+                d="M0,150 L0,80 Q100,20 200,80 Q300,140 400,60 L400,150 Z"
+                fill="url(#gradBack)"
+                trees={backTrees.map(t => ({ ...t, y: getBackY(t.x) }))}
+                treeColors={{ primary: palette.treePrimary, shadow: palette.treeShadow }}
+                delay={0}
+                isSnowing={props.isSnowing}
+                isChristmas={props.isChristmas}
+                skipIntro={props.skipIntro}
+            />
+        </>
+    );
+}
+
+export function LandscapeMid(props: LandscapeProps) {
+    const palette = useLandscapePalette(props.cleanliness, props.isNight, props.synthwaveMode, props.isSnowing);
+    const midTrees = [45, 120, 190, 260, 330].map(x => ({ x, y: 105, scale: 0.9 }));
+
+    return (
+        <>
+            <defs>
+                <linearGradient id="gradMid" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={palette.midHill} stopOpacity="0.9" />
+                    <stop offset="100%" stopColor={palette.midHill} />
+                </linearGradient>
+            </defs>
+            <HillLayer
+                d="M0,150 L0,110 Q80,140 160,90 Q240,40 320,100 Q360,130 400,90 L400,150 Z"
+                fill="url(#gradMid)"
+                trees={midTrees.map(t => ({ ...t, y: 100 }))}
+                treeColors={{ primary: palette.treePrimary, shadow: palette.treeShadow }}
+                delay={0.2}
+                isSnowing={props.isSnowing}
+                isChristmas={props.isChristmas}
+                skipIntro={props.skipIntro}
+            />
+        </>
+    );
+}
+
+export function LandscapeFront(props: LandscapeProps) {
+    const palette = useLandscapePalette(props.cleanliness, props.isNight, props.synthwaveMode, props.isSnowing);
+    const frontTrees = [10, 90, 310, 390].map(x => ({ x, y: 130, scale: 1.2 }));
+
+    return (
+        <>
+            <defs>
+                <linearGradient id="gradFront" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={palette.frontHill} stopOpacity="1" />
+                    <stop offset="100%" stopColor={palette.frontHill} />
+                </linearGradient>
+            </defs>
+            <HillLayer
+                d="M0,150 L0,130 Q120,80 200,130 Q280,180 400,110 L400,150 Z"
+                fill="url(#gradFront)"
+                trees={frontTrees.map(t => ({ ...t, y: 140 }))}
+                treeColors={{ primary: palette.treePrimary, shadow: palette.treeShadow }}
+                delay={0.4}
+                isSnowing={props.isSnowing}
+                isChristmas={props.isChristmas}
+                skipIntro={props.skipIntro}
+            />
+        </>
+    );
+}
+
+// Deprecated Monolith - Keeping for compatibility if needed, but Index.tsx should use layers
+export function Landscape(props: LandscapeProps) {
+    return (
+        <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-0">
+            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+                <LandscapeBack {...props} />
+                <LandscapeMid {...props} />
+                <LandscapeFront {...props} />
+            </svg>
+        </div>
+    );
+}

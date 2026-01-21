@@ -8,6 +8,11 @@ GridSense is a mobile-first companion app designed to help UK (and future) energ
 *   **Real-time Carbon Intensity**: Visualises the current grid status.
 *   **Energy Insights**: Smart, data-driven advice at the top of the feed (e.g. "Wait until 2pm for cleaner energy").
 *   **Immersive Scenes**: A dynamic background that changes based on air quality/cleanliness.
+    *   **Interactive Elements**: Click wind turbines for "overdrive" mode, tap the Sun/Moon to toggle Synthwave mode with vibrant colors.
+    *   **Atmospheric Grading**: Visual filters (contrast, saturation, sepia) dynamically adjust based on carbon intensity to simulate air quality.
+    *   **Hybrid Scene Logic**: Both renewable energy and fossil fuel elements coexist, with prominence scaled by carbon intensity.
+    *   **Random Events**: Periodic interactive events like UFOs, shooting stars, and rainbows that add delight and engagement.
+    *   **Roaming Sheep**: Animated sheep that wander across the landscape and can be clicked for playful interactions.
 *   **System Dark Mode**: Fully supported dark theme that respects your device settings.
 *   **Desktop Support**: Responsive layout with a dedicated sidebar and grid dashboard for larger screens.
 *   **Web Notifications**: Notification support for desktop browsers (Chrome/Safari) when the tab is open.
@@ -92,10 +97,12 @@ GridSense is a mobile-first companion app designed to help UK (and future) energ
 
 ## 📱 Developer Structure
 
-*   `src/pages`: Main application screens (Index, Planner, History, Settings).
+*   `src/pages`: Main application screens (Index, Planner, History, Settings, Glossary).
 *   `src/components`: Reusable UI blocks and Widgets.
+    *   `src/components/scene`: Interactive scene elements (Landscape, Sheep, CarrotEvents).
+    *   Error boundaries (ComponentErrorBoundary, ErrorBoundary, ErrorState) for robust error handling.
 *   `src/lib/carbonApi.ts`: Types and fetchers for the Carbon Intensity API.
-*   `src/hooks`: Custom React hooks (useCarbonData, useNotifications).
+*   `src/hooks`: Custom React hooks (useCarbonData, useNotifications, useOctopusEnergy).
 *   `ios/App/GridSenseWidget`: Native Swift code for the iOS Widget.
 
 ## 📄 License

@@ -130,10 +130,10 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
                   <div className="relative h-24 w-8 flex items-end justify-center">
                     {/* Forecast Bar (Background/Ghost) */}
                     <div
-                      className={`absolute bottom-0 w-full rounded-t-md transition-[height,background-color] duration-500 ease-out ${getIntensityColor(item.intensity.index)}`}
+                      className={`absolute bottom-0 w-full rounded-t-md transition-[height,background-color] duration-500 ease-out border-x border-t border-white/10 ${getIntensityColor(item.intensity.index)}`}
                       style={{
                         height: `${Math.max(height, 10)}%`,
-                        opacity: item.intensity.actual ? 0.3 : 1
+                        opacity: item.intensity.actual ? 0.3 : 0.9
                       }}
                     />
 

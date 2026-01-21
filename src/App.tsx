@@ -14,11 +14,13 @@ import Planner from "./pages/Planner";
 import MapPage from "./pages/Map";
 import Settings from "./pages/Settings";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Glossary from "./pages/Glossary";
 import HistoryPage from "./pages/History";
 import ScrollToTop from "@/components/ScrollToTop";
 import NotFound from "./pages/NotFound";
 import { AppLayout } from "@/components/layout/AppLayout";
 import TurbineTest from "./pages/TurbineTest";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -77,6 +79,7 @@ function AppContent() {
             <Route path="/map" element={<MapPage />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/glossary" element={<Glossary />} />
             <Route path="/history" element={<HistoryPage />} />
             <Route path="/__turbine-test" element={<TurbineTest />} />
             <Route path="*" element={<NotFound />} />
@@ -91,7 +94,9 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <TooltipProvider>
-        <AppContent />
+        <ErrorBoundary>
+          <AppContent />
+        </ErrorBoundary>
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>

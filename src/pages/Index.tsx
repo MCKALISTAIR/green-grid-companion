@@ -22,6 +22,8 @@ import { DEFINITIONS } from '@/lib/definitions';
 import { PullToRefresh } from '@/components/PullToRefresh';
 import { useSavedLocations } from '@/hooks/useSavedLocations';
 import type { ForecastData } from '@/lib/carbonApi';
+import { ErrorState } from '@/components/ErrorState';
+import { ComponentErrorBoundary } from '@/components/ComponentErrorBoundary';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -47,7 +49,9 @@ const Index = () => {
     forecast,
     lastUpdated,
     isLoading,
-    refetch
+    isError,
+    refetch,
+    getNextUpdate
   } = useCarbonData(postcode);
 
   // Auto-schedule notifications when forecast updates
@@ -100,6 +104,20 @@ const Index = () => {
 
   const skyColor = getSkyStartColor(index);
 
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <div className="flex-1 flex items-center justify-center p-4">
+          <ErrorState
+            title="Grid Data Unavailable"
+            description="We couldn't fetch the latest carbon intensity data. This might be a connection issue or the grid service is down."
+            retry={() => refetch()}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <TooltipProvider>
       <div
@@ -111,7 +129,9 @@ const Index = () => {
             {/* Header with scene */}
             <div className="relative">
               {/* Animated scene */}
-              <IntensityScene intensity={intensity} index={index} />
+              <ComponentErrorBoundary name="Scene" className="h-[45vh] min-h-96 pb-24">
+                <IntensityScene intensity={intensity} index={index} generationMix={generationMix} />
+              </ComponentErrorBoundary>
 
               {/* Overlay header */}
               <div className="absolute top-0 left-0 right-0 p-4 pt-[max(1rem,env(safe-area-inset-top))] flex items-center justify-between z-30">
@@ -173,9 +193,25 @@ const Index = () => {
                       </div>
                     )}
                     {!isLoading && lastUpdated && (
-                      <p className="text-xs text-card/80 mt-1 font-medium">
-                        Updated {new Date(lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </p>
+                      <div className="flex flex-col items-center mt-2">
+                        <div className="flex items-center gap-1.5 text-xs text-card/80 font-medium bg-white/20 px-2 py-0.5 rounded-md">
+                          <span>Updated {new Date(lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          <span>•</span>
+                          <span>Next {getNextUpdate(lastUpdated)?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-4 w-4 rounded-full p-0 hover:bg-transparent ml-0.5">
+                                <Info className="w-3 h-3 text-card/70" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[260px] p-3 text-xs bg-card border-border backdrop-blur-xl">
+                              <p className="font-semibold mb-1">Data Refresh Schedule</p>
+                              <p>Data is sourced directly from the National Grid ESO. They publish new carbon intensity figures every <span className="font-bold">30 minutes</span>.</p>
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -251,27 +287,35 @@ const Index = () => {
 
                       {/* Generation Mix */}
                       <Card className="p-4 shadow-lg">
-                        <GenerationMixBar mix={generationMix} />
+                        <ComponentErrorBoundary name="Generation Mix">
+                          <GenerationMixBar mix={generationMix} />
+                        </ComponentErrorBoundary>
                       </Card>
 
                       {/* Best/Worst Times */}
                       {forecast.length > 0 && (
                         <div className="md:col-span-1">
-                          <BestTimeCard forecast={forecast} />
+                          <ComponentErrorBoundary name="Best Time Advisor">
+                            <BestTimeCard forecast={forecast} />
+                          </ComponentErrorBoundary>
                         </div>
                       )}
 
                       {/* Hourly Forecast */}
                       {forecast.length > 0 && (
                         <Card className="p-4 shadow-lg md:col-span-2 lg:col-span-3">
-                          <ForecastChart forecast={forecast} showNext={24} />
+                          <ComponentErrorBoundary name="Hourly Forecast">
+                            <ForecastChart forecast={forecast} showNext={24} />
+                          </ComponentErrorBoundary>
                         </Card>
                       )}
 
                       {/* Daily Summary */}
                       {forecast.length > 0 && (
                         <div className="md:col-span-2 lg:col-span-3">
-                          <ForecastSummary forecast={forecast} />
+                          <ComponentErrorBoundary name="Daily Forecast">
+                            <ForecastSummary forecast={forecast} />
+                          </ComponentErrorBoundary>
                         </div>
                       )}
                     </div>

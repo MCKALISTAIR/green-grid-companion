@@ -19,8 +19,8 @@ export function useCarbonData(postcode: string) {
   const nationalQuery = useQuery<IntensityData>({
     queryKey: ['national'],
     queryFn: getCurrentIntensity,
-    refetchInterval: 30000,
-    staleTime: 15000,
+    refetchInterval: 1000 * 60 * 30, // 30 minutes
+    staleTime: 1000 * 60 * 15, // 15 minutes
   });
 
   const regionalListQuery = useQuery<RegionListItem[]>({
@@ -58,12 +58,12 @@ export function useCarbonData(postcode: string) {
   }
 
   // Fetch detailed regional data by ID (avoids CORS issues with postcode endpoint)
-  // Fetch detailed regional data by ID (avoids CORS issues with postcode endpoint)
   const regionalDataQuery = useQuery<RegionalData | null>({
     queryKey: ['regional', regionId],
     queryFn: () => regionId ? getRegionalIntensityById(regionId) : Promise.resolve(null),
     enabled: !!regionId,
-    refetchInterval: 30000,
+    refetchInterval: 1000 * 60 * 30, // 30 minutes
+    staleTime: 1000 * 60 * 15,
     retry: 2,
   });
 
@@ -79,16 +79,16 @@ export function useCarbonData(postcode: string) {
       return getRegionalHistoryAndForecast(regionId, from, to);
     },
     enabled: !!regionId,
-    refetchInterval: 60000 * 5,
-    staleTime: 60000 * 2,
+    refetchInterval: 1000 * 60 * 60, // Forecast doesn't change often
+    staleTime: 1000 * 60 * 30,
     retry: 2,
   });
 
   const generationQuery = useQuery<GenerationMix[]>({
     queryKey: ['generation'],
     queryFn: getGenerationMix,
-    refetchInterval: 60000,
-    staleTime: 30000,
+    refetchInterval: 1000 * 60 * 30,
+    staleTime: 1000 * 60 * 15,
   });
 
   // Extract data from specific regional query or fallback to national
@@ -101,9 +101,12 @@ export function useCarbonData(postcode: string) {
   const index = regionalData?.intensity?.index
     ?? nationalQuery.data?.intensity?.index
     ?? 'moderate';
+
   // Use the name from the found region metadata (from list) or fallback
-  const region = foundRegion?.shortname
-    ?? (nationalQuery.data ? 'National Grid' : '');
+  // If regional data failed to load, explicit fallback to "National"
+  const region = (regionalDataQuery.isSuccess && foundRegion?.shortname)
+    ? foundRegion.shortname
+    : (nationalQuery.data ? 'National Grid' : '');
 
   // Generation mix from regional or national
   const generationMix = regionalData?.generationmix ?? generationQuery.data ?? [];
@@ -130,8 +133,13 @@ export function useCarbonData(postcode: string) {
       (!!regionId && (regionalDataQuery.isLoading || forecastQuery.isLoading))
     ) : nationalQuery.isLoading,
 
-    isError: postcode ? (regionalListQuery.isError || regionalDataQuery.isError) : nationalQuery.isError,
-    error: regionalListQuery.error ?? regionalDataQuery.error ?? nationalQuery.error,
+    // Robustness: Only report error if we have NO data to show.
+    // If Regional fails but National is okay, we show National (graceful degradation).
+    isError: postcode
+      ? ((regionalListQuery.isError || regionalDataQuery.isError) && nationalQuery.isError)
+      : nationalQuery.isError,
+
+    error: (postcode && nationalQuery.isError) ? (regionalDataQuery.error || nationalQuery.error) : nationalQuery.error,
 
     // Refetch
     refetch: async () => {

@@ -55,8 +55,19 @@ export async function getRegionFromCoordinates(lat: number, lon: number): Promis
         const res = await fetch(`https://api.postcodes.io/postcodes?lon=${lon}&lat=${lat}`);
         if (!res.ok) return null;
 
-        const data = await response.json();
-        if (!data.result || data.result.length === 0) return null;
+        const data = await res.json();
+        // If postcodes.io fails (e.g. offshore or remote), try Nominatim reverse geocode
+        if (!data.result || data.result.length === 0) {
+            console.log('Postcodes.io returned no results, trying Nominatim reverse...');
+            const nomRes = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`);
+            if (nomRes.ok) {
+                const nomData = await nomRes.json();
+                if (nomData.address?.postcode) {
+                    return await lookupByCarbonApi(nomData.address.postcode);
+                }
+            }
+            return null;
+        }
 
         // Got a postcode, use Carbon API to resolve it to a Region
         const postcode = data.result[0].postcode;
@@ -66,8 +77,7 @@ export async function getRegionFromCoordinates(lat: number, lon: number): Promis
         return null;
     }
 
-    // Helper for inner catch
-    async function response() { return res; }
+
 }
 
 

@@ -65,10 +65,11 @@ export const UK_REGIONS = [
   { id: 14, name: 'South East England', postcode: 'BN' },
 ];
 
-// Helper for cache busting
+// Helper for fetch (now allows caching)
 const fetchWithNoCache = async (url: string) => {
-  const separator = url.includes('?') ? '&' : '?';
-  const response = await fetch(`${url}${separator}_t=${new Date().getTime()}`);
+  // We allow browser caching now to save bandwidth
+  // The API sends correct ETag/Cache-Control headers
+  const response = await fetch(url);
   return response;
 };
 
@@ -137,6 +138,18 @@ export async function getRegionalHistoryAndForecast(regionId: number, from: stri
     }
     return item;
   });
+}
+
+// Get National history + forecast
+export async function getNationalHistoryAndForecast(from: string, to: string): Promise<ForecastData[]> {
+  // Endpoint: /intensity/{from}/{to}
+  const response = await fetchWithNoCache(`${BASE_URL}/intensity/${from}/${to}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch national history: ${response.status}`);
+  }
+  const json = await response.json();
+  const data: ForecastData[] = json.data || [];
+  return data;
 }
 
 // Get intensity for a specific region ID
