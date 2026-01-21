@@ -50,12 +50,6 @@ export function useOctopusEnergy() {
   const { data: status, isLoading: statusLoading, refetch: refetchStatus } = useQuery({
     queryKey: ['octopus-status'],
     queryFn: async (): Promise<OctopusStatus> => {
-      const { data, error } = await supabase.functions.invoke('octopus-energy', {
-        body: null,
-        method: 'GET',
-      });
-
-      // Use URL params approach for GET requests
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/octopus-energy?action=get-status`,
         {
