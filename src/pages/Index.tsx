@@ -1,15 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, RefreshCw, Zap, Info, Leaf, Activity } from 'lucide-react';
+import { RefreshCw, Zap, Info, Leaf, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { IntensityScene, getSkyStartColor } from '@/components/IntensityScene';
 import { GenerationMixBar } from '@/components/GenerationMixBar';
 import { ForecastChart } from '@/components/ForecastChart';
 import { ForecastSummary } from '@/components/ForecastSummary';
-import { RegionSelector } from '@/components/RegionSelector';
-import { NotificationSettings } from '@/components/NotificationSettings';
+import { LocationManager } from '@/components/LocationManager';
 import { BestTimeCard } from '@/components/BestTimeCard';
 import { FootprintView } from '@/components/FootprintView';
 import { DemandView } from '@/components/DemandView';
@@ -22,6 +20,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { DEFINITIONS } from '@/lib/definitions';
 import { BottomNav } from '@/components/BottomNav';
 import { PullToRefresh } from '@/components/PullToRefresh';
+import { useSavedLocations } from '@/hooks/useSavedLocations';
 import type { ForecastData } from '@/lib/carbonApi';
 
 const Index = () => {
@@ -120,7 +119,7 @@ const Index = () => {
 
               {/* Overlay header */}
               <div className="absolute top-0 left-0 right-0 p-4 pt-[max(1rem,env(safe-area-inset-top))] flex items-center justify-between z-30">
-                <RegionSelector value={postcode} onChange={setPostcode} />
+                <LocationManager value={postcode} onChange={setPostcode} />
                 {/* Right side buttons removed */}
               </div>
 
