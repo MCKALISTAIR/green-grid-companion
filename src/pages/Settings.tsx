@@ -1,6 +1,6 @@
 import { NotificationSettings } from '@/components/NotificationSettings';
 import { OctopusIntegration } from '@/components/OctopusIntegration';
-import { BottomNav } from '@/components/BottomNav';
+
 
 export default function Settings() {
     return (
@@ -26,7 +26,7 @@ export default function Settings() {
                     </p>
                 </div>
             </div>
-            <BottomNav />
+
         </div>
     );
 }

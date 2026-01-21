@@ -9,10 +9,13 @@ GridSense is a mobile-first companion app designed to help UK (and future) energ
 *   **Energy Insights**: Smart, data-driven advice at the top of the feed (e.g. "Wait until 2pm for cleaner energy").
 *   **Immersive Scenes**: A dynamic background that changes based on air quality/cleanliness.
 *   **System Dark Mode**: Fully supported dark theme that respects your device settings.
-*   **iOS Home Screen Widget**: Check live carbon intensity directly from your home screen.
+*   **Desktop Support**: Responsive layout with a dedicated sidebar and grid dashboard for larger screens.
+*   **Web Notifications**: Notification support for desktop browsers (Chrome/Safari) when the tab is open.
+*   **iOS Home Screen Widget**: Check live carbon intensity directly from your home screen (supports Region selection).
 
 ### ⚡ Power Planner
 *   **Smart Scheduling**: Plan usage for EVs, Washing Machines, and custom appliances.
+*   **Reminders**: Set notifications for optimal start times directly from the planner.
 *   **Carbon Savings**: Quantified impact (e.g. "Save 120g CO₂ vs Now").
 *   **Fixed View**: Distraction-free, single-screen experience.
 

@@ -4,7 +4,7 @@ import { getRegionalHistoryAndForecast, ForecastData } from '@/lib/carbonApi';
 import { useCarbonData } from '@/hooks/useCarbonData';
 import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { BottomNav } from '@/components/BottomNav';
+
 import { ComposedChart, Line, Area, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format, parseISO, subDays, isSameHour, isSameDay } from 'date-fns';
 import { Loader2, TrendingDown, TrendingUp, Zap } from 'lucide-react';
@@ -271,7 +271,7 @@ export default function HistoryPage() {
                     </>
                 )}
             </div>
-            <BottomNav />
+
         </div>
     );
 }

@@ -17,6 +17,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import HistoryPage from "./pages/History";
 import ScrollToTop from "@/components/ScrollToTop";
 import NotFound from "./pages/NotFound";
+import { AppLayout } from "@/components/layout/AppLayout";
 import TurbineTest from "./pages/TurbineTest";
 
 const queryClient = new QueryClient({
@@ -67,18 +68,19 @@ function AppContent() {
       <BrowserRouter>
         <ScrollToTop />
         <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/planner" element={<Planner />} />
-          <Route path="/map" element={<MapPage />} />
-          <Route path="/settings" element={<Settings />} />
           <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/privacy" element={<PrivacyPolicy />} />
-          <Route path="/history" element={<HistoryPage />} />
-          {import.meta.env.DEV && (
+
+          {/* Main App Layout */}
+          <Route element={<AppLayout />}>
+            <Route path="/" element={<Index />} />
+            <Route path="/planner" element={<Planner />} />
+            <Route path="/map" element={<MapPage />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/history" element={<HistoryPage />} />
             <Route path="/__turbine-test" element={<TurbineTest />} />
-          )}
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
+            <Route path="*" element={<NotFound />} />
+          </Route>
         </Routes>
       </BrowserRouter>
     </>

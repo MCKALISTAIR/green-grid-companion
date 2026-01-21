@@ -19,7 +19,6 @@ import { toast } from 'sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DEFINITIONS } from '@/lib/definitions';
-import { BottomNav } from '@/components/BottomNav';
 import { PullToRefresh } from '@/components/PullToRefresh';
 import { useSavedLocations } from '@/hooks/useSavedLocations';
 import type { ForecastData } from '@/lib/carbonApi';
@@ -108,7 +107,7 @@ const Index = () => {
         style={{ background: skyColor }}
       >
         <PullToRefresh onRefresh={handleRefresh} disabled={isLoading}>
-          <div className="min-h-[100dvh] flex flex-col animate-in fade-in duration-700 pb-[calc(4rem+env(safe-area-inset-bottom))]">
+          <div className="min-h-[100dvh] flex flex-col animate-in fade-in duration-700 pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-0">
             {/* Header with scene */}
             <div className="relative">
               {/* Animated scene */}
@@ -122,7 +121,7 @@ const Index = () => {
 
               {/* Current intensity display - Only show if NOT in demand mode (DemandView has its own header) */}
               {viewMode !== 'demand' && (
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-center w-auto max-w-[90%]">
+                <div className="absolute bottom-6 lg:bottom-10 left-1/2 -translate-x-1/2 text-center w-auto max-w-[90%] z-20">
                   <div className="bg-white/30 backdrop-blur-md rounded-2xl p-4 shadow-sm border border-white/20">
                     <div className="flex items-center justify-center gap-1.5 mb-1">
                       <p className="text-card/90 text-sm font-medium uppercase tracking-wide">
@@ -184,7 +183,7 @@ const Index = () => {
             </div>
 
             {/* Content cards */}
-            <div className="flex-1 px-4 py-6 space-y-4 -mt-4 relative z-10 bg-background">
+            <div className="flex-1 px-4 py-6 space-y-4 -mt-4 relative z-10 bg-background lg:max-w-7xl lg:mx-auto w-full lg:rounded-t-3xl lg:shadow-xl lg:-mt-6 lg:space-y-6">
 
               {/* View Toggle - Always show, simplified if no Octopus */}
               <div className="flex gap-2 p-1 bg-muted rounded-lg overflow-x-auto scrollbar-none">
@@ -234,8 +233,8 @@ const Index = () => {
                   ) : viewMode === 'footprint' && isOctopusLinked ? (
                     <FootprintView />
                   ) : (
-                    <div className="space-y-4">
-                      {/* Energy Insights (formerly Tip of the day) */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {/* Energy Insights */}
                       <Card className="p-4 shadow-lg bg-accent/30 border-accent/50">
                         <div className="flex items-start gap-3">
                           <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
@@ -257,19 +256,23 @@ const Index = () => {
 
                       {/* Best/Worst Times */}
                       {forecast.length > 0 && (
-                        <BestTimeCard forecast={forecast} />
+                        <div className="md:col-span-1">
+                          <BestTimeCard forecast={forecast} />
+                        </div>
                       )}
 
                       {/* Hourly Forecast */}
                       {forecast.length > 0 && (
-                        <Card className="p-4 shadow-lg">
-                          <ForecastChart forecast={forecast} showNext={12} />
+                        <Card className="p-4 shadow-lg md:col-span-2 lg:col-span-3">
+                          <ForecastChart forecast={forecast} showNext={24} />
                         </Card>
                       )}
 
                       {/* Daily Summary */}
                       {forecast.length > 0 && (
-                        <ForecastSummary forecast={forecast} />
+                        <div className="md:col-span-2 lg:col-span-3">
+                          <ForecastSummary forecast={forecast} />
+                        </div>
                       )}
                     </div>
                   )}
@@ -279,9 +282,8 @@ const Index = () => {
           </div>
         </PullToRefresh>
 
-        <BottomNav onHomeClick={scrollToTop} />
-      </div>
-    </TooltipProvider>
+      </div >
+    </TooltipProvider >
   );
 };
 function getSmartTip(current: number, forecast: ForecastData[]): string {

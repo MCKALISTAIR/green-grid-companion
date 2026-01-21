@@ -12,6 +12,17 @@ struct IntensityData: Codable {
     let intensity: IntensityValue
 }
 
+struct RegionalResponse: Codable {
+    let data: [RegionalDataWrapper]
+}
+
+struct RegionalDataWrapper: Codable {
+    let regionid: Int
+    let dnoregion: String
+    let shortname: String
+    let data: [IntensityData]
+}
+
 struct IntensityValue: Codable {
     let forecast: Int
     let actual: Int?
@@ -20,6 +31,9 @@ struct IntensityValue: Codable {
 
 // MARK: - Timeline Provider
 struct Provider: TimelineProvider {
+    // Must match the suite name in SharedPrefsPlugin.swift
+    let suiteName = "group.app.lovable.1558020f8a4c43dc9ea079533f5d485c"
+
     func placeholder(in context: Context) -> SimpleEntry {
         SimpleEntry(date: Date(), intensity: 50, index: "low", status: "Active")
     }
@@ -30,24 +44,61 @@ struct Provider: TimelineProvider {
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<SimpleEntry>) -> Void) {
-        // Fetch data from API
-        let url = URL(string: "https://api.carbonintensity.org.uk/intensity")!
+        // 1. Try to read selected Region ID from App Group
+        let userDefaults = UserDefaults(suiteName: suiteName)
+        let regionId = userDefaults?.string(forKey: "selected_region_id")?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        
+        // 2. Build URL based on region
+        let useRegional = !regionId.isEmpty
+        let urlString = useRegional 
+            ? "https://api.carbonintensity.org.uk/regional/regionid/\(regionId)"
+            : "https://api.carbonintensity.org.uk/intensity"
+            
+        print("Widget Fetching URL: \(urlString)")
+        
+        guard let url = URL(string: urlString) else {
+            // Fallback
+            let entry = SimpleEntry(date: Date(), intensity: 0, index: "url_error", status: "Error")
+            completion(Timeline(entries: [entry], policy: .after(Date().addingTimeInterval(1800))))
+            return
+        }
         
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
             var entries: [SimpleEntry] = []
             let currentDate = Date()
             
-            if let data = data,
-               let decoded = try? JSONDecoder().decode(IntensityResponse.self, from: data),
-               let first = decoded.data.first {
+            if let data = data {
+                // Determine if we are parsing National or Regional structure
+                // National: { data: [ { from, to, intensity: { forecast, actual, index } } ] }
+                // Regional: { data: [ { from, to, data: [ { intensity: { forecast, index } } ] } ] } -- Wait, structure is different!
                 
-                let intensity = first.intensity.forecast
-                let index = first.intensity.index
+                // Let's decode loosely or handle both struct types?
+                // Simplification for now: If regional, the "intensity" field is deeper.
+                // Let's look at the response shape:
+                // National: { data: [ { intensity: { forecast: 99, index: "moderate" } } ] }
+                // Regional: { data: [ { data: [ { intensity: { forecast: 99, index: "moderate" } } ] } ] } (It's nested!)
                 
-                // Create an entry for now
-                let entry = SimpleEntry(date: currentDate, intensity: intensity, index: index, status: "Live")
-                entries.append(entry)
-            } else {
+                // We need separate Codables.
+                if useRegional {
+                    if let decoded = try? JSONDecoder().decode(RegionalResponse.self, from: data),
+                       let firstRegionData = decoded.data.first?.data.first {
+                        let intensity = firstRegionData.intensity.forecast
+                        let index = firstRegionData.intensity.index
+                        let entry = SimpleEntry(date: currentDate, intensity: intensity, index: index, status: "Regional: \(regionId!)")
+                        entries.append(entry)
+                    }
+                } else {
+                    if let decoded = try? JSONDecoder().decode(IntensityResponse.self, from: data),
+                       let first = decoded.data.first {
+                        let intensity = first.intensity.forecast
+                        let index = first.intensity.index
+                        let entry = SimpleEntry(date: currentDate, intensity: intensity, index: index, status: "National")
+                        entries.append(entry)
+                    }
+                }
+            } 
+            
+            if entries.isEmpty {
                 // Fallback / Error
                 let entry = SimpleEntry(date: currentDate, intensity: 0, index: "error", status: "Error")
                 entries.append(entry)

@@ -7,9 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { WashingMachine, Car, Utensils, Zap, Plus, PenLine } from 'lucide-react';
 import { getIntensityColor, getIntensityTextColor } from '@/lib/carbonApi';
-import { format, parseISO, addHours } from 'date-fns';
+import { LocalNotifications } from '@capacitor/local-notifications';
+import { format, parseISO, addHours, subMinutes, isFuture } from 'date-fns';
 import { PullToRefresh } from '@/components/PullToRefresh';
-import { BottomNav } from '@/components/BottomNav';
+
+import { toast } from 'sonner';
+import { Bell } from 'lucide-react';
 
 const APPLIANCES = [
     { id: 'ev', name: 'EV Charge', icon: Car, power: 7.4, duration: 4, label: 'Full Charge (4h)' },
@@ -50,9 +53,12 @@ export default function Planner() {
         // Assuming duration is in Hours. slots needed = duration * 2.
         const slotsNeeded = Math.ceil(selectedAppliance.duration * 2);
 
-        let bestStart = 0;
+        let bestStart = -1;
         let minAvgIntensity = Infinity;
 
+        // Ensure we only look at future slots if we want to be realistic, 
+        // but forecast usually returns future 24-48h. 
+        // We'll iterate through all available forecast data.
         for (let i = 0; i <= forecast.length - slotsNeeded; i++) {
             let sum = 0;
             let valid = true;
@@ -73,7 +79,7 @@ export default function Planner() {
             }
         }
 
-        if (minAvgIntensity === Infinity) return null;
+        if (bestStart === -1 || minAvgIntensity === Infinity) return null;
 
         return {
             startTime: forecast[bestStart].from,
@@ -84,6 +90,48 @@ export default function Planner() {
     const bestSlot = findBestTime();
     const currentIntensity = forecast[0]?.intensity.forecast || 0;
     const savings = bestSlot ? Math.round((currentIntensity - bestSlot.avgIntensity) * selectedAppliance.power * selectedAppliance.duration) : 0;
+
+    const scheduleReminder = async () => {
+        if (!bestSlot) return;
+
+        try {
+            const permission = await LocalNotifications.requestPermissions();
+            if (permission.display !== 'granted') {
+                toast.error('Notifications permission denied');
+                return;
+            }
+
+            const startDate = parseISO(bestSlot.startTime);
+            // Schedule 15 minutes before
+            const notificationTime = subMinutes(startDate, 15);
+
+            if (!isFuture(notificationTime)) {
+                toast.error('This time is too soon to schedule a reminder!');
+                return;
+            }
+
+            await LocalNotifications.schedule({
+                notifications: [
+                    {
+                        title: `Power Planner: Run ${selectedAppliance.name}`,
+                        body: `Ideally start your ${selectedAppliance.name} in 15 minutes for lowest carbon intensity!`,
+                        id: new Date().getTime(),
+                        schedule: { at: notificationTime },
+                        sound: undefined,
+                        attachments: undefined,
+                        actionTypeId: '',
+                        extra: null
+                    }
+                ]
+            });
+
+            toast.success(`Reminder set for ${format(notificationTime, 'h:mm a')}`);
+
+        } catch (error) {
+            console.error('Failed to schedule notification:', error);
+            toast.error('Failed to schedule reminder');
+        }
+    };
 
     return (
         <div className="h-[100dvh] overflow-hidden bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
@@ -190,6 +238,15 @@ export default function Planner() {
                                 </p>
                             </div>
 
+                            <Button
+                                className="w-full"
+                                variant="secondary"
+                                onClick={scheduleReminder}
+                            >
+                                <Bell className="w-4 h-4 mr-2" />
+                                Remind me 15m before
+                            </Button>
+
                             {savings > 0 && (
                                 <div className="bg-background/50 rounded-lg p-4 text-center">
                                     <p className="text-sm text-muted-foreground">Impact vs Now</p>
@@ -207,7 +264,7 @@ export default function Planner() {
                     )}
                 </div>
             </PullToRefresh>
-            <BottomNav />
+
         </div>
     );
 }

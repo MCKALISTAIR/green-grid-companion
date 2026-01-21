@@ -14,6 +14,7 @@ interface NotificationSettingsProps {
 export function NotificationSettings({ onClose }: NotificationSettingsProps) {
   const {
     isNative,
+    isSupported,
     permissionStatus,
     prefs,
     requestPermission,
@@ -55,35 +56,37 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
         )}
       </div>
 
-      {!isNative && (
+      {/* Not Supported Message */}
+      {!isSupported && (
         <Card className="p-4 bg-accent/30 border-accent/50">
           <div className="flex items-center gap-3">
             <Smartphone className="w-5 h-5 text-accent-foreground" />
             <div>
-              <p className="text-sm font-medium text-foreground">Native app required</p>
+              <p className="text-sm font-medium text-foreground">Not supported</p>
               <p className="text-xs text-muted-foreground">
-                Install GridSense on your device for push notifications.
+                Your browser does not support notifications.
               </p>
             </div>
           </div>
         </Card>
       )}
 
-      {isNative && permissionStatus === 'denied' && (
+      {/* Permissions blocked */}
+      {isSupported && permissionStatus === 'denied' && (
         <Card className="p-4 bg-destructive/10 border-destructive/30">
           <div className="flex items-center gap-3">
             <BellOff className="w-5 h-5 text-destructive" />
             <div>
               <p className="text-sm font-medium text-destructive">Notifications blocked</p>
               <p className="text-xs text-muted-foreground">
-                Please enable notifications in your device settings.
+                Please enable notifications in your browser/device settings.
               </p>
             </div>
           </div>
         </Card>
       )}
 
-      {isNative && permissionStatus === 'prompt' && (
+      {isSupported && permissionStatus === 'prompt' && (
         <Card className="p-4 bg-primary/10 border-primary/30">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -119,7 +122,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
           <Switch
             checked={prefs.lowIntensityEnabled}
             onCheckedChange={handleLowIntensityToggle}
-            disabled={!isNative}
+            disabled={!isSupported}
           />
         </div>
 
@@ -149,7 +152,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
                 <div className="space-y-0.5 pr-4">
                   <div className="text-sm font-medium">Live Accuracy Mode</div>
                   <p className="text-[10px] text-muted-foreground">
-                    Periodically checks live data in background instead of relying on forecast.
+                    Periodically checks live data. {isNative ? '(Background Fetch)' : '(Tab must remain open)'}
                   </p>
                 </div>
                 <Switch
@@ -160,7 +163,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
             </div>
             {prefs.useBackgroundFetch && (
               <p className="text-[10px] text-amber-500/80 pt-2 flex items-center gap-1">
-                <Zap className="w-3 h-3" /> May use slightly more battery.
+                <Zap className="w-3 h-3" /> {isNative ? 'May use slightly more battery.' : 'Only works while this tab is active.'}
               </p>
             )}
           </div>
@@ -185,7 +188,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
           <Switch
             checked={prefs.dailyForecastEnabled}
             onCheckedChange={handleDailyForecastToggle}
-            disabled={!isNative}
+            disabled={!isSupported}
           />
         </div>
 
@@ -208,16 +211,16 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
         }
       </Card >
 
-      {isNative && permissionStatus === 'granted' && prefs.lowIntensityEnabled && (
+      {isSupported && permissionStatus === 'granted' && prefs.lowIntensityEnabled && (
         <p className="text-xs text-center text-muted-foreground">
-          You'll receive alerts on this device when grid intensity is favorable.
+          You'll receive alerts when grid intensity is favorable.
         </p>
       )}
 
       {
-        !isNative && (
+        !isSupported && (
           <p className="text-xs text-center text-muted-foreground">
-            Notifications require the native iOS/Android app. Settings are saved locally.
+            Notifications are not supported in this browser.
           </p>
         )
       }

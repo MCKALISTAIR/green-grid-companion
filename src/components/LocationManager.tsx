@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Check, ChevronsUpDown, MapPin, Navigation, Star, Plus, Trash2, Clock } from 'lucide-react';
+import { Check, ChevronsUpDown, MapPin, Navigation, Star, Plus, Trash2, Clock, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -29,6 +29,8 @@ import { Label } from '@/components/ui/label';
 import { UK_REGIONS } from '@/lib/carbonApi';
 import { toast } from 'sonner';
 import { useSavedLocations } from '@/hooks/useSavedLocations';
+import { searchLocation, getRegionFromCoordinates, LocationSearchResult } from '@/lib/location';
+import { setGenericSharedRegion } from '@/lib/sharedPrefs';
 
 interface LocationManagerProps {
   value: string;
@@ -39,8 +41,10 @@ interface LocationManagerProps {
 export function LocationManager({ value, onChange, showPostcode = true }: LocationManagerProps) {
   const [open, setOpen] = React.useState(false);
   const [loadingLocation, setLoadingLocation] = React.useState(false);
+  const [isSearching, setIsSearching] = React.useState(false);
   const [saveDialogOpen, setSaveDialogOpen] = React.useState(false);
   const [locationName, setLocationName] = React.useState('');
+  const [searchQuery, setSearchQuery] = React.useState('');
 
   const {
     savedLocations,
@@ -59,6 +63,46 @@ export function LocationManager({ value, onChange, showPostcode = true }: Locati
     onChange(postcode);
     addRecentLocation(postcode);
     setOpen(false);
+
+    // Sync to iOS Widget via App Group
+    // We need the RegionID (number), not the postcode.
+    // Let's find the region from the postcode or just pass the postcode if the widget supports it?
+    // The widget logic I wrote expects "regionId" (Int) for URL construction.
+    // I need to map postcode -> regionId here.
+    const region = UK_REGIONS.find(r => r.postcode === postcode);
+    if (region) {
+      // region.activeRegionId (or similar?)
+      // UK_REGIONS has `id`? Let's check `carbonApi.ts`.
+      // Assuming it has an ID, let's pass it.
+      setGenericSharedRegion(String(region.id));
+    }
+  };
+
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
+
+    setIsSearching(true);
+    try {
+      const result = await searchLocation(searchQuery);
+
+      if (result) {
+        handleSelectLocation(result.regionPostcode);
+        toast.success(`Found ${result.name}`, {
+          description: `Setting region to ${result.regionName}`,
+        });
+      } else {
+        toast.error('Location not found', {
+          description: `Could not find a region matching "${searchQuery}"`,
+        });
+      }
+    } catch (error) {
+      console.error('Search failed', error);
+      toast.error('Search failed', {
+        description: 'Something went wrong while searching.',
+      });
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   const handleMyLocation = () => {
@@ -74,29 +118,19 @@ export function LocationManager({ value, onChange, showPostcode = true }: Locati
       async (position) => {
         try {
           const { latitude, longitude } = position.coords;
-          const response = await fetch(
-            `https://api.postcodes.io/postcodes?lon=${longitude}&lat=${latitude}`
-          );
 
-          if (!response.ok) throw new Error('Failed to fetch location data');
-
-          const data = await response.json();
-          const result = data.result?.[0];
+          // Use our robust location utility
+          const result = await getRegionFromCoordinates(latitude, longitude);
 
           if (result) {
-            const outcode = result.outcode;
-            const matchedRegion = UK_REGIONS.find(r => outcode.startsWith(r.postcode));
-
-            if (matchedRegion) {
-              handleSelectLocation(matchedRegion.postcode);
-              toast.success('Location Updated', {
-                description: `Set region to ${matchedRegion.name}`,
-              });
-            } else {
-              toast.error('Region not found', {
-                description: 'Could not match your location to a supported region.',
-              });
-            }
+            handleSelectLocation(result.regionPostcode);
+            toast.success('Location Updated', {
+              description: `Set region to ${result.regionName}`,
+            });
+          } else {
+            toast.error('Region not found', {
+              description: 'Could not match your location to a supported region.',
+            });
           }
         } catch (error) {
           console.error('Location error:', error);
@@ -145,9 +179,18 @@ export function LocationManager({ value, onChange, showPostcode = true }: Locati
     .filter(pc => !savedLocations.some(sl => sl.postcode === pc))
     .slice(0, 3);
 
+  // Filter regions based on search for the standard list
+  const filteredRegions = UK_REGIONS.filter(region =>
+    region.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    region.postcode.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <>
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={(isOpen) => {
+        setOpen(isOpen);
+        if (!isOpen) setSearchQuery(''); // Reset search on close
+      }}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
@@ -177,60 +220,96 @@ export function LocationManager({ value, onChange, showPostcode = true }: Locati
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[320px] p-0 bg-card border-border backdrop-blur-xl">
-          <Command>
-            <CommandInput placeholder="Search locations..." aria-label="Search locations" />
+          <Command shouldFilter={false}>
+            <CommandInput
+              placeholder="Search postcode, town, or region..."
+              aria-label="Search locations"
+              value={searchQuery}
+              onValueChange={setSearchQuery}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleSearch();
+                }
+              }}
+            />
             <CommandList>
-              <CommandEmpty>No location found.</CommandEmpty>
+              <CommandEmpty className="py-2 px-2 text-sm">
+                {isSearching ? (
+                  <span className="flex items-center justify-center gap-2 text-muted-foreground">
+                    <Search className="w-4 h-4 animate-pulse" /> Searching...
+                  </span>
+                ) : searchQuery ? (
+                  <div className="flex flex-col gap-2">
+                    <p className="text-muted-foreground text-center pb-2">No direct region match.</p>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={handleSearch}
+                    >
+                      <Search className="mr-2 h-4 w-4" />
+                      Search for "{searchQuery}"
+                    </Button>
+                  </div>
+                ) : (
+                  "No location found."
+                )}
+              </CommandEmpty>
 
               {/* Current Location */}
-              <CommandGroup>
-                <CommandItem onSelect={handleMyLocation} className="cursor-pointer text-primary font-medium">
-                  <Navigation className={cn("mr-2 h-4 w-4", loadingLocation && "animate-spin")} />
-                  {loadingLocation ? 'Detecting location...' : 'Use my current location'}
-                </CommandItem>
-              </CommandGroup>
+              {!searchQuery && (
+                <CommandGroup>
+                  <CommandItem onSelect={handleMyLocation} className="cursor-pointer text-primary font-medium">
+                    <Navigation className={cn("mr-2 h-4 w-4", loadingLocation && "animate-spin")} />
+                    {loadingLocation ? 'Detecting location...' : 'Use my current location'}
+                  </CommandItem>
+                </CommandGroup>
+              )}
 
-              {/* Saved Locations */}
+              {/* Saved Locations - Filtered if searching */}
               {savedLocations.length > 0 && (
-                <>
-                  <CommandSeparator />
-                  <CommandGroup heading="Saved Locations">
-                    {savedLocations.map((loc) => {
-                      const region = UK_REGIONS.find(r => r.postcode === loc.postcode);
-                      return (
-                        <CommandItem
-                          key={loc.id}
-                          value={`${loc.name} ${loc.postcode}`}
-                          onSelect={() => handleSelectLocation(loc.postcode)}
-                          className="cursor-pointer group"
-                        >
-                          <Star className={cn(
-                            'mr-2 h-4 w-4 text-primary',
-                            value === loc.postcode ? 'fill-primary' : ''
-                          )} />
-                          <div className="flex flex-col flex-1">
-                            <span className="font-medium">{loc.name}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {region?.name} · {loc.postcode}
-                            </span>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={(e) => handleRemoveSaved(loc.id, loc.name, e)}
-                          >
-                            <Trash2 className="h-3 w-3 text-destructive" />
-                          </Button>
-                        </CommandItem>
-                      );
-                    })}
-                  </CommandGroup>
-                </>
+                (!searchQuery || savedLocations.some(l => l.name.toLowerCase().includes(searchQuery.toLowerCase()))) && (
+                  <>
+                    <CommandSeparator />
+                    <CommandGroup heading="Saved Locations">
+                      {savedLocations
+                        .filter(l => !searchQuery || l.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                        .map((loc) => {
+                          const region = UK_REGIONS.find(r => r.postcode === loc.postcode);
+                          return (
+                            <CommandItem
+                              key={loc.id}
+                              value={`${loc.name} ${loc.postcode}`}
+                              onSelect={() => handleSelectLocation(loc.postcode)}
+                              className="cursor-pointer group"
+                            >
+                              <Star className={cn(
+                                'mr-2 h-4 w-4 text-primary',
+                                value === loc.postcode ? 'fill-primary' : ''
+                              )} />
+                              <div className="flex flex-col flex-1">
+                                <span className="font-medium">{loc.name}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {region?.name} · {loc.postcode}
+                                </span>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={(e) => handleRemoveSaved(loc.id, loc.name, e)}
+                              >
+                                <Trash2 className="h-3 w-3 text-destructive" />
+                              </Button>
+                            </CommandItem>
+                          );
+                        })}
+                    </CommandGroup>
+                  </>
+                )
               )}
 
               {/* Recent Locations */}
-              {recentToShow.length > 0 && (
+              {!searchQuery && recentToShow.length > 0 && (
                 <>
                   <CommandSeparator />
                   <CommandGroup heading="Recent">
@@ -257,7 +336,7 @@ export function LocationManager({ value, onChange, showPostcode = true }: Locati
               )}
 
               {/* Save Current Location */}
-              {value && !isLocationSaved(value) && (
+              {!searchQuery && value && !isLocationSaved(value) && (
                 <>
                   <CommandSeparator />
                   <CommandGroup>
@@ -276,8 +355,8 @@ export function LocationManager({ value, onChange, showPostcode = true }: Locati
               )}
 
               <CommandSeparator />
-              <CommandGroup heading="All Regions">
-                {UK_REGIONS.map((region) => (
+              <CommandGroup heading="Regions">
+                {filteredRegions.map((region) => (
                   <CommandItem
                     key={region.postcode}
                     value={region.name}

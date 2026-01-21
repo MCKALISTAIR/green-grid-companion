@@ -87,28 +87,28 @@ function WindTurbine({ scale = 1, speed = 4 }: { scale?: number; speed?: number 
         <defs>
           {/* Tower gradient - darker at edges */}
           <linearGradient id="towerGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="hsl(var(--card))" stopOpacity="0.6" />
-            <stop offset="50%" stopColor="hsl(var(--card))" stopOpacity="0.95" />
-            <stop offset="100%" stopColor="hsl(var(--card))" stopOpacity="0.7" />
+            <stop offset="0%" stopColor="#e5e5e5" stopOpacity="0.8" />
+            <stop offset="50%" stopColor="#ffffff" stopOpacity="0.95" />
+            <stop offset="100%" stopColor="#e5e5e5" stopOpacity="0.9" />
           </linearGradient>
 
           {/* Nacelle gradient - subtle 3D effect */}
           <linearGradient id="nacelleGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="hsl(var(--card))" stopOpacity="1" />
-            <stop offset="100%" stopColor="hsl(var(--card))" stopOpacity="0.75" />
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+            <stop offset="100%" stopColor="#f0f0f0" stopOpacity="0.9" />
           </linearGradient>
 
           {/* Blade gradient - lighter towards tip */}
           <linearGradient id="bladeGradient" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stopColor="hsl(var(--card))" stopOpacity="0.95" />
-            <stop offset="70%" stopColor="hsl(var(--card))" stopOpacity="0.85" />
-            <stop offset="100%" stopColor="hsl(var(--card))" stopOpacity="0.6" />
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.95" />
+            <stop offset="70%" stopColor="#ffffff" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#f8f8f8" stopOpacity="0.8" />
           </linearGradient>
 
           {/* Hub radial gradient for 3D sphere effect */}
           <radialGradient id="hubGradient" cx="35%" cy="35%" r="60%">
-            <stop offset="0%" stopColor="hsl(var(--card))" stopOpacity="1" />
-            <stop offset="100%" stopColor="hsl(var(--card))" stopOpacity="0.7" />
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+            <stop offset="100%" stopColor="#e0e0e0" stopOpacity="0.9" />
           </radialGradient>
 
           {/* Shadow gradient for ground effect */}

@@ -42,7 +42,7 @@ interface OctopusStatus {
   footprint_records: number;
 }
 
-export function useOctopusEnergy() {
+export function useOctopusEnergy(days: number = 30) {
   const queryClient = useQueryClient();
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -70,12 +70,14 @@ export function useOctopusEnergy() {
     staleTime: 30000, // 30 seconds
   });
 
-  // Fetch footprint data
+  // Fetch footprint data with dynamic range
   const { data: footprint, isLoading: footprintLoading, refetch: refetchFootprint } = useQuery({
-    queryKey: ['octopus-footprint'],
+    queryKey: ['octopus-footprint', days],
     queryFn: async (): Promise<FootprintData> => {
+      // Ensure we request at least 1 day
+      const safeDays = Math.max(1, days);
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/octopus-energy?action=get-footprint&days=30`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/octopus-energy?action=get-footprint&days=${safeDays}`,
         {
           headers: {
             'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
@@ -134,11 +136,11 @@ export function useOctopusEnergy() {
   }, [refetchStatus]);
 
   // Sync consumption data
-  const syncConsumption = useCallback(async (days: number = 7) => {
+  const syncConsumption = useCallback(async (syncDays: number = 7) => {
     setIsSyncing(true);
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/octopus-energy?action=sync-consumption&days=${days}`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/octopus-energy?action=sync-consumption&days=${syncDays}`,
         {
           headers: {
             'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
@@ -200,8 +202,8 @@ export function useOctopusEnergy() {
   }, [refetchFootprint]);
 
   // Full sync: consumption + footprint calculation
-  const fullSync = useCallback(async (days: number = 7) => {
-    await syncConsumption(days);
+  const fullSync = useCallback(async (syncDays: number = 7) => {
+    await syncConsumption(syncDays);
     await calculateFootprint();
   }, [syncConsumption, calculateFootprint]);
 

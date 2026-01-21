@@ -4,7 +4,7 @@ import { getAllRegions, getIntensityColor } from '@/lib/carbonApi';
 import { UKMap } from '@/components/UKMap';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BottomNav } from '@/components/BottomNav';
+
 import { PullToRefresh } from '@/components/PullToRefresh';
 import { Map as MapIcon, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -66,8 +66,8 @@ export default function MapPage() {
                                     <Card key={region.regionid} className="p-4 flex items-center justify-between transition-all active:scale-[0.99]">
                                         <div className="flex items-center gap-3">
                                             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${idx === 0 ? 'bg-yellow-100 text-yellow-700' :
-                                                    idx === 1 ? 'bg-gray-100 text-gray-700' :
-                                                        idx === 2 ? 'bg-orange-100 text-orange-800' : 'bg-muted text-muted-foreground'
+                                                idx === 1 ? 'bg-gray-100 text-gray-700' :
+                                                    idx === 2 ? 'bg-orange-100 text-orange-800' : 'bg-muted text-muted-foreground'
                                                 }`}>
                                                 {idx + 1}
                                             </div>
@@ -92,7 +92,7 @@ export default function MapPage() {
                     )}
                 </div>
             </PullToRefresh>
-            <BottomNav />
+
         </div>
     );
 }

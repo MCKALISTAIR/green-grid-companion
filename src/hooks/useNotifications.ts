@@ -31,6 +31,8 @@ export function useNotifications() {
     });
 
     const isNative = Capacitor.isNativePlatform();
+    // Allow notifications on web if supported
+    const isSupported = isNative || ('Notification' in window);
 
     const checkPermission = useCallback(async () => {
         if (!isNative) return;
@@ -108,10 +110,11 @@ export function useNotifications() {
     }, [prefs, isNative, initBackgroundFetch, stopBackgroundFetch]);
 
     const requestPermission = async () => {
-        if (!isNative) {
-            toast.error("Notifications are only available on mobile devices.");
+        if (!isNative && !('Notification' in window)) {
+            toast.error("Notifications are not supported in this browser.");
             return false;
         }
+
         const status = await LocalNotifications.requestPermissions();
         if (status.display === 'granted') {
             setPermissionStatus('granted');
@@ -133,8 +136,8 @@ export function useNotifications() {
             return;
         }
 
-        // Only run if native and enabled
-        if (!isNative || !prefs.lowIntensityEnabled || permissionStatus !== 'granted') return;
+        // Run if native OR web (permission granted)
+        if (!prefs.lowIntensityEnabled || permissionStatus !== 'granted') return;
 
         const now = new Date();
         const pendingNotifications: ScheduleOptions['notifications'] = [];
@@ -180,6 +183,7 @@ export function useNotifications() {
 
     return {
         isNative,
+        isSupported,
         permissionStatus,
         prefs,
         requestPermission,
