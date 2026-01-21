@@ -22,6 +22,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { DEFINITIONS } from '@/lib/definitions';
 import { BottomNav } from '@/components/BottomNav';
 import { PullToRefresh } from '@/components/PullToRefresh';
+import type { ForecastData } from '@/lib/carbonApi';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -276,10 +277,6 @@ const Index = () => {
     </TooltipProvider>
   );
 };
-
-
-import { ForecastData } from '@/lib/carbonApi';
-
 function getSmartTip(current: number, forecast: ForecastData[]): string {
   if (!forecast || forecast.length < 12) {
     return "Check back later for a more tailored energy tip.";
