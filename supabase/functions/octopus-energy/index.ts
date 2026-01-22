@@ -63,10 +63,22 @@ Deno.serve(async (req: Request) => {
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    const url = new URL(req.url);
-    const action = url.searchParams.get('action');
+    
+    // Parse action and params from request body (POST) or query params (GET)
+    let action: string | null = null;
+    let days: number = 7;
+    
+    if (req.method === 'POST') {
+      const body = await req.json().catch(() => ({}));
+      action = body.action || null;
+      days = parseInt(body.days) || 7;
+    } else {
+      const url = new URL(req.url);
+      action = url.searchParams.get('action');
+      days = parseInt(url.searchParams.get('days') || '7');
+    }
 
-    console.log(`Octopus Energy API - Action: ${action}`);
+    console.log(`Octopus Energy API - Action: ${action}, Days: ${days}`);
 
     // Basic auth header for Octopus API
     const authHeader = 'Basic ' + btoa(OCTOPUS_API_KEY + ':');
@@ -151,8 +163,8 @@ Deno.serve(async (req: Request) => {
 
       const { mpan, serial_number } = meterData;
 
-      // Calculate date range - last 7 days by default, or use query params
-      const daysBack = parseInt(url.searchParams.get('days') || '7');
+      // Calculate date range using days from request body
+      const daysBack = days;
       const periodTo = new Date();
       const periodFrom = new Date();
       periodFrom.setDate(periodFrom.getDate() - daysBack);
@@ -291,7 +303,6 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === 'get-footprint') {
-      const days = parseInt(url.searchParams.get('days') || '7');
       const periodFrom = new Date();
       periodFrom.setDate(periodFrom.getDate() - days);
 
