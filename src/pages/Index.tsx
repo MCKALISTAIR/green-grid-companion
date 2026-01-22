@@ -24,6 +24,9 @@ import { useSavedLocations } from '@/hooks/useSavedLocations';
 import type { ForecastData } from '@/lib/carbonApi';
 import { ErrorState } from '@/components/ErrorState';
 import { ComponentErrorBoundary } from '@/components/ComponentErrorBoundary';
+import { useGridDemand } from '@/hooks/useGridDemand';
+import { WeatherWidget } from '@/components/WeatherWidget';
+import { GreenerNightsCard } from '@/components/GreenerNightsCard';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -53,6 +56,8 @@ const Index = () => {
     refetch,
     getNextUpdate
   } = useCarbonData(postcode);
+
+  const { frequency: gridFrequency } = useGridDemand();
 
   // Auto-schedule notifications when forecast updates
   useEffect(() => {
@@ -197,7 +202,16 @@ const Index = () => {
                         <div className="flex items-center gap-1.5 text-xs text-card/80 font-medium bg-white/20 px-2 py-0.5 rounded-md">
                           <span>Updated {new Date(lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                           <span>•</span>
-                          <span>Next {getNextUpdate(lastUpdated)?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          <span>
+                            {(() => {
+                              const next = getNextUpdate(lastUpdated);
+                              if (!next) return '';
+                              const isOverdue = new Date() > next;
+                              return isOverdue
+                                ? <span className="text-orange-300 animate-pulse">Waiting...</span>
+                                : `Next ${next.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+                            })()}
+                          </span>
 
                           <Popover>
                             <PopoverTrigger asChild>
@@ -281,6 +295,17 @@ const Index = () => {
                             <p className="text-sm text-muted-foreground mt-1">
                               {getSmartTip(intensity, forecast)}
                             </p>
+                            <div className="mt-3">
+                              <ComponentErrorBoundary name="Weather Widget">
+                                <WeatherWidget />
+                              </ComponentErrorBoundary>
+                            </div>
+
+                            <div className="mt-3">
+                              <ComponentErrorBoundary name="Greener Nights">
+                                <GreenerNightsCard />
+                              </ComponentErrorBoundary>
+                            </div>
                           </div>
                         </div>
                       </Card>
@@ -288,7 +313,7 @@ const Index = () => {
                       {/* Generation Mix */}
                       <Card className="p-4 shadow-lg">
                         <ComponentErrorBoundary name="Generation Mix">
-                          <GenerationMixBar mix={generationMix} />
+                          <GenerationMixBar mix={generationMix} frequency={gridFrequency} />
                         </ComponentErrorBoundary>
                       </Card>
 
@@ -345,15 +370,24 @@ function getSmartTip(current: number, forecast: ForecastData[]): string {
   const min = future.reduce((min, f) => f.intensity.forecast < min.intensity.forecast ? f : min, future[0]);
   const max = future.reduce((max, f) => f.intensity.forecast > max.intensity.forecast ? f : max, future[0]);
 
+  // Pre-check: If current intensity is already very low, don't tell them to wait.
+  // 50g is roughly the "Very Low" threshold.
+  if (current <= 50) {
+    return "Carbon intensity is excellent right now! Perfect time to charge or run appliances.";
+  }
+
   // Scenario 1: Currently much cleaner than average (Good time!)
   if (current < avg - 30) {
-    return `It's much greener than usual right now! Great time to run your appliances before levels rise.`;
+    return `It's much greener than usual right now. Good time to use energy before levels rise.`;
   }
 
   // Scenario 2: High now, but significantly better later
-  if (current > min.intensity.forecast + 40) {
+  // Only suggest waiting if:
+  // 1. Savings are substantial (> 50g difference)
+  // 2. AND we are not already in a "Low" period (< 100g)
+  if (current > min.intensity.forecast + 50 && current > 100) {
     const bestTime = new Date(min.from).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-    return `Intensity is high right now. If you can, wait until around ${bestTime} for much cleaner energy.`;
+    return `Intensity is relatively high. If you can, wait until around ${bestTime} for much cleaner energy.`;
   }
 
   // Scenario 3: Generally Low all day

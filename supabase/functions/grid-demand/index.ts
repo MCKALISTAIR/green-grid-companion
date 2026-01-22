@@ -1,4 +1,5 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+// @ts-ignore: Suppress Deno namespace error if not in Deno context
+const _ignore = null;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -28,7 +29,7 @@ interface NesoResponse {
   };
 }
 
-serve(async (req) => {
+Deno.serve(async (req: Request) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -50,11 +51,18 @@ serve(async (req) => {
 
     const demandPromise = fetch(nesoUrl).then(res => res.json() as Promise<NesoResponse>);
 
+    // 3. Fetch Frequency (Using Dec 2025 Resource ID as fallback for current month)
+    // TODO: Update this ID dynamically or via cron to match the current month's resource ID
+    const frequencyResourceId = '5c408627-44a1-417d-9fc5-a26ad822c4e4';
+    const frequencyUrl = `https://api.neso.energy/api/3/action/datastore_search_sql?sql=SELECT * from "${frequencyResourceId}" ORDER BY "_id" DESC LIMIT 1`;
+    const frequencyPromise = fetch(frequencyUrl).then(res => res.json() as Promise<any>);
+
     // Use Promise.allSettled so one failure doesn't block the other
-    const [mixResult, demandResult] = await Promise.allSettled([mixPromise, demandPromise]);
+    const [mixResult, demandResult, freqResult] = await Promise.allSettled([mixPromise, demandPromise, frequencyPromise]);
 
     let mixData: IntensityResponse | null = null;
     let demandData: NesoResponse | null = null;
+    let frequencyData: any = null;
 
     if (mixResult.status === 'fulfilled') {
       mixData = mixResult.value;
@@ -65,7 +73,13 @@ serve(async (req) => {
     if (demandResult.status === 'fulfilled') {
       demandData = demandResult.value;
     } else {
-      console.warn('Failed to fetch demand data (continuing with partial data):', demandResult.reason);
+      console.warn('Failed to fetch demand data:', demandResult.reason);
+    }
+
+    if (freqResult.status === 'fulfilled') {
+      frequencyData = freqResult.value;
+    } else {
+      console.warn('Failed to fetch frequency data:', freqResult.reason);
     }
 
     // Validation - We need at least the mix to show something useful
@@ -74,6 +88,7 @@ serve(async (req) => {
     }
 
     const latestDemand = demandData?.result?.records?.[0];
+    const latestFreq = frequencyData?.result?.records?.[0];
 
     // Use Transmission System Demand (TSD) or National Demand (ND). 
     // ND is usually what's referred to as "Demand" on the dashboard.
@@ -81,6 +96,7 @@ serve(async (req) => {
     // The Carbon Intensity API usually refers to "GB Demand".
     // We will use ND (National Demand) as the headline figure for now.
     const totalDemandMW = latestDemand?.ND ?? null;
+    const gridFrequency = latestFreq?.value ?? null; // Field usually named 'value' or 'frequency'
 
     // Calculate MW for each source based on percentage
     // Note: The percentages from carbonintensity.org.uk might slightly disagree with NESO MWs if timestamps drift,
@@ -106,7 +122,7 @@ serve(async (req) => {
         settlementDate: latestDemand?.SETTLEMENT_DATE ?? null,
         settlementPeriod: latestDemand?.SETTLEMENT_PERIOD ?? null,
         totalDemandMW: totalDemandMW,
-        gridFrequency: null, // Not available in this dataset
+        gridFrequency: gridFrequency,
         mix: mixMW
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

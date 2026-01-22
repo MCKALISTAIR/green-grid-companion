@@ -1,4 +1,8 @@
+// @ts-ignore
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+// Hack to make VS Code happy with Deno globals in a Node workspace
+declare const Deno: any;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -63,11 +67,11 @@ Deno.serve(async (req: Request) => {
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    
+
     // Parse action and params from request body (POST) or query params (GET)
     let action: string | null = null;
     let days: number = 7;
-    
+
     if (req.method === 'POST') {
       const body = await req.json().catch(() => ({}));
       action = body.action || null;
@@ -226,8 +230,34 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    // Helper to map MPAN Area Code (first 2 digits) to NESO Carbon Region ID
+    function getRegionIdFromMpan(mpan: string): number | null {
+      if (!mpan || mpan.length < 2) return null;
+      const areaCode = mpan.substring(0, 2);
+
+      // Mapping based on GSP Group Area Codes
+      const mapping: Record<string, number> = {
+        '10': 10, // Eastern
+        '11': 9,  // East Midlands
+        '12': 13, // London
+        '13': 6,  // MANWEB (N. Wales & Merseyside)
+        '14': 8,  // West Midlands
+        '15': 4,  // North East
+        '16': 3,  // North West
+        '17': 2,  // North Scotland
+        '18': 1,  // South Scotland
+        '19': 12, // South East
+        '20': 11, // Southern
+        '21': 7,  // South Wales
+        '22': 14, // South West
+        '23': 5,  // Yorkshire
+      };
+
+      return mapping[areaCode] || null;
+    }
+
     if (action === 'calculate-footprint') {
-      // Get consumption data that hasn't been calculated yet
+      // Get consumption data
       const { data: consumption, error: consumptionError } = await supabase
         .from('octopus_consumption')
         .select('*')
@@ -244,50 +274,112 @@ Deno.serve(async (req: Request) => {
 
       console.log(`Processing ${consumption.length} consumption records for footprint`);
 
+      // 1. Determine Date Range
+      const timestamps = consumption.map((r: any) => new Date(r.interval_start).getTime());
+      const minTime = new Date(Math.min(...timestamps));
+      const maxTime = new Date(Math.max(...timestamps));
+
+      const fromStr = minTime.toISOString();
+      const toStr = maxTime.toISOString();
+
+      // 2. Determine Region from MPAN (use first record's MPAN)
+      // MPAN is string in DB
+      const mpan = consumption[0].mpan;
+      const regionId = getRegionIdFromMpan(mpan);
+
+      let intensityUrl = `https://api.carbonintensity.org.uk/intensity/${fromStr}/${toStr}`;
+      let isRegional = false;
+
+      if (regionId) {
+        console.log(`Detected Region ID ${regionId} from MPAN ${mpan}. Using Regional Accuracy.`);
+        intensityUrl = `https://api.carbonintensity.org.uk/regional/intensity/${fromStr}/${toStr}/regionid/${regionId}`;
+        isRegional = true;
+      } else {
+        console.log(`Could not detect region from MPAN ${mpan}. Falling back to National Average.`);
+      }
+
+      console.log(`Fetching batch intensity from: ${intensityUrl}`);
+
+      let intensityMap = new Map<string, { intensity: number, index: string }>();
+
+      try {
+        const intensityResponse = await fetch(intensityUrl);
+        if (!intensityResponse.ok) {
+          const dryRunText = await intensityResponse.text();
+          console.error(`Intensity Batch Error ${intensityResponse.status}: ${dryRunText}`);
+          throw new Error(`Failed to fetch batch intensity: ${intensityResponse.status}`);
+        }
+
+        const intensityJson = await intensityResponse.json();
+
+        // Parse Logic: National vs Regional structure is different
+        let intensityList: any[] = [];
+
+        if (isRegional) {
+          // Regional response: { data: { data: [...] } }
+          if (Array.isArray(intensityJson.data)) {
+            intensityList = intensityJson.data[0]?.data || [];
+          } else {
+            intensityList = intensityJson.data?.data || [];
+          }
+        } else {
+          // National: { data: [...] }
+          intensityList = intensityJson.data || [];
+        }
+
+        console.log(`Received ${intensityList.length} intensity records (Regional: ${isRegional})`);
+
+        for (const item of intensityList) {
+          if (item.from && item.intensity) {
+            // Regional often only has 'forecast', no 'actual'. Use logic: actual ?? forecast
+            const value = item.intensity.actual ?? item.intensity.forecast ?? 0;
+            const index = item.intensity.index || 'moderate';
+
+            intensityMap.set(item.from, { intensity: value, index });
+          }
+        }
+
+      } catch (error) {
+        console.error('Batch fetch failed:', error);
+        return new Response(
+          JSON.stringify({ error: 'Failed to fetch external carbon data' }),
+          { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // 3. Process records
       let calculatedCount = 0;
       const footprintRecords: FootprintRecord[] = [];
 
-      // Group consumption by date for API efficiency
       for (const record of consumption) {
-        const intervalStart = new Date(record.interval_start);
+        const data = intensityMap.get(record.interval_start);
 
-        // Fetch intensity for this specific time from Carbon Intensity API
-        const intensityUrl = `https://api.carbonintensity.org.uk/intensity/${intervalStart.toISOString()}`;
+        if (data) {
+          const carbonG = record.consumption_kwh * data.intensity;
 
-        try {
-          const intensityResponse = await fetch(intensityUrl);
-          if (intensityResponse.ok) {
-            const intensityJson = await intensityResponse.json();
-            const intensityData: IntensityData = intensityJson.data?.[0];
-
-            if (intensityData) {
-              const intensity = intensityData.intensity.actual || intensityData.intensity.forecast;
-              const carbonG = record.consumption_kwh * intensity;
-
-              footprintRecords.push({
-                interval_start: record.interval_start,
-                interval_end: record.interval_end,
-                consumption_kwh: record.consumption_kwh,
-                intensity_gco2_kwh: intensity,
-                carbon_g: carbonG,
-                intensity_index: intensityData.intensity.index,
-                mpan: record.mpan
-              });
-            }
-          }
-        } catch (error) {
-          console.error(`Error fetching intensity for ${record.interval_start}:`, error);
+          footprintRecords.push({
+            interval_start: record.interval_start,
+            interval_end: record.interval_end,
+            consumption_kwh: record.consumption_kwh,
+            intensity_gco2_kwh: data.intensity,
+            carbon_g: carbonG,
+            intensity_index: data.index,
+            mpan: record.mpan
+          });
         }
       }
 
-      // Batch insert footprint records
+      // 4. Batch Insert
       if (footprintRecords.length > 0) {
-        for (const record of footprintRecords) {
-          const { error } = await supabase
-            .from('carbon_footprint')
-            .upsert(record, { onConflict: 'mpan,interval_start' });
+        // Upsert 
+        const { error } = await supabase
+          .from('carbon_footprint')
+          .upsert(footprintRecords, { onConflict: 'mpan,interval_start' });
 
-          if (!error) calculatedCount++;
+        if (!error) {
+          calculatedCount = footprintRecords.length;
+        } else {
+          console.error('Upsert check error:', error);
         }
       }
 
@@ -296,7 +388,8 @@ Deno.serve(async (req: Request) => {
       return new Response(
         JSON.stringify({
           success: true,
-          records_calculated: calculatedCount
+          records_calculated: calculatedCount,
+          region_used: isRegional ? regionId : 'national'
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -352,6 +445,56 @@ Deno.serve(async (req: Request) => {
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    if (action === 'get-greenness-forecast') {
+      const query = `
+        query GreennessForecast {
+          greennessForecast {
+            validFrom
+            validTo
+            greennessScore
+            greennessIndex
+            highlightFlag
+          }
+        }
+      `;
+
+      try {
+        const response = await fetch('https://api.octopus.energy/v1/graphql/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            // GraphQL endpoint is public, but good practice to include auth if we have it, 
+            // though the docs say it's public for this specific query.
+          },
+          body: JSON.stringify({ query, operationName: 'GreennessForecast' })
+        });
+
+        if (!response.ok) {
+          throw new Error(`GraphQL Error: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        if (result.errors) {
+          throw new Error(result.errors[0]?.message || 'GraphQL Query Error');
+        }
+
+        return new Response(
+          JSON.stringify({
+            forecast: result.data?.greennessForecast || []
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (error: unknown) {
+        console.error('GraphQL Fetch Error:', error);
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        return new Response(
+          JSON.stringify({ error: message }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     if (action === 'get-status') {

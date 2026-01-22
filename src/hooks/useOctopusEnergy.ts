@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-interface OctopusMeter {
+export interface OctopusMeter {
   id: string;
   mpan: string;
   serial_number: string;
@@ -11,7 +11,7 @@ interface OctopusMeter {
   last_sync_at: string | null;
 }
 
-interface FootprintRecord {
+export interface FootprintRecord {
   id: string;
   interval_start: string;
   interval_end: string;
@@ -22,7 +22,7 @@ interface FootprintRecord {
   mpan: string;
 }
 
-interface FootprintSummary {
+export interface FootprintSummary {
   total_carbon_kg: number;
   total_kwh: number;
   avg_intensity: number;
@@ -30,16 +30,24 @@ interface FootprintSummary {
   period_days: number;
 }
 
-interface FootprintData {
+export interface FootprintData {
   records: FootprintRecord[];
   summary: FootprintSummary;
 }
 
-interface OctopusStatus {
+export interface OctopusStatus {
   is_linked: boolean;
   meters: OctopusMeter[];
   latest_consumption: string | null;
   footprint_records: number;
+}
+
+export interface GreennessForecastItem {
+  validFrom: string;
+  validTo: string;
+  greennessScore: number;
+  greennessIndex: number;
+  highlightFlag: boolean;
 }
 
 export function useOctopusEnergy(days: number = 30) {
@@ -74,6 +82,20 @@ export function useOctopusEnergy(days: number = 30) {
     },
     enabled: status?.is_linked ?? false,
     staleTime: 60000,
+  });
+
+  // Fetch Greener Nights Forecast (always active if linked)
+  const { data: greennessForecast, isLoading: forecastLoading } = useQuery({
+    queryKey: ['greenness-forecast'],
+    queryFn: async (): Promise<GreennessForecastItem[]> => {
+      const { data, error } = await supabase.functions.invoke('octopus-energy', {
+        body: { action: 'get-greenness-forecast' }
+      });
+      if (error) throw new Error(error.message);
+      return data.forecast;
+    },
+    enabled: status?.is_linked ?? false, // Only fetch if linked
+    staleTime: 1000 * 60 * 60 * 4, // 4 hours
   });
 
   // Link meter (fetch from Octopus API)
@@ -156,7 +178,8 @@ export function useOctopusEnergy(days: number = 30) {
   return {
     status,
     footprint,
-    isLoading: statusLoading || footprintLoading,
+    greennessForecast,
+    isLoading: statusLoading || footprintLoading || forecastLoading,
     isSyncing,
     isLinked: status?.is_linked ?? false,
     linkMeter,

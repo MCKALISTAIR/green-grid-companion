@@ -141,6 +141,39 @@ export default function Glossary() {
                     </div>
                 </section>
 
+                {/* Data Sources & Embedded Generation */}
+                <section className="space-y-4">
+                    <div className="flex items-center gap-2">
+                        <Factory className="w-5 h-5 text-primary" />
+                        <h3 className="text-xl font-semibold">Behind the Scenes</h3>
+                    </div>
+                    <Card className="bg-gradient-to-br from-background to-muted/50">
+                        <CardHeader>
+                            <CardTitle className="text-base font-medium">Where does this data come from?</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+                            <p>
+                                We source our data directly from the **National Grid ESO** (Electricity System Operator). They manage the flow of electricity across Great Britain in real-time.
+                            </p>
+                            <div className="bg-background/50 p-3 rounded-lg border border-border/50">
+                                <h4 className="font-semibold text-foreground mb-1 flex items-center gap-2">
+                                    <Sun className="w-4 h-4 text-orange-500" />
+                                    The "Embedded Generation" Challenge
+                                </h4>
+                                <p>
+                                    Big power stations (like nuclear or wind farms) are easy to track because they have massive meters.
+                                    But millions of homes have **rooftop solar panels** that feed energy directly into local wires. These are "invisible" to the main national grid meters.
+                                </p>
+                                <p className="mt-2">
+                                    To solve this, the National Grid uses sophisticated **AI and weather models** to estimate how much "Embedded Generation" is happening.
+                                    <br />
+                                    So when you see "Solar" data here, it's actually a smart blend of real meter readings and high-tech weather forecasting!
+                                </p>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </section>
+
                 {/* Fuel Sources */}
                 <section className="space-y-4">
                     <h3 className="text-xl font-semibold px-1">Fuel Sources</h3>

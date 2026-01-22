@@ -44,11 +44,18 @@ export interface ForecastData {
   generationmix?: GenerationMix[];
 }
 
+export const REGION_IDS = {
+  NATIONAL: 0,
+  SCOTLAND: 16,
+  ENGLAND: 15,
+  WALES: 17,
+} as const;
+
 export const UK_REGIONS = [
-  { id: 0, name: 'National', postcode: 'GB' },
-  { id: 16, name: 'Scotland', postcode: 'Scotland' },
-  { id: 15, name: 'England', postcode: 'England' },
-  { id: 17, name: 'Wales', postcode: 'Wales' },
+  { id: REGION_IDS.NATIONAL, name: 'National', postcode: 'GB' },
+  { id: REGION_IDS.SCOTLAND, name: 'Scotland', postcode: 'Scotland' },
+  { id: REGION_IDS.ENGLAND, name: 'England', postcode: 'England' },
+  { id: REGION_IDS.WALES, name: 'Wales', postcode: 'Wales' },
   { id: 1, name: 'North Scotland', postcode: 'AB' },
   { id: 2, name: 'South Scotland', postcode: 'EH' },
   { id: 3, name: 'North West England', postcode: 'M' },

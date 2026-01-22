@@ -14,6 +14,7 @@ export interface GridDemandData {
     settlementDate: string | null;
     settlementPeriod: number | null;
     totalDemandMW: number | null;
+    gridFrequency: number | null;
     mix: GenerationSourceMW[];
 }
 
@@ -41,6 +42,7 @@ export function useGridDemand() {
 
     return {
         demand: data?.totalDemandMW,
+        frequency: data?.gridFrequency,
         mix: data?.mix || [],
         lastUpdated: data?.timestamp,
         isLoading,

@@ -19,6 +19,7 @@ export interface MixItem {
 interface GenerationMixBarProps {
   mix: MixItem[];
   showMW?: boolean;
+  frequency?: number | null;
 }
 
 const fuelColors: Record<string, string> = {
@@ -33,7 +34,7 @@ const fuelColors: Record<string, string> = {
   other: 'bg-gen-other',
 };
 
-export function GenerationMixBar({ mix, showMW = false }: GenerationMixBarProps) {
+export function GenerationMixBar({ mix, showMW = false, frequency }: GenerationMixBarProps) {
   // Filter out zero values and sort by percentage
   const sortedMix = [...mix]
     .filter(m => m.perc > 0)
@@ -58,7 +59,7 @@ export function GenerationMixBar({ mix, showMW = false }: GenerationMixBarProps)
           </div>
 
           {/* Bar visualization */}
-          <div className="h-4 md:h-6 rounded-full overflow-hidden flex shadow-inner bg-muted/30">
+          <div className="h-4 md:h-6 rounded-full overflow-hidden flex shadow-inner bg-muted/30" role="progressbar" aria-label="Generation Mix">
             {sortedMix.map((item) => (
               <div
                 key={item.fuel}
@@ -116,7 +117,26 @@ export function GenerationMixBar({ mix, showMW = false }: GenerationMixBarProps)
 
       <DialogContent className="max-w-md max-h-[85vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Generation Mix Breakdown</DialogTitle>
+          <DialogTitle className="flex items-center justify-between">
+            <span>Generation Mix Breakdown</span>
+            {frequency && (
+              <div className="flex items-center gap-2 text-sm font-normal bg-muted/50 px-2 py-1 rounded-md">
+                <span className="text-muted-foreground">Grid Freq:</span>
+                <div className="flex items-center gap-1.5">
+                  <span className={`font-mono font-medium ${frequency < 49.8 || frequency > 50.2 ? 'text-destructive' : 'text-emerald-500'
+                    }`}>
+                    {frequency.toFixed(3)} Hz
+                  </span>
+                  <span className="relative flex h-2 w-2">
+                    <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${frequency < 49.8 || frequency > 50.2 ? 'bg-destructive' : 'bg-emerald-500'
+                      }`}></span>
+                    <span className={`relative inline-flex rounded-full h-2 w-2 ${frequency < 49.8 || frequency > 50.2 ? 'bg-destructive' : 'bg-emerald-500'
+                      }`}></span>
+                  </span>
+                </div>
+              </div>
+            )}
+          </DialogTitle>
         </DialogHeader>
         <ScrollArea className="flex-1 pr-4 -mr-4">
           <div className="space-y-4 py-4">

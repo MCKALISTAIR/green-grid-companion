@@ -4,24 +4,33 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useCapacitor } from "@/hooks/useCapacitor";
-import { useEffect } from "react";
+import { useEffect, Suspense, lazy } from "react";
 import { App as CapacitorApp } from "@capacitor/app";
 import { registerServiceWorker } from "@/hooks/useOffline";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
-import Index from "./pages/Index";
-import Onboarding from "./pages/Onboarding";
-import Planner from "./pages/Planner";
-import MapPage from "./pages/Map";
-import Settings from "./pages/Settings";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import Glossary from "./pages/Glossary";
-import HistoryPage from "./pages/History";
-import ManageLocations from "./pages/ManageLocations";
-import ScrollToTop from "@/components/ScrollToTop";
-import NotFound from "./pages/NotFound";
 import { AppLayout } from "@/components/layout/AppLayout";
-import TurbineTest from "./pages/TurbineTest";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import ScrollToTop from "@/components/ScrollToTop";
+
+// Lazy load pages
+const Index = lazy(() => import("./pages/Index"));
+const Onboarding = lazy(() => import("./pages/Onboarding"));
+const Planner = lazy(() => import("./pages/Planner"));
+const MapPage = lazy(() => import("./pages/Map"));
+const Settings = lazy(() => import("./pages/Settings"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const Glossary = lazy(() => import("./pages/Glossary"));
+const HistoryPage = lazy(() => import("./pages/History"));
+const ManageLocations = lazy(() => import("./pages/ManageLocations"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const TurbineTest = lazy(() => import("./pages/TurbineTest"));
+
+// Loading fallback
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-[50vh]">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+  </div>
+);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -71,21 +80,19 @@ function AppContent() {
       <BrowserRouter>
         <ScrollToTop />
         <Routes>
-          <Route path="/onboarding" element={<Onboarding />} />
-
-          {/* Main App Layout */}
           <Route element={<AppLayout />}>
-            <Route path="/" element={<Index />} />
-            <Route path="/planner" element={<Planner />} />
-            <Route path="/map" element={<MapPage />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/privacy" element={<PrivacyPolicy />} />
-            <Route path="/glossary" element={<Glossary />} />
-            <Route path="/history" element={<HistoryPage />} />
-            <Route path="/locations" element={<ManageLocations />} />
-            <Route path="/__turbine-test" element={<TurbineTest />} />
-            <Route path="*" element={<NotFound />} />
+            <Route path="/" element={<Suspense fallback={<PageLoader />}><Index /></Suspense>} />
+            <Route path="/planner" element={<Suspense fallback={<PageLoader />}><Planner /></Suspense>} />
+            <Route path="/map" element={<Suspense fallback={<PageLoader />}><MapPage /></Suspense>} />
+            <Route path="/settings" element={<Suspense fallback={<PageLoader />}><Settings /></Suspense>} />
+            <Route path="/privacy" element={<Suspense fallback={<PageLoader />}><PrivacyPolicy /></Suspense>} />
+            <Route path="/glossary" element={<Suspense fallback={<PageLoader />}><Glossary /></Suspense>} />
+            <Route path="/history" element={<Suspense fallback={<PageLoader />}><HistoryPage /></Suspense>} />
+            <Route path="/locations" element={<Suspense fallback={<PageLoader />}><ManageLocations /></Suspense>} />
+            <Route path="/__turbine-test" element={<Suspense fallback={<PageLoader />}><TurbineTest /></Suspense>} />
+            <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />
           </Route>
+          <Route path="/onboarding" element={<Suspense fallback={<PageLoader />}><Onboarding /></Suspense>} />
         </Routes>
       </BrowserRouter>
     </>

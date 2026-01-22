@@ -11,8 +11,10 @@ import {
   RegionListItem,
   ForecastData,
   GenerationMix,
-  IntensityData
+  IntensityData,
+  REGION_IDS
 } from '@/lib/carbonApi';
+
 
 export function useCarbonData(postcode: string) {
   // National intensity as fallback
@@ -51,9 +53,9 @@ export function useCarbonData(postcode: string) {
   // Handle aggregate regions explicitly since they might not be in the /regional list
   let regionId = foundRegion?.regionid;
   if (!regionId) {
-    if (postcode === 'Scotland') regionId = 16;
-    if (postcode === 'England') regionId = 15;
-    if (postcode === 'Wales') regionId = 17;
+    if (postcode === 'Scotland') regionId = REGION_IDS.SCOTLAND;
+    if (postcode === 'England') regionId = REGION_IDS.ENGLAND;
+    if (postcode === 'Wales') regionId = REGION_IDS.WALES;
     // GB/National falls through to undefined, handled by fallback
   }
 
