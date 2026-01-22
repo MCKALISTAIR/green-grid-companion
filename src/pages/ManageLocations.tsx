@@ -1,0 +1,267 @@
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowLeft, MapPin, Star, Trash2, Pencil, Check, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useSavedLocations, SavedLocation } from '@/hooks/useSavedLocations';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { toast } from 'sonner';
+
+export default function ManageLocations() {
+  const {
+    savedLocations,
+    recentLocations,
+    removeLocation,
+    updateLocationName,
+    clearRecentLocations,
+  } = useSavedLocations();
+
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState('');
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showClearRecentDialog, setShowClearRecentDialog] = useState(false);
+
+  const toggleSelection = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const selectAll = () => {
+    if (selectedIds.size === savedLocations.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(savedLocations.map((loc) => loc.id)));
+    }
+  };
+
+  const startEditing = (location: SavedLocation) => {
+    setEditingId(location.id);
+    setEditValue(location.name);
+  };
+
+  const saveEdit = () => {
+    if (editingId && editValue.trim()) {
+      updateLocationName(editingId, editValue.trim());
+      toast.success('Location name updated');
+    }
+    setEditingId(null);
+    setEditValue('');
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditValue('');
+  };
+
+  const deleteSelected = () => {
+    selectedIds.forEach((id) => removeLocation(id));
+    toast.success(`Deleted ${selectedIds.size} location${selectedIds.size > 1 ? 's' : ''}`);
+    setSelectedIds(new Set());
+    setShowDeleteDialog(false);
+  };
+
+  const handleClearRecent = () => {
+    clearRecentLocations();
+    toast.success('Recent locations cleared');
+    setShowClearRecentDialog(false);
+  };
+
+  return (
+    <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
+      <div className="p-4 pt-[max(2rem,env(safe-area-inset-top))] space-y-6">
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          <Link to="/settings">
+            <Button variant="ghost" size="icon" className="shrink-0">
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold">Manage Locations</h1>
+            <p className="text-muted-foreground text-sm">Edit names and delete saved locations</p>
+          </div>
+        </div>
+
+        {/* Saved Locations Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <Star className="w-4 h-4 text-primary" />
+              Saved Locations
+            </h2>
+            {savedLocations.length > 0 && (
+              <Button variant="ghost" size="sm" onClick={selectAll}>
+                {selectedIds.size === savedLocations.length ? 'Deselect All' : 'Select All'}
+              </Button>
+            )}
+          </div>
+
+          {savedLocations.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <MapPin className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p>No saved locations yet</p>
+              <p className="text-sm">Save locations from the home screen to see them here</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {savedLocations.map((location) => (
+                <div
+                  key={location.id}
+                  className="flex items-center gap-3 p-3 bg-card border rounded-lg"
+                >
+                  <Checkbox
+                    checked={selectedIds.has(location.id)}
+                    onCheckedChange={() => toggleSelection(location.id)}
+                  />
+
+                  {editingId === location.id ? (
+                    <div className="flex-1 flex items-center gap-2">
+                      <Input
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        className="h-8"
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') saveEdit();
+                          if (e.key === 'Escape') cancelEdit();
+                        }}
+                      />
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={saveEdit}>
+                        <Check className="w-4 h-4 text-primary" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={cancelEdit}>
+                        <X className="w-4 h-4 text-destructive" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{location.name}</p>
+                        <p className="text-sm text-muted-foreground">{location.postcode}</p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 shrink-0"
+                        onClick={() => startEditing(location)}
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Bulk Delete Button */}
+          {selectedIds.size > 0 && (
+            <Button
+              variant="destructive"
+              className="w-full"
+              onClick={() => setShowDeleteDialog(true)}
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete {selectedIds.size} Location{selectedIds.size > 1 ? 's' : ''}
+            </Button>
+          )}
+        </div>
+
+        {/* Recent Locations Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Recent Searches</h2>
+            {recentLocations.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-destructive hover:text-destructive"
+                onClick={() => setShowClearRecentDialog(true)}
+              >
+                Clear All
+              </Button>
+            )}
+          </div>
+
+          {recentLocations.length === 0 ? (
+            <p className="text-muted-foreground text-sm py-4 text-center">
+              No recent searches
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {recentLocations.map((postcode) => (
+                <div
+                  key={postcode}
+                  className="px-3 py-1.5 bg-muted rounded-full text-sm font-medium"
+                >
+                  {postcode}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Locations</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {selectedIds.size} location
+              {selectedIds.size > 1 ? 's' : ''}? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={deleteSelected}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Clear Recent Dialog */}
+      <AlertDialog open={showClearRecentDialog} onOpenChange={setShowClearRecentDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear Recent Searches</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to clear all recent location searches?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleClearRecent}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Clear
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
