@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Bell, BellOff, Clock, Zap, Smartphone } from 'lucide-react';
+import { Bell, BellOff, Clock, Zap, Smartphone, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useNotifications } from '@/hooks/useNotifications';
 
 interface NotificationSettingsProps {
@@ -43,6 +44,24 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
     }
     updatePreference('dailyForecastEnabled', enabled);
   };
+
+  const handleWeeklyDigestToggle = async (enabled: boolean) => {
+    if (enabled && permissionStatus !== 'granted') {
+      const granted = await requestPermission();
+      if (!granted) return;
+    }
+    updatePreference('weeklyDigestEnabled', enabled);
+  };
+
+  const dayOptions = [
+    { value: 0, label: 'Sunday' },
+    { value: 1, label: 'Monday' },
+    { value: 2, label: 'Tuesday' },
+    { value: 3, label: 'Wednesday' },
+    { value: 4, label: 'Thursday' },
+    { value: 5, label: 'Friday' },
+    { value: 6, label: 'Saturday' },
+  ];
 
   return (
     <div className="space-y-6 p-1">
@@ -210,6 +229,56 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
           )
         }
       </Card >
+
+      {/* Weekly Digest */}
+      <Card className="p-4 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+              <CalendarDays className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h3 className="font-medium text-foreground">Weekly Digest</h3>
+              <p className="text-sm text-muted-foreground">
+                Summary of your carbon footprint & best times
+              </p>
+            </div>
+          </div>
+          <Switch
+            checked={prefs.weeklyDigestEnabled}
+            onCheckedChange={handleWeeklyDigestToggle}
+            disabled={!isSupported}
+          />
+        </div>
+
+        {prefs.weeklyDigestEnabled && (
+          <div className="space-y-3 pt-2 border-t border-border">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">
+                Send every:
+              </span>
+              <Select
+                value={prefs.weeklyDigestDay.toString()}
+                onValueChange={(value) => updatePreference('weeklyDigestDay', parseInt(value))}
+              >
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {dayOptions.map((day) => (
+                    <SelectItem key={day.value} value={day.value.toString()}>
+                      {day.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Includes: total emissions, energy usage, green energy %, and best times to use electricity.
+            </p>
+          </div>
+        )}
+      </Card>
 
       {isSupported && permissionStatus === 'granted' && prefs.lowIntensityEnabled && (
         <p className="text-xs text-center text-muted-foreground">
