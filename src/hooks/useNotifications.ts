@@ -10,7 +10,9 @@ export interface NotificationPrefs {
     lowIntensityThreshold: number;
     dailyForecastEnabled: boolean;
     dailyForecastTime: string;
-    useBackgroundFetch: boolean; // New pref for "Online Check"
+    useBackgroundFetch: boolean;
+    weeklyDigestEnabled: boolean;
+    weeklyDigestDay: number; // 0 = Sunday, 6 = Saturday
 }
 
 const DEFAULT_PREFS: NotificationPrefs = {
@@ -19,6 +21,8 @@ const DEFAULT_PREFS: NotificationPrefs = {
     dailyForecastEnabled: false,
     dailyForecastTime: '09:00',
     useBackgroundFetch: false,
+    weeklyDigestEnabled: false,
+    weeklyDigestDay: 0, // Sunday
 };
 
 const PREFS_KEY = 'gridgreen-notification-prefs';

@@ -122,6 +122,8 @@ export type Database = {
           platform: string
           postcode: string
           updated_at: string
+          weekly_digest_day: number
+          weekly_digest_enabled: boolean
         }
         Insert: {
           created_at?: string
@@ -134,6 +136,8 @@ export type Database = {
           platform?: string
           postcode: string
           updated_at?: string
+          weekly_digest_day?: number
+          weekly_digest_enabled?: boolean
         }
         Update: {
           created_at?: string
@@ -146,6 +150,8 @@ export type Database = {
           platform?: string
           postcode?: string
           updated_at?: string
+          weekly_digest_day?: number
+          weekly_digest_enabled?: boolean
         }
         Relationships: []
       }
