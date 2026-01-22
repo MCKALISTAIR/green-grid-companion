@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ChevronRight, GraduationCap, Shield } from 'lucide-react';
+import { ChevronRight, GraduationCap, Shield, MapPin } from 'lucide-react';
 import { NotificationSettings } from '@/components/NotificationSettings';
 import { OctopusIntegration } from '@/components/OctopusIntegration';
 
@@ -15,6 +15,27 @@ export default function Settings() {
 
                 <OctopusIntegration />
                 <NotificationSettings />
+
+                <div className="space-y-4">
+                    <h2 className="text-xl font-semibold">Preferences</h2>
+
+                    <div className="flex flex-col gap-3">
+                        <Link to="/locations">
+                            <div className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-colors">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-primary/10 rounded-full">
+                                        <MapPin className="w-5 h-5 text-primary" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-medium">Manage Locations</h3>
+                                        <p className="text-sm text-muted-foreground">Edit saved locations & clear history</p>
+                                    </div>
+                                </div>
+                                <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                            </div>
+                        </Link>
+                    </div>
+                </div>
 
                 <div className="space-y-4">
                     <h2 className="text-xl font-semibold">Resources</h2>

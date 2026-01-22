@@ -16,6 +16,7 @@ import Settings from "./pages/Settings";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Glossary from "./pages/Glossary";
 import HistoryPage from "./pages/History";
+import ManageLocations from "./pages/ManageLocations";
 import ScrollToTop from "@/components/ScrollToTop";
 import NotFound from "./pages/NotFound";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -81,6 +82,7 @@ function AppContent() {
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/glossary" element={<Glossary />} />
             <Route path="/history" element={<HistoryPage />} />
+            <Route path="/locations" element={<ManageLocations />} />
             <Route path="/__turbine-test" element={<TurbineTest />} />
             <Route path="*" element={<NotFound />} />
           </Route>
