@@ -13,8 +13,8 @@ export function PullToRefresh({ onRefresh, children, disabled = false }: PullToR
     const [isRefreshing, setIsRefreshing] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    const THRESHOLD = 80;
-    const MAX_PULL = 120;
+    const THRESHOLD = 120;
+    const MAX_PULL = 160;
 
     const handleTouchStart = (e: React.TouchEvent) => {
         if (disabled || isRefreshing) return;
@@ -80,9 +80,9 @@ export function PullToRefresh({ onRefresh, children, disabled = false }: PullToR
         >
             {/* Refresh Indicator */}
             <div
-                className="fixed top-0 left-0 right-0 flex justify-center pointer-events-none z-50 transition-all duration-300 pt-[env(safe-area-inset-top)]"
+                className="fixed top-0 left-0 right-0 flex justify-center pointer-events-none z-50 transition-all duration-300 pt-[calc(env(safe-area-inset-top)+1rem)]"
                 style={{
-                    transform: `translateY(${Math.max(pullDistance, isRefreshing ? THRESHOLD : 0) - 60}px)`,
+                    transform: `translateY(${Math.max(pullDistance, isRefreshing ? THRESHOLD : 0) - 100}px)`,
                     opacity: Math.min(pullDistance / (THRESHOLD * 0.5), 1)
                 }}
             >

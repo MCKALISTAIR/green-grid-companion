@@ -37,6 +37,7 @@ export interface FootprintData {
 
 export interface OctopusStatus {
   is_linked: boolean;
+  has_credentials: boolean;
   meters: OctopusMeter[];
   latest_consumption: string | null;
   footprint_records: number;
@@ -97,6 +98,27 @@ export function useOctopusEnergy(days: number = 30) {
     enabled: status?.is_linked ?? false, // Only fetch if linked
     staleTime: 1000 * 60 * 60 * 4, // 4 hours
   });
+
+  // Save Credentials
+  const saveCredentials = useCallback(async (apiKey: string, accountNumber: string) => {
+    setIsSyncing(true);
+    try {
+      const { error } = await supabase.functions.invoke('octopus-energy', {
+        body: { action: 'save-credentials', apiKey, accountNumber }
+      });
+
+      if (error) throw new Error(error.message || 'Failed to save credentials');
+
+      toast.success('Credentials saved successfully');
+      await refetchStatus();
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to save credentials';
+      toast.error(message);
+      throw error;
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [refetchStatus]);
 
   // Link meter (fetch from Octopus API)
   const linkMeter = useCallback(async () => {
@@ -175,6 +197,32 @@ export function useOctopusEnergy(days: number = 30) {
     await calculateFootprint();
   }, [syncConsumption, calculateFootprint]);
 
+  // Disconnect Account
+  const disconnect = useCallback(async () => {
+    setIsSyncing(true);
+    try {
+      const { error } = await supabase.functions.invoke('octopus-energy', {
+        body: { action: 'disconnect-account' }
+      });
+
+      if (error) throw new Error(error.message || 'Failed to disconnect account');
+
+      toast.success('Disconnected Octopus Energy account');
+
+      // Invalidate queries to clear data from UI immediately
+      queryClient.setQueryData(['octopus-status'], null);
+      queryClient.setQueryData(['octopus-footprint', days], null);
+
+      await refetchStatus();
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to disconnect account';
+      toast.error(message);
+      throw error;
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [refetchStatus, queryClient, days]);
+
   return {
     status,
     footprint,
@@ -182,10 +230,13 @@ export function useOctopusEnergy(days: number = 30) {
     isLoading: statusLoading || footprintLoading || forecastLoading,
     isSyncing,
     isLinked: status?.is_linked ?? false,
+    hasCredentials: status?.has_credentials ?? false,
+    saveCredentials,
     linkMeter,
     syncConsumption,
     calculateFootprint,
     fullSync,
+    disconnect,
     refetchStatus,
     refetchFootprint,
   };

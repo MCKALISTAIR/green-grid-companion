@@ -7,9 +7,9 @@ export default function PrivacyPolicy() {
     const navigate = useNavigate();
 
     return (
-        <div className="min-h-screen bg-background pb-[calc(2rem+env(safe-area-inset-bottom))]">
+        <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
             {/* Header */}
-            <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border/50 p-4 pt-[max(1rem,env(safe-area-inset-top))]">
+            <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border/50 px-4 pb-4 pt-[calc(env(safe-area-inset-top)+1rem)]">
                 <div className="flex items-center gap-2 max-w-2xl mx-auto">
                     <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="-ml-2">
                         <ArrowLeft className="w-5 h-5" />
@@ -67,6 +67,9 @@ export default function PrivacyPolicy() {
                         <ul className="list-disc pl-4 space-y-1">
                             <li>
                                 <strong>National Grid ESO</strong>: To fetch carbon intensity data for your region.
+                            </li>
+                            <li>
+                                <strong>Octopus Energy</strong>: To securely fetch your smart meter consumption data (only if you voluntarily link your account).
                             </li>
                             <li>
                                 <strong>Postcodes.io</strong>: To convert your GPS coordinates into a postcode district (if you use "Current Location").

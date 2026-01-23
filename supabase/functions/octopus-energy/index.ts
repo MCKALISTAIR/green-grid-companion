@@ -26,16 +26,6 @@ interface OctopusProperty {
   gas_meter_points?: OctopusMeterPoint[];
 }
 
-interface IntensityData {
-  from: string;
-  to: string;
-  intensity: {
-    forecast: number;
-    actual: number | null;
-    index: string;
-  };
-}
-
 interface FootprintRecord {
   interval_start: string;
   interval_end: string;
@@ -53,47 +43,158 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const OCTOPUS_API_KEY = Deno.env.get('OCTOPUS_API_KEY');
-    const OCTOPUS_ACCOUNT_NUMBER = Deno.env.get('OCTOPUS_ACCOUNT_NUMBER');
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-    if (!OCTOPUS_API_KEY || !OCTOPUS_ACCOUNT_NUMBER) {
-      console.error('Missing Octopus credentials');
+    // Create a Supabase client with the Auth context of the logged in user
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
       return new Response(
-        JSON.stringify({ error: 'Octopus Energy credentials not configured' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Missing Authorization header' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
+    // Use the user's JWT to create a scoped client (or use service role and get user manually)
+    // We'll use service role to allow access to the credentials table (which might be protected/private),
+    // but we MUST validate the user first.
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Parse action and params from request body (POST) or query params (GET)
+    // Validate User
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized', details: userError }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const userId = user.id;
+
+    // Parse action and params
     let action: string | null = null;
     let days: number = 7;
+    let payload: any = {};
 
     if (req.method === 'POST') {
       const body = await req.json().catch(() => ({}));
       action = body.action || null;
       days = parseInt(body.days) || 7;
+      payload = body;
     } else {
       const url = new URL(req.url);
       action = url.searchParams.get('action');
       days = parseInt(url.searchParams.get('days') || '7');
     }
 
-    console.log(`Octopus Energy API - Action: ${action}, Days: ${days}`);
+    console.log(`Octopus Energy API - Action: ${action}, Days: ${days}, User: ${userId}`);
 
-    // Basic auth header for Octopus API
-    const authHeader = 'Basic ' + btoa(OCTOPUS_API_KEY + ':');
+    // --- CREDENTIALS MANAGEMENT ---
+
+    if (action === 'save-credentials') {
+      const { apiKey, accountNumber } = payload;
+      if (!apiKey || !accountNumber) {
+        return new Response(
+          JSON.stringify({ error: 'Missing API Key or Account Number' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Upsert credentials
+      const { error } = await supabase
+        .from('octopus_credentials')
+        .upsert({
+          user_id: userId,
+          api_key: apiKey,
+          account_number: accountNumber,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id' });
+
+      if (error) {
+        console.error('Error saving credentials:', error);
+        return new Response(
+          JSON.stringify({ error: 'Failed to save credentials' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({ success: true }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (action === 'disconnect-account') {
+      const { error: credsError } = await supabase
+        .from('octopus_credentials')
+        .delete()
+        .eq('user_id', userId);
+
+      if (credsError) {
+        return new Response(
+          JSON.stringify({ error: 'Failed to delete credentials' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      await supabase.from('octopus_meters').delete().eq('user_id', userId);
+
+      return new Response(
+        JSON.stringify({ success: true }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Helper to get credentials
+    async function getUserCredentials() {
+      const { data, error } = await supabase
+        .from('octopus_credentials')
+        .select('api_key, account_number')
+        .eq('user_id', userId)
+        .single();
+
+      if (error || !data) {
+        return null;
+      }
+      return data;
+    }
+
+    if (action === 'check-credentials') {
+      const creds = await getUserCredentials();
+      return new Response(
+        JSON.stringify({ has_credentials: !!creds }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // --- REQUIRES CREDENTIALS ---
+
+    // For all other actions, we need credentials
+    const credentials = await getUserCredentials();
+
+    // Allow get-status to run even without credentials (it will return unlinked state)
+    // But other actions should fail if no credentials
+    if (!credentials && action !== 'get-status' && action !== 'get-greenness-forecast') {
+      return new Response(
+        JSON.stringify({ error: 'Octopus Energy credentials not configured' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { api_key: OCTOPUS_API_KEY, account_number: OCTOPUS_ACCOUNT_NUMBER } = credentials || {};
+    const authHeaderOctopus = OCTOPUS_API_KEY ? 'Basic ' + btoa(OCTOPUS_API_KEY + ':') : null;
 
     if (action === 'get-meters') {
+      if (!authHeaderOctopus || !OCTOPUS_ACCOUNT_NUMBER) throw new Error('Missing credentials');
+
       // Fetch account details to get meter information
       const accountUrl = `https://api.octopus.energy/v1/accounts/${OCTOPUS_ACCOUNT_NUMBER}/`;
       console.log(`Fetching account from: ${accountUrl}`);
 
       const response = await fetch(accountUrl, {
-        headers: { 'Authorization': authHeader }
+        headers: { 'Authorization': authHeaderOctopus }
       });
 
       if (!response.ok) {
@@ -106,9 +207,8 @@ Deno.serve(async (req: Request) => {
       }
 
       const accountData = await response.json();
-      console.log('Account data received:', JSON.stringify(accountData, null, 2));
 
-      // Extract electricity meters from all properties
+      // Extract electricity meters
       const meters: { mpan: string; serial_number: string }[] = [];
 
       for (const property of accountData.properties || []) {
@@ -124,18 +224,21 @@ Deno.serve(async (req: Request) => {
         }
       }
 
-      console.log(`Found ${meters.length} electricity meters`);
+      console.log(`Found ${meters.length} electricity meters for user ${userId}`);
 
-      // Store meters in database
+      // Store meters in database linked to user
       for (const meter of meters) {
         const { error } = await supabase
           .from('octopus_meters')
           .upsert({
+            user_id: userId, // Link to user
             mpan: meter.mpan,
             serial_number: meter.serial_number,
             is_active: true,
             updated_at: new Date().toISOString()
-          }, { onConflict: 'mpan' });
+          }, { onConflict: 'mpan' }); // Assumes MPAN is unique system-wide, which is true. 
+        // If user A claims it, User B can't claim same MPAN unless we change constraint.
+        // For now, MPAN is globally unique so this is fine.
 
         if (error) {
           console.error(`Error storing meter ${meter.mpan}:`, error);
@@ -149,16 +252,19 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === 'sync-consumption') {
-      // Get meter details from database
+      if (!authHeaderOctopus) throw new Error('Missing credentials');
+
+      // Get meter details for THIS user
       const { data: meterData, error: meterError } = await supabase
         .from('octopus_meters')
         .select('*')
+        .eq('user_id', userId) // Enforce user ownership
         .eq('is_active', true)
         .limit(1)
         .single();
 
       if (meterError || !meterData) {
-        console.error('No active meter found:', meterError);
+        console.error('No active meter found for user:', meterError);
         return new Response(
           JSON.stringify({ error: 'No linked meter found. Please link your meter first.' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -167,7 +273,7 @@ Deno.serve(async (req: Request) => {
 
       const { mpan, serial_number } = meterData;
 
-      // Calculate date range using days from request body
+      // Calculate date range
       const daysBack = days;
       const periodTo = new Date();
       const periodFrom = new Date();
@@ -175,10 +281,10 @@ Deno.serve(async (req: Request) => {
 
       const consumptionUrl = `https://api.octopus.energy/v1/electricity-meter-points/${mpan}/meters/${serial_number}/consumption/?period_from=${periodFrom.toISOString()}&period_to=${periodTo.toISOString()}&page_size=25000`;
 
-      console.log(`Fetching consumption from: ${consumptionUrl}`);
+      console.log(`Fetching consumption for ${mpan}`);
 
       const response = await fetch(consumptionUrl, {
-        headers: { 'Authorization': authHeader }
+        headers: { 'Authorization': authHeaderOctopus }
       });
 
       if (!response.ok) {
@@ -215,9 +321,8 @@ Deno.serve(async (req: Request) => {
       await supabase
         .from('octopus_meters')
         .update({ last_sync_at: new Date().toISOString() })
-        .eq('mpan', mpan);
-
-      console.log(`Stored ${insertedCount} consumption readings`);
+        .eq('mpan', mpan)
+        .eq('user_id', userId);
 
       return new Response(
         JSON.stringify({
@@ -234,45 +339,44 @@ Deno.serve(async (req: Request) => {
     function getRegionIdFromMpan(mpan: string): number | null {
       if (!mpan || mpan.length < 2) return null;
       const areaCode = mpan.substring(0, 2);
-
-      // Mapping based on GSP Group Area Codes
       const mapping: Record<string, number> = {
-        '10': 10, // Eastern
-        '11': 9,  // East Midlands
-        '12': 13, // London
-        '13': 6,  // MANWEB (N. Wales & Merseyside)
-        '14': 8,  // West Midlands
-        '15': 4,  // North East
-        '16': 3,  // North West
-        '17': 2,  // North Scotland
-        '18': 1,  // South Scotland
-        '19': 12, // South East
-        '20': 11, // Southern
-        '21': 7,  // South Wales
-        '22': 14, // South West
-        '23': 5,  // Yorkshire
+        '10': 10, '11': 9, '12': 13, '13': 6, '14': 8, '15': 4, '16': 3,
+        '17': 2, '18': 1, '19': 12, '20': 11, '21': 7, '22': 14, '23': 5,
       };
-
       return mapping[areaCode] || null;
     }
 
     if (action === 'calculate-footprint') {
-      // Get consumption data
+
+      // Find user's MPAN first to get the correct consumption data
+      const { data: userMeter } = await supabase
+        .from('octopus_meters')
+        .select('mpan')
+        .eq('user_id', userId)
+        .limit(1)
+        .single();
+
+      if (!userMeter) {
+        return new Response(
+          JSON.stringify({ error: 'No meter linked' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Get consumption data for this user's MPAN
       const { data: consumption, error: consumptionError } = await supabase
         .from('octopus_consumption')
         .select('*')
+        .eq('mpan', userMeter.mpan)
         .order('interval_start', { ascending: false })
         .limit(500);
 
       if (consumptionError || !consumption?.length) {
-        console.error('No consumption data found:', consumptionError);
         return new Response(
           JSON.stringify({ error: 'No consumption data found. Please sync consumption first.' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-
-      console.log(`Processing ${consumption.length} consumption records for footprint`);
 
       // 1. Determine Date Range
       const timestamps = consumption.map((r: any) => new Date(r.interval_start).getTime());
@@ -282,8 +386,7 @@ Deno.serve(async (req: Request) => {
       const fromStr = minTime.toISOString();
       const toStr = maxTime.toISOString();
 
-      // 2. Determine Region from MPAN (use first record's MPAN)
-      // MPAN is string in DB
+      // 2. Determine Region
       const mpan = consumption[0].mpan;
       const regionId = getRegionIdFromMpan(mpan);
 
@@ -291,50 +394,36 @@ Deno.serve(async (req: Request) => {
       let isRegional = false;
 
       if (regionId) {
-        console.log(`Detected Region ID ${regionId} from MPAN ${mpan}. Using Regional Accuracy.`);
         intensityUrl = `https://api.carbonintensity.org.uk/regional/intensity/${fromStr}/${toStr}/regionid/${regionId}`;
         isRegional = true;
-      } else {
-        console.log(`Could not detect region from MPAN ${mpan}. Falling back to National Average.`);
       }
-
-      console.log(`Fetching batch intensity from: ${intensityUrl}`);
 
       let intensityMap = new Map<string, { intensity: number, index: string }>();
 
       try {
         const intensityResponse = await fetch(intensityUrl);
-        if (!intensityResponse.ok) {
-          const dryRunText = await intensityResponse.text();
-          console.error(`Intensity Batch Error ${intensityResponse.status}: ${dryRunText}`);
-          throw new Error(`Failed to fetch batch intensity: ${intensityResponse.status}`);
-        }
+        if (!intensityResponse.ok) throw new Error(`Failed to fetch batch intensity: ${intensityResponse.status}`);
 
         const intensityJson = await intensityResponse.json();
-
-        // Parse Logic: National vs Regional structure is different
         let intensityList: any[] = [];
 
         if (isRegional) {
-          // Regional response: { data: { data: [...] } }
+          // Check nested structure carefully
           if (Array.isArray(intensityJson.data)) {
+            // Sometimes regional API returns array of regions, we want the first (and only) one if we requested by ID
             intensityList = intensityJson.data[0]?.data || [];
           } else {
+            // Or direct object
             intensityList = intensityJson.data?.data || [];
           }
         } else {
-          // National: { data: [...] }
           intensityList = intensityJson.data || [];
         }
 
-        console.log(`Received ${intensityList.length} intensity records (Regional: ${isRegional})`);
-
         for (const item of intensityList) {
           if (item.from && item.intensity) {
-            // Regional often only has 'forecast', no 'actual'. Use logic: actual ?? forecast
             const value = item.intensity.actual ?? item.intensity.forecast ?? 0;
             const index = item.intensity.index || 'moderate';
-
             intensityMap.set(item.from, { intensity: value, index });
           }
         }
@@ -371,19 +460,12 @@ Deno.serve(async (req: Request) => {
 
       // 4. Batch Insert
       if (footprintRecords.length > 0) {
-        // Upsert 
         const { error } = await supabase
           .from('carbon_footprint')
           .upsert(footprintRecords, { onConflict: 'mpan,interval_start' });
 
-        if (!error) {
-          calculatedCount = footprintRecords.length;
-        } else {
-          console.error('Upsert check error:', error);
-        }
+        if (!error) calculatedCount = footprintRecords.length;
       }
-
-      console.log(`Calculated footprint for ${calculatedCount} records`);
 
       return new Response(
         JSON.stringify({
@@ -396,17 +478,31 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === 'get-footprint') {
+      const { data: userMeter } = await supabase
+        .from('octopus_meters')
+        .select('mpan')
+        .eq('user_id', userId)
+        .limit(1)
+        .single();
+
+      if (!userMeter) {
+        return new Response(
+          JSON.stringify({ records: [], summary: {} }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       const periodFrom = new Date();
       periodFrom.setDate(periodFrom.getDate() - days);
 
       const { data: footprint, error } = await supabase
         .from('carbon_footprint')
         .select('*')
+        .eq('mpan', userMeter.mpan)
         .gte('interval_start', periodFrom.toISOString())
         .order('interval_start', { ascending: true });
 
       if (error) {
-        console.error('Error fetching footprint:', error);
         return new Response(
           JSON.stringify({ error: 'Failed to fetch footprint data' }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -420,13 +516,10 @@ Deno.serve(async (req: Request) => {
         ? footprint.reduce((sum: number, r: FootprintRecord) => sum + r.intensity_gco2_kwh, 0) / footprint.length
         : 0;
 
-      // Count by intensity level
       const byIndex: Record<string, { count: number; carbon_g: number; kwh: number }> = {};
       for (const record of footprint || []) {
         const idx = record.intensity_index;
-        if (!byIndex[idx]) {
-          byIndex[idx] = { count: 0, carbon_g: 0, kwh: 0 };
-        }
+        if (!byIndex[idx]) byIndex[idx] = { count: 0, carbon_g: 0, kwh: 0 };
         byIndex[idx].count++;
         byIndex[idx].carbon_g += Number(record.carbon_g);
         byIndex[idx].kwh += Number(record.consumption_kwh);
@@ -463,32 +556,19 @@ Deno.serve(async (req: Request) => {
       try {
         const response = await fetch('https://api.octopus.energy/v1/graphql/', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            // GraphQL endpoint is public, but good practice to include auth if we have it, 
-            // though the docs say it's public for this specific query.
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ query, operationName: 'GreennessForecast' })
         });
 
-        if (!response.ok) {
-          throw new Error(`GraphQL Error: ${response.status}`);
-        }
-
+        if (!response.ok) throw new Error(`GraphQL Error: ${response.status}`);
         const result = await response.json();
-
-        if (result.errors) {
-          throw new Error(result.errors[0]?.message || 'GraphQL Query Error');
-        }
+        if (result.errors) throw new Error(result.errors[0]?.message || 'GraphQL Query Error');
 
         return new Response(
-          JSON.stringify({
-            forecast: result.data?.greennessForecast || []
-          }),
+          JSON.stringify({ forecast: result.data?.greennessForecast || [] }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       } catch (error: unknown) {
-        console.error('GraphQL Fetch Error:', error);
         const message = error instanceof Error ? error.message : 'Unknown error';
         return new Response(
           JSON.stringify({ error: message }),
@@ -498,37 +578,52 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === 'get-status') {
-      // Get meter status
+      // Get meter status for current user
       const { data: meters } = await supabase
         .from('octopus_meters')
         .select('*')
+        .eq('user_id', userId)
         .eq('is_active', true);
 
       // Get latest consumption
-      const { data: latestConsumption } = await supabase
-        .from('octopus_consumption')
-        .select('interval_start')
-        .order('interval_start', { ascending: false })
-        .limit(1);
+      let latestConsumption = null;
+      let footprintCount = 0;
 
-      // Get footprint count
-      const { count: footprintCount } = await supabase
-        .from('carbon_footprint')
-        .select('*', { count: 'exact', head: true });
+      if (meters && meters.length > 0) {
+        // Assuming single meter for simplicity in status check, or check all
+        const mpans = meters.map(m => m.mpan);
+
+        const { data: latest } = await supabase
+          .from('octopus_consumption')
+          .select('interval_start')
+          .in('mpan', mpans)
+          .order('interval_start', { ascending: false })
+          .limit(1);
+
+        latestConsumption = latest?.[0]?.interval_start || null;
+
+        const { count } = await supabase
+          .from('carbon_footprint')
+          .select('*', { count: 'exact', head: true })
+          .in('mpan', mpans);
+
+        footprintCount = count || 0;
+      }
 
       return new Response(
         JSON.stringify({
           is_linked: meters && meters.length > 0,
+          has_credentials: !!credentials,
           meters: meters || [],
-          latest_consumption: latestConsumption?.[0]?.interval_start || null,
-          footprint_records: footprintCount || 0
+          latest_consumption: latestConsumption,
+          footprint_records: footprintCount
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     return new Response(
-      JSON.stringify({ error: 'Invalid action. Use: get-meters, sync-consumption, calculate-footprint, get-footprint, get-status' }),
+      JSON.stringify({ error: 'Invalid action' }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 

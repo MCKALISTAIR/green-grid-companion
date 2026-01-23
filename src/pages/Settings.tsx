@@ -7,7 +7,7 @@ import { OctopusIntegration } from '@/components/OctopusIntegration';
 export default function Settings() {
     return (
         <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
-            <div className="p-4 pt-[max(2rem,env(safe-area-inset-top))] space-y-8">
+            <div className="p-4 pt-[calc(env(safe-area-inset-top)+2rem)] space-y-8">
                 <div>
                     <h1 className="text-2xl font-bold">Settings</h1>
                     <p className="text-muted-foreground">Manage notifications and preferences.</p>
@@ -79,6 +79,9 @@ export default function Settings() {
                     </p>
                     <p>
                         Data sourced from <a href="https://www.carbonintensity.org.uk/" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">National Grid ESO</a>
+                    </p>
+                    <p>
+                        Powered by <a href="https://developer.octopus.energy/docs/api/" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">Octopus Energy API</a>
                     </p>
 
                 </div>

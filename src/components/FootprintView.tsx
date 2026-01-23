@@ -251,17 +251,7 @@ export function FootprintView() {
     );
   }
 
-  if (!footprint?.records?.length) {
-    return (
-      <Card className="p-6 text-center">
-        <Leaf className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-        <h3 className="font-medium text-foreground mb-2">No Footprint Data Yet</h3>
-        <p className="text-sm text-muted-foreground">
-          Sync your consumption data to calculate your carbon footprint.
-        </p>
-      </Card>
-    );
-  }
+
 
   return (
     <div className="space-y-4">
@@ -281,297 +271,310 @@ export function FootprintView() {
         </Tabs>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 gap-3">
-        <Card className="p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Leaf className="w-5 h-5 text-primary" />
-            <span className="text-sm text-muted-foreground">Total Carbon</span>
-          </div>
-          <p className="text-2xl font-bold text-foreground">
-            {insights?.totalCarbon.toFixed(1)} <span className="text-sm font-normal">kg CO₂</span>
+      {!footprint?.records?.length ? (
+        <Card className="p-6 text-center">
+          <Leaf className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+          <h3 className="font-medium text-foreground mb-2">No Footprint Data Yet</h3>
+          <p className="text-sm text-muted-foreground">
+            {timeRange === 'day' ? 'No data for this day.' : 'Sync your consumption data to see your carbon footprint.'}
           </p>
         </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Zap className="w-5 h-5 text-primary" />
-            <span className="text-sm text-muted-foreground">Energy Used</span>
-          </div>
-          <p className="text-2xl font-bold text-foreground">
-            {insights?.totalKwh.toFixed(1)} <span className="text-sm font-normal">kWh</span>
-          </p>
-        </Card>
-      </div>
-
-      {/* Green Score */}
-      {insights && (
-        <Card className="p-4 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                <Award className="w-6 h-6 text-primary" />
+      ) : (
+        <>
+          {/* Summary Cards */}
+          <div className="grid grid-cols-2 gap-3">
+            <Card className="p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Leaf className="w-5 h-5 text-primary" />
+                <span className="text-sm text-muted-foreground">Total Carbon</span>
               </div>
-              <div>
-                <h3 className="font-medium text-foreground">Green Energy Score</h3>
-                <p className="text-sm text-muted-foreground">
-                  {insights.greenPercentage >= 50
-                    ? 'Great job! Most of your usage was during clean periods.'
-                    : 'Try to shift more usage to low-intensity periods.'}
-                </p>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-3xl font-bold text-primary">
-                {insights.greenPercentage.toFixed(0)}%
+              <p className="text-2xl font-bold text-foreground">
+                {insights?.totalCarbon.toFixed(1)} <span className="text-sm font-normal">kg CO₂</span>
               </p>
-              <Badge
-                variant="outline"
-                className={insights.greenPercentage >= 50
-                  ? 'bg-primary/10 text-primary border-primary/20'
-                  : 'bg-muted text-muted-foreground border-border'
-                }
-              >
-                {insights.greenPercentage >= 70 ? 'Excellent' :
-                  insights.greenPercentage >= 50 ? 'Good' :
-                    insights.greenPercentage >= 30 ? 'Fair' : 'Needs Work'}
-              </Badge>
-            </div>
-          </div>
-        </Card>
-      )}
+            </Card>
 
-      {/* Personalized Insights */}
-      {insights && (
-        <Card className="p-4">
-          <h3 className="font-medium text-foreground mb-3 flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-primary" />
-            Your Insights
-          </h3>
-          <div className="space-y-3">
-            {/* Green usage insight */}
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-              <Leaf className="w-5 h-5 text-primary mt-0.5" />
-              <div>
-                <p className="text-sm text-foreground">
-                  <strong>{insights.greenPercentage.toFixed(0)}%</strong> of your energy came from low-carbon sources!
-                  {insights.greenPercentage >= 70 && " You're in the top tier of eco-conscious users! 🌟"}
-                  {insights.greenPercentage >= 50 && insights.greenPercentage < 70 && " Keep it up! You're doing better than average."}
-                  {insights.greenPercentage < 50 && " Try running appliances during windy or sunny periods."}
-                </p>
+            <Card className="p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Zap className="w-5 h-5 text-primary" />
+                <span className="text-sm text-muted-foreground">Energy Used</span>
               </div>
-            </div>
+              <p className="text-2xl font-bold text-foreground">
+                {insights?.totalKwh.toFixed(1)} <span className="text-sm font-normal">kWh</span>
+              </p>
+            </Card>
+          </div>
 
-            {/* Best day insight */}
-            {insights.bestPeriod && (
-              <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                <Star className="w-5 h-5 text-primary mt-0.5" />
+          {/* Green Score */}
+          {insights && (
+            <Card className="p-4 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                    <Award className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-foreground">Green Energy Score</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {insights.greenPercentage >= 50
+                        ? 'Great job! Most of your usage was during clean periods.'
+                        : 'Try to shift more usage to low-intensity periods.'}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-3xl font-bold text-primary">
+                    {insights.greenPercentage.toFixed(0)}%
+                  </p>
+                  <Badge
+                    variant="outline"
+                    className={insights.greenPercentage >= 50
+                      ? 'bg-primary/10 text-primary border-primary/20'
+                      : 'bg-muted text-muted-foreground border-border'
+                    }
+                  >
+                    {insights.greenPercentage >= 70 ? 'Excellent' :
+                      insights.greenPercentage >= 50 ? 'Good' :
+                        insights.greenPercentage >= 30 ? 'Fair' : 'Needs Work'}
+                  </Badge>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {/* Personalized Insights */}
+          {insights && (
+            <Card className="p-4">
+              <h3 className="font-medium text-foreground mb-3 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-primary" />
+                Your Insights
+              </h3>
+              <div className="space-y-3">
+                {/* Green usage insight */}
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                  <Leaf className="w-5 h-5 text-primary mt-0.5" />
+                  <div>
+                    <p className="text-sm text-foreground">
+                      <strong>{insights.greenPercentage.toFixed(0)}%</strong> of your energy came from low-carbon sources!
+                      {insights.greenPercentage >= 70 && " You're in the top tier of eco-conscious users! 🌟"}
+                      {insights.greenPercentage >= 50 && insights.greenPercentage < 70 && " Keep it up! You're doing better than average."}
+                      {insights.greenPercentage < 50 && " Try running appliances during windy or sunny periods."}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Best day insight */}
+                {insights.bestPeriod && (
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                    <Star className="w-5 h-5 text-primary mt-0.5" />
+                    <div>
+                      <p className="text-sm text-foreground">
+                        <strong>{insights.bestPeriod.date}</strong> was your greenest period with only{' '}
+                        <strong>{insights.bestPeriod.carbon.toFixed(1)}kg CO₂</strong>!
+                        {insights.bestPeriod.carbon < 1 && " That's incredibly low! 🎉"}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Peak usage time insight */}
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                  {insights.peakPeriod === 'morning' ? <Sun className="w-5 h-5 text-primary mt-0.5" /> :
+                    insights.peakPeriod === 'night' ? <Moon className="w-5 h-5 text-primary mt-0.5" /> :
+                      <Clock className="w-5 h-5 text-primary mt-0.5" />}
+                  <div>
+                    <p className="text-sm text-foreground">
+                      You use most energy in the <strong>{insights.peakPeriod}</strong>.
+                      {insights.peakPeriod === 'night' && " Night-time often has lower intensity – great choice!"}
+                      {insights.peakPeriod === 'afternoon' && " Afternoon can be high-intensity. Consider shifting some usage to morning or night."}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {/* Achievements Section */}
+          {achievements.length > 0 && (
+            <Card className="p-4">
+              <h3 className="font-medium text-foreground mb-3 flex items-center gap-2">
+                <Trophy className="w-4 h-4 text-primary" />
+                Achievements
+              </h3>
+              <div className="grid grid-cols-2 gap-2">
+                {achievements.map((achievement) => (
+                  <div
+                    key={achievement.id}
+                    className={`p-3 rounded-lg border transition-all ${achievement.unlocked
+                      ? 'bg-primary/10 border-primary/30'
+                      : 'bg-muted/30 border-border opacity-50'
+                      }`}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className={achievement.unlocked ? 'text-primary' : 'text-muted-foreground'}>
+                        {achievement.icon}
+                      </div>
+                      <span className={`text-sm font-medium ${achievement.unlocked ? 'text-foreground' : 'text-muted-foreground'
+                        }`}>
+                        {achievement.title}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{achievement.description}</p>
+                    {achievement.unlocked && (
+                      <Badge variant="outline" className="mt-2 text-xs bg-primary/10 text-primary border-primary/20">
+                        Unlocked!
+                      </Badge>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {/* Daily Carbon Chart */}
+          {dailyData.length > 0 && (
+            <Card className="p-4">
+              <h3 className="font-medium text-foreground mb-4">Carbon Footprint Trend</h3>
+              <div className="h-48">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={dailyData}>
+                    <defs>
+                      <linearGradient id="carbonGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="energyGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#fbbf24" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#fbbf24" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <XAxis
+                      dataKey="date"
+                      fontSize={10}
+                      tickLine={false}
+                      axisLine={false}
+                      stroke="hsl(var(--muted-foreground))"
+                    />
+                    <YAxis
+                      yAxisId="carbon"
+                      fontSize={10}
+                      tickLine={false}
+                      axisLine={false}
+                      stroke="hsl(var(--primary))"
+                      tickFormatter={(value) => `${value}kg`}
+                    />
+                    <YAxis
+                      yAxisId="energy"
+                      orientation="right"
+                      fontSize={10}
+                      tickLine={false}
+                      axisLine={false}
+                      stroke="#fbbf24"
+                      tickFormatter={(value) => `${value}`}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px',
+                        fontSize: '12px',
+                      }}
+                      formatter={(value: number, name: string) => {
+                        if (name === 'carbon_kg') return [`${value} kg`, 'Carbon'];
+                        if (name === 'kwh') return [`${value} kWh`, 'Energy'];
+                        return [value, name];
+                      }}
+                    />
+                    <Area
+                      yAxisId="carbon"
+                      type="monotone"
+                      dataKey="carbon_kg"
+                      stroke="hsl(var(--primary))"
+                      strokeWidth={2}
+                      fill="url(#carbonGradient)"
+                      name="carbon_kg"
+                    />
+                    <Area
+                      yAxisId="energy"
+                      type="monotone"
+                      dataKey="kwh"
+                      stroke="#fbbf24"
+                      strokeWidth={2}
+                      fill="url(#energyGradient)"
+                      name="kwh"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+          )}
+
+          {/* Intensity Breakdown */}
+          {intensityBreakdown.length > 0 && (
+            <Card className="p-4">
+              <h3 className="font-medium text-foreground mb-4">Usage by Grid Intensity</h3>
+              <div className="h-40">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={intensityBreakdown} layout="vertical">
+                    <XAxis
+                      type="number"
+                      fontSize={10}
+                      tickLine={false}
+                      axisLine={false}
+                      stroke="hsl(var(--muted-foreground))"
+                      tickFormatter={(value) => `${value}kWh`}
+                    />
+                    <YAxis
+                      type="category"
+                      dataKey="name"
+                      fontSize={10}
+                      tickLine={false}
+                      axisLine={false}
+                      stroke="hsl(var(--muted-foreground))"
+                      width={70}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px',
+                        fontSize: '12px',
+                        zIndex: 50,
+                      }}
+                      formatter={(value: number, name: string) => [
+                        `${value} kWh`,
+                        'Energy Used'
+                      ]}
+                    />
+                    <Bar dataKey="kwh" radius={[0, 4, 4, 0]}>
+                      {intensityBreakdown.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={INTENSITY_COLORS[entry.index] || 'hsl(var(--muted))'}
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+          )}
+
+          {/* Potential Savings */}
+          {insights && insights.potentialSavings > 0.1 && (
+            <Card className="p-4 border-primary/20 bg-primary/5">
+              <div className="flex items-start gap-3">
+                <Target className="w-5 h-5 text-primary mt-0.5" />
                 <div>
-                  <p className="text-sm text-foreground">
-                    <strong>{insights.bestPeriod.date}</strong> was your greenest period with only{' '}
-                    <strong>{insights.bestPeriod.carbon.toFixed(1)}kg CO₂</strong>!
-                    {insights.bestPeriod.carbon < 1 && " That's incredibly low! 🎉"}
+                  <h3 className="font-medium text-foreground">Potential Savings</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    If all your usage was during low-intensity periods, you could save up to{' '}
+                    <strong className="text-foreground">{insights.potentialSavings.toFixed(1)} kg CO₂</strong> per week!
                   </p>
                 </div>
               </div>
-            )}
-
-            {/* Peak usage time insight */}
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-              {insights.peakPeriod === 'morning' ? <Sun className="w-5 h-5 text-primary mt-0.5" /> :
-                insights.peakPeriod === 'night' ? <Moon className="w-5 h-5 text-primary mt-0.5" /> :
-                  <Clock className="w-5 h-5 text-primary mt-0.5" />}
-              <div>
-                <p className="text-sm text-foreground">
-                  You use most energy in the <strong>{insights.peakPeriod}</strong>.
-                  {insights.peakPeriod === 'night' && " Night-time often has lower intensity – great choice!"}
-                  {insights.peakPeriod === 'afternoon' && " Afternoon can be high-intensity. Consider shifting some usage to morning or night."}
-                </p>
-              </div>
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {/* Achievements Section */}
-      {achievements.length > 0 && (
-        <Card className="p-4">
-          <h3 className="font-medium text-foreground mb-3 flex items-center gap-2">
-            <Trophy className="w-4 h-4 text-primary" />
-            Achievements
-          </h3>
-          <div className="grid grid-cols-2 gap-2">
-            {achievements.map((achievement) => (
-              <div
-                key={achievement.id}
-                className={`p-3 rounded-lg border transition-all ${achievement.unlocked
-                  ? 'bg-primary/10 border-primary/30'
-                  : 'bg-muted/30 border-border opacity-50'
-                  }`}
-              >
-                <div className="flex items-center gap-2 mb-1">
-                  <div className={achievement.unlocked ? 'text-primary' : 'text-muted-foreground'}>
-                    {achievement.icon}
-                  </div>
-                  <span className={`text-sm font-medium ${achievement.unlocked ? 'text-foreground' : 'text-muted-foreground'
-                    }`}>
-                    {achievement.title}
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground">{achievement.description}</p>
-                {achievement.unlocked && (
-                  <Badge variant="outline" className="mt-2 text-xs bg-primary/10 text-primary border-primary/20">
-                    Unlocked!
-                  </Badge>
-                )}
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
-
-      {/* Daily Carbon Chart */}
-      {dailyData.length > 0 && (
-        <Card className="p-4">
-          <h3 className="font-medium text-foreground mb-4">Carbon Footprint Trend</h3>
-          <div className="h-48">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={dailyData}>
-                <defs>
-                  <linearGradient id="carbonGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="energyGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#fbbf24" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#fbbf24" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <XAxis
-                  dataKey="date"
-                  fontSize={10}
-                  tickLine={false}
-                  axisLine={false}
-                  stroke="hsl(var(--muted-foreground))"
-                />
-                <YAxis
-                  yAxisId="carbon"
-                  fontSize={10}
-                  tickLine={false}
-                  axisLine={false}
-                  stroke="hsl(var(--primary))"
-                  tickFormatter={(value) => `${value}kg`}
-                />
-                <YAxis
-                  yAxisId="energy"
-                  orientation="right"
-                  fontSize={10}
-                  tickLine={false}
-                  axisLine={false}
-                  stroke="#fbbf24"
-                  tickFormatter={(value) => `${value}`}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                    fontSize: '12px',
-                  }}
-                  formatter={(value: number, name: string) => {
-                    if (name === 'carbon_kg') return [`${value} kg`, 'Carbon'];
-                    if (name === 'kwh') return [`${value} kWh`, 'Energy'];
-                    return [value, name];
-                  }}
-                />
-                <Area
-                  yAxisId="carbon"
-                  type="monotone"
-                  dataKey="carbon_kg"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={2}
-                  fill="url(#carbonGradient)"
-                  name="carbon_kg"
-                />
-                <Area
-                  yAxisId="energy"
-                  type="monotone"
-                  dataKey="kwh"
-                  stroke="#fbbf24"
-                  strokeWidth={2}
-                  fill="url(#energyGradient)"
-                  name="kwh"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-      )}
-
-      {/* Intensity Breakdown */}
-      {intensityBreakdown.length > 0 && (
-        <Card className="p-4">
-          <h3 className="font-medium text-foreground mb-4">Usage by Grid Intensity</h3>
-          <div className="h-40">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={intensityBreakdown} layout="vertical">
-                <XAxis
-                  type="number"
-                  fontSize={10}
-                  tickLine={false}
-                  axisLine={false}
-                  stroke="hsl(var(--muted-foreground))"
-                  tickFormatter={(value) => `${value}kWh`}
-                />
-                <YAxis
-                  type="category"
-                  dataKey="name"
-                  fontSize={10}
-                  tickLine={false}
-                  axisLine={false}
-                  stroke="hsl(var(--muted-foreground))"
-                  width={70}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                    fontSize: '12px',
-                  }}
-                  formatter={(value: number, name: string) => [
-                    `${value} kWh`,
-                    'Energy Used'
-                  ]}
-                />
-                <Bar dataKey="kwh" radius={[0, 4, 4, 0]}>
-                  {intensityBreakdown.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={INTENSITY_COLORS[entry.index] || 'hsl(var(--muted))'}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-      )}
-
-      {/* Potential Savings */}
-      {insights && insights.potentialSavings > 0.1 && (
-        <Card className="p-4 border-primary/20 bg-primary/5">
-          <div className="flex items-start gap-3">
-            <Target className="w-5 h-5 text-primary mt-0.5" />
-            <div>
-              <h3 className="font-medium text-foreground">Potential Savings</h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                If all your usage was during low-intensity periods, you could save up to{' '}
-                <strong className="text-foreground">{insights.potentialSavings.toFixed(1)} kg CO₂</strong> per week!
-              </p>
-            </div>
-          </div>
-        </Card>
+            </Card>
+          )}
+        </>
       )}
     </div>
   );

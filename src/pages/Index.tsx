@@ -130,7 +130,7 @@ const Index = () => {
         style={{ background: skyColor }}
       >
         <PullToRefresh onRefresh={handleRefresh} disabled={isLoading}>
-          <div className="min-h-[100dvh] flex flex-col animate-in fade-in duration-700 pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-0">
+          <div className="min-h-[100dvh] flex flex-col animate-in fade-in duration-700 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-0">
             {/* Header with scene */}
             <div className="relative">
               {/* Animated scene */}

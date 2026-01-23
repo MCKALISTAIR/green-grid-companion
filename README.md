@@ -29,14 +29,17 @@ GridSense is a mobile-first companion app designed to help UK (and future) energ
 *   **Energy Overlay**: Overlay your actual **Octopus Energy** consumption (kWh) and Total Carbon Mass (gCO2) directly onto the intensity graph.
 *   **Stats**: Track average intensity, total footprint, and performance trends.
 
-### 🏆 Leaderboard (formerly Map)
+### 🏆 Leaderboard & Map
 *   **Regional Ranking**: See a live leaderboard of the greenest UK regions.
-*   **Dot Map**: An interactive, geographically accurate dot map (toggleable) showing real-time intensity across the country.
+*   **High-Fidelity Map**: A beautiful, geometrically accurate SVG map of the UK (GB + NI) showing real-time intensity bubbles.
 
 ### ⚙️ Settings & Integrations
 *   **Smart Alerts**: Configurable notifications for low-carbon windows.
 *   **Live Accuracy Mode**: Optional **Background Fetch** support to check real-time grid data periodically (offline-first by default).
-*   **Integrations**: Link **Octopus Energy** account to sync smart meter data, calculate your actual carbon footprint, and visualize usage history.
+*   **Octopus Energy Integration**:
+    *   **Multi-User Support**: Securely link multiple Octopus accounts on one device.
+    *   **Smart Meter Sync**: Sync historical consumption data to calculate your **Real Carbon Footprint**.
+    *   **Green Score**: Get a personalized "Green Energy Score" based on your usage timing.
 *   **Tesla Integration**: Coming Soon.
 
 ## 🛠️ Technology Stack
@@ -44,6 +47,7 @@ GridSense is a mobile-first companion app designed to help UK (and future) energ
 *   **Framework**: [React](https://react.dev/) + [Vite](https://vitejs.dev/)
 *   **Language**: [TypeScript](https://www.typescriptlang.org/)
 *   **Mobile Engine**: [Capacitor](https://capacitorjs.com/) (iOS & Android)
+*   **Backend**: [Supabase](https://supabase.com/) (PostgreSQL, Edge Functions, RLS)
 *   **UI Components**: [shadcn/ui](https://ui.shadcn.com/) (Radix Primitives)
 *   **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 *   **Charting**: [Recharts](https://recharts.org/)

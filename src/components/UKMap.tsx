@@ -1,4 +1,4 @@
-import { RegionListItem } from '@/lib/carbonApi'; // Note: Ensure this matches API. Index uses RegionListItem.
+import { RegionListItem } from '@/lib/carbonApi';
 import { getIntensityColor } from '@/lib/carbonApi';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
@@ -9,64 +9,77 @@ interface UKMapProps {
     selectedRegionId?: number;
 }
 
-// Approximate centroids for DNO regions (Lat, Lon)
-// These define the geographic center of each region.
+// Centroids for DNO regions (Lat, Lon)
 const REGION_COORDS: Record<string, { lat: number; lon: number }> = {
-    'North Scotland': { lat: 57.5, lon: -4.5 },
-    'South Scotland': { lat: 55.6, lon: -3.8 },
-    'North East England': { lat: 55.0, lon: -1.7 },
-    'North West England': { lat: 54.1, lon: -2.7 },
-    'Yorkshire': { lat: 54.0, lon: -1.0 },
-    'Merseyside and Northern Wales': { lat: 53.0, lon: -3.6 }, // Merged for approx
-    'North Wales & Merseyside': { lat: 53.0, lon: -3.6 },     // Alias if API diff
-    'East Midlands': { lat: 52.9, lon: -0.8 },
-    'West Midlands': { lat: 52.5, lon: -2.2 },
-    'East England': { lat: 52.3, lon: 0.6 },
-    'South Wales': { lat: 51.8, lon: -3.6 },
+    'North Scotland': { lat: 57.5, lon: -4.2 },
+    'South Scotland': { lat: 55.5, lon: -3.5 },
+    'North East England': { lat: 54.8, lon: -1.8 },
+    'North West England': { lat: 54.0, lon: -2.6 },
+    'Yorkshire': { lat: 53.9, lon: -1.0 },
+    'Merseyside and Northern Wales': { lat: 53.0, lon: -3.5 },
+    'North Wales & Merseyside': { lat: 53.0, lon: -3.5 },
+    'East Midlands': { lat: 52.8, lon: -0.9 },
+    'West Midlands': { lat: 52.5, lon: -2.1 },
+    'East England': { lat: 52.2, lon: 0.5 },
+    'South Wales': { lat: 51.7, lon: -3.4 },
     'London': { lat: 51.5, lon: -0.1 },
-    'South East England': { lat: 51.1, lon: 0.4 },
-    'Southern England': { lat: 51.2, lon: -1.4 },
-    'South West England': { lat: 50.8, lon: -3.8 },
+    'South East England': { lat: 51.0, lon: 0.2 },
+    'Southern England': { lat: 51.2, lon: -1.3 },
+    'South West England': { lat: 50.8, lon: -3.6 },
 };
 
-// Map projection helpers
-// Tuned to fit the UK in the aspect ratio nicely
-const MIN_LAT = 50.0;
-const MAX_LAT = 58.5;
-const MIN_LON = -6.0;
-const MAX_LON = 2.0;
+// Map Bounding Box for the SVG Projection
+// These match the visual bounds of the SVG below.
+const MIN_LAT = 49.8;
+const MAX_LAT = 59.5; // Includes Orkney/Shetland range
+const MIN_LON = -8.5; // Ireland/Western Isles
+const MAX_LON = 2.0;  // East Anglia
 
 const getPosition = (lat: number, lon: number) => {
-    // Flip Y because CSS top is 0
-    const y = 100 - ((lat - MIN_LAT) / (MAX_LAT - MIN_LAT)) * 100;
-    const x = ((lon - MIN_LON) / (MAX_LON - MIN_LON)) * 100;
-    return { x, y };
+    // Mercator-ish projection adjustment (simple linear is usually okay for this scale, but aspect ratio matters)
+    // SVG is 600x800 approx.
+    const yPct = 1 - (lat - MIN_LAT) / (MAX_LAT - MIN_LAT);
+    const xPct = (lon - MIN_LON) / (MAX_LON - MIN_LON);
+
+    return {
+        x: xPct * 100,
+        y: yPct * 100
+    };
 };
 
 export function UKMap({ regions, onRegionSelect, selectedRegionId }: UKMapProps) {
 
     return (
-        <div className="relative w-full aspect-[3/4.5] max-w-sm mx-auto my-4 select-none">
-            {/* Background Silhouette (This acts as the simplified map) */}
-            <div className="absolute inset-4 -z-10 group overflow-hidden">
-                <svg viewBox="0 0 100 100" className="w-full h-full opacity-20 drop-shadow-lg" aria-hidden="true">
+        <div className="relative w-full aspect-[0.75] max-w-sm mx-auto my-4 select-none">
+            {/* Detailed UK Map SVG */}
+            <div className="absolute inset-0 -z-10 group">
+                <svg viewBox="0 0 600 800" className="w-full h-full drop-shadow-xl" aria-hidden="true" style={{ overflow: 'visible' }}>
                     <defs>
                         <linearGradient id="ukGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" className="stop-color-muted-foreground/40" />
-                            <stop offset="100%" className="stop-color-muted-foreground/20" />
+                            <stop offset="0%" className="stop-color-muted-foreground/30" />
+                            <stop offset="100%" className="stop-color-muted-foreground/10" />
                         </linearGradient>
+                        <filter id="glow">
+                            <feGaussianBlur stdDeviation="2.5" result="coloredBlur" />
+                            <feMerge>
+                                <feMergeNode in="coloredBlur" />
+                                <feMergeNode in="SourceGraphic" />
+                            </feMerge>
+                        </filter>
                     </defs>
-                    {/* Great Britain (simplified) */}
+
+                    {/* GB Mainland */}
                     <path
-                        d="M25,2 C30,15 35,15 30,15 C33,20 27,30 29,35 C40,40 50,40 55,42 C62,50 62,55 70,60 C80,65 95,70 96,70 C96,75 80,85 80,88 C70,88 65,85 57,86 C50,88 30,95 6,100 C5,95 15,95 20,90 C20,90 30,85 40,85 C40,80 30,80 25,75 C20,70 15,75 15,70 C15,65 30,65 35,60 C40,55 35,55 30,48 C25,40 25,40 20,35 C15,30 15,20 15,15 C15,10 20,5 25,2 Z"
-                        className="fill-muted-foreground stroke-border stroke-[0.5]"
-                        fill="url(#ukGradient)"
+                        d="M176,736 L139,715 L161,698 L191,698 L199,673 L180,661 L182,637 L216,637 L237,605 L218,590 L232,572 L213,556 L237,532 L221,495 L240,486 L231,464 L251,446 L242,429 L262,408 L251,385 L269,363 L260,337 L290,310 L287,272 L315,249 L348,249 L359,219 L393,219 L409,191 L409,152 L440,122 L467,152 L454,196 L488,230 L470,268 L488,300 L469,343 L490,366 L490,402 L514,417 L539,403 L556,423 L530,446 L550,479 L530,513 L508,513 L497,542 L469,548 L460,572 L429,572 L411,593 L375,593 L359,619 L329,619 L315,639 L332,668 L360,668 L368,690 L409,683 L425,702 L425,716 L377,716 L362,703 L325,703 L312,718 L269,718 L260,703 L245,712 L223,695 L200,709 Z M312,98 L332,82 L356,98 L350,128 L329,140 L305,122 Z"
+                        className="fill-muted/20 stroke-border stroke-2"
+                        style={{ filter: 'url(#glow)' }}
                     />
-                    {/* Northern Ireland (simplified) */}
+
+                    {/* Northern Ireland */}
                     <path
-                        d="M2,45 C8,45 10,48 10,50 C10,55 5,55 5,52 C2,50 0,55 0,50 Z"
-                        className="fill-muted-foreground stroke-border stroke-[0.5]"
-                        fill="url(#ukGradient)"
+                        d="M110,485 L145,475 L165,510 L135,540 L105,525 Z"
+                        className="fill-muted/20 stroke-border stroke-2"
+                        style={{ filter: 'url(#glow)' }}
                     />
                 </svg>
             </div>
@@ -77,10 +90,8 @@ export function UKMap({ regions, onRegionSelect, selectedRegionId }: UKMapProps)
 
             {/* Region Markers */}
             {regions.map((region) => {
-                // Try precise name match, or looser match
                 let coords = REGION_COORDS[region.shortname];
                 if (!coords) {
-                    // Fallback aliases?
                     if (region.shortname.includes('Merseyside')) coords = REGION_COORDS['Merseyside and Northern Wales'];
                     if (region.shortname.includes('South England')) coords = REGION_COORDS['Southern England'];
                 }
@@ -100,12 +111,12 @@ export function UKMap({ regions, onRegionSelect, selectedRegionId }: UKMapProps)
                         className={cn(
                             "absolute w-10 h-10 -ml-5 -mt-5 rounded-full flex items-center justify-center shadow-md transition-all duration-300",
                             colorClass,
-                            isSelected ? "ring-4 ring-background shadow-xl" : "opacity-90 hover:opacity-100 hover:scale-110 hover:z-20 border-2 border-background/50"
+                            isSelected ? "ring-4 ring-background shadow-xl" : "opacity-90 hover:opacity-100 hover:scale-110 hover:z-20 border-2 border-background/50 text-white"
                         )}
                         style={{ left: `${x}%`, top: `${y}%` }}
                         onClick={() => onRegionSelect?.(region.regionid)}
                     >
-                        <span className="text-[10px] font-bold text-white drop-shadow-md">
+                        <span className="text-[10px] font-bold drop-shadow-md">
                             {region.intensity.forecast}
                         </span>
                         {isSelected && (

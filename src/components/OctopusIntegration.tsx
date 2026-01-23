@@ -2,36 +2,48 @@ import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  PlugZap, 
-  RefreshCw, 
-  Check, 
+import {
+  PlugZap,
+  RefreshCw,
+  Check,
   AlertCircle,
   Zap,
-  TrendingDown,
-  TrendingUp,
-  Leaf
+  Leaf,
+  MoreVertical,
+  LogOut,
+  ArrowRightLeft
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
-import { format, formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
+import { OctopusSettings } from './OctopusSettings';
 
 const OctopusLogo = ({ className }: { className?: string }) => (
   <img
-    src="/octopus_logo.png"
+    src="/octopus_logo.png" // Ensure this path is correct
     alt="Octopus Energy Logo"
     className={`${className} object-contain`}
   />
 );
 
 export function OctopusIntegration() {
-  const { 
-    status, 
-    isLoading, 
-    isSyncing, 
+  const {
+    status,
+    isLoading,
+    isSyncing,
     isLinked,
+    hasCredentials,
     linkMeter,
-    fullSync 
+    fullSync,
+    disconnect
   } = useOctopusEnergy();
+
+  const [isEditing, setIsEditing] = useState(false);
 
   const handleLinkMeter = async () => {
     try {
@@ -49,13 +61,48 @@ export function OctopusIntegration() {
     }
   };
 
+  const handleDisconnect = async () => {
+    if (confirm("Are you sure you want to disconnect? This will remove your credentials and unlink your meters.")) {
+      await disconnect();
+    }
+  };
+
+  // 1. Loading State
+  if (isLoading && !status) {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold text-foreground">Energy Integrations</h2>
+        <Card className="p-4 h-32 flex items-center justify-center border-purple-500/10">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <RefreshCw className="w-4 h-4 animate-spin" />
+            <span>Loading status...</span>
+          </div>
+        </Card>
+      </div>
+    )
+  }
+
+  // 2. No Credentials OR Editing -> Show Settings Form
+  if (!hasCredentials || isEditing) {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold text-foreground">Energy Integrations</h2>
+        <OctopusSettings
+          onSaved={() => setIsEditing(false)}
+          onCancel={isEditing ? () => setIsEditing(false) : undefined}
+        />
+      </div>
+    )
+  }
+
+  // 3. Has Credentials -> Show Integration Dashboard
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold text-foreground">Energy Integrations</h2>
 
       {/* Octopus Energy Card */}
       <Card className="p-4 border-purple-500/20 bg-purple-500/5">
-        <div className="flex items-center justify-between">
+        <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
               <OctopusLogo className="w-6 h-6" />
@@ -64,20 +111,20 @@ export function OctopusIntegration() {
               <div className="flex items-center gap-2">
                 <h3 className="font-medium text-foreground">Octopus Energy</h3>
                 {isLinked && (
-                  <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20">
+                  <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20 px-1.5 py-0 h-5 text-[10px]">
                     <Check className="w-3 h-3 mr-1" />
                     Linked
                   </Badge>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground max-w-[200px]">
-                {isLinked 
-                  ? 'Track your actual carbon footprint from meter data'
-                  : 'Link your meter to track real energy consumption'}
+              <p className="text-xs text-muted-foreground max-w-[200px] mt-1">
+                {isLinked
+                  ? 'Tracking carbon footprint from smart meter data'
+                  : 'Unlock your personal Carbon Footprint & Green Score'}
               </p>
             </div>
           </div>
-          
+
           {!isLinked ? (
             <Button
               variant="default"
@@ -99,24 +146,27 @@ export function OctopusIntegration() {
               )}
             </Button>
           ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSync}
-              disabled={isSyncing}
-            >
-              {isSyncing ? (
-                <>
-                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                  Syncing...
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="w-4 h-4 mr-2" />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleSync} disabled={isSyncing}>
+                  <RefreshCw className={`w-4 h-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
                   Sync Data
-                </>
-              )}
-            </Button>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setIsEditing(true)}>
+                  <ArrowRightLeft className="w-4 h-4 mr-2" />
+                  Switch Account
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDisconnect} className="text-red-600 focus:text-red-600">
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Disconnect
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
 
@@ -150,11 +200,12 @@ export function OctopusIntegration() {
       <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800 text-xs text-muted-foreground flex items-start gap-2">
         <AlertCircle className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
         <div>
-          <p className="font-medium text-foreground mb-1">How it works</p>
-          <p>
-            Your API key is stored securely and used to fetch your smart meter readings. 
-            We combine this with grid carbon intensity data to calculate your actual carbon footprint.
-          </p>
+          <p className="font-medium text-foreground mb-1">Unlock Smart Features</p>
+          <ul className="list-disc pl-4 space-y-1 mt-1">
+            <li>See your <strong>Real Carbon Footprint</strong> based on actual usage.</li>
+            <li>Get your <strong>Green Energy Score</strong> and personalized insights.</li>
+            <li>Track your progress securely—your keys stay on your device.</li>
+          </ul>
         </div>
       </div>
     </div>

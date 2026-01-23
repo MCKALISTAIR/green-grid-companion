@@ -54,7 +54,11 @@ export function ForecastSummary({ forecast }: ForecastSummaryProps) {
             const max = Math.max(...values.forecast);
             const avg = Math.round(values.forecast.reduce((a, b) => a + b, 0) / values.forecast.length);
 
-            const hasActuals = values.actual.length > 0;
+            const now = new Date();
+            now.setHours(0, 0, 0, 0); // Start of today
+            const isFutureDay = date.getTime() > now.getTime();
+
+            const hasActuals = !isFutureDay && values.actual.length > 0;
             const avgActual = hasActuals
                 ? Math.round(values.actual.reduce((a, b) => a + b, 0) / values.actual.length)
                 : undefined;
