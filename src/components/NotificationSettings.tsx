@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Bell, BellOff, Clock, Zap, Smartphone, CalendarDays } from 'lucide-react';
+import { Bell, BellOff, Clock, Zap, Smartphone, CalendarDays, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useNotifications } from '@/hooks/useNotifications';
 import { WeeklyDigestPreview } from './WeeklyDigestPreview';
+import { MonthlyReportPreview } from './MonthlyReportPreview';
 
 interface NotificationSettingsProps {
   onClose?: () => void;
@@ -54,6 +55,14 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
     updatePreference('weeklyDigestEnabled', enabled);
   };
 
+  const handleMonthlyReportToggle = async (enabled: boolean) => {
+    if (enabled && permissionStatus !== 'granted') {
+      const granted = await requestPermission();
+      if (!granted) return;
+    }
+    updatePreference('monthlyReportEnabled', enabled);
+  };
+
   const dayOptions = [
     { value: 0, label: 'Sunday' },
     { value: 1, label: 'Monday' },
@@ -63,6 +72,17 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
     { value: 5, label: 'Friday' },
     { value: 6, label: 'Saturday' },
   ];
+
+  const monthDayOptions = Array.from({ length: 28 }, (_, i) => ({
+    value: i + 1,
+    label: `${i + 1}${getOrdinalSuffix(i + 1)}`,
+  }));
+
+  function getOrdinalSuffix(n: number): string {
+    const s = ['th', 'st', 'nd', 'rd'];
+    const v = n % 100;
+    return s[(v - 20) % 10] || s[v] || s[0];
+  }
 
   return (
     <div className="space-y-6 p-1">
@@ -283,11 +303,57 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
         )}
       </Card>
 
-      {isSupported && permissionStatus === 'granted' && prefs.lowIntensityEnabled && (
-        <p className="text-xs text-center text-muted-foreground">
-          You'll receive alerts when grid intensity is favorable.
-        </p>
-      )}
+      {/* Monthly Report */}
+      <Card className="p-4 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-accent/50 flex items-center justify-center">
+              <FileText className="w-5 h-5 text-accent-foreground" />
+            </div>
+            <div>
+              <h3 className="font-medium text-foreground">Monthly Report</h3>
+              <p className="text-sm text-muted-foreground">
+                Detailed carbon analysis with trends
+              </p>
+            </div>
+          </div>
+          <Switch
+            checked={prefs.monthlyReportEnabled}
+            onCheckedChange={handleMonthlyReportToggle}
+            disabled={!isSupported}
+          />
+        </div>
+
+        {prefs.monthlyReportEnabled && (
+          <div className="space-y-3 pt-2 border-t border-border">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">
+                Send on the:
+              </span>
+              <Select
+                value={prefs.monthlyReportDay.toString()}
+                onValueChange={(value) => updatePreference('monthlyReportDay', parseInt(value))}
+              >
+                <SelectTrigger className="w-[100px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {monthDayOptions.map((day) => (
+                    <SelectItem key={day.value} value={day.value.toString()}>
+                      {day.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Includes: weekly trends, intensity breakdown, best/worst periods, and personalized insights.
+            </p>
+            
+            <MonthlyReportPreview />
+          </div>
+        )}
+      </Card>
 
       {
         !isSupported && (

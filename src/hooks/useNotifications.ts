@@ -13,6 +13,8 @@ export interface NotificationPrefs {
     useBackgroundFetch: boolean;
     weeklyDigestEnabled: boolean;
     weeklyDigestDay: number; // 0 = Sunday, 6 = Saturday
+    monthlyReportEnabled: boolean;
+    monthlyReportDay: number; // 1-28 (day of month)
 }
 
 const DEFAULT_PREFS: NotificationPrefs = {
@@ -23,6 +25,8 @@ const DEFAULT_PREFS: NotificationPrefs = {
     useBackgroundFetch: false,
     weeklyDigestEnabled: false,
     weeklyDigestDay: 0, // Sunday
+    monthlyReportEnabled: false,
+    monthlyReportDay: 1, // 1st of month
 };
 
 const PREFS_KEY = 'gridgreen-notification-prefs';

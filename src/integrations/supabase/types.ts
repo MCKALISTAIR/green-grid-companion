@@ -119,6 +119,8 @@ export type Database = {
           id: string
           low_intensity_enabled: boolean
           low_intensity_threshold: number
+          monthly_report_day: number
+          monthly_report_enabled: boolean
           platform: string
           postcode: string
           updated_at: string
@@ -133,6 +135,8 @@ export type Database = {
           id?: string
           low_intensity_enabled?: boolean
           low_intensity_threshold?: number
+          monthly_report_day?: number
+          monthly_report_enabled?: boolean
           platform?: string
           postcode: string
           updated_at?: string
@@ -147,6 +151,8 @@ export type Database = {
           id?: string
           low_intensity_enabled?: boolean
           low_intensity_threshold?: number
+          monthly_report_day?: number
+          monthly_report_enabled?: boolean
           platform?: string
           postcode?: string
           updated_at?: string
