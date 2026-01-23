@@ -18,8 +18,8 @@ const createWrapper = () => {
     );
 };
 
-// Mock fetch
-const mockFetch = vi.fn();
+// Mock fetch with all required properties
+const mockFetch = vi.fn() as unknown as typeof fetch;
 global.fetch = mockFetch;
 
 describe('useCarbonData', () => {

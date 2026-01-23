@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useNotifications } from '@/hooks/useNotifications';
+import { WeeklyDigestPreview } from './WeeklyDigestPreview';
 
 interface NotificationSettingsProps {
   onClose?: () => void;
@@ -276,6 +277,8 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
             <p className="text-xs text-muted-foreground">
               Includes: total emissions, energy usage, green energy %, and best times to use electricity.
             </p>
+            
+            <WeeklyDigestPreview />
           </div>
         )}
       </Card>
