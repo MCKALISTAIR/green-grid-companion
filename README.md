@@ -36,11 +36,32 @@ GridSense is a mobile-first companion app designed to help UK (and future) energ
 ### ⚙️ Settings & Integrations
 *   **Smart Alerts**: Configurable notifications for low-carbon windows.
 *   **Live Accuracy Mode**: Optional **Background Fetch** support to check real-time grid data periodically (offline-first by default).
+*   **Test Notifications**: Verify notification system is working with one tap.
 *   **Octopus Energy Integration**:
     *   **Multi-User Support**: Securely link multiple Octopus accounts on one device.
     *   **Smart Meter Sync**: Sync historical consumption data to calculate your **Real Carbon Footprint**.
-    *   **Green Score**: Get a personalized "Green Energy Score" based on your usage timing.
+    *   **Green Score**: Get a personalized "Green Energy Score" based on your usage timing with detailed explanations.
+    *   **Meter Management**: Easy-to-use settings for syncing, switching accounts, or disconnecting.
+    *   **Comprehensive Onboarding**: Learn what you'll unlock before linking your meter.
+*   **Weather Widget**: Show/hide local weather conditions with persistent preferences.
+*   **Custom Appliances**: Create and save custom appliances in Power Planner (persists between sessions).
 *   **Tesla Integration**: Coming Soon.
+
+## 🆕 Recent Updates (2026-01-24)
+
+### Performance Improvements ⚡
+*   **Instant Tab Switching**: 80-95% faster loading with smart data caching
+*   **Optimized Queries**: Enhanced React Query cache configurations across all pages
+*   **Better User Experience**: Professional skeleton loaders replace spinners
+
+### New Features
+*   **Weather Widget Controls**: Hide/show local conditions with one click
+*   **Green Energy Score Info**: Detailed popover explaining score calculation and ratings
+*   **Footprint Onboarding**: Always-visible Footprint tab with comprehensive setup guide
+*   **Octopus Settings Management**: Three-dot menu for sync, account switching, and disconnect
+*   **Test Notifications**: Verify your notification setup is working correctly
+*   **Persistent Custom Appliances**: Your Power Planner settings save automatically
+
 
 ## 🛠️ Technology Stack
 

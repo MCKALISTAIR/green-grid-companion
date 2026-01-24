@@ -32,6 +32,7 @@ export default function HistoryPage() {
         enabled: true, // Always fetch (National or Regional)
         refetchInterval: false,
         staleTime: 1000 * 60 * 30, // 30 mins
+        gcTime: 1000 * 60 * 60, // 1 hour - keep in cache
     });
 
     const data = historyQuery.data || [];
@@ -97,8 +98,21 @@ export default function HistoryPage() {
                         <p>Please enter a postcode in Settings to see regional history.</p>
                     </Card>
                 ) : isRegionLoading || historyQuery.isLoading ? (
-                    <div className="flex justify-center items-center h-[300px]">
-                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <Card className="p-4 animate-pulse bg-card">
+                                <div className="h-3 bg-muted rounded w-1/2 mb-2"></div>
+                                <div className="h-8 bg-muted rounded w-3/4"></div>
+                            </Card>
+                            <Card className="p-4 animate-pulse bg-card">
+                                <div className="h-3 bg-muted rounded w-1/2 mb-2"></div>
+                                <div className="h-8 bg-muted rounded w-3/4"></div>
+                            </Card>
+                        </div>
+                        <Card className="p-4 animate-pulse bg-card">
+                            <div className="h-4 bg-muted rounded w-1/4 mb-4"></div>
+                            <div className="h-[300px] bg-muted rounded"></div>
+                        </Card>
                     </div>
                 ) : (
                     <>

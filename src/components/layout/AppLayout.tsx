@@ -8,12 +8,12 @@ export function AppLayout() {
     };
 
     return (
-        <div className="min-h-screen bg-background font-sans">
+        <div className="min-h-[100vh] bg-background font-sans" style={{ minHeight: 'calc(100vh + env(safe-area-inset-top) + env(safe-area-inset-bottom))' }}>
             {/* Desktop Sidebar - Hidden on mobile */}
             <SideNav />
 
             {/* Main Content Area */}
-            <div className="lg:pl-64 flex flex-col min-h-screen">
+            <div className="lg:pl-64 flex flex-col min-h-[100vh]" style={{ minHeight: 'calc(100vh + env(safe-area-inset-top) + env(safe-area-inset-bottom))' }}>
                 <main className="flex-1 w-full max-w-7xl mx-auto">
                     {/* Outlet renders the current route's element */}
                     <Outlet />

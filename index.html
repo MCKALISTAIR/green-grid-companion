@@ -51,12 +51,23 @@
       -webkit-overflow-scrolling: touch;
     }
     
-    /* Ensure app takes full screen */
-    html, body, #root {
+    /* Ensure app takes full screen including safe areas */
+    html, body {
       height: 100%;
       width: 100%;
       margin: 0;
       padding: 0;
+      /* Extend background to cover safe areas */
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+    }
+    
+    #root {
+      height: 100%;
+      width: 100%;
+      /* Ensure root extends into safe areas */
+      min-height: calc(100vh + env(safe-area-inset-top) + env(safe-area-inset-bottom));
+      min-height: calc(-webkit-fill-available + env(safe-area-inset-top) + env(safe-area-inset-bottom));
     }
   </style>
 </head>

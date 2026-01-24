@@ -66,7 +66,8 @@ export function useOctopusEnergy(days: number = 30) {
       if (error) throw new Error(error.message || 'Failed to fetch status');
       return data;
     },
-    staleTime: 30000,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes - keep in cache
   });
 
   // Fetch footprint data with dynamic range
@@ -82,7 +83,8 @@ export function useOctopusEnergy(days: number = 30) {
       return data;
     },
     enabled: status?.is_linked ?? false,
-    staleTime: 60000,
+    staleTime: 10 * 60 * 1000, // 10 minutes - data stays fresh longer
+    gcTime: 30 * 60 * 1000, // 30 minutes - keep in cache even when unmounted
   });
 
   // Fetch Greener Nights Forecast (always active if linked)

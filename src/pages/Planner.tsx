@@ -23,25 +23,52 @@ const APPLIANCES = [
 
 export default function Planner() {
     const [selectedAppliance, setSelectedAppliance] = useState(APPLIANCES[0]);
-    const [customEvent, setCustomEvent] = useState({ name: '', duration: '1', power: '1.0' });
+    const [customEvent, setCustomEvent] = useState(() => {
+        const saved = localStorage.getItem('planner-custom-event');
+        return saved ? JSON.parse(saved) : { name: '', duration: '1', power: '1.0' };
+    });
     const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     const postcode = localStorage.getItem('gridgreen-postcode') || '';
     const { forecast, refetch, isLoading } = useCarbonData(postcode);
+
+    // Load saved custom appliance if it exists
+    useEffect(() => {
+        const saved = localStorage.getItem('planner-custom-appliance');
+        if (saved) {
+            try {
+                const customAppliance = JSON.parse(saved);
+                // Don't auto-select, just keep it available
+            } catch (e) {
+                console.error('Failed to load custom appliance', e);
+            }
+        }
+    }, []);
 
     const handleCustomSubmit = () => {
         const duration = Math.max(0.5, parseFloat(customEvent.duration) || 1);
         const power = parseFloat(customEvent.power) || 1.0;
         const name = customEvent.name || 'Custom Task';
 
-        setSelectedAppliance({
+        const customAppliance = {
             id: 'custom',
             name: name,
             icon: PenLine,
             power: power,
             duration: duration,
             label: `Custom (${duration}h)`
-        });
+        };
+
+        // Save to localStorage
+        localStorage.setItem('planner-custom-event', JSON.stringify(customEvent));
+        localStorage.setItem('planner-custom-appliance', JSON.stringify({
+            name: customAppliance.name,
+            power: customAppliance.power,
+            duration: customAppliance.duration,
+            label: customAppliance.label
+        }));
+
+        setSelectedAppliance(customAppliance);
         setIsDialogOpen(false);
     };
 
@@ -223,8 +250,15 @@ export default function Planner() {
                     </div>
 
                     {isLoading ? (
-                        <Card className="p-6 flex items-center justify-center min-h-[200px]">
-                            <p>Loading forecast...</p>
+                        <Card className="p-6 animate-pulse bg-card">
+                            <div className="space-y-4">
+                                <div className="text-center space-y-2">
+                                    <div className="h-4 bg-muted rounded w-1/3 mx-auto"></div>
+                                    <div className="h-8 bg-muted rounded w-1/2 mx-auto"></div>
+                                </div>
+                                <div className="h-10 bg-muted rounded"></div>
+                                <div className="h-24 bg-muted rounded"></div>
+                            </div>
                         </Card>
                     ) : bestSlot ? (
                         <Card className="p-6 space-y-4 border-primary/20 bg-primary/5">

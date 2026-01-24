@@ -1,7 +1,9 @@
 import { useState, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Leaf,
   TrendingDown,
@@ -14,7 +16,8 @@ import {
   Clock,
   Sun,
   Moon,
-  Star
+  Star,
+  Info
 } from 'lucide-react';
 import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
 import {
@@ -232,22 +235,137 @@ export function FootprintView() {
 
   if (!isLinked) {
     return (
-      <Card className="p-6 text-center">
-        <Leaf className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-        <h3 className="font-medium text-foreground mb-2">Carbon Footprint Tracking</h3>
-        <p className="text-sm text-muted-foreground">
-          Link your Octopus Energy meter to see your actual carbon footprint based on real consumption data.
-        </p>
-      </Card>
+      <div className="space-y-4">
+        <Card className="p-6 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+          <div className="text-center space-y-4">
+            <div className="w-20 h-20 mx-auto rounded-full bg-primary/20 flex items-center justify-center">
+              <Leaf className="w-10 h-10 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-foreground mb-2">Track Your Carbon Footprint</h2>
+              <p className="text-muted-foreground max-w-md mx-auto">
+                See your real environmental impact based on your actual electricity usage
+              </p>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-5">
+          <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-primary" />
+            What you'll unlock
+          </h3>
+          <div className="space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <Award className="w-4 h-4 text-primary" />
+              </div>
+              <div>
+                <p className="font-medium text-sm text-foreground">Green Energy Score</p>
+                <p className="text-xs text-muted-foreground">See what % of your usage came from clean energy</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <TrendingDown className="w-4 h-4 text-primary" />
+              </div>
+              <div>
+                <p className="font-medium text-sm text-foreground">Carbon Trends</p>
+                <p className="text-xs text-muted-foreground">Track your emissions over time with detailed charts</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <Target className="w-4 h-4 text-primary" />
+              </div>
+              <div>
+                <p className="font-medium text-sm text-foreground">Personalized Insights</p>
+                <p className="text-xs text-muted-foreground">Get tips on when to use energy based on your patterns</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <Trophy className="w-4 h-4 text-primary" />
+              </div>
+              <div>
+                <p className="font-medium text-sm text-foreground">Achievements</p>
+                <p className="text-xs text-muted-foreground">Earn badges for eco-friendly energy usage</p>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-5 bg-blue-50 dark:bg-blue-950/20 border-blue-100 dark:border-blue-900">
+          <div className="flex items-start gap-3">
+            <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+            <div>
+              <h3 className="font-semibold text-sm text-foreground mb-2">Requirements</h3>
+              <ul className="text-xs text-muted-foreground space-y-1.5 list-disc pl-4">
+                <li>An active Octopus Energy account</li>
+                <li>A smart meter installed at your property</li>
+                <li>Your Octopus Energy API key and account number</li>
+              </ul>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-5">
+          <h3 className="font-semibold text-foreground mb-3">How to get started</h3>
+          <ol className="space-y-3 text-sm">
+            <li className="flex items-start gap-3">
+              <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold flex-shrink-0">1</span>
+              <div>
+                <p className="font-medium">Get your API key</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Visit the <a href="https://octopus.energy/dashboard/new/accounts/personal-details/api-access" target="_blank" rel="noopener noreferrer" className="text-primary underline">Octopus Energy Developer Dashboard</a> to generate your API key
+                </p>
+              </div>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold flex-shrink-0">2</span>
+              <div>
+                <p className="font-medium">Find your account number</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Your account number starts with "A-" and can be found on your Octopus Energy bills or dashboard
+                </p>
+              </div>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold flex-shrink-0">3</span>
+              <div>
+                <p className="font-medium">Link your meter</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Go to Settings → Energy Integrations and enter your credentials to connect
+                </p>
+              </div>
+            </li>
+          </ol>
+        </Card>
+
+        <Button
+          className="w-full"
+          size="lg"
+          onClick={() => window.location.href = '/settings'}
+        >
+          <Zap className="w-4 h-4 mr-2" />
+          Go to Settings
+        </Button>
+      </div>
     );
   }
 
   if (isLoading) {
     return (
-      <Card className="p-6 animate-pulse">
-        <div className="h-4 bg-muted rounded w-1/3 mb-4"></div>
-        <div className="h-40 bg-muted rounded"></div>
-      </Card>
+      <div className="space-y-4 min-h-[50vh]">
+        <Card className="p-6 animate-pulse bg-card">
+          <div className="h-4 bg-muted rounded w-1/3 mb-4"></div>
+          <div className="h-40 bg-muted rounded"></div>
+        </Card>
+        <Card className="p-6 animate-pulse bg-card">
+          <div className="h-4 bg-muted rounded w-1/4 mb-3"></div>
+          <div className="h-32 bg-muted rounded"></div>
+        </Card>
+      </div>
     );
   }
 
@@ -313,7 +431,57 @@ export function FootprintView() {
                     <Award className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-medium text-foreground">Green Energy Score</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-medium text-foreground">Green Energy Score</h3>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0 hover:bg-transparent">
+                            <Info className="w-4 h-4 text-muted-foreground cursor-help" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[300px] p-4 bg-card border-border" align="start">
+                          <div className="space-y-3">
+                            <div>
+                              <h4 className="font-semibold text-sm mb-2">How it's calculated</h4>
+                              <p className="text-xs text-muted-foreground">
+                                Your Green Energy Score shows what percentage of your electricity was used during low-carbon intensity periods
+                                (when renewable energy like wind and solar dominated the grid).
+                              </p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-sm mb-2">Score ratings</h4>
+                              <div className="space-y-1.5 text-xs">
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">70%+</span>
+                                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-[10px] h-5">Excellent</Badge>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">50-69%</span>
+                                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-[10px] h-5">Good</Badge>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">30-49%</span>
+                                  <Badge variant="outline" className="text-[10px] h-5">Fair</Badge>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Below 30%</span>
+                                  <Badge variant="outline" className="text-[10px] h-5">Needs Work</Badge>
+                                </div>
+                              </div>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-sm mb-2">Improve your score</h4>
+                              <ul className="text-xs text-muted-foreground space-y-1 list-disc pl-4">
+                                <li>Charge devices overnight when wind is typically high</li>
+                                <li>Run appliances during sunny, windy days</li>
+                                <li>Check the Best Time card for optimal hours</li>
+                                <li>Enable notifications for green energy alerts</li>
+                              </ul>
+                            </div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
                     <p className="text-sm text-muted-foreground">
                       {insights.greenPercentage >= 50
                         ? 'Great job! Most of your usage was during clean periods.'

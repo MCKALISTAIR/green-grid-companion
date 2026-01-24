@@ -235,7 +235,7 @@ const Index = () => {
             {/* Content cards */}
             <div className="flex-1 px-4 py-6 space-y-4 -mt-4 relative z-10 bg-background lg:max-w-7xl lg:mx-auto w-full lg:rounded-t-3xl lg:shadow-xl lg:-mt-6 lg:space-y-6">
 
-              {/* View Toggle - Always show, simplified if no Octopus */}
+              {/* View Toggle - Always show all views */}
               <div className="flex gap-2 p-1 bg-muted rounded-lg overflow-x-auto scrollbar-none">
                 <Button
                   variant={viewMode === 'intensity' ? 'default' : 'ghost'}
@@ -255,18 +255,17 @@ const Index = () => {
                   <Zap className="w-4 h-4 mr-2" />
                   Demand
                 </Button>
-                {isOctopusLinked && (
-                  <Button
-                    variant={viewMode === 'footprint' ? 'default' : 'ghost'}
-                    size="sm"
-                    className="flex-1 min-w-[100px]"
-                    onClick={() => setViewMode('footprint')}
-                  >
-                    <Leaf className="w-4 h-4 mr-2" />
-                    Footprint
-                  </Button>
-                )}
+                <Button
+                  variant={viewMode === 'footprint' ? 'default' : 'ghost'}
+                  size="sm"
+                  className="flex-1 min-w-[100px]"
+                  onClick={() => setViewMode('footprint')}
+                >
+                  <Leaf className="w-4 h-4 mr-2" />
+                  Footprint
+                </Button>
               </div>
+
 
               {/* Render View */}
               <AnimatePresence mode="wait">
@@ -280,7 +279,7 @@ const Index = () => {
                 >
                   {viewMode === 'demand' ? (
                     <DemandView />
-                  ) : viewMode === 'footprint' && isOctopusLinked ? (
+                  ) : viewMode === 'footprint' ? (
                     <FootprintView />
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

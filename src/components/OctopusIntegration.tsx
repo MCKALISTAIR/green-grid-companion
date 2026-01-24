@@ -82,8 +82,8 @@ export function OctopusIntegration() {
     )
   }
 
-  // 2. No Credentials OR Editing -> Show Settings Form
-  if (!hasCredentials || isEditing) {
+  // 2. No Credentials OR (Editing AND not linked) -> Show Settings Form
+  if ((!hasCredentials && !isLinked) || (isEditing && !isLinked)) {
     return (
       <div className="space-y-4">
         <h2 className="text-lg font-semibold text-foreground">Energy Integrations</h2>

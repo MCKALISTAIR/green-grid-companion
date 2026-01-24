@@ -16,6 +16,7 @@ export default function MapPage() {
         queryKey: ['all-regions'],
         queryFn: getAllRegions,
         staleTime: 1000 * 60 * 5, // 5 minutes
+        gcTime: 1000 * 60 * 30, // 30 minutes
     });
 
     const sortedRegions = regions ? [...regions].sort((a, b) => a.intensity.forecast - b.intensity.forecast) : [];

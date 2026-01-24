@@ -145,6 +145,44 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
         </Card>
       )}
 
+      {/* Test Notification Button */}
+      {isSupported && permissionStatus === 'granted' && (
+        <Card className="p-4 bg-muted/30">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Bell className="w-5 h-5 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium text-foreground">Test Notification</p>
+                <p className="text-xs text-muted-foreground">
+                  Verify notifications are working
+                </p>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={async () => {
+                const { LocalNotifications } = await import('@capacitor/local-notifications');
+                try {
+                  await LocalNotifications.schedule({
+                    notifications: [{
+                      title: 'GridSense Test',
+                      body: '✅ Notifications are working perfectly!',
+                      id: Date.now(),
+                      schedule: { at: new Date(Date.now() + 1000) },
+                    }]
+                  });
+                } catch (error) {
+                  console.error('Test notification failed:', error);
+                }
+              }}
+            >
+              Send Test
+            </Button>
+          </div>
+        </Card>
+      )}
+
       {/* Low Intensity Alert */}
       <Card className="p-4 space-y-4">
         <div className="flex items-center justify-between">
@@ -297,7 +335,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
             <p className="text-xs text-muted-foreground">
               Includes: total emissions, energy usage, green energy %, and best times to use electricity.
             </p>
-            
+
             <WeeklyDigestPreview />
           </div>
         )}
@@ -349,7 +387,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
             <p className="text-xs text-muted-foreground">
               Includes: weekly trends, intensity breakdown, best/worst periods, and personalized insights.
             </p>
-            
+
             <MonthlyReportPreview />
           </div>
         )}

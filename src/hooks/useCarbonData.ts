@@ -23,6 +23,7 @@ export function useCarbonData(postcode: string) {
     queryFn: getCurrentIntensity,
     refetchInterval: 1000 * 60 * 30, // 30 minutes
     staleTime: 1000 * 60 * 15, // 15 minutes
+    gcTime: 1000 * 60 * 60, // 1 hour
   });
 
   const regionalListQuery = useQuery<RegionListItem[]>({
@@ -66,6 +67,7 @@ export function useCarbonData(postcode: string) {
     enabled: !!regionId,
     refetchInterval: 1000 * 60 * 30, // 30 minutes
     staleTime: 1000 * 60 * 15,
+    gcTime: 1000 * 60 * 60, // 1 hour
     retry: 2,
   });
 
@@ -83,6 +85,7 @@ export function useCarbonData(postcode: string) {
     enabled: !!regionId,
     refetchInterval: 1000 * 60 * 60, // Forecast doesn't change often
     staleTime: 1000 * 60 * 30,
+    gcTime: 1000 * 60 * 60, // 1 hour
     retry: 2,
   });
 
@@ -91,6 +94,7 @@ export function useCarbonData(postcode: string) {
     queryFn: getGenerationMix,
     refetchInterval: 1000 * 60 * 30,
     staleTime: 1000 * 60 * 15,
+    gcTime: 1000 * 60 * 60, // 1 hour
   });
 
   // Extract data from specific regional query or fallback to national
