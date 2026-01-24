@@ -68,10 +68,19 @@
     // Prevent stale Service Worker caches from breaking the dev preview.
     // Some browsers can keep an old SW controlling the page, serving outdated
     // JS chunks which leads to React hook crashes and even "HTTP ERROR 412".
+    // NOTE: Skip this in Capacitor native apps (they run on capacitor:// or ionic:// schemes)
     (function () {
       try {
+        var protocol = window.location.protocol || '';
+        // Skip for native Capacitor apps (capacitor://, ionic://, file://)
+        if (protocol === 'capacitor:' || protocol === 'ionic:' || protocol === 'file:') return;
+        
+        // Also check for Capacitor in userAgent (fallback detection)
+        if (window.navigator && /Capacitor/i.test(window.navigator.userAgent)) return;
+        
         var host = window.location.hostname || '';
-        var isDevPreview = host.endsWith('.lovableproject.com') || host === 'localhost' || host === '127.0.0.1';
+        var isDevPreview = host.endsWith('.lovableproject.com');
+        // Don't trigger on localhost for Capacitor compatibility
         if (!isDevPreview) return;
         if (!('serviceWorker' in navigator)) return;
 
