@@ -9,6 +9,10 @@ export interface PushNotificationPrefs {
   lowIntensityThreshold: number;
   dailyForecastEnabled: boolean;
   dailyForecastTime: string;
+  weeklyDigestEnabled: boolean;
+  weeklyDigestDay: number;
+  monthlyReportEnabled: boolean;
+  monthlyReportDay: number;
 }
 
 const DEFAULT_PREFS: PushNotificationPrefs = {
@@ -16,6 +20,10 @@ const DEFAULT_PREFS: PushNotificationPrefs = {
   lowIntensityThreshold: 100,
   dailyForecastEnabled: false,
   dailyForecastTime: '07:00',
+  weeklyDigestEnabled: false,
+  weeklyDigestDay: 0,
+  monthlyReportEnabled: false,
+  monthlyReportDay: 1,
 };
 
 export function usePushNotifications(postcode: string) {
@@ -45,6 +53,10 @@ export function usePushNotifications(postcode: string) {
           lowIntensityThreshold: data.low_intensity_threshold,
           dailyForecastEnabled: data.daily_forecast_enabled,
           dailyForecastTime: data.daily_forecast_time,
+          weeklyDigestEnabled: data.weekly_digest_enabled,
+          weeklyDigestDay: data.weekly_digest_day,
+          monthlyReportEnabled: data.monthly_report_enabled,
+          monthlyReportDay: data.monthly_report_day,
         });
         setIsRegistered(true);
       }
@@ -173,6 +185,10 @@ export function usePushNotifications(postcode: string) {
           low_intensity_threshold: newPrefs.lowIntensityThreshold,
           daily_forecast_enabled: newPrefs.dailyForecastEnabled,
           daily_forecast_time: newPrefs.dailyForecastTime,
+          weekly_digest_enabled: newPrefs.weeklyDigestEnabled,
+          weekly_digest_day: newPrefs.weeklyDigestDay,
+          monthly_report_enabled: newPrefs.monthlyReportEnabled,
+          monthly_report_day: newPrefs.monthlyReportDay,
           platform: Capacitor.getPlatform(),
         }, {
           onConflict: 'device_token'
