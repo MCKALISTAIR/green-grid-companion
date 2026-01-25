@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 const Onboarding = () => {
     const navigate = useNavigate();
@@ -44,7 +45,7 @@ const Onboarding = () => {
                 throw new Error("Could not determine postcode from location");
             }
         } catch (error) {
-            console.error("Geolocation error:", error);
+            logger.error('Onboarding geolocation failed', { error });
             let errorMessage = "Failed to get location.";
             if (error instanceof Error && error.message.includes('denied')) {
                 errorMessage = "Location permission denied. Please enter postcode manually.";

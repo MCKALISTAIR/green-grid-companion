@@ -3,6 +3,7 @@ import { Leaf, Zap, TrendingUp, TrendingDown, Loader2, Eye, BarChart3 } from 'lu
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 import {
   AreaChart,
   Area,
@@ -84,7 +85,7 @@ export function MonthlyReportPreview() {
         setError('No data available');
       }
     } catch (err) {
-      console.error('Error fetching monthly report preview:', err);
+      logger.error('Failed to fetch monthly report preview', { error: err });
       setError('Failed to load preview');
     } finally {
       setLoading(false);
@@ -93,9 +94,9 @@ export function MonthlyReportPreview() {
 
   if (!stats && !loading && !error) {
     return (
-      <Button 
-        variant="outline" 
-        size="sm" 
+      <Button
+        variant="outline"
+        size="sm"
         onClick={fetchPreview}
         className="w-full gap-2 mt-2"
       >
@@ -202,10 +203,10 @@ export function MonthlyReportPreview() {
                         <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <XAxis 
-                      dataKey="weekLabel" 
-                      fontSize={9} 
-                      tickLine={false} 
+                    <XAxis
+                      dataKey="weekLabel"
+                      fontSize={9}
+                      tickLine={false}
                       axisLine={false}
                       stroke="hsl(var(--muted-foreground))"
                     />
@@ -240,9 +241,9 @@ export function MonthlyReportPreview() {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={stats.by_intensity} layout="vertical">
                     <XAxis type="number" hide />
-                    <YAxis 
-                      type="category" 
-                      dataKey="index" 
+                    <YAxis
+                      type="category"
+                      dataKey="index"
                       fontSize={9}
                       tickLine={false}
                       axisLine={false}
@@ -251,9 +252,9 @@ export function MonthlyReportPreview() {
                     />
                     <Bar dataKey="kwh" radius={[0, 4, 4, 0]}>
                       {stats.by_intensity.map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}`} 
-                          fill={INTENSITY_COLORS[entry.index] || 'hsl(var(--muted))'} 
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={INTENSITY_COLORS[entry.index] || 'hsl(var(--muted))'}
                         />
                       ))}
                     </Bar>

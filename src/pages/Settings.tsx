@@ -2,9 +2,12 @@ import { Link } from 'react-router-dom';
 import { ChevronRight, GraduationCap, Shield, MapPin } from 'lucide-react';
 import { NotificationSettings } from '@/components/NotificationSettings';
 import { OctopusIntegration } from '@/components/OctopusIntegration';
+import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
 
 
 export default function Settings() {
+    const { isLinked } = useOctopusEnergy();
+
     return (
         <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
             <div className="p-4 pt-[calc(env(safe-area-inset-top)+2rem)] space-y-8">
@@ -78,11 +81,13 @@ export default function Settings() {
                         Developed by <a href="https://alistair-mckay.lovable.app" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">Alistair McKay</a>
                     </p>
                     <p>
-                        Data sourced from <a href="https://www.carbonintensity.org.uk/" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">National Grid ESO</a>
+                        Carbon data from <a href="https://www.carbonintensity.org.uk/" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">National Grid ESO</a>
                     </p>
-                    <p>
-                        Powered by <a href="https://developer.octopus.energy/docs/api/" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">Octopus Energy API</a>
-                    </p>
+                    {isLinked && (
+                        <p>
+                            Footprint data powered by <a href="https://developer.octopus.energy/docs/api/" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">Octopus Energy API</a>
+                        </p>
+                    )}
 
                 </div>
             </div>

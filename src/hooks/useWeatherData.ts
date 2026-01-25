@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Geolocation } from '@capacitor/geolocation';
+import { logger } from '@/lib/logger';
 
 // Weather condition types based on WMO codes
 export type WeatherCondition =
@@ -154,7 +155,7 @@ export function useWeatherData() {
         localStorage.setItem('gridgreen-coords', JSON.stringify(newCoords));
         setCoords(newCoords);
       } catch (error) {
-        console.warn('Could not get location for weather, using default:', error);
+        logger.debug('Could not get location for weather, using default', { error });
         setCoordsError('Location unavailable, using London weather');
         setCoords(DEFAULT_COORDS);
       }

@@ -4,6 +4,9 @@ import { getAllRegions, getIntensityColor } from '@/lib/carbonApi';
 import { UKMap } from '@/components/UKMap';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { ErrorState } from '@/components/ErrorState';
+import { EmptyState } from '@/components/EmptyState';
+import { getErrorInfo } from '@/lib/errorUtils';
 
 import { PullToRefresh } from '@/components/PullToRefresh';
 import { Map as MapIcon, X } from 'lucide-react';
@@ -12,7 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 export default function MapPage() {
     const [showMap, setShowMap] = useState(false);
 
-    const { data: regions, isLoading, refetch } = useQuery({
+    const { data: regions, isLoading, isError, error, refetch } = useQuery({
         queryKey: ['all-regions'],
         queryFn: getAllRegions,
         staleTime: 1000 * 60 * 5, // 5 minutes
@@ -20,6 +23,24 @@ export default function MapPage() {
     });
 
     const sortedRegions = regions ? [...regions].sort((a, b) => a.intensity.forecast - b.intensity.forecast) : [];
+
+    // Handle error state
+    if (isError) {
+        const errorInfo = getErrorInfo(error);
+        return (
+            <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
+                <div className="p-4 pt-[max(2rem,env(safe-area-inset-top))]">
+                    <h1 className="text-2xl font-bold mb-4">Leaderboard</h1>
+                    <ErrorState
+                        title={errorInfo.title}
+                        description={errorInfo.description}
+                        retry={() => refetch()}
+                        fullScreen
+                    />
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">

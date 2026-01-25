@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 export interface OctopusMeter {
   id: string;
@@ -95,7 +96,7 @@ export function useOctopusEnergy(days: number = 30) {
         body: { action: 'get-greenness-forecast' }
       });
       if (error) {
-        console.warn('Greenness forecast fetch failed:', error.message);
+        logger.warn('Greenness forecast fetch failed', { error: error.message });
         return []; // Graceful fallback
       }
       return data?.forecast || [];

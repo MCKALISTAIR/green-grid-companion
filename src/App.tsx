@@ -11,6 +11,7 @@ import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import ScrollToTop from "@/components/ScrollToTop";
+import { logger } from "@/lib/logger";
 
 // Lazy load pages
 const Index = lazy(() => import("./pages/Index"));
@@ -64,7 +65,7 @@ function AppContent() {
   useEffect(() => {
     const handleAppStateChange = async (state: { isActive: boolean }) => {
       if (state.isActive) {
-        console.log("App resumed. Force refreshing carbon intensity data...");
+        logger.info('App resumed, refreshing carbon data');
         // Force refetch of critical carbon data queries regardless of stale time
         await Promise.all([
           queryClient.refetchQueries({ queryKey: ['national'], type: 'active' }),

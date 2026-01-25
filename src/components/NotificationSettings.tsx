@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Bell, BellOff, Clock, Zap, Smartphone, CalendarDays, FileText } from 'lucide-react';
+import { Bell, BellOff, Clock, Zap, Smartphone, CalendarDays, FileText, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useNotifications } from '@/hooks/useNotifications';
 import { WeeklyDigestPreview } from './WeeklyDigestPreview';
 import { MonthlyReportPreview } from './MonthlyReportPreview';
+import { logger } from '@/lib/logger';
 
 interface NotificationSettingsProps {
   onClose?: () => void;
@@ -173,7 +174,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
                     }]
                   });
                 } catch (error) {
-                  console.error('Test notification failed:', error);
+                  logger.debug('Test notification failed', { error });
                 }
               }}
             >
@@ -400,6 +401,31 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
           </p>
         )
       }
+
+      {/* Display Preferences */}
+      <div className="pt-4 border-t border-border">
+        <h2 className="text-lg font-semibold text-foreground mb-4">Display Preferences</h2>
+
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                <Activity className="w-5 h-5 text-blue-500" />
+              </div>
+              <div>
+                <h3 className="font-medium text-foreground">Weather in Energy Insights</h3>
+                <p className="text-sm text-muted-foreground">
+                  Show local weather conditions
+                </p>
+              </div>
+            </div>
+            <Switch
+              checked={prefs.showWeatherInInsights}
+              onCheckedChange={(checked) => updatePreference('showWeatherInInsights', checked)}
+            />
+          </div>
+        </Card>
+      </div>
     </div >
   );
 }

@@ -7,12 +7,18 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 
 import { ComposedChart, Line, Area, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format, parseISO, subDays, isSameHour, isSameDay } from 'date-fns';
-import { Loader2, TrendingDown, TrendingUp, Zap } from 'lucide-react';
+import { Loader2, TrendingDown, TrendingUp, Zap, BarChart3 } from 'lucide-react';
+import { ErrorState } from '@/components/ErrorState';
+import { EmptyState } from '@/components/EmptyState';
+import { getErrorInfo } from '@/lib/errorUtils';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 export default function HistoryPage() {
     const postcode = localStorage.getItem('gridgreen-postcode') || '';
-    const { regionId, region, isLoading: isRegionLoading } = useCarbonData(postcode);
+    const { regionId, region, isLoading: isRegionLoading, isError: isRegionError, error: regionError } = useCarbonData(postcode);
     const { footprint, isLinked } = useOctopusEnergy();
+    const navigate = useNavigate();
 
     const [timeRange, setTimeRange] = useState<'24h' | '7d'>('7d');
 
@@ -84,6 +90,47 @@ export default function HistoryPage() {
     const startVal = data[0]?.intensity.forecast || 0;
     const endVal = data[data.length - 1]?.intensity.forecast || 0;
     const trend = endVal < startVal ? 'improving' : 'worsening';
+
+    // Handle error state
+    if (isRegionError || historyQuery.isError) {
+        const errorInfo = getErrorInfo(regionError || historyQuery.error);
+        return (
+            <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
+                <div className="p-4 space-y-6 pt-[calc(env(safe-area-inset-top)+2rem)]">
+                    <div>
+                        <h1 className="text-2xl font-bold">Grid History</h1>
+                        <p className="text-muted-foreground">{region || 'National'} carbon intensity over time.</p>
+                    </div>
+                    <ErrorState
+                        title={errorInfo.title}
+                        description={errorInfo.description}
+                        retry={() => historyQuery.refetch()}
+                        fullScreen
+                    />
+                </div>
+            </div>
+        );
+    }
+
+    // Empty state when no history data
+    if (!isRegionLoading && !historyQuery.isLoading && data.length === 0) {
+        return (
+            <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
+                <div className="p-4 space-y-6 pt-[calc(env(safe-area-inset-top)+2rem)]">
+                    <div>
+                        <h1 className="text-2xl font-bold">Grid History</h1>
+                        <p className="text-muted-foreground">{region || 'National'} carbon intensity over time.</p>
+                    </div>
+                    <EmptyState
+                        icon={BarChart3}
+                        title="No Historical Data"
+                        description="We couldn't find any historical carbon intensity data for this region."
+                        fullScreen
+                    />
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">

@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
+import { logger } from '@/lib/logger';
 
 export function useCapacitor() {
   useEffect(() => {
@@ -19,7 +20,7 @@ export function useCapacitor() {
           // Hide splash screen once app is ready
           await SplashScreen.hide();
         } catch (error) {
-          console.log('Capacitor init error:', error);
+          logger.debug('Capacitor initialization failed', { error });
         }
       }
     };

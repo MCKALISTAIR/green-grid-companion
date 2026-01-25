@@ -3,6 +3,7 @@ import { AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import * as Sentry from "@sentry/react";
+import { logger } from "@/lib/logger";
 
 interface Props {
     children: ReactNode;
@@ -25,10 +26,10 @@ export class ComponentErrorBoundary extends Component<Props, State> {
     }
 
     public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-        console.error(`Error in component boundary (${this.props.name || 'Unknown'}):`, error, errorInfo);
-        Sentry.captureException(error, {
-            extra: errorInfo as any,
-            tags: { component: this.props.name || 'Unknown' }
+        logger.error(`Component boundary error: ${this.props.name || 'Unknown'}`, {
+            error,
+            componentName: this.props.name,
+            componentStack: errorInfo.componentStack,
         });
     }
 

@@ -31,6 +31,7 @@ import { toast } from 'sonner';
 import { useSavedLocations } from '@/hooks/useSavedLocations';
 import { searchLocation, getRegionFromCoordinates, LocationSearchResult } from '@/lib/location';
 import { setGenericSharedRegion } from '@/lib/sharedPrefs';
+import { logger } from '@/lib/logger';
 
 interface LocationManagerProps {
   value: string;
@@ -96,7 +97,7 @@ export function LocationManager({ value, onChange, showPostcode = true }: Locati
         });
       }
     } catch (error) {
-      console.error('Search failed', error);
+      logger.error('Location search failed', { error, query: searchQuery });
       toast.error('Search failed', {
         description: 'Something went wrong while searching.',
       });
@@ -133,7 +134,7 @@ export function LocationManager({ value, onChange, showPostcode = true }: Locati
             });
           }
         } catch (error) {
-          console.error('Location error:', error);
+          logger.error('Geolocation error', { error });
           toast.error('Location Error', {
             description: 'Failed to detect your region. Please select manually.',
           });

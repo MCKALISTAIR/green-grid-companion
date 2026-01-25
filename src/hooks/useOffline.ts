@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { logger } from '@/lib/logger';
 
 interface OfflineState {
   isOnline: boolean;
@@ -52,7 +53,7 @@ export function useOffline() {
 // Service worker registration helper
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   if (!('serviceWorker' in navigator)) {
-    console.log('[SW] Service workers not supported');
+    logger.warn('Service workers not supported in this browser');
     return null;
   }
 
@@ -64,9 +65,9 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
       const registrations = await navigator.serviceWorker.getRegistrations();
       await Promise.all(registrations.map((r) => r.unregister()));
       await clearCaches();
-      console.log('[SW] Dev mode: service workers unregistered and caches cleared');
+      logger.debug('Dev mode: service workers unregistered and caches cleared');
     } catch (error) {
-      console.warn('[SW] Dev mode: failed to unregister/clear caches', error);
+      logger.warn('Dev mode: failed to unregister/clear caches', { error });
     }
     return null;
   }
@@ -76,7 +77,7 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
       scope: '/',
     });
 
-    console.log('[SW] Service worker registered:', registration.scope);
+    logger.info('Service worker registered', { scope: registration.scope });
 
     // Handle updates
     registration.addEventListener('updatefound', () => {
@@ -85,7 +86,7 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
         newWorker.addEventListener('statechange', () => {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
             // New content available, notify user
-            console.log('[SW] New content available, refresh to update');
+            logger.info('New service worker content available');
           }
         });
       }
@@ -93,7 +94,7 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
 
     return registration;
   } catch (error) {
-    console.error('[SW] Service worker registration failed:', error);
+    logger.error('Service worker registration failed', { error });
     return null;
   }
 }
@@ -110,6 +111,6 @@ export async function clearCaches(): Promise<void> {
   if ('caches' in window) {
     const names = await caches.keys();
     await Promise.all(names.map((name) => caches.delete(name)));
-    console.log('[SW] All caches cleared');
+    logger.debug('All caches cleared');
   }
 }

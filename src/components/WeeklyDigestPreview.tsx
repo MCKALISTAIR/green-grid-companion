@@ -3,6 +3,7 @@ import { Leaf, Zap, Clock, TrendingUp, Loader2, Eye } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 interface WeeklyStats {
   total_carbon_kg: number;
@@ -52,7 +53,7 @@ export function WeeklyDigestPreview() {
         setError('No data available');
       }
     } catch (err) {
-      console.error('Error fetching digest preview:', err);
+      logger.error('Failed to fetch weekly digest preview', { error: err });
       setError('Failed to load preview');
     } finally {
       setLoading(false);
@@ -61,9 +62,9 @@ export function WeeklyDigestPreview() {
 
   if (!stats && !loading && !error) {
     return (
-      <Button 
-        variant="outline" 
-        size="sm" 
+      <Button
+        variant="outline"
+        size="sm"
         onClick={fetchPreview}
         className="w-full gap-2 mt-2"
       >

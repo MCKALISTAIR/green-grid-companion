@@ -3,6 +3,7 @@ import { Capacitor } from '@capacitor/core';
 import { PushNotifications, Token, PushNotificationSchema, ActionPerformed } from '@capacitor/push-notifications';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 export interface PushNotificationPrefs {
   lowIntensityEnabled: boolean;
@@ -43,7 +44,7 @@ export function usePushNotifications(postcode: string) {
         .maybeSingle();
 
       if (error) {
-        console.error('Error loading preferences:', error);
+        logger.error('Failed to load push notification preferences', { error });
         return;
       }
 
@@ -61,7 +62,7 @@ export function usePushNotifications(postcode: string) {
         setIsRegistered(true);
       }
     } catch (error) {
-      console.error('Error loading preferences:', error);
+      logger.error('Failed to load push notification preferences', { error });
     }
   }, []);
 
@@ -80,7 +81,7 @@ export function usePushNotifications(postcode: string) {
           await PushNotifications.register();
         }
       } catch (error) {
-        console.error('Push init error:', error);
+        logger.error('Push notification initialization failed', { error });
       }
     };
 
@@ -88,19 +89,19 @@ export function usePushNotifications(postcode: string) {
 
     // Add listeners
     const registrationListener = PushNotifications.addListener('registration', async (token: Token) => {
-      console.log('Push registration success, token:', token.value);
+      logger.info('Push notification registered', { token: token.value });
       setDeviceToken(token.value);
       setPermissionStatus('granted');
       await loadPreferences(token.value);
     });
 
     const errorListener = PushNotifications.addListener('registrationError', (error) => {
-      console.error('Push registration error:', error);
+      logger.error('Push notification registration failed', { error });
       toast.error('Failed to register for notifications');
     });
 
     const notificationListener = PushNotifications.addListener('pushNotificationReceived', (notification: PushNotificationSchema) => {
-      console.log('Push notification received:', notification);
+      logger.info('Push notification received in foreground', { notification });
       // Show in-app toast when notification received in foreground
       toast.info(notification.title || 'GridSense', {
         description: notification.body,
@@ -108,7 +109,7 @@ export function usePushNotifications(postcode: string) {
     });
 
     const actionListener = PushNotifications.addListener('pushNotificationActionPerformed', (action: ActionPerformed) => {
-      console.log('Push notification action performed:', action);
+      logger.info('Push notification action performed', { action });
       // Handle notification tap - could navigate to specific screen
     });
 
@@ -156,7 +157,7 @@ export function usePushNotifications(postcode: string) {
         return null;
       }
     } catch (error) {
-      console.error('Permission request error:', error);
+      logger.error('Push notification permission request failed', { error });
       toast.error('Failed to request permission');
       return null;
     }
@@ -201,7 +202,7 @@ export function usePushNotifications(postcode: string) {
       setIsRegistered(true);
       if (token !== deviceToken) setDeviceToken(token); // Ensure state is consistent
     } catch (error) {
-      console.error('Error saving preferences:', error);
+      logger.error('Failed to save push notification preferences', { error });
       toast.error('Failed to save notification settings');
     }
   }, [deviceToken, postcode]);
@@ -230,7 +231,7 @@ export function usePushNotifications(postcode: string) {
       setPrefs(DEFAULT_PREFS);
       toast.success('Notifications disabled');
     } catch (error) {
-      console.error('Error unregistering:', error);
+      logger.error('Failed to unregister push notifications', { error });
     }
   }, [deviceToken]);
 

@@ -1,5 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
+import { logger } from '@/lib/logger';
 
 export function useHaptics() {
   const isNative = Capacitor.isNativePlatform();
@@ -9,7 +10,7 @@ export function useHaptics() {
     try {
       await Haptics.impact({ style });
     } catch (error) {
-      console.log('Haptic impact failed:', error);
+      logger.debug('Haptic impact failed', { error });
     }
   };
 
@@ -18,7 +19,7 @@ export function useHaptics() {
     try {
       await Haptics.notification({ type });
     } catch (error) {
-      console.log('Haptic notification failed:', error);
+      logger.debug('Haptic notification failed', { error });
     }
   };
 
@@ -27,7 +28,7 @@ export function useHaptics() {
     try {
       await Haptics.selectionStart();
     } catch (error) {
-      console.log('Haptic selection start failed:', error);
+      logger.debug('Haptic selection start failed', { error });
     }
   };
 
@@ -36,7 +37,7 @@ export function useHaptics() {
     try {
       await Haptics.selectionChanged();
     } catch (error) {
-      console.log('Haptic selection changed failed:', error);
+      logger.debug('Haptic selection changed failed', { error });
     }
   };
 
@@ -45,7 +46,7 @@ export function useHaptics() {
     try {
       await Haptics.selectionEnd();
     } catch (error) {
-      console.log('Haptic selection end failed:', error);
+      logger.debug('Haptic selection end failed', { error });
     }
   };
 

@@ -19,6 +19,7 @@ import {
 import { UK_REGIONS } from '@/lib/carbonApi';
 import { useToast } from '@/hooks/use-toast';
 import { searchLocation, getRegionFromCoordinates } from '@/lib/location';
+import { logger } from '@/lib/logger';
 
 interface RegionSelectorProps {
   value: string;
@@ -56,7 +57,7 @@ export function RegionSelector({ value, onChange }: RegionSelectorProps) {
         });
       }
     } catch (error) {
-      console.error('Search failed', error);
+      logger.error('Region search failed', { error, query: searchQuery });
       toast({
         title: 'Search failed',
         description: 'Something went wrong while searching.',
@@ -100,7 +101,7 @@ export function RegionSelector({ value, onChange }: RegionSelectorProps) {
             });
           }
         } catch (error) {
-          console.error('Location error:', error);
+          logger.error('Geolocation error', { error });
           toast({
             title: 'Location Error',
             description: 'Failed to detect your region. Please select manually.',

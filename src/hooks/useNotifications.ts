@@ -4,6 +4,7 @@ import { ForecastData, getRegionalIntensity } from '@/lib/carbonApi';
 import { useEffect, useState, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 export interface NotificationPrefs {
     lowIntensityEnabled: boolean;
@@ -15,6 +16,7 @@ export interface NotificationPrefs {
     weeklyDigestDay: number; // 0 = Sunday, 6 = Saturday
     monthlyReportEnabled: boolean;
     monthlyReportDay: number; // 1-28 (day of month)
+    showWeatherInInsights: boolean;
 }
 
 const DEFAULT_PREFS: NotificationPrefs = {
@@ -27,6 +29,7 @@ const DEFAULT_PREFS: NotificationPrefs = {
     weeklyDigestDay: 0, // Sunday
     monthlyReportEnabled: false,
     monthlyReportDay: 1, // 1st of month
+    showWeatherInInsights: true,
 };
 
 const PREFS_KEY = 'gridgreen-notification-prefs';
@@ -73,7 +76,7 @@ export function useNotifications() {
                 });
             }
         } catch (e) {
-            console.error('[BackgroundFetch] Error checking intensity', e);
+            logger.error('Background fetch intensity check failed', { error: e });
         }
     }, [prefs.lowIntensityThreshold]); // Re-create if threshold changes
 
@@ -85,7 +88,7 @@ export function useNotifications() {
             enableHeadless: true,
             requiredNetworkType: BackgroundFetch.NETWORK_TYPE_ANY
         }, async (taskId) => {
-            console.log('[BackgroundFetch] Event received:', taskId);
+            logger.info('Background fetch event received', { taskId });
 
             // Perform Work
             await checkLiveIntensity();
@@ -94,14 +97,15 @@ export function useNotifications() {
             BackgroundFetch.finish(taskId);
         }, (taskId) => {
             // Timeout
+            logger.warn('Background fetch timeout', { taskId });
             BackgroundFetch.finish(taskId);
         });
-        console.log('[BackgroundFetch] Configured:', status);
+        logger.info('Background fetch configured', { status });
     }, [checkLiveIntensity]);
 
     const stopBackgroundFetch = useCallback(async () => {
         await BackgroundFetch.stop();
-        console.log('[BackgroundFetch] Stopped');
+        logger.info('Background fetch stopped');
     }, []);
 
     // Persist prefs and handle Background Fetch toggle
@@ -182,9 +186,12 @@ export function useNotifications() {
         if (pendingNotifications.length > 0) {
             try {
                 await LocalNotifications.schedule({ notifications: pendingNotifications });
-                console.log(`[GreenGrid] Scheduled ${pendingNotifications.length} forecast alerts.`);
+                logger.info('Forecast alerts scheduled', {
+                    count: pendingNotifications.length,
+                    threshold: prefs.lowIntensityThreshold,
+                });
             } catch (error) {
-                console.error("Failed to schedule notifications", error);
+                logger.error('Failed to schedule notifications', { error, count: pendingNotifications.length });
             }
         }
     }, [isNative, prefs.lowIntensityEnabled, prefs.lowIntensityThreshold, prefs.useBackgroundFetch, permissionStatus]);

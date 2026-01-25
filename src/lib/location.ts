@@ -1,5 +1,6 @@
 
 import { UK_REGIONS, getRegionalIntensity } from './carbonApi';
+import { logger } from './logger';
 
 // Interfaces for API responses
 interface NominatimResult {
@@ -39,7 +40,7 @@ export async function searchLocation(query: string): Promise<LocationSearchResul
             const result = await lookupByCarbonApi(cleanQuery);
             if (result) return result;
         } catch (e) {
-            console.warn('Carbon API postcode lookup failed, trying backup', e);
+            logger.debug('Carbon API postcode lookup failed, trying backup', { error: e });
         }
     }
 
@@ -58,7 +59,7 @@ export async function getRegionFromCoordinates(lat: number, lon: number): Promis
         const data = await res.json();
         // If postcodes.io fails (e.g. offshore or remote), try Nominatim reverse geocode
         if (!data.result || data.result.length === 0) {
-            console.log('Postcodes.io returned no results, trying Nominatim reverse...');
+            logger.debug('Postcodes.io returned no results, trying Nominatim reverse geocode');
             const nomRes = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`);
             if (nomRes.ok) {
                 const nomData = await nomRes.json();
@@ -73,7 +74,7 @@ export async function getRegionFromCoordinates(lat: number, lon: number): Promis
         const postcode = data.result[0].postcode;
         return await lookupByCarbonApi(postcode);
     } catch (e) {
-        console.error('Failed to resolve coordinates to region', e);
+        logger.error('Failed to resolve coordinates to region', { error: e });
         return null;
     }
 
@@ -130,11 +131,11 @@ async function lookupByCarbonApi(postcode: string): Promise<LocationSearchResult
             };
         }
 
-        console.warn(`Could not map API region "${regionData.shortname}" to internal list.`);
+        logger.warn('Could not map API region to internal list', { regionName: regionData.shortname });
         return null;
 
     } catch (e) {
-        console.warn('Carbon API lookup failed', e);
+        logger.debug('Carbon API lookup failed', { error: e });
         return null;
     }
 }
@@ -167,7 +168,7 @@ async function lookupPlaceName(query: string): Promise<LocationSearchResult | nu
         return await getRegionFromCoordinates(parseFloat(place.lat), parseFloat(place.lon));
 
     } catch (e) {
-        console.error('Place lookup failed', e);
+        logger.error('Place lookup failed', { error: e });
         return null;
     }
 }

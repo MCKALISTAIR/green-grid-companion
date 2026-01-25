@@ -27,6 +27,7 @@ import { ComponentErrorBoundary } from '@/components/ComponentErrorBoundary';
 import { useGridDemand } from '@/hooks/useGridDemand';
 import { WeatherWidget } from '@/components/WeatherWidget';
 import { GreenerNightsCard } from '@/components/GreenerNightsCard';
+import { logger } from '@/lib/logger';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -35,7 +36,7 @@ const Index = () => {
   });
   const [viewMode, setViewMode] = useState<'intensity' | 'footprint' | 'demand'>('intensity');
 
-  const { scheduleGreenAlerts } = useNotifications();
+  const { scheduleGreenAlerts, prefs } = useNotifications();
   const { isLinked: isOctopusLinked } = useOctopusEnergy();
 
   useEffect(() => {
@@ -79,21 +80,21 @@ const Index = () => {
       if (lastUpdated) {
         const nextExpected = new Date(lastUpdated).getTime() + (30 * 60 * 1000);
         const now = Date.now();
-        
+
         // If we're more than 2 minutes past expected update, force refresh
         if (now > nextExpected + (2 * 60 * 1000)) {
-          console.log('Carbon data appears stale, triggering refresh...');
+          logger.info('Carbon data appears stale, triggering refresh');
           refetch();
         }
       }
     };
-    
+
     // Check every minute
     const intervalId = setInterval(checkAndRefresh, 60 * 1000);
-    
+
     // Also check immediately on mount
     checkAndRefresh();
-    
+
     return () => clearInterval(intervalId);
   }, [lastUpdated, refetch]);
 
@@ -318,11 +319,13 @@ const Index = () => {
                             <p className="text-sm text-muted-foreground mt-1">
                               {getSmartTip(intensity, forecast)}
                             </p>
-                            <div className="mt-3">
-                              <ComponentErrorBoundary name="Weather Widget">
-                                <WeatherWidget />
-                              </ComponentErrorBoundary>
-                            </div>
+                            {prefs.showWeatherInInsights && (
+                              <div className="mt-3">
+                                <ComponentErrorBoundary name="Weather Widget">
+                                  <WeatherWidget />
+                                </ComponentErrorBoundary>
+                              </div>
+                            )}
 
                             <div className="mt-3">
                               <ComponentErrorBoundary name="Greener Nights">

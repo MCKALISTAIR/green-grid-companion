@@ -1,7 +1,3 @@
-# Changelog
-
-## [Unreleased] - 2026-01-24
-
 ### Added
 
 #### Features

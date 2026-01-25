@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useCarbonData } from '@/hooks/useCarbonData';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { ErrorState } from '@/components/ErrorState';
+import { getErrorInfo } from '@/lib/errorUtils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,6 +15,7 @@ import { PullToRefresh } from '@/components/PullToRefresh';
 
 import { toast } from 'sonner';
 import { Bell } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 const APPLIANCES = [
     { id: 'ev', name: 'EV Charge', icon: Car, power: 7.4, duration: 4, label: 'Full Charge (4h)' },
@@ -30,7 +33,7 @@ export default function Planner() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     const postcode = localStorage.getItem('gridgreen-postcode') || '';
-    const { forecast, refetch, isLoading } = useCarbonData(postcode);
+    const { forecast, refetch, isLoading, isError, error } = useCarbonData(postcode);
 
     // Load saved custom appliance if it exists
     useEffect(() => {
@@ -40,7 +43,7 @@ export default function Planner() {
                 const customAppliance = JSON.parse(saved);
                 // Don't auto-select, just keep it available
             } catch (e) {
-                console.error('Failed to load custom appliance', e);
+                logger.debug('Failed to load custom appliance from storage', { error: e });
             }
         }
     }, []);
@@ -118,6 +121,27 @@ export default function Planner() {
     const currentIntensity = forecast[0]?.intensity.forecast || 0;
     const savings = bestSlot ? Math.round((currentIntensity - bestSlot.avgIntensity) * selectedAppliance.power * selectedAppliance.duration) : 0;
 
+    // Handle error state
+    if (isError) {
+        const errorInfo = getErrorInfo(error);
+        return (
+            <div className="h-[100dvh] overflow-hidden bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
+                <div className="p-4 space-y-6 pt-[max(2rem,env(safe-area-inset-top))]">
+                    <div>
+                        <h1 className="text-2xl font-bold">Power Planner</h1>
+                        <p className="text-muted-foreground">Schedule high-energy tasks to save carbon.</p>
+                    </div>
+                    <ErrorState
+                        title={errorInfo.title}
+                        description={errorInfo.description}
+                        retry={() => refetch()}
+                        fullScreen
+                    />
+                </div>
+            </div>
+        );
+    }
+
     const scheduleReminder = async () => {
         if (!bestSlot) return;
 
@@ -155,7 +179,7 @@ export default function Planner() {
             toast.success(`Reminder set for ${format(notificationTime, 'h:mm a')}`);
 
         } catch (error) {
-            console.error('Failed to schedule notification:', error);
+            logger.error('Failed to schedule power planner notification', { error });
             toast.error('Failed to schedule reminder');
         }
     };
