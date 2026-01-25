@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import {
   getRegionalForecastById,
   getRegionalHistoryAndForecast,
@@ -15,14 +16,34 @@ import {
   REGION_IDS
 } from '@/lib/carbonApi';
 
+// Calculate ms until next half-hour boundary (:00 or :30)
+// National Grid updates at these times, so we align our refreshes
+const getMsUntilNextHalfHour = (): number => {
+  const now = new Date();
+  const minutes = now.getMinutes();
+  const seconds = now.getSeconds();
+  const ms = now.getMilliseconds();
+  
+  // Calculate minutes until next :00 or :30
+  const minutesToNext = minutes < 30 ? (30 - minutes) : (60 - minutes);
+  // Convert to ms, add 90 second buffer for API processing delay
+  return ((minutesToNext * 60) - seconds) * 1000 - ms + 90000;
+};
 
 export function useCarbonData(postcode: string) {
+  // Calculate smart refetch interval aligned to grid updates
+  const refetchInterval = useMemo(() => {
+    const msUntilNext = getMsUntilNextHalfHour();
+    // Cap at 30 minutes max, minimum 1 minute
+    return Math.max(60000, Math.min(msUntilNext, 30 * 60 * 1000));
+  }, []);
+
   // National intensity as fallback
   const nationalQuery = useQuery<IntensityData>({
     queryKey: ['national'],
     queryFn: getCurrentIntensity,
-    refetchInterval: 1000 * 60 * 30, // 30 minutes
-    staleTime: 1000 * 60 * 15, // 15 minutes
+    refetchInterval: refetchInterval,
+    staleTime: 1000 * 60 * 10, // 10 minutes - more aggressive staleness
     gcTime: 1000 * 60 * 60, // 1 hour
   });
 
@@ -65,8 +86,8 @@ export function useCarbonData(postcode: string) {
     queryKey: ['regional', regionId],
     queryFn: () => regionId ? getRegionalIntensityById(regionId) : Promise.resolve(null),
     enabled: !!regionId,
-    refetchInterval: 1000 * 60 * 30, // 30 minutes
-    staleTime: 1000 * 60 * 15,
+    refetchInterval: refetchInterval,
+    staleTime: 1000 * 60 * 10, // 10 minutes
     gcTime: 1000 * 60 * 60, // 1 hour
     retry: 2,
   });
@@ -92,8 +113,8 @@ export function useCarbonData(postcode: string) {
   const generationQuery = useQuery<GenerationMix[]>({
     queryKey: ['generation'],
     queryFn: getGenerationMix,
-    refetchInterval: 1000 * 60 * 30,
-    staleTime: 1000 * 60 * 15,
+    refetchInterval: refetchInterval,
+    staleTime: 1000 * 60 * 10, // 10 minutes
     gcTime: 1000 * 60 * 60, // 1 hour
   });
 

@@ -41,8 +41,12 @@ const queryClient = new QueryClient({
       gcTime: 30 * 60 * 1000,
       // Retry failed requests
       retry: 2,
-      // Don't refetch on window focus when offline
+      // Refetch on window focus
       refetchOnWindowFocus: true,
+      // Refetch when reconnecting to network
+      refetchOnReconnect: true,
+      // Always check freshness on mount
+      refetchOnMount: 'always',
     },
   },
 });
@@ -60,9 +64,14 @@ function AppContent() {
   useEffect(() => {
     const handleAppStateChange = async (state: { isActive: boolean }) => {
       if (state.isActive) {
-        console.log("App resumed. Refreshing data...");
-        // Invalidate all queries to force a refresh if data is stale
-        await queryClient.invalidateQueries();
+        console.log("App resumed. Force refreshing carbon intensity data...");
+        // Force refetch of critical carbon data queries regardless of stale time
+        await Promise.all([
+          queryClient.refetchQueries({ queryKey: ['national'], type: 'active' }),
+          queryClient.refetchQueries({ queryKey: ['regional'], type: 'active' }),
+          queryClient.refetchQueries({ queryKey: ['forecast'], type: 'active' }),
+          queryClient.refetchQueries({ queryKey: ['generationMix'], type: 'active' }),
+        ]);
       }
     };
 
