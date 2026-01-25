@@ -87,18 +87,23 @@ export function useOctopusEnergy(days: number = 30) {
     gcTime: 30 * 60 * 1000, // 30 minutes - keep in cache even when unmounted
   });
 
-  // Fetch Greener Nights Forecast (always active if linked)
+  // Fetch Greener Nights Forecast (only if linked AND has credentials)
   const { data: greennessForecast, isLoading: forecastLoading } = useQuery({
     queryKey: ['greenness-forecast'],
     queryFn: async (): Promise<GreennessForecastItem[]> => {
       const { data, error } = await supabase.functions.invoke('octopus-energy', {
         body: { action: 'get-greenness-forecast' }
       });
-      if (error) throw new Error(error.message);
-      return data.forecast;
+      if (error) {
+        console.warn('Greenness forecast fetch failed:', error.message);
+        return []; // Graceful fallback
+      }
+      return data?.forecast || [];
     },
-    enabled: status?.is_linked ?? false, // Only fetch if linked
+    enabled: (status?.is_linked && status?.has_credentials) ?? false,
     staleTime: 1000 * 60 * 60 * 4, // 4 hours
+    gcTime: 1000 * 60 * 60 * 8, // 8 hours cache
+    retry: 1, // Only retry once - this is non-critical data
   });
 
   // Save Credentials

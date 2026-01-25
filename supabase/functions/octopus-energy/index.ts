@@ -176,7 +176,14 @@ Deno.serve(async (req: Request) => {
 
     // Allow get-status to run even without credentials (it will return unlinked state)
     // But other actions should fail if no credentials
-    if (!credentials && action !== 'get-status' && action !== 'get-greenness-forecast') {
+    if (!credentials && action !== 'get-status') {
+      // For greenness-forecast without creds, return empty gracefully
+      if (action === 'get-greenness-forecast') {
+        return new Response(
+          JSON.stringify({ forecast: [] }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
       return new Response(
         JSON.stringify({ error: 'Octopus Energy credentials not configured' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -541,6 +548,14 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === 'get-greenness-forecast') {
+      // This endpoint requires authentication with Octopus API
+      if (!authHeaderOctopus) {
+        return new Response(
+          JSON.stringify({ forecast: [], error: 'Octopus credentials required' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       const query = `
         query GreennessForecast {
           greennessForecast {
@@ -556,13 +571,30 @@ Deno.serve(async (req: Request) => {
       try {
         const response = await fetch('https://api.octopus.energy/v1/graphql/', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': authHeaderOctopus
+          },
           body: JSON.stringify({ query, operationName: 'GreennessForecast' })
         });
 
-        if (!response.ok) throw new Error(`GraphQL Error: ${response.status}`);
+        if (!response.ok) {
+          console.error(`Greenness forecast API error: ${response.status}`);
+          // Return empty forecast instead of failing - this is non-critical data
+          return new Response(
+            JSON.stringify({ forecast: [] }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        
         const result = await response.json();
-        if (result.errors) throw new Error(result.errors[0]?.message || 'GraphQL Query Error');
+        if (result.errors) {
+          console.error('GraphQL errors:', result.errors);
+          return new Response(
+            JSON.stringify({ forecast: [] }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
 
         return new Response(
           JSON.stringify({ forecast: result.data?.greennessForecast || [] }),
@@ -570,9 +602,11 @@ Deno.serve(async (req: Request) => {
         );
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
+        console.error('Greenness forecast error:', message);
+        // Return empty array for graceful degradation
         return new Response(
-          JSON.stringify({ error: message }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify({ forecast: [] }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
     }
