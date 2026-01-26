@@ -193,7 +193,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_my_credentials_status: {
+        Args: never
+        Returns: {
+          account_number: string
+          created_at: string
+          has_api_key: boolean
+          updated_at: string
+          user_id: string
+        }[]
+      }
+      user_owns_mpan: { Args: { check_mpan: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
