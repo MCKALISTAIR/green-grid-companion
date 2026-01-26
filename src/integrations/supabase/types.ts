@@ -80,6 +80,30 @@ export type Database = {
         }
         Relationships: []
       }
+      octopus_credentials: {
+        Row: {
+          account_number: string
+          api_key: string
+          created_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_number: string
+          api_key: string
+          created_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          account_number?: string
+          api_key?: string
+          created_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       octopus_meters: {
         Row: {
           created_at: string
@@ -89,6 +113,7 @@ export type Database = {
           mpan: string
           serial_number: string
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -98,6 +123,7 @@ export type Database = {
           mpan: string
           serial_number: string
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -107,6 +133,7 @@ export type Database = {
           mpan?: string
           serial_number?: string
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
