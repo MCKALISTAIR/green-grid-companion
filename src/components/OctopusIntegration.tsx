@@ -3,8 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-  PlugZap,
-  RefreshCw,
+  Wind,
   Check,
   AlertCircle,
   Zap,
@@ -13,6 +12,7 @@ import {
   LogOut,
   ArrowRightLeft
 } from 'lucide-react';
+import { TurbineSpinner } from '@/components/ui/turbine-spinner';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -72,9 +72,9 @@ export function OctopusIntegration() {
     return (
       <div className="space-y-4">
         <h2 className="text-lg font-semibold text-foreground">Energy Integrations</h2>
-        <Card className="p-4 h-32 flex items-center justify-center border-purple-500/10">
+        <Card className="p-4 h-32 flex items-center justify-center border-border">
           <div className="flex items-center gap-2 text-muted-foreground">
-            <RefreshCw className="w-4 h-4 animate-spin" />
+            <TurbineSpinner size="sm" />
             <span>Loading status...</span>
           </div>
         </Card>
@@ -135,12 +135,12 @@ export function OctopusIntegration() {
             >
               {isSyncing ? (
                 <>
-                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  <TurbineSpinner size="sm" className="mr-2" />
                   Linking...
                 </>
               ) : (
                 <>
-                  <PlugZap className="w-4 h-4 mr-2" />
+                  <Wind className="w-4 h-4 mr-2" />
                   Link Meter
                 </>
               )}
@@ -154,7 +154,7 @@ export function OctopusIntegration() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={handleSync} disabled={isSyncing}>
-                  <RefreshCw className={`w-4 h-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+                  {isSyncing ? <TurbineSpinner size="sm" className="mr-2" /> : <Wind className="w-4 h-4 mr-2" />}
                   Sync Data
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setIsEditing(true)}>

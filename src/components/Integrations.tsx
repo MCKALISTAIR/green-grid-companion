@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { PlugZap, Car, Check, ExternalLink, AlertCircle } from 'lucide-react';
+import { Car, Check, ExternalLink, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 const OctopusLogo = ({ className }: { className?: string }) => (

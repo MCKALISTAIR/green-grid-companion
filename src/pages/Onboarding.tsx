@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Navigation, ArrowRight, Loader2 } from 'lucide-react';
+import { MapPin, Navigation, ArrowRight } from 'lucide-react';
 import { Geolocation as CapacitorGeolocation } from '@capacitor/geolocation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
+import { TurbineSpinner } from '@/components/ui/turbine-spinner';
 
 const Onboarding = () => {
     const navigate = useNavigate();
@@ -94,7 +95,7 @@ const Onboarding = () => {
                         >
                             {isLoadingLocation ? (
                                 <>
-                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    <TurbineSpinner size="sm" className="mr-2" />
                                     Finding you...
                                 </>
                             ) : (
