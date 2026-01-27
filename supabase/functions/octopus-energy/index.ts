@@ -91,24 +91,78 @@ Deno.serve(async (req: Request) => {
 
     console.log(`Octopus Energy API - Action: ${action}, Days: ${days}, User: ${userId}`);
 
+    // --- CREDENTIALS VALIDATION ---
+
+    // Server-side validation for credentials format
+    function validateCredentials(apiKey: string, accountNumber: string): { valid: boolean; errors: string[] } {
+      const errors: string[] = [];
+
+      // Account number validation: A-XXXXXXXX format (letter A, dash, 8 alphanumeric)
+      const accountPattern = /^A-[A-Z0-9]{8}$/i;
+      const sanitizedAccount = accountNumber?.trim().toUpperCase() || '';
+      
+      if (!sanitizedAccount) {
+        errors.push('Account number is required');
+      } else if (!accountPattern.test(sanitizedAccount)) {
+        errors.push('Account number must be in format A-XXXXXXXX (e.g., A-12345678)');
+      }
+
+      // API key validation: sk_live_ prefix followed by 20+ alphanumeric characters
+      const apiKeyPattern = /^sk_live_[a-zA-Z0-9]{20,}$/;
+      const sanitizedApiKey = apiKey?.trim() || '';
+      
+      if (!sanitizedApiKey) {
+        errors.push('API key is required');
+      } else if (!apiKeyPattern.test(sanitizedApiKey)) {
+        errors.push('API key must start with sk_live_ followed by at least 20 alphanumeric characters');
+      }
+
+      // Additional security checks
+      if (sanitizedApiKey && sanitizedApiKey.length > 200) {
+        errors.push('API key exceeds maximum length');
+      }
+      if (sanitizedAccount && sanitizedAccount.length > 20) {
+        errors.push('Account number exceeds maximum length');
+      }
+
+      // Check for injection attempts (SQL, script tags, etc.)
+      const dangerousPatterns = [/<script/i, /javascript:/i, /on\w+=/i, /['";]/];
+      for (const pattern of dangerousPatterns) {
+        if (pattern.test(sanitizedApiKey) || pattern.test(sanitizedAccount)) {
+          errors.push('Invalid characters detected');
+          break;
+        }
+      }
+
+      return { valid: errors.length === 0, errors };
+    }
+
     // --- CREDENTIALS MANAGEMENT ---
 
     if (action === 'save-credentials') {
       const { apiKey, accountNumber } = payload;
-      if (!apiKey || !accountNumber) {
+      
+      // Server-side validation
+      const validation = validateCredentials(apiKey, accountNumber);
+      if (!validation.valid) {
+        console.warn(`Credential validation failed for user ${userId}:`, validation.errors);
         return new Response(
-          JSON.stringify({ error: 'Missing API Key or Account Number' }),
+          JSON.stringify({ error: 'Invalid credentials format', details: validation.errors }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
+
+      // Sanitize inputs before storage
+      const sanitizedApiKey = apiKey.trim();
+      const sanitizedAccountNumber = accountNumber.trim().toUpperCase();
 
       // Upsert credentials
       const { error } = await supabase
         .from('octopus_credentials')
         .upsert({
           user_id: userId,
-          api_key: apiKey,
-          account_number: accountNumber,
+          api_key: sanitizedApiKey,
+          account_number: sanitizedAccountNumber,
           updated_at: new Date().toISOString()
         }, { onConflict: 'user_id' });
 
