@@ -64,6 +64,96 @@ function checkRateLimit(userId: string, action: string): { allowed: boolean; ret
   return { allowed: true };
 }
 
+// --- SECURITY LOGGING ---
+// Comprehensive logging for security monitoring
+interface SecurityEvent {
+  type: 'AUTH_FAILURE' | 'RATE_LIMIT' | 'VALIDATION_FAILURE' | 'SUSPICIOUS_ACTIVITY';
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  details: Record<string, unknown>;
+  timestamp: string;
+}
+
+function logSecurityEvent(event: SecurityEvent) {
+  const logEntry = {
+    security_event: true,
+    ...event,
+    timestamp: event.timestamp || new Date().toISOString(),
+  };
+  
+  // Use appropriate log level based on severity
+  switch (event.severity) {
+    case 'CRITICAL':
+    case 'HIGH':
+      console.error(`[SECURITY] ${event.type}:`, JSON.stringify(logEntry));
+      break;
+    case 'MEDIUM':
+      console.warn(`[SECURITY] ${event.type}:`, JSON.stringify(logEntry));
+      break;
+    default:
+      console.info(`[SECURITY] ${event.type}:`, JSON.stringify(logEntry));
+  }
+}
+
+// Track failed auth attempts for pattern detection
+const authFailureTracker = new Map<string, { count: number; firstFailure: number }>();
+const AUTH_FAILURE_WINDOW_MS = 15 * 60 * 1000; // 15 minute window
+const AUTH_FAILURE_THRESHOLD = 10; // Alert after 10 failures from same IP
+
+function trackAuthFailure(ip: string, reason: string, userAgent: string | null) {
+  const now = Date.now();
+  const existing = authFailureTracker.get(ip);
+  
+  if (existing && (now - existing.firstFailure) < AUTH_FAILURE_WINDOW_MS) {
+    existing.count++;
+    authFailureTracker.set(ip, existing);
+    
+    // Escalate severity based on failure count
+    const severity = existing.count >= AUTH_FAILURE_THRESHOLD ? 'HIGH' : 
+                     existing.count >= 5 ? 'MEDIUM' : 'LOW';
+    
+    logSecurityEvent({
+      type: existing.count >= AUTH_FAILURE_THRESHOLD ? 'SUSPICIOUS_ACTIVITY' : 'AUTH_FAILURE',
+      severity,
+      details: {
+        ip,
+        reason,
+        user_agent: userAgent,
+        failure_count: existing.count,
+        window_minutes: 15,
+        message: existing.count >= AUTH_FAILURE_THRESHOLD 
+          ? `Potential brute force attack: ${existing.count} failures from IP ${ip}`
+          : `Auth failure from ${ip}`,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  } else {
+    // First failure or window expired
+    authFailureTracker.set(ip, { count: 1, firstFailure: now });
+    
+    logSecurityEvent({
+      type: 'AUTH_FAILURE',
+      severity: 'LOW',
+      details: {
+        ip,
+        reason,
+        user_agent: userAgent,
+        failure_count: 1,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  }
+}
+
+// Cleanup old auth failure entries
+function cleanupAuthFailureTracker() {
+  const now = Date.now();
+  for (const [ip, data] of authFailureTracker.entries()) {
+    if ((now - data.firstFailure) > AUTH_FAILURE_WINDOW_MS) {
+      authFailureTracker.delete(ip);
+    }
+  }
+}
+
 // Periodic cleanup of old entries (runs on each request, but is fast)
 function cleanupRateLimitStore() {
   const now = Date.now();
@@ -107,6 +197,13 @@ Deno.serve(async (req: Request) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Extract request metadata for logging
+  const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
+                   req.headers.get('x-real-ip') || 
+                   'unknown';
+  const userAgent = req.headers.get('user-agent');
+  const requestId = req.headers.get('x-request-id') || crypto.randomUUID();
+
   try {
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -114,8 +211,18 @@ Deno.serve(async (req: Request) => {
     // Create a Supabase client with the Auth context of the logged in user
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
+      trackAuthFailure(clientIP, 'missing_auth_header', userAgent);
       return new Response(
         JSON.stringify({ error: 'Missing Authorization header' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check for malformed auth header
+    if (!authHeader.startsWith('Bearer ') || authHeader.length < 20) {
+      trackAuthFailure(clientIP, 'malformed_auth_header', userAgent);
+      return new Response(
+        JSON.stringify({ error: 'Invalid Authorization header format' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -130,8 +237,9 @@ Deno.serve(async (req: Request) => {
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
 
     if (userError || !user) {
+      trackAuthFailure(clientIP, userError?.message || 'invalid_token', userAgent);
       return new Response(
-        JSON.stringify({ error: 'Unauthorized', details: userError }),
+        JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -154,10 +262,11 @@ Deno.serve(async (req: Request) => {
       days = parseInt(url.searchParams.get('days') || '7');
     }
 
-    console.log(`Octopus Energy API - Action: ${action}, Days: ${days}, User: ${userId}`);
+    console.log(`[${requestId}] Octopus Energy API - Action: ${action}, Days: ${days}, User: ${userId.substring(0, 8)}...`);
 
-    // Cleanup old rate limit entries periodically
+    // Cleanup old entries periodically
     cleanupRateLimitStore();
+    cleanupAuthFailureTracker();
 
     // --- CREDENTIALS VALIDATION ---
 
@@ -211,7 +320,18 @@ Deno.serve(async (req: Request) => {
       // Rate limiting check
       const rateLimit = checkRateLimit(userId, 'save-credentials');
       if (!rateLimit.allowed) {
-        console.warn(`Rate limit exceeded for user ${userId} on save-credentials`);
+        logSecurityEvent({
+          type: 'RATE_LIMIT',
+          severity: 'MEDIUM',
+          details: {
+            user_id: userId.substring(0, 8) + '...',
+            action: 'save-credentials',
+            ip: clientIP,
+            retry_after: rateLimit.retryAfter,
+            message: 'Rate limit exceeded for credential save attempt',
+          },
+          timestamp: new Date().toISOString(),
+        });
         return new Response(
           JSON.stringify({ 
             error: 'Too many attempts. Please try again later.',
@@ -233,7 +353,19 @@ Deno.serve(async (req: Request) => {
       // Server-side validation
       const validation = validateCredentials(apiKey, accountNumber);
       if (!validation.valid) {
-        console.warn(`Credential validation failed for user ${userId}:`, validation.errors);
+        logSecurityEvent({
+          type: 'VALIDATION_FAILURE',
+          severity: validation.errors.some(e => e.includes('Invalid characters')) ? 'HIGH' : 'LOW',
+          details: {
+            user_id: userId.substring(0, 8) + '...',
+            ip: clientIP,
+            errors: validation.errors,
+            message: validation.errors.some(e => e.includes('Invalid characters'))
+              ? 'Potential injection attempt detected'
+              : 'Credential format validation failed',
+          },
+          timestamp: new Date().toISOString(),
+        });
         return new Response(
           JSON.stringify({ error: 'Invalid credentials format', details: validation.errors }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
