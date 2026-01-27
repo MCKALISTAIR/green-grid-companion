@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Leaf, Zap, Clock, TrendingUp, Loader2, Eye } from 'lucide-react';
+import { Leaf, Zap, Clock, TrendingUp, Eye } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logger';
+import { TurbineSpinner } from '@/components/ui/turbine-spinner';
 
 interface WeeklyStats {
   total_carbon_kg: number;
@@ -77,7 +78,7 @@ export function WeeklyDigestPreview() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-4 gap-2 text-muted-foreground">
-        <Loader2 className="w-4 h-4 animate-spin" />
+        <TurbineSpinner size="sm" />
         <span className="text-sm">Loading preview...</span>
       </div>
     );
