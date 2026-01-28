@@ -19,7 +19,7 @@ export function TurbineSpinner({ className, size = "md" }: TurbineSpinnerProps) 
   return (
     <svg
       viewBox="0 0 40 40"
-      className={cn(sizeClasses[size], "text-primary", className)}
+      className={cn(sizeClasses[size], "text-primary motion-reduce:animate-none", className)}
       aria-label="Loading"
     >
       {/* Tower */}
@@ -28,10 +28,10 @@ export function TurbineSpinner({ className, size = "md" }: TurbineSpinnerProps) 
         fill="currentColor"
         opacity="0.6"
       />
-      
+
       {/* Hub */}
       <circle cx="20" cy="18" r="2.5" fill="currentColor" />
-      
+
       {/* Blades - rotating group */}
       <g className="origin-center animate-spin" style={{ transformOrigin: "20px 18px" }}>
         {/* Blade 1 - pointing up */}

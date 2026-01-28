@@ -45,22 +45,30 @@ GridSense is a mobile-first companion app designed to help UK (and future) energ
     *   **Comprehensive Onboarding**: Learn what you'll unlock before linking your meter.
 *   **Weather Widget**: Show/hide local weather conditions with persistent preferences.
 *   **Custom Appliances**: Create and save custom appliances in Power Planner (persists between sessions).
-*   **Tesla Integration**: Coming Soon.
+*   **Tesla Integration**:
+    *   **Vehicle Status**: View real-time battery level, range, and charging status for all your Tesla vehicles.
+    *   **Energy Sites**: Monitor solar generation and Powerwall status.
+    *   **Smart Charging Impact**: Track how much Carbon (CO₂) you've saved by charging during greener times compared to grid average.
+    *   **Seamless Linking**: Secure OAuth connection to your Tesla account.
 
-## 🆕 Recent Updates (2026-01-24)
+## 🆕 Recent Updates (2026-01-28)
 
 ### Performance Improvements ⚡
-*   **Instant Tab Switching**: 80-95% faster loading with smart data caching
-*   **Optimized Queries**: Enhanced React Query cache configurations across all pages
-*   **Better User Experience**: Professional skeleton loaders replace spinners
+*   **Instant Integrations**: 90% faster loading for Energy Integrations via optimistic parallel fetching.
+*   **Optimized Queries**: Enhanced React Query cache configurations across all pages.
+*   **Better User Experience**: Professional skeleton loaders replace spinners.
 
 ### New Features
-*   **Weather Widget Controls**: Hide/show local conditions with one click
-*   **Green Energy Score Info**: Detailed popover explaining score calculation and ratings
-*   **Footprint Onboarding**: Always-visible Footprint tab with comprehensive setup guide
-*   **Octopus Settings Management**: Three-dot menu for sync, account switching, and disconnect
-*   **Test Notifications**: Verify your notification setup is working correctly
-*   **Persistent Custom Appliances**: Your Power Planner settings save automatically
+*   **Tesla Integration**: Full support for vehicles and energy sites with carbon impact tracking.
+*   **Forecast Comparison**: New "Pred vs Act" comparative view in Home screen intensity cards.
+*   **Weather Widget Controls**: Hide/show local weather conditions.
+*   **Green Energy Score Info**: Detailed popover explaining score calculation
+*   **Octopus Settings**: Enhanced management for linked accounts
+*   **Notification Testing**: Verify your setup with one tap
+
+### Technical Improvements
+*   **Centralized Logging**: robust `logger` with Sentry support and environment awareness
+*   **Error Handling**: Standardized error utilities across the app
 
 
 ## 🛠️ Technology Stack
@@ -126,8 +134,10 @@ GridSense is a mobile-first companion app designed to help UK (and future) energ
 *   `src/components`: Reusable UI blocks and Widgets.
     *   `src/components/scene`: Interactive scene elements (Landscape, Sheep, CarrotEvents).
     *   Error boundaries (ComponentErrorBoundary, ErrorBoundary, ErrorState) for robust error handling.
-*   `src/lib/carbonApi.ts`: Types and fetchers for the Carbon Intensity API.
-*   `src/hooks`: Custom React hooks (useCarbonData, useNotifications, useOctopusEnergy).
+*   `src/lib`:
+    *   `carbonApi.ts`: Carbon Intensity API fetchers.
+    *   `logger.ts`: Centralized logging utility with Sentry integration.
+*   `src/hooks`: Custom React hooks (useCarbonData, useTeslaEnergy, useOctopusEnergy).
 *   `ios/App/GridSenseWidget`: Native Swift code for the iOS Widget.
 
 ## 📄 License

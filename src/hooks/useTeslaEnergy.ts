@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -82,6 +82,9 @@ export function useTeslaEnergy() {
   const queryClient = useQueryClient();
   const [isLinking, setIsLinking] = useState(false);
 
+  // Optimistic loading
+  const [cachedIsLinked] = useState(() => localStorage.getItem('tesla-is-linked') === 'true');
+
   // Fetch Tesla status
   const {
     data: status,
@@ -96,6 +99,17 @@ export function useTeslaEnergy() {
     retry: 1,
   });
 
+  // Sync status to local storage
+  useEffect(() => {
+    if (status) {
+      if (status.linked) {
+        localStorage.setItem('tesla-is-linked', 'true');
+      } else {
+        localStorage.removeItem('tesla-is-linked');
+      }
+    }
+  }, [status]);
+
   // Fetch vehicle state
   const fetchVehicleState = useCallback(async (vehicleId: string): Promise<TeslaVehicleState> => {
     return callTeslaFunction<TeslaVehicleState>('get-vehicle-state', { vehicleId });
@@ -108,7 +122,7 @@ export function useTeslaEnergy() {
   } = useQuery({
     queryKey: ['tesla-charging-stats'],
     queryFn: () => callTeslaFunction<TeslaChargingStats>('get-charging-stats'),
-    enabled: status?.linked ?? false,
+    enabled: status?.linked ?? cachedIsLinked,
     staleTime: 10 * 60 * 1000,
   });
 
@@ -117,7 +131,7 @@ export function useTeslaEnergy() {
     setIsLinking(true);
     try {
       const redirectUri = `${window.location.origin}/settings?tesla_callback=true`;
-      
+
       const { authUrl, state } = await callTeslaFunction<{ authUrl: string; state: string }>(
         'get-auth-url',
         { redirectUri }
@@ -125,7 +139,7 @@ export function useTeslaEnergy() {
 
       // Store state for CSRF validation
       sessionStorage.setItem('tesla_oauth_state', state);
-      
+
       // Redirect to Tesla auth
       window.location.href = authUrl;
     } catch (error) {
@@ -146,7 +160,7 @@ export function useTeslaEnergy() {
       sessionStorage.removeItem('tesla_oauth_state');
 
       const redirectUri = `${window.location.origin}/settings?tesla_callback=true`;
-      
+
       return callTeslaFunction<{ success: boolean }>('exchange-code', {
         code,
         redirectUri,
@@ -182,6 +196,7 @@ export function useTeslaEnergy() {
       toast.success('Tesla account disconnected');
       queryClient.invalidateQueries({ queryKey: ['tesla-status'] });
       queryClient.invalidateQueries({ queryKey: ['tesla-charging-stats'] });
+      localStorage.removeItem('tesla-is-linked');
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : 'Failed to unlink Tesla account');

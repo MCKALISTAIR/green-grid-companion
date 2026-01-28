@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -56,6 +56,11 @@ export function useOctopusEnergy(days: number = 30) {
   const queryClient = useQueryClient();
   const [isSyncing, setIsSyncing] = useState(false);
 
+  // Optimistic loading: Check local storage to see if we were linked previously
+  // This allows us to start fetching data immediately instead of waiting for the status check
+  const [cachedIsLinked] = useState(() => localStorage.getItem('octopus-is-linked') === 'true');
+  const [cachedHasCreds] = useState(() => localStorage.getItem('octopus-has-creds') === 'true');
+
   // Fetch current status
   const { data: status, isLoading: statusLoading, refetch: refetchStatus } = useQuery({
     queryKey: ['octopus-status'],
@@ -71,6 +76,23 @@ export function useOctopusEnergy(days: number = 30) {
     gcTime: 30 * 60 * 1000, // 30 minutes - keep in cache
   });
 
+  // Sync status to local storage for future optimistic loading
+  useEffect(() => {
+    if (status) {
+      if (status.is_linked) {
+        localStorage.setItem('octopus-is-linked', 'true');
+      } else {
+        localStorage.removeItem('octopus-is-linked');
+      }
+
+      if (status.has_credentials) {
+        localStorage.setItem('octopus-has-creds', 'true');
+      } else {
+        localStorage.removeItem('octopus-has-creds');
+      }
+    }
+  }, [status]);
+
   // Fetch footprint data with dynamic range
   const { data: footprint, isLoading: footprintLoading, refetch: refetchFootprint } = useQuery({
     queryKey: ['octopus-footprint', days],
@@ -83,7 +105,7 @@ export function useOctopusEnergy(days: number = 30) {
       if (error) throw new Error(error.message || 'Failed to fetch footprint');
       return data;
     },
-    enabled: status?.is_linked ?? false,
+    enabled: status?.is_linked ?? cachedIsLinked,
     staleTime: 10 * 60 * 1000, // 10 minutes - data stays fresh longer
     gcTime: 30 * 60 * 1000, // 30 minutes - keep in cache even when unmounted
   });
@@ -101,7 +123,7 @@ export function useOctopusEnergy(days: number = 30) {
       }
       return data?.forecast || [];
     },
-    enabled: (status?.is_linked && status?.has_credentials) ?? false,
+    enabled: (status?.is_linked && status?.has_credentials) ?? (cachedIsLinked && cachedHasCreds),
     staleTime: 1000 * 60 * 60 * 4, // 4 hours
     gcTime: 1000 * 60 * 60 * 8, // 8 hours cache
     retry: 1, // Only retry once - this is non-critical data
@@ -217,9 +239,11 @@ export function useOctopusEnergy(days: number = 30) {
 
       toast.success('Disconnected Octopus Energy account');
 
-      // Invalidate queries to clear data from UI immediately
+      // Invalidate queries and clear local storage
       queryClient.setQueryData(['octopus-status'], null);
       queryClient.setQueryData(['octopus-footprint', days], null);
+      localStorage.removeItem('octopus-is-linked');
+      localStorage.removeItem('octopus-has-creds');
 
       await refetchStatus();
     } catch (error: unknown) {

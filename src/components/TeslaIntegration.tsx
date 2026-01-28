@@ -3,12 +3,12 @@ import { useSearchParams } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Car, 
-  Battery, 
-  Sun, 
-  RefreshCw, 
-  ExternalLink, 
+import {
+  Car,
+  Battery,
+  Sun,
+  RefreshCw,
+  ExternalLink,
   Check,
   AlertCircle,
   Zap,
@@ -212,24 +212,24 @@ export function TeslaIntegration() {
                     </p>
                   ) : (
                     <div className="grid grid-cols-3 gap-2 text-center">
-                      <div>
+                      <div aria-label={`Current Battery: ${state.batteryLevel}%`}>
                         <div className="flex items-center justify-center gap-1 text-lg font-semibold">
-                          <Battery className="w-4 h-4" />
+                          <Battery className="w-4 h-4" aria-hidden="true" />
                           {state.batteryLevel}%
                         </div>
                         <p className="text-xs text-muted-foreground">Current</p>
                       </div>
-                      <div>
+                      <div aria-label={`Charge Limit: ${state.chargeLimit}%`}>
                         <div className="text-lg font-semibold">
                           {state.chargeLimit}%
                         </div>
                         <p className="text-xs text-muted-foreground">Limit</p>
                       </div>
-                      <div>
+                      <div aria-label={`Charging Status: ${state.chargingState === 'Charging' ? `Charging at ${state.chargeRate} miles per hour` : (state.chargingState || 'Idle')}`}>
                         <div className="text-lg font-semibold flex items-center justify-center gap-1">
                           {state.chargingState === 'Charging' ? (
                             <>
-                              <Zap className="w-4 h-4 text-yellow-500" />
+                              <Zap className="w-4 h-4 text-yellow-500" aria-hidden="true" />
                               {state.chargeRate}mi/h
                             </>
                           ) : (

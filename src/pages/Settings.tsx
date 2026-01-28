@@ -2,11 +2,14 @@ import { Link } from 'react-router-dom';
 import { ChevronRight, GraduationCap, Shield, MapPin } from 'lucide-react';
 import { NotificationSettings } from '@/components/NotificationSettings';
 import { OctopusIntegration } from '@/components/OctopusIntegration';
+import { TeslaIntegration } from '@/components/TeslaIntegration';
 import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
+import { useTeslaEnergy } from '@/hooks/useTeslaEnergy';
 
 
 export default function Settings() {
     const { isLinked } = useOctopusEnergy();
+    const { isLinked: isTeslaLinked } = useTeslaEnergy();
 
     return (
         <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
@@ -17,6 +20,7 @@ export default function Settings() {
                 </div>
 
                 <OctopusIntegration />
+                <TeslaIntegration />
                 <NotificationSettings />
 
                 <div className="space-y-4">
@@ -86,6 +90,11 @@ export default function Settings() {
                     {isLinked && (
                         <p>
                             Footprint data powered by <a href="https://developer.octopus.energy/docs/api/" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">Octopus Energy API</a>
+                        </p>
+                    )}
+                    {isTeslaLinked && (
+                        <p>
+                            Vehicle & Energy data powered by <a href="https://developer.tesla.com/" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">Tesla Fleet API</a>
                         </p>
                     )}
 

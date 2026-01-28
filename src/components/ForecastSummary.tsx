@@ -14,6 +14,8 @@ interface DailyStats {
     min: number;
     max: number;
     avg: number;
+    minActual?: number;
+    maxActual?: number;
     avgActual?: number;
     hasActuals: boolean;
 }
@@ -59,11 +61,16 @@ export function ForecastSummary({ forecast }: ForecastSummaryProps) {
             const isFutureDay = date.getTime() > now.getTime();
 
             const hasActuals = !isFutureDay && values.actual.length > 0;
-            const avgActual = hasActuals
-                ? Math.round(values.actual.reduce((a, b) => a + b, 0) / values.actual.length)
-                : undefined;
 
-            result.push({ date: dateKey, label, min, max, avg, avgActual, hasActuals });
+            let minActual, maxActual, avgActual;
+
+            if (hasActuals) {
+                minActual = Math.min(...values.actual);
+                maxActual = Math.max(...values.actual);
+                avgActual = Math.round(values.actual.reduce((a, b) => a + b, 0) / values.actual.length);
+            }
+
+            result.push({ date: dateKey, label, min, max, avg, minActual, maxActual, avgActual, hasActuals });
         });
 
         // Sort by date to ensure correct order
@@ -93,26 +100,59 @@ export function ForecastSummary({ forecast }: ForecastSummaryProps) {
                         </div>
 
                         {day.hasActuals ? (
-                            <div className="flex items-center justify-around gap-2">
-                                {/* Predicted Avg */}
+                            <div className="grid grid-cols-3 gap-2">
+                                {/* Lowest Comparison */}
                                 <div className="flex flex-col items-center gap-1">
-                                    <div className="p-1.5 rounded-full bg-muted/20">
-                                        <Activity className="w-4 h-4 text-muted-foreground" />
+                                    <div className="p-1.5 rounded-full bg-intensity-very-low/10 mb-1">
+                                        <TrendingDown className="w-4 h-4 text-intensity-very-low" />
                                     </div>
-                                    <span className="text-sm font-bold text-muted-foreground">{day.avg}</span>
-                                    <span className="text-[10px] text-muted-foreground uppercase">Pred. Avg</span>
+                                    <div className="grid grid-cols-2 gap-x-2 text-center w-full px-1">
+                                        <div className="flex flex-col">
+                                            <span className="text-xs font-semibold text-muted-foreground/70">{day.min}</span>
+                                            <span className="text-[9px] text-muted-foreground/50 uppercase scale-90">Pred</span>
+                                        </div>
+                                        <div className="flex flex-col border-l border-border/30">
+                                            <span className="text-xs font-bold text-foreground">{day.minActual}</span>
+                                            <span className="text-[9px] text-primary uppercase scale-90">Act</span>
+                                        </div>
+                                    </div>
+                                    <span className="text-[10px] text-muted-foreground uppercase font-medium mt-1">Low</span>
                                 </div>
 
-                                {/* Divider */}
-                                <div className="h-8 w-px bg-border/50" />
-
-                                {/* Actual Avg */}
-                                <div className="flex flex-col items-center gap-1">
-                                    <div className="p-1.5 rounded-full bg-primary/10">
-                                        <Activity className="w-4 h-4 text-primary" />
+                                {/* Average Comparison */}
+                                <div className="flex flex-col items-center gap-1 border-l border-r border-border/30 px-1">
+                                    <div className="p-1.5 rounded-full bg-intensity-moderate/10 mb-1">
+                                        <Activity className="w-4 h-4 text-intensity-moderate" />
                                     </div>
-                                    <span className="text-sm font-bold text-foreground">{day.avgActual}</span>
-                                    <span className="text-[10px] text-primary uppercase font-semibold">Act. Avg</span>
+                                    <div className="grid grid-cols-2 gap-x-2 text-center w-full px-1">
+                                        <div className="flex flex-col">
+                                            <span className="text-xs font-semibold text-muted-foreground/70">{day.avg}</span>
+                                            <span className="text-[9px] text-muted-foreground/50 uppercase scale-90">Pred</span>
+                                        </div>
+                                        <div className="flex flex-col border-l border-border/30">
+                                            <span className="text-xs font-bold text-foreground">{day.avgActual}</span>
+                                            <span className="text-[9px] text-primary uppercase scale-90">Act</span>
+                                        </div>
+                                    </div>
+                                    <span className="text-[10px] text-muted-foreground uppercase font-medium mt-1">Avg</span>
+                                </div>
+
+                                {/* Highest Comparison */}
+                                <div className="flex flex-col items-center gap-1">
+                                    <div className="p-1.5 rounded-full bg-intensity-very-high/10 mb-1">
+                                        <TrendingUp className="w-4 h-4 text-intensity-very-high" />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-x-2 text-center w-full px-1">
+                                        <div className="flex flex-col">
+                                            <span className="text-xs font-semibold text-muted-foreground/70">{day.max}</span>
+                                            <span className="text-[9px] text-muted-foreground/50 uppercase scale-90">Pred</span>
+                                        </div>
+                                        <div className="flex flex-col border-l border-border/30">
+                                            <span className="text-xs font-bold text-foreground">{day.maxActual}</span>
+                                            <span className="text-[9px] text-primary uppercase scale-90">Act</span>
+                                        </div>
+                                    </div>
+                                    <span className="text-[10px] text-muted-foreground uppercase font-medium mt-1">High</span>
                                 </div>
                             </div>
                         ) : (

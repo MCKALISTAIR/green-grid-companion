@@ -1,6 +1,37 @@
 ### Added
 
 #### Features
+- **Tesla Energy Integration**: Complete integration for Tesla Vehicles and Energy Sites
+  - **Vehicle Tracking**: View real-time battery level, charging status, and range
+  - **Energy Sites**: Monitor Solar and Powerwall status
+  - **Smart Charging Stats**: Track total energy charged and **Carbon Saved** vs average grid intensity
+  - **Secure OAuth**: Safe account linking with official Tesla login
+  - **Multi-Product Support**: Handle multiple vehicles and homes
+
+- **New UI Components**:
+  - `TurbineSpinner`: Themed loading indicator
+  - `EmptyState`: Reusable empty state component
+
+#### Technical & infrastructure
+- **Centralized Logging System**: New `logger` utility with Sentry integration
+  - Unified interface for generic logs (`debug`, `info`, `warn`, `error`)
+  - Automatic environment detection (Web vs Native)
+  - Breadcrumb support for better debugging
+  - Configurable log levels and console coloring
+
+- **Improved Forecast Summary**:
+  - Comparative view for past days showing Lowest, Average, and Highest intensity
+  - Direct comparison between Forecast (Predicted) and Actual values
+
+- **Performance Improvements**:
+  - Implemented optimistic parallel data fetching for energy integrations
+  - Reduced effective loading time by caching connection status
+
+- **Error Handling**: Standardized `errorUtils` for consistent error reporting
+
+
+
+#### Features
 - **Weather Widget Controls**: Added ability to hide/show the local weather conditions box in Energy Insights section
   - Close button (X) to dismiss the widget
   - "Show Local Weather" button to restore it

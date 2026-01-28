@@ -50,7 +50,7 @@ export function OctopusSettings({ onSaved, onCancel }: { onSaved: () => void; on
         // Sanitize input - only allow alphanumeric and dash
         const sanitized = value.replace(/[^a-zA-Z0-9-]/g, '').toUpperCase();
         setAccountNumber(sanitized);
-        
+
         if (touched.accountNumber) {
             setErrors(prev => ({
                 ...prev,
@@ -63,7 +63,7 @@ export function OctopusSettings({ onSaved, onCancel }: { onSaved: () => void; on
         // Sanitize input - only allow alphanumeric and underscore
         const sanitized = value.replace(/[^a-zA-Z0-9_]/g, '');
         setApiKey(sanitized);
-        
+
         if (touched.apiKey) {
             setErrors(prev => ({
                 ...prev,
@@ -83,10 +83,10 @@ export function OctopusSettings({ onSaved, onCancel }: { onSaved: () => void; on
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         // Validate all fields
         const result = credentialsSchema.safeParse({ accountNumber, apiKey });
-        
+
         if (!result.success) {
             const fieldErrors: ValidationErrors = {};
             result.error.errors.forEach(err => {
@@ -99,7 +99,7 @@ export function OctopusSettings({ onSaved, onCancel }: { onSaved: () => void; on
             setTouched({ accountNumber: true, apiKey: true });
             return;
         }
-        
+
         try {
             await saveCredentials(result.data.apiKey, result.data.accountNumber);
             onSaved();
@@ -130,11 +130,10 @@ export function OctopusSettings({ onSaved, onCancel }: { onSaved: () => void; on
                             onChange={(e) => handleAccountNumberChange(e.target.value)}
                             onBlur={() => handleBlur('accountNumber')}
                             maxLength={11}
-                            className={`h-8 bg-background/50 ${
-                                errors.accountNumber && touched.accountNumber 
-                                    ? 'border-destructive focus-visible:ring-destructive' 
+                            className={`h-8 bg-background/50 ${errors.accountNumber && touched.accountNumber
+                                    ? 'border-destructive focus-visible:ring-destructive'
                                     : ''
-                            }`}
+                                }`}
                             aria-invalid={!!errors.accountNumber}
                             aria-describedby={errors.accountNumber ? 'account-error' : undefined}
                         />
@@ -157,11 +156,10 @@ export function OctopusSettings({ onSaved, onCancel }: { onSaved: () => void; on
                                 onChange={(e) => handleApiKeyChange(e.target.value)}
                                 onBlur={() => handleBlur('apiKey')}
                                 maxLength={100}
-                                className={`h-8 pr-8 bg-background/50 ${
-                                    errors.apiKey && touched.apiKey 
-                                        ? 'border-destructive focus-visible:ring-destructive' 
+                                className={`h-8 pr-8 bg-background/50 ${errors.apiKey && touched.apiKey
+                                        ? 'border-destructive focus-visible:ring-destructive'
                                         : ''
-                                }`}
+                                    }`}
                                 aria-invalid={!!errors.apiKey}
                                 aria-describedby={errors.apiKey ? 'apikey-error' : undefined}
                             />
@@ -215,9 +213,14 @@ export function OctopusSettings({ onSaved, onCancel }: { onSaved: () => void; on
                     </div>
                 </form>
 
-                <div className="text-[10px] text-muted-foreground mt-2">
-                    Your credentials are stored securely and only used to fetch your meter data.
-                    You can find your API Key in the <a href="https://octopus.energy/dashboard/developer/" target="_blank" rel="noreferrer" className="underline hover:text-purple-500">Octopus Developer Dashboard</a>.
+                <div className="text-[10px] text-muted-foreground mt-2 space-y-2">
+                    <p>
+                        Your credentials are stored securely and only used to fetch your meter data.
+                        You can find your API Key in the <a href="https://octopus.energy/dashboard/developer/" target="_blank" rel="noreferrer" className="underline hover:text-purple-500">Octopus Developer Dashboard</a>.
+                    </p>
+                    <p className="pt-2 border-t border-purple-200 dark:border-purple-800/50">
+                        Not with Octopus yet? <a href="https://share.octopus.energy/light-sheep-695" target="_blank" rel="noreferrer" className="underline font-medium text-purple-600 hover:text-purple-500 dark:text-purple-400">Join with £50 free credit</a>
+                    </p>
                 </div>
             </div>
         </Card>
