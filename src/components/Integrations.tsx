@@ -1,9 +1,7 @@
-import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Car, Check, ExternalLink, AlertCircle } from 'lucide-react';
-import { toast } from 'sonner';
+import { AlertCircle } from 'lucide-react';
+import { TeslaIntegration } from '@/components/TeslaIntegration';
 
 const OctopusLogo = ({ className }: { className?: string }) => (
     <img
@@ -13,36 +11,7 @@ const OctopusLogo = ({ className }: { className?: string }) => (
     />
 );
 
-const TeslaLogo = ({ className }: { className?: string }) => (
-    <img
-        src="/tesla_logo.png"
-        alt="Tesla Logo"
-        className={`${className} object-contain`}
-    />
-);
-
 export function Integrations() {
-    // Simple local mock state for now. In a real app this would come from a backend/hook.
-    const [octopusLinked, setOctopusLinked] = useState(false);
-    const [teslaLinked, setTeslaLinked] = useState(false);
-    const [isLoading, setIsLoading] = useState<string | null>(null);
-
-    const handleLink = async (service: 'octopus' | 'tesla') => {
-        setIsLoading(service);
-
-        // Simulate API delay
-        setTimeout(() => {
-            setIsLoading(null);
-            if (service === 'octopus') {
-                setOctopusLinked(!octopusLinked);
-                toast.success(octopusLinked ? 'Octopus Account Disconnected' : 'Octopus Account Linked');
-            } else {
-                setTeslaLinked(!teslaLinked);
-                toast.success(teslaLinked ? 'Tesla Account Disconnected' : 'Tesla Account Linked');
-            }
-        }, 1500);
-    };
-
     return (
         <div className="space-y-4">
             <h2 className="text-lg font-semibold text-foreground">Integrations</h2>
@@ -71,29 +40,8 @@ export function Integrations() {
                 </Button>
             </Card>
 
-            {/* Tesla */}
-            <Card className="p-4 flex items-center justify-between border-red-500/20 bg-red-500/5">
-                <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-                        <TeslaLogo className="w-6 h-6 text-red-600 dark:text-red-400" />
-                    </div>
-                    <div>
-                        <div className="flex items-center gap-2">
-                            <h3 className="font-medium text-foreground">Tesla</h3>
-                        </div>
-                        <p className="text-xs text-muted-foreground max-w-[200px]">
-                            Track the impact of charging using energy at the greenest times.
-                        </p>
-                    </div>
-                </div>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={true}
-                >
-                    Coming Soon
-                </Button>
-            </Card>
+            {/* Tesla Integration */}
+            <TeslaIntegration />
 
             <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800 text-xs text-muted-foreground flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />

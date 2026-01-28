@@ -22,6 +22,7 @@ import {
 import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
 import { formatDistanceToNow } from 'date-fns';
 import { OctopusSettings } from './OctopusSettings';
+import { TeslaIntegration } from './TeslaIntegration';
 
 const OctopusLogo = ({ className }: { className?: string }) => (
   <img
@@ -195,6 +196,9 @@ export function OctopusIntegration() {
           </div>
         )}
       </Card>
+
+      {/* Tesla Integration */}
+      <TeslaIntegration />
 
       {/* Info Message */}
       <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800 text-xs text-muted-foreground flex items-start gap-2">

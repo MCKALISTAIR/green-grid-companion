@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.monthly-report]
 verify_jwt = false
+
+[functions.tesla-energy]
+verify_jwt = false

@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useCarbonData } from '@/hooks/useCarbonData';
+import { useTeslaEnergy } from '@/hooks/useTeslaEnergy';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ErrorState } from '@/components/ErrorState';
@@ -7,17 +8,18 @@ import { getErrorInfo } from '@/lib/errorUtils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { WashingMachine, Car, Utensils, Zap, Plus, PenLine } from 'lucide-react';
+import { WashingMachine, Car, Utensils, Zap, Plus, PenLine, Battery, Leaf } from 'lucide-react';
 import { getIntensityColor, getIntensityTextColor } from '@/lib/carbonApi';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { format, parseISO, addHours, subMinutes, isFuture } from 'date-fns';
 import { PullToRefresh } from '@/components/PullToRefresh';
+import { TurbineSpinner } from '@/components/ui/turbine-spinner';
 
 import { toast } from 'sonner';
 import { Bell } from 'lucide-react';
 import { logger } from '@/lib/logger';
 
-const APPLIANCES = [
+const DEFAULT_APPLIANCES = [
     { id: 'ev', name: 'EV Charge', icon: Car, power: 7.4, duration: 4, label: 'Full Charge (4h)' },
     { id: 'washing', name: 'Washing', icon: WashingMachine, power: 1.0, duration: 2, label: 'Eco Cycle (2h)' },
     { id: 'dish', name: 'Dishwasher', icon: Utensils, power: 1.5, duration: 2, label: 'Auto (2h)' },
@@ -25,22 +27,100 @@ const APPLIANCES = [
 ];
 
 export default function Planner() {
-    const [selectedAppliance, setSelectedAppliance] = useState(APPLIANCES[0]);
     const [customEvent, setCustomEvent] = useState(() => {
         const saved = localStorage.getItem('planner-custom-event');
         return saved ? JSON.parse(saved) : { name: '', duration: '1', power: '1.0' };
     });
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [teslaVehicleState, setTeslaVehicleState] = useState<{
+        batteryLevel?: number;
+        chargeLimit?: number;
+        batteryCapacity?: number;
+    } | null>(null);
+    const [isFetchingTesla, setIsFetchingTesla] = useState(false);
 
     const postcode = localStorage.getItem('gridgreen-postcode') || '';
     const { forecast, refetch, isLoading, isError, error } = useCarbonData(postcode);
+    const { isLinked: isTeslaLinked, vehicles, fetchVehicleState } = useTeslaEnergy();
+
+    // Build dynamic appliance list including Tesla vehicles
+    const APPLIANCES = useMemo(() => {
+        const appliances = [...DEFAULT_APPLIANCES];
+        
+        // Add Tesla vehicles as appliance options
+        if (isTeslaLinked && vehicles.length > 0) {
+            vehicles.forEach((vehicle, index) => {
+                // Calculate charging needs based on vehicle state
+                const batteryCapacity = vehicle.battery_capacity_kwh || 75;
+                const currentLevel = teslaVehicleState?.batteryLevel || 50;
+                const chargeLimit = teslaVehicleState?.chargeLimit || 80;
+                const energyNeeded = batteryCapacity * ((chargeLimit - currentLevel) / 100);
+                const chargingPower = 7.4; // Home charger
+                const duration = Math.max(0.5, energyNeeded / chargingPower);
+
+                appliances.unshift({
+                    id: `tesla-${vehicle.vehicle_id}`,
+                    name: vehicle.display_name || 'Tesla',
+                    icon: Car,
+                    power: chargingPower,
+                    duration: Math.round(duration * 10) / 10,
+                    label: teslaVehicleState 
+                        ? `${currentLevel}% → ${chargeLimit}% (${duration.toFixed(1)}h)`
+                        : 'Tap to refresh',
+                });
+            });
+        }
+
+        return appliances;
+    }, [isTeslaLinked, vehicles, teslaVehicleState]);
+
+    const [selectedAppliance, setSelectedAppliance] = useState(APPLIANCES[0]);
+
+    // Update selected appliance when APPLIANCES changes
+    useEffect(() => {
+        if (selectedAppliance.id.startsWith('tesla-')) {
+            const updated = APPLIANCES.find(a => a.id === selectedAppliance.id);
+            if (updated) {
+                setSelectedAppliance(updated);
+            }
+        }
+    }, [APPLIANCES, selectedAppliance.id]);
+
+    // Fetch Tesla vehicle state when a Tesla vehicle is selected
+    useEffect(() => {
+        const fetchTeslaState = async () => {
+            if (!selectedAppliance.id.startsWith('tesla-')) return;
+            
+            const vehicleId = selectedAppliance.id.replace('tesla-', '');
+            setIsFetchingTesla(true);
+            
+            try {
+                const state = await fetchVehicleState(vehicleId);
+                if (state.status === 'online') {
+                    setTeslaVehicleState({
+                        batteryLevel: state.batteryLevel,
+                        chargeLimit: state.chargeLimit,
+                        batteryCapacity: state.batteryCapacity,
+                    });
+                }
+            } catch (err) {
+                logger.error('Failed to fetch Tesla state', { error: err });
+            } finally {
+                setIsFetchingTesla(false);
+            }
+        };
+
+        if (selectedAppliance.id.startsWith('tesla-') && !teslaVehicleState) {
+            fetchTeslaState();
+        }
+    }, [selectedAppliance.id, fetchVehicleState, teslaVehicleState]);
 
     // Load saved custom appliance if it exists
     useEffect(() => {
         const saved = localStorage.getItem('planner-custom-appliance');
         if (saved) {
             try {
-                const customAppliance = JSON.parse(saved);
+                JSON.parse(saved);
                 // Don't auto-select, just keep it available
             } catch (e) {
                 logger.debug('Failed to load custom appliance from storage', { error: e });
@@ -287,7 +367,9 @@ export default function Planner() {
                     ) : bestSlot ? (
                         <Card className="p-6 space-y-4 border-primary/20 bg-primary/5">
                             <div className="text-center space-y-1">
-                                <h3 className="text-lg font-medium text-muted-foreground">Best time to run</h3>
+                                <h3 className="text-lg font-medium text-muted-foreground">
+                                    {selectedAppliance.id.startsWith('tesla-') ? 'Best time to charge' : 'Best time to run'}
+                                </h3>
                                 <p className="text-3xl font-bold text-foreground">
                                     {format(parseISO(bestSlot.startTime), 'EEEE h:mm a')}
                                 </p>
@@ -295,6 +377,28 @@ export default function Planner() {
                                     {bestSlot.avgIntensity} gCO₂/kWh average
                                 </p>
                             </div>
+
+                            {/* Tesla-specific info */}
+                            {selectedAppliance.id.startsWith('tesla-') && teslaVehicleState && (
+                                <div className="flex items-center justify-center gap-4 text-sm">
+                                    <div className="flex items-center gap-1">
+                                        <Battery className="w-4 h-4" />
+                                        <span>{teslaVehicleState.batteryLevel}%</span>
+                                    </div>
+                                    <span>→</span>
+                                    <div className="flex items-center gap-1">
+                                        <Zap className="w-4 h-4 text-primary" />
+                                        <span>{teslaVehicleState.chargeLimit}%</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {isFetchingTesla && (
+                                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                                    <TurbineSpinner className="w-4 h-4" />
+                                    <span>Fetching vehicle data...</span>
+                                </div>
+                            )}
 
                             <Button
                                 className="w-full"
@@ -308,9 +412,15 @@ export default function Planner() {
                             {savings > 0 && (
                                 <div className="bg-background/50 rounded-lg p-4 text-center">
                                     <p className="text-sm text-muted-foreground">Impact vs Now</p>
-                                    <p className="text-xl font-bold text-green-600">Save {savings}g CO₂</p>
+                                    <p className="text-xl font-bold text-green-600 flex items-center justify-center gap-1">
+                                        <Leaf className="w-5 h-5" />
+                                        Save {savings}g CO₂
+                                    </p>
                                     <p className="text-xs text-muted-foreground mt-1">
-                                        Equivalent to charging a smartphone {Math.round(savings / 5)} times
+                                        {selectedAppliance.id.startsWith('tesla-')
+                                            ? `That's ${(savings / 120).toFixed(1)} fewer miles of petrol car emissions`
+                                            : `Equivalent to charging a smartphone ${Math.round(savings / 5)} times`
+                                        }
                                     </p>
                                 </div>
                             )}
