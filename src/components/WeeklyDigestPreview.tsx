@@ -166,7 +166,7 @@ export function WeeklyDigestPreview() {
             💡 Best time to use energy today: <span className="font-medium">{stats.best_time_today}</span>
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            Link your smart meter for personalized insights!
+            Link your smart meter for personalised insights!
           </p>
         </div>
       )}

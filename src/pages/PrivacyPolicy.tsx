@@ -35,7 +35,7 @@ export default function PrivacyPolicy() {
                         <CardTitle className="text-base">No Personal Data Collection</CardTitle>
                     </CardHeader>
                     <CardContent className="text-sm text-muted-foreground">
-                        I do not collect, store, or share your personal data. I don't have a database of users, and I don't track your behavior.
+                        I do not collect, store, or share your personal data. I don't have a database of users, and I don't track your behaviour.
                     </CardContent>
                 </Card>
 

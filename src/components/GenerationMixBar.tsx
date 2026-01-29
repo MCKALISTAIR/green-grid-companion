@@ -1,4 +1,4 @@
-import { GenerationMix } from '@/lib/carbonApi';
+import { GenerationMix, getFuelColor } from '@/lib/carbonApi';
 import {
   Dialog,
   DialogContent,
@@ -22,17 +22,7 @@ interface GenerationMixBarProps {
   frequency?: number | null;
 }
 
-const fuelColors: Record<string, string> = {
-  wind: 'bg-gen-wind',
-  solar: 'bg-gen-solar',
-  nuclear: 'bg-gen-nuclear',
-  gas: 'bg-gen-gas',
-  coal: 'bg-gen-coal',
-  hydro: 'bg-gen-hydro',
-  biomass: 'bg-gen-biomass',
-  imports: 'bg-gen-imports',
-  other: 'bg-gen-other',
-};
+
 
 export function GenerationMixBar({ mix, showMW = false, frequency }: GenerationMixBarProps) {
   // Filter out zero values and sort by percentage
@@ -47,7 +37,7 @@ export function GenerationMixBar({ mix, showMW = false, frequency }: GenerationM
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <div className="space-y-4 cursor-pointer hover:opacity-80 transition-opacity" role="button" aria-label="View generation mix details">
+        <button type="button" className="w-full text-left space-y-4 cursor-pointer hover:opacity-80 transition-opacity" aria-label="View generation mix details">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
               Generation Mix
@@ -63,7 +53,7 @@ export function GenerationMixBar({ mix, showMW = false, frequency }: GenerationM
             {sortedMix.map((item) => (
               <div
                 key={item.fuel}
-                className={`${fuelColors[item.fuel.toLowerCase()] || 'bg-gen-other'} transition-all duration-500`}
+                className={`${getFuelColor(item.fuel)} transition-all duration-500`}
                 style={{ width: `${item.perc}%` }}
               />
             ))}
@@ -78,7 +68,7 @@ export function GenerationMixBar({ mix, showMW = false, frequency }: GenerationM
                   key={item.fuel}
                   className="flex items-center gap-1.5 text-xs text-muted-foreground"
                 >
-                  <div className={`w-2.5 h-2.5 rounded-full ${fuelColors[item.fuel.toLowerCase()] || 'bg-gen-other'}`} />
+                  <div className={`w-2.5 h-2.5 rounded-full ${getFuelColor(item.fuel)}`} />
                   <span className="capitalize">{item.fuel}</span>
                   <span className="font-medium text-foreground">
                     {showMW && item.mw
@@ -101,7 +91,7 @@ export function GenerationMixBar({ mix, showMW = false, frequency }: GenerationM
                 className="flex items-center justify-between text-sm"
               >
                 <div className="flex items-center gap-2">
-                  <div className={`w-3 h-3 rounded-full ${fuelColors[item.fuel.toLowerCase()] || 'bg-gen-other'}`} />
+                  <div className={`w-3 h-3 rounded-full ${getFuelColor(item.fuel)}`} />
                   <span className="capitalize text-muted-foreground">{item.fuel}</span>
                 </div>
                 <span className="font-semibold tabular-nums">
@@ -112,7 +102,7 @@ export function GenerationMixBar({ mix, showMW = false, frequency }: GenerationM
               </div>
             ))}
           </div>
-        </div>
+        </button>
       </DialogTrigger>
 
       <DialogContent className="max-w-md max-h-[85vh] flex flex-col">
@@ -148,7 +138,7 @@ export function GenerationMixBar({ mix, showMW = false, frequency }: GenerationM
                 <div key={item.fuel} className="space-y-2 p-3 rounded-lg bg-accent/20 border border-border/50">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className={`w-4 h-4 rounded-full ${fuelColors[item.fuel.toLowerCase()] || 'bg-gen-other'}`} />
+                      <div className={`w-4 h-4 rounded-full ${getFuelColor(item.fuel)}`} />
                       <span className="font-medium capitalize text-lg">{item.fuel}</span>
                     </div>
                     <div className="text-right">

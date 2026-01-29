@@ -295,7 +295,7 @@ export function MonthlyReportPreview() {
             📊 Your monthly report is ready!
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            Link your smart meter for detailed carbon insights.
+            Link your smart meter for personalised insights.
           </p>
         </div>
       )}

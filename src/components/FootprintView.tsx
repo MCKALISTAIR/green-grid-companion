@@ -279,7 +279,7 @@ export function FootprintView() {
                 <Target className="w-4 h-4 text-primary" />
               </div>
               <div>
-                <p className="font-medium text-sm text-foreground">Personalized Insights</p>
+                <p className="font-medium text-sm text-foreground">Personalised Insights</p>
                 <p className="text-xs text-muted-foreground">Get tips on when to use energy based on your patterns</p>
               </div>
             </div>
@@ -355,9 +355,9 @@ export function FootprintView() {
         <div className="text-center pt-2">
           <p className="text-xs text-muted-foreground">
             Not with Octopus yet?{' '}
-            <a 
-              href="https://share.octopus.energy/vivid-dodo-915" 
-              target="_blank" 
+            <a
+              href="https://share.octopus.energy/vivid-dodo-915"
+              target="_blank"
               rel="noopener noreferrer"
               className="text-purple-600 dark:text-purple-400 hover:underline font-medium"
             >

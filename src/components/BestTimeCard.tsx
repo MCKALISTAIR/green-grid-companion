@@ -1,5 +1,5 @@
 import { ForecastData } from '@/lib/carbonApi';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, isTomorrow } from 'date-fns';
 import { BatteryCharging, TrendingDown, TrendingUp } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 
@@ -8,32 +8,32 @@ interface BestTimeCardProps {
 }
 
 export function BestTimeCard({ forecast }: BestTimeCardProps) {
-  if (forecast.length < 4) return null;
+  if (forecast.length < 6) return null;
 
   // Filter for future times only (or current window)
   const now = new Date();
   const futureForecast = forecast.filter(f => new Date(f.to) > now);
 
-  if (futureForecast.length < 4) return null;
+  if (futureForecast.length < 6) return null;
 
-  // Find the 4-hour window with lowest average intensity
+  // Find the 3-hour window with lowest average intensity
   let minSum = Infinity;
   let minStartIndex = 0;
 
-  for (let i = 0; i <= futureForecast.length - 4; i++) {
-    const sum = futureForecast.slice(i, i + 4).reduce((acc, f) => acc + f.intensity.forecast, 0);
+  for (let i = 0; i <= futureForecast.length - 6; i++) {
+    const sum = futureForecast.slice(i, i + 6).reduce((acc, f) => acc + f.intensity.forecast, 0);
     if (sum < minSum) {
       minSum = sum;
       minStartIndex = i;
     }
   }
 
-  // Find the worst 4-hour window too
+  // Find the worst 3-hour window too
   let maxSum = 0;
   let maxStartIndex = 0;
 
-  for (let i = 0; i <= futureForecast.length - 4; i++) {
-    const sum = futureForecast.slice(i, i + 4).reduce((acc, f) => acc + f.intensity.forecast, 0);
+  for (let i = 0; i <= futureForecast.length - 6; i++) {
+    const sum = futureForecast.slice(i, i + 6).reduce((acc, f) => acc + f.intensity.forecast, 0);
     if (sum > maxSum) {
       maxSum = sum;
       maxStartIndex = i;
@@ -41,9 +41,9 @@ export function BestTimeCard({ forecast }: BestTimeCardProps) {
   }
 
   const bestStart = parseISO(futureForecast[minStartIndex].from);
-  const bestEnd = parseISO(futureForecast[minStartIndex + 3].to);
+  const bestEnd = parseISO(futureForecast[minStartIndex + 5].to);
   const worstStart = parseISO(futureForecast[maxStartIndex].from);
-  const worstEnd = parseISO(futureForecast[maxStartIndex + 3].to);
+  const worstEnd = parseISO(futureForecast[maxStartIndex + 5].to);
 
   return (
     <div className="space-y-3">
@@ -56,13 +56,13 @@ export function BestTimeCard({ forecast }: BestTimeCardProps) {
           <div className="flex-1">
             <div className="flex items-center gap-2">
               <BatteryCharging className="w-4 h-4 text-intensity-very-low" />
-              <span className="text-sm font-medium text-foreground">Best time to charge</span>
+              <span className="text-sm font-medium text-foreground">Best time to load-shift</span>
             </div>
             <p className="text-lg font-bold text-intensity-very-low">
-              {format(bestStart, 'HH:mm')} → {format(bestEnd, 'HH:mm')}
+              {format(bestStart, 'HH:mm')} → {format(bestEnd, 'HH:mm')}{isTomorrow(bestStart) ? ' tomorrow' : ''}
             </p>
             <p className="text-xs text-muted-foreground">
-              Average: {Math.round(minSum / 4)} gCO₂/kWh
+              Average: {Math.round(minSum / 6)} gCO₂/kWh
             </p>
           </div>
         </div>
@@ -79,10 +79,10 @@ export function BestTimeCard({ forecast }: BestTimeCardProps) {
               <span className="text-sm font-medium text-foreground">Avoid high usage</span>
             </div>
             <p className="text-lg font-bold text-intensity-high">
-              {format(worstStart, 'HH:mm')} → {format(worstEnd, 'HH:mm')}
+              {format(worstStart, 'HH:mm')} → {format(worstEnd, 'HH:mm')}{isTomorrow(worstStart) ? ' tomorrow' : ''}
             </p>
             <p className="text-xs text-muted-foreground">
-              Average: {Math.round(maxSum / 4)} gCO₂/kWh
+              Average: {Math.round(maxSum / 6)} gCO₂/kWh
             </p>
           </div>
         </div>

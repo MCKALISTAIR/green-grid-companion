@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ChevronRight, GraduationCap, Shield, MapPin, History } from 'lucide-react';
+import { ChevronRight, GraduationCap, Shield, MapPin, History, MessageSquare, Mail } from 'lucide-react';
 import { NotificationSettings } from '@/components/NotificationSettings';
 import { OctopusIntegration } from '@/components/OctopusIntegration';
 import { TeslaIntegration } from '@/components/TeslaIntegration';
@@ -95,6 +95,27 @@ export default function Settings() {
                                 <ChevronRight className="w-5 h-5 text-muted-foreground" />
                             </div>
                         </Link>
+                    </div>
+                </div>
+
+                <div className="space-y-4">
+                    <h2 className="text-xl font-semibold">Support</h2>
+
+                    <div className="flex flex-col gap-3">
+                        <a href="mailto:support@gridsense.app?subject=GridSense%20Feedback">
+                            <div className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-colors">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-primary/10 rounded-full">
+                                        <MessageSquare className="w-5 h-5 text-primary" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-medium">Send Feedback</h3>
+                                        <p className="text-sm text-muted-foreground">Report bugs or suggest features</p>
+                                    </div>
+                                </div>
+                                <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                            </div>
+                        </a>
                     </div>
                 </div>
 

@@ -3,9 +3,8 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
   <!-- iOS / Apple specific -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -13,15 +12,15 @@
   <link rel="apple-touch-icon" href="/icon-192.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="/icon-192.png" />
   <link rel="icon" type="image/png" href="/icon-192.png" />
-  
+
   <!-- Theme color for mobile browsers -->
   <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
   <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
-  
+
   <!-- Prevent text size adjustment on orientation change -->
   <meta name="format-detection" content="telephone=no" />
   <meta name="mobile-web-app-capable" content="yes" />
-  
+
   <title>GridSense</title>
   <meta name="description" content="Track UK carbon intensity and find the best times to use clean energy." />
   <meta name="author" content="GridSense" />
@@ -44,15 +43,17 @@
       --sab: env(safe-area-inset-bottom);
       --sal: env(safe-area-inset-left);
     }
-    
+
     /* Prevent overscroll bounce on iOS */
-    html, body {
+    html,
+    body {
       overscroll-behavior: none;
       -webkit-overflow-scrolling: touch;
     }
-    
+
     /* Ensure app takes full screen including safe areas */
-    html, body {
+    html,
+    body {
       height: 100%;
       width: 100%;
       margin: 0;
@@ -61,7 +62,7 @@
       min-height: 100vh;
       min-height: -webkit-fill-available;
     }
-    
+
     #root {
       height: 100%;
       width: 100%;
@@ -85,10 +86,10 @@
         var protocol = window.location.protocol || '';
         // Skip for native Capacitor apps (capacitor://, ionic://, file://)
         if (protocol === 'capacitor:' || protocol === 'ionic:' || protocol === 'file:') return;
-        
+
         // Also check for Capacitor in userAgent (fallback detection)
         if (window.navigator && /Capacitor/i.test(window.navigator.userAgent)) return;
-        
+
         var host = window.location.hostname || '';
         var isDevPreview = host.endsWith('.lovableproject.com');
         // Don't trigger on localhost for Capacitor compatibility
