@@ -634,7 +634,7 @@ export function IntensityScene({ intensity, index, generationMix = [] }: Intensi
       <AnimatePresence>
         {sceneConfig.showRenewables && (
           <motion.div
-            className="absolute bottom-20 left-0 right-0 flex justify-around px-12"
+            className="absolute bottom-[18%] left-0 right-0 flex justify-around px-12"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

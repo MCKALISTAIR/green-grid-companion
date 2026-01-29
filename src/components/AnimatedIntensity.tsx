@@ -21,18 +21,18 @@ export function AnimatedIntensity({
   const [direction, setDirection] = useState<'up' | 'down' | null>(null);
   const { lightTap } = useHaptics();
   const hasAnimatedRef = useRef(false);
-  
+
   // Spring animation for smooth number counting
   const springValue = useSpring(value, {
     damping: 30,
     stiffness: 100,
     duration: animationDuration,
   });
-  
+
   // Transform spring value to rounded integer for display
   const displayValue = useTransform(springValue, (latest) => Math.round(latest));
   const [displayNumber, setDisplayNumber] = useState(value);
-  
+
   // Subscribe to displayValue changes
   useEffect(() => {
     const unsubscribe = displayValue.on('change', (latest) => {
@@ -40,35 +40,35 @@ export function AnimatedIntensity({
     });
     return unsubscribe;
   }, [displayValue]);
-  
+
   // Update spring target when value changes
   useEffect(() => {
     springValue.set(value);
   }, [value, springValue]);
-  
+
   // Detect value changes and trigger animations
   useEffect(() => {
     // Skip initial render
     if (previousValue === null || previousValue === value) {
       return;
     }
-    
+
     // Determine direction
     const newDirection = value > previousValue ? 'up' : 'down';
     setDirection(newDirection);
     setShowArrow(true);
-    
+
     // Trigger haptic feedback
     lightTap();
-    
+
     // Hide arrow after 2 seconds
     const timer = setTimeout(() => {
       setShowArrow(false);
     }, 2000);
-    
+
     return () => clearTimeout(timer);
-  }, [value, previousValue, lightTap]);
-  
+  }, [value, previousValue]); // Removed lightTap from deps - function reference shouldn't trigger effect
+
   return (
     <div className={cn('flex items-center gap-1', className)}>
       <motion.span
@@ -80,7 +80,7 @@ export function AnimatedIntensity({
       >
         {displayNumber}
       </motion.span>
-      
+
       <AnimatePresence>
         {showArrow && direction && (
           <motion.div

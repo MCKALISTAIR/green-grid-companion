@@ -198,8 +198,8 @@ const Index = () => {
                         <RefreshCw className="w-10 h-10 text-card animate-spin" aria-label="Loading data" />
                       ) : (
                         <>
-                          <AnimatedIntensity 
-                            value={intensity} 
+                          <AnimatedIntensity
+                            value={intensity}
                             previousValue={previousIntensity}
                           />
                           <div className="flex items-center gap-1">
@@ -314,7 +314,7 @@ const Index = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.3, ease: "easeOut" }}
-                  className="w-full"
+                  className="w-full overflow-auto max-h-[calc(100vh-24rem)]"
                 >
                   {viewMode === 'demand' ? (
                     <DemandView />

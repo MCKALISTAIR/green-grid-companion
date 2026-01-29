@@ -24,8 +24,6 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
 
     return (
         <div className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
-            {/* Gradient fade to integrate nicely */}
-            <div className="absolute bottom-0 left-0 right-0 top-12 bg-gradient-to-t from-background via-background/80 to-transparent h-24 -z-10" />
 
             {/* Nav Bar */}
             <div className="pointer-events-auto pb-[env(safe-area-inset-bottom)] bg-background/80 backdrop-blur-lg border-t border-border/40">
@@ -33,7 +31,10 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
 
                     <Button
                         variant="ghost"
-                        className={`flex flex-col items-center gap-1 h-auto py-2 px-1 hover:bg-transparent ${isActive('/') ? 'text-primary' : 'text-muted-foreground'}`}
+                        className={`flex flex-col items-center gap-1 h-auto py-2 px-1 rounded-lg transition-all ${isActive('/')
+                            ? 'text-primary bg-primary/10 font-semibold'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
+                            }`}
                         onClick={handleHome}
                     >
                         <Home className="w-5 h-5" />
@@ -42,7 +43,10 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
 
                     <Button
                         variant="ghost"
-                        className={`flex flex-col items-center gap-1 h-auto py-2 px-1 hover:bg-transparent ${isActive('/planner') ? 'text-primary' : 'text-muted-foreground'}`}
+                        className={`flex flex-col items-center gap-1 h-auto py-2 px-1 rounded-lg transition-all ${isActive('/planner')
+                            ? 'text-primary bg-primary/10 font-semibold'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
+                            }`}
                         onClick={() => navigate('/planner')}
                     >
                         <Calendar className="w-5 h-5" />
@@ -51,7 +55,10 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
 
                     <Button
                         variant="ghost"
-                        className={`flex flex-col items-center gap-1 h-auto py-2 px-1 hover:bg-transparent ${isActive('/history') ? 'text-primary' : 'text-muted-foreground'}`}
+                        className={`flex flex-col items-center gap-1 h-auto py-2 px-1 rounded-lg transition-all ${isActive('/history')
+                            ? 'text-primary bg-primary/10 font-semibold'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
+                            }`}
                         onClick={() => navigate('/history')}
                     >
                         <Clock className="w-5 h-5" />
@@ -60,7 +67,10 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
 
                     <Button
                         variant="ghost"
-                        className={`flex flex-col items-center gap-1 h-auto py-2 px-1 hover:bg-transparent ${isActive('/map') ? 'text-primary' : 'text-muted-foreground'}`}
+                        className={`flex flex-col items-center gap-1 h-auto py-2 px-1 rounded-lg transition-all ${isActive('/map')
+                            ? 'text-primary bg-primary/10 font-semibold'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
+                            }`}
                         onClick={() => navigate('/map')}
                     >
                         <ListOrdered className="w-5 h-5" />
@@ -69,7 +79,10 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
 
                     <Button
                         variant="ghost"
-                        className={`flex flex-col items-center gap-1 h-auto py-2 px-1 hover:bg-transparent ${isActive('/settings') ? 'text-primary' : 'text-muted-foreground'}`}
+                        className={`flex flex-col items-center gap-1 h-auto py-2 px-1 rounded-lg transition-all ${isActive('/settings')
+                            ? 'text-primary bg-primary/10 font-semibold'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
+                            }`}
                         onClick={() => navigate('/settings')}
                     >
                         <Settings className="w-5 h-6" />

@@ -96,7 +96,7 @@ export default function MapPage() {
                                             <div>
                                                 <h3 className="font-semibold text-sm">{region.shortname}</h3>
                                                 <div className={`text-[10px] inline-flex items-center px-1.5 py-0.5 rounded-full mt-0.5 ${getIntensityColor(region.intensity.index)} bg-opacity-20`}>
-                                                    <span className={`capitalize font-medium opacity-100`}>
+                                                    <span className="capitalize font-medium text-foreground">
                                                         {region.intensity.index}
                                                     </span>
                                                 </div>

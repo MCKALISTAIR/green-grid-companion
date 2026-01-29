@@ -5,10 +5,12 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DEFINITIONS } from '@/lib/definitions';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export interface MixItem {
   fuel: string;
@@ -170,6 +172,15 @@ export function GenerationMixBar({ mix, showMW = false, frequency }: GenerationM
             })}
           </div>
         </ScrollArea>
+
+        {/* Close button for easier mobile interaction */}
+        <div className="pt-3 pb-2 border-t">
+          <DialogClose asChild>
+            <Button variant="outline" className="w-full" size="lg">
+              Close
+            </Button>
+          </DialogClose>
+        </div>
       </DialogContent>
     </Dialog >
   );

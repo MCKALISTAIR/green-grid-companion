@@ -1,8 +1,9 @@
-import { Zap, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Zap, RefreshCw, AlertTriangle, Info } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { GenerationMixBar } from '@/components/GenerationMixBar';
 import { useGridDemand } from '@/hooks/useGridDemand';
 import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 export function DemandView() {
     const { demand, mix, isLoading, error, refetch, lastUpdated } = useGridDemand();
@@ -44,7 +45,20 @@ export function DemandView() {
             <Card className="p-5 shadow-lg bg-card/50 backdrop-blur-sm border-primary/10">
                 <div className="flex items-start justify-between">
                     <div>
-                        <p className="text-sm font-medium text-muted-foreground">Total Grid Demand</p>
+                        <div className="flex items-center gap-1.5">
+                            <p className="text-sm font-medium text-muted-foreground">Total Grid Demand</p>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0 hover:bg-transparent">
+                                        <Info className="w-3.5 h-3.5 text-muted-foreground/70 cursor-help" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-[280px] p-3 text-xs bg-card border-border backdrop-blur-xl">
+                                    <p className="font-semibold mb-1">UK-Wide Data</p>
+                                    <p>This shows total demand for the entire UK electricity grid, not region-specific data. The grid operates as a single synchronized system across Great Britain.</p>
+                                </PopoverContent>
+                            </Popover>
+                        </div>
                         <h2 className="text-4xl font-bold tracking-tight mt-1 text-primary">
                             {demandGW ? (
                                 <>

@@ -144,7 +144,10 @@ export function useNotifications() {
     const scheduleGreenAlerts = useCallback(async (forecast: ForecastData[]) => {
         // If Background Fetch is enabled, we DO NOT use forecast scheduling.
         if (prefs.useBackgroundFetch) {
-            await LocalNotifications.cancel(await LocalNotifications.getPending());
+            const pending = await LocalNotifications.getPending();
+            if (pending.notifications.length > 0) {
+                await LocalNotifications.cancel(pending);
+            }
             return;
         }
 
@@ -156,7 +159,10 @@ export function useNotifications() {
         let isGreenWindow = false;
 
         // Clean up pending notifications
-        await LocalNotifications.cancel(await LocalNotifications.getPending());
+        const pending = await LocalNotifications.getPending();
+        if (pending.notifications.length > 0) {
+            await LocalNotifications.cancel(pending);
+        }
 
         for (const slot of forecast) {
             const startTime = new Date(slot.from);
