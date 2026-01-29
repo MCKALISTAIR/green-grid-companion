@@ -6,6 +6,8 @@ import { TeslaIntegration } from '@/components/TeslaIntegration';
 import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
 import { useTeslaEnergy } from '@/hooks/useTeslaEnergy';
 import { VERSION_STRING } from '@/lib/version';
+import { Button } from '@/components/ui/button';
+import { Zap } from 'lucide-react';
 
 
 export default function Settings() {
@@ -116,6 +118,46 @@ export default function Settings() {
                     <p className="pt-2">
                         <Link to="/changelog" className="text-primary hover:underline">{VERSION_STRING}</Link>
                     </p>
+                </div>
+
+                {/* Debug Section */}
+                <div className="border-t border-border pt-8 pb-4">
+                    <h2 className="text-lg font-semibold mb-4 px-1">Debug</h2>
+                    <div className="p-4 bg-card border rounded-lg space-y-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h3 className="font-medium">Test Error Tracking</h3>
+                                <p className="text-sm text-muted-foreground">Sends a test error to Sentry</p>
+                            </div>
+                            <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => {
+                                    try {
+                                        throw new Error("This is a test error from GridSense Settings");
+                                    } catch (error) {
+                                        // We import logger dynamically or from top level. 
+                                        // Settings.tsx doesn't import logger yet. 
+                                        // We need to ensure logger is imported.
+                                        // Actually, I'll update the imports in a separate call or use window.logger if exposed? 
+                                        // No, I should import it.
+                                        // I'll add the import in the next step.
+                                        console.error("Test error triggered", error);
+                                        import('@/lib/logger').then(({ logger }) => {
+                                            logger.error("Test error triggered by user", { error });
+                                        });
+                                    }
+                                    // Also direct Sentry capture for verification
+                                    import('@sentry/react').then(Sentry => {
+                                        Sentry.captureMessage("Test Message from GridSense Settings");
+                                    });
+                                }}
+                            >
+                                <Zap className="w-4 h-4 mr-2" />
+                                Trigger Error
+                            </Button>
+                        </div>
+                    </div>
                 </div>
             </div>
 

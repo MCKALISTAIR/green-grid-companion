@@ -1,7 +1,7 @@
 {
   "name": "gridsense",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.2.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "test": "bun test",
     "test:watch": "vitest",
-    "build:mobile": "vite build && npx cap sync"
+    "build:mobile": "vite build && npx cap sync",
+    "sync-version": "bun scripts/update-version.ts"
   },
   "dependencies": {
     "@capacitor/app": "^8.0.0",

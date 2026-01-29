@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Navigation, ArrowRight } from 'lucide-react';
+import { MapPin, Navigation, ArrowRight, Bell } from 'lucide-react';
 import { Geolocation as CapacitorGeolocation } from '@capacitor/geolocation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,11 +8,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
 import { TurbineSpinner } from '@/components/ui/turbine-spinner';
+import { useNotifications } from '@/hooks/useNotifications';
 
 const Onboarding = () => {
     const navigate = useNavigate();
+    const [step, setStep] = useState<'location' | 'notifications'>('location');
     const [isLoadingLocation, setIsLoadingLocation] = useState(false);
     const [manualPostcode, setManualPostcode] = useState('');
+    const { requestPermission, updatePreference } = useNotifications();
 
     const handleEnableLocation = async () => {
         setIsLoadingLocation(true);
@@ -41,7 +44,7 @@ const Onboarding = () => {
 
                 localStorage.setItem('gridgreen-postcode', postcode);
                 toast.success(`Location set to ${postcode}`);
-                navigate('/');
+                setStep('notifications');
             } else {
                 throw new Error("Could not determine postcode from location");
             }
@@ -61,78 +64,114 @@ const Onboarding = () => {
         e.preventDefault();
         if (!manualPostcode.trim()) return;
 
-        // Basic validation could go here
         const cleanPostcode = manualPostcode.trim().toUpperCase();
-
-        // We could technically validate against the API here too, but for now just save it.
-        // The main page handles invalid postcodes gracefully (hopefully) or we assume user knows.
-        // Let's do a quick validation fetch to be nice?
-        // Actually, let's just save it. The main app will try to fetch data.
-
         localStorage.setItem('gridgreen-postcode', cleanPostcode);
+        setStep('notifications');
+    };
+
+    const handleEnableNotifications = async () => {
+        const granted = await requestPermission();
+        if (granted) {
+            updatePreference('lowIntensityEnabled', true);
+            toast.success("Notifications enabled!");
+        }
+        navigate('/');
+    };
+
+    const handleSkipNotifications = () => {
         navigate('/');
     };
 
     return (
         <div className="min-h-screen min-h-[100dvh] bg-background flex items-center justify-center p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
-            <Card className="w-full max-w-md shadow-xl border-border/50 bg-card/50 backdrop-blur-sm">
+            <Card className="w-full max-w-md shadow-xl border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-300">
                 <CardHeader className="text-center space-y-2">
                     <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-2">
-                        <MapPin className="w-6 h-6 text-primary" />
+                        {step === 'location' ? (
+                            <MapPin className="w-6 h-6 text-primary" />
+                        ) : (
+                            <Bell className="w-6 h-6 text-primary" />
+                        )}
                     </div>
-                    <CardTitle className="text-2xl font-bold">Welcome to GridSense</CardTitle>
+                    <CardTitle className="text-2xl font-bold">
+                        {step === 'location' ? 'Welcome to GridSense' : 'Stay Updated'}
+                    </CardTitle>
                     <CardDescription>
-                        To give you accurate carbon intensity data, we need to know your location.
+                        {step === 'location'
+                            ? 'To give you accurate carbon intensity data, we need to know your location.'
+                            : 'Get notified when grid intensity is low so you can use cleaner energy.'}
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                    <div className="space-y-4">
-                        <Button
-                            size="lg"
-                            className="w-full font-semibold relative overflow-hidden group"
-                            onClick={handleEnableLocation}
-                            disabled={isLoadingLocation}
-                        >
-                            {isLoadingLocation ? (
-                                <>
-                                    <TurbineSpinner size="sm" className="mr-2" />
-                                    Finding you...
-                                </>
-                            ) : (
-                                <>
-                                    <Navigation className="w-4 h-4 mr-2 group-hover:animate-pulse" />
-                                    Use Current Location
-                                </>
-                            )}
-                        </Button>
+                    {step === 'location' ? (
+                        <div className="space-y-4">
+                            <Button
+                                size="lg"
+                                className="w-full font-semibold relative overflow-hidden group"
+                                onClick={handleEnableLocation}
+                                disabled={isLoadingLocation}
+                            >
+                                {isLoadingLocation ? (
+                                    <>
+                                        <TurbineSpinner size="sm" className="mr-2" />
+                                        Finding you...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Navigation className="w-4 h-4 mr-2 group-hover:animate-pulse" />
+                                        Use Current Location
+                                    </>
+                                )}
+                            </Button>
 
-                        <div className="relative">
-                            <div className="absolute inset-0 flex items-center">
-                                <span className="w-full border-t border-muted" />
+                            <div className="relative">
+                                <div className="absolute inset-0 flex items-center">
+                                    <span className="w-full border-t border-muted" />
+                                </div>
+                                <div className="relative flex justify-center text-xs uppercase">
+                                    <span className="bg-background px-2 text-muted-foreground">Or enter manually</span>
+                                </div>
                             </div>
-                            <div className="relative flex justify-center text-xs uppercase">
-                                <span className="bg-background px-2 text-muted-foreground">Or enter manually</span>
-                            </div>
+
+                            <form onSubmit={handleManualSubmit} className="space-y-2" role="form" aria-label="Manual Postcode Entry">
+                                <div className="flex gap-2">
+                                    <Input
+                                        placeholder="Enter Postcode (e.g. SW1)"
+                                        value={manualPostcode}
+                                        onChange={(e) => setManualPostcode(e.target.value)}
+                                        className="bg-background/50"
+                                        aria-label="Enter your postcode"
+                                    />
+                                    <Button type="submit" variant="secondary" disabled={!manualPostcode.trim()} aria-label="Submit postcode">
+                                        <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                                    </Button>
+                                </div>
+                            </form>
                         </div>
-
-                        <form onSubmit={handleManualSubmit} className="space-y-2" role="form" aria-label="Manual Postcode Entry">
-                            <div className="flex gap-2">
-                                <Input
-                                    placeholder="Enter Postcode (e.g. SW1)"
-                                    value={manualPostcode}
-                                    onChange={(e) => setManualPostcode(e.target.value)}
-                                    className="bg-background/50"
-                                    aria-label="Enter your postcode"
-                                />
-                                <Button type="submit" variant="secondary" disabled={!manualPostcode.trim()} aria-label="Submit postcode">
-                                    <ArrowRight className="w-4 h-4" aria-hidden="true" />
-                                </Button>
-                            </div>
-                        </form>
-                    </div>
+                    ) : (
+                        <div className="space-y-4">
+                            <Button
+                                size="lg"
+                                className="w-full font-semibold"
+                                onClick={handleEnableNotifications}
+                            >
+                                <Bell className="w-4 h-4 mr-2" />
+                                Enable Alerts
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                className="w-full"
+                                onClick={handleSkipNotifications}
+                            >
+                                Skip for now
+                            </Button>
+                        </div>
+                    )}
                 </CardContent>
                 <CardFooter className="justify-center text-xs text-muted-foreground text-center">
-                    We only store your postcode locally on your device specifically for fetching energy data.
+                    {step === 'location'
+                        ? 'We only store your postcode locally on your device specifically for fetching energy data.'
+                        : 'You can change this later in Settings.'}
                 </CardFooter>
             </Card>
         </div>

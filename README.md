@@ -51,7 +51,12 @@ GridSense is a mobile-first companion app designed to help UK (and future) energ
     *   **Smart Charging Impact**: Track how much Carbon (CO₂) you've saved by charging during greener times compared to grid average.
     *   **Seamless Linking**: Secure OAuth connection to your Tesla account.
 
-## 🆕 Recent Updates (2026-01-28)
+## 🆕 Recent Updates (v1.2.1 - 2026-01-29)
+
+### Reliability & Onboarding 🛡️
+*   **Production Error Tracking**: Sentry integration for monitoring stability in real-time.
+*   **Enhanced Onboarding**: New wizard flow with proactive notification permissions.
+*   **Automated Releases**: Version synchronization across Web, iOS, and Android configs.
 
 ### Performance Improvements ⚡
 *   **Instant Integrations**: 90% faster loading for Energy Integrations via optimistic parallel fetching.

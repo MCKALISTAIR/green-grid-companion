@@ -1,10 +1,10 @@
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { VERSION_STRING, BUILD_DATE } from '@/lib/version';
-import { 
-  Sparkles, 
-  Zap, 
-  Bug, 
+import {
+  Sparkles,
+  Zap,
+  Bug,
   Wrench,
   ChevronLeft,
   Car,
@@ -29,6 +29,17 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: 'v1.2.1',
+    date: '2026-01-29',
+    title: 'Reliability & Onboarding',
+    changes: [
+      { type: 'feature', description: 'New Onboarding flow with notification permissions' },
+      { type: 'feature', description: 'Production-grade error tracking with Sentry' },
+      { type: 'technical', description: 'Automated version synchronization' },
+      { type: 'fix', description: 'Fixed iOS notification permission configuration' },
+    ],
+  },
+  {
     version: 'v1.2.0',
     date: '2026-01-29',
     title: 'Seamless Data Updates',
@@ -42,7 +53,7 @@ const changelog: ChangelogEntry[] = [
   },
   {
     version: 'v1.1.0',
-    date: '2026-01-22',
+    date: '2026-01-28',
     title: 'Tesla Integration',
     changes: [
       { type: 'feature', description: 'Complete Tesla integration for Vehicles and Energy Sites' },
@@ -54,7 +65,7 @@ const changelog: ChangelogEntry[] = [
   },
   {
     version: 'v1.0.0',
-    date: '2026-01-15',
+    date: '2026-01-23',
     title: 'Carbon Footprint Tracking',
     changes: [
       { type: 'feature', description: 'Octopus Energy integration for smart meter data' },
@@ -66,55 +77,25 @@ const changelog: ChangelogEntry[] = [
   },
   {
     version: 'v0.9.0',
-    date: '2026-01-08',
-    title: 'Enhanced Forecasting',
-    changes: [
-      { type: 'feature', description: 'Comparative forecast view with actual vs predicted' },
-      { type: 'feature', description: 'Power Planner for optimal usage timing' },
-      { type: 'improvement', description: 'Skeleton loaders for better perceived performance' },
-      { type: 'fix', description: 'Fixed forecast chart timezone issues' },
-    ],
-  },
-  {
-    version: 'v0.8.0',
-    date: '2025-12-20',
+    date: '2026-01-21',
     title: 'Dynamic Visual Scene',
     changes: [
       { type: 'feature', description: 'Interactive intensity scene with day/night cycle' },
       { type: 'feature', description: 'Real-time weather effects synced via Open-Meteo API' },
       { type: 'feature', description: 'Parallax depth layers with mountains and grass' },
       { type: 'improvement', description: 'High intensity shows factories, low shows renewables' },
+      { type: 'improvement', description: 'Desktop layout optimizations' },
     ],
   },
   {
-    version: 'v0.7.0',
-    date: '2025-12-10',
-    title: 'Push Notifications',
+    version: 'v0.8.0',
+    date: '2026-01-16',
+    title: 'Enhanced Forecasting',
     changes: [
-      { type: 'feature', description: 'Low intensity alerts when grid is clean' },
-      { type: 'feature', description: 'Daily forecast notifications' },
-      { type: 'feature', description: 'Monthly carbon report summaries' },
-      { type: 'technical', description: 'Edge functions for scheduled notifications' },
-    ],
-  },
-  {
-    version: 'v0.6.0',
-    date: '2025-12-01',
-    title: 'UK Regional Map',
-    changes: [
-      { type: 'feature', description: 'Interactive map showing all UK regions' },
-      { type: 'feature', description: 'Regional carbon intensity leaderboard' },
-      { type: 'improvement', description: 'Quick region switching' },
-    ],
-  },
-  {
-    version: 'v0.5.0',
-    date: '2025-11-15',
-    title: 'Historical Data',
-    changes: [
-      { type: 'feature', description: 'View past carbon intensity data' },
-      { type: 'feature', description: 'Generation mix breakdown charts' },
-      { type: 'improvement', description: 'Date range selector for history' },
+      { type: 'feature', description: 'Comparative forecast view with actual vs predicted' },
+      { type: 'feature', description: 'Power Planner for optimal usage timing' },
+      { type: 'improvement', description: 'Skeleton loaders for better perceived performance' },
+      { type: 'fix', description: 'Fixed forecast chart timezone issues' },
     ],
   },
   {
@@ -174,15 +155,15 @@ export default function Changelog() {
                 </div>
                 <span className="text-xs text-muted-foreground">{entry.date}</span>
               </div>
-              
+
               <ul className="space-y-2">
                 {entry.changes.map((change, changeIndex) => {
                   const config = typeConfig[change.type];
                   const Icon = config.icon;
                   return (
                     <li key={changeIndex} className="flex items-start gap-2 text-sm">
-                      <Badge 
-                        variant="outline" 
+                      <Badge
+                        variant="outline"
                         className={`${config.color} text-[10px] px-1.5 py-0 h-5 shrink-0 mt-0.5`}
                       >
                         <Icon className="w-3 h-3 mr-1" />

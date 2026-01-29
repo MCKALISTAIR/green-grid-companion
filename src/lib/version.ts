@@ -12,8 +12,8 @@
 export const APP_VERSION = {
   major: 1,
   minor: 2,
-  patch: 0,
-  stage: 'beta' as const,
+  patch: 1,
+  stage: 'stable' as const,
 };
 
 export const VERSION_STRING = `v${APP_VERSION.major}.${APP_VERSION.minor}.${APP_VERSION.patch} ${APP_VERSION.stage.charAt(0).toUpperCase() + APP_VERSION.stage.slice(1)}`;
