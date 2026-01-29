@@ -1,5 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
-import { useMemo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo, useEffect, useRef, useCallback, useState } from 'react';
 import {
   getRegionalForecastById,
   getRegionalHistoryAndForecast,
@@ -15,6 +15,7 @@ import {
   IntensityData,
   REGION_IDS
 } from '@/lib/carbonApi';
+import { logger } from '@/lib/logger';
 
 // Calculate ms until next half-hour boundary (:00 or :30)
 // National Grid updates at these times, so we align our refreshes
@@ -30,27 +31,59 @@ const getMsUntilNextHalfHour = (): number => {
   return ((minutesToNext * 60) - seconds) * 1000 - ms + 90000;
 };
 
-export function useCarbonData(postcode: string) {
-  // Calculate smart refetch interval aligned to grid updates
-  const refetchInterval = useMemo(() => {
+// Hook for precise setTimeout-based refetching aligned to grid schedule
+function useSmartRefetch(refetchFn: () => Promise<void>, enabled: boolean) {
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  const scheduleNextFetch = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    
     const msUntilNext = getMsUntilNextHalfHour();
-    // Cap at 30 minutes max, minimum 1 minute
-    return Math.max(60000, Math.min(msUntilNext, 30 * 60 * 1000));
-  }, []);
+    logger.debug(`Next carbon data fetch scheduled in ${Math.round(msUntilNext / 1000)}s`);
+    
+    timeoutRef.current = setTimeout(async () => {
+      logger.info('Smart refetch triggered at half-hour boundary');
+      await refetchFn();
+      // Schedule the next fetch after this one completes
+      scheduleNextFetch();
+    }, msUntilNext);
+  }, [refetchFn]);
+  
+  useEffect(() => {
+    if (!enabled) return;
+    
+    // Schedule initial fetch
+    scheduleNextFetch();
+    
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [enabled, scheduleNextFetch]);
+}
+
+export function useCarbonData(postcode: string) {
+  const queryClient = useQueryClient();
+  
+  // Track previous intensity for animation
+  const [previousIntensity, setPreviousIntensity] = useState<number | null>(null);
+  const lastIntensityRef = useRef<number | null>(null);
 
   // National intensity as fallback
   const nationalQuery = useQuery<IntensityData>({
     queryKey: ['national'],
     queryFn: getCurrentIntensity,
-    refetchInterval: refetchInterval,
     staleTime: 1000 * 60 * 10, // 10 minutes - more aggressive staleness
     gcTime: 1000 * 60 * 60, // 1 hour
+    // No refetchInterval - we use smart setTimeout instead
   });
 
   const regionalListQuery = useQuery<RegionListItem[]>({
     queryKey: ['regional', 'all'],
     queryFn: getAllRegions,
-    refetchInterval: 1000 * 60 * 5, // Check every 5 minutes
     staleTime: 1000 * 60 * 5,
     retry: 2,
   });
@@ -86,10 +119,10 @@ export function useCarbonData(postcode: string) {
     queryKey: ['regional', regionId],
     queryFn: () => regionId ? getRegionalIntensityById(regionId) : Promise.resolve(null),
     enabled: !!regionId,
-    refetchInterval: refetchInterval,
     staleTime: 1000 * 60 * 10, // 10 minutes
     gcTime: 1000 * 60 * 60, // 1 hour
     retry: 2,
+    // No refetchInterval - we use smart setTimeout instead
   });
 
   const forecastQuery = useQuery<ForecastData[]>({
@@ -104,7 +137,6 @@ export function useCarbonData(postcode: string) {
       return getRegionalHistoryAndForecast(regionId, from, to);
     },
     enabled: !!regionId,
-    refetchInterval: 1000 * 60 * 60, // Forecast doesn't change often
     staleTime: 1000 * 60 * 30,
     gcTime: 1000 * 60 * 60, // 1 hour
     retry: 2,
@@ -113,10 +145,24 @@ export function useCarbonData(postcode: string) {
   const generationQuery = useQuery<GenerationMix[]>({
     queryKey: ['generation'],
     queryFn: getGenerationMix,
-    refetchInterval: refetchInterval,
     staleTime: 1000 * 60 * 10, // 10 minutes
     gcTime: 1000 * 60 * 60, // 1 hour
+    // No refetchInterval - we use smart setTimeout instead
   });
+
+  // Refetch function for smart scheduling
+  const refetch = useCallback(async () => {
+    await Promise.all([
+      nationalQuery.refetch(),
+      regionalListQuery.refetch(),
+      regionalDataQuery.refetch(),
+      forecastQuery.refetch(),
+      generationQuery.refetch(),
+    ]);
+  }, [nationalQuery, regionalListQuery, regionalDataQuery, forecastQuery, generationQuery]);
+
+  // Use smart refetch aligned to grid schedule
+  useSmartRefetch(refetch, !!postcode);
 
   // Extract data from specific regional query or fallback to national
   const regionalData = regionalDataQuery.data?.data?.[0];
@@ -129,6 +175,14 @@ export function useCarbonData(postcode: string) {
     ?? nationalQuery.data?.intensity?.index
     ?? 'moderate';
 
+  // Track intensity changes for animation
+  useEffect(() => {
+    if (intensity !== 0 && intensity !== lastIntensityRef.current) {
+      setPreviousIntensity(lastIntensityRef.current);
+      lastIntensityRef.current = intensity;
+    }
+  }, [intensity]);
+
   // Use the name from the found region metadata (from list) or fallback
   // If regional data failed to load, explicit fallback to "National"
   const region = (regionalDataQuery.isSuccess && foundRegion?.shortname)
@@ -138,9 +192,19 @@ export function useCarbonData(postcode: string) {
   // Generation mix from regional or national
   const generationMix = regionalData?.generationmix ?? generationQuery.data ?? [];
 
+  // Determine if this is an initial load (no data yet) vs background refetch
+  const isInitialLoad = postcode ? (
+    regionalListQuery.isLoading ||
+    (!!regionId && !regionalDataQuery.data && regionalDataQuery.isLoading)
+  ) : (!nationalQuery.data && nationalQuery.isLoading);
+
+  // isLoading should only be true on initial load, not during background refetches
+  const isLoading = isInitialLoad;
+
   return {
     // Current intensity
     intensity,
+    previousIntensity,
     index,
     region,
     regionId, // Export regionId for use in other hooks/pages
@@ -152,13 +216,15 @@ export function useCarbonData(postcode: string) {
     // Forecast
     forecast: forecastQuery.data ?? [],
 
-    // Loading states - show loading if the requested data is loading
-    // If postcode is provided, we wait for regional list. 
-    // If found, we wait for specific data and forecast.
-    isLoading: postcode ? (
-      regionalListQuery.isLoading ||
-      (!!regionId && (regionalDataQuery.isLoading || forecastQuery.isLoading))
-    ) : nationalQuery.isLoading,
+    // Loading states - only true on initial load, not background refetches
+    isLoading,
+    
+    // Flag for background fetching (data exists but refreshing)
+    isBackgroundFetching: !isInitialLoad && (
+      nationalQuery.isFetching || 
+      regionalDataQuery.isFetching || 
+      forecastQuery.isFetching
+    ),
 
     // Robustness: Only report error if we have NO data to show.
     // If Regional fails but National is okay, we show National (graceful degradation).
@@ -169,15 +235,7 @@ export function useCarbonData(postcode: string) {
     error: (postcode && nationalQuery.isError) ? (regionalDataQuery.error || nationalQuery.error) : nationalQuery.error,
 
     // Refetch
-    refetch: async () => {
-      await Promise.all([
-        nationalQuery.refetch(),
-        regionalListQuery.refetch(),
-        regionalDataQuery.refetch(),
-        forecastQuery.refetch(),
-        generationQuery.refetch(),
-      ]);
-    },
+    refetch,
 
     // Helper to calculate next expected update time (HH:00 or HH:30)
     getNextUpdate: (lastUpdatedStr?: string) => {
