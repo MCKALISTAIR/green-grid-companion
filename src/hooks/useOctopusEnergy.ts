@@ -61,6 +61,10 @@ export function useOctopusEnergy(days: number = 30) {
   const [cachedIsLinked] = useState(() => localStorage.getItem('octopus-is-linked') === 'true');
   const [cachedHasCreds] = useState(() => localStorage.getItem('octopus-has-creds') === 'true');
 
+  // Only attempt to fetch status if user might be authenticated (has cached state or session)
+  // This prevents 401 errors for users who are not logged in
+  const shouldFetchStatus = cachedIsLinked || cachedHasCreds;
+
   // Fetch current status
   const { data: status, isLoading: statusLoading, refetch: refetchStatus } = useQuery({
     queryKey: ['octopus-status'],
@@ -69,11 +73,28 @@ export function useOctopusEnergy(days: number = 30) {
         body: { action: 'get-status' }
       });
 
-      if (error) throw new Error(error.message || 'Failed to fetch status');
+      if (error) {
+        // If 401, user is not authenticated - clear cached state
+        if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
+          localStorage.removeItem('octopus-is-linked');
+          localStorage.removeItem('octopus-has-creds');
+          // Return a default "not linked" status instead of throwing
+          return {
+            is_linked: false,
+            has_credentials: false,
+            meters: [],
+            latest_consumption: null,
+            footprint_records: 0
+          };
+        }
+        throw new Error(error.message || 'Failed to fetch status');
+      }
       return data;
     },
+    enabled: shouldFetchStatus,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes - keep in cache
+    retry: false, // Don't retry on auth failures
   });
 
   // Sync status to local storage for future optimistic loading
