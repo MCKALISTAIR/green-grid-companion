@@ -54,8 +54,12 @@ export interface GreennessForecastItem {
 
 export function useOctopusEnergy(days: number = 30) {
   const queryClient = useQueryClient();
+  
+  // All useState hooks must be declared first in the same order every render
   const [isSyncing, setIsSyncing] = useState(false);
   const [hasSession, setHasSession] = useState(false);
+  const [cachedIsLinked] = useState(() => localStorage.getItem('octopus-is-linked') === 'true');
+  const [cachedHasCreds] = useState(() => localStorage.getItem('octopus-has-creds') === 'true');
 
   // Check for authenticated session on mount and listen for changes
   useEffect(() => {
@@ -80,10 +84,6 @@ export function useOctopusEnergy(days: number = 30) {
 
     return () => subscription.unsubscribe();
   }, []);
-
-  // Optimistic loading: Check local storage to see if we were linked previously
-  const [cachedIsLinked] = useState(() => localStorage.getItem('octopus-is-linked') === 'true');
-  const [cachedHasCreds] = useState(() => localStorage.getItem('octopus-has-creds') === 'true');
 
   // Only fetch if we have a session AND user might have credentials
   const shouldFetchStatus = hasSession && (cachedIsLinked || cachedHasCreds);
