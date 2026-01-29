@@ -55,20 +55,55 @@ export interface GreennessForecastItem {
 export function useOctopusEnergy(days: number = 30) {
   const queryClient = useQueryClient();
   const [isSyncing, setIsSyncing] = useState(false);
+  const [hasSession, setHasSession] = useState(false);
+
+  // Check for authenticated session on mount and listen for changes
+  useEffect(() => {
+    // Check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setHasSession(!!session);
+      if (!session) {
+        // No session - clear any stale cached state
+        localStorage.removeItem('octopus-is-linked');
+        localStorage.removeItem('octopus-has-creds');
+      }
+    });
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setHasSession(!!session);
+      if (!session) {
+        localStorage.removeItem('octopus-is-linked');
+        localStorage.removeItem('octopus-has-creds');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Optimistic loading: Check local storage to see if we were linked previously
-  // This allows us to start fetching data immediately instead of waiting for the status check
   const [cachedIsLinked] = useState(() => localStorage.getItem('octopus-is-linked') === 'true');
   const [cachedHasCreds] = useState(() => localStorage.getItem('octopus-has-creds') === 'true');
 
-  // Only attempt to fetch status if user might be authenticated (has cached state or session)
-  // This prevents 401 errors for users who are not logged in
-  const shouldFetchStatus = cachedIsLinked || cachedHasCreds;
+  // Only fetch if we have a session AND user might have credentials
+  const shouldFetchStatus = hasSession && (cachedIsLinked || cachedHasCreds);
 
   // Fetch current status
   const { data: status, isLoading: statusLoading, refetch: refetchStatus } = useQuery({
     queryKey: ['octopus-status'],
     queryFn: async (): Promise<OctopusStatus> => {
+      // Double-check session before calling
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        return {
+          is_linked: false,
+          has_credentials: false,
+          meters: [],
+          latest_consumption: null,
+          footprint_records: 0
+        };
+      }
+
       const { data, error } = await supabase.functions.invoke('octopus-energy', {
         body: { action: 'get-status' }
       });
@@ -78,7 +113,6 @@ export function useOctopusEnergy(days: number = 30) {
         if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
           localStorage.removeItem('octopus-is-linked');
           localStorage.removeItem('octopus-has-creds');
-          // Return a default "not linked" status instead of throwing
           return {
             is_linked: false,
             has_credentials: false,
