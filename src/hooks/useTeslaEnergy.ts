@@ -80,10 +80,33 @@ async function callTeslaFunction<T>(action: string, data?: Record<string, unknow
 
 export function useTeslaEnergy() {
   const queryClient = useQueryClient();
+  
+  // All useState hooks first
   const [isLinking, setIsLinking] = useState(false);
-
-  // Optimistic loading
+  const [hasSession, setHasSession] = useState(false);
   const [cachedIsLinked] = useState(() => localStorage.getItem('tesla-is-linked') === 'true');
+
+  // Check for authenticated session on mount and listen for changes
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setHasSession(!!session);
+      if (!session) {
+        localStorage.removeItem('tesla-is-linked');
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setHasSession(!!session);
+      if (!session) {
+        localStorage.removeItem('tesla-is-linked');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Only fetch if we have a session AND user might be linked
+  const shouldFetchStatus = hasSession && cachedIsLinked;
 
   // Fetch Tesla status
   const {
@@ -93,10 +116,24 @@ export function useTeslaEnergy() {
     refetch: refetchStatus,
   } = useQuery({
     queryKey: ['tesla-status'],
-    queryFn: () => callTeslaFunction<TeslaStatus>('get-status'),
+    queryFn: async () => {
+      // Double-check session before calling
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        return {
+          configured: false,
+          linked: false,
+          vehicles: [],
+          energySites: [],
+          lastSync: null
+        };
+      }
+      return callTeslaFunction<TeslaStatus>('get-status');
+    },
+    enabled: shouldFetchStatus,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000,
-    retry: 1,
+    retry: false, // Don't retry on auth failures
   });
 
   // Sync status to local storage
