@@ -23,6 +23,7 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const Glossary = lazy(() => import("./pages/Glossary"));
 const HistoryPage = lazy(() => import("./pages/History"));
 const ManageLocations = lazy(() => import("./pages/ManageLocations"));
+const Changelog = lazy(() => import("./pages/Changelog"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const TurbineTest = lazy(() => import("./pages/TurbineTest"));
 
@@ -121,6 +122,7 @@ function AppContent() {
             <Route path="/glossary" element={<Suspense fallback={<PageLoader />}><Glossary /></Suspense>} />
             <Route path="/history" element={<Suspense fallback={<PageLoader />}><HistoryPage /></Suspense>} />
             <Route path="/locations" element={<Suspense fallback={<PageLoader />}><ManageLocations /></Suspense>} />
+            <Route path="/changelog" element={<Suspense fallback={<PageLoader />}><Changelog /></Suspense>} />
             <Route path="/__turbine-test" element={<Suspense fallback={<PageLoader />}><TurbineTest /></Suspense>} />
             <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />
           </Route>
