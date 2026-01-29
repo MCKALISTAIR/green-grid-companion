@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RefreshCw, Zap, Info, Leaf, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -27,6 +27,7 @@ import { ComponentErrorBoundary } from '@/components/ComponentErrorBoundary';
 import { useGridDemand } from '@/hooks/useGridDemand';
 import { WeatherWidget } from '@/components/WeatherWidget';
 import { GreenerNightsCard } from '@/components/GreenerNightsCard';
+import { AnimatedIntensity } from '@/components/AnimatedIntensity';
 import { logger } from '@/lib/logger';
 
 const Index = () => {
@@ -47,6 +48,7 @@ const Index = () => {
 
   const {
     intensity,
+    previousIntensity,
     index,
     region,
     generationMix,
@@ -196,9 +198,10 @@ const Index = () => {
                         <RefreshCw className="w-10 h-10 text-card animate-spin" aria-label="Loading data" />
                       ) : (
                         <>
-                          <span className="text-6xl font-bold text-card drop-shadow-md">
-                            {intensity}
-                          </span>
+                          <AnimatedIntensity 
+                            value={intensity} 
+                            previousValue={previousIntensity}
+                          />
                           <div className="flex items-center gap-1">
                             <span className="text-card/90 text-lg font-medium">gCO₂/kWh</span>
                             <Popover>
@@ -231,10 +234,21 @@ const Index = () => {
                             {(() => {
                               const next = getNextUpdate(lastUpdated);
                               if (!next) return '';
-                              const isOverdue = new Date() > next;
-                              return isOverdue
-                                ? <span className="text-orange-300 animate-pulse">Waiting...</span>
-                                : `Next ${next.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+                              // Always show the next update time, even if we're past it
+                              // If overdue, show the *following* half-hour slot
+                              const now = new Date();
+                              if (now > next) {
+                                // Calculate next half-hour from now
+                                const minutes = now.getMinutes();
+                                const nextSlot = new Date(now);
+                                if (minutes < 30) {
+                                  nextSlot.setMinutes(30, 0, 0);
+                                } else {
+                                  nextSlot.setHours(nextSlot.getHours() + 1, 0, 0, 0);
+                                }
+                                return `Next ~${nextSlot.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+                              }
+                              return `Next ${next.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
                             })()}
                           </span>
 
