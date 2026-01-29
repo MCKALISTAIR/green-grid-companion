@@ -350,6 +350,21 @@ export function FootprintView() {
           <Zap className="w-4 h-4 mr-2" />
           Go to Settings
         </Button>
+
+        {/* Octopus promotional banner */}
+        <div className="text-center pt-2">
+          <p className="text-xs text-muted-foreground">
+            Not with Octopus yet?{' '}
+            <a 
+              href="https://share.octopus.energy/vivid-dodo-915" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-purple-600 dark:text-purple-400 hover:underline font-medium"
+            >
+              Join with £50 free credit
+            </a>
+          </p>
+        </div>
       </div>
     );
   }

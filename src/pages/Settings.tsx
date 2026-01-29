@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom';
-import { ChevronRight, GraduationCap, Shield, MapPin } from 'lucide-react';
+import { ChevronRight, GraduationCap, Shield, MapPin, History } from 'lucide-react';
 import { NotificationSettings } from '@/components/NotificationSettings';
 import { OctopusIntegration } from '@/components/OctopusIntegration';
 import { TeslaIntegration } from '@/components/TeslaIntegration';
 import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
 import { useTeslaEnergy } from '@/hooks/useTeslaEnergy';
+import { VERSION_STRING } from '@/lib/version';
 
 
 export default function Settings() {
@@ -63,6 +64,21 @@ export default function Settings() {
                             </div>
                         </Link>
 
+                        <Link to="/changelog">
+                            <div className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-colors">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-primary/10 rounded-full">
+                                        <History className="w-5 h-5 text-primary" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-medium">What's New</h3>
+                                        <p className="text-sm text-muted-foreground">View changelog & version history</p>
+                                    </div>
+                                </div>
+                                <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                            </div>
+                        </Link>
+
                         <Link to="/privacy">
                             <div className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-colors">
                                 <div className="flex items-center gap-3">
@@ -97,7 +113,9 @@ export default function Settings() {
                             Vehicle & Energy data powered by <a href="https://developer.tesla.com/" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">Tesla Fleet API</a>
                         </p>
                     )}
-
+                    <p className="pt-2">
+                        <Link to="/changelog" className="text-primary hover:underline">{VERSION_STRING}</Link>
+                    </p>
                 </div>
             </div>
 
