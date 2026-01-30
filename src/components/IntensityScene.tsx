@@ -37,6 +37,7 @@ interface IntensitySceneProps {
   intensity: number;
   index: string;
   generationMix?: GenerationMix[];
+  isVintage?: boolean;
 }
 
 // Custom SVG components for better animations
@@ -306,7 +307,7 @@ function Firefly({ delay, x, y }: { delay: number; x: number; y: number }) {
   );
 }
 
-export function IntensityScene({ intensity, index, generationMix = [] }: IntensitySceneProps) {
+export function IntensityScene({ intensity, index, generationMix = [], isVintage = false }: IntensitySceneProps) {
   const { timeOfDay, isNight, sunPosition } = useTimeOfDay();
   const { weather } = useWeatherData();
   const [synthwaveMode, setSynthwaveMode] = useState(false);
@@ -457,7 +458,7 @@ export function IntensityScene({ intensity, index, generationMix = [] }: Intensi
 
   return (
     <motion.div
-      className="relative w-full h-[45vh] min-h-96 overflow-hidden rounded-b-3xl"
+      className={`relative w-full h-[300px] md:h-full overflow-hidden rounded-xl md:rounded-l-xl transition-colors duration-1000 ${isVintage ? 'sepia-[.6] contrast-125 grayscale-[.3]' : ''}`}
       animate={{
         background: sceneConfig.skyGradient,
         filter: sceneConfig.sceneFilter,
@@ -466,6 +467,12 @@ export function IntensityScene({ intensity, index, generationMix = [] }: Intensi
       role="img"
       aria-label={`Animated landscape representing ${index} carbon intensity`}
     >
+      {/* Vintage Overlay - Grain effect */}
+      {isVintage && (
+        <div className="absolute inset-0 z-50 pointer-events-none opacity-20 mix-blend-overlay"
+          style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.85\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}
+        />
+      )}
       {/* Energy Facts Overlay */}
       <EnergyFactBubble intensity={intensity} generationMix={generationMix} />
 

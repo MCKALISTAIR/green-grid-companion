@@ -13,6 +13,12 @@ import { EmptyState } from '@/components/EmptyState';
 import { getErrorInfo } from '@/lib/errorUtils';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { CalendarIcon, RotateCcw } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useHistoricalCarbon } from '@/hooks/useHistoricalCarbon';
+import { IntensityScene } from '@/components/IntensityScene';
 
 export default function HistoryPage() {
     const postcode = localStorage.getItem('gridgreen-postcode') || '';
@@ -21,7 +27,9 @@ export default function HistoryPage() {
     const navigate = useNavigate();
 
     const [timeRange, setTimeRange] = useState<'24h' | '7d'>('7d');
+    const [date, setDate] = useState<Date | undefined>(undefined); // If defined, we are in Time Machine mode
 
+    // Standard History Query (Live/Recent)
     const historyQuery = useQuery<ForecastData[]>({
         queryKey: ['history', regionId, timeRange],
         queryFn: () => {
@@ -35,13 +43,25 @@ export default function HistoryPage() {
                 return getNationalHistoryAndForecast(from, to);
             }
         },
-        enabled: true, // Always fetch (National or Regional)
+        enabled: !date, // Only fetch if NOT in time machine mode
         refetchInterval: false,
         staleTime: 1000 * 60 * 30, // 30 mins
         gcTime: 1000 * 60 * 60, // 1 hour - keep in cache
     });
 
-    const data = historyQuery.data || [];
+    // Time Machine Query
+    const { data: historicalData, isLoading: isHistoricalLoading, isError: isHistoricalError } = useHistoricalCarbon(date);
+
+    // Determine which data to show
+    const displayData = date ? historicalData : (historyQuery.data || []);
+    const isLoading = date ? isHistoricalLoading : historyQuery.isLoading;
+    const isError = date ? isHistoricalError : historyQuery.isError;
+    const error = date ? null : historyQuery.error; // Historical hook handles its own error retrieval if needed
+
+    // Logic for "Vintage" mode - just a flag for now, could be passed to scene later
+    const isVintage = !!date;
+
+    const data = displayData;
 
     // Calculate simple stats
     const avgIntensity = data.length > 0
@@ -92,8 +112,8 @@ export default function HistoryPage() {
     const trend = endVal < startVal ? 'improving' : 'worsening';
 
     // Handle error state
-    if (isRegionError || historyQuery.isError) {
-        const errorInfo = getErrorInfo(regionError || historyQuery.error);
+    if (isRegionError || isError) {
+        const errorInfo = getErrorInfo(regionError || error);
         return (
             <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
                 <div className="p-4 space-y-6 pt-[calc(env(safe-area-inset-top)+2rem)]">
@@ -104,7 +124,7 @@ export default function HistoryPage() {
                     <ErrorState
                         title={errorInfo.title}
                         description={errorInfo.description}
-                        retry={() => historyQuery.refetch()}
+                        retry={() => date ? window.location.reload() : historyQuery.refetch()}
                         fullScreen
                     />
                 </div>
@@ -113,7 +133,7 @@ export default function HistoryPage() {
     }
 
     // Empty state when no history data
-    if (!isRegionLoading && !historyQuery.isLoading && data.length === 0) {
+    if (!isRegionLoading && !isLoading && data.length === 0) {
         return (
             <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
                 <div className="p-4 space-y-6 pt-[calc(env(safe-area-inset-top)+2rem)]">
@@ -135,16 +155,64 @@ export default function HistoryPage() {
     return (
         <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
             <div className="p-4 space-y-6 pt-[calc(env(safe-area-inset-top)+2rem)]">
-                <div>
-                    <h1 className="text-2xl font-bold">Grid History</h1>
-                    <p className="text-muted-foreground">{region || 'National'} carbon intensity over time.</p>
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div>
+                        <h1 className="text-2xl font-bold flex items-center gap-2">
+                            {date ? '🕰️ Time Machine' : 'Grid History'}
+                        </h1>
+                        <p className="text-muted-foreground">
+                            {date
+                                ? `Viewing archives for ${format(date, 'MMMM do, yyyy')}`
+                                : `${region || 'National'} carbon intensity over time.`
+                            }
+                        </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant={"outline"}
+                                    className={cn(
+                                        "justify-start text-left font-normal w-[240px]",
+                                        !date && "text-muted-foreground"
+                                    )}
+                                >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {date ? format(date, "PPP") : <span>Pick a past date</span>}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="end">
+                                <Calendar
+                                    mode="single"
+                                    selected={date}
+                                    onSelect={setDate}
+                                    disabled={(date) =>
+                                        date > new Date() || date < new Date("1900-01-01")
+                                    }
+                                    initialFocus
+                                />
+                            </PopoverContent>
+                        </Popover>
+
+                        {date && (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setDate(undefined)}
+                                title="Return to Present"
+                            >
+                                <RotateCcw className="h-4 w-4" />
+                            </Button>
+                        )}
+                    </div>
                 </div>
 
                 {!postcode ? (
                     <Card className="p-6 text-center">
                         <p>Please enter a postcode in Settings to see regional history.</p>
                     </Card>
-                ) : isRegionLoading || historyQuery.isLoading ? (
+                ) : isRegionLoading || isLoading ? (
                     <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                             <Card className="p-4 animate-pulse bg-card">
@@ -163,6 +231,40 @@ export default function HistoryPage() {
                     </div>
                 ) : (
                     <>
+                        {/* Time Machine Scene Visualisation */}
+                        {date && data.length > 0 && (
+                            <Card className="overflow-hidden border-2 border-primary/20">
+                                <div className="relative h-[200px] w-full">
+                                    <IntensityScene
+                                        intensity={avgIntensity}
+                                        index={data[Math.floor(data.length / 2)]?.intensity.index || 'moderate'}
+                                        generationMix={data[Math.floor(data.length / 2)]?.generationmix}
+                                        isVintage={true}
+                                    />
+                                    <div className="absolute top-2 left-2 bg-black/50 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-mono">
+                                        SNAPSHOT: {format(date, 'yyyy')}
+                                    </div>
+                                </div>
+                                <CardContent className="p-4 bg-muted/20">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-background rounded-full border">
+                                            {avgIntensity < (historyQuery.data && historyQuery.data.length > 0 ? (historyQuery.data.reduce((acc, curr) => acc + curr.intensity.forecast, 0) / historyQuery.data.length) : 0) ? (
+                                                <TrendingDown className="w-5 h-5 text-green-600" />
+                                            ) : (
+                                                <TrendingUp className="w-5 h-5 text-red-600" />
+                                            )}
+                                        </div>
+                                        <div>
+                                            <div className="font-semibold text-sm">Time Travel Analysis</div>
+                                            <div className="text-xs text-muted-foreground">
+                                                This day was <span className="font-bold text-foreground">{Math.abs(avgIntensity - Math.round(historyQuery.data && historyQuery.data.length > 0 ? (historyQuery.data.reduce((acc, curr) => acc + curr.intensity.forecast, 0) / historyQuery.data.length) : avgIntensity))}g {avgIntensity < (historyQuery.data && historyQuery.data.length > 0 ? Math.round(historyQuery.data.reduce((acc, curr) => acc + curr.intensity.forecast, 0) / historyQuery.data.length) : avgIntensity) ? 'cleaner' : 'dirtier'}</span> than the current 7-day average.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
+
                         {/* Stats Cards */}
                         <div className="grid grid-cols-2 gap-4">
                             <Card className="p-4 border-primary/20 bg-primary/5">
