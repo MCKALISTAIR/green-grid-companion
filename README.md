@@ -51,7 +51,13 @@ GridSense is a mobile-first companion app designed to help UK (and future) energ
     *   **Smart Charging Impact**: Track how much Carbon (CO₂) you've saved by charging during greener times compared to grid average.
     *   **Seamless Linking**: Secure OAuth connection to your Tesla account.
 
-## 🆕 Recent Updates (v1.2.1 - 2026-01-30)
+## 🆕 Recent Updates (v1.3.0 - 2026-01-30)
+
+### 🏆 Gamification & History
+*   **Grid Guardian Achievements**: Unlock badges like 'Night Owl' and 'Clean Streak' for eco-friendly habits.
+*   **Grid Time Machine**: Travel back in time to view historical carbon intensity data with a vintage filter.
+*   **Secret Builder Mode**: Unlockable debug panel (tap Version # 7 times) to control weather and time of day.
+*   **Badges Profile**: View your earned achievements in the Settings page.
 
 ### 🎨 Enhanced Dynamic Scene
 *   **Living Ecosystem**: Bees, rabbits, foxes, and owls that appear based on time/conditions.

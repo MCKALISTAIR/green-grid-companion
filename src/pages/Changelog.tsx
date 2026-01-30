@@ -25,6 +25,18 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: 'v1.3.0',
+    date: new Date().toISOString().split('T')[0],
+    title: 'Gamification & Time Travel',
+    changes: [
+      { type: 'feature', description: 'Grid Time Machine: Explore historical carbon data' },
+      { type: 'feature', description: 'Grid Guardian Achievements: Unlock badges for green habits' },
+      { type: 'feature', description: 'Secret Builder Mode: Customize your dashboard scene' },
+      { type: 'feature', description: 'Vintage filter for historical data visualization' },
+      { type: 'improvement', description: 'New "Badges" section in Settings' },
+    ],
+  },
+  {
     version: 'v1.2.1',
     date: '2026-01-29',
     title: 'Reliability & Onboarding',
