@@ -1,18 +1,21 @@
 import { Link } from 'react-router-dom';
-import { ChevronRight, GraduationCap, Shield, MapPin, History, MessageSquare, Mail } from 'lucide-react';
+import { ChevronRight, GraduationCap, Shield, MapPin, History, MessageSquare } from 'lucide-react';
 import { NotificationSettings } from '@/components/NotificationSettings';
 import { OctopusIntegration } from '@/components/OctopusIntegration';
 import { TeslaIntegration } from '@/components/TeslaIntegration';
 import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
 import { useTeslaEnergy } from '@/hooks/useTeslaEnergy';
+import { useVersionCheck } from '@/hooks/useVersionCheck';
 import { VERSION_STRING } from '@/lib/version';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Zap } from 'lucide-react';
 
 
 export default function Settings() {
     const { isLinked } = useOctopusEnergy();
     const { isLinked: isTeslaLinked } = useTeslaEnergy();
+    const { hasNewVersion } = useVersionCheck();
 
     return (
         <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
@@ -69,12 +72,22 @@ export default function Settings() {
                         <Link to="/changelog">
                             <div className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-colors">
                                 <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-primary/10 rounded-full">
+                                    <div className="p-2 bg-primary/10 rounded-full relative">
                                         <History className="w-5 h-5 text-primary" />
+                                        {hasNewVersion && (
+                                            <span className="absolute -top-1 -right-1 w-3 h-3 bg-destructive rounded-full animate-pulse" />
+                                        )}
                                     </div>
-                                    <div>
-                                        <h3 className="font-medium">What's New</h3>
-                                        <p className="text-sm text-muted-foreground">View changelog & version history</p>
+                                    <div className="flex items-center gap-2">
+                                        <div>
+                                            <h3 className="font-medium">What's New</h3>
+                                            <p className="text-sm text-muted-foreground">View changelog & version history</p>
+                                        </div>
+                                        {hasNewVersion && (
+                                            <Badge variant="destructive" className="text-[10px] px-1.5 py-0 h-5">
+                                                New
+                                            </Badge>
+                                        )}
                                     </div>
                                 </div>
                                 <ChevronRight className="w-5 h-5 text-muted-foreground" />

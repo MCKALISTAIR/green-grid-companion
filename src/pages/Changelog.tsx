@@ -1,18 +1,14 @@
+import { useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { VERSION_STRING, BUILD_DATE } from '@/lib/version';
+import { useVersionCheck } from '@/hooks/useVersionCheck';
 import {
   Sparkles,
   Zap,
   Bug,
   Wrench,
   ChevronLeft,
-  Car,
-  Leaf,
-  Bell,
-  BarChart3,
-  Clock,
-  Gauge
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -119,6 +115,13 @@ const typeConfig = {
 };
 
 export default function Changelog() {
+  const { markVersionSeen } = useVersionCheck();
+
+  // Mark version as seen when user visits the changelog
+  useEffect(() => {
+    markVersionSeen();
+  }, [markVersionSeen]);
+
   return (
     <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
       <div className="p-4 pt-[calc(env(safe-area-inset-top)+1rem)] space-y-6">
