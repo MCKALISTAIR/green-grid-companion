@@ -3,6 +3,7 @@ import { ChevronRight, GraduationCap, Shield, MapPin, History, MessageSquare } f
 import { NotificationSettings } from '@/components/NotificationSettings';
 import { OctopusIntegration } from '@/components/OctopusIntegration';
 import { TeslaIntegration } from '@/components/TeslaIntegration';
+import { AccountBackup } from '@/components/AccountBackup';
 import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
 import { useTeslaEnergy } from '@/hooks/useTeslaEnergy';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
@@ -23,6 +24,11 @@ export default function Settings() {
                 <div>
                     <h1 className="text-2xl font-bold">Settings</h1>
                     <p className="text-muted-foreground">Manage notifications and preferences.</p>
+                </div>
+
+                <div className="space-y-4">
+                    <h2 className="text-xl font-semibold">Account</h2>
+                    <AccountBackup />
                 </div>
 
                 <OctopusIntegration />
