@@ -10,6 +10,9 @@ import { useVersionCheck } from '@/hooks/useVersionCheck';
 import { VERSION_STRING } from '@/lib/version';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { useEnergyFacts } from '@/hooks/useEnergyFacts';
 import { Zap } from 'lucide-react';
 
 
@@ -17,6 +20,7 @@ export default function Settings() {
     const { isLinked } = useOctopusEnergy();
     const { isLinked: isTeslaLinked } = useTeslaEnergy();
     const { hasNewVersion } = useVersionCheck();
+    const { tone, setTone } = useEnergyFacts();
 
     return (
         <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
@@ -39,6 +43,36 @@ export default function Settings() {
                     <h2 className="text-xl font-semibold">Preferences</h2>
 
                     <div className="flex flex-col gap-3">
+                        {/* Commentary Style Preference */}
+                        <div className="p-4 bg-card border rounded-lg space-y-3">
+                            <div className="flex items-center gap-2">
+                                <MessageSquare className="w-5 h-5 text-primary" />
+                                <div>
+                                    <h3 className="font-medium">Commentary Style</h3>
+                                    <p className="text-sm text-muted-foreground">Choose the tone of energy facts.</p>
+                                </div>
+                            </div>
+
+                            <RadioGroup
+                                value={tone}
+                                onValueChange={(val) => setTone(val as any)}
+                                className="flex gap-4 pt-1"
+                            >
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="friendly" id="tone-friendly" />
+                                    <Label htmlFor="tone-friendly">Friendly</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="snarky" id="tone-snarky" />
+                                    <Label htmlFor="tone-snarky">Snarky</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="mixed" id="tone-mixed" />
+                                    <Label htmlFor="tone-mixed">Mixed</Label>
+                                </div>
+                            </RadioGroup>
+                        </div>
+
                         <Link to="/locations">
                             <div className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-colors">
                                 <div className="flex items-center gap-3">

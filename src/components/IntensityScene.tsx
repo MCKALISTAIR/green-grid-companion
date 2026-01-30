@@ -29,6 +29,7 @@ import { HydroDam } from './scene/HydroDam';
 import { TrendArrows } from './scene/TrendArrows';
 import { MeteorShower } from './scene/MeteorShower';
 import { BiomassSmoke } from './scene/BiomassSmoke';
+import { EnergyFactBubble } from './scene/EnergyFactBubble';
 
 import { GenerationMix } from '@/lib/carbonApi';
 
@@ -465,6 +466,9 @@ export function IntensityScene({ intensity, index, generationMix = [] }: Intensi
       role="img"
       aria-label={`Animated landscape representing ${index} carbon intensity`}
     >
+      {/* Energy Facts Overlay */}
+      <EnergyFactBubble intensity={intensity} generationMix={generationMix} />
+
       {/* Weather Effects Layer (fog, rain, snow, lightning) */}
       <WeatherEffects weather={weather} isNight={isNight} />
       {/* Stars for night time */}
