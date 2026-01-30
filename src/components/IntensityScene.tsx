@@ -30,6 +30,8 @@ import { TrendArrows } from './scene/TrendArrows';
 import { MeteorShower } from './scene/MeteorShower';
 import { BiomassSmoke } from './scene/BiomassSmoke';
 import { EnergyFactBubble } from './scene/EnergyFactBubble';
+import { useAchievements } from '@/hooks/useAchievements';
+import { useSceneDirector } from '@/hooks/useSceneDirector';
 
 import { GenerationMix } from '@/lib/carbonApi';
 
@@ -307,10 +309,38 @@ function Firefly({ delay, x, y }: { delay: number; x: number; y: number }) {
   );
 }
 
-export function IntensityScene({ intensity, index, generationMix = [], isVintage = false }: IntensitySceneProps) {
-  const { timeOfDay, isNight, sunPosition } = useTimeOfDay();
-  const { weather } = useWeatherData();
+export function IntensityScene({ intensity: propIntensity, index: propIndex, generationMix = [], isVintage = false }: IntensitySceneProps) {
+  const { timeOfDay: realTimeOfDay, isNight: realIsNight, sunPosition: realSunPosition } = useTimeOfDay();
+  const { weather: realWeather } = useWeatherData();
+  const { unlock } = useAchievements();
+  const { active: isDirectorMode, overrides } = useSceneDirector();
+
+  // Helper to determine active time of day (override or real)
+  const timeOfDay = (isDirectorMode && overrides.timeOfDay) ? overrides.timeOfDay : realTimeOfDay;
+  // Simple approximation for night if override is set (night/dusk/dawn usually imply night-ish features, but let's stick to 'night')
+  const isNight = (isDirectorMode && overrides.timeOfDay)
+    ? (overrides.timeOfDay === 'night' || overrides.timeOfDay === 'dusk' || overrides.timeOfDay === 'dawn') // Broad approximation for UI
+    : realIsNight;
+
+  // Override Weather
+  const weather = (isDirectorMode && overrides.weather) ? { ...realWeather, ...overrides.weather } : realWeather;
+
+  // Override Intensity (updates 'cleanliness' calculation below naturally if we swap the prop? 
+  // We can't swap the prop easily inside the component unless we rename the prop variable or create a new local one.
+  // PROPOSING: Rename prop `intensity` to `propIntensity` in arguments, and use `const intensity = ...`)
+
   const [synthwaveMode, setSynthwaveMode] = useState(false);
+
+  // Apply Intensity Override
+  const intensity = (isDirectorMode && overrides.intensity !== undefined) ? overrides.intensity : propIntensity;
+  // We might need to recalculate 'index' (low/med/high) if intensity changes, for color logic.
+  // But strictly 'index' is passed as prop. 
+  // Let's crude approx index if overridden for visual color shifting:
+  const index = (isDirectorMode && overrides.intensity !== undefined)
+    ? (overrides.intensity < 50 ? 'very low' : overrides.intensity < 150 ? 'low' : overrides.intensity < 250 ? 'moderate' : overrides.intensity < 350 ? 'high' : 'very high')
+    : propIndex;
+
+  const sunPosition = realSunPosition; // TODO: Calculate fake sun position based on overridden timeOfDay if needed
 
   // Check if user has seen the scene intro during this session
   const [hasSeenScene, setHasSeenScene] = useState(() => {
@@ -999,7 +1029,11 @@ export function IntensityScene({ intensity, index, generationMix = [], isVintage
 
       {/* Fox - Rare event at dusk */}
       <AnimatePresence>
-        {showFox && <Fox />}
+        {showFox && (
+          <div onClick={() => unlock('fox_spotter')} className="cursor-pointer pointer-events-auto">
+            <Fox />
+          </div>
+        )}
       </AnimatePresence>
 
       {/* ===== PHASE 3: ADVANCED FEATURES ===== */}

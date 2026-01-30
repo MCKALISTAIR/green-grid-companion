@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getRegionalHistoryAndForecast, getNationalHistoryAndForecast, ForecastData } from '@/lib/carbonApi';
 import { useCarbonData } from '@/hooks/useCarbonData';
@@ -19,6 +19,7 @@ import { CalendarIcon, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useHistoricalCarbon } from '@/hooks/useHistoricalCarbon';
 import { IntensityScene } from '@/components/IntensityScene';
+import { useAchievements } from '@/hooks/useAchievements';
 
 export default function HistoryPage() {
     const postcode = localStorage.getItem('gridgreen-postcode') || '';
@@ -60,6 +61,15 @@ export default function HistoryPage() {
 
     // Logic for "Vintage" mode - just a flag for now, could be passed to scene later
     const isVintage = !!date;
+
+    const { unlock } = useAchievements();
+
+    // Unlock Time Traveler achievement if using Time Machine
+    useEffect(() => {
+        if (date) {
+            unlock('time_traveler');
+        }
+    }, [date, unlock]);
 
     const data = displayData;
 

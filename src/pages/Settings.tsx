@@ -13,7 +13,10 @@ import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { useEnergyFacts } from '@/hooks/useEnergyFacts';
-import { Zap } from 'lucide-react';
+import { useAchievements } from '@/hooks/useAchievements';
+import { useSceneDirector } from '@/hooks/useSceneDirector';
+import { Zap, Trophy, Lock, Construction } from 'lucide-react';
+import { toast } from 'sonner';
 
 
 export default function Settings() {
@@ -21,6 +24,39 @@ export default function Settings() {
     const { isLinked: isTeslaLinked } = useTeslaEnergy();
     const { hasNewVersion } = useVersionCheck();
     const { tone, setTone } = useEnergyFacts();
+    const { achievements } = useAchievements();
+    const { unlocked, handleVersionTap } = useSceneDirector();
+
+    const onVersionClick = () => {
+        handleVersionTap();
+        // Feedback for tapping (optional, maybe standard '7 taps remaining')
+        // Logic inside hook handles the state, but we might want intermediate feedback?
+        // Let's keep it secret for now, or use the tapCount from hook if we exported it.
+    };
+
+    const AchievementsList = () => (
+        <>
+            {achievements.map((achievement) => (
+                <div
+                    key={achievement.id}
+                    className={`p-3 border rounded-lg flex flex-col items-center text-center gap-2 transition-all ${achievement.unlocked ? 'bg-primary/5 border-primary/20' : 'bg-muted/50 border-muted opacity-60 grayscale'}`}
+                >
+                    <div className="text-2xl filter drop-shadow-sm">
+                        {achievement.unlocked ? achievement.icon : <Lock className="w-6 h-6 text-muted-foreground" />}
+                    </div>
+                    <div>
+                        <div className="font-semibold text-xs mb-1">{achievement.title}</div>
+                        <div className="text-[10px] text-muted-foreground leading-tight">{achievement.description}</div>
+                    </div>
+                    {achievement.progress !== undefined && !achievement.unlocked && achievement.maxProgress && (
+                        <div className="w-full h-1 bg-muted mt-1 rounded-full overflow-hidden">
+                            <div className="h-full bg-primary/50" style={{ width: `${(achievement.progress / achievement.maxProgress) * 100}%` }} />
+                        </div>
+                    )}
+                </div>
+            ))}
+        </>
+    );
 
     return (
         <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
@@ -38,6 +74,16 @@ export default function Settings() {
                 <OctopusIntegration />
                 <TeslaIntegration />
                 <NotificationSettings />
+
+                <div className="space-y-4">
+                    <h2 className="text-xl font-semibold flex items-center gap-2">
+                        <Trophy className="w-5 h-5 text-yellow-500" />
+                        Badges
+                    </h2>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <AchievementsList />
+                    </div>
+                </div>
 
                 <div className="space-y-4">
                     <h2 className="text-xl font-semibold">Preferences</h2>
@@ -189,9 +235,20 @@ export default function Settings() {
                             Vehicle & Energy data powered by <a href="https://developer.tesla.com/" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">Tesla Fleet API</a>
                         </p>
                     )}
-                    <p className="pt-2">
-                        <Link to="/changelog" className="text-primary hover:underline">{VERSION_STRING}</Link>
-                    </p>
+                    <div className="pt-2 flex flex-col items-center gap-1">
+                        <span
+                            onClick={(e) => { e.preventDefault(); onVersionClick(); }}
+                            className="bg-transparent border-0 p-0 text-primary hover:underline cursor-pointer select-none"
+                        >
+                            {VERSION_STRING}
+                        </span>
+                        {unlocked && (
+                            <Badge variant="outline" className="text-[10px] border-amber-500 text-amber-500 gap-1 mt-1 animate-in fade-in zoom-in">
+                                <Construction className="w-3 h-3" />
+                                Director Mode Unlocked
+                            </Badge>
+                        )}
+                    </div>
                 </div>
 
                 {/* Debug Section */}

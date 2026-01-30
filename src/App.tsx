@@ -12,6 +12,8 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import ScrollToTop from "@/components/ScrollToTop";
 import { logger } from "@/lib/logger";
+import { AchievementManager } from "@/components/AchievementManager";
+import { DirectorPanel } from "@/components/DirectorPanel";
 
 // Lazy load pages
 const Index = lazy(() => import("./pages/Index"));
@@ -138,6 +140,8 @@ const App = () => (
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <TooltipProvider>
         <ErrorBoundary>
+          <AchievementManager />
+          <DirectorPanel />
           <AppContent />
         </ErrorBoundary>
       </TooltipProvider>
