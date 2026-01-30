@@ -2,6 +2,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, ListOrdered, Calendar, Settings, Clock, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { VERSION_STRING } from '@/lib/version';
 
 export function SideNav() {
     const navigate = useNavigate();
@@ -47,7 +48,7 @@ export function SideNav() {
                 <NavItem path="/settings" icon={Settings} label="Settings" />
                 <div className="mt-4 px-2">
                     <p className="text-xs text-muted-foreground text-center">
-                        v0.0.1 Beta
+                        {VERSION_STRING}
                     </p>
                 </div>
             </div>

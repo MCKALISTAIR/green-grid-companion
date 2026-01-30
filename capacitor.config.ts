@@ -19,7 +19,12 @@ const config: CapacitorConfig = {
       androidScaleType: 'CENTER_CROP',
       showSpinner: false
     },
-    StatusBar: {}
+    StatusBar: {},
+    SignInWithApple: {
+      clientId: 'app.lovable.1558020f8a4c43dc9ea079533f5d485c.web',
+      redirectURI: 'https://gridsense-app.lovable.app/auth/callback',
+      scopes: 'email name'
+    }
   }
 };
 

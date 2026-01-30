@@ -10,24 +10,61 @@ export interface LandscapeProps {
     skipIntro?: boolean;
 }
 
+// Get current season based on month
+function getCurrentSeason(): 'spring' | 'summer' | 'autumn' | 'winter' {
+    const month = new Date().getMonth(); // 0-11
+    if (month >= 2 && month <= 4) return 'spring'; // Mar-May
+    if (month >= 5 && month <= 7) return 'summer'; // Jun-Aug  
+    if (month >= 8 && month <= 10) return 'autumn'; // Sep-Nov
+    return 'winter'; // Dec-Feb
+}
+
 // 🌲 Stylized Pine Tree with Shading
 function PineTree({ x, y, scale = 1, colorPrimary, colorShadow, isSnowing, isChristmas }: { x: number; y: number; scale?: number; colorPrimary: string; colorShadow: string; isSnowing?: boolean; isChristmas?: boolean }) {
+    const season = getCurrentSeason();
+
+    // Seasonal color overrides
+    const getSeasonalColors = () => {
+        if (isChristmas || isSnowing) return { primary: colorPrimary, shadow: colorShadow };
+
+        switch (season) {
+            case 'spring':
+                return { primary: '#86efac', shadow: '#4ade80' };
+            case 'autumn':
+                return { primary: '#fb923c', shadow: '#f97316' };
+            default:
+                return { primary: colorPrimary, shadow: colorShadow };
+        }
+    };
+
+    const seasonalColors = getSeasonalColors();
+
     return (
         <g transform={`translate(${x}, ${y}) scale(${scale})`}>
             {/* Trunk */}
             <rect x="-2" y="0" width="4" height="10" fill="rgba(60, 40, 20, 0.4)" />
 
             {/* Bottom Tier */}
-            <path d="M0,-25 L15,-5 L0,-5 Z" fill={colorShadow} />
-            <path d="M0,-25 L-15,-5 L0,-5 Z" fill={colorPrimary} />
+            <path d="M0,-25 L15,-5 L0,-5 Z" fill={seasonalColors.shadow} />
+            <path d="M0,-25 L-15,-5 L0,-5 Z" fill={seasonalColors.primary} />
 
             {/* Middle Tier */}
-            <path d="M0,-40 L12,-20 L0,-20 Z" fill={colorShadow} />
-            <path d="M0,-40 L-12,-20 L0,-20 Z" fill={colorPrimary} />
+            <path d="M0,-40 L12,-20 L0,-20 Z" fill={seasonalColors.shadow} />
+            <path d="M0,-40 L-12,-20 L0,-20 Z" fill={seasonalColors.primary} />
 
             {/* Top Tier */}
-            <path d="M0,-50 L8,-35 L0,-35 Z" fill={colorShadow} />
-            <path d="M0,-50 L-8,-35 L0,-35 Z" fill={colorPrimary} />
+            <path d="M0,-50 L8,-35 L0,-35 Z" fill={seasonalColors.shadow} />
+            <path d="M0,-50 L-8,-35 L0,-35 Z" fill={seasonalColors.primary} />
+
+            {/* Spring Blossoms 🌸 */}
+            {season === 'spring' && !isChristmas && (
+                <g>
+                    <circle cx="-8" cy="-15" r="1.2" fill="#fda4af" opacity="0.9" />
+                    <circle cx="6" cy="-22" r="1.2" fill="#fda4af" opacity="0.9" />
+                    <circle cx="-4" cy="-30" r="1.2" fill="#fda4af" opacity="0.9" />
+                    <circle cx="7" cy="-38" r="1.2" fill="#fda4af" opacity="0.9" />
+                </g>
+            )}
 
             {/* Christmas Decorations 🎄 */}
             {isChristmas && (

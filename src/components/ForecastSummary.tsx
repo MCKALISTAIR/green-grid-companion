@@ -58,9 +58,9 @@ export function ForecastSummary({ forecast }: ForecastSummaryProps) {
 
             const now = new Date();
             now.setHours(0, 0, 0, 0); // Start of today
-            const isFutureDay = date.getTime() > now.getTime();
+            const isPastDay = date.getTime() < now.getTime(); // Strictly less than (not today)
 
-            const hasActuals = !isFutureDay && values.actual.length > 0;
+            const hasActuals = isPastDay && values.actual.length > 0;
 
             let minActual, maxActual, avgActual;
 

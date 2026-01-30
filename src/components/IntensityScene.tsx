@@ -10,6 +10,25 @@ import { Butterfly } from './scene/Butterfly';
 import { Sheep } from './scene/Sheep';
 import { WeatherEffects } from './scene/WeatherEffects';
 import { UFO, ElectricDrone, SteamTrain } from './scene/CarrotEvents';
+import { NuclearCoolingTower } from './scene/NuclearCoolingTower';
+import { OffshoreWind } from './scene/OffshoreWind';
+import { TidalWaves } from './scene/TidalWaves';
+import { Rainbow } from './scene/Rainbow';
+import { PollutionWarning } from './scene/PollutionWarning';
+import { NetZeroCelebration } from './scene/NetZeroCelebration';
+import { Bee } from './scene/Bee';
+import { Rabbit } from './scene/Rabbit';
+import { Owl } from './scene/Owl';
+import { Fox } from './scene/Fox';
+import { Flowers } from './scene/Flowers';
+import { ForegroundGrass } from './scene/ForegroundGrass';
+import { BackgroundMountains } from './scene/BackgroundMountains';
+import { AuroraBorealis } from './scene/AuroraBorealis';
+import { EVChargingStation } from './scene/EVChargingStation';
+import { HydroDam } from './scene/HydroDam';
+import { TrendArrows } from './scene/TrendArrows';
+import { MeteorShower } from './scene/MeteorShower';
+import { BiomassSmoke } from './scene/BiomassSmoke';
 
 import { GenerationMix } from '@/lib/carbonApi';
 
@@ -24,9 +43,9 @@ function FlyingBird({ delay, duration, startX, top, scale }: { delay: number; du
   return (
     <motion.svg
       className="absolute w-8 h-8"
-      initial={{ x: `${startX}%`, opacity: 0 }}
+      initial={{ left: `${startX}%`, opacity: 0 }}
       animate={{
-        x: [`${startX}%`, '120%'],
+        left: ['${startX}%', '120%'],
         opacity: [0, 1, 1, 0],
       }}
       transition={{
@@ -343,6 +362,48 @@ export function IntensityScene({ intensity, index, generationMix = [] }: Intensi
     setTimeout(() => setTurbineOverdrive(null), 2000); // Reset after 2s
   };
 
+  // Extract generation mix percentages
+  const getGenerationPercentage = (fuel: string) => {
+    const mix = generationMix.find(m => m.fuel.toLowerCase() === fuel.toLowerCase());
+    return mix?.perc || 0;
+  };
+
+  const nuclearPercentage = getGenerationPercentage('nuclear');
+  const windPercentage = getGenerationPercentage('wind');
+  const hydroPercentage = getGenerationPercentage('hydro');
+  // Note: Marine energy is rare in UK grid, may not exist in data
+  const marinePercentage = generationMix.find(m =>
+    m.fuel.toLowerCase().includes('marine') || m.fuel.toLowerCase().includes('tidal')
+  )?.perc || 0;
+
+  // Rare fox event (1% chance every 30s at dusk)
+  const [showFox, setShowFox] = useState(false);
+  const isDawnOrDusk = timeOfDay === 'dawn' || timeOfDay === 'dusk';
+
+  useEffect(() => {
+    if (!isDawnOrDusk || showFox) return;
+
+    const foxInterval = setInterval(() => {
+      if (Math.random() > 0.99) {
+        setShowFox(true);
+        setTimeout(() => setShowFox(false), 12000); // Fox animation is 12s
+      }
+    }, 30000);
+
+    return () => clearInterval(foxInterval);
+  }, [isDawnOrDusk, showFox]);
+
+  // Meteor shower event (triggered by double-clicking moon)
+  const [showMeteorShower, setShowMeteorShower] = useState(false);
+
+  const handleMoonDoubleClick = () => {
+    setShowMeteorShower(true);
+    setTimeout(() => setShowMeteorShower(false), 8000); // 8s duration
+  };
+
+  // Extract biomass percentage for smoke
+  const biomassPercentage = getGenerationPercentage('biomass');
+
   const sceneConfig = useMemo(() => {
     const cleanliness = Math.max(0, Math.min(1, 1 - (intensity - 50) / 300));
 
@@ -415,7 +476,7 @@ export function IntensityScene({ intensity, index, generationMix = [] }: Intensi
 
       {/* Moon for night time */}
       <AnimatePresence>
-        {sceneConfig.showMoon && <Moon position={sunPosition} />}
+        {sceneConfig.showMoon && <Moon position={sunPosition} onDoubleClick={handleMoonDoubleClick} />}
       </AnimatePresence>
 
       {/* Sun Rays for clean energy */}
@@ -824,6 +885,179 @@ export function IntensityScene({ intensity, index, generationMix = [] }: Intensi
               <Droplets className="w-6 h-6 text-gen-hydro/60" aria-hidden="true" />
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Nuclear Cooling Towers - Show when nuclear % > 5 */}
+      <AnimatePresence>
+        {sceneConfig.showRenewables && nuclearPercentage > 5 && (
+          <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-15">
+            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+              <NuclearCoolingTower x={280} steamIntensity={nuclearPercentage / 100} isNight={isNight} />
+              {nuclearPercentage > 15 && <NuclearCoolingTower x={240} steamIntensity={0.5} isNight={isNight} />}
+            </svg>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Offshore Wind Turbines - Show when wind % > 10 */}
+      <AnimatePresence>
+        {windPercentage > 10 && (
+          <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-5">
+            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+              <OffshoreWind count={Math.min(3, Math.floor(windPercentage / 10))} windSpeed={weather.windSpeed} />
+            </svg>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Tidal Waves - Show when hydro/marine % > 5 */}
+      <AnimatePresence>
+        {(hydroPercentage > 5 || marinePercentage > 0) && (
+          <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-25">
+            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+              <TidalWaves intensity={(hydroPercentage + marinePercentage) / 100} />
+            </svg>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ===== PHASE 2: CARBON MILESTONES ===== */}
+
+      {/* Rainbow - Ultra clean energy (<50g) */}
+      <AnimatePresence>
+        {intensity < 50 && <Rainbow />}
+      </AnimatePresence>
+
+      {/* Pollution Warning - High carbon (>300g) */}
+      <AnimatePresence>
+        {intensity > 300 && <PollutionWarning />}
+      </AnimatePresence>
+
+      {/* Net Zero Celebration - Zero or negative carbon */}
+      <AnimatePresence>
+        {intensity <= 0 && <NetZeroCelebration />}
+      </AnimatePresence>
+
+      {/* ===== PHASE 2: LIVING ECOSYSTEM ===== */}
+
+      {/* Flowers for bees */}
+      <AnimatePresence>
+        {sceneConfig.cleanliness > 0.8 && !isNight && (
+          <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-12">
+            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+              <Flowers positions={[
+                { x: 50, y: 120 },
+                { x: 120, y: 115 },
+                { x: 200, y: 118 },
+                { x: 280, y: 120 },
+                { x: 350, y: 117 },
+              ]} />
+            </svg>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Bees visiting flowers */}
+      <AnimatePresence>
+        {sceneConfig.cleanliness > 0.8 && !isNight && (
+          <>
+            <Bee startX={15} startY={18} delay={0} />
+            <Bee startX={50} startY={22} delay={2} />
+            <Bee startX={75} startY={20} delay={4} />
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Rabbit hopping at dawn/dusk */}
+      <AnimatePresence>
+        {isDawnOrDusk && sceneConfig.cleanliness > 0.6 && <Rabbit delay={0} />}
+      </AnimatePresence>
+
+      {/* Owls perched on trees at night */}
+      <AnimatePresence>
+        {isNight && sceneConfig.cleanliness > 0.7 && (
+          <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-12">
+            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+              <Owl treeX={80} treeY={85} />
+              <Owl treeX={320} treeY={95} />
+            </svg>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Fox - Rare event at dusk */}
+      <AnimatePresence>
+        {showFox && <Fox />}
+      </AnimatePresence>
+
+      {/* ===== PHASE 3: ADVANCED FEATURES ===== */}
+
+      {/* Background mountains for parallax */}
+      <AnimatePresence>
+        {sceneConfig.cleanliness > 0.5 && (
+          <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-1">
+            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+              <BackgroundMountains isNight={isNight} />
+            </svg>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Foreground grass with wind sway */}
+      <AnimatePresence>
+        {sceneConfig.cleanliness > 0.6 && (
+          <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-30">
+            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+              <ForegroundGrass windSpeed={weather.windSpeed} />
+            </svg>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Aurora Borealis for ultra-clean winter nights */}
+      <AnimatePresence>
+        {isNight && intensity < 30 && (new Date().getMonth() >= 11 || new Date().getMonth() <= 2) && (
+          <AuroraBorealis intensity={(30 - intensity) / 30} />
+        )}
+      </AnimatePresence>
+
+      {/* EV Charging Station at night when clean */}
+      <AnimatePresence>
+        {isNight && sceneConfig.cleanliness > 0.7 && (
+          <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-16">
+            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+              <EVChargingStation isCharging={sceneConfig.cleanliness > 0.8} />
+            </svg>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Hydro Dam when rainy + hydro */}
+      <AnimatePresence>
+        {isRaining && hydroPercentage > 10 && (
+          <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-14">
+            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+              <HydroDam flowIntensity={Math.min(hydroPercentage / 50, 1)} />
+            </svg>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Meteor Shower - Double-click moon */}
+      <AnimatePresence>
+        {showMeteorShower && <MeteorShower />}
+      </AnimatePresence>
+
+      {/* Biomass Smoke - Green tinted smoke when biomass > 5% */}
+      <AnimatePresence>
+        {biomassPercentage > 5 && sceneConfig.showRenewables && (
+          <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-15">
+            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+              <BiomassSmoke x={180} intensity={biomassPercentage / 100} />
+              {biomassPercentage > 15 && <BiomassSmoke x={220} intensity={0.6} />}
+            </svg>
+          </div>
         )}
       </AnimatePresence>
     </motion.div >

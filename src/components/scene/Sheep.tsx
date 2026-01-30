@@ -1,5 +1,6 @@
 import { useState, useId } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useHaptics } from '@/hooks/useHaptics';
 
 interface SheepProps {
     x: number;
@@ -12,10 +13,12 @@ interface SheepProps {
 export function Sheep({ x, y, scale = 1, isNight, delay = 0 }: SheepProps) {
     const [isJumping, setIsJumping] = useState(false);
     const id = useId();
+    const { mediumTap } = useHaptics();
 
     const handleClick = () => {
         if (isJumping) return;
         setIsJumping(true);
+        mediumTap(); // Haptic feedback!
         setTimeout(() => setIsJumping(false), 1000);
     };
 

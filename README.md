@@ -51,7 +51,15 @@ GridSense is a mobile-first companion app designed to help UK (and future) energ
     *   **Smart Charging Impact**: Track how much Carbon (CO₂) you've saved by charging during greener times compared to grid average.
     *   **Seamless Linking**: Secure OAuth connection to your Tesla account.
 
-## 🆕 Recent Updates (v1.2.1 - 2026-01-29)
+## 🆕 Recent Updates (v1.2.1 - 2026-01-30)
+
+### 🎨 Enhanced Dynamic Scene
+*   **Living Ecosystem**: Bees, rabbits, foxes, and owls that appear based on time/conditions.
+*   **Carbon Milestones**: Special effects for <50g (Rainbow), >300g (Pollution Warning), and Net Zero.
+*   **Advanced Weather**: Hydro dams during rain, Aurora Borealis on clean winter nights.
+*   **Parallax Depth**: Multi-layered background with mountains and swaying grass.
+*   **Interactive Elements**: Double-click the moon for a meteor shower!
+*   **Generation Mix Reality**: Real-time nuclear cooling towers, offshore wind, and biomass smoke.
 
 ### Reliability & Onboarding 🛡️
 *   **Production Error Tracking**: Sentry integration for monitoring stability in real-time.
