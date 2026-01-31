@@ -184,6 +184,31 @@ export function useOctopusEnergy(days: number = 30) {
     retry: 1, // Only retry once - this is non-critical data
   });
 
+  // Migrate data from anonymous session to authenticated user
+  const migrateData = useCallback(async (previousUserId: string) => {
+    setIsSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('octopus-energy', {
+        body: { action: 'migrate-data', previousUserId }
+      });
+
+      if (error) throw new Error(error.message || 'Failed to migrate data');
+
+      if (data.migrated?.credentials || data.migrated?.meters > 0) {
+        toast.success('Your Octopus data has been restored to this account!');
+        await refetchStatus();
+      }
+      return data;
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to migrate data';
+      logger.error('Data migration failed', { error: message });
+      // Don't show error toast - this is a background operation
+      return null;
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [refetchStatus]);
+
   // Save Credentials
   const saveCredentials = useCallback(async (apiKey: string, accountNumber: string) => {
     setIsSyncing(true);
@@ -324,6 +349,7 @@ export function useOctopusEnergy(days: number = 30) {
     calculateFootprint,
     fullSync,
     disconnect,
+    migrateData,
     refetchStatus,
     refetchFootprint,
   };
