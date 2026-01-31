@@ -54,14 +54,17 @@ export function useSceneDirector() {
         });
     }, [unlocked]);
 
-    const updateOverride = useCallback((key: keyof SceneOverrides, value: any) => {
-        setOverrides(prev => ({
-            ...prev,
-            [key]: {
-                ...(prev[key] || {}),
-                ...value
-            }
-        }));
+    const updateOverride = useCallback((key: keyof SceneOverrides, value: Record<string, unknown>) => {
+        setOverrides(prev => {
+            const currentValue = prev[key];
+            const isObject = currentValue && typeof currentValue === 'object' && !Array.isArray(currentValue);
+            return {
+                ...prev,
+                [key]: isObject 
+                    ? { ...(currentValue as Record<string, unknown>), ...value }
+                    : value
+            };
+        });
     }, []);
 
     const setExactOverride = useCallback((key: keyof SceneOverrides, value: any) => {

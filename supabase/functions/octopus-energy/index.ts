@@ -400,6 +400,122 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    // --- DATA MIGRATION (after sign-in) ---
+    // This action migrates orphaned Octopus data to the authenticated user's account
+    if (action === 'migrate-data') {
+      const { previousUserId } = payload;
+      
+      if (!previousUserId) {
+        return new Response(
+          JSON.stringify({ error: 'Previous user ID required for migration' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      console.log(`[${requestId}] Migrating Octopus data from ${previousUserId.substring(0, 8)}... to ${userId.substring(0, 8)}...`);
+
+      let migratedCredentials = false;
+      let migratedMeters = 0;
+      let consumptionRecords = 0;
+      let footprintRecords = 0;
+
+      // 1. Check if user already has credentials - don't overwrite
+      const { data: existingCreds } = await supabase
+        .from('octopus_credentials')
+        .select('user_id')
+        .eq('user_id', userId)
+        .single();
+
+      if (!existingCreds) {
+        // Migrate credentials from previous user
+        const { data: oldCreds, error: oldCredsError } = await supabase
+          .from('octopus_credentials')
+          .select('*')
+          .eq('user_id', previousUserId)
+          .single();
+
+        if (oldCreds && !oldCredsError) {
+          const { error: insertError } = await supabase
+            .from('octopus_credentials')
+            .insert({
+              user_id: userId,
+              api_key: oldCreds.api_key,
+              account_number: oldCreds.account_number,
+              created_at: oldCreds.created_at,
+              updated_at: new Date().toISOString()
+            });
+
+          if (!insertError) {
+            migratedCredentials = true;
+            // Delete old credentials
+            await supabase
+              .from('octopus_credentials')
+              .delete()
+              .eq('user_id', previousUserId);
+          }
+        }
+      }
+
+      // 2. Migrate meters
+      const { data: oldMeters } = await supabase
+        .from('octopus_meters')
+        .select('*')
+        .eq('user_id', previousUserId);
+
+      if (oldMeters && oldMeters.length > 0) {
+        for (const meter of oldMeters) {
+          // Check if this meter already belongs to current user
+          const { data: existingMeter } = await supabase
+            .from('octopus_meters')
+            .select('id')
+            .eq('mpan', meter.mpan)
+            .eq('user_id', userId)
+            .single();
+
+          if (!existingMeter) {
+            // Update meter ownership to new user
+            const { error: updateError } = await supabase
+              .from('octopus_meters')
+              .update({ user_id: userId, updated_at: new Date().toISOString() })
+              .eq('id', meter.id);
+
+            if (!updateError) {
+              migratedMeters++;
+
+              // Count consumption records for this meter
+              const { count: consCount } = await supabase
+                .from('octopus_consumption')
+                .select('*', { count: 'exact', head: true })
+                .eq('mpan', meter.mpan);
+              consumptionRecords += consCount || 0;
+
+              // Count footprint records for this meter
+              const { count: fpCount } = await supabase
+                .from('carbon_footprint')
+                .select('*', { count: 'exact', head: true })
+                .eq('mpan', meter.mpan);
+              footprintRecords += fpCount || 0;
+            }
+          }
+        }
+      }
+
+      console.log(`[${requestId}] Migration complete: creds=${migratedCredentials}, meters=${migratedMeters}, consumption=${consumptionRecords}, footprint=${footprintRecords}`);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          migrated: {
+            credentials: migratedCredentials,
+            meters: migratedMeters,
+            consumption_records: consumptionRecords,
+            footprint_records: footprintRecords
+          }
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     if (action === 'disconnect-account') {
       const { error: credsError } = await supabase
         .from('octopus_credentials')

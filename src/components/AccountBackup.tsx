@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,26 +8,83 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { User } from '@supabase/supabase-js';
 
+// Storage key for previous anonymous user ID
+const ANON_USER_ID_KEY = 'octopus-anon-user-id';
+
 export function AccountBackup() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
+  const migrationAttemptedRef = useRef(false);
 
   useEffect(() => {
     // Check initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      
+      // Store user ID for potential migration later
+      if (session?.user?.id) {
+        const storedAnonId = localStorage.getItem(ANON_USER_ID_KEY);
+        if (!storedAnonId) {
+          // First time signing in - this user might have had anon data
+          // We'll store their ID for future reference
+        }
+      }
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      const previousUser = user;
       setUser(session?.user ?? null);
+
+      // Handle sign-in event - attempt data migration
+      if (event === 'SIGNED_IN' && session?.user && !migrationAttemptedRef.current) {
+        migrationAttemptedRef.current = true;
+        
+        // Check if there's a stored anonymous user ID to migrate from
+        const storedAnonId = localStorage.getItem(ANON_USER_ID_KEY);
+        
+        if (storedAnonId && storedAnonId !== session.user.id) {
+          // Attempt to migrate data from the anonymous session
+          try {
+            const { data, error } = await supabase.functions.invoke('octopus-energy', {
+              body: { action: 'migrate-data', previousUserId: storedAnonId }
+            });
+
+            if (!error && data?.migrated) {
+              const { credentials, meters, consumption_records, footprint_records } = data.migrated;
+              if (credentials || meters > 0) {
+                toast.success(
+                  `Restored your Octopus data: ${meters} meter(s), ${footprint_records} footprint records`
+                );
+              }
+            }
+          } catch (err) {
+            console.error('Data migration failed:', err);
+          }
+          
+          // Clear the stored anon ID after migration attempt
+          localStorage.removeItem(ANON_USER_ID_KEY);
+        }
+      }
+      
+      // Store anonymous user ID when signing out
+      if (event === 'SIGNED_OUT' && previousUser?.id) {
+        localStorage.setItem(ANON_USER_ID_KEY, previousUser.id);
+      }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [user]);
 
   const handleSignIn = async (provider: 'google' | 'apple') => {
     setLoading(true);
+    
+    // Store current user ID before sign-in for potential migration
+    const { data: { session: currentSession } } = await supabase.auth.getSession();
+    if (currentSession?.user?.id) {
+      localStorage.setItem(ANON_USER_ID_KEY, currentSession.user.id);
+    }
+    
     try {
       const { error } = await lovable.auth.signInWithOAuth(provider, {
         redirect_uri: window.location.origin,
@@ -45,6 +102,7 @@ export function AccountBackup() {
 
   const handleSignOut = async () => {
     setLoading(true);
+    migrationAttemptedRef.current = false; // Reset for next sign-in
     try {
       await supabase.auth.signOut();
       toast.success('Signed out successfully');

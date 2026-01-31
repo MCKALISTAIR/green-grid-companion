@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { isPlatform } from '@ionic/react';
+import { Capacitor } from '@capacitor/core';
 import { SignInWithApple, SignInWithAppleResponse } from '@capacitor-community/apple-sign-in';
 import { lovable } from '@/integrations/lovable';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+
+const isNativeIOS = () => Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios';
 
 export const AppleSignInButton = () => {
     const [isLoading, setIsLoading] = useState(false);
@@ -13,7 +15,7 @@ export const AppleSignInButton = () => {
         setIsLoading(true);
 
         try {
-            if (isPlatform('capacitor') && isPlatform('ios')) {
+            if (isNativeIOS()) {
                 // Native iOS Sign in with Apple
                 console.log('Starting native Apple Sign In...');
 
