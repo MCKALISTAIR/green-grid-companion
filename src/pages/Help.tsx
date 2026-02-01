@@ -66,16 +66,7 @@ export default function Help() {
                         <AccordionTrigger>Interactive Features</AccordionTrigger>
                         <AccordionContent>
                             <div className="space-y-3 text-sm">
-                                <p><strong>Hidden Interactions:</strong></p>
-                                <ul className="list-disc pl-5 space-y-1">
-                                    <li>Tap wind turbines to trigger overdrive mode</li>
-                                    <li>Tap the sun or moon for day/night cycle</li>
-                                    <li>Tap energy insights bubble to cycle through tips</li>
-                                    <li>Watch for roaming animals in the scene</li>
-                                    <li>Pull down to refresh data</li>
-                                </ul>
-
-                                <p className="pt-2"><strong>Navigation:</strong></p>
+                                <p><strong>Navigation:</strong></p>
                                 <p>Swipe or tap the bottom tabs to access Power Planner, History, Leaderboard, and Settings.</p>
                             </div>
                         </AccordionContent>

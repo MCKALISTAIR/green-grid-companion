@@ -1,10 +1,16 @@
 import { ForecastData } from '@/lib/carbonApi';
-import { format, parseISO, isTomorrow } from 'date-fns';
+import { format, parseISO, isTomorrow, isToday } from 'date-fns';
 import { BatteryCharging, TrendingDown, TrendingUp } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 
 interface BestTimeCardProps {
   forecast: ForecastData[];
+}
+
+function getDayLabel(date: Date) {
+  if (isToday(date)) return '';
+  if (isTomorrow(date)) return 'tomorrow';
+  return format(date, 'EEEE'); // e.g. "Monday"
 }
 
 export function BestTimeCard({ forecast }: BestTimeCardProps) {
@@ -59,7 +65,7 @@ export function BestTimeCard({ forecast }: BestTimeCardProps) {
               <span className="text-sm font-medium text-foreground">Best time to load-shift</span>
             </div>
             <p className="text-lg font-bold text-intensity-very-low">
-              {format(bestStart, 'HH:mm')} → {format(bestEnd, 'HH:mm')}{isTomorrow(bestStart) ? ' tomorrow' : ''}
+              {format(bestStart, 'HH:mm')} → {format(bestEnd, 'HH:mm')} <span className="text-sm font-medium ml-1 text-muted-foreground">{getDayLabel(bestStart)}</span>
             </p>
             <p className="text-xs text-muted-foreground">
               Average: {Math.round(minSum / 6)} gCO₂/kWh
@@ -79,7 +85,7 @@ export function BestTimeCard({ forecast }: BestTimeCardProps) {
               <span className="text-sm font-medium text-foreground">Avoid high usage</span>
             </div>
             <p className="text-lg font-bold text-intensity-high">
-              {format(worstStart, 'HH:mm')} → {format(worstEnd, 'HH:mm')}{isTomorrow(worstStart) ? ' tomorrow' : ''}
+              {format(worstStart, 'HH:mm')} → {format(worstEnd, 'HH:mm')} <span className="text-sm font-medium ml-1 text-muted-foreground">{getDayLabel(worstStart)}</span>
             </p>
             <p className="text-xs text-muted-foreground">
               Average: {Math.round(maxSum / 6)} gCO₂/kWh

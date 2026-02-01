@@ -6,6 +6,24 @@ All notable changes to GridSense will be documented in this file.
 
 ### Added
 
+#### iOS UX Polish 🍎
+- **Haptic Feedback**: Added tactile responses to interactive elements
+  - Light impact for Wind Turbines overrides
+  - Medium impact for Sun/Moon toggles
+  - Refresh confirmation haptics
+- **Dynamic Status Bar**: Native status bar now synchronizes with the sky scene
+  - Color matches the exact gradient top color
+  - Adapts to time of day and weather conditions
+- **Reduced Motion Support**:
+  - Respects system accessibility settings
+  - Disables parallax cloud movement
+  - Simplifies particle effects when requested
+
+#### Stability Improvements 🛡️
+- **Crash Protection**: Fixed "Grid Malfunction" crash caused by race conditions in scene logic
+- **Robust Fallbacks**: Added safe default colors for invalid time/weather states
+- **Component Isolation**: Wrapped critical UI components in error boundaries to prevent app-wide crashes
+
 #### Help & Onboarding Features 🎓
 - **Feature Guides Page**: Comprehensive in-depth guides for all major features
   - Home Dashboard guide explaining intensity scene and color interpretation

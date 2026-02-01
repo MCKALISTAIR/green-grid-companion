@@ -14,6 +14,8 @@ import ScrollToTop from "@/components/ScrollToTop";
 import { logger } from "@/lib/logger";
 import { AchievementManager } from "@/components/AchievementManager";
 import { DirectorPanel } from "@/components/DirectorPanel";
+import { StatusBarManager } from "@/components/StatusBarManager";
+import { ComponentErrorBoundary } from "@/components/ComponentErrorBoundary";
 import { SplashScreen } from "@/components/SplashScreen";
 
 // Lazy load pages
@@ -29,6 +31,7 @@ const ManageLocations = lazy(() => import("./pages/ManageLocations"));
 const Changelog = lazy(() => import("./pages/Changelog"));
 const Help = lazy(() => import("./pages/Help"));
 const FeatureGuides = lazy(() => import("./pages/FeatureGuides"));
+const GuideDetail = lazy(() => import("./pages/GuideDetail"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const TurbineTest = lazy(() => import("./pages/TurbineTest"));
 
@@ -133,6 +136,7 @@ function AppContent() {
             <Route path="/changelog" element={<Suspense fallback={<PageLoader />}><Changelog /></Suspense>} />
             <Route path="/help" element={<Suspense fallback={<PageLoader />}><Help /></Suspense>} />
             <Route path="/feature-guides" element={<Suspense fallback={<PageLoader />}><FeatureGuides /></Suspense>} />
+            <Route path="/guides/:id" element={<Suspense fallback={<PageLoader />}><GuideDetail /></Suspense>} />
             <Route path="/__turbine-test" element={<Suspense fallback={<PageLoader />}><TurbineTest /></Suspense>} />
             <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />
           </Route>
@@ -150,6 +154,9 @@ const App = () => (
         <ErrorBoundary>
           <AchievementManager />
           <DirectorPanel />
+          <ComponentErrorBoundary name="Status Bar Manager">
+            <StatusBarManager />
+          </ComponentErrorBoundary>
           <AppContent />
         </ErrorBoundary>
       </TooltipProvider>

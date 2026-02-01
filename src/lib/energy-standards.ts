@@ -34,14 +34,17 @@ export const OFGEM_TDCV_2025 = {
     }
 } as const;
 
-export type HouseType = 'LOW' | 'MEDIUM' | 'HIGH';
+export type HouseType = 'LOW' | 'MEDIUM' | 'HIGH' | 'CUSTOM';
 
 export const DEFAULT_HOUSE_TYPE: HouseType = 'MEDIUM';
 
 /**
  * Get the average daily kWh consumption for a given house type.
  */
-export function getAverageDailyKwh(type: HouseType = DEFAULT_HOUSE_TYPE): number {
+export function getAverageDailyKwh(type: HouseType = DEFAULT_HOUSE_TYPE, customAnnualKwh?: number): number {
+    if (type === 'CUSTOM') {
+        return Number(((customAnnualKwh || 0) / 365).toFixed(2));
+    }
     const annual = OFGEM_TDCV_2025[type].annualKwh;
     return Number((annual / 365).toFixed(2));
 }

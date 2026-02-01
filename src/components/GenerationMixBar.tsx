@@ -85,7 +85,7 @@ export function GenerationMixBar({ mix, showMW = false, frequency }: GenerationM
             </div>
           </div>
 
-          <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-y-2 gap-x-4 pt-2">
+          <div className="hidden md:grid grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-y-2 gap-x-6 pt-2">
             {/* Desktop: Full Grid showing all items */}
             {sortedMix.map((item) => (
               <div
@@ -94,7 +94,7 @@ export function GenerationMixBar({ mix, showMW = false, frequency }: GenerationM
               >
                 <div className="flex items-center gap-2">
                   <div className={`w-3 h-3 rounded-full ${getFuelColor(item.fuel)}`} />
-                  <span className="capitalize text-muted-foreground">{item.fuel}</span>
+                  <span className="capitalize text-muted-foreground pr-2">{item.fuel}</span>
                 </div>
                 <span className="font-semibold tabular-nums">
                   {showMW && item.mw

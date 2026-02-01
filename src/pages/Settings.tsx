@@ -28,7 +28,7 @@ export default function Settings() {
     const { tone, setTone } = useEnergyFacts();
     const { achievements } = useAchievements();
     const { unlocked, handleVersionTap } = useSceneDirector();
-    const { houseType, setHouseType } = useSettings();
+    const { houseType, setHouseType, customAnnualKwh, setCustomAnnualKwh } = useSettings();
 
     const onVersionClick = () => {
         handleVersionTap();
@@ -117,6 +117,40 @@ export default function Settings() {
                                     </div>
                                 </div>
                             ))}
+
+                            <div className="flex items-start space-x-2 p-2 rounded hover:bg-muted/50 transition-colors">
+                                <RadioGroupItem value="CUSTOM" id="house-CUSTOM" className="mt-1" />
+                                <div className="grid gap-2 w-full pr-2">
+                                    <Label htmlFor="house-CUSTOM" className="font-medium">
+                                        Custom Estimate
+                                    </Label>
+                                    <div className="text-xs text-muted-foreground mb-1">
+                                        Enter your own annual consumption if known.
+                                    </div>
+
+                                    {houseType === 'CUSTOM' && (
+                                        <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                                            <div className="relative flex-1 max-w-[140px]">
+                                                <input
+                                                    type="number"
+                                                    value={customAnnualKwh || ''}
+                                                    onChange={(e) => {
+                                                        const val = parseInt(e.target.value);
+                                                        if (!isNaN(val) && val >= 0) {
+                                                            setCustomAnnualKwh(val);
+                                                        }
+                                                    }}
+                                                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                                    placeholder="2900"
+                                                />
+                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
+                                                    kWh
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </RadioGroup>
                     </div>
                 </div>

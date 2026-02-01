@@ -3,6 +3,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
+import { parseEdgeFunctionError } from '@/lib/errorUtils';
+import { ensureAuthSession } from '@/lib/auth-utils';
 
 export interface OctopusMeter {
   id: string;
@@ -57,7 +59,6 @@ export function useOctopusEnergy(days: number = 30) {
 
   // All useState hooks must be declared first in the same order every render
   const [isSyncing, setIsSyncing] = useState(false);
-  const [hasSession, setHasSession] = useState(false);
   const [cachedIsLinked] = useState(() => localStorage.getItem('octopus-is-linked') === 'true');
   const [cachedHasCreds] = useState(() => localStorage.getItem('octopus-has-creds') === 'true');
   // New: Cached actual credentials for re-linking
@@ -66,55 +67,22 @@ export function useOctopusEnergy(days: number = 30) {
     return cached ? JSON.parse(cached) : null;
   });
 
-  // Check for authenticated session on mount and listen for changes
-  useEffect(() => {
-    // Check initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setHasSession(!!session);
-      if (!session) {
-        // No session - clear any stale cached state
-        localStorage.removeItem('octopus-is-linked');
-        localStorage.removeItem('octopus-has-creds');
-      }
-    });
-
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setHasSession(!!session);
-      if (!session) {
-        localStorage.removeItem('octopus-is-linked');
-        localStorage.removeItem('octopus-has-creds');
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  // Only fetch if we have a session AND user might have credentials
-  const shouldFetchStatus = hasSession && (cachedIsLinked || cachedHasCreds);
+  // Fetch status if user might have credentials (removed session requirement)
+  const shouldFetchStatus = cachedIsLinked || cachedHasCreds;
 
   // Fetch current status
   const { data: status, isLoading: statusLoading, refetch: refetchStatus } = useQuery({
     queryKey: ['octopus-status'],
     queryFn: async (): Promise<OctopusStatus> => {
-      // Double-check session before calling
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        return {
-          is_linked: false,
-          has_credentials: false,
-          meters: [],
-          latest_consumption: null,
-          footprint_records: 0
-        };
-      }
+      // Ensure we have a session (creates anonymous if needed)
+      await ensureAuthSession();
 
       const { data, error } = await supabase.functions.invoke('octopus-energy', {
         body: { action: 'get-status' }
       });
 
       if (error) {
-        // If 401, user is not authenticated - clear cached state
+        // If 401, session might be invalid - return empty state
         if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
           localStorage.removeItem('octopus-is-linked');
           localStorage.removeItem('octopus-has-creds');
@@ -218,6 +186,9 @@ export function useOctopusEnergy(days: number = 30) {
   const saveCredentials = useCallback(async (apiKey: string, accountNumber: string) => {
     setIsSyncing(true);
     try {
+      // Ensure we have a session (creates anonymous if needed)
+      await ensureAuthSession();
+
       const { error } = await supabase.functions.invoke('octopus-energy', {
         body: { action: 'save-credentials', apiKey, accountNumber }
       });
@@ -232,7 +203,7 @@ export function useOctopusEnergy(days: number = 30) {
       toast.success('Credentials saved successfully');
       await refetchStatus();
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to save credentials';
+      const message = parseEdgeFunctionError(error, { feature: 'octopus', action: 'save' });
       toast.error(message);
       throw error;
     } finally {
@@ -250,6 +221,9 @@ export function useOctopusEnergy(days: number = 30) {
   const linkMeter = useCallback(async () => {
     setIsSyncing(true);
     try {
+      // Ensure we have a session (creates anonymous if needed)
+      await ensureAuthSession();
+
       const { data, error } = await supabase.functions.invoke('octopus-energy', {
         body: { action: 'get-meters' }
       });
@@ -265,7 +239,7 @@ export function useOctopusEnergy(days: number = 30) {
 
       return data;
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to link meter';
+      const message = parseEdgeFunctionError(error, { feature: 'octopus', action: 'link' });
       toast.error(message);
       throw error;
     } finally {
@@ -277,6 +251,9 @@ export function useOctopusEnergy(days: number = 30) {
   const syncConsumption = useCallback(async (syncDays: number = 7) => {
     setIsSyncing(true);
     try {
+      // Ensure we have a session (creates anonymous if needed)
+      await ensureAuthSession();
+
       const { data, error } = await supabase.functions.invoke('octopus-energy', {
         body: { action: 'sync-consumption', days: syncDays }
       });
@@ -287,7 +264,7 @@ export function useOctopusEnergy(days: number = 30) {
       await refetchStatus();
       return data;
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to sync consumption';
+      const message = parseEdgeFunctionError(error, { feature: 'octopus', action: 'sync' });
       toast.error(message);
       throw error;
     } finally {
@@ -299,6 +276,9 @@ export function useOctopusEnergy(days: number = 30) {
   const calculateFootprint = useCallback(async () => {
     setIsSyncing(true);
     try {
+      // Ensure we have a session (creates anonymous if needed)
+      await ensureAuthSession();
+
       const { data, error } = await supabase.functions.invoke('octopus-energy', {
         body: { action: 'calculate-footprint' }
       });
@@ -309,7 +289,7 @@ export function useOctopusEnergy(days: number = 30) {
       await refetchFootprint();
       return data;
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to calculate footprint';
+      const message = parseEdgeFunctionError(error, { feature: 'octopus', action: 'calculate' });
       toast.error(message);
       throw error;
     } finally {
@@ -327,6 +307,9 @@ export function useOctopusEnergy(days: number = 30) {
   const disconnect = useCallback(async () => {
     setIsSyncing(true);
     try {
+      // Ensure we have a session (creates anonymous if needed)
+      await ensureAuthSession();
+
       const { error } = await supabase.functions.invoke('octopus-energy', {
         body: { action: 'disconnect-account' }
       });
@@ -343,7 +326,7 @@ export function useOctopusEnergy(days: number = 30) {
 
       await refetchStatus();
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to disconnect account';
+      const message = parseEdgeFunctionError(error, { feature: 'octopus', action: 'disconnect' });
       toast.error(message);
       throw error;
     } finally {

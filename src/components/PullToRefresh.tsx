@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect, ReactNode } from 'react';
+import { useState, useRef, ReactNode } from 'react';
+import { useHaptics } from '@/hooks/useHaptics';
 import { RefreshCw } from 'lucide-react';
 
 interface PullToRefreshProps {
@@ -12,6 +13,7 @@ export function PullToRefresh({ onRefresh, children, disabled = false }: PullToR
     const [pullDistance, setPullDistance] = useState(0);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
+    const { impactMedium } = useHaptics();
 
     const THRESHOLD = 120;
     const MAX_PULL = 160;
@@ -52,6 +54,7 @@ export function PullToRefresh({ onRefresh, children, disabled = false }: PullToR
         if (disabled || isRefreshing) return;
 
         if (pullDistance > THRESHOLD) {
+            impactMedium();
             setIsRefreshing(true);
             setPullDistance(THRESHOLD); // Snap to threshold
 
@@ -80,8 +83,9 @@ export function PullToRefresh({ onRefresh, children, disabled = false }: PullToR
         >
             {/* Refresh Indicator */}
             <div
-                className="fixed top-0 left-0 right-0 flex justify-center pointer-events-none z-50 transition-all duration-300 pt-[calc(env(safe-area-inset-top)+1rem)]"
+                className="fixed top-0 left-0 right-0 flex justify-center pointer-events-none z-50 transition-all duration-300"
                 style={{
+                    paddingTop: 'calc(max(env(safe-area-inset-top), 40px) + 1rem)',
                     transform: `translateY(${Math.max(pullDistance, isRefreshing ? THRESHOLD : 0) - 100}px)`,
                     opacity: Math.min(pullDistance / (THRESHOLD * 0.5), 1)
                 }}

@@ -19,7 +19,7 @@ export function AnimatedIntensity({
 }: AnimatedIntensityProps) {
   const [showArrow, setShowArrow] = useState(false);
   const [direction, setDirection] = useState<'up' | 'down' | null>(null);
-  const { lightTap } = useHaptics();
+  const { impactLight } = useHaptics();
   const hasAnimatedRef = useRef(false);
 
   // Spring animation for smooth number counting
@@ -59,7 +59,7 @@ export function AnimatedIntensity({
     setShowArrow(true);
 
     // Trigger haptic feedback
-    lightTap();
+    impactLight();
 
     // Hide arrow after 2 seconds
     const timer = setTimeout(() => {

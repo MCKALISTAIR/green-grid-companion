@@ -50,9 +50,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
                     <h1 className="text-3xl font-bold tracking-tight text-foreground font-sans">
                         GridSense
                     </h1>
-                    <p className="text-xs text-muted-foreground tracking-widest uppercase">
-                        Powering a Greener Future
-                    </p>
+
                 </div>
             </div>
 

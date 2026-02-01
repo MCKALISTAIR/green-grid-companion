@@ -5,10 +5,12 @@ const SETTINGS_KEY = 'grid-companion-settings';
 
 interface Settings {
     houseType: HouseType;
+    customAnnualKwh: number;
 }
 
 const DEFAULT_SETTINGS: Settings = {
     houseType: DEFAULT_HOUSE_TYPE,
+    customAnnualKwh: 2900,
 };
 
 export function useSettings() {
@@ -40,5 +42,7 @@ export function useSettings() {
         // Convenience accessors
         houseType: settings.houseType,
         setHouseType: (type: HouseType) => updateSetting('houseType', type),
+        customAnnualKwh: settings.customAnnualKwh,
+        setCustomAnnualKwh: (kwh: number) => updateSetting('customAnnualKwh', kwh),
     };
 }

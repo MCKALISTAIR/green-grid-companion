@@ -17,6 +17,9 @@ GridSense is a mobile-first companion app designed to help UK (and future) energ
 *   **Desktop Support**: Responsive layout with a dedicated sidebar and grid dashboard for larger screens.
 *   **Web Notifications**: Notification support for desktop browsers (Chrome/Safari) when the tab is open.
 *   **iOS Home Screen Widget**: Check live carbon intensity directly from your home screen (supports Region selection).
+*   **Haptic Feedback**: Tactile responses for interactive elements (Wind Turbines, Sun/Moon, Pull-to-Refresh).
+*   **Dynamic Status Bar**: The native iOS status bar adapts to match the changing sky color for a seamless look.
+*   **Reduced Motion**: Respects system accessibility settings to disable parallax and complex animations.
 
 ### ⚡ Power Planner
 *   **Smart Scheduling**: Plan usage for EVs, Washing Machines, and custom appliances.

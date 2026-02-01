@@ -46,7 +46,7 @@ export default function Planner() {
     // Build dynamic appliance list including Tesla vehicles
     const APPLIANCES = useMemo(() => {
         const appliances = [...DEFAULT_APPLIANCES];
-        
+
         // Add Tesla vehicles as appliance options
         if (isTeslaLinked && vehicles.length > 0) {
             vehicles.forEach((vehicle, index) => {
@@ -64,7 +64,7 @@ export default function Planner() {
                     icon: Car,
                     power: chargingPower,
                     duration: Math.round(duration * 10) / 10,
-                    label: teslaVehicleState 
+                    label: teslaVehicleState
                         ? `${currentLevel}% → ${chargeLimit}% (${duration.toFixed(1)}h)`
                         : 'Tap to refresh',
                 });
@@ -90,10 +90,10 @@ export default function Planner() {
     useEffect(() => {
         const fetchTeslaState = async () => {
             if (!selectedAppliance.id.startsWith('tesla-')) return;
-            
+
             const vehicleId = selectedAppliance.id.replace('tesla-', '');
             setIsFetchingTesla(true);
-            
+
             try {
                 const state = await fetchVehicleState(vehicleId);
                 if (state.status === 'online') {
@@ -166,10 +166,14 @@ export default function Planner() {
         let bestStart = -1;
         let minAvgIntensity = Infinity;
 
+        const now = new Date();
+
         // Ensure we only look at future slots if we want to be realistic, 
         // but forecast usually returns future 24-48h. 
         // We'll iterate through all available forecast data.
         for (let i = 0; i <= forecast.length - slotsNeeded; i++) {
+            // Skip past slots
+            if (new Date(forecast[i].from) < now) continue;
             let sum = 0;
             let valid = true;
             for (let j = 0; j < slotsNeeded; j++) {

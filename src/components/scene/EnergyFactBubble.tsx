@@ -56,7 +56,7 @@ export function EnergyFactBubble({ intensity, generationMix }: EnergyFactBubbleP
                     initial={{ opacity: 0, y: 10, scale: 0.9 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
-                    className="absolute top-[30%] right-4 pr-[env(safe-area-inset-right)] z-40 max-w-[200px] md:max-w-[260px]"
+                    className="absolute bottom-4 right-4 pr-[env(safe-area-inset-right)] z-40 max-w-[200px] md:max-w-[260px]"
                 >
                     <div
                         className={`

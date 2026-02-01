@@ -2,6 +2,8 @@ import { useState, useCallback, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { parseEdgeFunctionError } from '@/lib/errorUtils';
+import { ensureAuthSession } from '@/lib/auth-utils';
 
 export interface TeslaVehicle {
   id: string;
@@ -80,33 +82,13 @@ async function callTeslaFunction<T>(action: string, data?: Record<string, unknow
 
 export function useTeslaEnergy() {
   const queryClient = useQueryClient();
-  
+
   // All useState hooks first
   const [isLinking, setIsLinking] = useState(false);
-  const [hasSession, setHasSession] = useState(false);
   const [cachedIsLinked] = useState(() => localStorage.getItem('tesla-is-linked') === 'true');
 
-  // Check for authenticated session on mount and listen for changes
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setHasSession(!!session);
-      if (!session) {
-        localStorage.removeItem('tesla-is-linked');
-      }
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setHasSession(!!session);
-      if (!session) {
-        localStorage.removeItem('tesla-is-linked');
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  // Only fetch if we have a session AND user might be linked
-  const shouldFetchStatus = hasSession && cachedIsLinked;
+  // Fetch status if user might be linked (removed session requirement)
+  const shouldFetchStatus = cachedIsLinked;
 
   // Fetch Tesla status
   const {
@@ -117,17 +99,8 @@ export function useTeslaEnergy() {
   } = useQuery({
     queryKey: ['tesla-status'],
     queryFn: async () => {
-      // Double-check session before calling
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        return {
-          configured: false,
-          linked: false,
-          vehicles: [],
-          energySites: [],
-          lastSync: null
-        };
-      }
+      // Ensure we have a session (creates anonymous if needed)
+      await ensureAuthSession();
       return callTeslaFunction<TeslaStatus>('get-status');
     },
     enabled: shouldFetchStatus,
@@ -167,6 +140,9 @@ export function useTeslaEnergy() {
   const startLinking = useCallback(async () => {
     setIsLinking(true);
     try {
+      // Ensure we have a session (creates anonymous if needed)
+      await ensureAuthSession();
+
       const redirectUri = `${window.location.origin}/settings?tesla_callback=true`;
 
       const { authUrl, state } = await callTeslaFunction<{ authUrl: string; state: string }>(
@@ -181,7 +157,8 @@ export function useTeslaEnergy() {
       window.location.href = authUrl;
     } catch (error) {
       console.error('Failed to start Tesla linking:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to start Tesla connection');
+      const message = parseEdgeFunctionError(error, { feature: 'tesla', action: 'link' });
+      toast.error(message);
       setIsLinking(false);
     }
   }, []);
@@ -209,7 +186,8 @@ export function useTeslaEnergy() {
       setIsLinking(false);
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : 'Failed to link Tesla account');
+      const message = parseEdgeFunctionError(error, { feature: 'tesla', action: 'link' });
+      toast.error(message);
       setIsLinking(false);
     },
   });
@@ -222,7 +200,8 @@ export function useTeslaEnergy() {
       queryClient.invalidateQueries({ queryKey: ['tesla-status'] });
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : 'Failed to sync Tesla products');
+      const message = parseEdgeFunctionError(error, { feature: 'tesla', action: 'sync' });
+      toast.error(message);
     },
   });
 
@@ -236,7 +215,8 @@ export function useTeslaEnergy() {
       localStorage.removeItem('tesla-is-linked');
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : 'Failed to unlink Tesla account');
+      const message = parseEdgeFunctionError(error, { feature: 'tesla', action: 'disconnect' });
+      toast.error(message);
     },
   });
 

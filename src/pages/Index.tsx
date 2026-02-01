@@ -4,7 +4,12 @@ import { RefreshCw, Zap, Info, Leaf, Activity, MapPin, ChevronDown } from 'lucid
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { IntensityScene, getSkyStartColor } from '@/components/IntensityScene';
+import { IntensityScene } from '@/components/IntensityScene';
+import { useTimeOfDay } from '@/hooks/useTimeOfDay';
+import { useWeatherData } from '@/hooks/useWeatherData';
+import { useSceneDirector } from '@/hooks/useSceneDirector';
+import { getSkyTopColor, getCarbonIndex } from '@/lib/sceneUtils';
+import { getErrorInfo } from "@/lib/errorUtils";
 import { GenerationMixBar } from '@/components/GenerationMixBar';
 import { ForecastChart } from '@/components/ForecastChart';
 import { ForecastSummary } from '@/components/ForecastSummary';
@@ -56,6 +61,7 @@ const Index = () => {
     lastUpdated,
     isLoading,
     isError,
+    error,
     refetch,
     getNextUpdate,
     nextUpdate
@@ -137,16 +143,39 @@ const Index = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const skyColor = getSkyStartColor(index);
+  const { timeOfDay: realTimeOfDay, isNight: realIsNight } = useTimeOfDay();
+  const { weather: realWeather } = useWeatherData();
+  const { active: isDirectorMode, overrides } = useSceneDirector();
+
+  // Compute overrides
+  const timeOfDay = (isDirectorMode && overrides.timeOfDay) ? overrides.timeOfDay : realTimeOfDay;
+
+  const derivedIntensity = (isDirectorMode && overrides.intensity !== undefined)
+    ? overrides.intensity
+    : intensity;
+
+  const weather = (isDirectorMode && overrides.weather)
+    ? { ...realWeather, ...overrides.weather }
+    : realWeather;
+
+  // Derive cleanliness from intensity (reused formula)
+  const cleanliness = Math.max(0, Math.min(1, 1 - (derivedIntensity - 50) / 300));
+
+  // Use the effective intensity for the effective index string
+  const effectiveIndex = getCarbonIndex(derivedIntensity);
+
+  const skyColor = getSkyTopColor(effectiveIndex, timeOfDay, cleanliness, weather);
 
   if (isError) {
+    const errorInfo = getErrorInfo(error);
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <div className="flex-1 flex items-center justify-center p-4">
           <ErrorState
-            title="Grid Data Unavailable"
-            description="We couldn't fetch the latest carbon intensity data. This might be a connection issue or the grid service is down."
+            title={errorInfo.title}
+            description={errorInfo.description}
             retry={() => refetch()}
+            fullScreen
           />
         </div>
       </div>
@@ -160,9 +189,10 @@ const Index = () => {
         style={{ background: skyColor }}
       >
         <PullToRefresh onRefresh={handleRefresh} disabled={isLoading}>
-          <div className="min-h-[100dvh] flex flex-col animate-in fade-in duration-700 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-0">
+          <main className="min-h-[100dvh] flex flex-col animate-in fade-in duration-700 lg:pb-0">
+            <h1 className="sr-only">Carbon Intensity Dashboard</h1>
             {/* Header with scene */}
-            <div className="relative">
+            <div className="relative w-full">
               {/* Animated scene */}
               <ComponentErrorBoundary name="Scene" className="h-[50vh] min-h-96 pb-24">
                 <IntensityScene intensity={intensity} index={index} generationMix={generationMix} />
@@ -172,7 +202,7 @@ const Index = () => {
 
               {/* Current intensity display - Only show if NOT in demand mode (DemandView has its own header) */}
               {viewMode !== 'demand' && (
-                <div className="absolute bottom-6 lg:bottom-10 left-1/2 -translate-x-1/2 text-center w-auto max-w-[90%] z-10">
+                <div className="absolute top-[calc(env(safe-area-inset-top)+1rem)] left-1/2 -translate-x-1/2 text-center w-auto max-w-[90%] z-10">
                   <div className="bg-white/30 backdrop-blur-md rounded-2xl p-4 shadow-sm border border-white/20">
                     <div className="flex items-center justify-center gap-2 mb-1">
                       <LocationManager
@@ -247,15 +277,9 @@ const Index = () => {
                                 // it means the next update is late.
                                 const now = new Date();
                                 if (now > next) {
-                                  // Calculate next half-hour from now as a fallback projection
-                                  const minutes = now.getMinutes();
-                                  const nextSlot = new Date(now);
-                                  if (minutes < 30) {
-                                    nextSlot.setMinutes(30, 0, 0);
-                                  } else {
-                                    nextSlot.setHours(nextSlot.getHours() + 1, 0, 0, 0);
-                                  }
-                                  return `Next ~${nextSlot.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} `;
+                                  // If we are past the 'valid to' time, the update is late or pending.
+                                  // Don't project an hour into the future, just say it's due.
+                                  return 'Update Due';
                                 }
                                 return `Next ${next.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} `;
                               }
@@ -287,7 +311,7 @@ const Index = () => {
             </div>
 
             {/* Content cards */}
-            <div className="flex-1 px-4 py-6 space-y-4 -mt-4 relative z-10 bg-background lg:max-w-7xl lg:mx-auto w-full lg:rounded-t-3xl lg:shadow-xl lg:-mt-6 lg:space-y-6">
+            <div className="flex-1 px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-6 space-y-4 -mt-4 relative z-10 bg-background lg:max-w-7xl lg:mx-auto w-full lg:rounded-t-3xl lg:shadow-xl lg:mt-0 lg:space-y-6">
 
               {/* View Toggle - Always show all views */}
               <div className="flex gap-2 p-1 bg-muted rounded-lg overflow-x-auto scrollbar-none">
@@ -329,7 +353,7 @@ const Index = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.3, ease: "easeOut" }}
-                  className="w-full overflow-auto max-h-[calc(100vh-24rem)]"
+                  className="w-full overflow-auto max-h-[calc(100vh-24rem)] pb-20"
                 >
                   {viewMode === 'demand' ? (
                     <DemandView />
@@ -403,7 +427,7 @@ const Index = () => {
                 </motion.div>
               </AnimatePresence>
             </div>
-          </div>
+          </main>
         </PullToRefresh>
 
       </div >

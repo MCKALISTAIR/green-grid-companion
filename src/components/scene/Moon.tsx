@@ -22,6 +22,14 @@ export function Moon({ position = 0.5, onDoubleClick }: MoonProps) {
       exit={{ opacity: 0, scale: 0.8 }}
       transition={{ duration: 1 }}
       onDoubleClick={onDoubleClick}
+      onKeyDown={(e) => {
+        if (onDoubleClick && (e.key === 'Enter' || e.key === ' ')) {
+          onDoubleClick();
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label="Moon - Double click or press Enter to trigger meteor shower"
     >
       {/* Moon glow */}
       <div className="absolute inset-0 w-16 h-16 -translate-x-2 -translate-y-2 bg-card/20 rounded-full blur-xl" />

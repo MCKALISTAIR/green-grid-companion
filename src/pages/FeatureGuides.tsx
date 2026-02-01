@@ -3,62 +3,10 @@ import { ChevronLeft, ChevronRight, Home, Calendar, Bell, Map, LineChart, Sparkl
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
-const FEATURE_GUIDES = [
-    {
-        id: 'home-dashboard',
-        title: 'Home Dashboard',
-        icon: Home,
-        description: 'Understanding the intensity scene, reading data, and interpreting colors',
-    },
-    {
-        id: 'carbon-intensity',
-        title: 'Carbon Intensity Explained',
-        icon: Zap,
-        description: 'What it means, how it\'s calculated, and why it matters',
-    },
-    {
-        id: 'power-planner',
-        title: 'Power Planner',
-        icon: Calendar,
-        description: 'Find the best times to charge devices and run appliances',
-    },
-    {
-        id: 'notifications',
-        title: 'Notifications',
-        icon: Bell,
-        description: 'Set up alerts and customize notification preferences',
-    },
-    {
-        id: 'leaderboard',
-        title: 'Leaderboard',
-        icon: Map,
-        description: 'Compare regions across the UK and understand rankings',
-    },
-    {
-        id: 'history',
-        title: 'History & Trends',
-        icon: LineChart,
-        description: 'Analyze patterns over time and compare periods',
-    },
-    {
-        id: 'interactive-scene',
-        title: 'Interactive Scene',
-        icon: Sparkles,
-        description: 'Discover hidden interactions, turbines, animals, and easter eggs',
-    },
-    {
-        id: 'integrations',
-        title: 'Integrations',
-        icon: Plug,
-        description: 'Connect Octopus Energy and Tesla accounts',
-    },
-    {
-        id: 'saved-locations',
-        title: 'Saved Locations',
-        icon: MapPin,
-        description: 'Manage multiple regions and quick switching',
-    },
-];
+import { FEATURE_GUIDES } from '@/data/feature-guides';
+
+// Removed local definition
+
 
 export default function FeatureGuides() {
     const navigate = useNavigate();

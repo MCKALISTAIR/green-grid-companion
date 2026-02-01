@@ -1,5 +1,9 @@
-import { useMemo, useId, useState, useEffect } from 'react';
+
 import { Sun, Cloud, Factory, Leaf, Flame, Droplets } from 'lucide-react';
+import { useHaptics } from '@/hooks/useHaptics';
+import { NotificationType } from '@capacitor/haptics';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { useMemo, useId, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTimeOfDay, TimeOfDay } from '@/hooks/useTimeOfDay';
 import { useWeatherData, WeatherData } from '@/hooks/useWeatherData';
@@ -34,6 +38,7 @@ import { useAchievements } from '@/hooks/useAchievements';
 import { useSceneDirector } from '@/hooks/useSceneDirector';
 
 import { GenerationMix } from '@/lib/carbonApi';
+import { getSkyGradient } from '@/lib/sceneUtils';
 
 interface IntensitySceneProps {
   intensity: number;
@@ -93,6 +98,12 @@ function FlyingBird({ delay, duration, startX, top, scale }: { delay: number; du
 
 function WindTurbine({ scale = 1, speed = 4, onClick }: { scale?: number; speed?: number; onClick?: () => void }) {
   const id = useId();
+  const { impactLight } = useHaptics();
+
+  const handleClick = () => {
+    impactLight();
+    onClick?.();
+  };
 
   return (
     <motion.div
@@ -102,7 +113,15 @@ function WindTurbine({ scale = 1, speed = 4, onClick }: { scale?: number; speed?
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
       transition={{ duration: 0.6 }}
-      onClick={onClick}
+      onClick={handleClick}
+      role="button"
+      tabIndex={0}
+      aria-label="Wind Turbine - Click to boost speed"
+      onKeyDown={(e) => {
+        if (onClick && (e.key === 'Enter' || e.key === ' ')) {
+          handleClick();
+        }
+      }}
     >
       {/*
         Single-SVG turbine so the rotor pivot is in the SAME coordinate space as the tower.
@@ -313,34 +332,33 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
   const { timeOfDay: realTimeOfDay, isNight: realIsNight, sunPosition: realSunPosition } = useTimeOfDay();
   const { weather: realWeather } = useWeatherData();
   const { unlock } = useAchievements();
+  // ...
   const { active: isDirectorMode, overrides } = useSceneDirector();
+  const { impactMedium, notification } = useHaptics();
+  const shouldReduceMotion = useReducedMotion();
+
+  // ... (timeOfDay, isNight, etc.)
 
   // Helper to determine active time of day (override or real)
   const timeOfDay = (isDirectorMode && overrides.timeOfDay) ? overrides.timeOfDay : realTimeOfDay;
-  // Simple approximation for night if override is set (night/dusk/dawn usually imply night-ish features, but let's stick to 'night')
+
   const isNight = (isDirectorMode && overrides.timeOfDay)
-    ? (overrides.timeOfDay === 'night' || overrides.timeOfDay === 'dusk' || overrides.timeOfDay === 'dawn') // Broad approximation for UI
+    ? (overrides.timeOfDay === 'night' || overrides.timeOfDay === 'dusk' || overrides.timeOfDay === 'dawn')
     : realIsNight;
 
   // Override Weather
   const weather = (isDirectorMode && overrides.weather) ? { ...realWeather, ...overrides.weather } : realWeather;
 
-  // Override Intensity (updates 'cleanliness' calculation below naturally if we swap the prop? 
-  // We can't swap the prop easily inside the component unless we rename the prop variable or create a new local one.
-  // PROPOSING: Rename prop `intensity` to `propIntensity` in arguments, and use `const intensity = ...`)
-
   const [synthwaveMode, setSynthwaveMode] = useState(false);
 
   // Apply Intensity Override
   const intensity = (isDirectorMode && overrides.intensity !== undefined) ? overrides.intensity : propIntensity;
-  // We might need to recalculate 'index' (low/med/high) if intensity changes, for color logic.
-  // But strictly 'index' is passed as prop. 
-  // Let's crude approx index if overridden for visual color shifting:
+
   const index = (isDirectorMode && overrides.intensity !== undefined)
     ? (overrides.intensity < 50 ? 'very low' : overrides.intensity < 150 ? 'low' : overrides.intensity < 250 ? 'moderate' : overrides.intensity < 350 ? 'high' : 'very high')
     : propIndex;
 
-  const sunPosition = realSunPosition; // TODO: Calculate fake sun position based on overridden timeOfDay if needed
+  const sunPosition = realSunPosition;
 
   // Check if user has seen the scene intro during this session
   const [hasSeenScene, setHasSeenScene] = useState(() => {
@@ -355,17 +373,16 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
   }, [hasSeenScene]);
 
   const birdConfig = useMemo(() => {
-    // Generate stable config for max possible birds (e.g. 5) to avoid re-gen on count change
     return Array.from({ length: 5 }).map((_, i) => ({
       id: i,
-      top: 10 + Math.random() * 30, // Random top between 10-40%
-      delay: i * 5, // Staggered delay
-      duration: 15 + Math.random() * 10, // Slower duration (15-25s)
-      scale: 0.6 + Math.random() * 0.4 // Random scale for depth
+      top: 10 + Math.random() * 30,
+      delay: i * 5,
+      duration: 15 + Math.random() * 10,
+      scale: 0.6 + Math.random() * 0.4
     }));
-  }, []); // Empty deps = truly stable
+  }, []);
 
-  const { isRaining } = weather; // Destructure common used value
+  const { isRaining } = weather;
 
   const [activeEvent, setActiveEvent] = useState<'none' | 'ufo' | 'drone' | 'train'>('none');
   const [turbineOverdrive, setTurbineOverdrive] = useState<number | null>(null);
@@ -374,27 +391,20 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
   useEffect(() => {
     const triggerRandomEvent = () => {
       if (activeEvent !== 'none') return;
-
       const rand = Math.random();
-      // Night + High Cloud/Stars = good for UFO
       if (isNight && rand > 0.7) setActiveEvent('ufo');
-      // Day + Clean = Drone
       else if (!isNight && intensity < 100 && rand > 0.6) setActiveEvent('drone');
-      // Day + Dirty = Train
       else if (intensity > 200 && rand > 0.6) setActiveEvent('train');
     };
-
-    // Check for event opportunity every 20 seconds
     const interval = setInterval(triggerRandomEvent, 20000);
     return () => clearInterval(interval);
   }, [activeEvent, isNight, intensity]);
 
   const handleTurbineClick = (i: number) => {
     setTurbineOverdrive(i);
-    setTimeout(() => setTurbineOverdrive(null), 2000); // Reset after 2s
+    setTimeout(() => setTurbineOverdrive(null), 2000);
   };
 
-  // Extract generation mix percentages
   const getGenerationPercentage = (fuel: string) => {
     const mix = generationMix.find(m => m.fuel.toLowerCase() === fuel.toLowerCase());
     return mix?.perc || 0;
@@ -403,83 +413,60 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
   const nuclearPercentage = getGenerationPercentage('nuclear');
   const windPercentage = getGenerationPercentage('wind');
   const hydroPercentage = getGenerationPercentage('hydro');
-  // Note: Marine energy is rare in UK grid, may not exist in data
   const marinePercentage = generationMix.find(m =>
     m.fuel.toLowerCase().includes('marine') || m.fuel.toLowerCase().includes('tidal')
   )?.perc || 0;
 
-  // Rare fox event (1% chance every 30s at dusk)
   const [showFox, setShowFox] = useState(false);
   const isDawnOrDusk = timeOfDay === 'dawn' || timeOfDay === 'dusk';
 
   useEffect(() => {
     if (!isDawnOrDusk || showFox) return;
-
     const foxInterval = setInterval(() => {
       if (Math.random() > 0.99) {
         setShowFox(true);
-        setTimeout(() => setShowFox(false), 12000); // Fox animation is 12s
+        setTimeout(() => setShowFox(false), 12000);
       }
     }, 30000);
-
     return () => clearInterval(foxInterval);
   }, [isDawnOrDusk, showFox]);
 
-  // Meteor shower event (triggered by double-clicking moon)
   const [showMeteorShower, setShowMeteorShower] = useState(false);
 
   const handleMoonDoubleClick = () => {
+    notification(NotificationType.Success);
     setShowMeteorShower(true);
-    setTimeout(() => setShowMeteorShower(false), 8000); // 8s duration
+    setTimeout(() => setShowMeteorShower(false), 8000);
   };
 
-  // Extract biomass percentage for smoke
   const biomassPercentage = getGenerationPercentage('biomass');
 
   const sceneConfig = useMemo(() => {
     const cleanliness = Math.max(0, Math.min(1, 1 - (intensity - 50) / 300));
-
-    // Weather modifiers for scene elements
     const weatherReducesBirds = weather.isRaining || weather.isSnowing || weather.isThunderstorm;
     const weatherReducesButterflies = weather.isRaining || weather.isSnowing || weather.isFoggy || weather.isThunderstorm;
 
-    // Hybrid Logic: Allow mixing of elements
-    // Cleanliness > 0.7: Pure Green
-    // Cleanliness 0.4 - 0.7: Hybrid (Turbines + 1 Distant Factory)
-    // Cleanliness < 0.4: Dirty (Factories dominant)
-
     return {
       cleanliness,
-      // Apply Synthwave override if active
       skyGradient: synthwaveMode
         ? 'linear-gradient(180deg, #2b1055 0%, #7597de 100%)'
         : getSkyGradient(index, timeOfDay, cleanliness, weather),
-
-      // Always show renewables unless it's terrible, just fewer of them
       showRenewables: cleanliness > 0.25,
-      // Show factories if it's not perfect
       showFactories: cleanliness < 0.85,
-
       showBirds: cleanliness > 0.6 && !isNight && !weatherReducesBirds,
-      showSmoke: cleanliness < 0.5, // Only smoke when it's actually getting dirty
+      showSmoke: cleanliness < 0.5,
       showRain: cleanliness < 0.35 && !weather.isRaining,
       showSunRays: cleanliness > 0.7 && !isNight && weather.cloudCover < 60 && !weather.isRaining,
       showStars: isNight && cleanliness > 0.3 && weather.cloudCover < 70,
       showMoon: isNight && weather.cloudCover < 80,
       showButterflies: cleanliness > 0.9 && !isNight && !weatherReducesButterflies,
-      showFireflies: isNight && cleanliness > 0.8 && !weather.isRaining, // New!
-
-      // Dynamic Counts based on mix
+      showFireflies: isNight && cleanliness > 0.8 && !weather.isRaining,
       turbineCount: Math.max(1, Math.floor(cleanliness * 4)),
-      // Scale factories: 0.8->1, 0.5->1, 0.2->3
       factoryOpacity: Math.max(0, 1 - cleanliness),
-
       solarBrightness: cleanliness * (weather.cloudCover < 50 ? 1 : 0.6),
       birdCount: Math.floor(cleanliness * 4) + 1,
       starVisibility: cleanliness * (1 - weather.cloudCover / 100),
       windSpeed: weather.windSpeed,
-
-      // Atmospheric Filters
       sceneFilter: synthwaveMode
         ? 'contrast(1.2) saturate(1.5) hue-rotate(-10deg)'
         : `contrast(${0.8 + cleanliness * 0.4}) saturate(${0.7 + cleanliness * 0.5}) sepia(${Math.max(0, (0.5 - cleanliness) * 0.5)})`,
@@ -488,7 +475,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
 
   return (
     <motion.div
-      className={`relative w-full h-[300px] md:h-full overflow-hidden rounded-xl md:rounded-l-xl transition-colors duration-1000 ${isVintage ? 'sepia-[.6] contrast-125 grayscale-[.3]' : ''}`}
+      className={`relative w-full h-[300px] md:h-[50vh] overflow-hidden rounded-xl md:rounded-l-xl transition-colors duration-1000 ${isVintage ? 'sepia-[.6] contrast-125 grayscale-[.3]' : ''}`}
       animate={{
         background: sceneConfig.skyGradient,
         filter: sceneConfig.sceneFilter,
@@ -497,30 +484,24 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       role="img"
       aria-label={`Animated landscape representing ${index} carbon intensity`}
     >
-      {/* Vintage Overlay - Grain effect */}
       {isVintage && (
         <div className="absolute inset-0 z-50 pointer-events-none opacity-20 mix-blend-overlay"
           style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.85\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}
         />
       )}
-      {/* Energy Facts Overlay */}
       <EnergyFactBubble intensity={intensity} generationMix={generationMix} />
 
-      {/* Weather Effects Layer (fog, rain, snow, lightning) */}
       <WeatherEffects weather={weather} isNight={isNight} />
-      {/* Stars for night time */}
       <AnimatePresence>
         {sceneConfig.showStars && (
           <Stars count={40} visibility={sceneConfig.starVisibility} />
         )}
       </AnimatePresence>
 
-      {/* Moon for night time */}
       <AnimatePresence>
         {sceneConfig.showMoon && <Moon position={sunPosition} onDoubleClick={handleMoonDoubleClick} />}
       </AnimatePresence>
 
-      {/* Sun Rays for clean energy */}
       <AnimatePresence>
         {sceneConfig.showSunRays && (
           <motion.div
@@ -537,12 +518,23 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
         )}
       </AnimatePresence>
 
-      {/* Sun with glow - hidden at night */}
       <AnimatePresence>
         {!isNight && (
           <motion.div
             className="absolute top-8 right-8 cursor-pointer active:scale-90"
-            onClick={() => setSynthwaveMode(!synthwaveMode)}
+            onClick={() => {
+              impactMedium();
+              setSynthwaveMode(!synthwaveMode);
+            }}
+            role="button"
+            tabIndex={0}
+            aria-label={`Toggle synthwave mode ${synthwaveMode ? 'off' : 'on'}`}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                impactMedium();
+                setSynthwaveMode(!synthwaveMode);
+              }
+            }}
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{
               opacity: sceneConfig.cleanliness * 0.3 + 0.7,
@@ -554,7 +546,6 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
               filter: `brightness(${sceneConfig.solarBrightness + 0.5})`,
             }}
           >
-            {/* Sun glow effect */}
             <motion.div
               className="absolute inset-0 w-20 h-20 -translate-x-2 -translate-y-2 bg-accent/30 rounded-full blur-xl"
               animate={{ scale: [1, 1.2, 1] }}
@@ -567,35 +558,36 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
 
       {/* Rain effect for dirty energy */}
       <AnimatePresence>
-        {sceneConfig.showRain && (
-          <motion.div
-            className="absolute inset-0 overflow-hidden"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            {[...Array(20)].map((_, i) => (
-              <RainDrop key={i} delay={Math.random() * 2} x={5 + (i * 4.5)} />
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
+        {
+          sceneConfig.showRain && (
+            <motion.div
+              className="absolute inset-0 overflow-hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              {[...Array(20)].map((_, i) => (
+                <RainDrop key={i} delay={Math.random() * 2} x={5 + (i * 4.5)} />
+              ))}
+            </motion.div>
+          )
+        }
+      </AnimatePresence >
 
-      {/* Clouds with parallax movement */}
       <Cloud
-        className="absolute top-12 w-24 h-14 text-card/80 animate-cloud-drift"
-        style={{ animationDelay: '0s', animationDuration: '35s' }}
+        className={`absolute top-12 w-24 h-14 text-card/80 ${shouldReduceMotion ? '' : 'animate-cloud-drift'}`}
+        style={shouldReduceMotion ? { left: '10%' } : { animationDelay: '0s', animationDuration: '35s' }}
         aria-hidden="true"
       />
       <Cloud
-        className="absolute top-20 w-16 h-10 text-card/60 animate-cloud-drift"
-        style={{ animationDelay: '-12s', animationDuration: '45s' }}
+        className={`absolute top-20 w-16 h-10 text-card/60 ${shouldReduceMotion ? '' : 'animate-cloud-drift'}`}
+        style={shouldReduceMotion ? { left: '60%' } : { animationDelay: '-12s', animationDuration: '45s' }}
         aria-hidden="true"
       />
       <Cloud
-        className="absolute top-6 w-20 h-12 text-card/70 animate-cloud-drift"
-        style={{ animationDelay: '-25s', animationDuration: '40s' }}
+        className={`absolute top-6 w-20 h-12 text-card/70 ${shouldReduceMotion ? '' : 'animate-cloud-drift'}`}
+        style={shouldReduceMotion ? { left: '80%' } : { animationDelay: '-25s', animationDuration: '40s' }}
         aria-hidden="true"
       />
 
@@ -610,13 +602,13 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
               transition={{ duration: 1 }}
             >
               <Cloud
-                className="absolute top-8 w-28 h-16 text-secondary/50 animate-cloud-drift"
-                style={{ animationDelay: '-5s', animationDuration: '25s' }}
+                className={`absolute top-8 w-28 h-16 text-secondary/50 ${shouldReduceMotion ? '' : 'animate-cloud-drift'}`}
+                style={shouldReduceMotion ? { left: '20%' } : { animationDelay: '-5s', animationDuration: '25s' }}
                 aria-hidden="true"
               />
               <Cloud
-                className="absolute top-14 w-24 h-14 text-secondary/40 animate-cloud-drift"
-                style={{ animationDelay: '-18s', animationDuration: '28s' }}
+                className={`absolute top-14 w-24 h-14 text-secondary/40 ${shouldReduceMotion ? '' : 'animate-cloud-drift'}`}
+                style={shouldReduceMotion ? { left: '50%' } : { animationDelay: '-18s', animationDuration: '28s' }}
                 aria-hidden="true"
               />
             </motion.div>
@@ -1109,80 +1101,4 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
   );
 }
 
-// Time-based sky gradient colors
-const TIME_SKY_COLORS: Record<TimeOfDay, { start: string; mid: string; end: string }> = {
-  night: { start: 'hsl(230 70% 25%)', mid: 'hsl(240 60% 35%)', end: 'hsl(250 50% 40%)' }, // Richer blues for clean nights
-  dawn: { start: 'hsl(280 40% 35%)', mid: 'hsl(30 60% 55%)', end: 'hsl(45 50% 70%)' },
-  morning: { start: 'hsl(200 80% 60%)', mid: 'hsl(195 70% 70%)', end: 'hsl(180 50% 75%)' },
-  midday: { start: 'hsl(200 90% 55%)', mid: 'hsl(195 80% 65%)', end: 'hsl(150 60% 75%)' },
-  afternoon: { start: 'hsl(200 70% 60%)', mid: 'hsl(190 60% 68%)', end: 'hsl(160 50% 72%)' },
-  sunset: { start: 'hsl(30 70% 50%)', mid: 'hsl(20 80% 60%)', end: 'hsl(280 40% 45%)' },
-  dusk: { start: 'hsl(260 50% 35%)', mid: 'hsl(270 45% 40%)', end: 'hsl(240 40% 30%)' },
-};
 
-// Intensity-based adjustments
-const INTENSITY_ADJUSTMENTS: Record<string, { satMod: number; lightMod: number }> = {
-  'very low': { satMod: 1.1, lightMod: 1.05 },
-  'low': { satMod: 1.0, lightMod: 1.0 },
-  'moderate': { satMod: 0.8, lightMod: 0.95 },
-  'high': { satMod: 0.6, lightMod: 0.9 },
-  'very high': { satMod: 0.4, lightMod: 0.85 },
-};
-
-function getSkyGradient(index: string, timeOfDay: TimeOfDay, cleanliness: number, weather?: WeatherData): string {
-  const timeColors = TIME_SKY_COLORS[timeOfDay];
-  const adjustment = INTENSITY_ADJUSTMENTS[index] || INTENSITY_ADJUSTMENTS['moderate'];
-
-  // Weather modifies sky colors
-  if (weather) {
-    // Overcast/cloudy weather makes sky grayer
-    if (weather.cloudCover > 70 || weather.isRaining) {
-      const grayFactor = Math.min(weather.cloudCover / 100, 0.8);
-      return `linear-gradient(180deg, 
-        hsl(220 ${20 - grayFactor * 15}% ${45 + grayFactor * 10}%) 0%, 
-        hsl(220 ${15 - grayFactor * 10}% ${55 + grayFactor * 5}%) 40%, 
-        hsl(220 ${10 - grayFactor * 5}% ${60}%) 100%)`;
-    }
-
-    // Foggy weather
-    if (weather.isFoggy) {
-      return `linear-gradient(180deg, 
-        hsl(0 0% 75%) 0%, 
-        hsl(0 0% 80%) 40%, 
-        hsl(0 0% 85%) 100%)`;
-    }
-
-    // Thunderstorm - dark dramatic sky
-    if (weather.isThunderstorm) {
-      return `linear-gradient(180deg, 
-        hsl(240 30% 25%) 0%, 
-        hsl(250 25% 35%) 40%, 
-        hsl(260 20% 40%) 100%)`;
-    }
-
-    // Snowy weather - lighter, whiter sky
-    if (weather.isSnowing) {
-      return `linear-gradient(180deg, 
-        hsl(210 20% 70%) 0%, 
-        hsl(210 15% 80%) 40%, 
-        hsl(210 10% 85%) 100%)`;
-    }
-  }
-
-  // Blend time-based colors with cleanliness factor
-  // Lower cleanliness = more muted, brownish tones
-  const pollutionFactor = 1 - cleanliness;
-
-  return `linear-gradient(180deg, ${timeColors.start} 0%, ${timeColors.mid} 40%, ${timeColors.end} 100%)`;
-}
-
-export function getSkyStartColor(index: string): string {
-  const SKY_START_COLORS: Record<string, string> = {
-    'very low': 'hsl(195 90% 55%)',
-    'low': 'hsl(200 70% 60%)',
-    'moderate': 'hsl(200 40% 65%)',
-    'high': 'hsl(40 40% 60%)',
-    'very high': 'hsl(25 35% 50%)',
-  };
-  return SKY_START_COLORS[index] || SKY_START_COLORS['moderate'];
-}

@@ -62,7 +62,7 @@ export type TimeRange = 'day' | 'week' | 'month' | 'year';
 
 export function FootprintView() {
   const [timeRange, setTimeRange] = useState<TimeRange>('month');
-  const { houseType } = useSettings();
+  const { houseType, customAnnualKwh } = useSettings();
 
   // Determine days to fetch based on range
   const daysToFetch = useMemo(() => {
@@ -157,7 +157,7 @@ export function FootprintView() {
     const impact = getImpactEquivalents(carbonSaved);
 
     // Household Comparison
-    const benchmarkDaily = getAverageDailyKwh(houseType);
+    const benchmarkDaily = getAverageDailyKwh(houseType, customAnnualKwh);
     const benchmarkTotal = benchmarkDaily * daysToFetch;
     const comparisonDiff = total_kwh - benchmarkTotal;
     const comparisonPercent = benchmarkTotal > 0 ? (comparisonDiff / benchmarkTotal) * 100 : 0;

@@ -42,7 +42,7 @@ function PineTree({ x, y, scale = 1, colorPrimary, colorShadow, isSnowing, isChr
     return (
         <g transform={`translate(${x}, ${y}) scale(${scale})`}>
             {/* Trunk */}
-            <rect x="-2" y="0" width="4" height="10" fill="rgba(60, 40, 20, 0.4)" />
+            <rect x="-2" y="-8" width="4" height="18" fill="rgba(60, 40, 20, 0.4)" />
 
             {/* Bottom Tier */}
             <path d="M0,-25 L15,-5 L0,-5 Z" fill={seasonalColors.shadow} />

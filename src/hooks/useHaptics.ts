@@ -1,78 +1,64 @@
-import { Capacitor } from '@capacitor/core';
+
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
-import { logger } from '@/lib/logger';
+import { Capacitor } from '@capacitor/core';
+import { useCallback } from 'react';
 
 export function useHaptics() {
-  const isNative = Capacitor.isNativePlatform();
+  const isAvailable = Capacitor.isNativePlatform();
 
-  const impact = async (style: ImpactStyle = ImpactStyle.Medium) => {
-    if (!isNative) return;
+  const impactLight = useCallback(async () => {
+    if (!isAvailable) return;
     try {
-      await Haptics.impact({ style });
-    } catch (error) {
-      logger.debug('Haptic impact failed', { error });
+      await Haptics.impact({ style: ImpactStyle.Light });
+    } catch (e) {
+      // Fail silently
     }
-  };
+  }, [isAvailable]);
 
-  const notification = async (type: NotificationType = NotificationType.Success) => {
-    if (!isNative) return;
+  const impactMedium = useCallback(async () => {
+    if (!isAvailable) return;
+    try {
+      await Haptics.impact({ style: ImpactStyle.Medium });
+    } catch (e) {
+      // Fail silently
+    }
+  }, [isAvailable]);
+
+  const impactHeavy = useCallback(async () => {
+    if (!isAvailable) return;
+    try {
+      await Haptics.impact({ style: ImpactStyle.Heavy });
+    } catch (e) {
+      // Fail silently
+    }
+  }, [isAvailable]);
+
+  const notification = useCallback(async (type: NotificationType) => {
+    if (!isAvailable) return;
     try {
       await Haptics.notification({ type });
-    } catch (error) {
-      logger.debug('Haptic notification failed', { error });
+    } catch (e) {
+      // Fail silently
     }
-  };
+  }, [isAvailable]);
 
-  const selectionStart = async () => {
-    if (!isNative) return;
+  const selection = useCallback(async () => {
+    if (!isAvailable) return;
     try {
       await Haptics.selectionStart();
-    } catch (error) {
-      logger.debug('Haptic selection start failed', { error });
-    }
-  };
-
-  const selectionChanged = async () => {
-    if (!isNative) return;
-    try {
       await Haptics.selectionChanged();
-    } catch (error) {
-      logger.debug('Haptic selection changed failed', { error });
-    }
-  };
-
-  const selectionEnd = async () => {
-    if (!isNative) return;
-    try {
       await Haptics.selectionEnd();
-    } catch (error) {
-      logger.debug('Haptic selection end failed', { error });
+    } catch (e) {
+      // Fail silently
     }
-  };
-
-  // Convenience methods
-  const lightTap = () => impact(ImpactStyle.Light);
-  const mediumTap = () => impact(ImpactStyle.Medium);
-  const heavyTap = () => impact(ImpactStyle.Heavy);
-  const success = () => notification(NotificationType.Success);
-  const warning = () => notification(NotificationType.Warning);
-  const error = () => notification(NotificationType.Error);
+  }, [isAvailable]);
 
   return {
-    isNative,
-    impact,
+    impactLight,
+    impactMedium,
+    impactHeavy,
     notification,
-    selectionStart,
-    selectionChanged,
-    selectionEnd,
-    lightTap,
-    mediumTap,
-    heavyTap,
-    success,
-    warning,
-    error,
+    selection,
+    isAvailable
   };
 }
-
-// Re-export types for convenience
-export { ImpactStyle, NotificationType };
