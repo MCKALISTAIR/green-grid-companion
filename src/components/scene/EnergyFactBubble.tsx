@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useEnergyFacts } from '@/hooks/useEnergyFacts';
 import { useTimeOfDay } from '@/hooks/useTimeOfDay';
 import { useWeatherData } from '@/hooks/useWeatherData';
+import { useCoalFreeStreak, formatStreak } from '@/hooks/useCoalFreeStreak';
 import { GenerationMix } from '@/lib/carbonApi';
 import { MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,7 @@ export function EnergyFactBubble({ intensity, generationMix }: EnergyFactBubbleP
     const { currentFact, refreshFact, tone } = useEnergyFacts();
     const { isNight } = useTimeOfDay();
     const { weather } = useWeatherData();
+    const coalStreak = useCoalFreeStreak(generationMix);
     const [isVisible, setIsVisible] = useState(true);
 
     // Refresh fact on mount and when interactions occur
@@ -54,7 +56,7 @@ export function EnergyFactBubble({ intensity, generationMix }: EnergyFactBubbleP
                     initial={{ opacity: 0, y: 10, scale: 0.9 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
-                    className="absolute top-4 right-4 z-40 max-w-[200px] md:max-w-[260px]"
+                    className="absolute top-[30%] right-4 pr-[env(safe-area-inset-right)] z-40 max-w-[200px] md:max-w-[260px]"
                 >
                     <div
                         className={`
@@ -82,7 +84,12 @@ export function EnergyFactBubble({ intensity, generationMix }: EnergyFactBubbleP
                         <div className="flex gap-2 items-start">
                             <MessageCircle className="w-3.5 h-3.5 mt-0.5 opacity-70 shrink-0" />
                             <p className="leading-snug">
-                                {currentFact.text}
+                                {currentFact.id === 'coal_free_current' && coalStreak.isActive && coalStreak.days * 24 + coalStreak.hours >= 24
+                                    ? `The UK has been coal-free for ${formatStreak(coalStreak)}!`
+                                    : currentFact.id === 'coal_free_current'
+                                        ? null // Don't show this fact if streak < 24h
+                                        : currentFact.text
+                                }
                             </p>
                         </div>
                     </div>

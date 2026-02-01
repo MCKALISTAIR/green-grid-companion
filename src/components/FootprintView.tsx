@@ -17,8 +17,16 @@ import {
   Sun,
   Moon,
   Star,
-  Info
+  Info,
+  Car,
+  Smartphone,
+  Trees,
+  Coffee,
+  Home
 } from 'lucide-react';
+import { getImpactEquivalents, getImpactColor } from '@/lib/impact-conversions';
+import { useSettings } from '@/hooks/useSettings';
+import { getAverageDailyKwh, getHouseTypeLabel } from '@/lib/energy-standards';
 import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
 import {
   AreaChart,
@@ -54,6 +62,7 @@ export type TimeRange = 'day' | 'week' | 'month' | 'year';
 
 export function FootprintView() {
   const [timeRange, setTimeRange] = useState<TimeRange>('month');
+  const { houseType } = useSettings();
 
   // Determine days to fetch based on range
   const daysToFetch = useMemo(() => {
@@ -139,6 +148,21 @@ export function FootprintView() {
     const optimalCarbon = total_kwh * 50 / 1000;
     const potentialSavings = total_carbon_kg - optimalCarbon;
 
+    // Actual Savings (compared to average intensity for the period)
+    // How much CO2 did they *avoid* by using their specific mix vs just flat usage at average?
+    // We can simulate "Average User" carbon: Total kWh * Average Period Intensity
+    const averageUserCarbon = (total_kwh * avgIntensity) / 1000;
+    const carbonSaved = Math.max(0, averageUserCarbon - total_carbon_kg);
+
+    const impact = getImpactEquivalents(carbonSaved);
+
+    // Household Comparison
+    const benchmarkDaily = getAverageDailyKwh(houseType);
+    const benchmarkTotal = benchmarkDaily * daysToFetch;
+    const comparisonDiff = total_kwh - benchmarkTotal;
+    const comparisonPercent = benchmarkTotal > 0 ? (comparisonDiff / benchmarkTotal) * 100 : 0;
+    const isEfficient = comparisonDiff < 0;
+
     // Best period calculation
     const dataPoints = dailyData.map(d => ({ date: d.date, carbon: d.carbon_kg, kwh: d.kwh }));
     const bestPeriod = dataPoints.length > 0
@@ -162,6 +186,14 @@ export function FootprintView() {
       dirtyKwh,
       avgIntensity,
       potentialSavings,
+      carbonSaved,
+      impact,
+      comparison: {
+        diff: comparisonDiff,
+        percent: Math.abs(comparisonPercent),
+        isEfficient,
+        benchmark: benchmarkTotal
+      },
       totalCarbon: total_carbon_kg,
       totalKwh: total_kwh,
       bestPeriod,
@@ -524,6 +556,106 @@ export function FootprintView() {
             </Card>
           )}
 
+
+
+          {/* Household Comparison Card */}
+          {insights && (
+            <Card className="p-4 mb-4">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${insights.comparison.isEfficient
+                    ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600'
+                    : 'bg-amber-100 dark:bg-amber-900/30 text-amber-600'
+                    }`}>
+                    {insights.comparison.isEfficient ? <TrendingDown className="w-5 h-5" /> : <TrendingUp className="w-5 h-5" />}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground">Vs. Average</h3>
+                    <p className="text-xs text-muted-foreground">{getHouseTypeLabel(houseType)}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className={`text-xl font-bold ${insights.comparison.isEfficient ? 'text-emerald-600' : 'text-amber-600'}`}>
+                    {insights.comparison.isEfficient ? '-' : '+'}{insights.comparison.percent.toFixed(0)}%
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {insights.comparison.diff > 0 ? 'More' : 'Less'} energy used
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-3 text-xs text-muted-foreground bg-muted/50 p-2 rounded">
+                You used <strong>{insights.totalKwh.toFixed(1)} kWh</strong> vs benchmark <strong>{insights.comparison.benchmark.toFixed(1)} kWh</strong> based on the national average for your home type.
+              </div>
+            </Card>
+          )}
+
+          {/* Impact Visualization Card - NEW */}
+          {insights && insights.carbonSaved > 0.1 && (
+            <Card className="p-5 bg-gradient-to-br from-emerald-500/10 to-teal-500/5 border-emerald-500/20 mb-6">
+              <div className="flex flex-col gap-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                      <Leaf className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground">Your Positive Impact</h3>
+                      <p className="text-xs text-muted-foreground">Compared to grid average</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className={`text-2xl font-bold ${getImpactColor(insights.carbonSaved)}`}>
+                      -{insights.carbonSaved.toFixed(1)}<span className="text-sm font-normal text-muted-foreground ml-1">kg CO₂</span>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 mt-1">
+                  {/* Miles Driven */}
+                  <div className="p-3 bg-card/60 rounded-lg flex flex-col items-center text-center gap-2 shadow-sm border border-border/50">
+                    <Car className="w-5 h-5 text-blue-500" />
+                    <div>
+                      <p className="text-lg font-bold text-foreground">{insights.impact.milesDriven}</p>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Miles Driven</p>
+                    </div>
+                  </div>
+
+                  {/* Trees */}
+                  <div className="p-3 bg-card/60 rounded-lg flex flex-col items-center text-center gap-2 shadow-sm border border-border/50">
+                    <Trees className="w-5 h-5 text-green-600" />
+                    <div>
+                      <p className="text-lg font-bold text-foreground">{insights.impact.treesPlanted}</p>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Tree Days</p>
+                    </div>
+                  </div>
+
+                  {/* Smartphones */}
+                  <div className="p-3 bg-card/60 rounded-lg flex flex-col items-center text-center gap-2 shadow-sm border border-border/50">
+                    <Smartphone className="w-5 h-5 text-indigo-500" />
+                    <div>
+                      <p className="text-lg font-bold text-foreground">{insights.impact.smartphonesCharged}</p>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Phone Charges</p>
+                    </div>
+                  </div>
+
+                  {/* Kettles - standard British unit of measurement */}
+                  <div className="p-3 bg-card/60 rounded-lg flex flex-col items-center text-center gap-2 shadow-sm border border-border/50">
+                    <Coffee className="w-5 h-5 text-amber-600" />
+                    <div>
+                      <p className="text-lg font-bold text-foreground">{insights.impact.kettlesBoiled}</p>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Kettles Boiled</p>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-xs text-center text-muted-foreground/80 italic mt-1">
+                  You avoided this much carbon by using energy when the grid was greener!
+                </p>
+              </div>
+            </Card>
+          )}
+
           {/* Personalized Insights */}
           {insights && (
             <Card className="p-4">
@@ -758,7 +890,8 @@ export function FootprintView() {
             </Card>
           )}
         </>
-      )}
-    </div>
+      )
+      }
+    </div >
   );
 }

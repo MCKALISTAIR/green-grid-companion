@@ -54,12 +54,17 @@ export interface GreennessForecastItem {
 
 export function useOctopusEnergy(days: number = 30) {
   const queryClient = useQueryClient();
-  
+
   // All useState hooks must be declared first in the same order every render
   const [isSyncing, setIsSyncing] = useState(false);
   const [hasSession, setHasSession] = useState(false);
   const [cachedIsLinked] = useState(() => localStorage.getItem('octopus-is-linked') === 'true');
   const [cachedHasCreds] = useState(() => localStorage.getItem('octopus-has-creds') === 'true');
+  // New: Cached actual credentials for re-linking
+  const [cachedCredentials, setCachedCredentials] = useState<{ apiKey: string; accountNumber: string } | null>(() => {
+    const cached = localStorage.getItem('octopus-cached-real-creds');
+    return cached ? JSON.parse(cached) : null;
+  });
 
   // Check for authenticated session on mount and listen for changes
   useEffect(() => {
@@ -209,7 +214,7 @@ export function useOctopusEnergy(days: number = 30) {
     }
   }, [refetchStatus]);
 
-  // Save Credentials
+  // Save Credentials (and cache them)
   const saveCredentials = useCallback(async (apiKey: string, accountNumber: string) => {
     setIsSyncing(true);
     try {
@@ -218,6 +223,11 @@ export function useOctopusEnergy(days: number = 30) {
       });
 
       if (error) throw new Error(error.message || 'Failed to save credentials');
+
+      // Cache credentials locally on success
+      const creds = { apiKey, accountNumber };
+      localStorage.setItem('octopus-cached-real-creds', JSON.stringify(creds));
+      setCachedCredentials(creds);
 
       toast.success('Credentials saved successfully');
       await refetchStatus();
@@ -229,6 +239,12 @@ export function useOctopusEnergy(days: number = 30) {
       setIsSyncing(false);
     }
   }, [refetchStatus]);
+
+  const clearCachedCredentials = useCallback(() => {
+    localStorage.removeItem('octopus-cached-real-creds');
+    setCachedCredentials(null);
+    toast.info('Removed saved credentials from device');
+  }, []);
 
   // Link meter (fetch from Octopus API)
   const linkMeter = useCallback(async () => {
@@ -352,5 +368,8 @@ export function useOctopusEnergy(days: number = 30) {
     migrateData,
     refetchStatus,
     refetchFootprint,
+    // New exports
+    cachedCredentials,
+    clearCachedCredentials,
   };
 }

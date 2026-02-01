@@ -37,9 +37,10 @@ interface LocationManagerProps {
   value: string;
   onChange: (value: string) => void;
   showPostcode?: boolean;
+  trigger?: React.ReactNode;
 }
 
-export function LocationManager({ value, onChange, showPostcode = true }: LocationManagerProps) {
+export function LocationManager({ value, onChange, showPostcode = true, trigger }: LocationManagerProps) {
   const [open, setOpen] = React.useState(false);
   const [loadingLocation, setLoadingLocation] = React.useState(false);
   const [isSearching, setIsSearching] = React.useState(false);
@@ -193,32 +194,36 @@ export function LocationManager({ value, onChange, showPostcode = true }: Locati
         if (!isOpen) setSearchQuery(''); // Reset search on close
       }}>
         <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            aria-label="Select location"
-            className="w-auto max-w-[220px] justify-between bg-card/80 backdrop-blur-sm border-border/50 shadow-md h-10"
-          >
-            <div className="flex items-center gap-2 truncate">
-              {savedLocation ? (
-                <Star className="w-4 h-4 text-primary shrink-0 fill-primary" aria-hidden="true" />
-              ) : (
-                <MapPin className="w-4 h-4 text-primary shrink-0" aria-hidden="true" />
-              )}
-              <div className="flex flex-col items-start truncate">
-                <span className="truncate text-sm font-medium">
-                  {savedLocation?.name || selectedRegion?.name || 'Select location'}
-                </span>
-                {showPostcode && selectedRegion && (
-                  <span className="text-xs text-muted-foreground truncate">
-                    {selectedRegion.postcode}
-                  </span>
+          {trigger ? (
+            trigger
+          ) : (
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              aria-label="Select location"
+              className="w-auto max-w-[220px] justify-between bg-card/80 backdrop-blur-sm border-border/50 shadow-md h-10"
+            >
+              <div className="flex items-center gap-2 truncate">
+                {savedLocation ? (
+                  <Star className="w-4 h-4 text-primary shrink-0 fill-primary" aria-hidden="true" />
+                ) : (
+                  <MapPin className="w-4 h-4 text-primary shrink-0" aria-hidden="true" />
                 )}
+                <div className="flex flex-col items-start truncate">
+                  <span className="truncate text-sm font-medium">
+                    {savedLocation?.name || selectedRegion?.name || 'Select location'}
+                  </span>
+                  {showPostcode && selectedRegion && (
+                    <span className="text-xs text-muted-foreground truncate">
+                      {selectedRegion.postcode}
+                    </span>
+                  )}
+                </div>
               </div>
-            </div>
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" aria-hidden="true" />
-          </Button>
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" aria-hidden="true" />
+            </Button>
+          )}
         </PopoverTrigger>
         <PopoverContent className="w-[320px] p-0 bg-card border-border backdrop-blur-xl">
           <Command shouldFilter={false}>

@@ -8,7 +8,7 @@ const PREFS_KEY = 'gridgreen-fact-prefs';
 export function useEnergyFacts() {
     const [tone, setTone] = useState<TonePreference>(() => {
         const saved = localStorage.getItem(PREFS_KEY);
-        return (saved as TonePreference) || 'mixed';
+        return (saved as TonePreference) || 'friendly';
     });
 
     const [currentFact, setCurrentFact] = useState<EnergyFact | null>(null);

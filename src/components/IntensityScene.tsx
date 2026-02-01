@@ -965,9 +965,9 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
 
       {/* ===== PHASE 2: CARBON MILESTONES ===== */}
 
-      {/* Rainbow - Ultra clean energy (<50g) */}
+      {/* Rainbow - appears during/after rain when sun is visible (daytime + rain) */}
       <AnimatePresence>
-        {intensity < 50 && <Rainbow />}
+        {intensity < 50 && weather.isRaining && !isNight && <Rainbow />}
       </AnimatePresence>
 
       {/* Pollution Warning - High carbon (>300g) */}

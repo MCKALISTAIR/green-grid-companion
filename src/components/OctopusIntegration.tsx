@@ -41,7 +41,10 @@ export function OctopusIntegration() {
     hasCredentials,
     linkMeter,
     fullSync,
-    disconnect
+    disconnect,
+    cachedCredentials,
+    saveCredentials,
+    clearCachedCredentials
   } = useOctopusEnergy();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -68,6 +71,12 @@ export function OctopusIntegration() {
     }
   };
 
+  const handleRelink = async () => {
+    if (cachedCredentials) {
+      await saveCredentials(cachedCredentials.apiKey, cachedCredentials.accountNumber);
+    }
+  };
+
   // 1. Loading State
   if (isLoading && !status) {
     return (
@@ -81,6 +90,65 @@ export function OctopusIntegration() {
         </Card>
       </div>
     )
+  }
+
+  // 1.5 Re-link Card (Has cached credentials but NOT linked)
+  if (!isLinked && cachedCredentials && !isEditing) {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold text-foreground">Energy Integrations</h2>
+        <Card className="p-5 border-purple-500/20 bg-purple-500/5">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                <OctopusLogo className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-medium text-foreground">Welcome back!</h3>
+                <p className="text-sm text-muted-foreground">
+                  Continue with account <span className="font-mono bg-muted px-1.5 py-0.5 rounded text-xs">{cachedCredentials.accountNumber.slice(0, 4)}***</span>
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-2 w-full">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  if (confirm("Remove saved credentials from this device?")) {
+                    clearCachedCredentials();
+                  }
+                }}
+              >
+                Forget
+              </Button>
+              <Button
+                className="flex-[2] bg-purple-600 hover:bg-purple-700"
+                onClick={handleRelink}
+                disabled={isSyncing}
+              >
+                {isSyncing ? (
+                  <>
+                    <TurbineSpinner size="sm" className="mr-2" />
+                    Connecting...
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-4 h-4 mr-2" />
+                    Re-link Account
+                  </>
+                )}
+              </Button>
+            </div>
+
+            <p className="text-xs text-center text-muted-foreground/60 cursor-pointer hover:text-purple-500 underline" onClick={() => setIsEditing(true)}>
+              Use a different account
+            </p>
+          </div>
+        </Card>
+      </div>
+    );
   }
 
   // 2. No Credentials OR (Editing AND not linked) -> Show Settings Form

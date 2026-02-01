@@ -79,7 +79,7 @@ function logSecurityEvent(event: SecurityEvent) {
     ...event,
     timestamp: event.timestamp || new Date().toISOString(),
   };
-  
+
   // Use appropriate log level based on severity
   switch (event.severity) {
     case 'CRITICAL':
@@ -102,15 +102,15 @@ const AUTH_FAILURE_THRESHOLD = 10; // Alert after 10 failures from same IP
 function trackAuthFailure(ip: string, reason: string, userAgent: string | null) {
   const now = Date.now();
   const existing = authFailureTracker.get(ip);
-  
+
   if (existing && (now - existing.firstFailure) < AUTH_FAILURE_WINDOW_MS) {
     existing.count++;
     authFailureTracker.set(ip, existing);
-    
+
     // Escalate severity based on failure count
-    const severity = existing.count >= AUTH_FAILURE_THRESHOLD ? 'HIGH' : 
-                     existing.count >= 5 ? 'MEDIUM' : 'LOW';
-    
+    const severity = existing.count >= AUTH_FAILURE_THRESHOLD ? 'HIGH' :
+      existing.count >= 5 ? 'MEDIUM' : 'LOW';
+
     logSecurityEvent({
       type: existing.count >= AUTH_FAILURE_THRESHOLD ? 'SUSPICIOUS_ACTIVITY' : 'AUTH_FAILURE',
       severity,
@@ -120,7 +120,7 @@ function trackAuthFailure(ip: string, reason: string, userAgent: string | null) 
         user_agent: userAgent,
         failure_count: existing.count,
         window_minutes: 15,
-        message: existing.count >= AUTH_FAILURE_THRESHOLD 
+        message: existing.count >= AUTH_FAILURE_THRESHOLD
           ? `Potential brute force attack: ${existing.count} failures from IP ${ip}`
           : `Auth failure from ${ip}`,
       },
@@ -129,7 +129,7 @@ function trackAuthFailure(ip: string, reason: string, userAgent: string | null) 
   } else {
     // First failure or window expired
     authFailureTracker.set(ip, { count: 1, firstFailure: now });
-    
+
     logSecurityEvent({
       type: 'AUTH_FAILURE',
       severity: 'LOW',
@@ -198,9 +198,9 @@ Deno.serve(async (req: Request) => {
   }
 
   // Extract request metadata for logging
-  const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
-                   req.headers.get('x-real-ip') || 
-                   'unknown';
+  const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    req.headers.get('x-real-ip') ||
+    'unknown';
   const userAgent = req.headers.get('user-agent');
   const requestId = req.headers.get('x-request-id') || crypto.randomUUID();
 
@@ -277,7 +277,7 @@ Deno.serve(async (req: Request) => {
       // Account number validation: A-XXXXXXXX format (letter A, dash, 8 alphanumeric)
       const accountPattern = /^A-[A-Z0-9]{8}$/i;
       const sanitizedAccount = accountNumber?.trim().toUpperCase() || '';
-      
+
       if (!sanitizedAccount) {
         errors.push('Account number is required');
       } else if (!accountPattern.test(sanitizedAccount)) {
@@ -287,7 +287,7 @@ Deno.serve(async (req: Request) => {
       // API key validation: sk_live_ prefix followed by 20+ alphanumeric characters
       const apiKeyPattern = /^sk_live_[a-zA-Z0-9]{20,}$/;
       const sanitizedApiKey = apiKey?.trim() || '';
-      
+
       if (!sanitizedApiKey) {
         errors.push('API key is required');
       } else if (!apiKeyPattern.test(sanitizedApiKey)) {
@@ -333,23 +333,23 @@ Deno.serve(async (req: Request) => {
           timestamp: new Date().toISOString(),
         });
         return new Response(
-          JSON.stringify({ 
+          JSON.stringify({
             error: 'Too many attempts. Please try again later.',
-            retry_after: rateLimit.retryAfter 
+            retry_after: rateLimit.retryAfter
           }),
-          { 
-            status: 429, 
-            headers: { 
-              ...corsHeaders, 
+          {
+            status: 429,
+            headers: {
+              ...corsHeaders,
               'Content-Type': 'application/json',
               'Retry-After': String(rateLimit.retryAfter)
-            } 
+            }
           }
         );
       }
 
       const { apiKey, accountNumber } = payload;
-      
+
       // Server-side validation
       const validation = validateCredentials(apiKey, accountNumber);
       if (!validation.valid) {
@@ -404,7 +404,7 @@ Deno.serve(async (req: Request) => {
     // This action migrates orphaned Octopus data to the authenticated user's account
     if (action === 'migrate-data') {
       const { previousUserId } = payload;
-      
+
       if (!previousUserId) {
         return new Response(
           JSON.stringify({ error: 'Previous user ID required for migration' }),
@@ -776,9 +776,12 @@ Deno.serve(async (req: Request) => {
       }
 
       // 1. Determine Date Range
-      const timestamps = consumption.map((r: any) => new Date(r.interval_start).getTime());
-      const minTime = new Date(Math.min(...timestamps));
-      const maxTime = new Date(Math.max(...timestamps));
+      // Consumption is ordered by interval_start DESC (latest first)
+      const lastRecord = consumption[0]; // Latest time
+      const firstRecord = consumption[consumption.length - 1]; // Earliest time
+
+      const minTime = new Date(firstRecord.interval_start);
+      const maxTime = new Date(lastRecord.interval_end);
 
       const fromStr = minTime.toISOString();
       const toStr = maxTime.toISOString();
@@ -961,7 +964,7 @@ Deno.serve(async (req: Request) => {
       try {
         const response = await fetch('https://api.octopus.energy/v1/graphql/', {
           method: 'POST',
-          headers: { 
+          headers: {
             'Content-Type': 'application/json',
             'Authorization': authHeaderOctopus
           },
@@ -976,7 +979,7 @@ Deno.serve(async (req: Request) => {
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
-        
+
         const result = await response.json();
         if (result.errors) {
           console.error('GraphQL errors:', result.errors);

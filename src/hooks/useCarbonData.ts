@@ -24,7 +24,7 @@ const getMsUntilNextHalfHour = (): number => {
   const minutes = now.getMinutes();
   const seconds = now.getSeconds();
   const ms = now.getMilliseconds();
-  
+
   // Calculate minutes until next :00 or :30
   const minutesToNext = minutes < 30 ? (30 - minutes) : (60 - minutes);
   // Convert to ms, add 90 second buffer for API processing delay
@@ -34,15 +34,15 @@ const getMsUntilNextHalfHour = (): number => {
 // Hook for precise setTimeout-based refetching aligned to grid schedule
 function useSmartRefetch(refetchFn: () => Promise<void>, enabled: boolean) {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   const scheduleNextFetch = useCallback(() => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
-    
+
     const msUntilNext = getMsUntilNextHalfHour();
     logger.debug(`Next carbon data fetch scheduled in ${Math.round(msUntilNext / 1000)}s`);
-    
+
     timeoutRef.current = setTimeout(async () => {
       logger.info('Smart refetch triggered at half-hour boundary');
       await refetchFn();
@@ -50,13 +50,13 @@ function useSmartRefetch(refetchFn: () => Promise<void>, enabled: boolean) {
       scheduleNextFetch();
     }, msUntilNext);
   }, [refetchFn]);
-  
+
   useEffect(() => {
     if (!enabled) return;
-    
+
     // Schedule initial fetch
     scheduleNextFetch();
-    
+
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -67,7 +67,7 @@ function useSmartRefetch(refetchFn: () => Promise<void>, enabled: boolean) {
 
 export function useCarbonData(postcode: string) {
   const queryClient = useQueryClient();
-  
+
   // Track previous intensity for animation
   const [previousIntensity, setPreviousIntensity] = useState<number | null>(null);
   const lastIntensityRef = useRef<number | null>(null);
@@ -218,11 +218,11 @@ export function useCarbonData(postcode: string) {
 
     // Loading states - only true on initial load, not background refetches
     isLoading,
-    
+
     // Flag for background fetching (data exists but refreshing)
     isBackgroundFetching: !isInitialLoad && (
-      nationalQuery.isFetching || 
-      regionalDataQuery.isFetching || 
+      nationalQuery.isFetching ||
+      regionalDataQuery.isFetching ||
       forecastQuery.isFetching
     ),
 
@@ -234,10 +234,14 @@ export function useCarbonData(postcode: string) {
 
     error: (postcode && nationalQuery.isError) ? (regionalDataQuery.error || nationalQuery.error) : nationalQuery.error,
 
+    // Next expected update from API data (valid until)
+    nextUpdate: regionalData?.to || nationalQuery.data?.to,
+
     // Refetch
     refetch,
 
     // Helper to calculate next expected update time (HH:00 or HH:30)
+    // kept for fallback if needed, but UI should prefer nextUpdate above
     getNextUpdate: (lastUpdatedStr?: string) => {
       if (!lastUpdatedStr) return null;
       const last = new Date(lastUpdatedStr);

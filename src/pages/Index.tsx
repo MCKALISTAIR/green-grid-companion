@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { RefreshCw, Zap, Info, Leaf, Activity } from 'lucide-react';
+import { RefreshCw, Zap, Info, Leaf, Activity, MapPin, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -37,7 +37,7 @@ const Index = () => {
   });
   const [viewMode, setViewMode] = useState<'intensity' | 'footprint' | 'demand'>('intensity');
 
-  const { scheduleGreenAlerts, prefs } = useNotifications();
+  const { scheduleGreenAlerts, scheduleDailyForecast, scheduleHighIntensityAlerts, prefs } = useNotifications();
   const { isLinked: isOctopusLinked } = useOctopusEnergy();
 
   useEffect(() => {
@@ -57,7 +57,8 @@ const Index = () => {
     isLoading,
     isError,
     refetch,
-    getNextUpdate
+    getNextUpdate,
+    nextUpdate
   } = useCarbonData(postcode);
 
   const { frequency: gridFrequency } = useGridDemand();
@@ -66,8 +67,10 @@ const Index = () => {
   useEffect(() => {
     if (forecast && forecast.length > 0) {
       scheduleGreenAlerts(forecast);
+      scheduleDailyForecast(forecast);
+      scheduleHighIntensityAlerts(forecast);
     }
-  }, [forecast, scheduleGreenAlerts]);
+  }, [forecast, scheduleGreenAlerts, scheduleDailyForecast, scheduleHighIntensityAlerts]);
 
   // Save postcode preference
   useEffect(() => {
@@ -161,24 +164,28 @@ const Index = () => {
             {/* Header with scene */}
             <div className="relative">
               {/* Animated scene */}
-              <ComponentErrorBoundary name="Scene" className="h-[45vh] min-h-96 pb-24">
+              <ComponentErrorBoundary name="Scene" className="h-[50vh] min-h-96 pb-24">
                 <IntensityScene intensity={intensity} index={index} generationMix={generationMix} />
               </ComponentErrorBoundary>
 
-              {/* Overlay header */}
-              <div className="absolute top-0 left-0 right-0 p-4 pt-[max(1rem,env(safe-area-inset-top))] flex items-center justify-between z-30">
-                <LocationManager value={postcode} onChange={setPostcode} />
-                {/* Right side buttons removed */}
-              </div>
+              {/* Overlay header - removed, location now in card */}
 
               {/* Current intensity display - Only show if NOT in demand mode (DemandView has its own header) */}
               {viewMode !== 'demand' && (
-                <div className="absolute bottom-6 lg:bottom-10 left-1/2 -translate-x-1/2 text-center w-auto max-w-[90%] z-20">
+                <div className="absolute bottom-6 lg:bottom-10 left-1/2 -translate-x-1/2 text-center w-auto max-w-[90%] z-10">
                   <div className="bg-white/30 backdrop-blur-md rounded-2xl p-4 shadow-sm border border-white/20">
-                    <div className="flex items-center justify-center gap-1.5 mb-1">
-                      <p className="text-card/90 text-sm font-medium uppercase tracking-wide">
-                        {isLoading ? 'Loading...' : region || 'Select a region'}
-                      </p>
+                    <div className="flex items-center justify-center gap-2 mb-1">
+                      <LocationManager
+                        value={postcode}
+                        onChange={setPostcode}
+                        trigger={
+                          <button className="flex items-center gap-1.5 text-card/90 text-sm font-medium uppercase tracking-wide hover:text-card transition-colors cursor-pointer group">
+                            <MapPin className="w-3.5 h-3.5" />
+                            <span>{isLoading ? 'Loading...' : region || 'Select location'}</span>
+                            <ChevronDown className="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity" />
+                          </button>
+                        }
+                      />
                       {!isLoading && region && (
                         <Popover>
                           <PopoverTrigger asChild>
@@ -232,23 +239,31 @@ const Index = () => {
                           <span>•</span>
                           <span>
                             {(() => {
+                              // Prefer the explicit 'valid to' time from the API
+                              // This handles misses/variable intervals (e.g. 1hr vs 30m) gracefully
+                              if (nextUpdate) {
+                                const next = new Date(nextUpdate);
+                                // If the API says data is valid until X, and we are past X, 
+                                // it means the next update is late.
+                                const now = new Date();
+                                if (now > next) {
+                                  // Calculate next half-hour from now as a fallback projection
+                                  const minutes = now.getMinutes();
+                                  const nextSlot = new Date(now);
+                                  if (minutes < 30) {
+                                    nextSlot.setMinutes(30, 0, 0);
+                                  } else {
+                                    nextSlot.setHours(nextSlot.getHours() + 1, 0, 0, 0);
+                                  }
+                                  return `Next ~${nextSlot.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} `;
+                                }
+                                return `Next ${next.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} `;
+                              }
+
+                              // Fallback (shouldn't really be hit if nextUpdate is present)
                               const next = getNextUpdate(lastUpdated);
                               if (!next) return '';
-                              // Always show the next update time, even if we're past it
-                              // If overdue, show the *following* half-hour slot
-                              const now = new Date();
-                              if (now > next) {
-                                // Calculate next half-hour from now
-                                const minutes = now.getMinutes();
-                                const nextSlot = new Date(now);
-                                if (minutes < 30) {
-                                  nextSlot.setMinutes(30, 0, 0);
-                                } else {
-                                  nextSlot.setHours(nextSlot.getHours() + 1, 0, 0, 0);
-                                }
-                                return `Next ~${nextSlot.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-                              }
-                              return `Next ${next.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+                              return `Next ${next.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} `;
                             })()}
                           </span>
 

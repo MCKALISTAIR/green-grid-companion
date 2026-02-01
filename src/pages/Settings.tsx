@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ChevronRight, GraduationCap, Shield, MapPin, History, MessageSquare } from 'lucide-react';
+import { ChevronRight, GraduationCap, Shield, MapPin, History, MessageSquare, Home } from 'lucide-react';
 import { NotificationSettings } from '@/components/NotificationSettings';
 import { OctopusIntegration } from '@/components/OctopusIntegration';
 import { TeslaIntegration } from '@/components/TeslaIntegration';
@@ -16,6 +16,8 @@ import { useEnergyFacts } from '@/hooks/useEnergyFacts';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useSceneDirector } from '@/hooks/useSceneDirector';
 import { Zap, Trophy, Lock, Construction } from 'lucide-react';
+import { useSettings } from '@/hooks/useSettings';
+import { HouseType, OFGEM_TDCV_2025 } from '@/lib/energy-standards';
 import { toast } from 'sonner';
 
 
@@ -26,6 +28,7 @@ export default function Settings() {
     const { tone, setTone } = useEnergyFacts();
     const { achievements } = useAchievements();
     const { unlocked, handleVersionTap } = useSceneDirector();
+    const { houseType, setHouseType } = useSettings();
 
     const onVersionClick = () => {
         handleVersionTap();
@@ -86,6 +89,39 @@ export default function Settings() {
                 </div>
 
                 <div className="space-y-4">
+                    <h2 className="text-xl font-semibold">Household Profile</h2>
+                    <div className="p-4 bg-card border rounded-lg space-y-3">
+                        <div className="flex items-center gap-2">
+                            <Home className="w-5 h-5 text-primary" />
+                            <div>
+                                <h3 className="font-medium">House Type</h3>
+                                <p className="text-sm text-muted-foreground">Used for benchmarks.</p>
+                            </div>
+                        </div>
+
+                        <RadioGroup
+                            value={houseType}
+                            onValueChange={(val) => setHouseType(val as HouseType)}
+                            className="flex flex-col gap-2 pt-1"
+                        >
+                            {(Object.entries(OFGEM_TDCV_2025) as [HouseType, typeof OFGEM_TDCV_2025['LOW']][]).map(([key, value]) => (
+                                <div key={key} className="flex items-start space-x-2 p-2 rounded hover:bg-muted/50 transition-colors">
+                                    <RadioGroupItem value={key} id={`house-${key}`} className="mt-1" />
+                                    <div className="grid gap-0.5">
+                                        <Label htmlFor={`house-${key}`} className="font-medium">
+                                            {value.label}
+                                        </Label>
+                                        <span className="text-xs text-muted-foreground">
+                                            ~{value.annualKwh.toLocaleString()} kWh/year
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                        </RadioGroup>
+                    </div>
+                </div>
+
+                <div className="space-y-4">
                     <h2 className="text-xl font-semibold">Preferences</h2>
 
                     <div className="flex flex-col gap-3">
@@ -140,6 +176,36 @@ export default function Settings() {
                     <h2 className="text-xl font-semibold">Resources</h2>
 
                     <div className="flex flex-col gap-3">
+                        <Link to="/feature-guides">
+                            <div className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-colors">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-primary/10 rounded-full">
+                                        <GraduationCap className="w-5 h-5 text-primary" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-medium">Feature Guides</h3>
+                                        <p className="text-sm text-muted-foreground">Detailed how-to guides for each feature</p>
+                                    </div>
+                                </div>
+                                <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                            </div>
+                        </Link>
+
+                        <Link to="/help">
+                            <div className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-colors">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-primary/10 rounded-full">
+                                        <MessageSquare className="w-5 h-5 text-primary" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-medium">Help & Tips</h3>
+                                        <p className="text-sm text-muted-foreground">Quick answers & FAQs</p>
+                                    </div>
+                                </div>
+                                <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                            </div>
+                        </Link>
+
                         <Link to="/glossary">
                             <div className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-colors">
                                 <div className="flex items-center gap-3">
@@ -201,7 +267,7 @@ export default function Settings() {
                     <h2 className="text-xl font-semibold">Support</h2>
 
                     <div className="flex flex-col gap-3">
-                        <a href="mailto:support@gridsense.app?subject=GridSense%20Feedback">
+                        <a href="mailto:allymckay5@gmail.com?subject=GridSense%20Feedback">
                             <div className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-colors">
                                 <div className="flex items-center gap-3">
                                     <div className="p-2 bg-primary/10 rounded-full">

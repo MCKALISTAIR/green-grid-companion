@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useCapacitor } from "@/hooks/useCapacitor";
-import { useEffect, Suspense, lazy } from "react";
+import { useEffect, Suspense, lazy, useState } from "react";
 import { App as CapacitorApp } from "@capacitor/app";
 import { registerServiceWorker } from "@/hooks/useOffline";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
@@ -14,6 +14,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import { logger } from "@/lib/logger";
 import { AchievementManager } from "@/components/AchievementManager";
 import { DirectorPanel } from "@/components/DirectorPanel";
+import { SplashScreen } from "@/components/SplashScreen";
 
 // Lazy load pages
 const Index = lazy(() => import("./pages/Index"));
@@ -26,6 +27,8 @@ const Glossary = lazy(() => import("./pages/Glossary"));
 const HistoryPage = lazy(() => import("./pages/History"));
 const ManageLocations = lazy(() => import("./pages/ManageLocations"));
 const Changelog = lazy(() => import("./pages/Changelog"));
+const Help = lazy(() => import("./pages/Help"));
+const FeatureGuides = lazy(() => import("./pages/FeatureGuides"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const TurbineTest = lazy(() => import("./pages/TurbineTest"));
 
@@ -78,6 +81,8 @@ const queryClient = new QueryClient({
 });
 
 function AppContent() {
+  const [showSplash, setShowSplash] = useState(true);
+
   // Initialize Capacitor for native platforms
   useCapacitor();
 
@@ -110,6 +115,7 @@ function AppContent() {
 
   return (
     <>
+      {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
       <OfflineIndicator />
       <Sonner position="top-center" />
       <BrowserRouter>
@@ -125,6 +131,8 @@ function AppContent() {
             <Route path="/history" element={<Suspense fallback={<PageLoader />}><HistoryPage /></Suspense>} />
             <Route path="/locations" element={<Suspense fallback={<PageLoader />}><ManageLocations /></Suspense>} />
             <Route path="/changelog" element={<Suspense fallback={<PageLoader />}><Changelog /></Suspense>} />
+            <Route path="/help" element={<Suspense fallback={<PageLoader />}><Help /></Suspense>} />
+            <Route path="/feature-guides" element={<Suspense fallback={<PageLoader />}><FeatureGuides /></Suspense>} />
             <Route path="/__turbine-test" element={<Suspense fallback={<PageLoader />}><TurbineTest /></Suspense>} />
             <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />
           </Route>

@@ -51,7 +51,38 @@ GridSense is a mobile-first companion app designed to help UK (and future) energ
     *   **Smart Charging Impact**: Track how much Carbon (CO₂) you've saved by charging during greener times compared to grid average.
     *   **Seamless Linking**: Secure OAuth connection to your Tesla account.
 
-## 🆕 Recent Updates (v1.3.0 - 2026-01-30)
+## 🆕 Recent Updates (v1.4.0 - 2026-02-01)
+
+### 📚 Help & Learning
+*   **Feature Guides**: Comprehensive in-depth guides for all major features accessible from Settings
+    *   Home Dashboard, Carbon Intensity, Power Planner, Notifications
+    *   Leaderboard, History & Trends, Interactive Scene, Integrations
+    *   Saved Locations management
+*   **Help & Tips**: Quick-reference FAQ with accordion sections for common questions
+    *   Getting Started, Understanding Data, Interactive Features
+    *   Troubleshooting, Privacy & Data, and more
+*   **Professional Splash Screen**: Branded loading experience with TurbineLogo and smooth transitions
+
+### 💡 Enhanced Energy Insights
+*   **60+ Contextual Facts**: Dramatically expanded energy insights with new categories
+    *   Storage, Savings, Nuclear, Grid Balancing, Weather-based tips
+    *   Real-world impact comparisons (car miles, tree offsets, smartphone charges)
+*   **Coal-Free Streak Tracker**: Monitor continuous periods without coal in the grid
+    *   Tracks days and hours since last coal usage
+    *   Persists across sessions
+    *   Celebration messages in Energy Insights
+*   **Smart Fact Selection**: Dynamic filtering based on intensity, time of day, weather, and generation mix
+
+### 🔧 Energy Standards & Conversions
+*   **UK House Types**: Integrated energy standards for different housing types
+    *   Flat, Terraced, Semi-Detached, Detached
+    *   Average consumption data for accurate impact calculations
+*   **Real-World Conversions**: Convert gCO₂ to relatable equivalents
+    *   Car miles driven, trees needed for offset
+    *   Smartphone charges, cups of tea, LED bulb hours
+*   **User Settings System**: Centralized configuration management
+
+## Previous Updates (v1.3.0 - 2026-01-30)
 
 ### 🏆 Gamification & History
 *   **Grid Guardian Achievements**: Unlock badges like 'Night Owl' and 'Clean Streak' for eco-friendly habits.
@@ -149,14 +180,19 @@ GridSense is a mobile-first companion app designed to help UK (and future) energ
 
 ## 📱 Developer Structure
 
-*   `src/pages`: Main application screens (Index, Planner, History, Settings, Glossary).
+*   `src/pages`: Main application screens (Index, Planner, History, Settings, Glossary, Help, FeatureGuides).
 *   `src/components`: Reusable UI blocks and Widgets.
     *   `src/components/scene`: Interactive scene elements (Landscape, Sheep, CarrotEvents).
     *   Error boundaries (ComponentErrorBoundary, ErrorBoundary, ErrorState) for robust error handling.
+    *   `SplashScreen.tsx`: Professional branded loading screen.
+    *   `TurbineLogo.tsx`: Animated turbine logo component.
 *   `src/lib`:
     *   `carbonApi.ts`: Carbon Intensity API fetchers.
     *   `logger.ts`: Centralized logging utility with Sentry integration.
-*   `src/hooks`: Custom React hooks (useCarbonData, useTeslaEnergy, useOctopusEnergy).
+    *   `energyFacts.ts`: 60+ contextual energy insights with smart filtering.
+    *   `energy-standards.ts`: UK house types and consumption data.
+    *   `impact-conversions.ts`: Real-world CO₂ equivalency conversions.
+*   `src/hooks`: Custom React hooks (useCarbonData, useTeslaEnergy, useOctopusEnergy, useCoalFreeStreak, useSettings, useEnergyFacts, useNotifications).
 *   `ios/App/GridSenseWidget`: Native Swift code for the iOS Widget.
 
 ## 📄 License

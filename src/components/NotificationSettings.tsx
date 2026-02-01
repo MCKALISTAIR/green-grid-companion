@@ -33,12 +33,17 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
     updatePreference('lowIntensityEnabled', enabled);
   };
 
-  // Local state for slider to ensure smooth dragging without constant storage writes
+  // Local state for sliders to ensure smooth dragging without constant storage writes
   const [localThreshold, setLocalThreshold] = useState(prefs.lowIntensityThreshold);
+  const [localHighThreshold, setLocalHighThreshold] = useState(prefs.highIntensityThreshold);
 
   useEffect(() => {
     setLocalThreshold(prefs.lowIntensityThreshold);
   }, [prefs.lowIntensityThreshold]);
+
+  useEffect(() => {
+    setLocalHighThreshold(prefs.highIntensityThreshold);
+  }, [prefs.highIntensityThreshold]);
 
   const handleDailyForecastToggle = async (enabled: boolean) => {
     if (enabled && permissionStatus !== 'granted') {
@@ -46,6 +51,14 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
       if (!granted) return;
     }
     updatePreference('dailyForecastEnabled', enabled);
+  };
+
+  const handleHighIntensityToggle = async (enabled: boolean) => {
+    if (enabled && permissionStatus !== 'granted') {
+      const granted = await requestPermission();
+      if (!granted) return;
+    }
+    updatePreference('highIntensityEnabled', enabled);
   };
 
   const handleWeeklyDigestToggle = async (enabled: boolean) => {
@@ -249,6 +262,51 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
         )
         }
       </Card >
+
+
+      {/* High Intensity Alert */}
+      <Card className="p-4 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-destructive/20 flex items-center justify-center">
+              <Zap className="w-5 h-5 text-destructive" />
+            </div>
+            <div>
+              <h3 className="font-medium text-foreground">High Intensity Alert</h3>
+              <p className="text-sm text-muted-foreground">
+                Get notified when the grid is dirty
+              </p>
+            </div>
+          </div>
+          <Switch
+            checked={prefs.highIntensityEnabled}
+            onCheckedChange={handleHighIntensityToggle}
+            disabled={!isSupported}
+          />
+        </div>
+
+        {prefs.highIntensityEnabled && (
+          <div className="space-y-3 pt-2 border-t border-border">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">
+                Alert when above:
+              </span>
+              <span className="font-medium text-destructive">
+                {localHighThreshold} gCO₂/kWh
+              </span>
+            </div>
+            <Slider
+              value={[localHighThreshold]}
+              onValueChange={([value]) => setLocalHighThreshold(value)}
+              onValueCommit={([value]) => updatePreference('highIntensityThreshold', value)}
+              min={150}
+              max={400}
+              step={10}
+              className="w-full"
+            />
+          </div>
+        )}
+      </Card>
 
       {/* Daily Forecast */}
       < Card className="p-4 space-y-4" >

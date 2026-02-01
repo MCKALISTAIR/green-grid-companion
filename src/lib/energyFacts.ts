@@ -208,7 +208,134 @@ export const ENERGY_FACTS: EnergyFact[] = [
         category: 'general',
         tone: 'friendly',
         condition: () => true
-    }
+    },
+    {
+        id: 'general_friendly_4',
+        text: "The MySE 16-260 wind turbine stands 242m tall - that's taller than the Golden Gate Bridge towers!",
+        category: 'general',
+        tone: 'friendly',
+        condition: () => true
+    },
+    {
+        id: 'general_friendly_5',
+        text: "In 2020, the UK went a record-breaking 67 days, 22 hours without burning any coal.",
+        category: 'general',
+        tone: 'friendly',
+        condition: () => true
+    },
+    {
+        id: 'general_friendly_6',
+        text: "The Hornsea 2 offshore wind farm covers an area larger than the Maldives!",
+        category: 'general',
+        tone: 'friendly',
+        condition: () => true
+    },
+    {
+        id: 'general_friendly_7',
+        text: "Scotland generates enough renewable energy to power all its homes twice over.",
+        category: 'general',
+        tone: 'friendly',
+        condition: () => true
+    },
+    {
+        id: 'general_friendly_8',
+        text: "One rotation of a giant wind turbine can power a UK home for an entire day.",
+        category: 'general',
+        tone: 'friendly',
+        condition: () => true
+    },
+    {
+        id: 'general_friendly_9',
+        text: "The UK's first offshore wind farm opened in 2000 with just 2 turbines. Now we have thousands!",
+        category: 'general',
+        tone: 'friendly',
+        condition: () => true
+    },
+    {
+        id: 'general_friendly_10',
+        text: "Solar panels in the UK generate enough electricity to power 4 million homes.",
+        category: 'general',
+        tone: 'friendly',
+        condition: () => true
+    },
+    {
+        id: 'general_friendly_11',
+        text: "Nuclear power plants can run continuously for 18-24 months before refueling.",
+        category: 'general',
+        tone: 'friendly',
+        condition: () => true
+    },
+    {
+        id: 'general_friendly_12',
+        text: "The UK achieved its first coal-free day in over 130 years on April 21, 2017.",
+        category: 'general',
+        tone: 'friendly',
+        condition: () => true
+    },
+    {
+        id: 'general_friendly_13',
+        text: "Wind turbines can operate at over 95% availability throughout their lifetime.",
+        category: 'general',
+        tone: 'friendly',
+        condition: () => true
+    },
+    {
+        id: 'general_friendly_14',
+        text: "Renewable energy created over 44,000 jobs in the UK renewable electricity sector.",
+        category: 'general',
+        tone: 'friendly',
+        condition: () => true
+    },
+    {
+        id: 'general_friendly_15',
+        text: "A single offshore wind turbine blade can be longer than a football pitch!",
+        category: 'general',
+        tone: 'friendly',
+        condition: () => true
+    },
+    {
+        id: 'general_friendly_16',
+        text: "The UK has the world's largest installed offshore wind capacity.",
+        category: 'general',
+        tone: 'friendly',
+        condition: () => true
+    },
+    {
+        id: 'general_friendly_17',
+        text: "Tidal power is predictable up to 100 years in advance - unlike wind or solar!",
+        category: 'general',
+        tone: 'friendly',
+        condition: () => true
+    },
+    {
+        id: 'general_friendly_18',
+        text: "UK renewable energy capacity has quadrupled in the last decade.",
+        category: 'general',
+        tone: 'friendly',
+        condition: () => true
+    },
+    {
+        id: 'general_friendly_19',
+        text: "Modern wind turbines can generate power at wind speeds as low as 7 mph.",
+        category: 'general',
+        tone: 'friendly',
+        condition: () => true
+    },
+    {
+        id: 'general_friendly_20',
+        text: "Hydroelectric dams can switch from zero to full power in just 90 seconds!",
+        category: 'general',
+        tone: 'friendly',
+        condition: () => true
+    },
+    {
+        id: 'coal_free_record',
+        text: "The UK's record coal-free run was 67 days, 22 hours in 2020.",
+        category: 'general',
+        tone: 'friendly',
+        condition: () => true
+    },
+    // Note: coal_free_current fact will be added dynamically by useEnergyFacts hook
 ];
 
 export function getRandomFact(context: FactContext, tonePref: 'snarky' | 'friendly' | 'mixed' = 'mixed'): EnergyFact {
