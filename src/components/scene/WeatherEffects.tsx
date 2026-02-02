@@ -12,7 +12,7 @@ interface WeatherEffectsProps {
 function FogLayer({ intensity = 0.5, layer = 1 }: { intensity?: number; layer?: number }) {
   const duration = 20 + layer * 10;
   const yOffset = layer * 15;
-  
+
   return (
     <motion.div
       className="absolute inset-0 pointer-events-none"
@@ -44,7 +44,7 @@ function Snowflake({ delay, x, size = 'md' }: { delay: number; x: number; size?:
   const pixelSize = sizes[size];
   const duration = 4 + Math.random() * 3;
   const drift = 20 + Math.random() * 30;
-  
+
   return (
     <motion.div
       className="absolute rounded-full bg-card"
@@ -125,23 +125,23 @@ function LightningBolt({ x, delay }: { x: number; delay: number }) {
 }
 
 // Weather-aware Clouds Component
-function WeatherClouds({ 
-  cloudCover, 
-  isRaining, 
-  isNight 
-}: { 
-  cloudCover: number; 
+function WeatherClouds({
+  cloudCover,
+  isRaining,
+  isNight
+}: {
+  cloudCover: number;
   isRaining: boolean;
   isNight: boolean;
 }) {
   const cloudCount = Math.ceil(cloudCover / 25); // 1-4 clouds based on coverage
   const cloudOpacity = isNight ? 0.4 : 0.7;
   const cloudColor = isRaining ? 'hsl(220 10% 50%)' : 'hsl(0 0% 95%)';
-  
+
   const clouds = useMemo(() => {
     return Array.from({ length: cloudCount }, (_, i) => ({
       id: i,
-      top: 5 + (i % 3) * 8,
+      top: 15 + (i % 3) * 8, // Started at 5%, now 15% to clear status bar
       size: 16 + (i % 2) * 8,
       duration: 30 + i * 5,
       delay: -i * 8,
@@ -181,7 +181,7 @@ function WeatherClouds({
 // Heavy Rain Component (different from carbon-based rain)
 function HeavyRain({ intensity = 0.5 }: { intensity: number }) {
   const dropCount = Math.floor(30 * intensity);
-  
+
   const drops = useMemo(() => {
     return Array.from({ length: dropCount }, (_, i) => ({
       id: i,
@@ -193,7 +193,7 @@ function HeavyRain({ intensity = 0.5 }: { intensity: number }) {
   }, [dropCount]);
 
   return (
-    <motion.div 
+    <motion.div
       className="absolute inset-0 overflow-hidden pointer-events-none"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -245,8 +245,8 @@ export function WeatherEffects({ weather, isNight }: WeatherEffectsProps) {
 
       {/* Weather-based Clouds (in addition to carbon-based) */}
       {weather.cloudCover > 40 && (
-        <WeatherClouds 
-          cloudCover={weather.cloudCover} 
+        <WeatherClouds
+          cloudCover={weather.cloudCover}
           isRaining={weather.isRaining}
           isNight={isNight}
         />
@@ -262,16 +262,16 @@ export function WeatherEffects({ weather, isNight }: WeatherEffectsProps) {
       {/* Snow Effect */}
       <AnimatePresence>
         {weather.isSnowing && (
-          <motion.div 
+          <motion.div
             className="absolute inset-0 overflow-hidden pointer-events-none"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             {Array.from({ length: Math.floor(25 * weather.precipitationIntensity) + 15 }).map((_, i) => (
-              <Snowflake 
-                key={i} 
-                delay={Math.random() * 5} 
+              <Snowflake
+                key={i}
+                delay={Math.random() * 5}
                 x={Math.random() * 100}
                 size={['sm', 'md', 'lg'][i % 3] as 'sm' | 'md' | 'lg'}
               />

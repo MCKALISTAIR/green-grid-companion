@@ -143,7 +143,8 @@ export function LocationManager({ value, onChange, showPostcode = true, trigger 
           setLoadingLocation(false);
         }
       },
-      () => {
+      (error) => {
+        logger.error('Geolocation error callback', { error });
         setLoadingLocation(false);
         toast.error('Location Access Denied', {
           description: 'Please enable location access to use this feature.',

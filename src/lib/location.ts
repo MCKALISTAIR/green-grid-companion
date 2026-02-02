@@ -77,8 +77,49 @@ export async function getRegionFromCoordinates(lat: number, lon: number): Promis
         logger.error('Failed to resolve coordinates to region', { error: e });
         return null;
     }
+}
 
+/**
+ * Resolve a postcode to coordinates (Lat/Lon) using postcodes.io
+ */
+export async function resolvePostcode(postcode: string): Promise<{ lat: number; lon: number } | null> {
+    try {
+        const cleanPostcode = postcode.replace(/\s+/g, '').toUpperCase();
+        const response = await fetch(`https://api.postcodes.io/postcodes/${cleanPostcode}`);
+        if (!response.ok) return null;
 
+        const data = await response.json();
+        if (data.status === 200 && data.result) {
+            return {
+                lat: data.result.latitude,
+                lon: data.result.longitude
+            };
+        } else {
+            logger.warn('Postcode resolution returned success but no result or 200', { data });
+        }
+    } catch (error) {
+        logger.warn('Failed to resolve postcode', { postcode, error });
+    }
+    return null;
+}
+
+/**
+ * Calculate distance between two coordinates in km (Haversine formula)
+ */
+export function getDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 6371; // Radius of the earth in km
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+}
+
+function deg2rad(deg: number) {
+    return deg * (Math.PI / 180);
 }
 
 

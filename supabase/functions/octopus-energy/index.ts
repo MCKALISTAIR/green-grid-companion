@@ -1018,7 +1018,7 @@ Deno.serve(async (req: Request) => {
 
       if (meters && meters.length > 0) {
         // Assuming single meter for simplicity in status check, or check all
-        const mpans = meters.map(m => m.mpan);
+        const mpans = meters.map((m: any) => m.mpan);
 
         const { data: latest } = await supabase
           .from('octopus_consumption')

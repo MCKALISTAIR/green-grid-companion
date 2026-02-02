@@ -114,6 +114,13 @@ export function useCarbonData(postcode: string) {
     // GB/National falls through to undefined, handled by fallback
   }
 
+  logger.info('useCarbonData resolution', {
+    postcode,
+    targetRegionName,
+    foundRegionShortname: foundRegion?.shortname,
+    regionId
+  });
+
   // Fetch detailed regional data by ID (avoids CORS issues with postcode endpoint)
   const regionalDataQuery = useQuery<RegionalData | null>({
     queryKey: ['regional', regionId],
@@ -141,6 +148,20 @@ export function useCarbonData(postcode: string) {
     gcTime: 1000 * 60 * 60, // 1 hour
     retry: 2,
   });
+
+  // START FALLBACK: If we couldn't resolve regionId locally, maybe we can get it from the API directly?
+  // We can try to fetch the specific postcode data which INCLUDES the regionid.
+  const postcodeQuery = useQuery<RegionalData>({
+    queryKey: ['regional', postcode],
+    queryFn: () => getRegionalIntensity(postcode),
+    enabled: !!postcode && !regionId, // Only run if we failed to resolve ID locally
+    staleTime: 1000 * 60 * 30, // 30 mins
+  });
+
+  // If local resolution failed, try to use the ID from the direct postcode lookup
+  if (!regionId && postcodeQuery.data?.regionid) {
+    regionId = postcodeQuery.data.regionid;
+  }
 
   const generationQuery = useQuery<GenerationMix[]>({
     queryKey: ['generation'],

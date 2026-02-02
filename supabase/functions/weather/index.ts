@@ -1,7 +1,9 @@
 // @ts-ignore: Suppress Deno namespace error if not in Deno context
 const _ignore = null;
 
-const corsHeaders = {
+declare const Deno: any;
+
+export const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }

@@ -69,7 +69,28 @@ export const UK_REGIONS = [
   { id: 11, name: 'South West England', postcode: 'BS' },
   { id: 12, name: 'South England', postcode: 'SO' },
   { id: 13, name: 'London', postcode: 'SW' },
+  { id: 13, name: 'London', postcode: 'SE' },
+  { id: 13, name: 'London', postcode: 'E' },
+  { id: 13, name: 'London', postcode: 'EC' },
+  { id: 13, name: 'London', postcode: 'N' },
+  { id: 13, name: 'London', postcode: 'NW' },
+  { id: 13, name: 'London', postcode: 'W' },
+  { id: 13, name: 'London', postcode: 'WC' },
   { id: 14, name: 'South East England', postcode: 'BN' },
+  // Expanded Scottish Regions
+  { id: 1, name: 'North Scotland', postcode: 'IV' },
+  { id: 1, name: 'North Scotland', postcode: 'KW' },
+  { id: 1, name: 'North Scotland', postcode: 'PH' },
+  { id: 1, name: 'North Scotland', postcode: 'ZE' },
+  { id: 1, name: 'North Scotland', postcode: 'HS' },
+  { id: 2, name: 'South Scotland', postcode: 'FK' },
+  { id: 2, name: 'South Scotland', postcode: 'G' },
+  { id: 2, name: 'South Scotland', postcode: 'KA' },
+  { id: 2, name: 'South Scotland', postcode: 'KY' },
+  { id: 2, name: 'South Scotland', postcode: 'ML' },
+  { id: 2, name: 'South Scotland', postcode: 'PA' },
+  { id: 2, name: 'South Scotland', postcode: 'TD' },
+  { id: 2, name: 'South Scotland', postcode: 'DG' },
 ];
 
 // Helper for fetch (now allows caching)

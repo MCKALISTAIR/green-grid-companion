@@ -33,7 +33,6 @@ import { HydroDam } from './scene/HydroDam';
 import { TrendArrows } from './scene/TrendArrows';
 import { MeteorShower } from './scene/MeteorShower';
 import { BiomassSmoke } from './scene/BiomassSmoke';
-import { EnergyFactBubble } from './scene/EnergyFactBubble';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useSceneDirector } from '@/hooks/useSceneDirector';
 
@@ -489,7 +488,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
           style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.85\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E")' }}
         />
       )}
-      <EnergyFactBubble intensity={intensity} generationMix={generationMix} />
+
 
       <WeatherEffects weather={weather} isNight={isNight} />
       <AnimatePresence>
@@ -576,17 +575,17 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       </AnimatePresence >
 
       <Cloud
-        className={`absolute top-12 w-24 h-14 text-card/80 ${shouldReduceMotion ? '' : 'animate-cloud-drift'}`}
+        className={`absolute top-20 w-24 h-14 text-card/80 ${shouldReduceMotion ? '' : 'animate-cloud-drift'}`}
         style={shouldReduceMotion ? { left: '10%' } : { animationDelay: '0s', animationDuration: '35s' }}
         aria-hidden="true"
       />
       <Cloud
-        className={`absolute top-20 w-16 h-10 text-card/60 ${shouldReduceMotion ? '' : 'animate-cloud-drift'}`}
+        className={`absolute top-28 w-16 h-10 text-card/60 ${shouldReduceMotion ? '' : 'animate-cloud-drift'}`}
         style={shouldReduceMotion ? { left: '60%' } : { animationDelay: '-12s', animationDuration: '45s' }}
         aria-hidden="true"
       />
       <Cloud
-        className={`absolute top-6 w-20 h-12 text-card/70 ${shouldReduceMotion ? '' : 'animate-cloud-drift'}`}
+        className={`absolute top-14 w-20 h-12 text-card/70 ${shouldReduceMotion ? '' : 'animate-cloud-drift'}`}
         style={shouldReduceMotion ? { left: '80%' } : { animationDelay: '-25s', animationDuration: '40s' }}
         aria-hidden="true"
       />

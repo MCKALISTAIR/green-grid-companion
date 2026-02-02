@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Geolocation } from '@capacitor/geolocation';
 import { logger } from '@/lib/logger';
+import { resolvePostcode } from '@/lib/location';
 
 // Weather condition types based on WMO codes
 export type WeatherCondition =
@@ -109,16 +110,34 @@ async function fetchWeather(lat: number, lon: number): Promise<WeatherData> {
 // Default UK coordinates (London) as fallback
 const DEFAULT_COORDS = { lat: 51.5074, lon: -0.1278 };
 
-export function useWeatherData() {
+
+
+export function useWeatherData(postcode?: string) {
   const [coords, setCoords] = useState<{ lat: number; lon: number } | null>(null);
   const [coordsError, setCoordsError] = useState<string | null>(null);
 
   useEffect(() => {
     async function getLocation() {
+      // 1. If Postcode is provided, try to resolve it first
+      if (postcode) {
+        const resolved = await resolvePostcode(postcode);
+        if (resolved) {
+          setCoords(resolved);
+          setCoordsError(null);
+          return;
+        }
+        // If resolution fails, we fall through to other methods? 
+        // Or should we set error? Let's fallback to current location but log warning.
+        logger.warn('Could not resolve postcode, falling back to device location');
+      }
+
       try {
-        // Check for cached coordinates first
+        // 2. Check for cached coordinates (only if we didn't just try a postcode)
+        // If we have a postcode but it failed, we probably don't want the *old* cache unless it matches?
+        // Simpler: Just use standard cache/geo logic if postcode is missing or failed
+
         const cached = localStorage.getItem('gridgreen-coords');
-        if (cached) {
+        if (cached && !postcode) {
           try {
             const parsed = JSON.parse(cached);
             if (parsed.lat && parsed.lon) {
@@ -126,33 +145,33 @@ export function useWeatherData() {
               return;
             }
           } catch {
-            // Invalid cached data, continue to get new location
+            // Invalid cached data
           }
         }
 
-        // Try to get current position - use browser API in web, Capacitor on native
+        // 3. Device Geolocation
         let latitude: number;
         let longitude: number;
 
         if (Capacitor.isNativePlatform()) {
-          // Native: use Capacitor Geolocation
           const position = await Geolocation.getCurrentPosition({ timeout: 5000 });
           latitude = position.coords.latitude;
           longitude = position.coords.longitude;
         } else if ('geolocation' in navigator) {
-          // Web: use browser Geolocation API
           const position = await new Promise<GeolocationPosition>((resolve, reject) => {
             navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
           });
           latitude = position.coords.latitude;
           longitude = position.coords.longitude;
         } else {
-          // No geolocation available, use default
           throw new Error('Geolocation not available');
         }
 
         const newCoords = { lat: latitude, lon: longitude };
-        localStorage.setItem('gridgreen-coords', JSON.stringify(newCoords));
+        // Only cache if it's the device location (not a specific postcode override)
+        if (!postcode) {
+          localStorage.setItem('gridgreen-coords', JSON.stringify(newCoords));
+        }
         setCoords(newCoords);
       } catch (error) {
         logger.debug('Could not get location for weather, using default', { error });
@@ -162,7 +181,7 @@ export function useWeatherData() {
     }
 
     getLocation();
-  }, []);
+  }, [postcode]);
 
   const query = useQuery<WeatherData>({
     queryKey: ['weather', coords?.lat, coords?.lon],

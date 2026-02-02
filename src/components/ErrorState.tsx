@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 interface ErrorStateProps {
     title?: string;
     description?: string;
+    steps?: string[];
     retry?: () => void;
     fullScreen?: boolean;
 }
@@ -12,6 +13,7 @@ interface ErrorStateProps {
 export function ErrorState({
     title = "Connection Lost",
     description = "We couldn't connect to the grid. Please check your internet connection.",
+    steps,
     retry,
     fullScreen = false
 }: ErrorStateProps) {
@@ -35,6 +37,17 @@ export function ErrorState({
             <p className="text-muted-foreground max-w-[300px] mb-6 leading-relaxed">
                 {description}
             </p>
+
+            {steps && steps.length > 0 && (
+                <ul className="text-sm text-muted-foreground/80 mb-8 text-left space-y-2 bg-muted/30 p-4 rounded-lg border border-border/50">
+                    {steps.map((step, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                            <span className="text-primary mt-1">•</span>
+                            <span>{step}</span>
+                        </li>
+                    ))}
+                </ul>
+            )}
 
             {retry && (
                 <Button onClick={retry} size="lg" className="gap-2">

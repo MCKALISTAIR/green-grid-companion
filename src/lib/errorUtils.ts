@@ -5,6 +5,7 @@
 export interface ErrorInfo {
     title: string;
     description: string;
+    steps?: string[];
     isOffline?: boolean;
 }
 
@@ -168,7 +169,12 @@ export function getErrorInfo(error: unknown): ErrorInfo {
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
         return {
             title: "You're Offline",
-            description: "Check your internet connection and try again.",
+            description: "We couldn't connect to the grid data.",
+            steps: [
+                "Check your Wi-Fi or mobile data connection",
+                "Disable Airplane mode if it's on",
+                "Try refreshing the page"
+            ],
             isOffline: true,
         };
     }
@@ -181,7 +187,11 @@ export function getErrorInfo(error: unknown): ErrorInfo {
     if (lowerMessage.includes('timeout') || lowerMessage.includes('timed out')) {
         return {
             title: 'Request Timeout',
-            description: 'The server took too long to respond. Please try again.',
+            description: 'The server took too long to respond.',
+            steps: [
+                "Check your internet speed",
+                "Wait a moment and try again",
+            ]
         };
     }
 
@@ -189,7 +199,12 @@ export function getErrorInfo(error: unknown): ErrorInfo {
     if (lowerMessage.includes('network') || lowerMessage.includes('fetch')) {
         return {
             title: 'Connection Failed',
-            description: "We couldn't reach the server. Please check your connection.",
+            description: "We couldn't reach the Carbon Intensity server.",
+            steps: [
+                "Check your internet connection",
+                "The API might be down temporarily",
+                "Try again in a few minutes"
+            ]
         };
     }
 
@@ -198,6 +213,10 @@ export function getErrorInfo(error: unknown): ErrorInfo {
         return {
             title: 'Access Denied',
             description: "You don't have permission to access this data.",
+            steps: [
+                "Try signing out and signing back in",
+                "Check if your session has expired"
+            ]
         };
     }
 
@@ -205,7 +224,12 @@ export function getErrorInfo(error: unknown): ErrorInfo {
     if (lowerMessage.includes('500') || lowerMessage.includes('server error')) {
         return {
             title: 'Server Error',
-            description: 'The service is having issues. Please try again later.',
+            description: 'The National Grid service is having issues.',
+            steps: [
+                "This is not your fault",
+                "Services usually recover within minutes",
+                "Try again later"
+            ]
         };
     }
 
@@ -213,14 +237,22 @@ export function getErrorInfo(error: unknown): ErrorInfo {
     if (lowerMessage.includes('rate limit') || lowerMessage.includes('too many requests')) {
         return {
             title: 'Too Many Requests',
-            description: 'Please wait a moment before trying again.',
+            description: 'You are sending too many requests.',
+            steps: [
+                "Wait a moment before trying again",
+                "Don't refresh too quickly"
+            ]
         };
     }
 
     // Default error
     return {
         title: 'Something Went Wrong',
-        description: 'We encountered an unexpected error. Please try again.',
+        description: 'We encountered an unexpected error.',
+        steps: [
+            "Try refreshing the app",
+            "Clear your cache if the issue persists"
+        ]
     };
 }
 

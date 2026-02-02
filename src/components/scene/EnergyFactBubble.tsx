@@ -12,9 +12,11 @@ import { Button } from '@/components/ui/button';
 interface EnergyFactBubbleProps {
     intensity: number;
     generationMix?: GenerationMix[];
+    className?: string;
+    variant?: 'bubble' | 'plain';
 }
 
-export function EnergyFactBubble({ intensity, generationMix }: EnergyFactBubbleProps) {
+export function EnergyFactBubble({ intensity, generationMix, className, variant = 'bubble' }: EnergyFactBubbleProps) {
     const { currentFact, refreshFact, tone } = useEnergyFacts();
     const { isNight } = useTimeOfDay();
     const { weather } = useWeatherData();
@@ -56,30 +58,37 @@ export function EnergyFactBubble({ intensity, generationMix }: EnergyFactBubbleP
                     initial={{ opacity: 0, y: 10, scale: 0.9 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
-                    className="absolute bottom-4 right-4 pr-[env(safe-area-inset-right)] z-40 max-w-[200px] md:max-w-[260px]"
+                    className={variant === 'bubble'
+                        ? `absolute bottom-4 right-4 pr-[env(safe-area-inset-right)] z-40 max-w-[200px] md:max-w-[260px] ${className || ''}`
+                        : `w-full ${className || ''}`
+                    }
                 >
                     <div
                         className={`
-              relative p-3 rounded-2xl shadow-lg backdrop-blur-md 
-              border border-white/20 text-xs md:text-sm font-medium
+              relative rounded-2xl text-xs md:text-sm font-medium
               cursor-pointer select-none transition-colors
-              ${tone === 'snarky'
+              ${variant === 'bubble' ? 'p-3 shadow-lg backdrop-blur-md border border-white/20' : 'p-0 bg-transparent'}
+              ${variant === 'bubble' && tone === 'snarky'
                                 ? 'bg-purple-900/40 text-purple-50 hover:bg-purple-900/50'
-                                : 'bg-white/30 text-slate-800 dark:text-slate-100 hover:bg-white/40'
+                                : variant === 'bubble'
+                                    ? 'bg-white/30 text-slate-800 dark:text-slate-100 hover:bg-white/40'
+                                    : 'text-muted-foreground hover:text-foreground/80'
                             }
             `}
                         onClick={() => {
                             // Click to cycle
-                            setIsVisible(false);
+                            if (variant === 'bubble') setIsVisible(false); // Only hide if bubble
                             setTimeout(() => handleRefresh(), 300);
                         }}
                     >
-                        {/* Speech bubble tail */}
-                        <div className={`
+                        {/* Speech bubble tail - only for bubble variant */}
+                        {variant === 'bubble' && (
+                            <div className={`
               absolute -bottom-2 right-6 w-4 h-4 rotate-45 
               ${tone === 'snarky' ? 'bg-purple-900/40' : 'bg-white/30'}
               backdrop-blur-md border-r border-b border-white/20
             `} />
+                        )}
 
                         <div className="flex gap-2 items-start">
                             <MessageCircle className="w-3.5 h-3.5 mt-0.5 opacity-70 shrink-0" />

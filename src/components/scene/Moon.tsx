@@ -8,7 +8,7 @@ interface MoonProps {
 export function Moon({ position = 0.5, onDoubleClick }: MoonProps) {
   // Calculate position on arc
   const arcX = 20 + position * 60; // 20% to 80% of width
-  const arcY = 10 + Math.sin(position * Math.PI) * -5; // Slight arc
+  const arcY = 15 + Math.sin(position * Math.PI) * -5; // Slight arc, pushed down to 10-15% range
 
   return (
     <motion.div
@@ -31,16 +31,19 @@ export function Moon({ position = 0.5, onDoubleClick }: MoonProps) {
       tabIndex={0}
       aria-label="Moon - Double click or press Enter to trigger meteor shower"
     >
-      {/* Moon glow */}
-      <div className="absolute inset-0 w-16 h-16 -translate-x-2 -translate-y-2 bg-card/20 rounded-full blur-xl" />
+      {/* Moon glow - stronger and wider */}
+      <div className="absolute inset-0 w-24 h-24 -translate-x-6 -translate-y-6 bg-white/20 rounded-full blur-2xl" />
 
-      {/* Moon body */}
-      <div className="relative w-12 h-12 rounded-full bg-gradient-to-br from-card via-card/90 to-muted shadow-lg">
-        {/* Craters */}
-        <div className="absolute top-2 left-3 w-2 h-2 rounded-full bg-muted/30" />
-        <div className="absolute top-5 right-2 w-3 h-3 rounded-full bg-muted/20" />
-        <div className="absolute bottom-3 left-4 w-1.5 h-1.5 rounded-full bg-muted/25" />
-        <div className="absolute bottom-2 right-3 w-2 h-2 rounded-full bg-muted/15" />
+      {/* Moon body - Explicitly light color to stand out in dark mode */}
+      <div className="relative w-12 h-12 rounded-full bg-gradient-to-br from-[#fffdf5] via-[#e2e8f0] to-[#cbd5e1] shadow-[0_0_15px_rgba(255,255,255,0.5)] overflow-hidden">
+        {/* Subtle texture/noise overlay could go here, but craters are enough for now */}
+
+        {/* Craters - darker grey, slightly blurry */}
+        <div className="absolute top-2 left-3 w-2.5 h-2.5 rounded-full bg-[#94a3b8]/40 shadow-inner" />
+        <div className="absolute top-5 right-2 w-3.5 h-3.5 rounded-full bg-[#94a3b8]/30 shadow-inner" />
+        <div className="absolute bottom-3 left-4 w-1.5 h-1.5 rounded-full bg-[#94a3b8]/50 shadow-inner" />
+        <div className="absolute bottom-2 right-3 w-2.5 h-2.5 rounded-full bg-[#94a3b8]/30 shadow-inner" />
+        <div className="absolute top-1 right-4 w-1 h-1 rounded-full bg-[#94a3b8]/40 shadow-inner" />
       </div>
     </motion.div>
   );

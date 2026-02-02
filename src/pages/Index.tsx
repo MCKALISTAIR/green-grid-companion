@@ -33,7 +33,9 @@ import { useGridDemand } from '@/hooks/useGridDemand';
 import { WeatherWidget } from '@/components/WeatherWidget';
 import { GreenerNightsCard } from '@/components/GreenerNightsCard';
 import { AnimatedIntensity } from '@/components/AnimatedIntensity';
+import { EnergyFactBubble } from '@/components/scene/EnergyFactBubble';
 import { logger } from '@/lib/logger';
+import { LocationMismatchPrompt } from '@/components/LocationMismatchPrompt';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -144,7 +146,7 @@ const Index = () => {
   };
 
   const { timeOfDay: realTimeOfDay, isNight: realIsNight } = useTimeOfDay();
-  const { weather: realWeather } = useWeatherData();
+  const { weather: realWeather } = useWeatherData(postcode);
   const { active: isDirectorMode, overrides } = useSceneDirector();
 
   // Compute overrides
@@ -174,7 +176,8 @@ const Index = () => {
           <ErrorState
             title={errorInfo.title}
             description={errorInfo.description}
-            retry={() => refetch()}
+            steps={errorInfo.steps}
+            retry={refetch}
             fullScreen
           />
         </div>
@@ -372,6 +375,16 @@ const Index = () => {
                             <p className="text-sm text-muted-foreground mt-1">
                               {getSmartTip(intensity, forecast)}
                             </p>
+
+                            <div className="mt-2 text-sm">
+                              <EnergyFactBubble
+                                intensity={intensity}
+                                generationMix={generationMix}
+                                variant="plain"
+                                className="!relative !w-full"
+                              />
+                            </div>
+
                             {prefs.showWeatherInInsights && (
                               <div className="mt-3">
                                 <ComponentErrorBoundary name="Weather Widget">
@@ -428,8 +441,17 @@ const Index = () => {
               </AnimatePresence>
             </div>
           </main>
-        </PullToRefresh>
+        </PullToRefresh >
 
+
+        {/* Location Mismatch Prompt */}
+        <LocationMismatchPrompt
+          currentPostcode={postcode}
+          onUpdate={(newPostcode) => {
+            setPostcode(newPostcode);
+            toast.success("Location updated to match your current region");
+          }}
+        />
       </div >
     </TooltipProvider >
   );
