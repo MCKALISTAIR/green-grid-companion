@@ -8,8 +8,7 @@ import { logger } from './logger';
  * without requiring Google/Apple sign-in. When they later authenticate,
  * the AccountBackup component automatically migrates their data.
  * 
- * @returns Promise<Session> - The current or newly created session
- * @throws Error if session creation fails
+ * @returns Promise<Session | null> - The current or newly created session, or null if creation fails
  */
 export async function ensureAuthSession() {
     // Check if user already has a session (authenticated or anonymous)
@@ -23,21 +22,33 @@ export async function ensureAuthSession() {
         return session;
     }
 
-    // No session - create an anonymous one
+    // No session - try to create an anonymous one
     logger.info('Creating anonymous authentication session');
 
-    const { data, error } = await supabase.auth.signInAnonymously();
+    try {
+        const { data, error } = await supabase.auth.signInAnonymously();
 
-    if (error || !data.session) {
-        logger.error('Failed to create anonymous session', { error: error?.message });
-        throw new Error('Failed to create authentication session. Please try again.');
+        if (error) {
+            logger.warn('Failed to create anonymous session', { error: error.message });
+            return null;
+        }
+
+        if (!data.session) {
+            logger.warn('Anonymous sign-in returned no session');
+            return null;
+        }
+
+        logger.info('Anonymous session created successfully', {
+            userId: data.session.user?.id?.substring(0, 8) + '...'
+        });
+
+        return data.session;
+    } catch (error) {
+        logger.warn('Exception creating anonymous session', { 
+            error: error instanceof Error ? error.message : 'Unknown error' 
+        });
+        return null;
     }
-
-    logger.info('Anonymous session created successfully', {
-        userId: data.session.user?.id?.substring(0, 8) + '...'
-    });
-
-    return data.session;
 }
 
 /**
@@ -81,4 +92,14 @@ export async function shouldPromptForAuth(): Promise<boolean> {
 
     // Only prompt anonymous users who have been using the app
     return session.user?.is_anonymous === true;
+}
+
+/**
+ * Check if we have a valid session (any type)
+ * 
+ * @returns Promise<boolean> - True if there's any valid session
+ */
+export async function hasValidSession(): Promise<boolean> {
+    const { data: { session } } = await supabase.auth.getSession();
+    return !!session;
 }

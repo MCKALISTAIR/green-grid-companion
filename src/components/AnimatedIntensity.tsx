@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { motion, useSpring, useTransform, AnimatePresence } from 'framer-motion';
 import { TrendingUp, TrendingDown } from 'lucide-react';
-import { useHaptics, ImpactStyle } from '@/hooks/useHaptics';
+import { useHaptics } from '@/hooks/useHaptics';
 import { cn } from '@/lib/utils';
 
 interface AnimatedIntensityProps {

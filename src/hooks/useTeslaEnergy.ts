@@ -3,7 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { parseEdgeFunctionError } from '@/lib/errorUtils';
-import { ensureAuthSession } from '@/lib/auth-utils';
+import { ensureAuthSession, hasValidSession } from '@/lib/auth-utils';
+import { logger } from '@/lib/logger';
 
 export interface TeslaVehicle {
   id: string;
@@ -63,6 +64,11 @@ export interface TeslaStatus {
   lastSync: string | null;
 }
 
+const LOCAL_STORAGE_KEYS = {
+  isLinked: 'tesla-is-linked',
+  pendingAuth: 'tesla-pending-auth',
+};
+
 async function callTeslaFunction<T>(action: string, data?: Record<string, unknown>): Promise<T> {
   const { data: response, error } = await supabase.functions.invoke('tesla-energy', {
     body: { action, ...data },
@@ -85,9 +91,9 @@ export function useTeslaEnergy() {
 
   // All useState hooks first
   const [isLinking, setIsLinking] = useState(false);
-  const [cachedIsLinked] = useState(() => localStorage.getItem('tesla-is-linked') === 'true');
+  const [cachedIsLinked] = useState(() => localStorage.getItem(LOCAL_STORAGE_KEYS.isLinked) === 'true');
 
-  // Fetch status if user might be linked (removed session requirement)
+  // Fetch status if user might be linked
   const shouldFetchStatus = cachedIsLinked;
 
   // Fetch Tesla status
@@ -99,8 +105,19 @@ export function useTeslaEnergy() {
   } = useQuery({
     queryKey: ['tesla-status'],
     queryFn: async () => {
-      // Ensure we have a session (creates anonymous if needed)
-      await ensureAuthSession();
+      // Check if we can get a session
+      const session = await ensureAuthSession();
+      
+      if (!session) {
+        return {
+          configured: false,
+          linked: false,
+          vehicles: [],
+          energySites: [],
+          lastSync: null,
+        } as TeslaStatus;
+      }
+      
       return callTeslaFunction<TeslaStatus>('get-status');
     },
     enabled: shouldFetchStatus,
@@ -113,9 +130,9 @@ export function useTeslaEnergy() {
   useEffect(() => {
     if (status) {
       if (status.linked) {
-        localStorage.setItem('tesla-is-linked', 'true');
+        localStorage.setItem(LOCAL_STORAGE_KEYS.isLinked, 'true');
       } else {
-        localStorage.removeItem('tesla-is-linked');
+        localStorage.removeItem(LOCAL_STORAGE_KEYS.isLinked);
       }
     }
   }, [status]);
@@ -140,8 +157,15 @@ export function useTeslaEnergy() {
   const startLinking = useCallback(async () => {
     setIsLinking(true);
     try {
-      // Ensure we have a session (creates anonymous if needed)
-      await ensureAuthSession();
+      // Ensure we have a session - Tesla OAuth requires it
+      const session = await ensureAuthSession();
+      
+      if (!session) {
+        // For Tesla, we need auth because OAuth tokens must be stored server-side
+        toast.error('Please sign in first to connect your Tesla account');
+        setIsLinking(false);
+        return;
+      }
 
       const redirectUri = `${window.location.origin}/settings?tesla_callback=true`;
 
@@ -156,7 +180,7 @@ export function useTeslaEnergy() {
       // Redirect to Tesla auth
       window.location.href = authUrl;
     } catch (error) {
-      console.error('Failed to start Tesla linking:', error);
+      logger.error('Failed to start Tesla linking:', { error });
       const message = parseEdgeFunctionError(error, { feature: 'tesla', action: 'link' });
       toast.error(message);
       setIsLinking(false);
@@ -212,7 +236,7 @@ export function useTeslaEnergy() {
       toast.success('Tesla account disconnected');
       queryClient.invalidateQueries({ queryKey: ['tesla-status'] });
       queryClient.invalidateQueries({ queryKey: ['tesla-charging-stats'] });
-      localStorage.removeItem('tesla-is-linked');
+      localStorage.removeItem(LOCAL_STORAGE_KEYS.isLinked);
     },
     onError: (error) => {
       const message = parseEdgeFunctionError(error, { feature: 'tesla', action: 'disconnect' });
