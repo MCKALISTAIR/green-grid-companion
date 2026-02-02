@@ -13,12 +13,12 @@ interface SheepProps {
 export function Sheep({ x, y, scale = 1, isNight, delay = 0 }: SheepProps) {
     const [isJumping, setIsJumping] = useState(false);
     const id = useId();
-    const { mediumTap } = useHaptics();
+    const { impactMedium } = useHaptics();
 
     const handleClick = () => {
         if (isJumping) return;
         setIsJumping(true);
-        mediumTap(); // Haptic feedback!
+        impactMedium(); // Haptic feedback!
         setTimeout(() => setIsJumping(false), 1000);
     };
 

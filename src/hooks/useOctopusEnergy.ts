@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
 import { parseEdgeFunctionError } from '@/lib/errorUtils';
-import { ensureAuthSession } from '@/lib/auth-utils';
+import { ensureAuthSession, hasValidSession } from '@/lib/auth-utils';
 
 export interface OctopusMeter {
   id: string;
@@ -54,28 +54,46 @@ export interface GreennessForecastItem {
   highlightFlag: boolean;
 }
 
+const LOCAL_STORAGE_KEYS = {
+  isLinked: 'octopus-is-linked',
+  hasCreds: 'octopus-has-creds',
+  credentials: 'octopus-cached-real-creds',
+  pendingSync: 'octopus-pending-sync',
+};
+
 export function useOctopusEnergy(days: number = 30) {
   const queryClient = useQueryClient();
 
   // All useState hooks must be declared first in the same order every render
   const [isSyncing, setIsSyncing] = useState(false);
-  const [cachedIsLinked] = useState(() => localStorage.getItem('octopus-is-linked') === 'true');
-  const [cachedHasCreds] = useState(() => localStorage.getItem('octopus-has-creds') === 'true');
-  // New: Cached actual credentials for re-linking
+  const [cachedIsLinked] = useState(() => localStorage.getItem(LOCAL_STORAGE_KEYS.isLinked) === 'true');
+  const [cachedHasCreds] = useState(() => localStorage.getItem(LOCAL_STORAGE_KEYS.hasCreds) === 'true');
+  // Cached credentials for re-linking or local-only storage
   const [cachedCredentials, setCachedCredentials] = useState<{ apiKey: string; accountNumber: string } | null>(() => {
-    const cached = localStorage.getItem('octopus-cached-real-creds');
+    const cached = localStorage.getItem(LOCAL_STORAGE_KEYS.credentials);
     return cached ? JSON.parse(cached) : null;
   });
 
-  // Fetch status if user might have credentials (removed session requirement)
+  // Fetch status if user might have credentials
   const shouldFetchStatus = cachedIsLinked || cachedHasCreds;
 
   // Fetch current status
   const { data: status, isLoading: statusLoading, refetch: refetchStatus } = useQuery({
     queryKey: ['octopus-status'],
     queryFn: async (): Promise<OctopusStatus> => {
-      // Ensure we have a session (creates anonymous if needed)
-      await ensureAuthSession();
+      // Check if we can get a session
+      const session = await ensureAuthSession();
+      
+      if (!session) {
+        // No session - return local-only status
+        return {
+          is_linked: false,
+          has_credentials: !!cachedCredentials,
+          meters: [],
+          latest_consumption: null,
+          footprint_records: 0
+        };
+      }
 
       const { data, error } = await supabase.functions.invoke('octopus-energy', {
         body: { action: 'get-status' }
@@ -84,11 +102,11 @@ export function useOctopusEnergy(days: number = 30) {
       if (error) {
         // If 401, session might be invalid - return empty state
         if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
-          localStorage.removeItem('octopus-is-linked');
-          localStorage.removeItem('octopus-has-creds');
+          localStorage.removeItem(LOCAL_STORAGE_KEYS.isLinked);
+          localStorage.removeItem(LOCAL_STORAGE_KEYS.hasCreds);
           return {
             is_linked: false,
-            has_credentials: false,
+            has_credentials: !!cachedCredentials,
             meters: [],
             latest_consumption: null,
             footprint_records: 0
@@ -108,15 +126,15 @@ export function useOctopusEnergy(days: number = 30) {
   useEffect(() => {
     if (status) {
       if (status.is_linked) {
-        localStorage.setItem('octopus-is-linked', 'true');
+        localStorage.setItem(LOCAL_STORAGE_KEYS.isLinked, 'true');
       } else {
-        localStorage.removeItem('octopus-is-linked');
+        localStorage.removeItem(LOCAL_STORAGE_KEYS.isLinked);
       }
 
       if (status.has_credentials) {
-        localStorage.setItem('octopus-has-creds', 'true');
+        localStorage.setItem(LOCAL_STORAGE_KEYS.hasCreds, 'true');
       } else {
-        localStorage.removeItem('octopus-has-creds');
+        localStorage.removeItem(LOCAL_STORAGE_KEYS.hasCreds);
       }
     }
   }, [status]);
@@ -157,6 +175,48 @@ export function useOctopusEnergy(days: number = 30) {
     retry: 1, // Only retry once - this is non-critical data
   });
 
+  // Try to sync pending credentials when auth becomes available
+  const syncPendingCredentials = useCallback(async () => {
+    const hasPending = localStorage.getItem(LOCAL_STORAGE_KEYS.pendingSync) === 'true';
+    if (!hasPending || !cachedCredentials) return;
+
+    const hasSession = await hasValidSession();
+    if (!hasSession) return;
+
+    logger.info('Syncing pending Octopus credentials to backend');
+    
+    try {
+      const { error } = await supabase.functions.invoke('octopus-energy', {
+        body: { 
+          action: 'save-credentials', 
+          apiKey: cachedCredentials.apiKey, 
+          accountNumber: cachedCredentials.accountNumber 
+        }
+      });
+
+      if (!error) {
+        localStorage.removeItem(LOCAL_STORAGE_KEYS.pendingSync);
+        toast.success('Octopus credentials synced to your account!');
+        await refetchStatus();
+      }
+    } catch (error) {
+      logger.warn('Failed to sync pending credentials', { error });
+    }
+  }, [cachedCredentials, refetchStatus]);
+
+  // Check for pending sync on mount and auth state changes
+  useEffect(() => {
+    syncPendingCredentials();
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN') {
+        syncPendingCredentials();
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [syncPendingCredentials]);
+
   // Migrate data from anonymous session to authenticated user
   const migrateData = useCallback(async (previousUserId: string) => {
     setIsSyncing(true);
@@ -182,37 +242,58 @@ export function useOctopusEnergy(days: number = 30) {
     }
   }, [refetchStatus]);
 
-  // Save Credentials (and cache them)
+  // Save Credentials (with local fallback)
   const saveCredentials = useCallback(async (apiKey: string, accountNumber: string) => {
     setIsSyncing(true);
-    try {
-      // Ensure we have a session (creates anonymous if needed)
-      await ensureAuthSession();
+    
+    // Always cache credentials locally first
+    const creds = { apiKey, accountNumber };
+    localStorage.setItem(LOCAL_STORAGE_KEYS.credentials, JSON.stringify(creds));
+    setCachedCredentials(creds);
+    localStorage.setItem(LOCAL_STORAGE_KEYS.hasCreds, 'true');
 
+    try {
+      // Try to get/create a session
+      const session = await ensureAuthSession();
+      
+      if (!session) {
+        // No session available - save locally only and mark for later sync
+        logger.info('Saving Octopus credentials locally (no auth session)');
+        localStorage.setItem(LOCAL_STORAGE_KEYS.pendingSync, 'true');
+        toast.success('Credentials saved! Sign in to sync across devices.');
+        return;
+      }
+
+      // We have a session - save to backend
       const { error } = await supabase.functions.invoke('octopus-energy', {
         body: { action: 'save-credentials', apiKey, accountNumber }
       });
 
-      if (error) throw new Error(error.message || 'Failed to save credentials');
+      if (error) {
+        // Backend save failed but we have local copy
+        logger.warn('Backend save failed, credentials stored locally', { error: error.message });
+        localStorage.setItem(LOCAL_STORAGE_KEYS.pendingSync, 'true');
+        toast.success('Credentials saved locally. Will sync when connected.');
+        return;
+      }
 
-      // Cache credentials locally on success
-      const creds = { apiKey, accountNumber };
-      localStorage.setItem('octopus-cached-real-creds', JSON.stringify(creds));
-      setCachedCredentials(creds);
-
+      // Success - clear pending sync flag
+      localStorage.removeItem(LOCAL_STORAGE_KEYS.pendingSync);
       toast.success('Credentials saved successfully');
       await refetchStatus();
     } catch (error: unknown) {
-      const message = parseEdgeFunctionError(error, { feature: 'octopus', action: 'save' });
-      toast.error(message);
-      throw error;
+      // Any error - we still have the local copy
+      logger.warn('Error saving credentials to backend', { error });
+      localStorage.setItem(LOCAL_STORAGE_KEYS.pendingSync, 'true');
+      toast.success('Credentials saved locally. Will sync when connected.');
     } finally {
       setIsSyncing(false);
     }
   }, [refetchStatus]);
 
   const clearCachedCredentials = useCallback(() => {
-    localStorage.removeItem('octopus-cached-real-creds');
+    localStorage.removeItem(LOCAL_STORAGE_KEYS.credentials);
+    localStorage.removeItem(LOCAL_STORAGE_KEYS.pendingSync);
     setCachedCredentials(null);
     toast.info('Removed saved credentials from device');
   }, []);
@@ -221,8 +302,13 @@ export function useOctopusEnergy(days: number = 30) {
   const linkMeter = useCallback(async () => {
     setIsSyncing(true);
     try {
-      // Ensure we have a session (creates anonymous if needed)
-      await ensureAuthSession();
+      // Ensure we have a session
+      const session = await ensureAuthSession();
+      
+      if (!session) {
+        toast.error('Please sign in to link your meter');
+        return null;
+      }
 
       const { data, error } = await supabase.functions.invoke('octopus-energy', {
         body: { action: 'get-meters' }
@@ -251,8 +337,13 @@ export function useOctopusEnergy(days: number = 30) {
   const syncConsumption = useCallback(async (syncDays: number = 7) => {
     setIsSyncing(true);
     try {
-      // Ensure we have a session (creates anonymous if needed)
-      await ensureAuthSession();
+      // Ensure we have a session
+      const session = await ensureAuthSession();
+      
+      if (!session) {
+        toast.error('Please sign in to sync consumption data');
+        return null;
+      }
 
       const { data, error } = await supabase.functions.invoke('octopus-energy', {
         body: { action: 'sync-consumption', days: syncDays }
@@ -276,8 +367,13 @@ export function useOctopusEnergy(days: number = 30) {
   const calculateFootprint = useCallback(async () => {
     setIsSyncing(true);
     try {
-      // Ensure we have a session (creates anonymous if needed)
-      await ensureAuthSession();
+      // Ensure we have a session
+      const session = await ensureAuthSession();
+      
+      if (!session) {
+        toast.error('Please sign in to calculate footprint');
+        return null;
+      }
 
       const { data, error } = await supabase.functions.invoke('octopus-energy', {
         body: { action: 'calculate-footprint' }
@@ -307,22 +403,23 @@ export function useOctopusEnergy(days: number = 30) {
   const disconnect = useCallback(async () => {
     setIsSyncing(true);
     try {
-      // Ensure we have a session (creates anonymous if needed)
-      await ensureAuthSession();
+      const hasSession = await hasValidSession();
+      
+      if (hasSession) {
+        const { error } = await supabase.functions.invoke('octopus-energy', {
+          body: { action: 'disconnect-account' }
+        });
 
-      const { error } = await supabase.functions.invoke('octopus-energy', {
-        body: { action: 'disconnect-account' }
-      });
-
-      if (error) throw new Error(error.message || 'Failed to disconnect account');
+        if (error) throw new Error(error.message || 'Failed to disconnect account');
+      }
 
       toast.success('Disconnected Octopus Energy account');
 
-      // Invalidate queries and clear local storage
+      // Clear all local storage
       queryClient.setQueryData(['octopus-status'], null);
       queryClient.setQueryData(['octopus-footprint', days], null);
-      localStorage.removeItem('octopus-is-linked');
-      localStorage.removeItem('octopus-has-creds');
+      Object.values(LOCAL_STORAGE_KEYS).forEach(key => localStorage.removeItem(key));
+      setCachedCredentials(null);
 
       await refetchStatus();
     } catch (error: unknown) {
@@ -334,6 +431,9 @@ export function useOctopusEnergy(days: number = 30) {
     }
   }, [refetchStatus, queryClient, days]);
 
+  // Check if there are pending credentials to sync
+  const hasPendingSync = localStorage.getItem(LOCAL_STORAGE_KEYS.pendingSync) === 'true';
+
   return {
     status,
     footprint,
@@ -341,7 +441,7 @@ export function useOctopusEnergy(days: number = 30) {
     isLoading: statusLoading || footprintLoading || forecastLoading,
     isSyncing,
     isLinked: status?.is_linked ?? false,
-    hasCredentials: status?.has_credentials ?? false,
+    hasCredentials: status?.has_credentials ?? !!cachedCredentials,
     saveCredentials,
     linkMeter,
     syncConsumption,
@@ -354,5 +454,6 @@ export function useOctopusEnergy(days: number = 30) {
     // New exports
     cachedCredentials,
     clearCachedCredentials,
+    hasPendingSync,
   };
 }
