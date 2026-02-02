@@ -242,7 +242,30 @@ export function useOctopusEnergy(days: number = 30) {
     }
   }, [refetchStatus]);
 
-  // Save Credentials (with local fallback)
+  // Helper function to link meters (internal use)
+  const linkMeterInternal = useCallback(async (): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.functions.invoke('octopus-energy', {
+        body: { action: 'get-meters' }
+      });
+
+      if (error) {
+        logger.warn('Failed to auto-link meters', { error: error.message });
+        return false;
+      }
+
+      if (data.meters?.length > 0) {
+        logger.info(`Auto-linked ${data.meters.length} meter(s)`);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      logger.warn('Error auto-linking meters', { error });
+      return false;
+    }
+  }, []);
+
+  // Save Credentials (with local fallback) - auto-links meters on success
   const saveCredentials = useCallback(async (apiKey: string, accountNumber: string) => {
     setIsSyncing(true);
     
@@ -277,9 +300,19 @@ export function useOctopusEnergy(days: number = 30) {
         return;
       }
 
-      // Success - clear pending sync flag
+      // Success - clear pending sync flag and auto-link meters
       localStorage.removeItem(LOCAL_STORAGE_KEYS.pendingSync);
-      toast.success('Credentials saved successfully');
+      
+      // Auto-link meters immediately after saving credentials
+      const metersLinked = await linkMeterInternal();
+      
+      if (metersLinked) {
+        toast.success('Account connected and meter(s) linked!');
+        localStorage.setItem(LOCAL_STORAGE_KEYS.isLinked, 'true');
+      } else {
+        toast.success('Credentials saved. Could not find meters - check your account.');
+      }
+      
       await refetchStatus();
     } catch (error: unknown) {
       // Any error - we still have the local copy
@@ -289,7 +322,7 @@ export function useOctopusEnergy(days: number = 30) {
     } finally {
       setIsSyncing(false);
     }
-  }, [refetchStatus]);
+  }, [refetchStatus, linkMeterInternal]);
 
   const clearCachedCredentials = useCallback(() => {
     localStorage.removeItem(LOCAL_STORAGE_KEYS.credentials);
