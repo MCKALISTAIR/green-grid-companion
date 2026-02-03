@@ -1,4 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { RealtimeChannel } from '@supabase/supabase-js';
+import { logger } from '@/lib/logger';
 
 export interface SavedLocation {
   id: string;
@@ -7,14 +10,14 @@ export interface SavedLocation {
   createdAt: number;
 }
 
-const STORAGE_KEY = 'gridgreen-saved-locations';
-const RECENT_KEY = 'gridgreen-recent-locations';
+const LOCAL_STORAGE_KEY = 'gridgreen-saved-locations';
+const LOCAL_RECENT_KEY = 'gridgreen-recent-locations';
 const MAX_RECENT = 5;
 
 export function useSavedLocations() {
   const [savedLocations, setSavedLocations] = useState<SavedLocation[]>(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch {
       return [];
@@ -23,22 +26,173 @@ export function useSavedLocations() {
 
   const [recentLocations, setRecentLocations] = useState<string[]>(() => {
     try {
-      const stored = localStorage.getItem(RECENT_KEY);
+      const stored = localStorage.getItem(LOCAL_RECENT_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch {
       return [];
     }
   });
 
-  // Persist saved locations
+  const [userId, setUserId] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const channelRef = useRef<RealtimeChannel | null>(null);
+  const isInitialLoadRef = useRef(true);
+
+  // Track auth state
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(savedLocations));
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUserId(session?.user?.id ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setUserId(session?.user?.id ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Load from database when authenticated
+  useEffect(() => {
+    if (!userId) {
+      isInitialLoadRef.current = true;
+      return;
+    }
+
+    const loadFromDatabase = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('user_preferences')
+          .select('saved_locations, recent_locations')
+          .eq('user_id', userId)
+          .single();
+
+        if (error && error.code !== 'PGRST116') { // PGRST116 = not found
+          logger.error('Failed to load preferences', { error });
+          return;
+        }
+
+        if (data) {
+          const dbSavedLocations = (data.saved_locations as unknown as SavedLocation[]) || [];
+          const dbRecentLocations = (data.recent_locations as unknown as string[]) || [];
+          
+          // Merge local data with database data (database takes precedence)
+          const localSaved = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
+          const localRecent = JSON.parse(localStorage.getItem(LOCAL_RECENT_KEY) || '[]');
+          
+          // If DB is empty but local has data, use local (first sync scenario)
+          if (dbSavedLocations.length === 0 && localSaved.length > 0) {
+            setSavedLocations(localSaved);
+            setRecentLocations(localRecent);
+            // Sync local to database
+            await syncToDatabase(localSaved, localRecent);
+          } else {
+            setSavedLocations(dbSavedLocations);
+            setRecentLocations(dbRecentLocations);
+          }
+        } else {
+          // No record exists - create one with local data
+          const localSaved = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
+          const localRecent = JSON.parse(localStorage.getItem(LOCAL_RECENT_KEY) || '[]');
+          await syncToDatabase(localSaved, localRecent);
+        }
+        
+        isInitialLoadRef.current = false;
+      } catch (err) {
+        logger.error('Error loading preferences', { error: err });
+      }
+    };
+
+    loadFromDatabase();
+  }, [userId]);
+
+  // Set up realtime subscription for cross-device sync
+  useEffect(() => {
+    if (!userId) {
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+      return;
+    }
+
+    // Subscribe to changes in user_preferences table
+    const channel = supabase
+      .channel(`user_preferences:${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_preferences',
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          logger.debug('Realtime preferences update', { event: payload.eventType });
+          
+          if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
+            const newData = payload.new as any;
+            if (newData.saved_locations) {
+              setSavedLocations(newData.saved_locations);
+            }
+            if (newData.recent_locations) {
+              setRecentLocations(newData.recent_locations);
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    channelRef.current = channel;
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId]);
+
+  // Sync to localStorage (always, for offline support)
+  useEffect(() => {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(savedLocations));
   }, [savedLocations]);
 
-  // Persist recent locations
   useEffect(() => {
-    localStorage.setItem(RECENT_KEY, JSON.stringify(recentLocations));
+    localStorage.setItem(LOCAL_RECENT_KEY, JSON.stringify(recentLocations));
   }, [recentLocations]);
+
+  // Sync to database when data changes (if authenticated)
+  const syncToDatabase = useCallback(async (locations: SavedLocation[], recent: string[]) => {
+    if (!userId || isSyncing) return;
+    
+    setIsSyncing(true);
+    try {
+      const { error } = await supabase
+        .from('user_preferences')
+        .upsert({
+          user_id: userId,
+          saved_locations: locations as unknown as Record<string, unknown>[],
+          recent_locations: recent as unknown as string[],
+          updated_at: new Date().toISOString(),
+        } as any, { onConflict: 'user_id' });
+
+      if (error) {
+        logger.error('Failed to sync preferences', { error });
+      }
+    } catch (err) {
+      logger.error('Error syncing preferences', { error: err });
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [userId, isSyncing]);
+
+  // Debounced sync on data changes
+  useEffect(() => {
+    if (!userId || isInitialLoadRef.current) return;
+    
+    const timeoutId = setTimeout(() => {
+      syncToDatabase(savedLocations, recentLocations);
+    }, 500); // Debounce 500ms
+
+    return () => clearTimeout(timeoutId);
+  }, [savedLocations, recentLocations, userId, syncToDatabase]);
 
   const saveLocation = useCallback((name: string, postcode: string) => {
     const newLocation: SavedLocation = {
@@ -94,5 +248,7 @@ export function useSavedLocations() {
     clearRecentLocations,
     isLocationSaved,
     getSavedLocationByPostcode,
+    isSyncing,
+    isAuthenticated: !!userId,
   };
 }
