@@ -4,6 +4,7 @@ import {
   getRegionalForecastById,
   getRegionalHistoryAndForecast,
   getRegionalIntensityById,
+  getRegionalIntensity,
   getGenerationMix,
   getCurrentIntensity,
   getAllRegions,
