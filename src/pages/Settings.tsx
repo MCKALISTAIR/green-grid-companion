@@ -291,20 +291,23 @@ export default function Settings() {
                     <h2 className="text-xl font-semibold">Resources</h2>
 
                     <div className="flex flex-col gap-3">
-                        <button onClick={() => setShowYearWrapped(true)}>
-                            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary/10 to-chart-4/10 border border-primary/20 rounded-lg hover:from-primary/20 hover:to-chart-4/20 transition-colors">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-primary/20 rounded-full">
-                                        <Sparkles className="w-5 h-5 text-primary" />
+                        {/* Only show Year Wrapped button in December */}
+                        {new Date().getMonth() === 11 && (
+                            <button onClick={() => setShowYearWrapped(true)}>
+                                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary/10 to-chart-4/10 border border-primary/20 rounded-lg hover:from-primary/20 hover:to-chart-4/20 transition-colors">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-primary/20 rounded-full">
+                                            <Sparkles className="w-5 h-5 text-primary" />
+                                        </div>
+                                        <div className="text-left">
+                                            <h3 className="font-medium">{new Date().getFullYear()} Grid Wrapped</h3>
+                                            <p className="text-sm text-muted-foreground">Your year in UK electricity</p>
+                                        </div>
                                     </div>
-                                    <div className="text-left">
-                                        <h3 className="font-medium">2025 Grid Wrapped</h3>
-                                        <p className="text-sm text-muted-foreground">Your year in UK electricity</p>
-                                    </div>
+                                    <Badge variant="secondary" className="text-[10px]">New</Badge>
                                 </div>
-                                <Badge variant="secondary" className="text-[10px]">New</Badge>
-                            </div>
-                        </button>
+                            </button>
+                        )}
 
                         <Link to="/feature-guides">
                             <div className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-colors">
@@ -491,7 +494,7 @@ export default function Settings() {
             <YearWrapped 
                 open={showYearWrapped} 
                 onOpenChange={setShowYearWrapped} 
-                year={2025} 
+                year={new Date().getFullYear()} 
             />
         </div>
     );
