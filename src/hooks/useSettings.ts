@@ -183,6 +183,12 @@ export function useSettings() {
     setSettings((prev) => ({ ...prev, [key]: value }));
   };
 
+  const syncNow = useCallback(() => {
+    if (userId && !isSyncing) {
+      syncToDatabase(settings);
+    }
+  }, [userId, isSyncing, settings, syncToDatabase]);
+
   return {
     settings,
     updateSetting,
@@ -194,5 +200,6 @@ export function useSettings() {
     isSyncing,
     isAuthenticated: !!userId,
     lastSyncedAt,
+    syncNow,
   };
 }

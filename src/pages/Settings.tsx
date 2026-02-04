@@ -28,7 +28,7 @@ export default function Settings() {
     const { tone, setTone } = useEnergyFacts();
     const { achievements } = useAchievements();
     const { unlocked, handleVersionTap } = useSceneDirector();
-    const { houseType, setHouseType, customAnnualKwh, setCustomAnnualKwh, isAuthenticated, isSyncing, lastSyncedAt } = useSettings();
+    const { houseType, setHouseType, customAnnualKwh, setCustomAnnualKwh, isAuthenticated, isSyncing, lastSyncedAt, syncNow } = useSettings();
 
     const formatLastSync = (date: Date | null) => {
         if (!date) return 'Not yet synced';
@@ -112,6 +112,16 @@ export default function Settings() {
                                         </p>
                                     </div>
                                 </div>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={syncNow}
+                                    disabled={isSyncing}
+                                    className="shrink-0"
+                                >
+                                    <RefreshCw className={`w-4 h-4 mr-1.5 ${isSyncing ? 'animate-spin' : ''}`} />
+                                    Sync Now
+                                </Button>
                             </div>
                         </div>
                     )}
