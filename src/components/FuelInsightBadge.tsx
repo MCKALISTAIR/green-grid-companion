@@ -1,4 +1,4 @@
-import { Flame, Leaf, TrendingDown, TrendingUp, Trophy, Sparkles } from 'lucide-react';
+import { Leaf, TrendingDown, Trophy, Sparkles } from 'lucide-react';
 import { FuelStreak, formatStreakDuration } from '@/hooks/useFuelStreaks';
 import { FuelMilestone } from '@/hooks/useFuelMilestones';
 import { cn } from '@/lib/utils';
@@ -10,24 +10,25 @@ interface FuelInsightBadgeProps {
 }
 
 export function FuelInsightBadge({ streak, milestone, compact = false }: FuelInsightBadgeProps) {
-    // Streak badge for fossil fuels at 0%
-    if (streak?.isActive) {
+    // Streak badge for fossil fuels at 0% - only show if we have meaningful data (>= 1 day)
+    if (streak?.isActive && streak.days >= 1) {
         const duration = formatStreakDuration(streak.days, streak.hours);
+        const fuelName = streak.fuel.charAt(0).toUpperCase() + streak.fuel.slice(1);
 
         if (compact) {
             return (
                 <div className={cn(
                     "inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium",
                     streak.isNewRecord
-                        ? "bg-amber-500/20 text-amber-600 dark:text-amber-400"
-                        : "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400"
+                        ? "bg-chart-4/20 text-chart-4"
+                        : "bg-primary/20 text-primary"
                 )}>
                     {streak.isNewRecord ? (
                         <Trophy className="w-2.5 h-2.5" />
                     ) : (
                         <Leaf className="w-2.5 h-2.5" />
                     )}
-                    <span>{duration} free</span>
+                    <span>{duration} {streak.fuel}-free</span>
                 </div>
             );
         }
@@ -36,20 +37,20 @@ export function FuelInsightBadge({ streak, milestone, compact = false }: FuelIns
             <div className={cn(
                 "flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs",
                 streak.isNewRecord
-                    ? "bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-amber-500/30"
-                    : "bg-emerald-500/10 border border-emerald-500/20"
+                    ? "bg-gradient-to-r from-chart-4/20 to-chart-5/20 border border-chart-4/30"
+                    : "bg-primary/10 border border-primary/20"
             )}>
                 {streak.isNewRecord ? (
                     <>
-                        <Trophy className="w-3.5 h-3.5 text-amber-500" />
-                        <span className="text-amber-600 dark:text-amber-400 font-medium">
+                        <Trophy className="w-3.5 h-3.5 text-chart-4" />
+                        <span className="text-chart-4 font-medium">
                             New record! {duration} {streak.fuel}-free
                         </span>
                     </>
                 ) : (
                     <>
-                        <Leaf className="w-3.5 h-3.5 text-emerald-500" />
-                        <span className="text-emerald-600 dark:text-emerald-400">
+                        <Leaf className="w-3.5 h-3.5 text-primary" />
+                        <span className="text-primary">
                             {duration} without {streak.fuel}
                         </span>
                     </>
@@ -67,7 +68,7 @@ export function FuelInsightBadge({ streak, milestone, compact = false }: FuelIns
         if (milestone.type === 'low') {
             if (compact) {
                 return (
-                    <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-blue-500/20 text-blue-600 dark:text-blue-400">
+                    <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-chart-1/20 text-chart-1">
                         <TrendingDown className="w-2.5 h-2.5" />
                         <span>{periodText} low</span>
                     </div>
@@ -75,9 +76,9 @@ export function FuelInsightBadge({ streak, milestone, compact = false }: FuelIns
             }
 
             return (
-                <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs bg-blue-500/10 border border-blue-500/20">
-                    <TrendingDown className="w-3.5 h-3.5 text-blue-500" />
-                    <span className="text-blue-600 dark:text-blue-400">
+                <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs bg-chart-1/10 border border-chart-1/20">
+                    <TrendingDown className="w-3.5 h-3.5 text-chart-1" />
+                    <span className="text-chart-1">
                         {fuelName} at lowest share in {periodText}
                     </span>
                 </div>
@@ -95,7 +96,7 @@ export function FuelInsightBadge({ streak, milestone, compact = false }: FuelIns
         }
 
         return (
-            <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs bg-gradient-to-r from-primary/10 to-emerald-500/10 border border-primary/20">
+            <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs bg-gradient-to-r from-primary/10 to-chart-2/10 border border-primary/20">
                 <Sparkles className="w-3.5 h-3.5 text-primary" />
                 <span className="text-primary font-medium">
                     {fuelName} at highest share in {periodText}! 🎉
