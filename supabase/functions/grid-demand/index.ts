@@ -53,72 +53,37 @@ Deno.serve(async (req: Request) => {
 
     const demandPromise = fetch(nesoUrl).then(res => res.json() as Promise<NesoResponse>);
 
-    // 3. Fetch Frequency dynamically by finding the current month's resource in the Historic Frequency Data package
-    // NESO organizes frequency data in a single package (cb1cc925-ecd8-4406-b021-3a3f368196e1) with monthly resources
-    // Resource names follow format: "February 2026 – Historic Frequency Data"
-    const now = new Date();
-    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
-                        'July', 'August', 'September', 'October', 'November', 'December'];
-    
+    // 3. Fetch real-time frequency from NESO's live system data page
+    // This endpoint provides live grid frequency updated every few seconds
     const frequencyPromise = (async () => {
       try {
-        // The Historic Frequency Data package ID is stable
-        const packageId = 'cb1cc925-ecd8-4406-b021-3a3f368196e1';
-        const packageUrl = `https://api.neso.energy/api/3/action/package_show?id=${packageId}`;
+        console.log('Fetching real-time frequency from NESO...');
+        const realTimeUrl = 'https://extranet.neso.energy/NesoRealTime/Home/SystemData';
+        const freqRes = await fetch(realTimeUrl, {
+          headers: { 'Accept': 'text/html' }
+        });
         
-        console.log('Fetching frequency package metadata...');
-        const packageRes = await fetch(packageUrl);
-        const packageData = await packageRes.json();
-        
-        if (!packageData?.result?.resources?.length) {
-          console.warn('No resources found in frequency package');
+        if (!freqRes.ok) {
+          console.warn(`Real-time frequency request failed: ${freqRes.status}`);
           return null;
         }
         
-        const resources = packageData.result.resources;
+        const html = await freqRes.text();
         
-        // Try to find current month's resource first
-        const currentMonth = monthNames[now.getUTCMonth()];
-        const currentYear = now.getUTCFullYear();
-        const currentMonthPattern = `${currentMonth} ${currentYear}`;
+        // Parse frequency from HTML: look for pattern like "50.11 Hz" in the Frequency row
+        // The HTML structure has: <th>Frequency</th><td>50.11 Hz</td>
+        const frequencyMatch = html.match(/Frequency<\/th>\s*<td>\s*([\d.]+)\s*Hz/i);
         
-        let targetResource = resources.find((r: any) => 
-          r.name?.includes(currentMonthPattern) && r.datastore_active
-        );
-        
-        // If not found, try previous month (data might not be uploaded yet early in the month)
-        if (!targetResource) {
-          const prevMonthIndex = now.getUTCMonth() === 0 ? 11 : now.getUTCMonth() - 1;
-          const prevYear = now.getUTCMonth() === 0 ? currentYear - 1 : currentYear;
-          const prevMonthPattern = `${monthNames[prevMonthIndex]} ${prevYear}`;
-          
-          console.log(`Current month "${currentMonthPattern}" not found, trying "${prevMonthPattern}"`);
-          targetResource = resources.find((r: any) => 
-            r.name?.includes(prevMonthPattern) && r.datastore_active
-          );
+        if (frequencyMatch && frequencyMatch[1]) {
+          const frequency = parseFloat(frequencyMatch[1]);
+          console.log(`Real-time frequency: ${frequency} Hz`);
+          return { frequency };
         }
         
-        // Still not found? Use the most recently created resource with datastore_active
-        if (!targetResource) {
-          console.log('Month-specific resource not found, using most recent available');
-          const activeResources = resources
-            .filter((r: any) => r.datastore_active)
-            .sort((a: any, b: any) => new Date(b.created).getTime() - new Date(a.created).getTime());
-          targetResource = activeResources[0];
-        }
-        
-        if (!targetResource?.id) {
-          console.warn('No suitable frequency resource found');
-          return null;
-        }
-        
-        console.log(`Using frequency resource: ${targetResource.name} (${targetResource.id})`);
-        
-        const frequencyUrl = `https://api.neso.energy/api/3/action/datastore_search_sql?sql=SELECT * from "${targetResource.id}" ORDER BY "_id" DESC LIMIT 1`;
-        const freqRes = await fetch(frequencyUrl);
-        return freqRes.json();
+        console.warn('Could not parse frequency from NESO real-time page');
+        return null;
       } catch (err) {
-        console.error('Error fetching frequency data:', err);
+        console.error('Error fetching real-time frequency:', err);
         return null;
       }
     })();
@@ -154,15 +119,12 @@ Deno.serve(async (req: Request) => {
     }
 
     const latestDemand = demandData?.result?.records?.[0];
-    const latestFreq = frequencyData?.result?.records?.[0];
-
-    // Use Transmission System Demand (TSD) or National Demand (ND). 
-    // ND is usually what's referred to as "Demand" on the dashboard.
-    // However, Embedded Wind/Solar is heavily relevant for Carbon Intensity.
-    // The Carbon Intensity API usually refers to "GB Demand".
-    // We will use ND (National Demand) as the headline figure for now.
+    
+    // Use National Demand (ND) as the headline figure
     const totalDemandMW = latestDemand?.ND ?? null;
-    const gridFrequency = latestFreq?.f ?? latestFreq?.value ?? null; // Field is 'f' in NESO frequency data
+    
+    // Extract frequency from the real-time data (new format: { frequency: number })
+    const gridFrequency = frequencyData?.frequency ?? null;
 
     // Calculate MW for each source based on percentage
     // Note: The percentages from carbonintensity.org.uk might slightly disagree with NESO MWs if timestamps drift,
