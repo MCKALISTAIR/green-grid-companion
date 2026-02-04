@@ -34,7 +34,7 @@ export function FuelRecordCelebration({ record, onDismiss }: FuelRecordCelebrati
                                 <PartyPopper className="w-4 h-4" />
                             </h3>
                             <p className="text-sm text-foreground/80">
-                                The UK grid has gone <span className="font-bold text-chart-4">{record.newRecord} days</span> without using {fuelName.toLowerCase()}.
+                                The UK grid has gone <span className="font-bold text-chart-4">{record.newRecord}{record.exceededLookback ? '+' : ''} days</span> without using {fuelName.toLowerCase()}.
                             </p>
                             {record.previousRecord > 0 && (
                                 <p className="text-xs text-muted-foreground">
