@@ -53,11 +53,75 @@ Deno.serve(async (req: Request) => {
 
     const demandPromise = fetch(nesoUrl).then(res => res.json() as Promise<NesoResponse>);
 
-    // 3. Fetch Frequency (Using Dec 2025 Resource ID as fallback for current month)
-    // TODO: Update this ID dynamically or via cron to match the current month's resource ID
-    const frequencyResourceId = '5c408627-44a1-417d-9fc5-a26ad822c4e4';
-    const frequencyUrl = `https://api.neso.energy/api/3/action/datastore_search_sql?sql=SELECT * from "${frequencyResourceId}" ORDER BY "_id" DESC LIMIT 1`;
-    const frequencyPromise = fetch(frequencyUrl).then(res => res.json() as Promise<any>);
+    // 3. Fetch Frequency dynamically by finding the current month's resource in the Historic Frequency Data package
+    // NESO organizes frequency data in a single package (cb1cc925-ecd8-4406-b021-3a3f368196e1) with monthly resources
+    // Resource names follow format: "February 2026 – Historic Frequency Data"
+    const now = new Date();
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                        'July', 'August', 'September', 'October', 'November', 'December'];
+    
+    const frequencyPromise = (async () => {
+      try {
+        // The Historic Frequency Data package ID is stable
+        const packageId = 'cb1cc925-ecd8-4406-b021-3a3f368196e1';
+        const packageUrl = `https://api.neso.energy/api/3/action/package_show?id=${packageId}`;
+        
+        console.log('Fetching frequency package metadata...');
+        const packageRes = await fetch(packageUrl);
+        const packageData = await packageRes.json();
+        
+        if (!packageData?.result?.resources?.length) {
+          console.warn('No resources found in frequency package');
+          return null;
+        }
+        
+        const resources = packageData.result.resources;
+        
+        // Try to find current month's resource first
+        const currentMonth = monthNames[now.getUTCMonth()];
+        const currentYear = now.getUTCFullYear();
+        const currentMonthPattern = `${currentMonth} ${currentYear}`;
+        
+        let targetResource = resources.find((r: any) => 
+          r.name?.includes(currentMonthPattern) && r.datastore_active
+        );
+        
+        // If not found, try previous month (data might not be uploaded yet early in the month)
+        if (!targetResource) {
+          const prevMonthIndex = now.getUTCMonth() === 0 ? 11 : now.getUTCMonth() - 1;
+          const prevYear = now.getUTCMonth() === 0 ? currentYear - 1 : currentYear;
+          const prevMonthPattern = `${monthNames[prevMonthIndex]} ${prevYear}`;
+          
+          console.log(`Current month "${currentMonthPattern}" not found, trying "${prevMonthPattern}"`);
+          targetResource = resources.find((r: any) => 
+            r.name?.includes(prevMonthPattern) && r.datastore_active
+          );
+        }
+        
+        // Still not found? Use the most recently created resource with datastore_active
+        if (!targetResource) {
+          console.log('Month-specific resource not found, using most recent available');
+          const activeResources = resources
+            .filter((r: any) => r.datastore_active)
+            .sort((a: any, b: any) => new Date(b.created).getTime() - new Date(a.created).getTime());
+          targetResource = activeResources[0];
+        }
+        
+        if (!targetResource?.id) {
+          console.warn('No suitable frequency resource found');
+          return null;
+        }
+        
+        console.log(`Using frequency resource: ${targetResource.name} (${targetResource.id})`);
+        
+        const frequencyUrl = `https://api.neso.energy/api/3/action/datastore_search_sql?sql=SELECT * from "${targetResource.id}" ORDER BY "_id" DESC LIMIT 1`;
+        const freqRes = await fetch(frequencyUrl);
+        return freqRes.json();
+      } catch (err) {
+        console.error('Error fetching frequency data:', err);
+        return null;
+      }
+    })();
 
     // Use Promise.allSettled so one failure doesn't block the other
     const [mixResult, demandResult, freqResult] = await Promise.allSettled([mixPromise, demandPromise, frequencyPromise]);
@@ -98,7 +162,7 @@ Deno.serve(async (req: Request) => {
     // The Carbon Intensity API usually refers to "GB Demand".
     // We will use ND (National Demand) as the headline figure for now.
     const totalDemandMW = latestDemand?.ND ?? null;
-    const gridFrequency = latestFreq?.value ?? null; // Field usually named 'value' or 'frequency'
+    const gridFrequency = latestFreq?.f ?? latestFreq?.value ?? null; // Field is 'f' in NESO frequency data
 
     // Calculate MW for each source based on percentage
     // Note: The percentages from carbonintensity.org.uk might slightly disagree with NESO MWs if timestamps drift,
