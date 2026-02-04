@@ -5,10 +5,16 @@ import { useGridDemand } from '@/hooks/useGridDemand';
 import { useSettings } from '@/hooks/useSettings';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useFuelStreaks } from '@/hooks/useFuelStreaks';
+import { useFuelMilestones } from '@/hooks/useFuelMilestones';
+import { FuelInsightBadge } from '@/components/FuelInsightBadge';
+import { FuelRecordList } from '@/components/FuelRecordCelebration';
 
 export function DemandView() {
     const { demand, mix, frequency: gridFrequency, isLoading, error, refetch, lastUpdated } = useGridDemand();
     const { showGridFrequency } = useSettings();
+    const { streaks, newRecords, dismissRecord } = useFuelStreaks(mix);
+    const { milestones } = useFuelMilestones(mix);
 
     if (isLoading) {
         return (
@@ -44,8 +50,41 @@ export function DemandView() {
     // Sort mix by percentage descending
     const sortedMix = [...mix].sort((a, b) => b.perc - a.perc);
 
+    // Create lookup maps for streaks and milestones by fuel
+    const streakByFuel = Object.fromEntries(streaks.map(s => [s.fuel, s]));
+    const milestoneByFuel = Object.fromEntries(milestones.map(m => [m.fuel, m]));
+
+    // Active streaks (fossil fuels currently at 0%)
+    const activeStreaks = streaks.filter(s => s.isActive && s.days > 0);
+
+    // Has any interesting insights to show
+    const hasInsights = activeStreaks.length > 0 || milestones.length > 0;
+
     return (
         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* Record celebrations */}
+            {newRecords.length > 0 && (
+                <FuelRecordList records={newRecords} onDismiss={dismissRecord} />
+            )}
+
+            {/* Insights Summary - shows active streaks and milestones */}
+            {hasInsights && (
+                <Card className="p-4 shadow-lg bg-gradient-to-br from-card to-accent/5 border-primary/10">
+                    <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                        Grid Insights
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                        {activeStreaks.map(streak => (
+                            <FuelInsightBadge key={`streak-${streak.fuel}`} streak={streak} />
+                        ))}
+                        {milestones.map(milestone => (
+                            <FuelInsightBadge key={`milestone-${milestone.fuel}`} milestone={milestone} />
+                        ))}
+                    </div>
+                </Card>
+            )}
+
             {/* Demand Highlights Card */}
             <div className={`grid gap-4 ${showGridFrequency ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
                 <Card className="p-5 shadow-lg bg-card/50 backdrop-blur-sm border-primary/10">
@@ -135,17 +174,39 @@ export function DemandView() {
             </Card>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                {sortedMix.map((source) => (
-                    <Card key={source.id} className="p-3 flex items-center justify-between shadow-sm hover:bg-accent/5 transition-colors">
-                        <span className="text-sm font-medium capitalize">{source.name}</span>
-                        <div className="text-right">
-                            {source.mw !== null && (
-                                <span className="block text-sm font-bold">{(source.mw / 1000).toFixed(2)} GW</span>
+                {sortedMix.map((source) => {
+                    const fuelKey = source.fuel?.toLowerCase() || source.name?.toLowerCase() || '';
+                    const streak = streakByFuel[fuelKey];
+                    const milestone = milestoneByFuel[fuelKey];
+                    const hasInsight = (streak?.isActive) || milestone;
+
+                    return (
+                        <Card 
+                            key={source.id} 
+                            className={`p-3 shadow-sm hover:bg-accent/5 transition-colors ${hasInsight ? 'ring-1 ring-primary/20' : ''}`}
+                        >
+                            <div className="flex items-start justify-between">
+                                <span className="text-sm font-medium capitalize">{source.name}</span>
+                                <div className="text-right">
+                                    {source.mw !== null && (
+                                        <span className="block text-sm font-bold">{(source.mw / 1000).toFixed(2)} GW</span>
+                                    )}
+                                    <span className="text-xs text-muted-foreground">{source.perc}%</span>
+                                </div>
+                            </div>
+                            {/* Show insight badge if applicable */}
+                            {hasInsight && (
+                                <div className="mt-2 pt-2 border-t border-border/50">
+                                    <FuelInsightBadge 
+                                        streak={streak?.isActive ? streak : undefined} 
+                                        milestone={milestone} 
+                                        compact 
+                                    />
+                                </div>
                             )}
-                            <span className="text-xs text-muted-foreground">{source.perc}%</span>
-                        </div>
-                    </Card>
-                ))}
+                        </Card>
+                    );
+                })}
             </div>
         </div>
     );
