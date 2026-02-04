@@ -1,4 +1,4 @@
-// @ts-ignore: Suppress Deno namespace error if not in Deno context
+// Deno context wrapper
 const _ignore = null;
 
 declare const Deno: any;
@@ -62,24 +62,24 @@ Deno.serve(async (req: Request) => {
         const freqRes = await fetch(realTimeUrl, {
           headers: { 'Accept': 'text/html' }
         });
-        
+
         if (!freqRes.ok) {
           console.warn(`Real-time frequency request failed: ${freqRes.status}`);
           return null;
         }
-        
+
         const html = await freqRes.text();
-        
+
         // Parse frequency from HTML: look for pattern like "50.11 Hz" in the Frequency row
         // The HTML structure has: <th>Frequency</th><td>50.11 Hz</td>
         const frequencyMatch = html.match(/Frequency<\/th>\s*<td>\s*([\d.]+)\s*Hz/i);
-        
+
         if (frequencyMatch && frequencyMatch[1]) {
           const frequency = parseFloat(frequencyMatch[1]);
           console.log(`Real-time frequency: ${frequency} Hz`);
           return { frequency };
         }
-        
+
         console.warn('Could not parse frequency from NESO real-time page');
         return null;
       } catch (err) {
@@ -93,7 +93,7 @@ Deno.serve(async (req: Request) => {
 
     let mixData: IntensityResponse | null = null;
     let demandData: NesoResponse | null = null;
-    let frequencyData: any = null;
+    let frequencyData: { frequency: number } | null = null;
 
     if (mixResult.status === 'fulfilled') {
       mixData = mixResult.value;
@@ -119,10 +119,10 @@ Deno.serve(async (req: Request) => {
     }
 
     const latestDemand = demandData?.result?.records?.[0];
-    
+
     // Use National Demand (ND) as the headline figure
     const totalDemandMW = latestDemand?.ND ?? null;
-    
+
     // Extract frequency from the real-time data (new format: { frequency: number })
     const gridFrequency = frequencyData?.frequency ?? null;
 

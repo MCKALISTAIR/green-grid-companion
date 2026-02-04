@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, ListOrdered, Calendar, Settings, Clock, Zap } from 'lucide-react';
+import { Home, ListOrdered, Calendar, Settings, Clock, Zap, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { VERSION_STRING } from '@/lib/version';
@@ -10,7 +10,7 @@ export function SideNav() {
 
     const isActive = (path: string) => location.pathname === path;
 
-    const NavItem = ({ path, icon: Icon, label }: { path: string; icon: any; label: string }) => (
+    const NavItem = ({ path, icon: Icon, label }: { path: string; icon: LucideIcon; label: string }) => (
         <Button
             variant={isActive(path) ? 'secondary' : 'ghost'}
             className={`w-full justify-start gap-3 h-10 ${isActive(path) ? 'font-medium' : 'text-muted-foreground'}`}

@@ -43,16 +43,16 @@ function shouldShowYearWrapped(): { shouldShow: boolean; year: number } {
   const now = new Date();
   const currentMonth = now.getMonth(); // 0-indexed, December = 11
   const currentYear = now.getFullYear();
-  
+
   // Only show in December
   if (currentMonth !== 11) {
     return { shouldShow: false, year: currentYear };
   }
-  
+
   // Check if already shown this year
   const storageKey = `year-wrapped-auto-shown-${currentYear}`;
   const alreadyShown = localStorage.getItem(storageKey) === 'true';
-  
+
   return { shouldShow: !alreadyShown, year: currentYear };
 }
 
@@ -234,10 +234,28 @@ const Index = () => {
           <main className="min-h-[100dvh] flex flex-col animate-in fade-in duration-700 lg:pb-0">
             <h1 className="sr-only">Carbon Intensity Dashboard</h1>
             {/* Header with scene */}
-            <div className="relative w-full">
+            {/* Header with scene */}
+            <div className="relative w-full h-[55vh] min-h-[320px]">
               {/* Animated scene */}
-              <ComponentErrorBoundary name="Scene" className="h-[50vh] min-h-96 pb-24">
-                <IntensityScene intensity={intensity} index={index} generationMix={generationMix} />
+              <ComponentErrorBoundary name="Scene">
+                <IntensityScene intensity={intensity} index={index} generationMix={generationMix} className="h-full" />
+
+                {/* Desktop Region Selector - Top Left */}
+                <div className="absolute top-6 left-6 z-30 hidden lg:block">
+                  <LocationManager
+                    value={postcode}
+                    onChange={setPostcode}
+                    trigger={
+                      <button className="flex items-center gap-2 text-white/90 text-sm font-medium uppercase tracking-wide transition-all cursor-pointer bg-black/20 hover:bg-black/30 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 hover:border-white/20 shadow-sm group">
+                        <MapPin className="w-3.5 h-3.5" />
+                        <span>{isLoading ? 'Loading...' : region || 'Select location'}</span>
+                        <ChevronDown className="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity" />
+                      </button>
+                    }
+                  />
+                </div>
+
+
               </ComponentErrorBoundary>
 
               {/* Overlay header - removed, location now in card */}
@@ -245,19 +263,21 @@ const Index = () => {
               {/* Current intensity display - Only show if NOT in demand mode (DemandView has its own header) */}
               {viewMode !== 'demand' && (
                 <div className="absolute top-[calc(env(safe-area-inset-top)+1rem)] left-1/2 -translate-x-1/2 text-center w-auto max-w-[90%] z-10">
-                  <div className="bg-white/30 backdrop-blur-md rounded-2xl p-4 shadow-sm border border-white/20">
+                  <div className="bg-white/30 backdrop-blur-md rounded-2xl p-3 shadow-sm border border-white/20">
                     <div className="flex items-center justify-center gap-2 mb-1">
-                      <LocationManager
-                        value={postcode}
-                        onChange={setPostcode}
-                        trigger={
-                          <button className="flex items-center gap-1.5 text-card/90 text-sm font-medium uppercase tracking-wide hover:text-card transition-colors cursor-pointer group">
-                            <MapPin className="w-3.5 h-3.5" />
-                            <span>{isLoading ? 'Loading...' : region || 'Select location'}</span>
-                            <ChevronDown className="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity" />
-                          </button>
-                        }
-                      />
+                      <div className="lg:hidden">
+                        <LocationManager
+                          value={postcode}
+                          onChange={setPostcode}
+                          trigger={
+                            <button className="flex items-center gap-1.5 text-card/90 text-sm font-medium uppercase tracking-wide hover:text-card transition-colors cursor-pointer group">
+                              <MapPin className="w-3.5 h-3.5" />
+                              <span>{isLoading ? 'Loading...' : region || 'Select location'}</span>
+                              <ChevronDown className="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity" />
+                            </button>
+                          }
+                        />
+                      </div>
                       {!isLoading && region && (
                         <Popover>
                           <PopoverTrigger asChild>
@@ -356,6 +376,17 @@ const Index = () => {
             <div className="flex-1 px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-6 space-y-4 -mt-4 relative z-10 bg-background lg:max-w-7xl lg:mx-auto w-full lg:rounded-t-3xl lg:shadow-xl lg:mt-0 lg:space-y-6">
 
               {/* View Toggle - Always show all views */}
+
+              {/* Energy Commentary Quote */}
+              <div className="px-2 pb-2">
+                <EnergyFactBubble
+                  intensity={intensity}
+                  generationMix={generationMix}
+                  variant="plain"
+                  className="flex justify-center"
+                />
+              </div>
+
               <div className="flex gap-2 p-1 bg-muted rounded-lg overflow-x-auto scrollbar-none">
                 <Button
                   variant={viewMode === 'intensity' ? 'default' : 'ghost'}
@@ -415,14 +446,7 @@ const Index = () => {
                               {getSmartTip(intensity, forecast)}
                             </p>
 
-                            <div className="mt-2 text-sm">
-                              <EnergyFactBubble
-                                intensity={intensity}
-                                generationMix={generationMix}
-                                variant="plain"
-                                className="!relative !w-full"
-                              />
-                            </div>
+
 
                             {prefs.showWeatherInInsights && (
                               <div className="mt-3">
@@ -492,10 +516,10 @@ const Index = () => {
           }}
         />
 
-        <YearWrapped 
-          open={showYearWrapped} 
-          onOpenChange={setShowYearWrapped} 
-          year={wrappedYear} 
+        <YearWrapped
+          open={showYearWrapped}
+          onOpenChange={setShowYearWrapped}
+          year={wrappedYear}
         />
       </div >
     </TooltipProvider >

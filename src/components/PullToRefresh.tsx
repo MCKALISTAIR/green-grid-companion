@@ -60,6 +60,8 @@ export function PullToRefresh({ onRefresh, children, disabled = false }: PullToR
 
             try {
                 await onRefresh();
+            } catch (error) {
+                console.error('PullToRefresh error:', error);
             } finally {
                 setTimeout(() => {
                     setIsRefreshing(false);

@@ -137,6 +137,7 @@ function HillLayer({
 }
 
 // 🎨 Palette Hook
+// eslint-disable-next-line react-refresh/only-export-components
 export function useLandscapePalette(cleanliness: number, isNight: boolean, synthwaveMode: boolean, isSnowing?: boolean) {
     return useMemo(() => {
         if (synthwaveMode) {

@@ -25,7 +25,18 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
-    version: 'v1.3.0',
+    version: 'v1.4.1',
+    date: '2026-02-04',
+    title: 'Polish & Stability',
+    changes: [
+      { type: 'fix', description: 'Fixed scene layout stretching and height issues' },
+      { type: 'improvement', description: 'Improved commentary text alignment' },
+      { type: 'fix', description: 'Resolved "Grid Malfunction" crash' },
+      { type: 'fix', description: 'Fixed intensity card occlusion on small screens' },
+    ],
+  },
+  {
+    version: 'v1.4.0',
     date: new Date().toISOString().split('T')[0],
     title: 'Gamification & Time Travel',
     changes: [

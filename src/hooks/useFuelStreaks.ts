@@ -121,15 +121,15 @@ export function useFuelStreaks(mix: MixItem[]) {
             const storedRecords = localStorage.getItem(RECORDS_KEY);
             const storedLastSeen = localStorage.getItem(LAST_SEEN_KEY);
 
-            let streakData: Record<string, FuelStreakData> = storedStreaks
+            const streakData: Record<string, FuelStreakData> = storedStreaks
                 ? JSON.parse(storedStreaks)
                 : {};
 
-            let recordData: Record<string, FuelRecord> = storedRecords
+            const recordData: Record<string, FuelRecord> = storedRecords
                 ? JSON.parse(storedRecords)
                 : {};
 
-            let lastSeenData: StoredLastSeen = storedLastSeen
+            const lastSeenData: StoredLastSeen = storedLastSeen
                 ? JSON.parse(storedLastSeen)
                 : {};
 

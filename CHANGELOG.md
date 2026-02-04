@@ -2,7 +2,15 @@
 
 All notable changes to GridSense will be documented in this file.
 
-## [Unreleased] - 2026-02-01
+## [v1.4.1] - 2026-02-04
+
+### Fixed 🐛
+- **Scene Layout**: Fixed vertical stretching and layout collapse issues on mobile
+- **Visual Polish**: Improved commentary quote alignment and spacing
+- **Stability**: Fixed "Grid Malfunction" crash and race conditions in data hooks
+- **UI**: Resolved issue where intensity card was partially obscured on some devices
+
+## [v1.4.0] - 2026-02-01
 
 ### Added
 

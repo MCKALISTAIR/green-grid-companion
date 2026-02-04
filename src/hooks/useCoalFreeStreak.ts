@@ -28,7 +28,7 @@ export function useCoalFreeStreak(generationMix?: GenerationMix[]): CoalFreeStre
 
         // Get stored streak data
         const stored = localStorage.getItem(STORAGE_KEY);
-        let streakData: CoalStreakData = stored
+        const streakData: CoalStreakData = stored
             ? JSON.parse(stored)
             : { lastCoalDetected: null, streakStarted: null };
 

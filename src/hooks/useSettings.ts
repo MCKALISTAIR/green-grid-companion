@@ -53,6 +53,35 @@ export function useSettings() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Sync to database
+  const syncToDatabase = useCallback(async (newSettings: Settings) => {
+    if (!userId || isSyncing) return;
+
+    setIsSyncing(true);
+    try {
+      const { error } = await supabase
+        .from('user_preferences')
+        .upsert({
+          user_id: userId,
+          settings: newSettings as unknown as Record<string, unknown>, // Supabase expects JSON/object types
+          updated_at: new Date().toISOString(),
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any, { onConflict: 'user_id' });
+
+      if (error) {
+        logger.error('Failed to sync settings', { error });
+      } else {
+        const now = new Date();
+        setLastSyncedAt(now);
+        localStorage.setItem(LAST_SYNC_KEY, now.toISOString());
+      }
+    } catch (err) {
+      logger.error('Error syncing settings', { error: err });
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [userId, isSyncing]);
+
   // Load settings from database when authenticated
   useEffect(() => {
     if (!userId) {
@@ -83,7 +112,7 @@ export function useSettings() {
             await syncToDatabase({ ...DEFAULT_SETTINGS, ...localSettings });
           }
         }
-        
+
         isInitialLoadRef.current = false;
       } catch (err) {
         logger.error('Error loading settings', { error: err });
@@ -91,7 +120,7 @@ export function useSettings() {
     };
 
     loadFromDatabase();
-  }, [userId]);
+  }, [userId, syncToDatabase]);
 
   // Set up realtime subscription for cross-device sync
   useEffect(() => {
@@ -115,9 +144,9 @@ export function useSettings() {
         },
         (payload) => {
           logger.debug('Realtime settings update', { event: payload.eventType });
-          
+
           if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
-            const newData = payload.new as any;
+            const newData = payload.new as { settings?: Settings };
             if (newData.settings && Object.keys(newData.settings).length > 0) {
               setSettings({ ...DEFAULT_SETTINGS, ...newData.settings });
             }
@@ -142,38 +171,52 @@ export function useSettings() {
     }
   }, [settings]);
 
-  // Sync to database
-  const syncToDatabase = useCallback(async (newSettings: Settings) => {
-    if (!userId || isSyncing) return;
-    
-    setIsSyncing(true);
-    try {
-      const { error } = await supabase
-        .from('user_preferences')
-        .upsert({
-          user_id: userId,
-          settings: newSettings as unknown as Record<string, unknown>,
-          updated_at: new Date().toISOString(),
-        } as any, { onConflict: 'user_id' });
 
-      if (error) {
-        logger.error('Failed to sync settings', { error });
-      } else {
-        const now = new Date();
-        setLastSyncedAt(now);
-        localStorage.setItem(LAST_SYNC_KEY, now.toISOString());
-      }
-    } catch (err) {
-      logger.error('Error syncing settings', { error: err });
-    } finally {
-      setIsSyncing(false);
+
+  // Load settings from database when authenticated
+  useEffect(() => {
+    if (!userId) {
+      isInitialLoadRef.current = true;
+      return;
     }
-  }, [userId, isSyncing]);
+
+    const loadFromDatabase = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('user_preferences')
+          .select('settings')
+          .eq('user_id', userId)
+          .single();
+
+        if (error && error.code !== 'PGRST116') {
+          logger.error('Failed to load settings', { error });
+          return;
+        }
+
+        if (data?.settings && typeof data.settings === 'object' && Object.keys(data.settings).length > 0) {
+          const dbSettings = data.settings as unknown as Settings;
+          setSettings({ ...DEFAULT_SETTINGS, ...dbSettings });
+        } else {
+          // No settings in DB, sync local settings up
+          const localSettings = JSON.parse(localStorage.getItem(LOCAL_SETTINGS_KEY) || '{}');
+          if (Object.keys(localSettings).length > 0) {
+            await syncToDatabase({ ...DEFAULT_SETTINGS, ...localSettings });
+          }
+        }
+
+        isInitialLoadRef.current = false;
+      } catch (err) {
+        logger.error('Error loading settings', { error: err });
+      }
+    };
+
+    loadFromDatabase();
+  }, [userId, syncToDatabase]);
 
   // Debounced sync on settings changes
   useEffect(() => {
     if (!userId || isInitialLoadRef.current) return;
-    
+
     const timeoutId = setTimeout(() => {
       syncToDatabase(settings);
     }, 500);

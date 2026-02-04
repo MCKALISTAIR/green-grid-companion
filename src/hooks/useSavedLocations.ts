@@ -51,6 +51,32 @@ export function useSavedLocations() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Sync to database when data changes (if authenticated)
+  const syncToDatabase = useCallback(async (locations: SavedLocation[], recent: string[]) => {
+    if (!userId || isSyncing) return;
+
+    setIsSyncing(true);
+    try {
+      const { error } = await supabase
+        .from('user_preferences')
+        .upsert({
+          user_id: userId,
+          saved_locations: locations as unknown as Record<string, unknown>[],
+          recent_locations: recent,
+          updated_at: new Date().toISOString(),
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any, { onConflict: 'user_id' });
+
+      if (error) {
+        logger.error('Failed to sync preferences', { error });
+      }
+    } catch (err) {
+      logger.error('Error syncing preferences', { error: err });
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [userId, isSyncing]);
+
   // Load from database when authenticated
   useEffect(() => {
     if (!userId) {
@@ -74,11 +100,11 @@ export function useSavedLocations() {
         if (data) {
           const dbSavedLocations = (data.saved_locations as unknown as SavedLocation[]) || [];
           const dbRecentLocations = (data.recent_locations as unknown as string[]) || [];
-          
+
           // Merge local data with database data (database takes precedence)
           const localSaved = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
           const localRecent = JSON.parse(localStorage.getItem(LOCAL_RECENT_KEY) || '[]');
-          
+
           // If DB is empty but local has data, use local (first sync scenario)
           if (dbSavedLocations.length === 0 && localSaved.length > 0) {
             setSavedLocations(localSaved);
@@ -95,7 +121,7 @@ export function useSavedLocations() {
           const localRecent = JSON.parse(localStorage.getItem(LOCAL_RECENT_KEY) || '[]');
           await syncToDatabase(localSaved, localRecent);
         }
-        
+
         isInitialLoadRef.current = false;
       } catch (err) {
         logger.error('Error loading preferences', { error: err });
@@ -103,7 +129,7 @@ export function useSavedLocations() {
     };
 
     loadFromDatabase();
-  }, [userId]);
+  }, [userId, syncToDatabase]);
 
   // Set up realtime subscription for cross-device sync
   useEffect(() => {
@@ -128,9 +154,9 @@ export function useSavedLocations() {
         },
         (payload) => {
           logger.debug('Realtime preferences update', { event: payload.eventType });
-          
+
           if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
-            const newData = payload.new as any;
+            const newData = payload.new as { saved_locations?: SavedLocation[]; recent_locations?: string[] };
             if (newData.saved_locations) {
               setSavedLocations(newData.saved_locations);
             }
@@ -158,35 +184,66 @@ export function useSavedLocations() {
     localStorage.setItem(LOCAL_RECENT_KEY, JSON.stringify(recentLocations));
   }, [recentLocations]);
 
-  // Sync to database when data changes (if authenticated)
-  const syncToDatabase = useCallback(async (locations: SavedLocation[], recent: string[]) => {
-    if (!userId || isSyncing) return;
-    
-    setIsSyncing(true);
-    try {
-      const { error } = await supabase
-        .from('user_preferences')
-        .upsert({
-          user_id: userId,
-          saved_locations: locations as unknown as Record<string, unknown>[],
-          recent_locations: recent as unknown as string[],
-          updated_at: new Date().toISOString(),
-        } as any, { onConflict: 'user_id' });
 
-      if (error) {
-        logger.error('Failed to sync preferences', { error });
-      }
-    } catch (err) {
-      logger.error('Error syncing preferences', { error: err });
-    } finally {
-      setIsSyncing(false);
+
+  // Load from database when authenticated
+  useEffect(() => {
+    if (!userId) {
+      isInitialLoadRef.current = true;
+      return;
     }
-  }, [userId, isSyncing]);
+
+    const loadFromDatabase = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('user_preferences')
+          .select('saved_locations, recent_locations')
+          .eq('user_id', userId)
+          .single();
+
+        if (error && error.code !== 'PGRST116') { // PGRST116 = not found
+          logger.error('Failed to load preferences', { error });
+          return;
+        }
+
+        if (data) {
+          const dbSavedLocations = (data.saved_locations as unknown as SavedLocation[]) || [];
+          const dbRecentLocations = (data.recent_locations as unknown as string[]) || [];
+
+          // Merge local data with database data (database takes precedence)
+          const localSaved = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
+          const localRecent = JSON.parse(localStorage.getItem(LOCAL_RECENT_KEY) || '[]');
+
+          // If DB is empty but local has data, use local (first sync scenario)
+          if (dbSavedLocations.length === 0 && localSaved.length > 0) {
+            setSavedLocations(localSaved);
+            setRecentLocations(localRecent);
+            // Sync local to database
+            await syncToDatabase(localSaved, localRecent);
+          } else {
+            setSavedLocations(dbSavedLocations);
+            setRecentLocations(dbRecentLocations);
+          }
+        } else {
+          // No record exists - create one with local data
+          const localSaved = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
+          const localRecent = JSON.parse(localStorage.getItem(LOCAL_RECENT_KEY) || '[]');
+          await syncToDatabase(localSaved, localRecent);
+        }
+
+        isInitialLoadRef.current = false;
+      } catch (err) {
+        logger.error('Error loading preferences', { error: err });
+      }
+    };
+
+    loadFromDatabase();
+  }, [userId, syncToDatabase]);
 
   // Debounced sync on data changes
   useEffect(() => {
     if (!userId || isInitialLoadRef.current) return;
-    
+
     const timeoutId = setTimeout(() => {
       syncToDatabase(savedLocations, recentLocations);
     }, 500); // Debounce 500ms

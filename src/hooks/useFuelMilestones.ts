@@ -37,7 +37,7 @@ export function useFuelMilestones(mix: MixItem[]) {
 
         // Load existing history
         const stored = localStorage.getItem(HISTORY_KEY);
-        let history: FuelHistory = stored ? JSON.parse(stored) : {};
+        const history: FuelHistory = stored ? JSON.parse(stored) : {};
 
         const newMilestones: FuelMilestone[] = [];
         const allFuels = [...FOSSIL_FUELS, ...RENEWABLES];

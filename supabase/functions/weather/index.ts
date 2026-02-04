@@ -1,4 +1,4 @@
-// @ts-ignore: Suppress Deno namespace error if not in Deno context
+// Deno context wrapper
 const _ignore = null;
 
 declare const Deno: any;

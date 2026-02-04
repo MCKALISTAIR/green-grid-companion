@@ -1,4 +1,4 @@
-// @ts-ignore
+// @ts-expect-error: Suppress Deno namespace error
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // Hack to make VS Code happy with Deno globals in a Node workspace
@@ -798,7 +798,7 @@ Deno.serve(async (req: Request) => {
         isRegional = true;
       }
 
-      let intensityMap = new Map<string, { intensity: number, index: string }>();
+      const intensityMap = new Map<string, { intensity: number, index: string }>();
 
       try {
         const intensityResponse = await fetch(intensityUrl);
