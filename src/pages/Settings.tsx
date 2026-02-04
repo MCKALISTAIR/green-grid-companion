@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ChevronRight, GraduationCap, Shield, MapPin, History, MessageSquare, Home, Cloud, RefreshCw } from 'lucide-react';
+import { ChevronRight, GraduationCap, Shield, MapPin, History, MessageSquare, Home, Cloud, RefreshCw, Activity } from 'lucide-react';
 import { NotificationSettings } from '@/components/NotificationSettings';
 import { OctopusIntegration } from '@/components/OctopusIntegration';
 import { TeslaIntegration } from '@/components/TeslaIntegration';
@@ -28,7 +28,7 @@ export default function Settings() {
     const { tone, setTone } = useEnergyFacts();
     const { achievements } = useAchievements();
     const { unlocked, handleVersionTap } = useSceneDirector();
-    const { houseType, setHouseType, customAnnualKwh, setCustomAnnualKwh, isAuthenticated, isSyncing, lastSyncedAt, syncNow } = useSettings();
+    const { houseType, setHouseType, customAnnualKwh, setCustomAnnualKwh, showGridFrequency, setShowGridFrequency, isAuthenticated, isSyncing, lastSyncedAt, syncNow } = useSettings();
 
     const formatLastSync = (date: Date | null) => {
         if (!date) return 'Not yet synced';
@@ -240,6 +240,31 @@ export default function Settings() {
                                     <Label htmlFor="tone-mixed">Mixed</Label>
                                 </div>
                             </RadioGroup>
+                        </div>
+
+                        {/* Grid Frequency Toggle */}
+                        <div className="p-4 bg-card border rounded-lg">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-primary/10 rounded-full">
+                                        <Activity className="w-5 h-5 text-primary" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-medium">Show Grid Frequency</h3>
+                                        <p className="text-sm text-muted-foreground">Display live 50Hz frequency data</p>
+                                    </div>
+                                </div>
+                                <button
+                                    role="switch"
+                                    aria-checked={showGridFrequency}
+                                    onClick={() => setShowGridFrequency(!showGridFrequency)}
+                                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${showGridFrequency ? 'bg-primary' : 'bg-input'}`}
+                                >
+                                    <span
+                                        className={`pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform ${showGridFrequency ? 'translate-x-5' : 'translate-x-0'}`}
+                                    />
+                                </button>
+                            </div>
                         </div>
 
                         <Link to="/locations">
