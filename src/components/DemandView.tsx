@@ -88,15 +88,35 @@ export function DemandView() {
                 {/* Grid Frequency Card */}
                 <Card className="p-5 shadow-lg bg-card/50 backdrop-blur-sm border-primary/10 flex flex-col justify-center">
                     <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-muted-foreground">Grid Frequency</p>
-                            <div className="flex items-baseline gap-2 mt-1">
-                                <h2 className="text-4xl font-bold tracking-tight text-primary">
-                                    {typeof gridFrequency === 'number' && !isNaN(gridFrequency) ? gridFrequency.toFixed(3) : '--'}
-                                </h2>
-                                <span className="text-lg font-medium text-muted-foreground/80">Hz</span>
+                        <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                                <p className="text-sm font-medium text-muted-foreground">Grid Frequency</p>
+                                {typeof gridFrequency === 'number' && !isNaN(gridFrequency) && (
+                                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
+                                        LIVE
+                                    </span>
+                                )}
                             </div>
-                            <p className="text-xs text-muted-foreground mt-2">Target: 50.00 Hz</p>
+                            {typeof gridFrequency === 'number' && !isNaN(gridFrequency) ? (
+                                <>
+                                    <div className="flex items-baseline gap-2 mt-1">
+                                        <h2 className="text-4xl font-bold tracking-tight text-primary">
+                                            {gridFrequency.toFixed(3)}
+                                        </h2>
+                                        <span className="text-lg font-medium text-muted-foreground/80">Hz</span>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground mt-2">Target: 50.00 Hz</p>
+                                </>
+                            ) : (
+                                <div className="mt-2">
+                                    <p className="text-sm text-muted-foreground/70">
+                                        Live frequency unavailable
+                                    </p>
+                                    <p className="text-xs text-muted-foreground/50 mt-1">
+                                        Real-time data temporarily inaccessible
+                                    </p>
+                                </div>
+                            )}
                         </div>
                         <div className="p-3 bg-blue-500/10 rounded-full">
                             <Activity className="w-6 h-6 text-blue-500" />
