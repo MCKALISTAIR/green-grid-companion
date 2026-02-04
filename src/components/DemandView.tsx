@@ -2,11 +2,13 @@ import { Zap, RefreshCw, AlertTriangle, Info, Activity } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { GenerationMixBar } from '@/components/GenerationMixBar';
 import { useGridDemand } from '@/hooks/useGridDemand';
+import { useSettings } from '@/hooks/useSettings';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 export function DemandView() {
     const { demand, mix, frequency: gridFrequency, isLoading, error, refetch, lastUpdated } = useGridDemand();
+    const { showGridFrequency } = useSettings();
 
     if (isLoading) {
         return (
@@ -45,7 +47,7 @@ export function DemandView() {
     return (
         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Demand Highlights Card */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className={`grid gap-4 ${showGridFrequency ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
                 <Card className="p-5 shadow-lg bg-card/50 backdrop-blur-sm border-primary/10">
                     <div className="flex items-start justify-between">
                         <div>
@@ -85,44 +87,46 @@ export function DemandView() {
                     </div>
                 </Card>
 
-                {/* Grid Frequency Card */}
-                <Card className="p-5 shadow-lg bg-card/50 backdrop-blur-sm border-primary/10 flex flex-col justify-center">
-                    <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                                <p className="text-sm font-medium text-muted-foreground">Grid Frequency</p>
-                                {typeof gridFrequency === 'number' && !isNaN(gridFrequency) && (
-                                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
-                                        LIVE
-                                    </span>
+                {/* Grid Frequency Card - only shown when enabled in settings */}
+                {showGridFrequency && (
+                    <Card className="p-5 shadow-lg bg-card/50 backdrop-blur-sm border-primary/10 flex flex-col justify-center">
+                        <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                    <p className="text-sm font-medium text-muted-foreground">Grid Frequency</p>
+                                    {typeof gridFrequency === 'number' && !isNaN(gridFrequency) && (
+                                        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
+                                            LIVE
+                                        </span>
+                                    )}
+                                </div>
+                                {typeof gridFrequency === 'number' && !isNaN(gridFrequency) ? (
+                                    <>
+                                        <div className="flex items-baseline gap-2 mt-1">
+                                            <h2 className="text-4xl font-bold tracking-tight text-primary">
+                                                {gridFrequency.toFixed(3)}
+                                            </h2>
+                                            <span className="text-lg font-medium text-muted-foreground/80">Hz</span>
+                                        </div>
+                                        <p className="text-xs text-muted-foreground mt-2">Target: 50.00 Hz</p>
+                                    </>
+                                ) : (
+                                    <div className="mt-2">
+                                        <p className="text-sm text-muted-foreground/70">
+                                            Live frequency unavailable
+                                        </p>
+                                        <p className="text-xs text-muted-foreground/50 mt-1">
+                                            Real-time data temporarily inaccessible
+                                        </p>
+                                    </div>
                                 )}
                             </div>
-                            {typeof gridFrequency === 'number' && !isNaN(gridFrequency) ? (
-                                <>
-                                    <div className="flex items-baseline gap-2 mt-1">
-                                        <h2 className="text-4xl font-bold tracking-tight text-primary">
-                                            {gridFrequency.toFixed(3)}
-                                        </h2>
-                                        <span className="text-lg font-medium text-muted-foreground/80">Hz</span>
-                                    </div>
-                                    <p className="text-xs text-muted-foreground mt-2">Target: 50.00 Hz</p>
-                                </>
-                            ) : (
-                                <div className="mt-2">
-                                    <p className="text-sm text-muted-foreground/70">
-                                        Live frequency unavailable
-                                    </p>
-                                    <p className="text-xs text-muted-foreground/50 mt-1">
-                                        Real-time data temporarily inaccessible
-                                    </p>
-                                </div>
-                            )}
+                            <div className="p-3 bg-primary/10 rounded-full">
+                                <Activity className="w-6 h-6 text-primary" />
+                            </div>
                         </div>
-                        <div className="p-3 bg-blue-500/10 rounded-full">
-                            <Activity className="w-6 h-6 text-blue-500" />
-                        </div>
-                    </div>
-                </Card>
+                    </Card>
+                )}
             </div>
 
             {/* Generation Breakdown */}

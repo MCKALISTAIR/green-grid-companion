@@ -9,11 +9,13 @@ const LOCAL_SETTINGS_KEY = 'grid-companion-settings';
 interface Settings {
   houseType: HouseType;
   customAnnualKwh: number;
+  showGridFrequency: boolean;
 }
 
 const DEFAULT_SETTINGS: Settings = {
   houseType: DEFAULT_HOUSE_TYPE,
   customAnnualKwh: 2900,
+  showGridFrequency: false,
 };
 
 const LAST_SYNC_KEY = 'grid-companion-last-sync';
@@ -197,6 +199,8 @@ export function useSettings() {
     setHouseType: (type: HouseType) => updateSetting('houseType', type),
     customAnnualKwh: settings.customAnnualKwh,
     setCustomAnnualKwh: (kwh: number) => updateSetting('customAnnualKwh', kwh),
+    showGridFrequency: settings.showGridFrequency,
+    setShowGridFrequency: (show: boolean) => updateSetting('showGridFrequency', show),
     isSyncing,
     isAuthenticated: !!userId,
     lastSyncedAt,
