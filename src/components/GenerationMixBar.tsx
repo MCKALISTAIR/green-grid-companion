@@ -111,7 +111,7 @@ export function GenerationMixBar({ mix, showMW = false, frequency }: GenerationM
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>Generation Mix Breakdown</span>
-            {frequency && (
+            {typeof frequency === 'number' && !isNaN(frequency) && (
               <div className="flex items-center gap-2 text-sm font-normal bg-muted/50 px-2 py-1 rounded-md">
                 <span className="text-muted-foreground">Grid Freq:</span>
                 <div className="flex items-center gap-1.5">
