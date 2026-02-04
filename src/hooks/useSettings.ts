@@ -16,6 +16,8 @@ const DEFAULT_SETTINGS: Settings = {
   customAnnualKwh: 2900,
 };
 
+const LAST_SYNC_KEY = 'grid-companion-last-sync';
+
 export function useSettings() {
   const [settings, setSettings] = useState<Settings>(() => {
     try {
@@ -29,6 +31,10 @@ export function useSettings() {
 
   const [userId, setUserId] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(() => {
+    const saved = localStorage.getItem(LAST_SYNC_KEY);
+    return saved ? new Date(saved) : null;
+  });
   const channelRef = useRef<RealtimeChannel | null>(null);
   const isInitialLoadRef = useRef(true);
 
@@ -150,6 +156,10 @@ export function useSettings() {
 
       if (error) {
         logger.error('Failed to sync settings', { error });
+      } else {
+        const now = new Date();
+        setLastSyncedAt(now);
+        localStorage.setItem(LAST_SYNC_KEY, now.toISOString());
       }
     } catch (err) {
       logger.error('Error syncing settings', { error: err });
@@ -183,5 +193,6 @@ export function useSettings() {
     setCustomAnnualKwh: (kwh: number) => updateSetting('customAnnualKwh', kwh),
     isSyncing,
     isAuthenticated: !!userId,
+    lastSyncedAt,
   };
 }

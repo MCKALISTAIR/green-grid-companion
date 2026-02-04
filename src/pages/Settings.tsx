@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ChevronRight, GraduationCap, Shield, MapPin, History, MessageSquare, Home } from 'lucide-react';
+import { ChevronRight, GraduationCap, Shield, MapPin, History, MessageSquare, Home, Cloud, RefreshCw } from 'lucide-react';
 import { NotificationSettings } from '@/components/NotificationSettings';
 import { OctopusIntegration } from '@/components/OctopusIntegration';
 import { TeslaIntegration } from '@/components/TeslaIntegration';
@@ -28,7 +28,26 @@ export default function Settings() {
     const { tone, setTone } = useEnergyFacts();
     const { achievements } = useAchievements();
     const { unlocked, handleVersionTap } = useSceneDirector();
-    const { houseType, setHouseType, customAnnualKwh, setCustomAnnualKwh } = useSettings();
+    const { houseType, setHouseType, customAnnualKwh, setCustomAnnualKwh, isAuthenticated, isSyncing, lastSyncedAt } = useSettings();
+
+    const formatLastSync = (date: Date | null) => {
+        if (!date) return 'Not yet synced';
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        
+        if (diffMins < 1) return 'Just now';
+        if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
+        if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+        
+        return date.toLocaleString(undefined, {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+        });
+    };
 
     const onVersionClick = () => {
         handleVersionTap();
@@ -72,6 +91,30 @@ export default function Settings() {
                 <div className="space-y-4">
                     <h2 className="text-xl font-semibold">Account</h2>
                     <AccountBackup />
+                    
+                    {isAuthenticated && (
+                        <div className="p-4 bg-card border rounded-lg">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-primary/10 rounded-full">
+                                        <Cloud className="w-5 h-5 text-primary" />
+                                    </div>
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <h3 className="font-medium">Synced across devices</h3>
+                                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5">
+                                                <RefreshCw className={`w-3 h-3 mr-1 ${isSyncing ? 'animate-spin' : ''}`} />
+                                                {isSyncing ? 'Syncing...' : 'Active'}
+                                            </Badge>
+                                        </div>
+                                        <p className="text-sm text-muted-foreground">
+                                            Last synced: {formatLastSync(lastSyncedAt)}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <OctopusIntegration />
