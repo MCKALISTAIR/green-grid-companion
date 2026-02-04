@@ -7,7 +7,8 @@ const RECORDS_KEY = 'fuel-streak-records-v2';
 const LAST_SEEN_KEY = 'fuel-last-seen-v1';
 
 // Fossil fuels we want to track "free" streaks for
-const FOSSIL_FUELS = ['coal', 'gas', 'oil'];
+// Note: Oil removed as UK grid hasn't used it for generation in years
+const FOSSIL_FUELS = ['coal', 'gas'];
 
 // API endpoint for historical generation data
 const CARBON_API_BASE = 'https://api.carbonintensity.org.uk';
@@ -27,6 +28,7 @@ export interface FuelRecord {
     newRecord: number; // days
     achievedAt: string; // ISO timestamp
     celebrated: boolean;
+    exceededLookback?: boolean; // True if the streak exceeds API lookback limit
 }
 
 export interface FuelStreak {
@@ -220,7 +222,8 @@ export function useFuelStreaks(mix: MixItem[]) {
                                     previousRecord: previousRecordDays,
                                     newRecord: days,
                                     achievedAt: nowStr,
-                                    celebrated: false
+                                    celebrated: false,
+                                    exceededLookback: streakData[fuel].exceededLookback
                                 };
                             }
 
