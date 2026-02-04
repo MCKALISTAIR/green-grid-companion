@@ -12,7 +12,7 @@ interface FuelInsightBadgeProps {
 export function FuelInsightBadge({ streak, milestone, compact = false }: FuelInsightBadgeProps) {
     // Streak badge for fossil fuels at 0% - only show if we have meaningful data (>= 1 day)
     if (streak?.isActive && streak.days >= 1) {
-        const duration = formatStreakDuration(streak.days, streak.hours);
+        const duration = formatStreakDuration(streak.days, streak.hours, streak.exceededLookback);
         const fuelName = streak.fuel.charAt(0).toUpperCase() + streak.fuel.slice(1);
 
         if (compact) {

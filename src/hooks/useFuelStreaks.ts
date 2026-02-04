@@ -18,6 +18,7 @@ export interface FuelStreakData {
     streakStarted: string | null; // When the current streak started
     currentPerc: number;
     verifiedHistorically: boolean; // Whether we've verified via API
+    exceededLookback?: boolean; // True if fuel wasn't found in max lookback period
 }
 
 export interface FuelRecord {
@@ -36,19 +37,23 @@ export interface FuelStreak {
     isNewRecord: boolean;
     previousRecord?: number;
     isVerified: boolean; // Has historical verification
+    exceededLookback?: boolean; // True if the streak is "30+ days"
 }
 
 interface StoredLastSeen {
     [fuel: string]: string | null; // ISO timestamp
 }
 
+// Maximum days the Carbon Intensity API allows for historical queries
+const MAX_LOOKBACK_DAYS = 30;
+
 // Fetch historical generation mix to find when a fuel was last used
-async function fetchLastSeenFromHistory(fuel: string): Promise<string | null> {
+async function fetchLastSeenFromHistory(fuel: string): Promise<{ lastSeen: string | null; exceededLookback: boolean }> {
     try {
-        // Check the last 14 days of data (API allows up to 30 days)
+        // Check the last 30 days of data (API maximum)
         const to = new Date();
         const from = new Date();
-        from.setDate(from.getDate() - 14);
+        from.setDate(from.getDate() - MAX_LOOKBACK_DAYS);
 
         const fromStr = from.toISOString();
         const toStr = to.toISOString();
@@ -59,7 +64,7 @@ async function fetchLastSeenFromHistory(fuel: string): Promise<string | null> {
 
         if (!response.ok) {
             console.warn(`Failed to fetch historical generation: ${response.status}`);
-            return null;
+            return { lastSeen: null, exceededLookback: false };
         }
 
         const json = await response.json();
@@ -73,16 +78,15 @@ async function fetchLastSeenFromHistory(fuel: string): Promise<string | null> {
 
             if (fuelEntry && fuelEntry.perc > 0) {
                 // Found when it was last used
-                return entry.to || entry.from;
+                return { lastSeen: entry.to || entry.from, exceededLookback: false };
             }
         }
 
-        // If we didn't find it in 14 days, it's been at least 14 days
-        // Return the start of our search window as a conservative estimate
-        return null; // Will indicate "at least 14 days"
+        // If we didn't find it in 30 days, it's been at least 30 days
+        return { lastSeen: from.toISOString(), exceededLookback: true };
     } catch (error) {
         console.warn('Error fetching historical generation:', error);
-        return null;
+        return { lastSeen: null, exceededLookback: false };
     }
 }
 
@@ -173,22 +177,22 @@ export function useFuelStreaks(mix: MixItem[]) {
                         isVerified = true;
                     } else if (!streakData[fuel].verifiedHistorically) {
                         // Need to fetch historical data
-                        const historicalLastSeen = await fetchLastSeenFromHistory(fuel);
+                        const result = await fetchLastSeenFromHistory(fuel);
 
-                        if (historicalLastSeen) {
-                            lastSeenTime = new Date(historicalLastSeen);
-                            lastSeenData[fuel] = historicalLastSeen;
-                            streakData[fuel].lastSeen = historicalLastSeen;
-                            streakData[fuel].streakStarted = historicalLastSeen;
+                        if (result.lastSeen) {
+                            lastSeenTime = new Date(result.lastSeen);
+                            lastSeenData[fuel] = JSON.stringify({ 
+                                timestamp: result.lastSeen, 
+                                exceededLookback: result.exceededLookback 
+                            });
+                            streakData[fuel].lastSeen = result.lastSeen;
+                            streakData[fuel].streakStarted = result.lastSeen;
                             isVerified = true;
-                        } else {
-                            // Not found in 14 days - use 14 days as minimum
-                            const fourteenDaysAgo = new Date();
-                            fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
-                            lastSeenTime = fourteenDaysAgo;
-                            lastSeenData[fuel] = fourteenDaysAgo.toISOString();
-                            streakData[fuel].streakStarted = fourteenDaysAgo.toISOString();
-                            isVerified = true; // We verified it's been at least 14 days
+                            
+                            // Store if we exceeded lookback for display purposes
+                            if (result.exceededLookback) {
+                                streakData[fuel].exceededLookback = true;
+                            }
                         }
 
                         streakData[fuel].verifiedHistorically = true;
@@ -227,7 +231,8 @@ export function useFuelStreaks(mix: MixItem[]) {
                                 isActive: true,
                                 isNewRecord,
                                 previousRecord: previousRecordDays,
-                                isVerified
+                                isVerified,
+                                exceededLookback: streakData[fuel].exceededLookback
                             });
 
                             // Check if we should show celebration
@@ -275,8 +280,9 @@ export function useFuelStreaks(mix: MixItem[]) {
 }
 
 // Format streak for display
-export function formatStreakDuration(days: number, hours: number): string {
+export function formatStreakDuration(days: number, hours: number, exceededLookback?: boolean): string {
     if (days === 0) return '';
+    if (exceededLookback) return `${days}+ days`; // Show "30+ days" if we hit the API limit
     if (days === 1) return '1 day';
     return `${days} days`;
 }
