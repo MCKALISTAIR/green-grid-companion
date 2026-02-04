@@ -235,7 +235,7 @@ const Index = () => {
             <h1 className="sr-only">Carbon Intensity Dashboard</h1>
             {/* Header with scene */}
             {/* Header with scene */}
-            <div className="relative w-full h-[55vh] min-h-[320px]">
+            <div className="relative w-full h-[35vh] min-h-[280px]">
               {/* Animated scene */}
               <ComponentErrorBoundary name="Scene">
                 <IntensityScene intensity={intensity} index={index} generationMix={generationMix} className="h-full" />
