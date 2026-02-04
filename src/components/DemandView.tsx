@@ -1,7 +1,7 @@
 import { Zap, RefreshCw, AlertTriangle, Info, Activity } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { GenerationMixBar } from '@/components/GenerationMixBar';
-import { useGridDemand } from '@/hooks/useGridDemand';
+import { useGridDemand, MixWithTrend } from '@/hooks/useGridDemand';
 import { useSettings } from '@/hooks/useSettings';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -9,9 +9,10 @@ import { useFuelStreaks } from '@/hooks/useFuelStreaks';
 import { useFuelMilestones } from '@/hooks/useFuelMilestones';
 import { FuelInsightBadge } from '@/components/FuelInsightBadge';
 import { FuelRecordList } from '@/components/FuelRecordCelebration';
+import { FuelTrendIndicator } from '@/components/FuelTrendIndicator';
 
 export function DemandView() {
-    const { demand, mix, frequency: gridFrequency, isLoading, error, refetch, lastUpdated } = useGridDemand();
+    const { demand, mix, mixWithTrends, frequency: gridFrequency, isLoading, error, refetch, lastUpdated } = useGridDemand();
     const { showGridFrequency } = useSettings();
     const { streaks, newRecords, dismissRecord } = useFuelStreaks(mix);
     const { milestones } = useFuelMilestones(mix);
@@ -47,8 +48,9 @@ export function DemandView() {
     const demandGW = demand ? (demand / 1000).toFixed(2) : null;
     const updatedTime = lastUpdated ? new Date(lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
 
-    // Sort mix by percentage descending
+    // Sort mix by percentage descending (use mixWithTrends for the cards)
     const sortedMix = [...mix].sort((a, b) => b.perc - a.perc);
+    const sortedMixWithTrends = [...mixWithTrends].sort((a, b) => b.perc - a.perc);
 
     // Create lookup maps for streaks and milestones by fuel
     const streakByFuel = Object.fromEntries(streaks.map(s => [s.fuel, s]));
@@ -174,7 +176,7 @@ export function DemandView() {
             </Card>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                {sortedMix.map((source) => {
+                {sortedMixWithTrends.map((source) => {
                     const fuelKey = source.fuel?.toLowerCase() || source.name?.toLowerCase() || '';
                     const streak = streakByFuel[fuelKey];
                     const milestone = milestoneByFuel[fuelKey];
@@ -186,12 +188,27 @@ export function DemandView() {
                             className={`p-3 shadow-sm hover:bg-accent/5 transition-colors ${hasInsight ? 'ring-1 ring-primary/20' : ''}`}
                         >
                             <div className="flex items-start justify-between">
-                                <span className="text-sm font-medium capitalize">{source.name}</span>
+                                <div className="flex items-center gap-1.5">
+                                    <span className="text-sm font-medium capitalize">{source.name}</span>
+                                    <FuelTrendIndicator
+                                        currentPerc={source.perc}
+                                        previousPerc={source.previousPerc}
+                                        trend={source.trend}
+                                        showDiff={false}
+                                    />
+                                </div>
                                 <div className="text-right">
                                     {source.mw !== null && (
                                         <span className="block text-sm font-bold">{(source.mw / 1000).toFixed(2)} GW</span>
                                     )}
-                                    <span className="text-xs text-muted-foreground">{source.perc}%</span>
+                                    <div className="flex items-center justify-end gap-1">
+                                        <span className="text-xs text-muted-foreground">{source.perc}%</span>
+                                        {source.previousPerc !== null && source.trend && source.trend !== 'stable' && (
+                                            <span className={`text-[10px] ${source.trend === 'up' ? 'text-primary' : 'text-destructive'}`}>
+                                                ({source.trend === 'up' ? '+' : ''}{(source.perc - source.previousPerc).toFixed(1)}%)
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                             {/* Show insight badge if applicable */}
