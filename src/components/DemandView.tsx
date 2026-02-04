@@ -92,7 +92,7 @@ export function DemandView() {
                             <p className="text-sm font-medium text-muted-foreground">Grid Frequency</p>
                             <div className="flex items-baseline gap-2 mt-1">
                                 <h2 className="text-4xl font-bold tracking-tight text-primary">
-                                    {gridFrequency?.toFixed(3) || '--'}
+                                    {typeof gridFrequency === 'number' && !isNaN(gridFrequency) ? gridFrequency.toFixed(3) : '--'}
                                 </h2>
                                 <span className="text-lg font-medium text-muted-foreground/80">Hz</span>
                             </div>
