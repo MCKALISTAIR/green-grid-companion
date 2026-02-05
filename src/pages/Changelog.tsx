@@ -130,6 +130,11 @@ const changelog: ChangelogEntry[] = [
   },
 ];
 
+const formatDate = (dateStr: string) => {
+  const [year, month, day] = dateStr.split('-');
+  return `${day}-${month}-${year}`;
+};
+
 const typeConfig = {
   feature: { icon: Sparkles, label: 'New', color: 'bg-primary/10 text-primary border-primary/20' },
   improvement: { icon: Zap, label: 'Improved', color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20' },
@@ -179,7 +184,7 @@ export default function Changelog() {
                   </div>
                   <p className="text-sm font-medium text-primary mt-0.5">{entry.title}</p>
                 </div>
-                <span className="text-xs text-muted-foreground">{entry.date}</span>
+                <span className="text-xs text-muted-foreground">{formatDate(entry.date)}</span>
               </div>
 
               <ul className="space-y-2">
