@@ -15,10 +15,24 @@ Deno.serve(async (req: Request) => {
     }
 
     try {
-        const { lat, lon } = await req.json()
+        const body = await req.json()
+        
+        // Parse and validate coordinates
+        const lat = parseFloat(body.lat)
+        const lon = parseFloat(body.lon)
 
-        if (!lat || !lon) {
-            throw new Error('Missing lat/lon parameters')
+        if (isNaN(lat) || lat < -90 || lat > 90) {
+            return new Response(
+                JSON.stringify({ error: 'Invalid latitude: must be between -90 and 90' }),
+                { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
+        }
+        
+        if (isNaN(lon) || lon < -180 || lon > 180) {
+            return new Response(
+                JSON.stringify({ error: 'Invalid longitude: must be between -180 and 180' }),
+                { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
         }
 
         console.log(`Fetching weather for ${lat}, ${lon}`)
