@@ -104,6 +104,51 @@ export type Database = {
         }
         Relationships: []
       }
+      octopus_intelligent_dispatches: {
+        Row: {
+          charge_kwh: number | null
+          created_at: string
+          dispatch_type: string
+          end_time: string
+          id: string
+          location: string | null
+          mpan: string
+          notified_at: string | null
+          source: string | null
+          start_time: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          charge_kwh?: number | null
+          created_at?: string
+          dispatch_type: string
+          end_time: string
+          id?: string
+          location?: string | null
+          mpan: string
+          notified_at?: string | null
+          source?: string | null
+          start_time: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          charge_kwh?: number | null
+          created_at?: string
+          dispatch_type?: string
+          end_time?: string
+          id?: string
+          location?: string | null
+          mpan?: string
+          notified_at?: string | null
+          source?: string | null
+          start_time?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       octopus_meters: {
         Row: {
           created_at: string

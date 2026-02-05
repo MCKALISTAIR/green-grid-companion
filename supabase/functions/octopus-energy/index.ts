@@ -1004,6 +1004,172 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    // --- INTELLIGENT DISPATCH SLOTS ---
+    // Fetch planned and completed charging dispatches for Octopus Intelligent tariffs
+    if (action === 'get-intelligent-dispatches') {
+      if (!authHeaderOctopus || !OCTOPUS_ACCOUNT_NUMBER) {
+        return new Response(
+          JSON.stringify({ planned: [], completed: [], error: 'Octopus credentials required' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Get user's meter to store with dispatches
+      const { data: userMeter } = await supabase
+        .from('octopus_meters')
+        .select('mpan')
+        .eq('user_id', userId)
+        .limit(1)
+        .single();
+
+      if (!userMeter) {
+        return new Response(
+          JSON.stringify({ planned: [], completed: [], error: 'No meter linked' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const mpan = userMeter.mpan;
+      const dispatchUrl = `https://api.octopus.energy/v1/accounts/${OCTOPUS_ACCOUNT_NUMBER}/electricity-meter-points/${mpan}/intelligent-dispatches/`;
+
+      console.log(`[${requestId}] Fetching Intelligent dispatches for MPAN ${mpan.substring(0, 4)}...`);
+
+      try {
+        const response = await fetch(dispatchUrl, {
+          headers: { 'Authorization': authHeaderOctopus }
+        });
+
+        if (!response.ok) {
+          // 404 means user doesn't have Intelligent tariff - this is fine
+          if (response.status === 404) {
+            console.log(`[${requestId}] No Intelligent tariff found for account`);
+            return new Response(
+              JSON.stringify({ planned: [], completed: [], message: 'Intelligent tariff not detected' }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+          console.error(`Intelligent dispatch API error: ${response.status}`);
+          return new Response(
+            JSON.stringify({ planned: [], completed: [], error: `API error: ${response.status}` }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        const data = await response.json();
+        const plannedDispatches = data.plannedDispatches || [];
+        const completedDispatches = data.completedDispatches || [];
+
+        console.log(`[${requestId}] Found ${plannedDispatches.length} planned, ${completedDispatches.length} completed dispatches`);
+
+        // Store dispatches in database for history and notifications
+        const dispatchesToUpsert: any[] = [];
+        const newCompletedStarts: string[] = [];
+
+        // Check for newly started dispatches (for notifications)
+        const now = new Date();
+
+        for (const dispatch of plannedDispatches) {
+          dispatchesToUpsert.push({
+            user_id: userId,
+            mpan,
+            dispatch_type: 'planned',
+            start_time: dispatch.start || dispatch.startDt,
+            end_time: dispatch.end || dispatch.endDt,
+            charge_kwh: dispatch.chargeKwh || null,
+            source: dispatch.source || null,
+            location: dispatch.location || null,
+            updated_at: new Date().toISOString()
+          });
+        }
+
+        for (const dispatch of completedDispatches) {
+          const startTime = new Date(dispatch.start || dispatch.startDt);
+          
+          dispatchesToUpsert.push({
+            user_id: userId,
+            mpan,
+            dispatch_type: 'completed',
+            start_time: dispatch.start || dispatch.startDt,
+            end_time: dispatch.end || dispatch.endDt,
+            charge_kwh: dispatch.chargeKwh || null,
+            source: dispatch.source || null,
+            location: dispatch.location || null,
+            updated_at: new Date().toISOString()
+          });
+
+          // Track if this is a recently started dispatch (within last 10 mins)
+          const timeSinceStart = now.getTime() - startTime.getTime();
+          if (timeSinceStart >= 0 && timeSinceStart < 10 * 60 * 1000) {
+            newCompletedStarts.push(dispatch.start || dispatch.startDt);
+          }
+        }
+
+        // Upsert dispatches
+        if (dispatchesToUpsert.length > 0) {
+          const { error: upsertError } = await supabase
+            .from('octopus_intelligent_dispatches')
+            .upsert(dispatchesToUpsert, { 
+              onConflict: 'user_id,mpan,dispatch_type,start_time',
+              ignoreDuplicates: false 
+            });
+
+          if (upsertError) {
+            console.error('Error storing dispatches:', upsertError);
+          }
+        }
+
+        // Check for dispatches that just started and haven't been notified
+        let chargingStarted = false;
+        let chargingStartDispatch = null;
+
+        if (newCompletedStarts.length > 0) {
+          // Check if we already notified for these
+          const { data: unnotified } = await supabase
+            .from('octopus_intelligent_dispatches')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('dispatch_type', 'completed')
+            .in('start_time', newCompletedStarts)
+            .is('notified_at', null);
+
+          if (unnotified && unnotified.length > 0) {
+            chargingStarted = true;
+            chargingStartDispatch = unnotified[0];
+
+            // Mark as notified
+            await supabase
+              .from('octopus_intelligent_dispatches')
+              .update({ notified_at: new Date().toISOString() })
+              .eq('user_id', userId)
+              .in('start_time', newCompletedStarts)
+              .is('notified_at', null);
+          }
+        }
+
+        return new Response(
+          JSON.stringify({
+            planned: plannedDispatches,
+            completed: completedDispatches,
+            chargingStarted,
+            chargingStartDispatch: chargingStartDispatch ? {
+              startTime: chargingStartDispatch.start_time,
+              endTime: chargingStartDispatch.end_time,
+              source: chargingStartDispatch.source
+            } : null
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        console.error('Intelligent dispatch error:', message);
+        return new Response(
+          JSON.stringify({ planned: [], completed: [], error: message }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
     if (action === 'get-status') {
       // Get meter status for current user
       const { data: meters } = await supabase
