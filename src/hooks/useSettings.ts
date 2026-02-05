@@ -170,56 +170,13 @@ export function useSettings() {
       console.error('Failed to save settings:', error);
     }
   }, [settings]);
-
-
-
-  // Load settings from database when authenticated
-  useEffect(() => {
-    if (!userId) {
-      isInitialLoadRef.current = true;
-      return;
-    }
-
-    const loadFromDatabase = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('user_preferences')
-          .select('settings')
-          .eq('user_id', userId)
-          .single();
-
-        if (error && error.code !== 'PGRST116') {
-          logger.error('Failed to load settings', { error });
-          return;
-        }
-
-        if (data?.settings && typeof data.settings === 'object' && Object.keys(data.settings).length > 0) {
-          const dbSettings = data.settings as unknown as Settings;
-          setSettings({ ...DEFAULT_SETTINGS, ...dbSettings });
-        } else {
-          // No settings in DB, sync local settings up
-          const localSettings = JSON.parse(localStorage.getItem(LOCAL_SETTINGS_KEY) || '{}');
-          if (Object.keys(localSettings).length > 0) {
-            await syncToDatabase({ ...DEFAULT_SETTINGS, ...localSettings });
-          }
-        }
-
-        isInitialLoadRef.current = false;
-      } catch (err) {
-        logger.error('Error loading settings', { error: err });
-      }
-    };
-
-    loadFromDatabase();
-  }, [userId, syncToDatabase]);
-
-  // Debounced sync on settings changes
+  // Debounced sync on settings changes - only sync after 2 seconds of inactivity
   useEffect(() => {
     if (!userId || isInitialLoadRef.current) return;
 
     const timeoutId = setTimeout(() => {
       syncToDatabase(settings);
-    }, 500);
+    }, 2000);
 
     return () => clearTimeout(timeoutId);
   }, [settings, userId, syncToDatabase]);

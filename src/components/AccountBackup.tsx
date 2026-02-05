@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Cloud, CloudOff, LogOut, Mail } from 'lucide-react';
+import { Cloud, CloudOff, LogOut, Mail, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
 import { lovable } from '@/integrations/lovable/index';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -11,24 +11,35 @@ import type { User } from '@supabase/supabase-js';
 // Storage key for previous anonymous user ID
 const ANON_USER_ID_KEY = 'octopus-anon-user-id';
 
-export function AccountBackup() {
+interface AccountBackupProps {
+  isSyncing?: boolean;
+  lastSyncedAt?: Date | null;
+  onSyncNow?: () => void;
+  formatLastSync?: (date: Date | null) => string;
+}
+
+export function AccountBackup({ isSyncing, lastSyncedAt, onSyncNow, formatLastSync }: AccountBackupProps) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const migrationAttemptedRef = useRef(false);
+
+  const defaultFormatLastSync = (date: Date | null) => {
+    if (!date) return 'Not yet synced';
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const formatFn = formatLastSync || defaultFormatLastSync;
 
   useEffect(() => {
     // Check initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
-      
-      // Store user ID for potential migration later
-      if (session?.user?.id) {
-        const storedAnonId = localStorage.getItem(ANON_USER_ID_KEY);
-        if (!storedAnonId) {
-          // First time signing in - this user might have had anon data
-          // We'll store their ID for future reference
-        }
-      }
     });
 
     // Listen for auth changes
@@ -115,36 +126,69 @@ export function AccountBackup() {
 
   if (user) {
     return (
-      <Card className="p-4 space-y-4">
-        <div className="flex items-center justify-between">
+      <Card className="p-3">
+        {/* Compact header - always visible */}
+        <button 
+          onClick={() => setExpanded(!expanded)}
+          className="w-full flex items-center justify-between"
+        >
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-full">
-              <Cloud className="w-5 h-5 text-primary" />
+            <div className="p-1.5 bg-primary/10 rounded-full">
+              <Cloud className="w-4 h-4 text-primary" />
             </div>
-            <div>
-              <h3 className="font-medium">Data Backup Active</h3>
-              <p className="text-sm text-muted-foreground">Your data syncs across devices</p>
+            <div className="text-left">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium truncate max-w-[180px]">{user.email}</span>
+                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                  {isSyncing ? (
+                    <>
+                      <RefreshCw className="w-2.5 h-2.5 mr-1 animate-spin" />
+                      Syncing
+                    </>
+                  ) : (
+                    'Synced'
+                  )}
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {formatFn(lastSyncedAt ?? null)}
+              </p>
             </div>
           </div>
-          <Badge variant="secondary">
-            Synced
-          </Badge>
-        </div>
-        
-        <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
-          <Mail className="w-4 h-4 text-muted-foreground" />
-          <span className="text-sm truncate">{user.email}</span>
-        </div>
+          {expanded ? (
+            <ChevronUp className="w-4 h-4 text-muted-foreground" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-muted-foreground" />
+          )}
+        </button>
 
-        <Button 
-          variant="outline" 
-          className="w-full"
-          onClick={handleSignOut}
-          disabled={loading}
-        >
-          <LogOut className="w-4 h-4 mr-2" />
-          Sign Out
-        </Button>
+        {/* Expandable section */}
+        {expanded && (
+          <div className="mt-3 pt-3 border-t space-y-2">
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="flex-1"
+                onClick={onSyncNow}
+                disabled={isSyncing}
+              >
+                <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${isSyncing ? 'animate-spin' : ''}`} />
+                Sync Now
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="flex-1"
+                onClick={handleSignOut}
+                disabled={loading}
+              >
+                <LogOut className="w-3.5 h-3.5 mr-1.5" />
+                Sign Out
+              </Button>
+            </div>
+          </div>
+        )}
       </Card>
     );
   }
