@@ -1,4 +1,4 @@
-import { Leaf, TrendingDown, Trophy, Sparkles } from 'lucide-react';
+import { Leaf, TrendingDown, Trophy, Sparkles, Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { FuelStreak, formatStreakDuration } from '@/hooks/useFuelStreaks';
 import { FuelMilestone } from '@/hooks/useFuelMilestones';
@@ -28,7 +28,10 @@ export function FuelInsightBadge({ streak, milestone, compact = false }: FuelIns
                 ) : (
                     <Leaf className="w-2.5 h-2.5" />
                 )}
-                <span>{duration} {streak.fuel}-free</span>
+                <span className="flex items-center gap-0.5">
+                    {duration} {streak.fuel}-free
+                    {streak.exceededLookback && <Info className="w-2.5 h-2.5 opacity-70" />}
+                </span>
             </div>
         ) : (
             <div className={cn(
@@ -49,6 +52,7 @@ export function FuelInsightBadge({ streak, milestone, compact = false }: FuelIns
                         <Leaf className="w-3.5 h-3.5 text-primary" />
                         <span className="text-primary">
                             {duration} without {streak.fuel}
+                            {streak.exceededLookback && <Info className="w-3 h-3 ml-1 opacity-70 inline" />}
                         </span>
                     </>
                 )}
