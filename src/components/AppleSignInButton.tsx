@@ -21,7 +21,7 @@ export const AppleSignInButton = () => {
 
                 const options = {
                     clientId: 'app.lovable.1558020f8a4c43dc9ea079533f5d485c.web',
-                    redirectURI: 'https://gridsense-app.lovable.app/auth/callback',
+                    redirectURI: window.location.origin,
                     scopes: 'email name',
                     state: Math.random().toString(36).substring(2),
                     nonce: Math.random().toString(36).substring(2)
@@ -49,7 +49,7 @@ export const AppleSignInButton = () => {
                 console.log('Starting web Apple Sign In...');
 
                 const result = await lovable.auth.signInWithOAuth('apple', {
-                    redirect_uri: 'https://gridsense-app.lovable.app/auth/callback'
+                    redirect_uri: window.location.origin,
                 });
 
                 if (result.error) {
