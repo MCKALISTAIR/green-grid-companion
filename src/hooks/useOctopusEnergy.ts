@@ -54,6 +54,28 @@ export interface GreennessForecastItem {
   highlightFlag: boolean;
 }
 
+export interface DispatchSlot {
+  start?: string;
+  end?: string;
+  startDt?: string;
+  endDt?: string;
+  chargeKwh?: number;
+  source?: string;
+  location?: string;
+}
+
+export interface IntelligentDispatchData {
+  planned: DispatchSlot[];
+  completed: DispatchSlot[];
+  chargingStarted: boolean;
+  chargingStartDispatch: {
+    startTime: string;
+    endTime: string;
+    source?: string;
+  } | null;
+  message?: string;
+}
+
 const LOCAL_STORAGE_KEYS = {
   isLinked: 'octopus-is-linked',
   hasCreds: 'octopus-has-creds',
@@ -173,6 +195,30 @@ export function useOctopusEnergy(days: number = 30) {
     staleTime: 1000 * 60 * 60 * 4, // 4 hours
     gcTime: 1000 * 60 * 60 * 8, // 8 hours cache
     retry: 1, // Only retry once - this is non-critical data
+  });
+
+  // Fetch Intelligent Dispatch slots (planned and completed charging windows)
+  const { 
+    data: intelligentDispatches, 
+    isLoading: dispatchesLoading,
+    refetch: refetchDispatches 
+  } = useQuery({
+    queryKey: ['intelligent-dispatches'],
+    queryFn: async (): Promise<IntelligentDispatchData> => {
+      const { data, error } = await supabase.functions.invoke('octopus-energy', {
+        body: { action: 'get-intelligent-dispatches' }
+      });
+      if (error) {
+        logger.warn('Intelligent dispatches fetch failed', { error: error.message });
+        return { planned: [], completed: [], chargingStarted: false, chargingStartDispatch: null };
+      }
+      return data as IntelligentDispatchData;
+    },
+    enabled: (status?.is_linked && status?.has_credentials) ?? (cachedIsLinked && cachedHasCreds),
+    staleTime: 1000 * 60 * 5, // 5 minutes - check more frequently for active charging
+    gcTime: 1000 * 60 * 30, // 30 minutes cache
+    refetchInterval: 1000 * 60 * 5, // Auto-refresh every 5 minutes to detect charging start
+    retry: 1,
   });
 
   // Try to sync pending credentials when auth becomes available
@@ -471,7 +517,9 @@ export function useOctopusEnergy(days: number = 30) {
     status,
     footprint,
     greennessForecast,
+    intelligentDispatches,
     isLoading: statusLoading || footprintLoading || forecastLoading,
+    isLoadingDispatches: dispatchesLoading,
     isSyncing,
     isLinked: status?.is_linked ?? false,
     hasCredentials: status?.has_credentials ?? !!cachedCredentials,
@@ -484,6 +532,7 @@ export function useOctopusEnergy(days: number = 30) {
     migrateData,
     refetchStatus,
     refetchFootprint,
+    refreshDispatches: refetchDispatches,
     // New exports
     cachedCredentials,
     clearCachedCredentials,
