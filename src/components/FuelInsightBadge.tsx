@@ -1,4 +1,5 @@
 import { Leaf, TrendingDown, Trophy, Sparkles } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { FuelStreak, formatStreakDuration } from '@/hooks/useFuelStreaks';
 import { FuelMilestone } from '@/hooks/useFuelMilestones';
 import { cn } from '@/lib/utils';
@@ -14,26 +15,22 @@ export function FuelInsightBadge({ streak, milestone, compact = false }: FuelIns
     if (streak?.isActive && streak.days >= 1) {
         const duration = formatStreakDuration(streak.days, streak.hours, streak.exceededLookback);
         const fuelName = streak.fuel.charAt(0).toUpperCase() + streak.fuel.slice(1);
-
-        if (compact) {
-            return (
-                <div className={cn(
-                    "inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium",
-                    streak.isNewRecord
-                        ? "bg-chart-4/20 text-chart-4"
-                        : "bg-primary/20 text-primary"
-                )}>
-                    {streak.isNewRecord ? (
-                        <Trophy className="w-2.5 h-2.5" />
-                    ) : (
-                        <Leaf className="w-2.5 h-2.5" />
-                    )}
-                    <span>{duration} {streak.fuel}-free</span>
-                </div>
-            );
-        }
-
-        return (
+        
+        const badgeContent = compact ? (
+            <div className={cn(
+                "inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium",
+                streak.isNewRecord
+                    ? "bg-chart-4/20 text-chart-4"
+                    : "bg-primary/20 text-primary"
+            )}>
+                {streak.isNewRecord ? (
+                    <Trophy className="w-2.5 h-2.5" />
+                ) : (
+                    <Leaf className="w-2.5 h-2.5" />
+                )}
+                <span>{duration} {streak.fuel}-free</span>
+            </div>
+        ) : (
             <div className={cn(
                 "flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs",
                 streak.isNewRecord
@@ -57,6 +54,24 @@ export function FuelInsightBadge({ streak, milestone, compact = false }: FuelIns
                 )}
             </div>
         );
+
+        // Wrap in tooltip if streak exceeds the API lookback limit
+        if (streak.exceededLookback) {
+            return (
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            {badgeContent}
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p className="text-xs">This streak extends beyond the 30-day API limit</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            );
+        }
+
+        return badgeContent;
     }
 
     // Milestone badge for lows/highs
