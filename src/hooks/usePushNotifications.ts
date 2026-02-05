@@ -34,30 +34,42 @@ export function usePushNotifications(postcode: string) {
   const [permissionStatus, setPermissionStatus] = useState<'prompt' | 'granted' | 'denied'>('prompt');
   const isNative = Capacitor.isNativePlatform();
 
-  // Load preferences from database
+  // Load preferences via edge function (secure server-side access)
   const loadPreferences = useCallback(async (token: string) => {
     try {
-      const { data, error } = await supabase
-        .from('push_subscriptions')
-        .select('*')
-        .eq('device_token', token)
-        .maybeSingle();
+      const { data, error } = await supabase.functions.invoke('push-subscriptions', {
+        body: null,
+        method: 'GET',
+      });
 
-      if (error) {
-        logger.error('Failed to load push notification preferences', { error });
-        return;
+      // Use query params for GET request
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/push-subscriptions?action=get&device_token=${encodeURIComponent(token)}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to load preferences');
       }
 
-      if (data) {
+      const result = await response.json();
+
+      if (result.data) {
         setPrefs({
-          lowIntensityEnabled: data.low_intensity_enabled,
-          lowIntensityThreshold: data.low_intensity_threshold,
-          dailyForecastEnabled: data.daily_forecast_enabled,
-          dailyForecastTime: data.daily_forecast_time,
-          weeklyDigestEnabled: data.weekly_digest_enabled,
-          weeklyDigestDay: data.weekly_digest_day,
-          monthlyReportEnabled: data.monthly_report_enabled,
-          monthlyReportDay: data.monthly_report_day,
+          lowIntensityEnabled: result.data.low_intensity_enabled,
+          lowIntensityThreshold: result.data.low_intensity_threshold,
+          dailyForecastEnabled: result.data.daily_forecast_enabled,
+          dailyForecastTime: result.data.daily_forecast_time,
+          weeklyDigestEnabled: result.data.weekly_digest_enabled,
+          weeklyDigestDay: result.data.weekly_digest_day,
+          monthlyReportEnabled: result.data.monthly_report_enabled,
+          monthlyReportDay: result.data.monthly_report_day,
         });
         setIsRegistered(true);
       }
@@ -163,7 +175,7 @@ export function usePushNotifications(postcode: string) {
     }
   }, [isNative]);
 
-  // Save preferences to database
+  // Save preferences via edge function (secure server-side access)
   const savePreferences = useCallback(async (newPrefs: PushNotificationPrefs, tokenOverride?: string) => {
     const token = tokenOverride || deviceToken;
 
@@ -177,26 +189,33 @@ export function usePushNotifications(postcode: string) {
       // Optimistic update
       setPrefs(newPrefs);
 
-      const { error } = await supabase
-        .from('push_subscriptions')
-        .upsert({
-          device_token: token,
-          postcode: postcode,
-          low_intensity_enabled: newPrefs.lowIntensityEnabled,
-          low_intensity_threshold: newPrefs.lowIntensityThreshold,
-          daily_forecast_enabled: newPrefs.dailyForecastEnabled,
-          daily_forecast_time: newPrefs.dailyForecastTime,
-          weekly_digest_enabled: newPrefs.weeklyDigestEnabled,
-          weekly_digest_day: newPrefs.weeklyDigestDay,
-          monthly_report_enabled: newPrefs.monthlyReportEnabled,
-          monthly_report_day: newPrefs.monthlyReportDay,
-          platform: Capacitor.getPlatform(),
-        }, {
-          onConflict: 'device_token'
-        });
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/push-subscriptions?action=upsert`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({
+            device_token: token,
+            postcode: postcode,
+            low_intensity_enabled: newPrefs.lowIntensityEnabled,
+            low_intensity_threshold: newPrefs.lowIntensityThreshold,
+            daily_forecast_enabled: newPrefs.dailyForecastEnabled,
+            daily_forecast_time: newPrefs.dailyForecastTime,
+            weekly_digest_enabled: newPrefs.weeklyDigestEnabled,
+            weekly_digest_day: newPrefs.weeklyDigestDay,
+            monthly_report_enabled: newPrefs.monthlyReportEnabled,
+            monthly_report_day: newPrefs.monthlyReportDay,
+            platform: Capacitor.getPlatform(),
+          }),
+        }
+      );
 
-      if (error) {
-        throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save preferences');
       }
 
       setIsRegistered(true);
@@ -217,15 +236,25 @@ export function usePushNotifications(postcode: string) {
     savePreferences(newPrefs, tokenOverride);
   }, [prefs, savePreferences]);
 
-  // Unregister device
+  // Unregister device via edge function
   const unregister = useCallback(async () => {
     if (!deviceToken) return;
 
     try {
-      await supabase
-        .from('push_subscriptions')
-        .delete()
-        .eq('device_token', deviceToken);
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/push-subscriptions?action=delete&device_token=${encodeURIComponent(deviceToken)}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to unregister');
+      }
 
       setIsRegistered(false);
       setPrefs(DEFAULT_PREFS);
