@@ -93,41 +93,12 @@ export default function Settings() {
 
                 <div className="space-y-4">
                     <h2 className="text-xl font-semibold">Account</h2>
-                    <AccountBackup />
-                    
-                    {isAuthenticated && (
-                        <div className="p-4 bg-card border rounded-lg">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-primary/10 rounded-full">
-                                        <Cloud className="w-5 h-5 text-primary" />
-                                    </div>
-                                    <div>
-                                        <div className="flex items-center gap-2">
-                                            <h3 className="font-medium">Synced across devices</h3>
-                                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5">
-                                                <RefreshCw className={`w-3 h-3 mr-1 ${isSyncing ? 'animate-spin' : ''}`} />
-                                                {isSyncing ? 'Syncing...' : 'Active'}
-                                            </Badge>
-                                        </div>
-                                        <p className="text-sm text-muted-foreground">
-                                            Last synced: {formatLastSync(lastSyncedAt)}
-                                        </p>
-                                    </div>
-                                </div>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={syncNow}
-                                    disabled={isSyncing}
-                                    className="shrink-0"
-                                >
-                                    <RefreshCw className={`w-4 h-4 mr-1.5 ${isSyncing ? 'animate-spin' : ''}`} />
-                                    Sync Now
-                                </Button>
-                            </div>
-                        </div>
-                    )}
+                    <AccountBackup 
+                        isSyncing={isSyncing} 
+                        lastSyncedAt={lastSyncedAt} 
+                        onSyncNow={syncNow}
+                        formatLastSync={formatLastSync}
+                    />
                 </div>
 
                 <OctopusIntegration />
