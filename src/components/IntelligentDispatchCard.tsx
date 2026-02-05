@@ -2,8 +2,11 @@ import { format, formatDistanceToNow } from 'date-fns';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useOctopusEnergy, DispatchSlot } from '@/hooks/useOctopusEnergy';
-import { Zap, Clock, CheckCircle2, BatteryCharging, Loader2 } from 'lucide-react';
+import { Zap, Clock, CheckCircle2, BatteryCharging, Loader2, Bell, BellOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { useState } from 'react';
+import { Capacitor } from '@capacitor/core';
 
 export function IntelligentDispatchCard() {
   const { 
@@ -13,6 +16,15 @@ export function IntelligentDispatchCard() {
     refreshDispatches,
     isSyncing 
   } = useOctopusEnergy();
+
+  const postcode = localStorage.getItem('gridgreen-postcode') || '';
+  const { 
+    permissionStatus, 
+    requestPermission, 
+    isNative 
+  } = usePushNotifications(postcode);
+
+  const [isRequestingPermission, setIsRequestingPermission] = useState(false);
 
   // Only show if linked and has Intelligent tariff data
   if (!isLinked || !intelligentDispatches) {
@@ -60,6 +72,20 @@ export function IntelligentDispatchCard() {
   const formatTime = (dateStr: string) => format(new Date(dateStr), 'HH:mm');
   const formatDate = (dateStr: string) => format(new Date(dateStr), 'EEE d MMM');
 
+  // Check if notifications are enabled
+  const notificationsEnabled = permissionStatus === 'granted';
+  const hasScheduledCharging = upcomingPlanned.length > 0 || activeDispatch;
+  const showNotificationPrompt = hasScheduledCharging && !notificationsEnabled && isNative;
+
+  const handleEnableNotifications = async () => {
+    setIsRequestingPermission(true);
+    try {
+      await requestPermission();
+    } finally {
+      setIsRequestingPermission(false);
+    }
+  };
+
   return (
     <Card className="p-4 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
       <div className="flex items-center justify-between mb-3">
@@ -81,6 +107,44 @@ export function IntelligentDispatchCard() {
           )}
         </Button>
       </div>
+
+      {/* Notification Prompt Banner */}
+      {showNotificationPrompt && (
+        <div className="mb-3 p-3 rounded-lg bg-accent/50 border border-accent">
+          <div className="flex items-start gap-3">
+            <BellOff className="w-5 h-5 text-accent-foreground mt-0.5 shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-accent-foreground">
+                Get notified when charging starts
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Enable notifications to know the moment your car starts charging—perfect for load-shifting during cheap energy windows.
+              </p>
+              <Button
+                size="sm"
+                className="mt-2"
+                onClick={handleEnableNotifications}
+                disabled={isRequestingPermission}
+              >
+                {isRequestingPermission ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                ) : (
+                  <Bell className="w-4 h-4 mr-2" />
+                )}
+                Enable Notifications
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Notifications Enabled Badge */}
+      {hasScheduledCharging && notificationsEnabled && (
+        <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
+          <Bell className="w-3 h-3" />
+          <span>You'll be notified when charging starts</span>
+        </div>
+      )}
 
       {/* Active Charging Banner */}
       {activeDispatch && (
