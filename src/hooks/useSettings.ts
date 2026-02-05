@@ -170,16 +170,52 @@ export function useSettings() {
       console.error('Failed to save settings:', error);
     }
   }, [settings]);
-  // Debounced sync on settings changes - only sync after 2 seconds of inactivity
+  // Sync on settings changes (debounced) - only when user actively changes something
+  const prevSettingsRef = useRef<string>(JSON.stringify(settings));
+  
   useEffect(() => {
     if (!userId || isInitialLoadRef.current) return;
 
+    const currentSettingsStr = JSON.stringify(settings);
+    // Only sync if settings actually changed (user made a change)
+    if (currentSettingsStr === prevSettingsRef.current) return;
+    
+    prevSettingsRef.current = currentSettingsStr;
+    
+    // Debounce for 1 second to batch rapid changes
     const timeoutId = setTimeout(() => {
       syncToDatabase(settings);
-    }, 2000);
+    }, 1000);
 
     return () => clearTimeout(timeoutId);
   }, [settings, userId, syncToDatabase]);
+
+  // Periodic sync every 48 hours
+  useEffect(() => {
+    if (!userId) return;
+
+    const FORTY_EIGHT_HOURS = 48 * 60 * 60 * 1000;
+    
+    const checkAndSync = () => {
+      if (!lastSyncedAt) {
+        syncToDatabase(settings);
+        return;
+      }
+      
+      const timeSinceSync = Date.now() - lastSyncedAt.getTime();
+      if (timeSinceSync >= FORTY_EIGHT_HOURS) {
+        syncToDatabase(settings);
+      }
+    };
+
+    // Check on mount
+    checkAndSync();
+
+    // Check periodically (every hour)
+    const intervalId = setInterval(checkAndSync, 60 * 60 * 1000);
+
+    return () => clearInterval(intervalId);
+  }, [userId, lastSyncedAt, settings, syncToDatabase]);
 
   const updateSetting = <K extends keyof Settings>(key: K, value: Settings[K]) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
