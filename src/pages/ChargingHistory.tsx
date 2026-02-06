@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { 
   BatteryCharging, Clock, Zap, ArrowLeft, CheckCircle2, 
-  Calendar, TrendingUp 
+  Calendar, TrendingUp, Leaf
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ensureAuthSession } from '@/lib/auth-utils';
@@ -22,6 +22,9 @@ interface ChargingSession {
   source: string | null;
   location: string | null;
   created_at: string;
+  avg_intensity_gco2: number | null;
+  carbon_used_g: number | null;
+  carbon_saved_g: number | null;
 }
 
 function ChargingHistory() {
@@ -35,7 +38,7 @@ function ChargingHistory() {
 
       const { data, error } = await supabase
         .from('octopus_intelligent_dispatches')
-        .select('id, dispatch_type, start_time, end_time, charge_kwh, source, location, created_at')
+        .select('id, dispatch_type, start_time, end_time, charge_kwh, source, location, created_at, avg_intensity_gco2, carbon_used_g, carbon_saved_g')
         .eq('dispatch_type', 'completed')
         .order('start_time', { ascending: false })
         .limit(100);
@@ -48,6 +51,8 @@ function ChargingHistory() {
 
   const totalEnergy = sessions?.reduce((sum, s) => sum + (s.charge_kwh || 0), 0) ?? 0;
   const totalSessions = sessions?.length ?? 0;
+  const totalCarbonSavedG = sessions?.reduce((sum, s) => sum + (s.carbon_saved_g && s.carbon_saved_g > 0 ? s.carbon_saved_g : 0), 0) ?? 0;
+  const totalCarbonSavedKg = totalCarbonSavedG / 1000;
 
   // Group sessions by date
   const groupedSessions = (sessions || []).reduce<Record<string, ChargingSession[]>>((groups, session) => {
@@ -82,7 +87,7 @@ function ChargingHistory() {
 
       {/* Summary Cards */}
       {!isLoading && totalSessions > 0 && (
-        <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className="grid grid-cols-3 gap-3 mb-4">
           <Card className="p-3 text-center">
             <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
               <BatteryCharging className="w-4 h-4" />
@@ -93,10 +98,22 @@ function ChargingHistory() {
           <Card className="p-3 text-center">
             <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
               <TrendingUp className="w-4 h-4" />
-              <span className="text-xs">Total Energy</span>
+              <span className="text-xs">Energy</span>
             </div>
             <span className="text-2xl font-bold">{totalEnergy.toFixed(1)}</span>
             <span className="text-xs text-muted-foreground ml-1">kWh</span>
+          </Card>
+          <Card className="p-3 text-center">
+            <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
+              <Leaf className="w-4 h-4 text-primary" />
+              <span className="text-xs">CO₂ Saved</span>
+            </div>
+            <span className="text-2xl font-bold text-primary">
+              {totalCarbonSavedKg >= 1 ? totalCarbonSavedKg.toFixed(1) : Math.round(totalCarbonSavedG)}
+            </span>
+            <span className="text-xs text-muted-foreground ml-1">
+              {totalCarbonSavedKg >= 1 ? 'kg' : 'g'}
+            </span>
           </Card>
         </div>
       )}
@@ -162,6 +179,21 @@ function ChargingHistory() {
                             </Badge>
                           )}
                         </div>
+                        {session.carbon_saved_g != null && session.carbon_saved_g > 0 && (
+                          <div className="flex items-center gap-1 mt-1">
+                            <Leaf className="w-3 h-3 text-primary" />
+                            <span className="text-xs text-primary font-medium">
+                              {session.carbon_saved_g >= 1000 
+                                ? `${(session.carbon_saved_g / 1000).toFixed(1)} kg CO₂ saved`
+                                : `${Math.round(session.carbon_saved_g)} g CO₂ saved`}
+                            </span>
+                            {session.avg_intensity_gco2 != null && (
+                              <span className="text-[10px] text-muted-foreground">
+                                ({session.avg_intensity_gco2} gCO₂/kWh)
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="text-right flex items-center gap-2">

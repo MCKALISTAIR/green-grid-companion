@@ -1082,18 +1082,56 @@ Deno.serve(async (req: Request) => {
           });
         }
 
+        // Fetch carbon intensity for completed dispatches to calculate savings
+        // UK average grid intensity ~230 gCO2/kWh as baseline
+        const UK_AVG_INTENSITY = 230;
+
         for (const dispatch of completedDispatches) {
           const startTime = new Date(dispatch.start || dispatch.startDt);
-          
+          const endTime = new Date(dispatch.end || dispatch.endDt);
+          const chargeKwh = dispatch.chargeKwh || 0;
+
+          let avgIntensity: number | null = null;
+          let carbonUsedG: number | null = null;
+          let carbonSavedG: number | null = null;
+
+          // Calculate carbon data if we have energy data
+          if (chargeKwh > 0) {
+            try {
+              const isoFrom = startTime.toISOString();
+              const isoTo = endTime.toISOString();
+              const intensityUrl = `https://api.carbonintensity.org.uk/intensity/${isoFrom}/${isoTo}`;
+              const intensityRes = await fetch(intensityUrl);
+              
+              if (intensityRes.ok) {
+                const intensityJson = await intensityRes.json();
+                const intervals = intensityJson.data || [];
+                
+                if (intervals.length > 0) {
+                  const totalIntensity = intervals.reduce((sum: number, i: any) => 
+                    sum + (i.intensity?.actual ?? i.intensity?.forecast ?? 0), 0);
+                  avgIntensity = Math.round(totalIntensity / intervals.length);
+                  carbonUsedG = Math.round(chargeKwh * avgIntensity * 100) / 100;
+                  carbonSavedG = Math.round((chargeKwh * UK_AVG_INTENSITY - carbonUsedG) * 100) / 100;
+                }
+              }
+            } catch (err) {
+              console.warn(`[${requestId}] Failed to fetch intensity for dispatch:`, err);
+            }
+          }
+
           dispatchesToUpsert.push({
             user_id: userId,
             mpan,
             dispatch_type: 'completed',
             start_time: dispatch.start || dispatch.startDt,
             end_time: dispatch.end || dispatch.endDt,
-            charge_kwh: dispatch.chargeKwh || null,
+            charge_kwh: chargeKwh || null,
             source: dispatch.source || null,
             location: dispatch.location || null,
+            avg_intensity_gco2: avgIntensity,
+            carbon_used_g: carbonUsedG,
+            carbon_saved_g: carbonSavedG,
             updated_at: new Date().toISOString()
           });
 
