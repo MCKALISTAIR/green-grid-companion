@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { 
   BatteryCharging, Clock, Zap, ArrowLeft, CheckCircle2, 
-  Calendar, TrendingUp 
+  Calendar, TrendingUp, Leaf
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ensureAuthSession } from '@/lib/auth-utils';
