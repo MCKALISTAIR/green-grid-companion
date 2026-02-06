@@ -12,6 +12,7 @@ import { LocalNotifications } from '@capacitor/local-notifications';
 import { logger } from '@/lib/logger';
 
 export function IntelligentDispatchCard() {
+  const navigate = useNavigate();
   const { 
     isLinked, 
     intelligentDispatches, 
