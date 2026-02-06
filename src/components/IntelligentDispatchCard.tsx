@@ -288,9 +288,16 @@ export function IntelligentDispatchCard() {
         )}
       </div>
 
-      <div className="mt-3 text-xs text-muted-foreground flex gap-1 items-center">
-        <Zap className="w-3 h-3" />
-        <span>Smart charging optimises for cheap, green energy.</span>
+      <div className="mt-3 flex items-center justify-between">
+        <div className="text-xs text-muted-foreground flex gap-1 items-center">
+          <Zap className="w-3 h-3" />
+          <span>Smart charging optimises for cheap, green energy.</span>
+        </div>
+        {(completed || []).length > 0 && (
+          <Button variant="link" size="sm" className="text-xs p-0 h-auto" onClick={() => navigate('/charging-history')}>
+            View history
+          </Button>
+        )}
       </div>
     </Card>
   );
