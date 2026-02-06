@@ -38,7 +38,7 @@ function ChargingHistory() {
 
       const { data, error } = await supabase
         .from('octopus_intelligent_dispatches')
-        .select('id, dispatch_type, start_time, end_time, charge_kwh, source, location, created_at')
+        .select('id, dispatch_type, start_time, end_time, charge_kwh, source, location, created_at, avg_intensity_gco2, carbon_used_g, carbon_saved_g')
         .eq('dispatch_type', 'completed')
         .order('start_time', { ascending: false })
         .limit(100);
