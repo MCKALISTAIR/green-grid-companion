@@ -138,6 +138,7 @@ function AppContent() {
             <Route path="/help" element={<Suspense fallback={<PageLoader />}><Help /></Suspense>} />
             <Route path="/feature-guides" element={<Suspense fallback={<PageLoader />}><FeatureGuides /></Suspense>} />
             <Route path="/guides/:id" element={<Suspense fallback={<PageLoader />}><GuideDetail /></Suspense>} />
+            <Route path="/charging-history" element={<Suspense fallback={<PageLoader />}><ChargingHistory /></Suspense>} />
             <Route path="/__turbine-test" element={<Suspense fallback={<PageLoader />}><TurbineTest /></Suspense>} />
             <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />
           </Route>
