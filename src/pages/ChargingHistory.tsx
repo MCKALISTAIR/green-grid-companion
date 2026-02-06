@@ -87,7 +87,7 @@ function ChargingHistory() {
 
       {/* Summary Cards */}
       {!isLoading && totalSessions > 0 && (
-        <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className="grid grid-cols-3 gap-3 mb-4">
           <Card className="p-3 text-center">
             <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
               <BatteryCharging className="w-4 h-4" />
@@ -98,10 +98,22 @@ function ChargingHistory() {
           <Card className="p-3 text-center">
             <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
               <TrendingUp className="w-4 h-4" />
-              <span className="text-xs">Total Energy</span>
+              <span className="text-xs">Energy</span>
             </div>
             <span className="text-2xl font-bold">{totalEnergy.toFixed(1)}</span>
             <span className="text-xs text-muted-foreground ml-1">kWh</span>
+          </Card>
+          <Card className="p-3 text-center">
+            <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
+              <Leaf className="w-4 h-4 text-primary" />
+              <span className="text-xs">CO₂ Saved</span>
+            </div>
+            <span className="text-2xl font-bold text-primary">
+              {totalCarbonSavedKg >= 1 ? totalCarbonSavedKg.toFixed(1) : Math.round(totalCarbonSavedG)}
+            </span>
+            <span className="text-xs text-muted-foreground ml-1">
+              {totalCarbonSavedKg >= 1 ? 'kg' : 'g'}
+            </span>
           </Card>
         </div>
       )}
