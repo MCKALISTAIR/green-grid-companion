@@ -106,6 +106,9 @@ export type Database = {
       }
       octopus_intelligent_dispatches: {
         Row: {
+          avg_intensity_gco2: number | null
+          carbon_saved_g: number | null
+          carbon_used_g: number | null
           charge_kwh: number | null
           created_at: string
           dispatch_type: string
@@ -120,6 +123,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          avg_intensity_gco2?: number | null
+          carbon_saved_g?: number | null
+          carbon_used_g?: number | null
           charge_kwh?: number | null
           created_at?: string
           dispatch_type: string
@@ -134,6 +140,9 @@ export type Database = {
           user_id: string
         }
         Update: {
+          avg_intensity_gco2?: number | null
+          carbon_saved_g?: number | null
+          carbon_used_g?: number | null
           charge_kwh?: number | null
           created_at?: string
           dispatch_type?: string
