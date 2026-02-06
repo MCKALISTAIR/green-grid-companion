@@ -22,6 +22,9 @@ interface ChargingSession {
   source: string | null;
   location: string | null;
   created_at: string;
+  avg_intensity_gco2: number | null;
+  carbon_used_g: number | null;
+  carbon_saved_g: number | null;
 }
 
 function ChargingHistory() {
