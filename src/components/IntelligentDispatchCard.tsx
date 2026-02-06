@@ -5,8 +5,10 @@ import { useOctopusEnergy, DispatchSlot } from '@/hooks/useOctopusEnergy';
 import { Zap, Clock, CheckCircle2, BatteryCharging, Loader2, Bell, BellOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
+import { LocalNotifications } from '@capacitor/local-notifications';
+import { logger } from '@/lib/logger';
 
 export function IntelligentDispatchCard() {
   const { 
