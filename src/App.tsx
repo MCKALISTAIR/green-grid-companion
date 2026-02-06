@@ -34,6 +34,7 @@ const FeatureGuides = lazy(() => import("./pages/FeatureGuides"));
 const GuideDetail = lazy(() => import("./pages/GuideDetail"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const TurbineTest = lazy(() => import("./pages/TurbineTest"));
+const ChargingHistory = lazy(() => import("./pages/ChargingHistory"));
 
 // Loading fallback with wind turbine spinner
 const PageLoader = () => (
