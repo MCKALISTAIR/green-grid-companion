@@ -5,8 +5,10 @@ import { useOctopusEnergy, DispatchSlot } from '@/hooks/useOctopusEnergy';
 import { Zap, Clock, CheckCircle2, BatteryCharging, Loader2, Bell, BellOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
+import { LocalNotifications } from '@capacitor/local-notifications';
+import { logger } from '@/lib/logger';
 
 export function IntelligentDispatchCard() {
   const { 
@@ -25,6 +27,39 @@ export function IntelligentDispatchCard() {
   } = usePushNotifications(postcode);
 
   const [isRequestingPermission, setIsRequestingPermission] = useState(false);
+  const notifiedChargingRef = useRef<string | null>(null);
+
+  // Send local notification when charging starts
+  useEffect(() => {
+    if (!intelligentDispatches?.chargingStarted || !intelligentDispatches?.chargingStartDispatch) return;
+    if (permissionStatus !== 'granted') return;
+
+    const dispatchKey = intelligentDispatches.chargingStartDispatch.startTime;
+    
+    // Don't re-notify for the same dispatch
+    if (notifiedChargingRef.current === dispatchKey) return;
+    notifiedChargingRef.current = dispatchKey;
+
+    const startTime = format(new Date(intelligentDispatches.chargingStartDispatch.startTime), 'HH:mm');
+
+    if (Capacitor.isNativePlatform()) {
+      LocalNotifications.schedule({
+        notifications: [{
+          id: 7777,
+          title: '⚡ Your car is charging!',
+          body: `Charging started at ${startTime}. Great time to run appliances while energy is cheap!`,
+          schedule: { at: new Date(Date.now() + 500) },
+          smallIcon: 'ic_stat_leaf',
+          actionTypeId: '',
+          extra: null,
+        }],
+      }).then(() => {
+        logger.info('Charging started notification sent', { startTime });
+      }).catch((err) => {
+        logger.error('Failed to send charging notification', { error: err });
+      });
+    }
+  }, [intelligentDispatches?.chargingStarted, intelligentDispatches?.chargingStartDispatch, permissionStatus]);
 
   // Only show if linked and has Intelligent tariff data
   if (!isLinked || !intelligentDispatches) {
