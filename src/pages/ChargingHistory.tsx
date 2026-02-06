@@ -113,7 +113,7 @@ function ChargingHistory() {
       {/* Empty State */}
       {!isLoading && totalSessions === 0 && (
         <EmptyState
-          icon={<BatteryCharging className="w-10 h-10 text-muted-foreground" />}
+          icon={BatteryCharging}
           title="No charging sessions yet"
           description="Once Octopus schedules and completes smart charging sessions, they'll appear here."
         />
