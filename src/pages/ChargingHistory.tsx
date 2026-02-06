@@ -51,6 +51,8 @@ function ChargingHistory() {
 
   const totalEnergy = sessions?.reduce((sum, s) => sum + (s.charge_kwh || 0), 0) ?? 0;
   const totalSessions = sessions?.length ?? 0;
+  const totalCarbonSavedG = sessions?.reduce((sum, s) => sum + (s.carbon_saved_g && s.carbon_saved_g > 0 ? s.carbon_saved_g : 0), 0) ?? 0;
+  const totalCarbonSavedKg = totalCarbonSavedG / 1000;
 
   // Group sessions by date
   const groupedSessions = (sessions || []).reduce<Record<string, ChargingSession[]>>((groups, session) => {
