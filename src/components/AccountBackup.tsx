@@ -2,11 +2,21 @@ import { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Cloud, CloudOff, LogOut, Mail, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
+import { Cloud, CloudOff, LogOut, Mail, RefreshCw, ChevronDown, ChevronUp, ArrowRightLeft } from 'lucide-react';
 import { lovable } from '@/integrations/lovable/index';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { User } from '@supabase/supabase-js';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 // Storage key for previous anonymous user ID
 const ANON_USER_ID_KEY = 'octopus-anon-user-id';
@@ -22,6 +32,8 @@ export function AccountBackup({ isSyncing, lastSyncedAt, onSyncNow, formatLastSy
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [showSwitchDialog, setShowSwitchDialog] = useState(false);
+  const [switchTarget, setSwitchTarget] = useState<'google' | 'apple' | null>(null);
   const migrationAttemptedRef = useRef(false);
 
   const defaultFormatLastSync = (date: Date | null) => {
@@ -124,6 +136,47 @@ export function AccountBackup({ isSyncing, lastSyncedAt, onSyncNow, formatLastSy
     }
   };
 
+  const handleSwitchProvider = (target: 'google' | 'apple') => {
+    setSwitchTarget(target);
+    setShowSwitchDialog(true);
+  };
+
+  const confirmSwitchProvider = async () => {
+    if (!switchTarget || !user) return;
+    setShowSwitchDialog(false);
+    setLoading(true);
+
+    try {
+      // Store current user ID for data migration
+      localStorage.setItem(ANON_USER_ID_KEY, user.id);
+      migrationAttemptedRef.current = false;
+
+      // Sign out first
+      await supabase.auth.signOut();
+
+      // Sign in with the new provider
+      const { error } = await lovable.auth.signInWithOAuth(switchTarget, {
+        redirect_uri: window.location.origin,
+      });
+
+      if (error) {
+        toast.error(`Switch failed: ${error.message}`);
+        localStorage.removeItem(ANON_USER_ID_KEY);
+      }
+      // On redirect, the onAuthStateChange SIGNED_IN handler will trigger migration
+    } catch (err) {
+      toast.error('Provider switch failed. Please try again.');
+      localStorage.removeItem(ANON_USER_ID_KEY);
+    } finally {
+      setLoading(false);
+      setSwitchTarget(null);
+    }
+  };
+
+  const currentProvider = user?.app_metadata?.provider || user?.identities?.[0]?.provider;
+  const alternateProvider: 'google' | 'apple' = currentProvider === 'apple' ? 'google' : 'apple';
+  const alternateProviderName = alternateProvider === 'google' ? 'Google' : 'Apple';
+
   // Get the sign-in provider
   const getProvider = (): { name: string; icon: React.ReactNode } => {
     const provider = user?.app_metadata?.provider || user?.identities?.[0]?.provider;
@@ -224,8 +277,36 @@ export function AccountBackup({ isSyncing, lastSyncedAt, onSyncNow, formatLastSy
                 Sign Out
               </Button>
             </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full text-muted-foreground"
+              onClick={() => handleSwitchProvider(alternateProvider)}
+              disabled={loading}
+            >
+              <ArrowRightLeft className="w-3.5 h-3.5 mr-1.5" />
+              Switch to {alternateProviderName}
+            </Button>
           </div>
         )}
+
+        {/* Switch Provider Confirmation Dialog */}
+        <AlertDialog open={showSwitchDialog} onOpenChange={setShowSwitchDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Switch to {alternateProviderName}?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Your energy data (Octopus meters, consumption history, carbon footprint, and Tesla data) will be transferred to your new {alternateProviderName} account. You'll be signed out and redirected to sign in with {alternateProviderName}.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmSwitchProvider}>
+                Switch to {alternateProviderName}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </Card>
     );
   }
