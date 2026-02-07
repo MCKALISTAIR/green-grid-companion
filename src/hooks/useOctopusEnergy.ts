@@ -256,7 +256,10 @@ export function useOctopusEnergy(days: number = 30) {
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_IN') {
+        // Re-enable status query so we discover existing server-side data
+        setCachedHasCreds(true);
         syncPendingCredentials();
+        queryClient.invalidateQueries({ queryKey: ['octopus-status'] });
       }
       if (event === 'SIGNED_OUT') {
         // Clear all cached octopus state so signed-out view is clean
