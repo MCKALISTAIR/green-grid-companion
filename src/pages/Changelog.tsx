@@ -25,6 +25,18 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: 'v1.5.0',
+    date: new Date().toISOString().split('T')[0],
+    title: 'Desktop Companion & Sync',
+    changes: [
+      { type: 'feature', description: 'macOS Menu Bar App: Live intensity in your menu bar' },
+      { type: 'feature', description: 'Cloud Sync: Back up your data with Apple/Google sign-in' },
+      { type: 'feature', description: 'Enhanced Onboarding: House type selection & welcome tour' },
+      { type: 'improvement', description: 'Interactive Product Tour for new users' },
+      { type: 'improvement', description: 'Refined Octopus "Welcome Back" experience' },
+    ],
+  },
+  {
     version: 'v1.4.1',
     date: '2026-02-04',
     title: 'Polish & Stability',

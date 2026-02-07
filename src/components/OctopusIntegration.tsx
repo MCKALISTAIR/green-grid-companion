@@ -96,10 +96,10 @@ export function OctopusIntegration() {
     return (
       <div className="space-y-4">
         <h2 className="text-lg font-semibold text-foreground">Energy Integrations</h2>
-        <Card className="p-5 border-purple-500/20 bg-purple-500/5">
+        <Card className="p-5 border-primary/20 bg-primary/5">
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
                 <OctopusLogo className="w-6 h-6" />
               </div>
               <div>
@@ -123,7 +123,7 @@ export function OctopusIntegration() {
                 Forget
               </Button>
               <Button
-                className="flex-[2] bg-purple-600 hover:bg-purple-700"
+                className="flex-[2]"
                 onClick={handleRelink}
                 disabled={isSyncing}
               >
@@ -141,7 +141,7 @@ export function OctopusIntegration() {
               </Button>
             </div>
 
-            <p className="text-xs text-center text-muted-foreground/60 cursor-pointer hover:text-purple-500 underline" onClick={() => setIsEditing(true)}>
+            <p className="text-xs text-center text-muted-foreground/60 cursor-pointer hover:text-primary underline" onClick={() => setIsEditing(true)}>
               Use a different account
             </p>
           </div>

@@ -28,7 +28,7 @@ export const CookieConsent = () => {
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-20 left-0 right-0 z-50 px-4 pb-2 animate-in slide-in-from-bottom duration-500">
+    <div className="fixed bottom-20 left-0 right-0 z-50 px-4 pb-2 animate-in slide-in-from-bottom-8 duration-700 ease-out fill-mode-forwards">
       <div className="mx-auto max-w-md rounded-xl border border-border bg-card p-4 shadow-lg">
         <div className="flex items-start gap-3">
           <Cookie className="h-5 w-5 text-primary mt-0.5 shrink-0" />

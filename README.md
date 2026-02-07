@@ -15,6 +15,7 @@ GridSense is a mobile-first companion app designed to help UK (and future) energ
     *   **Roaming Sheep**: Animated sheep that wander across the landscape and can be clicked for playful interactions.
 *   **System Dark Mode**: Fully supported dark theme that respects your device settings.
 *   **Desktop Support**: Responsive layout with a dedicated sidebar and grid dashboard for larger screens.
+*   **macOS Menu Bar App**: Native Swift companion app for your menu bar (Download via Settings).
 *   **Web Notifications**: Notification support for desktop browsers (Chrome/Safari) when the tab is open.
 *   **iOS Home Screen Widget**: Check live carbon intensity directly from your home screen (supports Region selection).
 *   **Haptic Feedback**: Tactile responses for interactive elements (Wind Turbines, Sun/Moon, Pull-to-Refresh).
@@ -46,6 +47,10 @@ GridSense is a mobile-first companion app designed to help UK (and future) energ
     *   **Green Score**: Get a personalized "Green Energy Score" based on your usage timing with detailed explanations.
     *   **Meter Management**: Easy-to-use settings for syncing, switching accounts, or disconnecting.
     *   **Comprehensive Onboarding**: Learn what you'll unlock before linking your meter.
+*   **Account Sync**:
+    *   **Cross-Device**: Sign in with Apple or Google to sync consumption, settings, and footprint data.
+    *   **Data Portability**: Export your data directly from the app.
+    *   **Secure Backup**: Never lose your history when switching phones.
 *   **Weather Widget**: Show/hide local weather conditions with persistent preferences.
 *   **Custom Appliances**: Create and save custom appliances in Power Planner (persists between sessions).
 *   **Tesla Integration**:
@@ -54,7 +59,22 @@ GridSense is a mobile-first companion app designed to help UK (and future) energ
     *   **Smart Charging Impact**: Track how much Carbon (CO₂) you've saved by charging during greener times compared to grid average.
     *   **Seamless Linking**: Secure OAuth connection to your Tesla account.
 
-## 🆕 Recent Updates (v1.4.1 - 2026-02-04)
+## 🆕 Recent Updates (v1.5.0 - 2026-02-07)
+
+### 🖥️ Desktop Companion & Experience
+*   **macOS Menu Bar App**: Keep an eye on the grid from your desktop. Native performance, tiny footprint.
+*   **Desktop Download**: easily download the app from the Settings page.
+*   **Product Tour**: Interactive guide for new users explaining every part of the dashboard.
+
+### 🔐 Account & Onboarding
+*   **Cloud Sync**: Sign in to back up your Octopus credentials and carbon history.
+*   **Enhanced Onboarding**: 
+    *   **Welcome Slides**: Clear introduction to GridSense features.
+    *   **Household Profiling**: Select your house type (Flat/Mid/Large) for instant accurate benchmarks.
+    *   **Smart Location**: Auto-detect region or enter postcode manually.
+*   **Cookie Consent**: Transparent, privacy-focused consent flow.
+
+## Previous Updates (v1.4.1 - 2026-02-04)
 
 ### 📚 Help & Learning
 *   **Feature Guides**: Comprehensive in-depth guides for all major features accessible from Settings
