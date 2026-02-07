@@ -22,7 +22,6 @@ import {
 import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
 import { formatDistanceToNow } from 'date-fns';
 import { OctopusSettings } from './OctopusSettings';
-import { TeslaIntegration } from './TeslaIntegration';
 
 const OctopusLogo = ({ className }: { className?: string }) => (
   <img
@@ -284,21 +283,20 @@ export function OctopusIntegration() {
         )}
       </Card>
 
-      {/* Tesla Integration */}
-      <TeslaIntegration />
-
-      {/* Info Message */}
-      <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800 text-xs text-muted-foreground flex items-start gap-2">
-        <AlertCircle className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-        <div>
-          <p className="font-medium text-foreground mb-1">Unlock Smart Features</p>
-          <ul className="list-disc pl-4 space-y-1 mt-1">
-            <li>See your <strong>Real Carbon Footprint</strong> based on actual usage.</li>
-            <li>Get your <strong>Green Energy Score</strong> and personalized insights.</li>
-            <li>Track your progress securely—your keys stay on your device.</li>
-          </ul>
+      {/* Info Message - only show when not linked */}
+      {!isLinked && (
+        <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800 text-xs text-muted-foreground flex items-start gap-2">
+          <AlertCircle className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="font-medium text-foreground mb-1">Unlock Smart Features</p>
+            <ul className="list-disc pl-4 space-y-1 mt-1">
+              <li>See your <strong>Real Carbon Footprint</strong> based on actual usage.</li>
+              <li>Get your <strong>Green Energy Score</strong> and personalized insights.</li>
+              <li>Track your progress securely—your keys stay on your device.</li>
+            </ul>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
