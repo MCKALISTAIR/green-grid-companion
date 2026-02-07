@@ -88,8 +88,8 @@ export function useOctopusEnergy(days: number = 30) {
 
   // All useState hooks must be declared first in the same order every render
   const [isSyncing, setIsSyncing] = useState(false);
-  const [cachedIsLinked] = useState(() => localStorage.getItem(LOCAL_STORAGE_KEYS.isLinked) === 'true');
-  const [cachedHasCreds] = useState(() => localStorage.getItem(LOCAL_STORAGE_KEYS.hasCreds) === 'true');
+  const [cachedIsLinked, setCachedIsLinked] = useState(() => localStorage.getItem(LOCAL_STORAGE_KEYS.isLinked) === 'true');
+  const [cachedHasCreds, setCachedHasCreds] = useState(() => localStorage.getItem(LOCAL_STORAGE_KEYS.hasCreds) === 'true');
   // Cached credentials for re-linking or local-only storage
   const [cachedCredentials, setCachedCredentials] = useState<{ apiKey: string; accountNumber: string } | null>(() => {
     const cached = localStorage.getItem(LOCAL_STORAGE_KEYS.credentials);
@@ -262,6 +262,8 @@ export function useOctopusEnergy(days: number = 30) {
         // Clear all cached octopus state so signed-out view is clean
         Object.values(LOCAL_STORAGE_KEYS).forEach(key => localStorage.removeItem(key));
         setCachedCredentials(null);
+        setCachedIsLinked(false);
+        setCachedHasCreds(false);
         queryClient.removeQueries({ queryKey: ['octopus-status'] });
         queryClient.removeQueries({ queryKey: ['octopus-footprint'] });
         queryClient.removeQueries({ queryKey: ['greenness-forecast'] });
