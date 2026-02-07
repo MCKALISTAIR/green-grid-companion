@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Cloud, CloudOff, LogOut, Mail, RefreshCw, ChevronDown, ChevronUp, ArrowRightLeft, Trash2 } from 'lucide-react';
+import { Cloud, CloudOff, LogOut, Mail, RefreshCw, ChevronDown, ChevronUp, ArrowRightLeft, Trash2, Download } from 'lucide-react';
 import { lovable } from '@/integrations/lovable/index';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -36,6 +36,7 @@ export function AccountBackup({ isSyncing, lastSyncedAt, onSyncNow, formatLastSy
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [switchTarget, setSwitchTarget] = useState<'google' | 'apple' | null>(null);
   const migrationAttemptedRef = useRef(false);
 
@@ -166,6 +167,37 @@ export function AccountBackup({ isSyncing, lastSyncedAt, onSyncNow, formatLastSy
     } finally {
       setIsDeleting(false);
       setDeleteConfirmText('');
+    }
+  };
+
+  const handleExportData = async () => {
+    setIsExporting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('export-data');
+
+      if (error) {
+        toast.error('Data export failed. Please try again.');
+        console.error('Export error:', error);
+        return;
+      }
+
+      // Create and download JSON file
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `gridsense-data-export-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast.success('Your data export has been downloaded.');
+    } catch (err) {
+      console.error('Export error:', err);
+      toast.error('Data export failed. Please try again.');
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -333,7 +365,17 @@ export function AccountBackup({ isSyncing, lastSyncedAt, onSyncNow, formatLastSy
               <ArrowRightLeft className="w-3.5 h-3.5 mr-1.5" />
               Switch to {alternateProviderName}
             </Button>
-            <div className="pt-2 border-t">
+            <div className="pt-2 border-t flex flex-col gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full text-muted-foreground"
+                onClick={handleExportData}
+                disabled={loading || isExporting}
+              >
+                <Download className="w-3.5 h-3.5 mr-1.5" />
+                {isExporting ? 'Exporting...' : 'Download My Data'}
+              </Button>
               <Button
                 variant="ghost"
                 size="sm"
