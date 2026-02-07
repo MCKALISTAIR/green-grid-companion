@@ -43,6 +43,7 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
 
                     <Button
                         variant="ghost"
+                        data-tour="nav-plan"
                         className={`flex flex-col items-center gap-1 h-auto py-2 px-1 rounded-lg transition-all ${isActive('/planner')
                             ? 'text-primary bg-primary/10 font-semibold'
                             : 'text-muted-foreground hover:text-foreground hover:bg-transparent'

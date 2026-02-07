@@ -17,6 +17,7 @@ import { DirectorPanel } from "@/components/DirectorPanel";
 import { StatusBarManager } from "@/components/StatusBarManager";
 import { ComponentErrorBoundary } from "@/components/ComponentErrorBoundary";
 import { SplashScreen } from "@/components/SplashScreen";
+import { DeepLinkHandler } from "@/components/DeepLinkHandler";
 
 // Lazy load pages
 const Index = lazy(() => import("./pages/Index"));
@@ -35,6 +36,7 @@ const GuideDetail = lazy(() => import("./pages/GuideDetail"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const TurbineTest = lazy(() => import("./pages/TurbineTest"));
 const ChargingHistory = lazy(() => import("./pages/ChargingHistory"));
+import AuthCallback from "./pages/AuthCallback";
 
 // Loading fallback with wind turbine spinner
 const PageLoader = () => (
@@ -123,6 +125,7 @@ function AppContent() {
       <OfflineIndicator />
       <Sonner position="top-center" />
       <BrowserRouter>
+        <DeepLinkHandler />
         <ScrollToTop />
         <Routes>
           <Route element={<AppLayout />}>
@@ -143,6 +146,7 @@ function AppContent() {
             <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />
           </Route>
           <Route path="/onboarding" element={<Suspense fallback={<PageLoader />}><Onboarding /></Suspense>} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
         </Routes>
       </BrowserRouter>
     </>

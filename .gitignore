@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Binaries
+*.zip
+.build/
+.swiftpm/

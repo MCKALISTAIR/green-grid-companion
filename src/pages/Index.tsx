@@ -38,6 +38,8 @@ import { logger } from '@/lib/logger';
 import { LocationMismatchPrompt } from '@/components/LocationMismatchPrompt';
 import { YearWrapped } from '@/components/YearWrapped';
 
+import { useProductTour } from '@/hooks/useProductTour';
+
 // Check if Year Wrapped should auto-show (December, once per year)
 function shouldShowYearWrapped(): { shouldShow: boolean; year: number } {
   const now = new Date();
@@ -125,6 +127,14 @@ const Index = () => {
       localStorage.setItem('gridgreen-postcode', postcode);
     }
   }, [postcode]);
+
+  // Start Tour
+  const { startTour } = useProductTour();
+  useEffect(() => {
+    if (!isLoading && intensity) {
+      startTour();
+    }
+  }, [isLoading, intensity, startTour]);
 
   // Periodic stale data check - ensures data refreshes even if intervals miss
   useEffect(() => {
@@ -262,7 +272,8 @@ const Index = () => {
 
               {/* Current intensity display - Only show if NOT in demand mode (DemandView has its own header) */}
               {viewMode !== 'demand' && (
-                <div className="absolute top-[calc(env(safe-area-inset-top)+1rem)] left-1/2 -translate-x-1/2 text-center w-auto max-w-[90%] z-10">
+                <div className="absolute top-[calc(env(safe-area-inset-top)+1rem)] left-1/2 -translate-x-1/2 text-center w-auto max-w-[90%] z-10"
+                  data-tour="intensity-gauge">
                   <div className="bg-white/30 backdrop-blur-md rounded-2xl p-3 shadow-sm border border-white/20">
                     <div className="flex items-center justify-center gap-2 mb-1">
                       <div className="lg:hidden">
@@ -466,7 +477,7 @@ const Index = () => {
                       </Card>
 
                       {/* Generation Mix */}
-                      <Card className="p-4 shadow-lg">
+                      <Card className="p-4 shadow-lg" data-tour="generation-mix">
                         <ComponentErrorBoundary name="Generation Mix">
                           <GenerationMixBar mix={generationMix} frequency={gridFrequency} />
                         </ComponentErrorBoundary>
@@ -483,7 +494,7 @@ const Index = () => {
 
                       {/* Hourly Forecast */}
                       {forecast.length > 0 && (
-                        <Card className="p-4 shadow-lg md:col-span-2 lg:col-span-3">
+                        <Card className="p-4 shadow-lg md:col-span-2 lg:col-span-3" data-tour="forecast-chart">
                           <ComponentErrorBoundary name="Hourly Forecast">
                             <ForecastChart forecast={forecast} showNext={24} />
                           </ComponentErrorBoundary>

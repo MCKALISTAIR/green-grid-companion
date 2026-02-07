@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, GraduationCap, Shield, MapPin, History, MessageSquare, Home, Cloud, RefreshCw, Activity, Sparkles } from 'lucide-react';
+import { ChevronRight, GraduationCap, Shield, MapPin, History, MessageSquare, Home, Cloud, RefreshCw, Activity, Sparkles, Monitor, Download } from 'lucide-react';
 import { NotificationSettings } from '@/components/NotificationSettings';
 import { OctopusIntegration } from '@/components/OctopusIntegration';
 import { TeslaIntegration } from '@/components/TeslaIntegration';
@@ -39,11 +39,11 @@ export default function Settings() {
         const diffMs = now.getTime() - date.getTime();
         const diffMins = Math.floor(diffMs / 60000);
         const diffHours = Math.floor(diffMs / 3600000);
-        
+
         if (diffMins < 1) return 'Just now';
         if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
         if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-        
+
         return date.toLocaleString(undefined, {
             month: 'short',
             day: 'numeric',
@@ -58,6 +58,9 @@ export default function Settings() {
         // Logic inside hook handles the state, but we might want intermediate feedback?
         // Let's keep it secret for now, or use the tapCount from hook if we exported it.
     };
+
+    // Simple platform detection
+    const isMac = typeof navigator !== 'undefined' && navigator.userAgent.includes('Macintosh');
 
     const AchievementsList = () => (
         <>
@@ -93,9 +96,9 @@ export default function Settings() {
 
                 <div className="space-y-4">
                     <h2 className="text-xl font-semibold">Account</h2>
-                    <AccountBackup 
-                        isSyncing={isSyncing} 
-                        lastSyncedAt={lastSyncedAt} 
+                    <AccountBackup
+                        isSyncing={isSyncing}
+                        lastSyncedAt={lastSyncedAt}
                         onSyncNow={syncNow}
                         formatLastSync={formatLastSync}
                     />
@@ -181,6 +184,41 @@ export default function Settings() {
                         </RadioGroup>
                     </div>
                 </div>
+
+                {isMac && (
+                    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+                        <h2 className="text-xl font-semibold">Desktop Companion</h2>
+                        <div className="p-4 bg-gradient-to-br from-card to-accent/5 border rounded-lg space-y-3 relative overflow-hidden">
+                            {/* Decorative background icon */}
+                            <Monitor className="absolute -right-4 -bottom-4 w-24 h-24 text-accent/10 rotate-[-15deg]" />
+
+                            <div className="flex items-start gap-3 relative z-10">
+                                <div className="p-2.5 bg-primary/10 rounded-xl">
+                                    <Monitor className="w-6 h-6 text-primary" />
+                                </div>
+                                <div className="space-y-1">
+                                    <h3 className="font-medium text-base">GridSense Menu Bar</h3>
+                                    <p className="text-sm text-muted-foreground leading-relaxed">
+                                        Keep an eye on the grid from your desktop. Our native menu bar app shows live intensity and upcoming forecasts at a glance.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="pt-2 relative z-10">
+                                <Button
+                                    className="w-full sm:w-auto gap-2 shadow-sm"
+                                    onClick={() => window.open('https://github.com/MCKALISTAIR/green-grid-companion/releases', '_blank')}
+                                >
+                                    <Download className="w-4 h-4" />
+                                    Download for macOS
+                                </Button>
+                                <p className="text-[10px] text-muted-foreground mt-2 text-center sm:text-left">
+                                    Requires macOS 11.0 or later.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 <div className="space-y-4">
                     <h2 className="text-xl font-semibold">Preferences</h2>
@@ -462,10 +500,10 @@ export default function Settings() {
                 </div>
             </div>
 
-            <YearWrapped 
-                open={showYearWrapped} 
-                onOpenChange={setShowYearWrapped} 
-                year={new Date().getFullYear()} 
+            <YearWrapped
+                open={showYearWrapped}
+                onOpenChange={setShowYearWrapped}
+                year={new Date().getFullYear()}
             />
         </div>
     );
