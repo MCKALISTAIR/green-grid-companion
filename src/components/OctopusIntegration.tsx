@@ -195,25 +195,44 @@ export function OctopusIntegration() {
           </div>
 
           {!isLinked ? (
-            <Button
-              variant="default"
-              size="sm"
-              onClick={handleLinkMeter}
-              disabled={isLoading || isSyncing}
-              className="bg-purple-600 hover:bg-purple-700"
-            >
-              {isSyncing ? (
-                <>
-                  <TurbineSpinner size="sm" className="mr-2" />
-                  Linking...
-                </>
-              ) : (
-                <>
-                  <Wind className="w-4 h-4 mr-2" />
-                  Link Meter
-                </>
-              )}
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleLinkMeter}
+                disabled={isLoading || isSyncing}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                {isSyncing ? (
+                  <>
+                    <TurbineSpinner size="sm" className="mr-2" />
+                    Linking...
+                  </>
+                ) : (
+                  <>
+                    <Wind className="w-4 h-4 mr-2" />
+                    Link Meter
+                  </>
+                )}
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setIsEditing(true)}>
+                    <ArrowRightLeft className="w-4 h-4 mr-2" />
+                    Change Credentials
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleDisconnect} className="text-red-600 focus:text-red-600">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Clear Credentials
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           ) : (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
