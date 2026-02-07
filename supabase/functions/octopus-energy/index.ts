@@ -597,9 +597,14 @@ Deno.serve(async (req: Request) => {
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`Octopus API error: ${response.status} - ${errorText}`);
+        const userMessage = response.status === 404
+          ? 'Account not found. Please check your account number is correct (e.g. A-12345678).'
+          : response.status === 401
+            ? 'Invalid API key. Please check your Octopus Energy API key.'
+            : `Octopus API error (${response.status}). Please try again later.`;
         return new Response(
-          JSON.stringify({ error: `Failed to fetch account: ${response.status}` }),
-          { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify({ error: userMessage, meters: [] }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
