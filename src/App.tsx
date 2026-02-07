@@ -18,6 +18,7 @@ import { StatusBarManager } from "@/components/StatusBarManager";
 import { ComponentErrorBoundary } from "@/components/ComponentErrorBoundary";
 import { SplashScreen } from "@/components/SplashScreen";
 import { DeepLinkHandler } from "@/components/DeepLinkHandler";
+import { CookieConsent } from "@/components/CookieConsent";
 
 // Lazy load pages
 const Index = lazy(() => import("./pages/Index"));
@@ -148,6 +149,7 @@ function AppContent() {
           <Route path="/onboarding" element={<Suspense fallback={<PageLoader />}><Onboarding /></Suspense>} />
           <Route path="/auth/callback" element={<AuthCallback />} />
         </Routes>
+        <CookieConsent />
       </BrowserRouter>
     </>
   );
