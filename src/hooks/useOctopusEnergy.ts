@@ -258,10 +258,19 @@ export function useOctopusEnergy(days: number = 30) {
       if (event === 'SIGNED_IN') {
         syncPendingCredentials();
       }
+      if (event === 'SIGNED_OUT') {
+        // Clear all cached octopus state so signed-out view is clean
+        Object.values(LOCAL_STORAGE_KEYS).forEach(key => localStorage.removeItem(key));
+        setCachedCredentials(null);
+        queryClient.removeQueries({ queryKey: ['octopus-status'] });
+        queryClient.removeQueries({ queryKey: ['octopus-footprint'] });
+        queryClient.removeQueries({ queryKey: ['greenness-forecast'] });
+        queryClient.removeQueries({ queryKey: ['intelligent-dispatches'] });
+      }
     });
 
     return () => subscription.unsubscribe();
-  }, [syncPendingCredentials]);
+  }, [syncPendingCredentials, queryClient]);
 
   // Migrate data from anonymous session to authenticated user
   const migrateData = useCallback(async (previousUserId: string) => {
