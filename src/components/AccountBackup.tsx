@@ -173,15 +173,28 @@ export function AccountBackup({ isSyncing, lastSyncedAt, onSyncNow, formatLastSy
     }
   };
 
-  const currentProvider = user?.app_metadata?.provider || user?.identities?.[0]?.provider;
-  const alternateProvider: 'google' | 'apple' = currentProvider === 'apple' ? 'google' : 'apple';
+  // Determine the most recently used provider by checking the identity with the latest updated_at
+  const getActiveProvider = (): string => {
+    const identities = user?.identities;
+    if (identities && identities.length > 0) {
+      // Sort by last_sign_in_at or updated_at descending to find the most recently used
+      const sorted = [...identities].sort((a, b) => {
+        const aTime = new Date(a.last_sign_in_at || a.updated_at || 0).getTime();
+        const bTime = new Date(b.last_sign_in_at || b.updated_at || 0).getTime();
+        return bTime - aTime;
+      });
+      return sorted[0]?.provider || 'email';
+    }
+    return user?.app_metadata?.provider || 'email';
+  };
+
+  const activeProvider = getActiveProvider();
+  const alternateProvider: 'google' | 'apple' = activeProvider === 'apple' ? 'google' : 'apple';
   const alternateProviderName = alternateProvider === 'google' ? 'Google' : 'Apple';
 
-  // Get the sign-in provider
+  // Get the sign-in provider display info
   const getProvider = (): { name: string; icon: React.ReactNode } => {
-    const provider = user?.app_metadata?.provider || user?.identities?.[0]?.provider;
-    
-    if (provider === 'google') {
+    if (activeProvider === 'google') {
       return {
         name: 'Google',
         icon: (
@@ -195,7 +208,7 @@ export function AccountBackup({ isSyncing, lastSyncedAt, onSyncNow, formatLastSy
       };
     }
     
-    if (provider === 'apple') {
+    if (activeProvider === 'apple') {
       return {
         name: 'Apple',
         icon: (
