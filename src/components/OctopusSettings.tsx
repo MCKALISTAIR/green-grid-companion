@@ -51,11 +51,9 @@ export function OctopusSettings({ onSaved, onCancel }: { onSaved: () => void; on
         const sanitized = value.replace(/[^a-zA-Z0-9-]/g, '').toUpperCase();
         setAccountNumber(sanitized);
 
-        if (touched.accountNumber) {
-            setErrors(prev => ({
-                ...prev,
-                accountNumber: validateField('accountNumber', sanitized)
-            }));
+        // Clear error while typing (don't re-validate until blur)
+        if (errors.accountNumber) {
+            setErrors(prev => ({ ...prev, accountNumber: undefined }));
         }
     };
 
@@ -64,11 +62,9 @@ export function OctopusSettings({ onSaved, onCancel }: { onSaved: () => void; on
         const sanitized = value.replace(/[^a-zA-Z0-9_]/g, '');
         setApiKey(sanitized);
 
-        if (touched.apiKey) {
-            setErrors(prev => ({
-                ...prev,
-                apiKey: validateField('apiKey', sanitized)
-            }));
+        // Clear error while typing (don't re-validate until blur)
+        if (errors.apiKey) {
+            setErrors(prev => ({ ...prev, apiKey: undefined }));
         }
     };
 
