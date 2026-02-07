@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Cloud, CloudOff, LogOut, Mail, RefreshCw, ChevronDown, ChevronUp, ArrowRightLeft } from 'lucide-react';
+import { Cloud, CloudOff, LogOut, Mail, RefreshCw, ChevronDown, ChevronUp, ArrowRightLeft, Trash2 } from 'lucide-react';
 import { lovable } from '@/integrations/lovable/index';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -33,6 +33,9 @@ export function AccountBackup({ isSyncing, lastSyncedAt, onSyncNow, formatLastSy
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [showSwitchDialog, setShowSwitchDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
   const [switchTarget, setSwitchTarget] = useState<'google' | 'apple' | null>(null);
   const migrationAttemptedRef = useRef(false);
 
@@ -133,6 +136,36 @@ export function AccountBackup({ isSyncing, lastSyncedAt, onSyncNow, formatLastSy
       toast.error('Sign out failed');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== 'DELETE') return;
+    setIsDeleting(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('delete-account');
+
+      if (error) {
+        toast.error('Account deletion failed. Please try again.');
+        console.error('Delete account error:', error);
+        return;
+      }
+
+      // Clear all local storage
+      localStorage.clear();
+      
+      // Sign out locally (server account is already deleted)
+      await supabase.auth.signOut({ scope: 'local' });
+      
+      toast.success('Your account and all data have been permanently deleted.');
+      setShowDeleteDialog(false);
+    } catch (err) {
+      console.error('Delete account error:', err);
+      toast.error('Account deletion failed. Please try again.');
+    } finally {
+      setIsDeleting(false);
+      setDeleteConfirmText('');
     }
   };
 
@@ -300,6 +333,18 @@ export function AccountBackup({ isSyncing, lastSyncedAt, onSyncNow, formatLastSy
               <ArrowRightLeft className="w-3.5 h-3.5 mr-1.5" />
               Switch to {alternateProviderName}
             </Button>
+            <div className="pt-2 border-t">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
+                onClick={() => setShowDeleteDialog(true)}
+                disabled={loading || isDeleting}
+              >
+                <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                Delete Account
+              </Button>
+            </div>
           </div>
         )}
 
@@ -316,6 +361,54 @@ export function AccountBackup({ isSyncing, lastSyncedAt, onSyncNow, formatLastSy
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction onClick={confirmSwitchProvider}>
                 Switch to {alternateProviderName}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Delete Account Confirmation Dialog */}
+        <AlertDialog open={showDeleteDialog} onOpenChange={(open) => {
+          setShowDeleteDialog(open);
+          if (!open) setDeleteConfirmText('');
+        }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete your account?</AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-3">
+                  <p>This will <strong>permanently delete</strong> all your data including:</p>
+                  <ul className="list-disc pl-5 space-y-1 text-sm">
+                    <li>Octopus Energy credentials and meter data</li>
+                    <li>Energy consumption and carbon footprint history</li>
+                    <li>Tesla integration and charging sessions</li>
+                    <li>Saved locations and preferences</li>
+                    <li>Your authentication account</li>
+                  </ul>
+                  <p className="font-medium">This action cannot be undone.</p>
+                  <div className="pt-2">
+                    <label className="text-sm text-muted-foreground">
+                      Type <span className="font-mono font-bold">DELETE</span> to confirm:
+                    </label>
+                    <input
+                      type="text"
+                      value={deleteConfirmText}
+                      onChange={(e) => setDeleteConfirmText(e.target.value.toUpperCase())}
+                      placeholder="DELETE"
+                      className="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      autoComplete="off"
+                    />
+                  </div>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteAccount}
+                disabled={deleteConfirmText !== 'DELETE' || isDeleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {isDeleting ? 'Deleting...' : 'Permanently Delete Account'}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
