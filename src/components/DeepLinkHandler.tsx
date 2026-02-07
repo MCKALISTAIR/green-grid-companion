@@ -1,45 +1,53 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { App } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 import { logger } from '@/lib/logger';
 
 export function DeepLinkHandler() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const handleDeepLink = async (event: { url: string }) => {
-            logger.info('Deep link received:', { url: event.url });
+        // Deep links only work on native platforms
+        if (!Capacitor.isNativePlatform()) return;
 
-            try {
-                const url = new URL(event.url);
+        let cleanup: (() => void) | undefined;
 
-                // Handle custom scheme "GridSense://"
-                // If the URL is something like GridSense://auth/callback?code=...
-                // We want to extract the pathname and search params
+        const setup = async () => {
+            const { App } = await import('@capacitor/app');
 
-                if (url.pathname.startsWith('/auth/callback')) {
-                    // Construct the path with query params
-                    const path = url.pathname + url.search;
-                    logger.info('Navigating to deep link path:', { path });
-                    navigate(path);
+            const handleDeepLink = (event: { url: string }) => {
+                logger.info('Deep link received:', { url: event.url });
+
+                try {
+                    const url = new URL(event.url);
+
+                    if (url.pathname.startsWith('/auth/callback')) {
+                        const path = url.pathname + url.search;
+                        logger.info('Navigating to deep link path:', { path });
+                        navigate(path);
+                    }
+                } catch (error) {
+                    logger.error('Failed to parse deep link URL', error);
                 }
-            } catch (error) {
-                logger.error('Failed to parse deep link URL', error);
+            };
+
+            const subscription = await App.addListener('appUrlOpen', handleDeepLink);
+            cleanup = () => subscription.remove();
+
+            // Check if app was opened with a URL (cold start)
+            try {
+                const launchUrl = await App.getLaunchUrl();
+                if (launchUrl?.url) {
+                    handleDeepLink(launchUrl);
+                }
+            } catch {
+                // getLaunchUrl can fail on some platforms — safe to ignore
             }
         };
 
-        const subscription = App.addListener('appUrlOpen', handleDeepLink);
+        setup();
 
-        // Check if app was opened with a URL (cold start)
-        App.getLaunchUrl().then((launchUrl) => {
-            if (launchUrl) {
-                handleDeepLink(launchUrl);
-            }
-        });
-
-        return () => {
-            subscription.then(handle => handle.remove());
-        };
+        return () => cleanup?.();
     }, [navigate]);
 
     return null;
