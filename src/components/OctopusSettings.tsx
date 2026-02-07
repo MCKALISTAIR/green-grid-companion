@@ -69,12 +69,15 @@ export function OctopusSettings({ onSaved, onCancel }: { onSaved: () => void; on
     };
 
     const handleBlur = (field: keyof CredentialsFormData) => {
-        setTouched(prev => ({ ...prev, [field]: true }));
         const value = field === 'accountNumber' ? accountNumber : apiKey;
-        setErrors(prev => ({
-            ...prev,
-            [field]: validateField(field, value)
-        }));
+        // Only validate on blur if the user has actually interacted (field has content or was previously touched)
+        if (value || touched[field]) {
+            setTouched(prev => ({ ...prev, [field]: true }));
+            setErrors(prev => ({
+                ...prev,
+                [field]: validateField(field, value)
+            }));
+        }
     };
 
     const handleSave = async (e: React.FormEvent) => {
@@ -130,8 +133,8 @@ export function OctopusSettings({ onSaved, onCancel }: { onSaved: () => void; on
                                     ? 'border-destructive focus-visible:ring-destructive'
                                     : ''
                                 }`}
-                            aria-invalid={!!errors.accountNumber}
-                            aria-describedby={errors.accountNumber ? 'account-error' : undefined}
+                            aria-invalid={!!(errors.accountNumber && touched.accountNumber)}
+                            aria-describedby={errors.accountNumber && touched.accountNumber ? 'account-error' : undefined}
                         />
                         {errors.accountNumber && touched.accountNumber && (
                             <p id="account-error" className="text-[10px] text-destructive flex items-center gap-1">
@@ -156,8 +159,8 @@ export function OctopusSettings({ onSaved, onCancel }: { onSaved: () => void; on
                                         ? 'border-destructive focus-visible:ring-destructive'
                                         : ''
                                     }`}
-                                aria-invalid={!!errors.apiKey}
-                                aria-describedby={errors.apiKey ? 'apikey-error' : undefined}
+                                aria-invalid={!!(errors.apiKey && touched.apiKey)}
+                                aria-describedby={errors.apiKey && touched.apiKey ? 'apikey-error' : undefined}
                             />
                             <button
                                 type="button"
