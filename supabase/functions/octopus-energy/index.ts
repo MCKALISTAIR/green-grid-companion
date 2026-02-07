@@ -1086,8 +1086,29 @@ Deno.serve(async (req: Request) => {
         // UK average grid intensity ~230 gCO2/kWh as baseline
         const UK_AVG_INTENSITY = 230;
 
+        // Get existing dispatches that already have carbon data to avoid re-fetching
+        const existingStartTimes = completedDispatches.map((d: any) => d.start || d.startDt);
+        const { data: existingDispatches } = await supabase
+          .from('octopus_intelligent_dispatches')
+          .select('start_time, carbon_saved_g, avg_intensity_gco2, carbon_used_g')
+          .eq('user_id', userId)
+          .eq('dispatch_type', 'completed')
+          .in('start_time', existingStartTimes);
+
+        const existingCarbonMap = new Map<string, { avg: number | null; used: number | null; saved: number | null }>();
+        for (const ed of existingDispatches || []) {
+          if (ed.carbon_saved_g != null) {
+            existingCarbonMap.set(ed.start_time, {
+              avg: ed.avg_intensity_gco2,
+              used: ed.carbon_used_g,
+              saved: ed.carbon_saved_g,
+            });
+          }
+        }
+
         for (const dispatch of completedDispatches) {
-          const startTime = new Date(dispatch.start || dispatch.startDt);
+          const startTimeStr = dispatch.start || dispatch.startDt;
+          const startTime = new Date(startTimeStr);
           const endTime = new Date(dispatch.end || dispatch.endDt);
           const chargeKwh = dispatch.chargeKwh || 0;
 
@@ -1095,8 +1116,14 @@ Deno.serve(async (req: Request) => {
           let carbonUsedG: number | null = null;
           let carbonSavedG: number | null = null;
 
-          // Calculate carbon data if we have energy data
-          if (chargeKwh > 0) {
+          // Reuse existing carbon data if already calculated
+          const existing = existingCarbonMap.get(startTimeStr);
+          if (existing) {
+            avgIntensity = existing.avg;
+            carbonUsedG = existing.used;
+            carbonSavedG = existing.saved;
+          } else if (chargeKwh > 0) {
+            // Only fetch intensity for dispatches we haven't calculated yet
             try {
               const isoFrom = startTime.toISOString();
               const isoTo = endTime.toISOString();
@@ -1124,7 +1151,7 @@ Deno.serve(async (req: Request) => {
             user_id: userId,
             mpan,
             dispatch_type: 'completed',
-            start_time: dispatch.start || dispatch.startDt,
+            start_time: startTimeStr,
             end_time: dispatch.end || dispatch.endDt,
             charge_kwh: chargeKwh || null,
             source: dispatch.source || null,
