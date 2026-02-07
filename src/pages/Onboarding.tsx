@@ -319,11 +319,14 @@ const Onboarding = () => {
                     {step === 'location' && renderLocationStep()}
                     {step === 'notifications' && renderNotificationsStep()}
                 </CardContent>
-                {step === 'welcome' && (
-                    <CardFooter className="justify-center py-4 bg-muted/20 text-xs text-muted-foreground">
-                        <p>Welcome to GridSense</p>
-                    </CardFooter>
-                )}
+                <CardFooter className="justify-center py-4 bg-muted/20 text-xs text-muted-foreground">
+                    <p>
+                        By continuing, you agree to our{' '}
+                        <a href="/privacy" className="underline hover:text-foreground transition-colors">
+                            Privacy Policy
+                        </a>
+                    </p>
+                </CardFooter>
             </Card>
         </div>
     );
