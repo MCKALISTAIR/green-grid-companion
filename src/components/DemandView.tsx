@@ -1,4 +1,4 @@
-import { Zap, RefreshCw, AlertTriangle, Info, Activity } from 'lucide-react';
+import { Zap, RefreshCw, AlertTriangle, Info, Activity, Home } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { GenerationMixBar } from '@/components/GenerationMixBar';
 import { useGridDemand, MixWithTrend } from '@/hooks/useGridDemand';
@@ -211,6 +211,21 @@ export function DemandView() {
                                     </div>
                                 </div>
                             </div>
+                            {/* Solar: show utility vs rooftop split */}
+                            {fuelKey === 'solar' && embeddedSolarMW !== null && source.mw !== null && source.mw > 0 && (
+                                <div className="mt-2 pt-2 border-t border-border/50 space-y-1">
+                                    <div className="flex items-center justify-between text-xs">
+                                        <span className="text-muted-foreground">Utility-scale</span>
+                                        <span className="font-medium">{((source.mw - embeddedSolarMW) / 1000).toFixed(2)} GW</span>
+                                    </div>
+                                    <div className="flex items-center justify-between text-xs">
+                                        <span className="text-muted-foreground flex items-center gap-1">
+                                            <Home className="w-3 h-3" /> Rooftop
+                                        </span>
+                                        <span className="font-medium">{(embeddedSolarMW / 1000).toFixed(2)} GW</span>
+                                    </div>
+                                </div>
+                            )}
                             {/* Show insight badge if applicable */}
                             {hasInsight && (
                                 <div className="mt-2 pt-2 border-t border-border/50">
