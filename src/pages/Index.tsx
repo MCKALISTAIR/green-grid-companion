@@ -422,6 +422,7 @@ const Index = () => {
                   size="sm"
                   className="flex-1 min-w-[100px]"
                   onClick={() => setViewMode('footprint')}
+                  data-tour="view-footprint"
                 >
                   <Leaf className="w-4 h-4 mr-2" />
                   Footprint
