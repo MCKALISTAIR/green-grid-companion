@@ -12,6 +12,7 @@ export interface OctopusMeter {
   serial_number: string;
   is_active: boolean;
   last_sync_at: string | null;
+  meter_type?: string;
 }
 
 export interface FootprintRecord {
@@ -31,10 +32,16 @@ export interface FootprintSummary {
   avg_intensity: number;
   by_intensity_index: Record<string, { count: number; carbon_g: number; kwh: number }>;
   period_days: number;
+  // Export/net fields
+  export_kwh?: number;
+  export_carbon_kg?: number;
+  net_carbon_kg?: number;
+  has_export_meter?: boolean;
 }
 
 export interface FootprintData {
   records: FootprintRecord[];
+  export_records?: FootprintRecord[];
   summary: FootprintSummary;
 }
 
