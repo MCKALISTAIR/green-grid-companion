@@ -52,14 +52,14 @@ export function BestTimeCard({ forecast }: BestTimeCardProps) {
   const worstEnd = parseISO(futureForecast[maxStartIndex + 5].to);
 
   return (
-    <div className="space-y-3">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
       {/* Best time */}
       <Card className="p-4 bg-intensity-very-low/10 border-intensity-very-low/30">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-intensity-very-low/20 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full bg-intensity-very-low/20 flex items-center justify-center shrink-0">
             <TrendingDown className="w-5 h-5 text-intensity-very-low" />
           </div>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <BatteryCharging className="w-4 h-4 text-intensity-very-low" />
               <span className="text-sm font-medium text-foreground">Best time to load-shift</span>
@@ -77,10 +77,10 @@ export function BestTimeCard({ forecast }: BestTimeCardProps) {
       {/* Worst time */}
       <Card className="p-4 bg-intensity-high/10 border-intensity-high/30">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-intensity-high/20 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full bg-intensity-high/20 flex items-center justify-center shrink-0">
             <TrendingUp className="w-5 h-5 text-intensity-high" />
           </div>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-foreground">Avoid high usage</span>
             </div>
