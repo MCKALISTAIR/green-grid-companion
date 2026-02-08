@@ -191,6 +191,17 @@ interface FootprintRecord {
   mpan: string;
 }
 
+// Static helper for MPAN → region mapping (used in cron sync)
+function getRegionIdFromMpanStatic(mpan: string): number | null {
+  if (!mpan || mpan.length < 2) return null;
+  const areaCode = mpan.substring(0, 2);
+  const mapping: Record<string, number> = {
+    '10': 10, '11': 9, '12': 13, '13': 6, '14': 8, '15': 4, '16': 3,
+    '17': 2, '18': 1, '19': 12, '20': 11, '21': 7, '22': 14, '23': 5,
+  };
+  return mapping[areaCode] || null;
+}
+
 Deno.serve(async (req: Request) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -208,7 +219,194 @@ Deno.serve(async (req: Request) => {
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-    // Create a Supabase client with the Auth context of the logged in user
+    // --- CRON: sync-all-users (no user auth needed, uses service role) ---
+    // Check if this is a cron-triggered bulk sync
+    const url = new URL(req.url);
+    const cronAction = url.searchParams.get('action');
+
+    if (cronAction === 'sync-all-users' || cronAction === 'calculate-all-footprints') {
+      console.log(`[${requestId}] Cron job triggered: ${cronAction}`);
+      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+      // Get all users with active meters and credentials
+      const { data: allMeters, error: metersErr } = await supabase
+        .from('octopus_meters')
+        .select('user_id, mpan, serial_number')
+        .eq('is_active', true);
+
+      if (metersErr || !allMeters?.length) {
+        console.log('No active meters found for cron sync');
+        return new Response(
+          JSON.stringify({ success: true, users_synced: 0, message: 'No active meters' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // De-duplicate by user_id
+      const userIds = [...new Set(allMeters.map(m => m.user_id))].filter(Boolean);
+      console.log(`Found ${userIds.length} users with active meters`);
+
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const uid of userIds) {
+        try {
+          const userMeters = allMeters.filter(m => m.user_id === uid);
+
+          if (cronAction === 'sync-all-users') {
+            // Get credentials for this user
+            const { data: creds } = await supabase
+              .from('octopus_credentials')
+              .select('api_key')
+              .eq('user_id', uid)
+              .single();
+
+            if (!creds) {
+              console.log(`No credentials for user ${uid.substring(0, 8)}..., skipping`);
+              continue;
+            }
+
+            const authHeaderOctopus = 'Basic ' + btoa(creds.api_key + ':');
+
+            for (const meter of userMeters) {
+              const daysBack = 3;
+              const periodTo = new Date();
+              const periodFrom = new Date();
+              periodFrom.setDate(periodFrom.getDate() - daysBack);
+
+              const consumptionUrl = `https://api.octopus.energy/v1/electricity-meter-points/${meter.mpan}/meters/${meter.serial_number}/consumption/?period_from=${periodFrom.toISOString()}&period_to=${periodTo.toISOString()}&page_size=25000`;
+
+              const response = await fetch(consumptionUrl, {
+                headers: { 'Authorization': authHeaderOctopus }
+              });
+
+              if (!response.ok) {
+                console.error(`Octopus API error for meter ${meter.mpan}: ${response.status}`);
+                errorCount++;
+                continue;
+              }
+
+              const consumptionData = await response.json();
+              const readings: OctopusConsumption[] = consumptionData.results || [];
+
+              let insertedCount = 0;
+              for (const reading of readings) {
+                const { error } = await supabase
+                  .from('octopus_consumption')
+                  .upsert({
+                    interval_start: reading.interval_start,
+                    interval_end: reading.interval_end,
+                    consumption_kwh: reading.consumption,
+                    mpan: meter.mpan,
+                    serial_number: meter.serial_number
+                  }, { onConflict: 'mpan,interval_start' });
+                if (!error) insertedCount++;
+              }
+
+              // Update last sync time
+              await supabase
+                .from('octopus_meters')
+                .update({ last_sync_at: new Date().toISOString() })
+                .eq('mpan', meter.mpan)
+                .eq('user_id', uid);
+
+              console.log(`Synced ${insertedCount} readings for meter ${meter.mpan}`);
+            }
+          } else {
+            // calculate-all-footprints
+            for (const meter of userMeters) {
+              const { data: consumption } = await supabase
+                .from('octopus_consumption')
+                .select('*')
+                .eq('mpan', meter.mpan)
+                .order('interval_start', { ascending: false })
+                .limit(500);
+
+              if (!consumption?.length) continue;
+
+              const firstRecord = consumption[consumption.length - 1];
+              const lastRecord = consumption[0];
+              const minTime = new Date(firstRecord.interval_start);
+              const maxTime = new Date(lastRecord.interval_end);
+
+              const mpan = meter.mpan;
+              const regionId = getRegionIdFromMpanStatic(mpan);
+
+              let intensityUrl = `https://api.carbonintensity.org.uk/intensity/${minTime.toISOString()}/${maxTime.toISOString()}`;
+              let isRegional = false;
+
+              if (regionId) {
+                intensityUrl = `https://api.carbonintensity.org.uk/regional/intensity/${minTime.toISOString()}/${maxTime.toISOString()}/regionid/${regionId}`;
+                isRegional = true;
+              }
+
+              const intensityResponse = await fetch(intensityUrl);
+              if (!intensityResponse.ok) {
+                console.error(`Carbon intensity API error for ${mpan}: ${intensityResponse.status}`);
+                errorCount++;
+                continue;
+              }
+
+              const intensityJson = await intensityResponse.json();
+              const intensityMap = new Map<string, { intensity: number, index: string }>();
+
+              let intensityList: any[] = [];
+              if (isRegional) {
+                intensityList = Array.isArray(intensityJson.data)
+                  ? intensityJson.data[0]?.data || []
+                  : intensityJson.data?.data || [];
+              } else {
+                intensityList = intensityJson.data || [];
+              }
+
+              for (const item of intensityList) {
+                if (item.from && item.intensity) {
+                  const value = item.intensity.actual ?? item.intensity.forecast ?? 0;
+                  const index = item.intensity.index || 'moderate';
+                  intensityMap.set(item.from, { intensity: value, index });
+                }
+              }
+
+              const footprintRecords: FootprintRecord[] = [];
+              for (const record of consumption) {
+                const data = intensityMap.get(record.interval_start);
+                if (data) {
+                  footprintRecords.push({
+                    interval_start: record.interval_start,
+                    interval_end: record.interval_end,
+                    consumption_kwh: record.consumption_kwh,
+                    intensity_gco2_kwh: data.intensity,
+                    carbon_g: record.consumption_kwh * data.intensity,
+                    intensity_index: data.index,
+                    mpan: record.mpan
+                  });
+                }
+              }
+
+              if (footprintRecords.length > 0) {
+                await supabase
+                  .from('carbon_footprint')
+                  .upsert(footprintRecords, { onConflict: 'mpan,interval_start' });
+              }
+
+              console.log(`Calculated ${footprintRecords.length} footprint records for meter ${mpan}`);
+            }
+          }
+
+          successCount++;
+        } catch (err) {
+          console.error(`Error processing user ${uid.substring(0, 8)}...:`, err);
+          errorCount++;
+        }
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, users_synced: successCount, errors: errorCount }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // --- Standard user-authenticated actions ---
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       trackAuthFailure(clientIP, 'missing_auth_header', userAgent);
@@ -227,9 +425,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Use the user's JWT to create a scoped client (or use service role and get user manually)
-    // We'll use service role to allow access to the credentials table (which might be protected/private),
-    // but we MUST validate the user first.
+    // Use service role but validate the user first
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     // Validate User
