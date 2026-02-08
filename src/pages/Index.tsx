@@ -14,7 +14,7 @@ import { GenerationMixBar } from '@/components/GenerationMixBar';
 import { ForecastChart } from '@/components/ForecastChart';
 import { ForecastSummary } from '@/components/ForecastSummary';
 import { LocationManager } from '@/components/LocationManager';
-import { BestTimeCard } from '@/components/BestTimeCard';
+import { BestTimeSlot, WorstTimeSlot } from '@/components/BestTimeCard';
 import { FootprintView } from '@/components/FootprintView';
 import { DemandView } from '@/components/DemandView';
 import { useCarbonData } from '@/hooks/useCarbonData';
@@ -477,6 +477,13 @@ const Index = () => {
                         </div>
                       </Card>
 
+                      {/* Best time - under Energy Insights */}
+                      {forecast.length > 0 && (
+                        <ComponentErrorBoundary name="Best Time">
+                          <BestTimeSlot forecast={forecast} />
+                        </ComponentErrorBoundary>
+                      )}
+
                       {/* Generation Mix */}
                       <Card className="p-4 shadow-lg" data-tour="generation-mix">
                         <ComponentErrorBoundary name="Generation Mix">
@@ -484,13 +491,11 @@ const Index = () => {
                         </ComponentErrorBoundary>
                       </Card>
 
-                      {/* Best/Worst Times */}
+                      {/* Worst time - under Generation Mix */}
                       {forecast.length > 0 && (
-                        <div className="md:col-span-1">
-                          <ComponentErrorBoundary name="Best Time Advisor">
-                            <BestTimeCard forecast={forecast} />
-                          </ComponentErrorBoundary>
-                        </div>
+                        <ComponentErrorBoundary name="Worst Time">
+                          <WorstTimeSlot forecast={forecast} />
+                        </ComponentErrorBoundary>
                       )}
 
                       {/* Hourly Forecast */}
