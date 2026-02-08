@@ -852,80 +852,80 @@ Deno.serve(async (req: Request) => {
     if (action === 'sync-consumption') {
       if (!authHeaderOctopus) throw new Error('Missing credentials');
 
-      // Get meter details for THIS user
-      const { data: meterData, error: meterError } = await supabase
+      // Get ALL active meters for this user
+      const { data: allMeterData, error: meterError } = await supabase
         .from('octopus_meters')
         .select('*')
-        .eq('user_id', userId) // Enforce user ownership
-        .eq('is_active', true)
-        .limit(1)
-        .single();
+        .eq('user_id', userId)
+        .eq('is_active', true);
 
-      if (meterError || !meterData) {
-        console.error('No active meter found for user:', meterError);
+      if (meterError || !allMeterData?.length) {
+        console.error('No active meters found for user:', meterError);
         return new Response(
           JSON.stringify({ error: 'No linked meter found. Please link your meter first.' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      const { mpan, serial_number } = meterData;
-
-      // Calculate date range
       const daysBack = days;
       const periodTo = new Date();
       const periodFrom = new Date();
       periodFrom.setDate(periodFrom.getDate() - daysBack);
 
-      const consumptionUrl = `https://api.octopus.energy/v1/electricity-meter-points/${mpan}/meters/${serial_number}/consumption/?period_from=${periodFrom.toISOString()}&period_to=${periodTo.toISOString()}&page_size=25000`;
+      let totalInserted = 0;
 
-      console.log(`Fetching consumption for ${mpan}`);
+      for (const meter of allMeterData) {
+        const { mpan, serial_number } = meter;
 
-      const response = await fetch(consumptionUrl, {
-        headers: { 'Authorization': authHeaderOctopus }
-      });
+        const consumptionUrl = `https://api.octopus.energy/v1/electricity-meter-points/${mpan}/meters/${serial_number}/consumption/?period_from=${periodFrom.toISOString()}&period_to=${periodTo.toISOString()}&page_size=25000`;
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`Octopus API error: ${response.status} - ${errorText}`);
-        return new Response(
-          JSON.stringify({ error: `Failed to fetch consumption: ${response.status}` }),
-          { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        console.log(`Fetching consumption for meter ${mpan}`);
+
+        const response = await fetch(consumptionUrl, {
+          headers: { 'Authorization': authHeaderOctopus }
+        });
+
+        if (!response.ok) {
+          console.error(`Octopus API error for meter ${mpan}: ${response.status}`);
+          continue; // Skip this meter but continue with others
+        }
+
+        const consumptionData = await response.json();
+        const readings: OctopusConsumption[] = consumptionData.results || [];
+
+        console.log(`Received ${readings.length} readings for meter ${mpan}`);
+
+        let insertedCount = 0;
+        for (const reading of readings) {
+          const { error } = await supabase
+            .from('octopus_consumption')
+            .upsert({
+              interval_start: reading.interval_start,
+              interval_end: reading.interval_end,
+              consumption_kwh: reading.consumption,
+              mpan,
+              serial_number
+            }, { onConflict: 'mpan,interval_start' });
+
+          if (!error) insertedCount++;
+        }
+
+        // Update last sync time for this meter
+        await supabase
+          .from('octopus_meters')
+          .update({ last_sync_at: new Date().toISOString() })
+          .eq('mpan', mpan)
+          .eq('user_id', userId);
+
+        totalInserted += insertedCount;
+        console.log(`Synced ${insertedCount} readings for meter ${mpan}`);
       }
-
-      const consumptionData = await response.json();
-      const readings: OctopusConsumption[] = consumptionData.results || [];
-
-      console.log(`Received ${readings.length} consumption readings`);
-
-      // Store consumption data
-      let insertedCount = 0;
-      for (const reading of readings) {
-        const { error } = await supabase
-          .from('octopus_consumption')
-          .upsert({
-            interval_start: reading.interval_start,
-            interval_end: reading.interval_end,
-            consumption_kwh: reading.consumption,
-            mpan,
-            serial_number
-          }, { onConflict: 'mpan,interval_start' });
-
-        if (!error) insertedCount++;
-      }
-
-      // Update last sync time
-      await supabase
-        .from('octopus_meters')
-        .update({ last_sync_at: new Date().toISOString() })
-        .eq('mpan', mpan)
-        .eq('user_id', userId);
 
       return new Response(
         JSON.stringify({
           success: true,
-          readings_synced: insertedCount,
+          readings_synced: totalInserted,
+          meters_synced: allMeterData.length,
           period_from: periodFrom.toISOString(),
           period_to: periodTo.toISOString()
         }),
