@@ -487,3 +487,76 @@
     opacity: 1 !important;
   }
 }
+
+/* Driver.js Product Tour Styling */
+.gridsense-tour-popover.driver-popover {
+  background: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  box-shadow: 0 10px 30px -10px hsl(var(--foreground) / 0.2);
+  font-family: 'Work Sans', sans-serif;
+  padding: 1.25rem;
+}
+
+.gridsense-tour-popover .driver-popover-title {
+  font-family: 'Work Sans', sans-serif;
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: hsl(var(--foreground));
+}
+
+.gridsense-tour-popover .driver-popover-description {
+  font-family: 'Work Sans', sans-serif;
+  font-size: 0.875rem;
+  color: hsl(var(--muted-foreground));
+  line-height: 1.5;
+  margin-top: 0.5rem;
+}
+
+.gridsense-tour-popover .driver-popover-progress-text {
+  font-family: 'Work Sans', sans-serif;
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.gridsense-tour-popover .driver-popover-navigation-btns button {
+  font-family: 'Work Sans', sans-serif;
+  font-weight: 500;
+  font-size: 0.8rem;
+  border-radius: calc(var(--radius) - 4px);
+  padding: 0.4rem 1rem;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+  transition: all 0.2s ease;
+}
+
+.gridsense-tour-popover .driver-popover-navigation-btns button:hover {
+  background: hsl(var(--secondary) / 0.8);
+}
+
+.gridsense-tour-popover .driver-popover-navigation-btns .driver-popover-next-btn {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-color: hsl(var(--primary));
+}
+
+.gridsense-tour-popover .driver-popover-navigation-btns .driver-popover-next-btn:hover {
+  background: hsl(var(--primary) / 0.9);
+}
+
+.gridsense-tour-popover .driver-popover-close-btn {
+  color: hsl(var(--muted-foreground));
+}
+
+.gridsense-tour-popover .driver-popover-close-btn:hover {
+  color: hsl(var(--foreground));
+}
+
+.gridsense-tour-popover .driver-popover-arrow-side-top .driver-popover-arrow,
+.gridsense-tour-popover .driver-popover-arrow-side-bottom .driver-popover-arrow,
+.gridsense-tour-popover .driver-popover-arrow-side-left .driver-popover-arrow,
+.gridsense-tour-popover .driver-popover-arrow-side-right .driver-popover-arrow {
+  border-color: hsl(var(--card));
+}

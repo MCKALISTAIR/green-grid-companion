@@ -11,15 +11,16 @@ export function useProductTour() {
             showProgress: true,
             animate: true,
             allowClose: true,
-            doneBtnText: 'Finish',
-            nextBtnText: 'Next',
-            prevBtnText: 'Back',
+            doneBtnText: 'Got it!',
+            nextBtnText: 'Next →',
+            prevBtnText: '← Back',
+            popoverClass: 'gridsense-tour-popover',
             steps: [
                 {
                     element: '[data-tour="intensity-gauge"]',
                     popover: {
-                        title: 'Live Carbon Intensity',
-                        description: 'This dial shows the current carbon intensity of the National Grid. Lower is better!',
+                        title: '⚡ Live Carbon Intensity',
+                        description: 'This shows the real-time carbon intensity for your region. The lower the number, the greener the grid!',
                         side: 'bottom',
                         align: 'center'
                     }
@@ -27,8 +28,8 @@ export function useProductTour() {
                 {
                     element: '[data-tour="forecast-chart"]',
                     popover: {
-                        title: '24-Hour Forecast',
-                        description: 'Plan ahead! See when the grid will be greenest over the next day.',
+                        title: '📊 24-Hour Forecast',
+                        description: 'Plan your energy usage! This chart shows when the grid will be at its greenest over the next 24 hours.',
                         side: 'top',
                         align: 'center'
                     }
@@ -36,8 +37,8 @@ export function useProductTour() {
                 {
                     element: '[data-tour="generation-mix"]',
                     popover: {
-                        title: 'Fuel Mix',
-                        description: 'See exactly where your electricity is coming from right now (Wind, Solar, Gas, etc).',
+                        title: '🔋 Generation Mix',
+                        description: 'A live breakdown of where your electricity is coming from — wind, solar, gas, nuclear and more.',
                         side: 'top',
                         align: 'center'
                     }
@@ -45,15 +46,14 @@ export function useProductTour() {
                 {
                     element: '[data-tour="nav-plan"]',
                     popover: {
-                        title: 'Power Planner',
-                        description: 'Use the Planner to schedule your appliances for the cheapest and greenest times.',
+                        title: '🗓️ Power Planner',
+                        description: 'Schedule your appliances to run at the cheapest and greenest times automatically.',
                         side: 'top',
                         align: 'center'
                     }
                 }
             ],
             onDestroyed: () => {
-                // Mark tour as seen when finished or skipped
                 localStorage.setItem('product_tour_seen', 'true');
             }
         });
@@ -66,12 +66,10 @@ export function useProductTour() {
     }, []);
 
     const startTour = () => {
-        // Only start if not seen and onboarding is complete
         const seen = localStorage.getItem('product_tour_seen');
         const onboardingComplete = localStorage.getItem('onboarding_complete');
 
         if (!seen && onboardingComplete === 'true') {
-            // Small delay to ensure UI is rendered
             setTimeout(() => {
                 driverObj.current?.drive();
             }, 1000);
