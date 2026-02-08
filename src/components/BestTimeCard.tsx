@@ -10,89 +10,94 @@ interface BestTimeCardProps {
 function getDayLabel(date: Date) {
   if (isToday(date)) return '';
   if (isTomorrow(date)) return 'tomorrow';
-  return format(date, 'EEEE'); // e.g. "Monday"
+  return format(date, 'EEEE');
 }
 
-export function BestTimeCard({ forecast }: BestTimeCardProps) {
+function useBestWorstTimes(forecast: ForecastData[]) {
   if (forecast.length < 6) return null;
 
-  // Filter for future times only (or current window)
   const now = new Date();
   const futureForecast = forecast.filter(f => new Date(f.to) > now);
-
   if (futureForecast.length < 6) return null;
 
-  // Find the 3-hour window with lowest average intensity
-  let minSum = Infinity;
-  let minStartIndex = 0;
+  let minSum = Infinity, minStartIndex = 0;
+  let maxSum = 0, maxStartIndex = 0;
 
   for (let i = 0; i <= futureForecast.length - 6; i++) {
     const sum = futureForecast.slice(i, i + 6).reduce((acc, f) => acc + f.intensity.forecast, 0);
-    if (sum < minSum) {
-      minSum = sum;
-      minStartIndex = i;
-    }
+    if (sum < minSum) { minSum = sum; minStartIndex = i; }
+    if (sum > maxSum) { maxSum = sum; maxStartIndex = i; }
   }
 
-  // Find the worst 3-hour window too
-  let maxSum = 0;
-  let maxStartIndex = 0;
+  return {
+    bestStart: parseISO(futureForecast[minStartIndex].from),
+    bestEnd: parseISO(futureForecast[minStartIndex + 5].to),
+    worstStart: parseISO(futureForecast[maxStartIndex].from),
+    worstEnd: parseISO(futureForecast[maxStartIndex + 5].to),
+    minAvg: Math.round(minSum / 6),
+    maxAvg: Math.round(maxSum / 6),
+  };
+}
 
-  for (let i = 0; i <= futureForecast.length - 6; i++) {
-    const sum = futureForecast.slice(i, i + 6).reduce((acc, f) => acc + f.intensity.forecast, 0);
-    if (sum > maxSum) {
-      maxSum = sum;
-      maxStartIndex = i;
-    }
-  }
-
-  const bestStart = parseISO(futureForecast[minStartIndex].from);
-  const bestEnd = parseISO(futureForecast[minStartIndex + 5].to);
-  const worstStart = parseISO(futureForecast[maxStartIndex].from);
-  const worstEnd = parseISO(futureForecast[maxStartIndex + 5].to);
+export function BestTimeSlot({ forecast }: BestTimeCardProps) {
+  const data = useBestWorstTimes(forecast);
+  if (!data) return null;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-      {/* Best time */}
-      <Card className="p-4 bg-intensity-very-low/10 border-intensity-very-low/30">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-intensity-very-low/20 flex items-center justify-center shrink-0">
-            <TrendingDown className="w-5 h-5 text-intensity-very-low" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <BatteryCharging className="w-4 h-4 text-intensity-very-low" />
-              <span className="text-sm font-medium text-foreground">Best time to load-shift</span>
-            </div>
-            <p className="text-lg font-bold text-intensity-very-low">
-              {format(bestStart, 'HH:mm')} → {format(bestEnd, 'HH:mm')} <span className="text-sm font-medium ml-1 text-muted-foreground">{getDayLabel(bestStart)}</span>
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Average: {Math.round(minSum / 6)} gCO₂/kWh
-            </p>
-          </div>
+    <Card className="p-4 bg-intensity-very-low/10 border-intensity-very-low/30">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-intensity-very-low/20 flex items-center justify-center shrink-0">
+          <TrendingDown className="w-5 h-5 text-intensity-very-low" />
         </div>
-      </Card>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <BatteryCharging className="w-4 h-4 text-intensity-very-low" />
+            <span className="text-sm font-medium text-foreground">Best time to load-shift</span>
+          </div>
+          <p className="text-lg font-bold text-intensity-very-low">
+            {format(data.bestStart, 'HH:mm')} → {format(data.bestEnd, 'HH:mm')} <span className="text-sm font-medium ml-1 text-muted-foreground">{getDayLabel(data.bestStart)}</span>
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Average: {data.minAvg} gCO₂/kWh
+          </p>
+        </div>
+      </div>
+    </Card>
+  );
+}
 
-      {/* Worst time */}
-      <Card className="p-4 bg-intensity-high/10 border-intensity-high/30">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-intensity-high/20 flex items-center justify-center shrink-0">
-            <TrendingUp className="w-5 h-5 text-intensity-high" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-foreground">Avoid high usage</span>
-            </div>
-            <p className="text-lg font-bold text-intensity-high">
-              {format(worstStart, 'HH:mm')} → {format(worstEnd, 'HH:mm')} <span className="text-sm font-medium ml-1 text-muted-foreground">{getDayLabel(worstStart)}</span>
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Average: {Math.round(maxSum / 6)} gCO₂/kWh
-            </p>
-          </div>
+export function WorstTimeSlot({ forecast }: BestTimeCardProps) {
+  const data = useBestWorstTimes(forecast);
+  if (!data) return null;
+
+  return (
+    <Card className="p-4 bg-intensity-high/10 border-intensity-high/30">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-intensity-high/20 flex items-center justify-center shrink-0">
+          <TrendingUp className="w-5 h-5 text-intensity-high" />
         </div>
-      </Card>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-foreground">Avoid high usage</span>
+          </div>
+          <p className="text-lg font-bold text-intensity-high">
+            {format(data.worstStart, 'HH:mm')} → {format(data.worstEnd, 'HH:mm')} <span className="text-sm font-medium ml-1 text-muted-foreground">{getDayLabel(data.worstStart)}</span>
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Average: {data.maxAvg} gCO₂/kWh
+          </p>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+/** @deprecated Use BestTimeSlot and WorstTimeSlot individually */
+export function BestTimeCard({ forecast }: BestTimeCardProps) {
+  return (
+    <div className="space-y-3">
+      <BestTimeSlot forecast={forecast} />
+      <WorstTimeSlot forecast={forecast} />
     </div>
   );
 }
