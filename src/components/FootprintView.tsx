@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Leaf,
+  RefreshCw,
   TrendingDown,
   TrendingUp,
   Zap,
@@ -26,6 +27,8 @@ import {
   ArrowDownUp,
   SunMedium
 } from 'lucide-react';
+import { TurbineSpinner } from '@/components/ui/turbine-spinner';
+import { formatDistanceToNow } from 'date-fns';
 import { getImpactEquivalents, getImpactColor } from '@/lib/impact-conversions';
 import { useSettings } from '@/hooks/useSettings';
 import { getAverageDailyKwh, getHouseTypeLabel } from '@/lib/energy-standards';
@@ -77,7 +80,7 @@ export function FootprintView() {
     }
   }, [timeRange]);
 
-  const { footprint, isLoading, isLinked } = useOctopusEnergy(daysToFetch);
+  const { footprint, isLoading, isLinked, status, isSyncing, fullSync } = useOctopusEnergy(daysToFetch);
 
   // Aggregate data based on time range
   const dailyData = useMemo(() => {
@@ -446,12 +449,57 @@ export function FootprintView() {
       </div>
 
       {!footprint?.records?.length ? (
-        <Card className="p-6 text-center">
-          <Leaf className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-          <h3 className="font-medium text-foreground mb-2">No Footprint Data Yet</h3>
-          <p className="text-sm text-muted-foreground">
-            {timeRange === 'day' ? 'No data for this day.' : 'Sync your consumption data to see your carbon footprint.'}
-          </p>
+        <Card className="p-6">
+          <div className="text-center mb-4">
+            <Leaf className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+            <h3 className="font-medium text-foreground mb-2">No Footprint Data Yet</h3>
+            <p className="text-sm text-muted-foreground">
+              {timeRange === 'day' ? 'No data for this day.' : 'Sync your consumption data to see your carbon footprint.'}
+            </p>
+          </div>
+
+          {/* Meter sync details */}
+          {status?.meters && status.meters.length > 0 && (
+            <div className="border-t border-border pt-4 mt-4 space-y-3">
+              <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
+                <Zap className="w-4 h-4 text-primary" />
+                Linked Meters
+              </h4>
+              {status.meters.map((meter) => (
+                <div key={meter.mpan} className="flex items-center justify-between text-sm bg-muted/30 rounded-lg px-3 py-2">
+                  <div>
+                    <span className="text-foreground font-medium">
+                      MPAN: ...{meter.mpan.slice(-6)}
+                    </span>
+                    {meter.meter_type === 'export' && (
+                      <Badge variant="outline" className="ml-1.5 text-[9px] h-4 px-1 bg-primary/10 text-primary border-primary/20">
+                        Export
+                      </Badge>
+                    )}
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {meter.last_sync_at
+                      ? `Synced ${formatDistanceToNow(new Date(meter.last_sync_at), { addSuffix: true })}`
+                      : 'Never synced'}
+                  </span>
+                </div>
+              ))}
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fullSync()}
+                disabled={isSyncing}
+                className="w-full mt-2"
+              >
+                {isSyncing ? (
+                  <><TurbineSpinner size="sm" className="mr-2" />Syncing &amp; Calculating...</>
+                ) : (
+                  <><RefreshCw className="w-4 h-4 mr-2" />Sync Now</>
+                )}
+              </Button>
+            </div>
+          )}
         </Card>
       ) : (
         <>
