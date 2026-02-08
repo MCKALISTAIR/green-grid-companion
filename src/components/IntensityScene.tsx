@@ -346,8 +346,10 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
     ? (overrides.timeOfDay === 'night' || overrides.timeOfDay === 'dusk' || overrides.timeOfDay === 'dawn')
     : realIsNight;
 
-  // Override Weather
-  const weather = (isDirectorMode && overrides.weather) ? { ...realWeather, ...overrides.weather } : realWeather;
+  // Override Weather - wrapped in useMemo to prevent dependency issues
+  const weather = useMemo(() => {
+    return (isDirectorMode && overrides.weather) ? { ...realWeather, ...overrides.weather } : realWeather;
+  }, [isDirectorMode, overrides.weather, realWeather]);
 
   const [synthwaveMode, setSynthwaveMode] = useState(false);
 

@@ -236,7 +236,7 @@ export default function Settings() {
 
                             <RadioGroup
                                 value={tone}
-                                onValueChange={(val) => setTone(val as any)}
+                                onValueChange={(val) => setTone(val as typeof tone)}
                                 className="flex gap-4 pt-1"
                             >
                                 <div className="flex items-center space-x-2">

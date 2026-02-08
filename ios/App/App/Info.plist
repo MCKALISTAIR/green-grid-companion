@@ -57,5 +57,16 @@
     <string>We need your location to show you the local energy grid intensity.</string>
     <key>NSLocationAlwaysUsageDescription</key>
     <string>We need your location to show you the local energy grid intensity.</string>
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>com.greengrid.companion</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>GridSense</string>
+            </array>
+        </dict>
+    </array>
 </dict>
 </plist>

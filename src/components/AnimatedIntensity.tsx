@@ -67,7 +67,7 @@ export function AnimatedIntensity({
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [value, previousValue]); // Removed lightTap from deps - function reference shouldn't trigger effect
+  }, [value, previousValue, impactLight]);
 
   return (
     <div className={cn('flex items-center gap-1', className)}>

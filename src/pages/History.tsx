@@ -104,7 +104,7 @@ export default function HistoryPage() {
                 formattedTime: format(itemDate, timeRange === '24h' ? 'HH:mm' : 'dd MMM HH:mm'),
             };
         });
-    }, [data, footprint]);
+    }, [data, footprint, timeRange]);
 
     // Compute consumption stats if available
     const totalConsumption = useMemo(() => {

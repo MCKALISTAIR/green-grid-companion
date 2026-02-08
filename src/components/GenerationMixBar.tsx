@@ -1,5 +1,5 @@
 import { GenerationMix, getFuelColor } from '@/lib/carbonApi';
-import { Home } from 'lucide-react';
+import { Home, Factory } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -206,7 +206,9 @@ export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolar
                     <div className="pl-6 pt-2 space-y-2">
                       <div className="flex items-center gap-2 text-sm">
                         <div className={`w-3 h-3 rounded-full ${getFuelColor('solar')}`} />
-                        <span className="text-muted-foreground">Utility-scale</span>
+                        <span className="text-muted-foreground flex items-center gap-1">
+                          <Factory className="w-3 h-3" /> Utility-scale
+                        </span>
                         <span className="ml-auto font-medium">
                           {((totalSolarMW - embeddedSolarMW) / 1000).toFixed(2)} GW
                         </span>

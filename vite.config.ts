@@ -12,6 +12,12 @@ export default defineConfig(({ mode }) => ({
     hmr: {
       overlay: false,
     },
+    proxy: {
+      '^/~oauth': {
+        target: 'https://gridsense-app.lovable.app',
+        changeOrigin: true,
+      },
+    },
   },
   plugins: [
     react(),

@@ -60,14 +60,14 @@ export function useSceneDirector() {
             const isObject = currentValue && typeof currentValue === 'object' && !Array.isArray(currentValue);
             return {
                 ...prev,
-                [key]: isObject 
+                [key]: isObject
                     ? { ...(currentValue as Record<string, unknown>), ...value }
                     : value
             };
         });
     }, []);
 
-    const setExactOverride = useCallback((key: keyof SceneOverrides, value: any) => {
+    const setExactOverride = useCallback((key: keyof SceneOverrides, value: SceneOverrides[typeof key]) => {
         setOverrides(prev => ({
             ...prev,
             [key]: value

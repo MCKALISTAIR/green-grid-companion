@@ -2,6 +2,87 @@
 
 All notable changes to GridSense will be documented in this file.
 
+## [v1.4.2] - 2026-02-08
+
+### Added ✨
+- **Octopus Energy Auto-Sync**: Automatic background synchronization of consumption data
+  - Syncs all linked meters automatically on app launch and when coming online
+  - Manual "Sync Now" button in footprint view for force-syncing
+  - Last sync timestamp display
+  - Loading indicators during sync operations
+  
+- **Solar Export Tracking**: Enhanced solar energy analytics
+  - Net footprint calculation now accounts for exported solar energy
+  - Solar split visualization in Demand view
+  - Embedded solar generation display in demand metrics
+  - Accurate carbon offset from exported renewable energy
+
+- **Account Management**: Comprehensive user account controls
+  - **Data Export**: Download all your data (consumption, settings, footprint) as JSON
+  - **Account Deletion**: GDPR-compliant account deletion with data removal
+  - **Provider Switching**: Switch between Apple and Google sign-in
+  - **Cookie Preferences**: Manage cookie consent with reset functionality
+  
+- **Privacy Enhancements**: Updated privacy controls
+  - GDPR rights documentation in Privacy Policy
+  - Cookie consent banner with granular controls
+  - Privacy policy link added to onboarding flow
+  - Cookie preferences reset button in Settings
+
+### Fixed 🐛
+- **Error Handling**: Enhanced error states and user feedback across the application
+  - Added explicit error states to `FootprintView` to differentiate between empty data and API failures
+  - Wrapped chart components with `ComponentErrorBoundary` to prevent crashes
+  - Added dedicated error UI with retry functionality
+  - Improved error messages in `useOctopusEnergy` hook with clear user guidance
+
+- **Navigation**: Fixed 404 page to use client-side routing with `Link` component
+  - Replaced anchor tag with `react-router-dom` Link for smoother navigation
+  - Enhanced visual styling with icon and button component
+
+- **Octopus Energy Integration**: Multiple stability improvements
+  - Fixed 404 handling in Octopus edge functions
+  - Resolved UI duplication issues
+  - Fixed immediate account validation
+  - Improved top-up flow UI
+  - Clear Octopus cache on sign-out
+  - Reactive state management improvements
+  - Fixed dispatch upsert and carbon fetch
+  - Refresh Octopus data on sign-in
+  - Process all meters during sync (not just first meter)
+
+- **Deep Link Handling**: Fixed deep link handler for web platform
+  - Proper routing for OAuth callbacks
+  - Improved Apple sign-in flow
+
+### Changed 🔄
+- **UI Improvements**:
+  - Reorganized BestTime cards for better layout
+  - Aligned cards in BestTimeCard component
+  - Improved onboarding scene view
+  - Show meter sync status in footprint view
+  - Relaxed validation while typing in forms
+
+### Technical Improvements 🔧
+- **Code Quality**: Fixed all client-side linting issues
+  - ✅ Resolved 7 React Hook dependency warnings:
+    - `AnimatedIntensity.tsx`: Added missing `impactLight` dependency
+    - `FootprintView.tsx`: Added `customAnnualKwh`, `daysToFetch`, `houseType` dependencies
+    - `IntensityScene.tsx`: Wrapped weather initialization in `useMemo`
+    - `useNotifications.ts`: Fixed `generateForecastSummary` dependency, removed unnecessary `isNative`
+    - `History.tsx`: Added `timeRange` dependency
+    - `Index.tsx`: Added `refetch` dependency
+  - ✅ Fixed 6 TypeScript `any` type errors:
+    - `useSceneDirector.ts`: Proper type inference for `setExactOverride`
+    - `errorUtils.ts`: Changed to `unknown` with type guards
+    - `logger.ts`: Updated to `unknown` for better type safety
+    - `Settings.tsx`: Proper type casting for tone selection
+
+- **Type Safety**: Enhanced TypeScript strictness across client-side codebase
+  - All client code now passes strict type checking
+  - Improved error handling with proper type guards
+  - Better type inference for hook dependencies
+
 ## [v1.4.1] - 2026-02-04
 
 ### Fixed 🐛

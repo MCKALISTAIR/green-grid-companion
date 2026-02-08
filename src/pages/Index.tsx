@@ -158,7 +158,7 @@ const Index = () => {
     checkAndRefresh();
 
     return () => clearInterval(intervalId);
-  }, [lastUpdated]); // Only depend on lastUpdated, not refetch (prevents infinite loop)
+  }, [lastUpdated, refetch]);
 
 
 

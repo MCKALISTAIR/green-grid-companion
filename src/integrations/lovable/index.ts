@@ -3,7 +3,13 @@
 import { createLovableAuth } from "@lovable.dev/cloud-auth-js";
 import { supabase } from "../supabase/client";
 
-const lovableAuth = createLovableAuth({});
+import { Capacitor } from "@capacitor/core";
+
+const lovableAuth = createLovableAuth({
+  oauthBrokerUrl: Capacitor.isNativePlatform()
+    ? "https://gridsense-app.lovable.app"
+    : undefined,
+});
 
 export const lovable = {
   auth: {

@@ -7,6 +7,8 @@ import { lovable } from '@/integrations/lovable/index';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { User } from '@supabase/supabase-js';
+import { Capacitor } from '@capacitor/core';
+import { APP_SCHEME } from '@/config';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -113,8 +115,12 @@ export function AccountBackup({ isSyncing, lastSyncedAt, onSyncNow, formatLastSy
     }
 
     try {
+      const redirectUri = Capacitor.isNativePlatform()
+        ? `${APP_SCHEME}://auth/callback`
+        : window.location.origin;
+
       const { error } = await lovable.auth.signInWithOAuth(provider, {
-        redirect_uri: window.location.origin,
+        redirect_uri: redirectUri,
       });
 
       if (error) {
@@ -220,8 +226,12 @@ export function AccountBackup({ isSyncing, lastSyncedAt, onSyncNow, formatLastSy
       await supabase.auth.signOut();
 
       // Sign in with the new provider
+      const redirectUri = Capacitor.isNativePlatform()
+        ? `${APP_SCHEME}://auth/callback`
+        : window.location.origin;
+
       const { error } = await lovable.auth.signInWithOAuth(switchTarget, {
-        redirect_uri: window.location.origin,
+        redirect_uri: redirectUri,
       });
 
       if (error) {

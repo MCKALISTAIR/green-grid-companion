@@ -20,7 +20,7 @@ import { Capacitor } from '@capacitor/core';
 import { getLoggerConfig, shouldLog, getLogColor, type LogLevel } from './logger.config';
 
 interface LogContext {
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 class Logger {
@@ -88,7 +88,7 @@ class Logger {
     /**
      * Set user context for Sentry
      */
-    setUser(user: { id?: string; email?: string;[key: string]: any }): void {
+    setUser(user: { id?: string; email?: string;[key: string]: unknown }): void {
         if (this.config.enableSentry) {
             Sentry.setUser(user);
         }

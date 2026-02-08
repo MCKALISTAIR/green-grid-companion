@@ -207,7 +207,7 @@ export function useNotifications() {
         } catch (error) {
             logger.error('Failed to schedule daily forecast', { error });
         }
-    }, [prefs.dailyForecastEnabled, prefs.dailyForecastTime, prefs.lowIntensityThreshold, permissionStatus]);
+    }, [prefs.dailyForecastEnabled, prefs.dailyForecastTime, prefs.lowIntensityThreshold, permissionStatus, generateForecastSummary]);
 
     const updatePreference = <K extends keyof NotificationPrefs>(key: K, value: NotificationPrefs[K]) => {
         setPrefs(prev => ({ ...prev, [key]: value }));
@@ -273,7 +273,7 @@ export function useNotifications() {
                 pendingNotifications.push({
                     id: Math.floor(startTime.getTime() / 100000), // Unique-ish ID
                     title: "🌿 Green Grid Forecast",
-                    body: `Intensity drops to ${slot.intensity.forecast}g at ${startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`,
+                    body: `Grid intensity is now ${slot.intensity.forecast}g! It's a great time to use energy.`,
                     schedule: { at: startTime },
                     smallIcon: 'ic_stat_leaf',
                     actionTypeId: "",
@@ -301,7 +301,7 @@ export function useNotifications() {
                 threshold: prefs.lowIntensityThreshold
             });
         }
-    }, [isNative, prefs.lowIntensityEnabled, prefs.lowIntensityThreshold, prefs.useBackgroundFetch, permissionStatus]);
+    }, [prefs.lowIntensityEnabled, prefs.lowIntensityThreshold, prefs.useBackgroundFetch, permissionStatus]);
 
     const scheduleHighIntensityAlerts = useCallback(async (forecast: ForecastData[]) => {
         logger.info('scheduleHighIntensityAlerts called', {
@@ -345,7 +345,7 @@ export function useNotifications() {
                 pendingNotifications.push({
                     id: 8000 + Math.floor(startTime.getTime() / 100000) % 1000,
                     title: "⚠️ High Carbon Alert",
-                    body: `Grid intensity rising to ${slot.intensity.forecast}g at ${startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}. Consider deferring heavy usage.`,
+                    body: `Grid intensity is now ${slot.intensity.forecast}g. Consider deferring heavy usage.`,
                     schedule: { at: startTime },
                     smallIcon: 'ic_stat_leaf',
                     actionTypeId: "",

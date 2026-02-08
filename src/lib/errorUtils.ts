@@ -20,7 +20,7 @@ export interface ErrorContext {
 /**
  * Extract user-friendly error message from Supabase edge function errors
  */
-export function parseEdgeFunctionError(error: any, context?: ErrorContext): string {
+export function parseEdgeFunctionError(error: unknown, context?: ErrorContext): string {
     // Check if offline first
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
         return "You're offline. Check your connection and try again.";
@@ -34,10 +34,11 @@ export function parseEdgeFunctionError(error: any, context?: ErrorContext): stri
         errorMessage = error;
     } else if (error instanceof Error) {
         errorMessage = error.message;
-    } else if (error?.message) {
+    } else if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
         errorMessage = error.message;
-    } else if (error?.error) {
-        errorMessage = typeof error.error === 'string' ? error.error : error.error.message || '';
+    } else if (error && typeof error === 'object' && 'error' in error) {
+        const errorObj = error.error;
+        errorMessage = typeof errorObj === 'string' ? errorObj : (errorObj && typeof errorObj === 'object' && 'message' in errorObj ? String(errorObj.message) : '');
     }
 
     const lowerMessage = errorMessage.toLowerCase();
@@ -107,7 +108,7 @@ export function parseEdgeFunctionError(error: any, context?: ErrorContext): stri
 /**
  * Get a contextual error message based on the feature and action
  */
-function getContextualErrorMessage(context?: ErrorContext, error?: any): string {
+function getContextualErrorMessage(context?: ErrorContext, error?: unknown): string {
     if (!context?.feature) {
         return 'Something went wrong. Please try again.';
     }

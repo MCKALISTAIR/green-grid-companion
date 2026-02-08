@@ -25,7 +25,8 @@ import {
   Coffee,
   Home,
   ArrowDownUp,
-  SunMedium
+  SunMedium,
+  AlertCircle
 } from 'lucide-react';
 import { TurbineSpinner } from '@/components/ui/turbine-spinner';
 import { formatDistanceToNow } from 'date-fns';
@@ -33,6 +34,7 @@ import { getImpactEquivalents, getImpactColor } from '@/lib/impact-conversions';
 import { useSettings } from '@/hooks/useSettings';
 import { getAverageDailyKwh, getHouseTypeLabel } from '@/lib/energy-standards';
 import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
+import { useAchievements } from '@/hooks/useAchievements';
 import {
   AreaChart,
   Area,
@@ -45,6 +47,7 @@ import {
   Cell
 } from 'recharts';
 import { format, parseISO, startOfDay, getHours } from 'date-fns';
+import { ComponentErrorBoundary } from '@/components/ComponentErrorBoundary';
 
 const INTENSITY_COLORS: Record<string, string> = {
   'very low': 'hsl(var(--intensity-very-low))',
@@ -80,7 +83,8 @@ export function FootprintView() {
     }
   }, [timeRange]);
 
-  const { footprint, isLoading, isLinked, status, isSyncing, fullSync } = useOctopusEnergy(daysToFetch);
+  const { footprint, isLoading, isLinked, status, isSyncing, fullSync, isError, refetchFootprint } = useOctopusEnergy(daysToFetch);
+  const { achievements: globalAchievements, unlock } = useAchievements();
 
   // Aggregate data based on time range
   const dailyData = useMemo(() => {
@@ -212,55 +216,67 @@ export function FootprintView() {
       exportCarbonKg,
       netCarbonKg,
     };
-  }, [footprint, dailyData]);
+  }, [footprint, dailyData, customAnnualKwh, daysToFetch, houseType]);
 
-  // Generate achievements
-  const achievements = useMemo((): Achievement[] => {
-    if (!insights) return [];
+  // Check and unlock achievements based on insights
+  useMemo(() => {
+    if (!insights) return;
+
+    if (insights.greenPercentage >= 50) unlock('green_majority');
+    if (insights.greenPercentage >= 70) unlock('eco_champion');
+    if (insights.veryLowPercentage >= 30) unlock('ultra_green');
+    if (insights.bestPeriod && insights.bestPeriod.carbon < 1) unlock('low_carbon_day');
+    if (insights.recordCount >= 100) unlock('data_tracker');
+  }, [insights, unlock]);
+
+  // Generate achievements list merging local definitions with global unlock state
+  const achievementsList = useMemo((): Achievement[] => {
+    // Helper to find global status
+    const isUnlocked = (id: string) => globalAchievements.find(a => a.id === id)?.unlocked ?? false;
 
     return [
       {
-        id: 'green-majority',
+        id: 'green_majority',
         title: 'Green Majority',
-        description: 'Used 50%+ green energy',
+        description: 'Used 50%+ green energy in a single period',
         icon: <Leaf className="w-5 h-5" />,
-        unlocked: insights.greenPercentage >= 50,
+        unlocked: isUnlocked('green_majority'),
         color: 'green',
       },
       {
-        id: 'eco-champion',
+        id: 'eco_champion',
         title: 'Eco Champion',
-        description: 'Used 70%+ green energy',
+        description: 'Used 70%+ green energy in a single period',
         icon: <Trophy className="w-5 h-5" />,
-        unlocked: insights.greenPercentage >= 70,
+        unlocked: isUnlocked('eco_champion'),
         color: 'emerald',
       },
       {
-        id: 'ultra-green',
+        id: 'ultra_green',
         title: 'Ultra Green',
         description: '30%+ at very low intensity',
         icon: <Sparkles className="w-5 h-5" />,
-        unlocked: insights.veryLowPercentage >= 30,
+        unlocked: isUnlocked('ultra_green'),
         color: 'teal',
       },
       {
-        id: 'low-carbon-day',
-        title: 'Low Carbon Period',
-        description: 'A period under 1kg CO₂',
+        id: 'low_carbon_day',
+        title: 'Low Carbon Zone',
+        description: 'Achieve a period with under 1kg CO₂ emissions',
         icon: <Star className="w-5 h-5" />,
-        unlocked: insights.bestPeriod ? insights.bestPeriod.carbon < 1 : false,
+        unlocked: isUnlocked('low_carbon_day'),
         color: 'yellow',
       },
       {
-        id: 'data-tracker',
+        id: 'data_tracker',
         title: 'Data Tracker',
         description: 'Tracked 100+ readings',
         icon: <Clock className="w-5 h-5" />,
-        unlocked: insights.recordCount >= 100,
+        unlocked: isUnlocked('data_tracker'),
         color: 'blue',
       },
     ];
-  }, [insights]);
+  }, [globalAchievements]);
 
   // Intensity breakdown for bar chart
   const intensityBreakdown = useMemo(() => {
@@ -428,6 +444,30 @@ export function FootprintView() {
     );
   }
 
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4 p-6 text-center">
+        <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mb-2">
+          <AlertCircle className="w-8 h-8 text-destructive" />
+        </div>
+        <div className="space-y-2 max-w-sm">
+          <h3 className="text-lg font-semibold">Unable to load footprint data</h3>
+          <p className="text-sm text-muted-foreground">
+            We encountered an error while fetching your carbon data. Please check your connection and try again.
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          onClick={() => refetchFootprint()}
+          className="mt-4"
+        >
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Retry
+        </Button>
+      </div>
+    );
+  }
+
 
 
   return (
@@ -453,8 +493,12 @@ export function FootprintView() {
           <div className="text-center mb-4">
             <Leaf className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
             <h3 className="font-medium text-foreground mb-2">No Footprint Data Yet</h3>
-            <p className="text-sm text-muted-foreground">
-              {timeRange === 'day' ? 'No data for this day.' : 'Sync your consumption data to see your carbon footprint.'}
+            <p className="text-sm text-muted-foreground mb-4 max-w-xs mx-auto">
+              {timeRange === 'day'
+                ? 'No data for this day.'
+                : !status?.latest_consumption
+                  ? 'Waiting for readings from Octopus Energy. Smart meter data can take 24-48 hours to become available after linking.'
+                  : 'Sync your consumption data to see your carbon footprint.'}
             </p>
           </div>
 
@@ -517,26 +561,58 @@ export function FootprintView() {
             </Card>
 
             {insights?.hasExport && (
-              <Card className="p-4 border-primary/20 bg-primary/5">
-                <div className="flex items-center gap-2 mb-2">
-                  <SunMedium className="w-5 h-5 text-primary" />
-                  <span className="text-xs text-muted-foreground">Solar Export</span>
+              <Card className="p-4 border-amber-500/20 bg-amber-500/10 relative">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <SunMedium className="w-5 h-5 text-amber-600 dark:text-amber-500" />
+                    <span className="text-xs text-muted-foreground">Solar Export</span>
+                  </div>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0 hover:bg-amber-500/10">
+                        <Info className="w-3.5 h-3.5 text-amber-600/70" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[280px] p-3 text-xs" align="end">
+                      <p>
+                        Your solar export meter shows clean energy you sent back to the grid ({insights.exportKwh.toFixed(1)} kWh),
+                        which actively displaces fossil fuels and reduces your net footprint.
+                      </p>
+                    </PopoverContent>
+                  </Popover>
                 </div>
-                <p className="text-2xl font-bold text-primary">
+                <p className="text-2xl font-bold text-amber-600 dark:text-amber-500">
                   -{insights.exportCarbonKg.toFixed(1)} <span className="text-sm font-normal">kg CO₂</span>
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">{insights.exportKwh.toFixed(1)} kWh exported</p>
               </Card>
             )}
 
-            <Card className={`p-4 ${insights?.hasExport ? 'border-emerald-500/20 bg-emerald-500/5' : ''}`}>
-              <div className="flex items-center gap-2 mb-2">
-                <Leaf className="w-5 h-5 text-primary" />
-                <span className="text-xs text-muted-foreground">
-                  {insights?.hasExport ? 'Net Carbon' : 'Total Carbon'}
-                </span>
+            <Card className={`p-4 ${insights?.hasExport ? 'border-emerald-500/20 bg-emerald-500/10' : ''} relative`}>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Leaf className={`w-5 h-5 ${insights?.hasExport ? 'text-emerald-600 dark:text-emerald-500' : 'text-primary'}`} />
+                  <span className="text-xs text-muted-foreground">
+                    {insights?.hasExport ? 'Net Carbon' : 'Total Carbon'}
+                  </span>
+                </div>
+                {insights?.hasExport && (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0 hover:bg-emerald-500/10">
+                        <Info className="w-3.5 h-3.5 text-emerald-600/70" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[280px] p-3 text-xs" align="end">
+                      <p>
+                        Your <strong>net footprint</strong> is your total grid emissions minus the carbon you offset by exporting solar energy.
+                        We subtract your export offset from your import emissions.
+                      </p>
+                    </PopoverContent>
+                  </Popover>
+                )}
               </div>
-              <p className="text-2xl font-bold text-foreground">
+              <p className={`text-2xl font-bold ${insights?.hasExport ? 'text-emerald-600 dark:text-emerald-500' : 'text-foreground'}`}>
                 {(insights?.hasExport ? insights.netCarbonKg : insights?.totalCarbon)?.toFixed(1)} <span className="text-sm font-normal">kg CO₂</span>
               </p>
               {insights?.hasExport && (
@@ -544,22 +620,6 @@ export function FootprintView() {
               )}
             </Card>
           </div>
-
-          {/* Net Carbon Explainer (only when export meter exists) */}
-          {insights?.hasExport && (
-            <Card className="p-3 border-primary/20">
-              <div className="flex items-start gap-2">
-                <ArrowDownUp className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                <div className="text-xs text-muted-foreground">
-                  <p>
-                    <strong className="text-foreground">How net carbon works:</strong> Your import meter tracks electricity drawn from the grid ({insights.totalKwh.toFixed(1)} kWh).
-                    Your solar export meter shows clean energy you sent back ({insights.exportKwh.toFixed(1)} kWh), which displaces grid carbon.
-                    Your <strong className="text-foreground">net footprint</strong> subtracts the export offset from your import emissions.
-                  </p>
-                </div>
-              </div>
-            </Card>
-          )}
 
           {/* Green Score */}
           {insights && (
@@ -634,10 +694,9 @@ export function FootprintView() {
                   </p>
                   <Badge
                     variant="outline"
-                    className={insights.greenPercentage >= 50
+                    className={`${insights.greenPercentage >= 50
                       ? 'bg-primary/10 text-primary border-primary/20'
-                      : 'bg-muted text-muted-foreground border-border'
-                    }
+                      : 'bg-muted text-muted-foreground border-border'} text-center justify-center h-auto py-1`}
                   >
                     {insights.greenPercentage >= 70 ? 'Excellent' :
                       insights.greenPercentage >= 50 ? 'Good' :
@@ -705,40 +764,70 @@ export function FootprintView() {
 
                 <div className="grid grid-cols-2 gap-3 mt-1">
                   {/* Miles Driven */}
-                  <div className="p-3 bg-card/60 rounded-lg flex flex-col items-center text-center gap-2 shadow-sm border border-border/50">
-                    <Car className="w-5 h-5 text-blue-500" />
-                    <div>
-                      <p className="text-lg font-bold text-foreground">{insights.impact.milesDriven}</p>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Miles Driven</p>
-                    </div>
-                  </div>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <div className="p-3 bg-card/60 rounded-lg flex flex-col items-center text-center gap-2 shadow-sm border border-border/50 cursor-pointer hover:bg-card/80 transition-colors">
+                        <Car className="w-5 h-5 text-blue-500" />
+                        <div>
+                          <p className="text-lg font-bold text-foreground">{insights.impact.milesDriven}</p>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Miles Driven</p>
+                        </div>
+                      </div>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-60 p-3 text-xs">
+                      <p>Equivalent to driving an average petrol car for <strong>{insights.impact.milesDriven} miles</strong>.</p>
+                      <p className="text-[10px] text-muted-foreground mt-1 text-right">Source: EPA (~0.4kg CO₂/mile)</p>
+                    </PopoverContent>
+                  </Popover>
 
                   {/* Trees */}
-                  <div className="p-3 bg-card/60 rounded-lg flex flex-col items-center text-center gap-2 shadow-sm border border-border/50">
-                    <Trees className="w-5 h-5 text-green-600" />
-                    <div>
-                      <p className="text-lg font-bold text-foreground">{insights.impact.treesPlanted}</p>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Tree Days</p>
-                    </div>
-                  </div>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <div className="p-3 bg-card/60 rounded-lg flex flex-col items-center text-center gap-2 shadow-sm border border-border/50 cursor-pointer hover:bg-card/80 transition-colors">
+                        <Trees className="w-5 h-5 text-green-600" />
+                        <div>
+                          <p className="text-lg font-bold text-foreground">{insights.impact.treesPlanted}</p>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Tree Days</p>
+                        </div>
+                      </div>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-60 p-3 text-xs">
+                      <p>Equivalent to the carbon absorbed by <strong>{insights.impact.treesPlanted} mature trees</strong> in a single day.</p>
+                      <p className="text-[10px] text-muted-foreground mt-1 text-right">Source: Carbon Trust (~25kg/year/tree)</p>
+                    </PopoverContent>
+                  </Popover>
 
                   {/* Smartphones */}
-                  <div className="p-3 bg-card/60 rounded-lg flex flex-col items-center text-center gap-2 shadow-sm border border-border/50">
-                    <Smartphone className="w-5 h-5 text-indigo-500" />
-                    <div>
-                      <p className="text-lg font-bold text-foreground">{insights.impact.smartphonesCharged}</p>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Phone Charges</p>
-                    </div>
-                  </div>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <div className="p-3 bg-card/60 rounded-lg flex flex-col items-center text-center gap-2 shadow-sm border border-border/50 cursor-pointer hover:bg-card/80 transition-colors">
+                        <Smartphone className="w-5 h-5 text-indigo-500" />
+                        <div>
+                          <p className="text-lg font-bold text-foreground">{insights.impact.smartphonesCharged}</p>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Phone Charges</p>
+                        </div>
+                      </div>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-60 p-3 text-xs">
+                      <p>Equivalent to fully charging a standard smartphone <strong>{insights.impact.smartphonesCharged} times</strong>.</p>
+                    </PopoverContent>
+                  </Popover>
 
-                  {/* Kettles - standard British unit of measurement */}
-                  <div className="p-3 bg-card/60 rounded-lg flex flex-col items-center text-center gap-2 shadow-sm border border-border/50">
-                    <Coffee className="w-5 h-5 text-amber-600" />
-                    <div>
-                      <p className="text-lg font-bold text-foreground">{insights.impact.kettlesBoiled}</p>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Kettles Boiled</p>
-                    </div>
-                  </div>
+                  {/* Kettles */}
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <div className="p-3 bg-card/60 rounded-lg flex flex-col items-center text-center gap-2 shadow-sm border border-border/50 cursor-pointer hover:bg-card/80 transition-colors">
+                        <Coffee className="w-5 h-5 text-amber-600" />
+                        <div>
+                          <p className="text-lg font-bold text-foreground">{insights.impact.kettlesBoiled}</p>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Kettles Boiled</p>
+                        </div>
+                      </div>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-60 p-3 text-xs">
+                      <p>Equivalent to boiling a full kettle of water <strong>{insights.impact.kettlesBoiled} times</strong>.</p>
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
                 <p className="text-xs text-center text-muted-foreground/80 italic mt-1">
@@ -801,186 +890,200 @@ export function FootprintView() {
           )}
 
           {/* Achievements Section */}
-          {achievements.length > 0 && (
-            <Card className="p-4">
-              <h3 className="font-medium text-foreground mb-3 flex items-center gap-2">
-                <Trophy className="w-4 h-4 text-primary" />
-                Achievements
-              </h3>
-              <div className="grid grid-cols-2 gap-2">
-                {achievements.map((achievement) => (
-                  <div
-                    key={achievement.id}
-                    className={`p-3 rounded-lg border transition-all ${achievement.unlocked
-                      ? 'bg-primary/10 border-primary/30'
-                      : 'bg-muted/30 border-border opacity-50'
-                      }`}
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      <div className={achievement.unlocked ? 'text-primary' : 'text-muted-foreground'}>
-                        {achievement.icon}
-                      </div>
-                      <span className={`text-sm font-medium ${achievement.unlocked ? 'text-foreground' : 'text-muted-foreground'
-                        }`}>
-                        {achievement.title}
-                      </span>
+          <Card className="p-4">
+            <h3 className="font-medium text-foreground mb-3 flex items-center gap-2">
+              <Trophy className="w-4 h-4 text-primary" />
+              Achievements
+            </h3>
+            <div className="grid grid-cols-2 gap-2">
+              {achievementsList.map((achievement) => (
+                <div
+                  key={achievement.id}
+                  className={`p-3 rounded-lg border transition-all ${achievement.unlocked
+                    ? 'bg-primary/10 border-primary/30'
+                    : 'bg-muted/30 border-border opacity-50'
+                    }`}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className={achievement.unlocked ? 'text-primary' : 'text-muted-foreground'}>
+                      {achievement.icon}
                     </div>
-                    <p className="text-xs text-muted-foreground">{achievement.description}</p>
-                    {achievement.unlocked && (
-                      <Badge variant="outline" className="mt-2 text-xs bg-primary/10 text-primary border-primary/20">
-                        Unlocked!
-                      </Badge>
-                    )}
+                    <span className={`text-sm font-medium ${achievement.unlocked ? 'text-foreground' : 'text-muted-foreground'
+                      }`}>
+                      {achievement.title}
+                    </span>
                   </div>
-                ))}
-              </div>
-            </Card>
-          )}
+                  <p className="text-xs text-muted-foreground">{achievement.description}</p>
+                  {achievement.unlocked && (
+                    <Badge variant="outline" className="mt-2 text-xs bg-primary/10 text-primary border-primary/20">
+                      Unlocked!
+                    </Badge>
+                  )}
+                </div>
+              ))}
+            </div>
+          </Card>
 
           {/* Daily Carbon Chart */}
           {dailyData.length > 0 && (
             <Card className="p-4">
               <h3 className="font-medium text-foreground mb-4">Carbon Footprint Trend</h3>
               <div className="h-48">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={dailyData}>
-                    <defs>
-                      <linearGradient id="carbonGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                      </linearGradient>
-                      <linearGradient id="energyGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#fbbf24" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#fbbf24" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <XAxis
-                      dataKey="date"
-                      fontSize={10}
-                      tickLine={false}
-                      axisLine={false}
-                      stroke="hsl(var(--muted-foreground))"
-                    />
-                    <YAxis
-                      yAxisId="carbon"
-                      fontSize={10}
-                      tickLine={false}
-                      axisLine={false}
-                      stroke="hsl(var(--primary))"
-                      tickFormatter={(value) => `${value}kg`}
-                    />
-                    <YAxis
-                      yAxisId="energy"
-                      orientation="right"
-                      fontSize={10}
-                      tickLine={false}
-                      axisLine={false}
-                      stroke="#fbbf24"
-                      tickFormatter={(value) => `${value}`}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                        fontSize: '12px',
-                      }}
-                      formatter={(value: number, name: string) => {
-                        if (name === 'carbon_kg') return [`${value} kg`, 'Carbon'];
-                        if (name === 'kwh') return [`${value} kWh`, 'Energy'];
-                        return [value, name];
-                      }}
-                    />
-                    <Area
-                      yAxisId="carbon"
-                      type="monotone"
-                      dataKey="carbon_kg"
-                      stroke="hsl(var(--primary))"
-                      strokeWidth={2}
-                      fill="url(#carbonGradient)"
-                      name="carbon_kg"
-                    />
-                    <Area
-                      yAxisId="energy"
-                      type="monotone"
-                      dataKey="kwh"
-                      stroke="#fbbf24"
-                      strokeWidth={2}
-                      fill="url(#energyGradient)"
-                      name="kwh"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
+                <ComponentErrorBoundary name="Carbon Chart">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={dailyData}>
+                      <defs>
+                        <linearGradient id="carbonGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="energyGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#fbbf24" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#fbbf24" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <XAxis
+                        dataKey="date"
+                        fontSize={10}
+                        tickLine={false}
+                        axisLine={false}
+                        stroke="hsl(var(--muted-foreground))"
+                      />
+                      <YAxis
+                        yAxisId="carbon"
+                        fontSize={10}
+                        tickLine={false}
+                        axisLine={false}
+                        stroke="hsl(var(--primary))"
+                        tickFormatter={(value) => `${value}kg`}
+                      />
+                      <YAxis
+                        yAxisId="energy"
+                        orientation="right"
+                        fontSize={10}
+                        tickLine={false}
+                        axisLine={false}
+                        stroke="#fbbf24"
+                        tickFormatter={(value) => `${value}`}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                          fontSize: '12px',
+                        }}
+                        formatter={(value: number, name: string) => {
+                          if (name === 'carbon_kg') return [`${value} kg`, 'Carbon'];
+                          if (name === 'kwh') return [`${value} kWh`, 'Energy'];
+                          return [value, name];
+                        }}
+                      />
+                      <Area
+                        yAxisId="carbon"
+                        type="monotone"
+                        dataKey="carbon_kg"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth={2}
+                        fill="url(#carbonGradient)"
+                        name="carbon_kg"
+                      />
+                      <Area
+                        yAxisId="energy"
+                        type="monotone"
+                        dataKey="kwh"
+                        stroke="#fbbf24"
+                        strokeWidth={2}
+                        fill="url(#energyGradient)"
+                        name="kwh"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </ComponentErrorBoundary>
               </div>
             </Card>
           )}
 
           {/* Intensity Breakdown */}
-          {intensityBreakdown.length > 0 && (
-            <Card className="p-4">
-              <h3 className="font-medium text-foreground mb-4">Usage by Grid Intensity</h3>
-              <div className="h-40">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={intensityBreakdown} layout="vertical">
-                    <XAxis
-                      type="number"
-                      fontSize={10}
-                      tickLine={false}
-                      axisLine={false}
-                      stroke="hsl(var(--muted-foreground))"
-                      tickFormatter={(value) => `${value}kWh`}
-                    />
-                    <YAxis
-                      type="category"
-                      dataKey="name"
-                      fontSize={10}
-                      tickLine={false}
-                      axisLine={false}
-                      stroke="hsl(var(--muted-foreground))"
-                      width={70}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                        fontSize: '12px',
-                        zIndex: 50,
-                      }}
-                      formatter={(value: number, name: string) => [
-                        `${value} kWh`,
-                        'Energy Used'
-                      ]}
-                    />
-                    <Bar dataKey="kwh" radius={[0, 4, 4, 0]}>
-                      {intensityBreakdown.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={INTENSITY_COLORS[entry.index] || 'hsl(var(--muted))'}
+          {
+            intensityBreakdown.length > 0 && (
+              <Card className="p-4">
+                <h3 className="font-medium text-foreground mb-4">Usage by Grid Intensity</h3>
+                <div className="h-40">
+                  <ComponentErrorBoundary name="Intensity Breakdown">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={intensityBreakdown} layout="vertical">
+                        <XAxis
+                          type="number"
+                          fontSize={10}
+                          tickLine={false}
+                          axisLine={false}
+                          stroke="hsl(var(--muted-foreground))"
+                          tickFormatter={(value) => `${value}kWh`}
                         />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </Card>
-          )}
+                        <YAxis
+                          type="category"
+                          dataKey="name"
+                          fontSize={10}
+                          tickLine={false}
+                          axisLine={false}
+                          stroke="hsl(var(--muted-foreground))"
+                          width={70}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: 'hsl(var(--card))',
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px',
+                            fontSize: '12px',
+                            zIndex: 50,
+                          }}
+                          formatter={(value: number, name: string) => [
+                            `${value} kWh`,
+                            'Energy Used'
+                          ]}
+                        />
+                        <Bar dataKey="kwh" radius={[0, 4, 4, 0]}>
+                          {intensityBreakdown.map((entry, index) => (
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={INTENSITY_COLORS[entry.index] || 'hsl(var(--muted))'}
+                            />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ComponentErrorBoundary>
+                </div>
+              </Card>
+            )
+          }
 
           {/* Potential Savings */}
-          {insights && insights.potentialSavings > 0.1 && (
-            <Card className="p-4 border-primary/20 bg-primary/5">
-              <div className="flex items-start gap-3">
-                <Target className="w-5 h-5 text-primary mt-0.5" />
-                <div>
-                  <h3 className="font-medium text-foreground">Potential Savings</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    If all your usage was during low-intensity periods, you could save up to{' '}
-                    <strong className="text-foreground">{insights.potentialSavings.toFixed(1)} kg CO₂</strong> per week!
-                  </p>
+          {
+            insights && insights.potentialSavings > 0.1 && (
+              <Card className="p-4 border-primary/20 bg-primary/5">
+                <div className="flex items-start gap-3">
+                  <Target className="w-5 h-5 text-primary mt-0.5" />
+                  <div>
+                    <h3 className="font-medium text-foreground">Potential Savings</h3>
+                    <div className="text-sm text-muted-foreground mt-1 space-y-2">
+                      <p>
+                        If all your usage was during low-intensity periods, you could save{' '}
+                        <strong className="text-foreground">{insights.potentialSavings.toFixed(1)} kg CO₂</strong> during this period!
+                      </p>
+                      <div className="flex items-center gap-2 p-2 bg-background/50 rounded-md border border-primary/10">
+                        <Car className="w-4 h-4 text-blue-500" />
+                        <p className="text-xs">
+                          That's equivalent to driving <strong className="text-foreground">{getImpactEquivalents(insights.potentialSavings).milesDriven} miles</strong> in an average car.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </Card>
-          )}
+              </Card>
+            )
+          }
         </>
       )
       }

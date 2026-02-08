@@ -4,6 +4,9 @@ const config: CapacitorConfig = {
   appId: 'app.lovable.1558020f8a4c43dc9ea079533f5d485c',
   appName: 'GridSense',
   webDir: 'dist',
+  server: {
+    allowNavigation: ['gridsense-app.lovable.app']
+  },
   /* 
   // Server configuration removed for local bundled mode
   */

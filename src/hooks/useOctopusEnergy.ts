@@ -107,12 +107,18 @@ export function useOctopusEnergy(days: number = 30) {
   const shouldFetchStatus = cachedIsLinked || cachedHasCreds;
 
   // Fetch current status
-  const { data: status, isLoading: statusLoading, refetch: refetchStatus } = useQuery({
+  const {
+    data: status,
+    isLoading: statusLoading,
+    refetch: refetchStatus,
+    isError: statusError,
+    error: statusErr
+  } = useQuery({
     queryKey: ['octopus-status'],
     queryFn: async (): Promise<OctopusStatus> => {
       // Check if we can get a session
       const session = await ensureAuthSession();
-      
+
       if (!session) {
         // No session - return local-only status
         return {
@@ -151,66 +157,13 @@ export function useOctopusEnergy(days: number = 30) {
     retry: false, // Don't retry on auth failures
   });
 
-  // Sync status to local storage for future optimistic loading
-  useEffect(() => {
-    if (status) {
-      if (status.is_linked) {
-        localStorage.setItem(LOCAL_STORAGE_KEYS.isLinked, 'true');
-      } else {
-        localStorage.removeItem(LOCAL_STORAGE_KEYS.isLinked);
-      }
-
-      if (status.has_credentials) {
-        localStorage.setItem(LOCAL_STORAGE_KEYS.hasCreds, 'true');
-      } else {
-        localStorage.removeItem(LOCAL_STORAGE_KEYS.hasCreds);
-      }
-    }
-  }, [status]);
-
-  // Auto-sync on app open if last sync is stale (>24 hours)
-  useEffect(() => {
-    if (!status?.is_linked || !status?.meters?.length) return;
-
-    const oldestSync = status.meters
-      .map(m => m.last_sync_at ? new Date(m.last_sync_at).getTime() : 0)
-      .reduce((min, t) => Math.min(min, t), Date.now());
-
-    const hoursSinceSync = (Date.now() - oldestSync) / (1000 * 60 * 60);
-    const autoSyncKey = 'octopus-auto-sync-last';
-    const lastAutoSync = localStorage.getItem(autoSyncKey);
-    const hoursSinceAutoSync = lastAutoSync
-      ? (Date.now() - parseInt(lastAutoSync, 10)) / (1000 * 60 * 60)
-      : Infinity;
-
-    // Only auto-sync if data is >24h stale AND we haven't auto-synced in the last 6 hours
-    if (hoursSinceSync > 24 && hoursSinceAutoSync > 6) {
-      logger.info('Auto-syncing Octopus data (stale for ' + Math.round(hoursSinceSync) + 'h)');
-      localStorage.setItem(autoSyncKey, Date.now().toString());
-
-      // Run in background without blocking UI
-      (async () => {
-        try {
-          const session = await ensureAuthSession();
-          if (!session) return;
-
-          await supabase.functions.invoke('octopus-energy', {
-            body: { action: 'sync-consumption', days: 3 }
-          });
-          await supabase.functions.invoke('octopus-energy', {
-            body: { action: 'calculate-footprint' }
-          });
-          await refetchStatus();
-          logger.info('Auto-sync completed successfully');
-        } catch (err) {
-          logger.warn('Auto-sync failed', { error: err });
-        }
-      })();
-    }
-  }, [status?.is_linked, status?.meters]);
-
-  // Fetch footprint data with dynamic range
-  const { data: footprint, isLoading: footprintLoading, refetch: refetchFootprint } = useQuery({
+  const {
+    data: footprint,
+    isLoading: footprintLoading,
+    refetch: refetchFootprint,
+    isError: footprintError,
+    error: footprintErr
+  } = useQuery({
     queryKey: ['octopus-footprint', days],
     queryFn: async (): Promise<FootprintData> => {
       const safeDays = Math.max(1, days);
@@ -226,8 +179,12 @@ export function useOctopusEnergy(days: number = 30) {
     gcTime: 30 * 60 * 1000, // 30 minutes - keep in cache even when unmounted
   });
 
-  // Fetch Greener Nights Forecast (only if linked AND has credentials)
-  const { data: greennessForecast, isLoading: forecastLoading } = useQuery({
+  const {
+    data: greennessForecast,
+    isLoading: forecastLoading,
+    isError: forecastError,
+    error: forecastErr
+  } = useQuery({
     queryKey: ['greenness-forecast'],
     queryFn: async (): Promise<GreennessForecastItem[]> => {
       const { data, error } = await supabase.functions.invoke('octopus-energy', {
@@ -246,10 +203,10 @@ export function useOctopusEnergy(days: number = 30) {
   });
 
   // Fetch Intelligent Dispatch slots (planned and completed charging windows)
-  const { 
-    data: intelligentDispatches, 
+  const {
+    data: intelligentDispatches,
     isLoading: dispatchesLoading,
-    refetch: refetchDispatches 
+    refetch: refetchDispatches
   } = useQuery({
     queryKey: ['intelligent-dispatches'],
     queryFn: async (): Promise<IntelligentDispatchData> => {
@@ -278,13 +235,13 @@ export function useOctopusEnergy(days: number = 30) {
     if (!hasSession) return;
 
     logger.info('Syncing pending Octopus credentials to backend');
-    
+
     try {
       const { error } = await supabase.functions.invoke('octopus-energy', {
-        body: { 
-          action: 'save-credentials', 
-          apiKey: cachedCredentials.apiKey, 
-          accountNumber: cachedCredentials.accountNumber 
+        body: {
+          action: 'save-credentials',
+          apiKey: cachedCredentials.apiKey,
+          accountNumber: cachedCredentials.accountNumber
         }
       });
 
@@ -301,7 +258,7 @@ export function useOctopusEnergy(days: number = 30) {
   // Check for pending sync on mount and auth state changes
   useEffect(() => {
     syncPendingCredentials();
-    
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_IN') {
         // Re-enable status query so we discover existing server-side data
@@ -376,7 +333,7 @@ export function useOctopusEnergy(days: number = 30) {
   // Save Credentials (with local fallback) - auto-links meters on success
   const saveCredentials = useCallback(async (apiKey: string, accountNumber: string) => {
     setIsSyncing(true);
-    
+
     // Always cache credentials locally first
     const creds = { apiKey, accountNumber };
     localStorage.setItem(LOCAL_STORAGE_KEYS.credentials, JSON.stringify(creds));
@@ -386,7 +343,7 @@ export function useOctopusEnergy(days: number = 30) {
     try {
       // Try to get/create a session
       const session = await ensureAuthSession();
-      
+
       if (!session) {
         // No session available - save locally only and mark for later sync
         logger.info('Saving Octopus credentials locally (no auth session)');
@@ -410,17 +367,17 @@ export function useOctopusEnergy(days: number = 30) {
 
       // Success - clear pending sync flag and auto-link meters
       localStorage.removeItem(LOCAL_STORAGE_KEYS.pendingSync);
-      
+
       // Auto-link meters immediately after saving credentials
       const metersLinked = await linkMeterInternal();
-      
+
       if (metersLinked) {
         toast.success('Account connected and meter(s) linked!');
         localStorage.setItem(LOCAL_STORAGE_KEYS.isLinked, 'true');
       } else {
         toast.success('Credentials saved. Could not find meters - check your account.');
       }
-      
+
       await refetchStatus();
     } catch (error: unknown) {
       // Any error - we still have the local copy
@@ -445,7 +402,7 @@ export function useOctopusEnergy(days: number = 30) {
     try {
       // Ensure we have a session
       const session = await ensureAuthSession();
-      
+
       if (!session) {
         toast.error('Please sign in to link your meter');
         return null;
@@ -480,7 +437,7 @@ export function useOctopusEnergy(days: number = 30) {
     try {
       // Ensure we have a session
       const session = await ensureAuthSession();
-      
+
       if (!session) {
         toast.error('Please sign in to sync consumption data');
         return null;
@@ -510,7 +467,7 @@ export function useOctopusEnergy(days: number = 30) {
     try {
       // Ensure we have a session
       const session = await ensureAuthSession();
-      
+
       if (!session) {
         toast.error('Please sign in to calculate footprint');
         return null;
@@ -545,7 +502,7 @@ export function useOctopusEnergy(days: number = 30) {
     setIsSyncing(true);
     try {
       const hasSession = await hasValidSession();
-      
+
       if (hasSession) {
         const { error } = await supabase.functions.invoke('octopus-energy', {
           body: { action: 'disconnect-account' }
@@ -599,5 +556,7 @@ export function useOctopusEnergy(days: number = 30) {
     cachedCredentials,
     clearCachedCredentials,
     hasPendingSync,
+    isError: statusError || footprintError || forecastError,
+    error: statusErr || footprintErr || forecastErr,
   };
 }

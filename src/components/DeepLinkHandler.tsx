@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { logger } from '@/lib/logger';
+import { APP_SCHEME } from '@/config';
 
 export function DeepLinkHandler() {
     const navigate = useNavigate();
@@ -20,6 +21,12 @@ export function DeepLinkHandler() {
 
                 try {
                     const url = new URL(event.url);
+
+                    // Verify scheme to prevent handling unexpected links
+                    if (url.protocol !== `${APP_SCHEME.toLowerCase()}:`) {
+                        logger.warn('Ignoring deep link with unknown scheme:', { scheme: url.protocol });
+                        return;
+                    }
 
                     if (url.pathname.startsWith('/auth/callback')) {
                         const path = url.pathname + url.search;

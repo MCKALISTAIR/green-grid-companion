@@ -47,6 +47,37 @@ export const ACHIEVEMENT_LIST: Omit<Achievement, 'unlocked'>[] = [
         title: 'Time Traveler',
         description: 'Use the Time Machine to view a past date',
         icon: '⏳',
+    },
+    // Footprint Achievements
+    {
+        id: 'green_majority',
+        title: 'Green Majority',
+        description: 'Use 50%+ green energy in a single period',
+        icon: '🌿',
+    },
+    {
+        id: 'eco_champion',
+        title: 'Eco Champion',
+        description: 'Use 70%+ green energy in a single period',
+        icon: '🏆',
+    },
+    {
+        id: 'ultra_green',
+        title: 'Ultra Green',
+        description: 'Have 30%+ of your usage at very low intensity',
+        icon: '✨',
+    },
+    {
+        id: 'low_carbon_day',
+        title: 'Low Carbon Zone',
+        description: 'Achieve a period with under 1kg CO₂ emissions',
+        icon: '⭐',
+    },
+    {
+        id: 'data_tracker',
+        title: 'Data Tracker',
+        description: 'Track 100+ consumption readings',
+        icon: '📈',
     }
 ];
 
