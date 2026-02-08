@@ -161,6 +161,47 @@ export function useOctopusEnergy(days: number = 30) {
     }
   }, [status]);
 
+  // Auto-sync on app open if last sync is stale (>24 hours)
+  useEffect(() => {
+    if (!status?.is_linked || !status?.meters?.length) return;
+
+    const oldestSync = status.meters
+      .map(m => m.last_sync_at ? new Date(m.last_sync_at).getTime() : 0)
+      .reduce((min, t) => Math.min(min, t), Date.now());
+
+    const hoursSinceSync = (Date.now() - oldestSync) / (1000 * 60 * 60);
+    const autoSyncKey = 'octopus-auto-sync-last';
+    const lastAutoSync = localStorage.getItem(autoSyncKey);
+    const hoursSinceAutoSync = lastAutoSync
+      ? (Date.now() - parseInt(lastAutoSync, 10)) / (1000 * 60 * 60)
+      : Infinity;
+
+    // Only auto-sync if data is >24h stale AND we haven't auto-synced in the last 6 hours
+    if (hoursSinceSync > 24 && hoursSinceAutoSync > 6) {
+      logger.info('Auto-syncing Octopus data (stale for ' + Math.round(hoursSinceSync) + 'h)');
+      localStorage.setItem(autoSyncKey, Date.now().toString());
+
+      // Run in background without blocking UI
+      (async () => {
+        try {
+          const session = await ensureAuthSession();
+          if (!session) return;
+
+          await supabase.functions.invoke('octopus-energy', {
+            body: { action: 'sync-consumption', days: 3 }
+          });
+          await supabase.functions.invoke('octopus-energy', {
+            body: { action: 'calculate-footprint' }
+          });
+          await refetchStatus();
+          logger.info('Auto-sync completed successfully');
+        } catch (err) {
+          logger.warn('Auto-sync failed', { error: err });
+        }
+      })();
+    }
+  }, [status?.is_linked, status?.meters]);
+
   // Fetch footprint data with dynamic range
   const { data: footprint, isLoading: footprintLoading, refetch: refetchFootprint } = useQuery({
     queryKey: ['octopus-footprint', days],
