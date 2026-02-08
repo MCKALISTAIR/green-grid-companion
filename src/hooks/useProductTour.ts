@@ -51,6 +51,33 @@ export function useProductTour() {
                         side: 'top',
                         align: 'center'
                     }
+                },
+                {
+                    element: '[data-tour="nav-history"]',
+                    popover: {
+                        title: '📜 Intensity History',
+                        description: 'Browse past carbon intensity data to spot patterns and see how the grid has performed over time.',
+                        side: 'top',
+                        align: 'center'
+                    }
+                },
+                {
+                    element: '[data-tour="nav-rank"]',
+                    popover: {
+                        title: '🏆 Regional Rankings',
+                        description: 'Compare carbon intensity across all UK regions and see how your area stacks up right now.',
+                        side: 'top',
+                        align: 'center'
+                    }
+                },
+                {
+                    element: '[data-tour="view-footprint"]',
+                    popover: {
+                        title: '🌱 Your Carbon Footprint',
+                        description: 'Link your Octopus Energy account to unlock personalised carbon tracking — see your daily emissions, green energy percentage, and savings tips.',
+                        side: 'bottom',
+                        align: 'center'
+                    }
                 }
             ],
             onDestroyed: () => {
