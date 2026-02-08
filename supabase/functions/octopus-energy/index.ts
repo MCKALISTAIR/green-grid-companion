@@ -806,37 +806,43 @@ Deno.serve(async (req: Request) => {
 
       const accountData = await response.json();
 
-      // Extract electricity meters
-      const meters: { mpan: string; serial_number: string }[] = [];
+      // Extract electricity meters - detect import vs export
+      const meters: { mpan: string; serial_number: string; meter_type: string }[] = [];
 
       for (const property of accountData.properties || []) {
         for (const meterPoint of property.electricity_meter_points || []) {
+          // Detect export meters: Octopus API uses is_export flag or profile_class
+          // Export MPANs typically have profile_class '00' or is_export=true
+          const isExport = meterPoint.is_export === true || 
+            meterPoint.profile_class === 0 ||
+            meterPoint.profile_class === '00';
+
           for (const meter of meterPoint.meters || []) {
             if (meterPoint.mpan && meter.serial_number) {
               meters.push({
                 mpan: meterPoint.mpan,
-                serial_number: meter.serial_number
+                serial_number: meter.serial_number,
+                meter_type: isExport ? 'export' : 'import'
               });
             }
           }
         }
       }
 
-      console.log(`Found ${meters.length} electricity meters for user ${userId}`);
+      console.log(`Found ${meters.length} electricity meters for user ${userId} (${meters.filter(m => m.meter_type === 'export').length} export)`);
 
       // Store meters in database linked to user
       for (const meter of meters) {
         const { error } = await supabase
           .from('octopus_meters')
           .upsert({
-            user_id: userId, // Link to user
+            user_id: userId,
             mpan: meter.mpan,
             serial_number: meter.serial_number,
+            meter_type: meter.meter_type,
             is_active: true,
             updated_at: new Date().toISOString()
-          }, { onConflict: 'mpan' }); // Assumes MPAN is unique system-wide, which is true. 
-        // If user A claims it, User B can't claim same MPAN unless we change constraint.
-        // For now, MPAN is globally unique so this is fine.
+          }, { onConflict: 'mpan' });
 
         if (error) {
           console.error(`Error storing meter ${meter.mpan}:`, error);
@@ -946,152 +952,139 @@ Deno.serve(async (req: Request) => {
 
     if (action === 'calculate-footprint') {
 
-      // Find user's MPAN first to get the correct consumption data
-      const { data: userMeter } = await supabase
+      // Find ALL user meters to process both import and export
+      const { data: userMeters } = await supabase
         .from('octopus_meters')
-        .select('mpan')
+        .select('mpan, meter_type')
         .eq('user_id', userId)
-        .limit(1)
-        .single();
+        .eq('is_active', true);
 
-      if (!userMeter) {
+      if (!userMeters?.length) {
         return new Response(
           JSON.stringify({ error: 'No meter linked' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      // Get consumption data for this user's MPAN
-      const { data: consumption, error: consumptionError } = await supabase
-        .from('octopus_consumption')
-        .select('*')
-        .eq('mpan', userMeter.mpan)
-        .order('interval_start', { ascending: false })
-        .limit(500);
+      let totalCalculated = 0;
 
-      if (consumptionError || !consumption?.length) {
-        return new Response(
-          JSON.stringify({ error: 'No consumption data found. Please sync consumption first.' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
+      for (const meter of userMeters) {
+        // Get consumption data for this meter
+        const { data: consumption, error: consumptionError } = await supabase
+          .from('octopus_consumption')
+          .select('*')
+          .eq('mpan', meter.mpan)
+          .order('interval_start', { ascending: false })
+          .limit(500);
 
-      // 1. Determine Date Range
-      // Consumption is ordered by interval_start DESC (latest first)
-      const lastRecord = consumption[0]; // Latest time
-      const firstRecord = consumption[consumption.length - 1]; // Earliest time
+        if (consumptionError || !consumption?.length) {
+          console.log(`No consumption data for meter ${meter.mpan}, skipping`);
+          continue;
+        }
 
-      const minTime = new Date(firstRecord.interval_start);
-      const maxTime = new Date(lastRecord.interval_end);
+        // Determine Date Range
+        const lastRecord = consumption[0];
+        const firstRecord = consumption[consumption.length - 1];
+        const minTime = new Date(firstRecord.interval_start);
+        const maxTime = new Date(lastRecord.interval_end);
 
-      const fromStr = minTime.toISOString();
-      const toStr = maxTime.toISOString();
+        // Determine Region
+        const mpan = consumption[0].mpan;
+        const regionId = getRegionIdFromMpan(mpan);
 
-      // 2. Determine Region
-      const mpan = consumption[0].mpan;
-      const regionId = getRegionIdFromMpan(mpan);
+        let intensityUrl = `https://api.carbonintensity.org.uk/intensity/${minTime.toISOString()}/${maxTime.toISOString()}`;
+        let isRegional = false;
 
-      let intensityUrl = `https://api.carbonintensity.org.uk/intensity/${fromStr}/${toStr}`;
-      let isRegional = false;
+        if (regionId) {
+          intensityUrl = `https://api.carbonintensity.org.uk/regional/intensity/${minTime.toISOString()}/${maxTime.toISOString()}/regionid/${regionId}`;
+          isRegional = true;
+        }
 
-      if (regionId) {
-        intensityUrl = `https://api.carbonintensity.org.uk/regional/intensity/${fromStr}/${toStr}/regionid/${regionId}`;
-        isRegional = true;
-      }
+        const intensityMap = new Map<string, { intensity: number, index: string }>();
 
-      const intensityMap = new Map<string, { intensity: number, index: string }>();
+        try {
+          const intensityResponse = await fetch(intensityUrl);
+          if (!intensityResponse.ok) throw new Error(`Failed to fetch batch intensity: ${intensityResponse.status}`);
 
-      try {
-        const intensityResponse = await fetch(intensityUrl);
-        if (!intensityResponse.ok) throw new Error(`Failed to fetch batch intensity: ${intensityResponse.status}`);
+          const intensityJson = await intensityResponse.json();
+          let intensityList: any[] = [];
 
-        const intensityJson = await intensityResponse.json();
-        let intensityList: any[] = [];
-
-        if (isRegional) {
-          // Check nested structure carefully
-          if (Array.isArray(intensityJson.data)) {
-            // Sometimes regional API returns array of regions, we want the first (and only) one if we requested by ID
-            intensityList = intensityJson.data[0]?.data || [];
+          if (isRegional) {
+            intensityList = Array.isArray(intensityJson.data)
+              ? intensityJson.data[0]?.data || []
+              : intensityJson.data?.data || [];
           } else {
-            // Or direct object
-            intensityList = intensityJson.data?.data || [];
+            intensityList = intensityJson.data || [];
           }
-        } else {
-          intensityList = intensityJson.data || [];
+
+          for (const item of intensityList) {
+            if (item.from && item.intensity) {
+              const value = item.intensity.actual ?? item.intensity.forecast ?? 0;
+              const index = item.intensity.index || 'moderate';
+              intensityMap.set(item.from, { intensity: value, index });
+            }
+          }
+        } catch (error) {
+          console.error(`Batch fetch failed for meter ${mpan}:`, error);
+          continue;
         }
 
-        for (const item of intensityList) {
-          if (item.from && item.intensity) {
-            const value = item.intensity.actual ?? item.intensity.forecast ?? 0;
-            const index = item.intensity.index || 'moderate';
-            intensityMap.set(item.from, { intensity: value, index });
+        // Process records
+        const footprintRecords: FootprintRecord[] = [];
+
+        for (const record of consumption) {
+          const data = intensityMap.get(record.interval_start);
+          if (data) {
+            const carbonG = record.consumption_kwh * data.intensity;
+            footprintRecords.push({
+              interval_start: record.interval_start,
+              interval_end: record.interval_end,
+              consumption_kwh: record.consumption_kwh,
+              intensity_gco2_kwh: data.intensity,
+              carbon_g: carbonG,
+              intensity_index: data.index,
+              mpan: record.mpan
+            });
           }
         }
 
-      } catch (error) {
-        console.error('Batch fetch failed:', error);
-        return new Response(
-          JSON.stringify({ error: 'Failed to fetch external carbon data' }),
-          { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      // 3. Process records
-      let calculatedCount = 0;
-      const footprintRecords: FootprintRecord[] = [];
-
-      for (const record of consumption) {
-        const data = intensityMap.get(record.interval_start);
-
-        if (data) {
-          const carbonG = record.consumption_kwh * data.intensity;
-
-          footprintRecords.push({
-            interval_start: record.interval_start,
-            interval_end: record.interval_end,
-            consumption_kwh: record.consumption_kwh,
-            intensity_gco2_kwh: data.intensity,
-            carbon_g: carbonG,
-            intensity_index: data.index,
-            mpan: record.mpan
-          });
+        if (footprintRecords.length > 0) {
+          const { error } = await supabase
+            .from('carbon_footprint')
+            .upsert(footprintRecords, { onConflict: 'mpan,interval_start' });
+          if (!error) totalCalculated += footprintRecords.length;
         }
-      }
 
-      // 4. Batch Insert
-      if (footprintRecords.length > 0) {
-        const { error } = await supabase
-          .from('carbon_footprint')
-          .upsert(footprintRecords, { onConflict: 'mpan,interval_start' });
-
-        if (!error) calculatedCount = footprintRecords.length;
+        console.log(`Calculated ${footprintRecords.length} footprint records for meter ${mpan} (${meter.meter_type})`);
       }
 
       return new Response(
         JSON.stringify({
           success: true,
-          records_calculated: calculatedCount,
-          region_used: isRegional ? regionId : 'national'
+          records_calculated: totalCalculated,
+          meters_processed: userMeters.length
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     if (action === 'get-footprint') {
-      const { data: userMeter } = await supabase
+      // Get ALL user meters with their types
+      const { data: userMeters } = await supabase
         .from('octopus_meters')
-        .select('mpan')
+        .select('mpan, meter_type')
         .eq('user_id', userId)
-        .limit(1)
-        .single();
+        .eq('is_active', true);
 
-      if (!userMeter) {
+      if (!userMeters?.length) {
         return new Response(
           JSON.stringify({ records: [], summary: {} }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
+
+      const mpans = userMeters.map(m => m.mpan);
+      const exportMpans = new Set(userMeters.filter(m => m.meter_type === 'export').map(m => m.mpan));
 
       const periodFrom = new Date();
       periodFrom.setDate(periodFrom.getDate() - days);
@@ -1099,7 +1092,7 @@ Deno.serve(async (req: Request) => {
       const { data: footprint, error } = await supabase
         .from('carbon_footprint')
         .select('*')
-        .eq('mpan', userMeter.mpan)
+        .in('mpan', mpans)
         .gte('interval_start', periodFrom.toISOString())
         .order('interval_start', { ascending: true });
 
@@ -1110,15 +1103,27 @@ Deno.serve(async (req: Request) => {
         );
       }
 
-      // Calculate summary stats
-      const totalCarbonG = footprint?.reduce((sum: number, r: FootprintRecord) => sum + Number(r.carbon_g), 0) || 0;
-      const totalKwh = footprint?.reduce((sum: number, r: FootprintRecord) => sum + Number(r.consumption_kwh), 0) || 0;
-      const avgIntensity = footprint?.length
-        ? footprint.reduce((sum: number, r: FootprintRecord) => sum + r.intensity_gco2_kwh, 0) / footprint.length
+      // Separate import and export records
+      const importRecords = (footprint || []).filter((r: any) => !exportMpans.has(r.mpan));
+      const exportRecords = (footprint || []).filter((r: any) => exportMpans.has(r.mpan));
+
+      // Calculate import summary stats
+      const importCarbonG = importRecords.reduce((sum: number, r: FootprintRecord) => sum + Number(r.carbon_g), 0);
+      const importKwh = importRecords.reduce((sum: number, r: FootprintRecord) => sum + Number(r.consumption_kwh), 0);
+      const avgIntensity = importRecords.length
+        ? importRecords.reduce((sum: number, r: FootprintRecord) => sum + r.intensity_gco2_kwh, 0) / importRecords.length
         : 0;
 
+      // Calculate export summary (carbon offset from solar export)
+      const exportCarbonG = exportRecords.reduce((sum: number, r: FootprintRecord) => sum + Number(r.carbon_g), 0);
+      const exportKwh = exportRecords.reduce((sum: number, r: FootprintRecord) => sum + Number(r.consumption_kwh), 0);
+
+      // Net carbon = import carbon - export offset
+      const netCarbonG = importCarbonG - exportCarbonG;
+
+      // Intensity breakdown (import only for green score calculation)
       const byIndex: Record<string, { count: number; carbon_g: number; kwh: number }> = {};
-      for (const record of footprint || []) {
+      for (const record of importRecords) {
         const idx = record.intensity_index;
         if (!byIndex[idx]) byIndex[idx] = { count: 0, carbon_g: 0, kwh: 0 };
         byIndex[idx].count++;
@@ -1128,13 +1133,19 @@ Deno.serve(async (req: Request) => {
 
       return new Response(
         JSON.stringify({
-          records: footprint,
+          records: importRecords,
+          export_records: exportRecords,
           summary: {
-            total_carbon_kg: totalCarbonG / 1000,
-            total_kwh: totalKwh,
+            total_carbon_kg: importCarbonG / 1000,
+            total_kwh: importKwh,
             avg_intensity: Math.round(avgIntensity),
             by_intensity_index: byIndex,
-            period_days: days
+            period_days: days,
+            // New export/net fields
+            export_kwh: exportKwh,
+            export_carbon_kg: exportCarbonG / 1000,
+            net_carbon_kg: netCarbonG / 1000,
+            has_export_meter: exportMpans.size > 0,
           }
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

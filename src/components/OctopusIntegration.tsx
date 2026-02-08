@@ -264,7 +264,14 @@ export function OctopusIntegration() {
               <div key={meter.mpan} className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-purple-500" />
-                  <span className="text-muted-foreground">MPAN: {meter.mpan.slice(-6)}</span>
+                  <span className="text-muted-foreground">
+                    MPAN: {meter.mpan.slice(-6)}
+                    {meter.meter_type === 'export' && (
+                      <Badge variant="outline" className="ml-1.5 text-[9px] h-4 px-1 bg-primary/10 text-primary border-primary/20">
+                        Export
+                      </Badge>
+                    )}
+                  </span>
                 </div>
                 {meter.last_sync_at && (
                   <span className="text-xs text-muted-foreground">

@@ -22,7 +22,9 @@ import {
   Smartphone,
   Trees,
   Coffee,
-  Home
+  Home,
+  ArrowDownUp,
+  SunMedium
 } from 'lucide-react';
 import { getImpactEquivalents, getImpactColor } from '@/lib/impact-conversions';
 import { useSettings } from '@/hooks/useSettings';
@@ -134,6 +136,10 @@ export function FootprintView() {
     if (!footprint?.summary) return null;
 
     const { by_intensity_index, total_kwh, total_carbon_kg } = footprint.summary;
+    const hasExport = footprint.summary.has_export_meter ?? false;
+    const exportKwh = footprint.summary.export_kwh ?? 0;
+    const exportCarbonKg = footprint.summary.export_carbon_kg ?? 0;
+    const netCarbonKg = footprint.summary.net_carbon_kg ?? total_carbon_kg;
 
     // Calculate green vs dirty usage
     const greenKwh = (by_intensity_index['very low']?.kwh || 0) + (by_intensity_index['low']?.kwh || 0);
@@ -149,8 +155,6 @@ export function FootprintView() {
     const potentialSavings = total_carbon_kg - optimalCarbon;
 
     // Actual Savings (compared to average intensity for the period)
-    // How much CO2 did they *avoid* by using their specific mix vs just flat usage at average?
-    // We can simulate "Average User" carbon: Total kWh * Average Period Intensity
     const averageUserCarbon = (total_kwh * avgIntensity) / 1000;
     const carbonSaved = Math.max(0, averageUserCarbon - total_carbon_kg);
 
@@ -199,6 +203,11 @@ export function FootprintView() {
       bestPeriod,
       peakPeriod,
       recordCount: footprint.records?.length || 0,
+      // Export/net
+      hasExport,
+      exportKwh,
+      exportCarbonKg,
+      netCarbonKg,
     };
   }, [footprint, dailyData]);
 
@@ -447,27 +456,62 @@ export function FootprintView() {
       ) : (
         <>
           {/* Summary Cards */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className={`grid gap-3 ${insights?.hasExport ? 'grid-cols-3' : 'grid-cols-2'}`}>
             <Card className="p-4">
               <div className="flex items-center gap-2 mb-2">
-                <Leaf className="w-5 h-5 text-primary" />
-                <span className="text-sm text-muted-foreground">Total Carbon</span>
+                <Zap className="w-5 h-5 text-primary" />
+                <span className="text-xs text-muted-foreground">Grid Import</span>
               </div>
               <p className="text-2xl font-bold text-foreground">
                 {insights?.totalCarbon.toFixed(1)} <span className="text-sm font-normal">kg CO₂</span>
               </p>
+              <p className="text-xs text-muted-foreground mt-1">{insights?.totalKwh.toFixed(1)} kWh</p>
             </Card>
 
-            <Card className="p-4">
+            {insights?.hasExport && (
+              <Card className="p-4 border-primary/20 bg-primary/5">
+                <div className="flex items-center gap-2 mb-2">
+                  <SunMedium className="w-5 h-5 text-primary" />
+                  <span className="text-xs text-muted-foreground">Solar Export</span>
+                </div>
+                <p className="text-2xl font-bold text-primary">
+                  -{insights.exportCarbonKg.toFixed(1)} <span className="text-sm font-normal">kg CO₂</span>
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">{insights.exportKwh.toFixed(1)} kWh exported</p>
+              </Card>
+            )}
+
+            <Card className={`p-4 ${insights?.hasExport ? 'border-emerald-500/20 bg-emerald-500/5' : ''}`}>
               <div className="flex items-center gap-2 mb-2">
-                <Zap className="w-5 h-5 text-primary" />
-                <span className="text-sm text-muted-foreground">Energy Used</span>
+                <Leaf className="w-5 h-5 text-primary" />
+                <span className="text-xs text-muted-foreground">
+                  {insights?.hasExport ? 'Net Carbon' : 'Total Carbon'}
+                </span>
               </div>
               <p className="text-2xl font-bold text-foreground">
-                {insights?.totalKwh.toFixed(1)} <span className="text-sm font-normal">kWh</span>
+                {(insights?.hasExport ? insights.netCarbonKg : insights?.totalCarbon)?.toFixed(1)} <span className="text-sm font-normal">kg CO₂</span>
               </p>
+              {insights?.hasExport && (
+                <p className="text-xs text-muted-foreground mt-1">After solar offset</p>
+              )}
             </Card>
           </div>
+
+          {/* Net Carbon Explainer (only when export meter exists) */}
+          {insights?.hasExport && (
+            <Card className="p-3 border-primary/20">
+              <div className="flex items-start gap-2">
+                <ArrowDownUp className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                <div className="text-xs text-muted-foreground">
+                  <p>
+                    <strong className="text-foreground">How net carbon works:</strong> Your import meter tracks electricity drawn from the grid ({insights.totalKwh.toFixed(1)} kWh).
+                    Your solar export meter shows clean energy you sent back ({insights.exportKwh.toFixed(1)} kWh), which displaces grid carbon.
+                    Your <strong className="text-foreground">net footprint</strong> subtracts the export offset from your import emissions.
+                  </p>
+                </div>
+              </div>
+            </Card>
+          )}
 
           {/* Green Score */}
           {insights && (
