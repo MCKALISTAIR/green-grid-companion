@@ -1,4 +1,5 @@
 import { GenerationMix, getFuelColor } from '@/lib/carbonApi';
+import { Home } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -22,11 +23,12 @@ interface GenerationMixBarProps {
   mix: MixItem[];
   showMW?: boolean;
   frequency?: number | null;
+  embeddedSolarMW?: number | null;
 }
 
 
 
-export function GenerationMixBar({ mix, showMW = false, frequency }: GenerationMixBarProps) {
+export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolarMW }: GenerationMixBarProps) {
   // Filter out zero values and sort by percentage
   const sortedMix = [...mix]
     .filter(m => m.perc > 0)
@@ -35,6 +37,13 @@ export function GenerationMixBar({ mix, showMW = false, frequency }: GenerationM
   const renewables = mix
     .filter(m => ['wind', 'solar', 'hydro', 'biomass'].includes(m.fuel.toLowerCase()))
     .reduce((acc, m) => acc + m.perc, 0);
+
+  // Calculate embedded solar share within the solar segment
+  const solarItem = sortedMix.find(m => m.fuel.toLowerCase() === 'solar');
+  const totalSolarMW = solarItem?.mw ?? null;
+  const embeddedSolarPerc = (totalSolarMW && embeddedSolarMW && totalSolarMW > 0)
+    ? Math.min((embeddedSolarMW / totalSolarMW) * 100, 100)
+    : null;
 
   return (
     <Dialog>
@@ -52,13 +61,38 @@ export function GenerationMixBar({ mix, showMW = false, frequency }: GenerationM
 
           {/* Bar visualization */}
           <div className="h-4 md:h-6 rounded-full overflow-hidden flex shadow-inner bg-muted/30" role="progressbar" aria-label="Generation Mix">
-            {sortedMix.map((item) => (
-              <div
-                key={item.fuel}
-                className={`${getFuelColor(item.fuel)} transition-all duration-500`}
-                style={{ width: `${item.perc}%` }}
-              />
-            ))}
+            {sortedMix.map((item) => {
+              const isSolar = item.fuel.toLowerCase() === 'solar';
+              // For solar, show a sub-segment with a striped pattern for embedded/rooftop
+              if (isSolar && embeddedSolarPerc !== null && embeddedSolarPerc > 0) {
+                const utilitySolarWidth = 100 - embeddedSolarPerc;
+                return (
+                  <div
+                    key={item.fuel}
+                    className="flex h-full transition-all duration-500"
+                    style={{ width: `${item.perc}%` }}
+                  >
+                    {/* Utility-scale solar */}
+                    <div
+                      className={`${getFuelColor(item.fuel)} h-full`}
+                      style={{ width: `${utilitySolarWidth}%` }}
+                    />
+                    {/* Embedded/rooftop solar - slightly lighter with pattern */}
+                    <div
+                      className="h-full bg-amber-300 dark:bg-amber-400/80"
+                      style={{ width: `${embeddedSolarPerc}%` }}
+                    />
+                  </div>
+                );
+              }
+              return (
+                <div
+                  key={item.fuel}
+                  className={`${getFuelColor(item.fuel)} transition-all duration-500`}
+                  style={{ width: `${item.perc}%` }}
+                />
+              );
+            })}
           </div>
 
           {/* Legend - Responsive Grid */}
@@ -165,6 +199,30 @@ export function GenerationMixBar({ mix, showMW = false, frequency }: GenerationM
                           {country}
                         </span>
                       ))}
+                    </div>
+                  )}
+
+                  {item.fuel.toLowerCase() === 'solar' && embeddedSolarMW !== null && totalSolarMW !== null && totalSolarMW > 0 && (
+                    <div className="pl-6 pt-2 space-y-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <div className={`w-3 h-3 rounded-full ${getFuelColor('solar')}`} />
+                        <span className="text-muted-foreground">Utility-scale</span>
+                        <span className="ml-auto font-medium">
+                          {((totalSolarMW - embeddedSolarMW) / 1000).toFixed(2)} GW
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <div className="w-3 h-3 rounded-full bg-amber-300 dark:bg-amber-400/80" />
+                        <span className="text-muted-foreground flex items-center gap-1">
+                          <Home className="w-3 h-3" /> Rooftop / Embedded
+                        </span>
+                        <span className="ml-auto font-medium">
+                          {(embeddedSolarMW / 1000).toFixed(2)} GW
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground/70 pt-1">
+                        Embedded solar includes private rooftop panels, community solar, and other distributed generation feeding into the grid.
+                      </p>
                     </div>
                   )}
                 </div>

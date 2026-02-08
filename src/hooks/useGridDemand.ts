@@ -16,6 +16,8 @@ export interface GridDemandData {
     settlementPeriod: number | null;
     totalDemandMW: number | null;
     gridFrequency: number | null;
+    embeddedSolarMW: number | null;
+    embeddedWindMW: number | null;
     mix: GenerationSourceMW[];
 }
 
@@ -98,6 +100,8 @@ export function useGridDemand() {
     return {
         demand: data?.totalDemandMW,
         frequency: data?.gridFrequency,
+        embeddedSolarMW: data?.embeddedSolarMW ?? null,
+        embeddedWindMW: data?.embeddedWindMW ?? null,
         mix: data?.mix || [],
         mixWithTrends,
         lastUpdated: data?.timestamp,
