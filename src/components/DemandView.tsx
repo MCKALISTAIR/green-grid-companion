@@ -12,7 +12,7 @@ import { FuelRecordList } from '@/components/FuelRecordCelebration';
 import { FuelTrendIndicator } from '@/components/FuelTrendIndicator';
 
 export function DemandView() {
-    const { demand, mix, mixWithTrends, frequency: gridFrequency, isLoading, error, refetch, lastUpdated } = useGridDemand();
+    const { demand, mix, mixWithTrends, frequency: gridFrequency, embeddedSolarMW, isLoading, error, refetch, lastUpdated } = useGridDemand();
     const { showGridFrequency } = useSettings();
     const { streaks, newRecords, dismissRecord } = useFuelStreaks(mix);
     const { milestones } = useFuelMilestones(mix);
@@ -172,7 +172,7 @@ export function DemandView() {
 
             {/* Generation Breakdown */}
             <Card className="p-4 shadow-lg">
-                <GenerationMixBar mix={sortedMix} showMW={true} />
+                <GenerationMixBar mix={sortedMix} showMW={true} embeddedSolarMW={embeddedSolarMW} />
             </Card>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">

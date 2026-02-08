@@ -151,6 +151,8 @@ Deno.serve(async (req: Request) => {
         settlementPeriod: latestDemand?.SETTLEMENT_PERIOD ?? null,
         totalDemandMW: totalDemandMW,
         gridFrequency: gridFrequency,
+        embeddedSolarMW: latestDemand?.EMBEDDED_SOLAR_GENERATION ?? null,
+        embeddedWindMW: latestDemand?.EMBEDDED_WIND_GENERATION ?? null,
         mix: mixMW
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
