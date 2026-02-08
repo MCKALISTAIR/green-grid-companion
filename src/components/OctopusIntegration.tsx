@@ -279,6 +279,25 @@ export function OctopusIntegration() {
                 <span>{status.footprint_records} footprint records calculated</span>
               </div>
             )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSync}
+              disabled={isSyncing}
+              className="w-full mt-2"
+            >
+              {isSyncing ? (
+                <>
+                  <TurbineSpinner size="sm" className="mr-2" />
+                  Syncing...
+                </>
+              ) : (
+                <>
+                  <Wind className="w-4 h-4 mr-2" />
+                  Sync Now
+                </>
+              )}
+            </Button>
           </div>
         )}
       </Card>
