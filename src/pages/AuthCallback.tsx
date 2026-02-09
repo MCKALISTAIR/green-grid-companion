@@ -15,7 +15,7 @@ export default function AuthCallback() {
                 const { data: { session }, error } = await supabase.auth.getSession();
 
                 if (error) {
-                    logger.error('Error checking session in auth callback', error);
+                    logger.error('Error checking session in auth callback', { message: error.message });
                     // Still redirect to home, maybe they are logged in or can try again
                     navigate("/");
                     return;
