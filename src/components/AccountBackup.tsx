@@ -115,9 +115,17 @@ export function AccountBackup({ isSyncing, lastSyncedAt, onSyncNow, formatLastSy
     }
 
     try {
-      const redirectUri = Capacitor.isNativePlatform()
-        ? `${APP_SCHEME}://auth/callback`
-        : window.location.origin;
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      let redirectUri: string;
+      
+      if (Capacitor.isNativePlatform()) {
+        redirectUri = `${APP_SCHEME}://auth/callback`;
+      } else if (isLocalhost) {
+        // Localhost can't be used as OAuth redirect — use the preview URL instead
+        redirectUri = 'https://gridsense-app.lovable.app';
+      } else {
+        redirectUri = window.location.origin;
+      }
 
       const { error } = await lovable.auth.signInWithOAuth(provider, {
         redirect_uri: redirectUri,
@@ -226,9 +234,16 @@ export function AccountBackup({ isSyncing, lastSyncedAt, onSyncNow, formatLastSy
       await supabase.auth.signOut();
 
       // Sign in with the new provider
-      const redirectUri = Capacitor.isNativePlatform()
-        ? `${APP_SCHEME}://auth/callback`
-        : window.location.origin;
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      let redirectUri: string;
+      
+      if (Capacitor.isNativePlatform()) {
+        redirectUri = `${APP_SCHEME}://auth/callback`;
+      } else if (isLocalhost) {
+        redirectUri = 'https://gridsense-app.lovable.app';
+      } else {
+        redirectUri = window.location.origin;
+      }
 
       const { error } = await lovable.auth.signInWithOAuth(switchTarget, {
         redirect_uri: redirectUri,
