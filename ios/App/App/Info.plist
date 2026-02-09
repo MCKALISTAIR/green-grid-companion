@@ -67,6 +67,14 @@
                 <string>GridSense</string>
             </array>
         </dict>
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>Google Sign-In</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>com.googleusercontent.apps.818569205239-ap8ptjsmhgtknlu5pclvaukkr5mb5eai</string>
+            </array>
+        </dict>
     </array>
 </dict>
 </plist>

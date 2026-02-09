@@ -29,8 +29,23 @@ export function DeepLinkHandler() {
                     }
 
                     if (url.pathname.startsWith('/auth/callback')) {
-                        const path = url.pathname + url.search;
-                        logger.info('Navigating to deep link path:', { path });
+                        // Forward hash fragment as query params so React Router can access them
+                        // The broker returns tokens in the hash: #access_token=...&refresh_token=...
+                        const hashFragment = url.hash ? url.hash.substring(1) : '';
+                        const existingSearch = url.search ? url.search.substring(1) : '';
+                        
+                        // Merge hash params into query params (hash takes priority)
+                        const mergedParams = new URLSearchParams(existingSearch);
+                        if (hashFragment) {
+                            const hashParams = new URLSearchParams(hashFragment);
+                            hashParams.forEach((value, key) => {
+                                mergedParams.set(key, value);
+                            });
+                        }
+                        
+                        const queryString = mergedParams.toString();
+                        const path = url.pathname + (queryString ? `?${queryString}` : '');
+                        logger.info('Navigating to auth callback with tokens:', { path, hasHash: !!hashFragment });
                         navigate(path);
                     }
                 } catch (error) {
