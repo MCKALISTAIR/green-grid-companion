@@ -125,17 +125,45 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
         </Card>
       )}
 
-      {/* Permissions blocked */}
+      {/* Permissions blocked — offer to re-request or open settings */}
       {isSupported && permissionStatus === 'denied' && (
         <Card className="p-4 bg-destructive/10 border-destructive/30">
-          <div className="flex items-center gap-3">
-            <BellOff className="w-5 h-5 text-destructive" />
-            <div>
-              <p className="text-sm font-medium text-destructive">Notifications blocked</p>
-              <p className="text-xs text-muted-foreground">
-                Please enable notifications in your browser/device settings.
-              </p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <BellOff className="w-5 h-5 text-destructive" />
+              <div>
+                <p className="text-sm font-medium text-destructive">Notifications blocked</p>
+                <p className="text-xs text-muted-foreground">
+                  {isNative
+                    ? 'Tap below to open your device settings and enable notifications.'
+                    : 'Please enable notifications in your browser settings, then refresh.'}
+                </p>
+              </div>
             </div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="shrink-0 border-destructive/40 text-destructive hover:bg-destructive/10"
+              onClick={async () => {
+                if (isNative) {
+                  try {
+                    const { NativeSettings, AndroidSettings, IOSSettings } = await import('capacitor-native-settings');
+                    await NativeSettings.open({
+                      optionAndroid: AndroidSettings.AppNotification,
+                      optionIOS: IOSSettings.App,
+                    });
+                  } catch {
+                    // Fallback: try re-requesting
+                    await requestPermission();
+                  }
+                } else {
+                  // On web, denied can't be re-prompted — guide user
+                  await requestPermission();
+                }
+              }}
+            >
+              {isNative ? 'Open Settings' : 'Enable'}
+            </Button>
           </div>
         </Card>
       )}
