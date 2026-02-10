@@ -201,6 +201,7 @@ export type Database = {
           daily_forecast_time: string
           device_token: string
           id: string
+          last_intensity_state: string | null
           low_intensity_enabled: boolean
           low_intensity_threshold: number
           monthly_report_day: number
@@ -217,6 +218,7 @@ export type Database = {
           daily_forecast_time?: string
           device_token: string
           id?: string
+          last_intensity_state?: string | null
           low_intensity_enabled?: boolean
           low_intensity_threshold?: number
           monthly_report_day?: number
@@ -233,6 +235,7 @@ export type Database = {
           daily_forecast_time?: string
           device_token?: string
           id?: string
+          last_intensity_state?: string | null
           low_intensity_enabled?: boolean
           low_intensity_threshold?: number
           monthly_report_day?: number
