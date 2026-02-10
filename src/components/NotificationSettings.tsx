@@ -110,7 +110,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
                 <p className="text-sm font-medium text-destructive">Notifications blocked</p>
                 <p className="text-xs text-muted-foreground">
                   {isNative
-                    ? 'Tap below to open your device settings and enable notifications.'
+                    ? 'Open your device Settings > GridSense > Notifications to enable.'
                     : 'Please enable notifications in your browser settings, then refresh.'}
                 </p>
               </div>
@@ -120,24 +120,12 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
               variant="outline"
               className="shrink-0 border-destructive/40 text-destructive hover:bg-destructive/10"
               onClick={async () => {
-                if (isNative) {
-                  try {
-                    const { NativeSettings, AndroidSettings, IOSSettings } = await import('capacitor-native-settings');
-                    await NativeSettings.open({
-                      optionAndroid: AndroidSettings.AppNotification,
-                      optionIOS: IOSSettings.App,
-                    });
-                  } catch {
-                    // Fallback: try re-requesting
-                    await requestPermission();
-                  }
-                } else {
-                  // On web, denied can't be re-prompted — guide user
-                  await requestPermission();
-                }
+                // On native, we can't programmatically open settings without additional plugins
+                // Just re-request permission as a fallback
+                await requestPermission();
               }}
             >
-              {isNative ? 'Open Settings' : 'Enable'}
+              {isNative ? 'Try Again' : 'Enable'}
             </Button>
           </div>
         </Card>
