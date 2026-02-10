@@ -25,13 +25,20 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
     updatePreference,
   } = useNotifications();
 
-  const handleLowIntensityToggle = async (enabled: boolean) => {
+  // Reusable toggle handler with permission check
+  const createToggleHandler = (prefKey: string) => async (enabled: boolean) => {
     if (enabled && permissionStatus !== 'granted') {
       const granted = await requestPermission();
       if (!granted) return;
     }
-    updatePreference('lowIntensityEnabled', enabled);
+    updatePreference(prefKey as keyof typeof prefs, enabled);
   };
+
+  const handleLowIntensityToggle = createToggleHandler('lowIntensityEnabled');
+  const handleHighIntensityToggle = createToggleHandler('highIntensityEnabled');
+  const handleDailyForecastToggle = createToggleHandler('dailyForecastEnabled');
+  const handleWeeklyDigestToggle = createToggleHandler('weeklyDigestEnabled');
+  const handleMonthlyReportToggle = createToggleHandler('monthlyReportEnabled');
 
   // Local state for sliders to ensure smooth dragging without constant storage writes
   const [localThreshold, setLocalThreshold] = useState(prefs.lowIntensityThreshold);
@@ -44,38 +51,6 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
   useEffect(() => {
     setLocalHighThreshold(prefs.highIntensityThreshold);
   }, [prefs.highIntensityThreshold]);
-
-  const handleDailyForecastToggle = async (enabled: boolean) => {
-    if (enabled && permissionStatus !== 'granted') {
-      const granted = await requestPermission();
-      if (!granted) return;
-    }
-    updatePreference('dailyForecastEnabled', enabled);
-  };
-
-  const handleHighIntensityToggle = async (enabled: boolean) => {
-    if (enabled && permissionStatus !== 'granted') {
-      const granted = await requestPermission();
-      if (!granted) return;
-    }
-    updatePreference('highIntensityEnabled', enabled);
-  };
-
-  const handleWeeklyDigestToggle = async (enabled: boolean) => {
-    if (enabled && permissionStatus !== 'granted') {
-      const granted = await requestPermission();
-      if (!granted) return;
-    }
-    updatePreference('weeklyDigestEnabled', enabled);
-  };
-
-  const handleMonthlyReportToggle = async (enabled: boolean) => {
-    if (enabled && permissionStatus !== 'granted') {
-      const granted = await requestPermission();
-      if (!granted) return;
-    }
-    updatePreference('monthlyReportEnabled', enabled);
-  };
 
   const dayOptions = [
     { value: 0, label: 'Sunday' },

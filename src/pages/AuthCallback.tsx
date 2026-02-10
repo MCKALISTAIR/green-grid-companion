@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
+import { ROUTES } from "@/lib/routes";
 
 /**
  * Handles OAuth callback by extracting tokens from the URL.
@@ -35,12 +36,12 @@ export default function AuthCallback() {
 
                     if (error) {
                         logger.error('Failed to set session from callback tokens', { message: error.message });
-                        navigate("/");
+                        navigate(ROUTES.HOME);
                         return;
                     }
 
                     logger.info('Session set successfully from callback tokens');
-                    navigate("/");
+                    navigate(ROUTES.HOME);
                     return;
                 }
 
@@ -57,10 +58,10 @@ export default function AuthCallback() {
                     logger.warn('No session or tokens found in auth callback');
                 }
 
-                navigate("/");
+                navigate(ROUTES.HOME);
             } catch (e) {
                 logger.error('Unexpected error in auth callback', e);
-                navigate("/");
+                navigate(ROUTES.HOME);
             }
         };
 

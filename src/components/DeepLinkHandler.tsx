@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { logger } from '@/lib/logger';
 import { APP_SCHEME } from '@/config';
+import { ROUTES } from '@/lib/routes';
 
 export function DeepLinkHandler() {
     const navigate = useNavigate();
@@ -28,12 +29,12 @@ export function DeepLinkHandler() {
                         return;
                     }
 
-                    if (url.pathname.startsWith('/auth/callback')) {
+                    if (url.pathname.startsWith(ROUTES.AUTH_CALLBACK)) {
                         // Forward hash fragment as query params so React Router can access them
                         // The broker returns tokens in the hash: #access_token=...&refresh_token=...
                         const hashFragment = url.hash ? url.hash.substring(1) : '';
                         const existingSearch = url.search ? url.search.substring(1) : '';
-                        
+
                         // Merge hash params into query params (hash takes priority)
                         const mergedParams = new URLSearchParams(existingSearch);
                         if (hashFragment) {
@@ -42,7 +43,7 @@ export function DeepLinkHandler() {
                                 mergedParams.set(key, value);
                             });
                         }
-                        
+
                         const queryString = mergedParams.toString();
                         const path = url.pathname + (queryString ? `?${queryString}` : '');
                         logger.info('Navigating to auth callback with tokens:', { path, hasHash: !!hashFragment });
@@ -62,8 +63,9 @@ export function DeepLinkHandler() {
                 if (launchUrl?.url) {
                     handleDeepLink(launchUrl);
                 }
-            } catch {
-                // getLaunchUrl can fail on some platforms — safe to ignore
+            } catch (error) {
+                // getLaunchUrl can fail on some platforms — safe to ignore, but log for debugging
+                logger.debug('getLaunchUrl not available on this platform', { error });
             }
         };
 

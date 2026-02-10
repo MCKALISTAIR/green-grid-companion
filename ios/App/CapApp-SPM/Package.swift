@@ -21,7 +21,8 @@ let package = Package(
         .package(name: "CapacitorSplashScreen", path: "../../../node_modules/@capacitor/splash-screen"),
         .package(name: "CapacitorStatusBar", path: "../../../node_modules/@capacitor/status-bar"),
         .package(name: "SentryCapacitor", path: "../../../node_modules/@sentry/capacitor"),
-        .package(name: "TransistorsoftCapacitorBackgroundFetch", path: "../../../node_modules/@transistorsoft/capacitor-background-fetch")
+        .package(name: "TransistorsoftCapacitorBackgroundFetch", path: "../../../node_modules/@transistorsoft/capacitor-background-fetch"),
+        .package(name: "CapacitorNativeSettings", path: "../../../node_modules/capacitor-native-settings")
     ],
     targets: [
         .target(
@@ -38,7 +39,8 @@ let package = Package(
                 .product(name: "CapacitorSplashScreen", package: "CapacitorSplashScreen"),
                 .product(name: "CapacitorStatusBar", package: "CapacitorStatusBar"),
                 .product(name: "SentryCapacitor", package: "SentryCapacitor"),
-                .product(name: "TransistorsoftCapacitorBackgroundFetch", package: "TransistorsoftCapacitorBackgroundFetch")
+                .product(name: "TransistorsoftCapacitorBackgroundFetch", package: "TransistorsoftCapacitorBackgroundFetch"),
+                .product(name: "CapacitorNativeSettings", package: "CapacitorNativeSettings")
             ]
         )
     ]

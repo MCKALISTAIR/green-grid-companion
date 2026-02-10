@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
     if (!carbonResponse.ok) {
       throw new Error('Failed to fetch carbon intensity data');
     }
-    
+
     const carbonData: CarbonIntensityResponse = await carbonResponse.json();
     const regions = carbonData.data[0]?.data || [];
 
@@ -71,12 +71,21 @@ Deno.serve(async (req) => {
     const notifications: Array<{ token: string; title: string; body: string }> = [];
     const stateUpdates: Array<{ id: string; state: string }> = [];
 
-    // Check each subscription
-    for (const sub of subscriptions as PushSubscription[]) {
-      // Find matching region for postcode
-      const postcodeLower = sub.postcode.toLowerCase();
+    // Cache for postcode-to-region lookups to avoid redundant searches
+    const postcodeCache = new Map<string, { intensity: number; index: string }>();
+
+    // Helper function to get region intensity with caching
+    const getRegionIntensity = async (postcode: string) => {
+      const postcodeLower = postcode.toLowerCase();
+
+      // Check cache first
+      if (postcodeCache.has(postcodeLower)) {
+        return postcodeCache.get(postcodeLower)!;
+      }
+
+      // Try exact match
       let regionIntensity = intensityByRegion.get(postcodeLower);
-      
+
       // If no exact match, try to find by first letter(s)
       if (!regionIntensity) {
         for (const [key, value] of intensityByRegion) {
@@ -96,6 +105,16 @@ Deno.serve(async (req) => {
           index: nationalData.data[0]?.intensity?.index || 'moderate',
         };
       }
+
+      // Cache the result
+      postcodeCache.set(postcodeLower, regionIntensity);
+      return regionIntensity;
+    };
+
+    // Check each subscription
+    for (const sub of subscriptions as PushSubscription[]) {
+      // Get region intensity (with caching)
+      const regionIntensity = await getRegionIntensity(sub.postcode);
 
       // Determine current state relative to threshold
       const currentState = regionIntensity.intensity <= sub.low_intensity_threshold ? 'below' : 'above';
@@ -124,13 +143,15 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Batch update all state changes
-    for (const update of stateUpdates) {
-      await supabase
-        .from('push_subscriptions')
-        .update({ last_intensity_state: update.state })
-        .eq('id', update.id);
-    }
+    // Batch update all state changes in parallel
+    await Promise.all(
+      stateUpdates.map(update =>
+        supabase
+          .from('push_subscriptions')
+          .update({ last_intensity_state: update.state })
+          .eq('id', update.id)
+      )
+    );
 
     console.log(`Checked ${subscriptions?.length || 0} subscriptions, ${stateUpdates.length} state changes, ${notifications.length} notifications to send`);
 
