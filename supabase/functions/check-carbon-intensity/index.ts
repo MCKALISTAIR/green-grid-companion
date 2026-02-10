@@ -26,6 +26,7 @@ interface PushSubscription {
   daily_forecast_enabled: boolean;
   daily_forecast_time: string;
   platform: string;
+  last_intensity_state: string | null; // 'above' | 'below' | null
 }
 
 Deno.serve(async (req) => {
@@ -68,11 +69,11 @@ Deno.serve(async (req) => {
     }
 
     const notifications: Array<{ token: string; title: string; body: string }> = [];
+    const stateUpdates: Array<{ id: string; state: string }> = [];
 
     // Check each subscription
     for (const sub of subscriptions as PushSubscription[]) {
       // Find matching region for postcode
-      // Try exact match first, then first letter(s)
       const postcodeLower = sub.postcode.toLowerCase();
       let regionIntensity = intensityByRegion.get(postcodeLower);
       
@@ -88,7 +89,6 @@ Deno.serve(async (req) => {
 
       // Default to national if no region match
       if (!regionIntensity) {
-        // Fetch national data
         const nationalResponse = await fetch('https://api.carbonintensity.org.uk/intensity');
         const nationalData = await nationalResponse.json();
         regionIntensity = {
@@ -97,27 +97,49 @@ Deno.serve(async (req) => {
         };
       }
 
-      // Check if intensity is below threshold
-      if (regionIntensity.intensity <= sub.low_intensity_threshold) {
-        notifications.push({
-          token: sub.device_token,
-          title: '⚡ Low Carbon Alert!',
-          body: `Carbon intensity is ${regionIntensity.intensity}g CO₂/kWh (${regionIntensity.index}). Great time to charge your EV or run appliances!`,
-        });
+      // Determine current state relative to threshold
+      const currentState = regionIntensity.intensity <= sub.low_intensity_threshold ? 'below' : 'above';
+      const previousState = sub.last_intensity_state;
+
+      // Only notify on state TRANSITIONS (or first check)
+      if (currentState !== previousState) {
+        if (currentState === 'below') {
+          // Intensity just dropped below threshold — good time to load shift
+          notifications.push({
+            token: sub.device_token,
+            title: '⚡ Low Carbon — Start Load Shifting!',
+            body: `Carbon intensity dropped to ${regionIntensity.intensity}g CO₂/kWh (${regionIntensity.index}). Great time to charge your EV or run appliances!`,
+          });
+        } else if (currentState === 'above' && previousState === 'below') {
+          // Intensity just climbed above threshold — stop load shifting
+          notifications.push({
+            token: sub.device_token,
+            title: '📈 Carbon Rising — Load Shifting Window Closed',
+            body: `Carbon intensity is now ${regionIntensity.intensity}g CO₂/kWh (${regionIntensity.index}). Consider pausing non-essential usage until it drops again.`,
+          });
+        }
+
+        // Track state update
+        stateUpdates.push({ id: sub.id, state: currentState });
       }
     }
 
-    // Return the notifications that should be sent
-    // In a production app, you would integrate with APNs/FCM here
-    // For now, we return the list of notifications to be sent
-    console.log(`Found ${notifications.length} notifications to send`);
+    // Batch update all state changes
+    for (const update of stateUpdates) {
+      await supabase
+        .from('push_subscriptions')
+        .update({ last_intensity_state: update.state })
+        .eq('id', update.id);
+    }
+
+    console.log(`Checked ${subscriptions?.length || 0} subscriptions, ${stateUpdates.length} state changes, ${notifications.length} notifications to send`);
 
     return new Response(
       JSON.stringify({
         success: true,
         checked: subscriptions?.length || 0,
+        stateChanges: stateUpdates.length,
         notifications: notifications.length,
-        // In production, you'd actually send these via APNs/FCM
         debug: notifications,
       }),
       {
