@@ -43,6 +43,9 @@ export function BestTimeSlot({ forecast }: BestTimeCardProps) {
   const data = useBestWorstTimes(forecast);
   if (!data) return null;
 
+  const now = new Date();
+  const isNow = now >= data.bestStart && now <= data.bestEnd;
+
   return (
     <Card className="p-4 bg-intensity-very-low/10 border-intensity-very-low/30">
       <div className="flex items-center gap-3">
@@ -52,7 +55,12 @@ export function BestTimeSlot({ forecast }: BestTimeCardProps) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <BatteryCharging className="w-4 h-4 text-intensity-very-low" />
-            <span className="text-sm font-medium text-foreground">Best time to load-shift</span>
+            <span className="text-sm font-medium text-foreground">
+              {isNow ? 'Load-shift now — it\'s the best time!' : 'Best time to load-shift'}
+            </span>
+            {isNow && (
+              <span className="text-[10px] font-semibold uppercase tracking-wider bg-intensity-very-low/20 text-intensity-very-low px-1.5 py-0.5 rounded-full">Now</span>
+            )}
           </div>
           <p className="text-lg font-bold text-intensity-very-low">
             {format(data.bestStart, 'HH:mm')} → {format(data.bestEnd, 'HH:mm')} <span className="text-sm font-medium ml-1 text-muted-foreground">{getDayLabel(data.bestStart)}</span>
