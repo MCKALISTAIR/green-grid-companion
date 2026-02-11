@@ -290,9 +290,9 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
               value={[localHighThreshold]}
               onValueChange={([value]) => setLocalHighThreshold(value)}
               onValueCommit={([value]) => updatePreference('highIntensityThreshold', value)}
-              min={50}
-              max={400}
-              step={5}
+              min={0}
+              max={100}
+              step={1}
               className="w-full"
             />
           </div>
