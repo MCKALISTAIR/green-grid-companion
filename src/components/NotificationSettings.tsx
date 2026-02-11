@@ -228,8 +228,9 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
               step={1}
               className="w-full"
             />
-
-
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              You'll be notified <span className="font-medium text-foreground">once</span> when intensity drops below {localThreshold} gCO₂/kWh, and <span className="font-medium text-foreground">once</span> when it rises back above — not on every change.
+            </p>
             <div className="pt-4 mt-4 border-t border-border/50">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5 pr-4">
@@ -295,6 +296,9 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
               step={1}
               className="w-full"
             />
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              You'll be notified <span className="font-medium text-foreground">once</span> when intensity rises above {localHighThreshold} gCO₂/kWh, and <span className="font-medium text-foreground">once</span> when it drops back below — not on every change.
+            </p>
           </div>
         )}
       </Card>
