@@ -11,6 +11,8 @@ interface PushSubscriptionData {
   platform?: string;
   low_intensity_enabled?: boolean;
   low_intensity_threshold?: number;
+  high_intensity_enabled?: boolean;
+  high_intensity_threshold?: number;
   daily_forecast_enabled?: boolean;
   daily_forecast_time?: string;
   weekly_digest_enabled?: boolean;
@@ -118,6 +120,15 @@ Deno.serve(async (req) => {
           );
         }
 
+        // Validate high intensity threshold range
+        if (body.high_intensity_threshold !== undefined && 
+            (body.high_intensity_threshold < 0 || body.high_intensity_threshold > 500)) {
+          return new Response(
+            JSON.stringify({ error: 'High intensity threshold must be between 0 and 500' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
         // Validate weekly digest day (0-6)
         if (body.weekly_digest_day !== undefined && 
             (body.weekly_digest_day < 0 || body.weekly_digest_day > 6)) {
@@ -155,6 +166,8 @@ Deno.serve(async (req) => {
             platform: body.platform?.toLowerCase() || 'ios',
             low_intensity_enabled: body.low_intensity_enabled ?? false,
             low_intensity_threshold: body.low_intensity_threshold ?? 100,
+            high_intensity_enabled: body.high_intensity_enabled ?? false,
+            high_intensity_threshold: body.high_intensity_threshold ?? 200,
             daily_forecast_enabled: body.daily_forecast_enabled ?? false,
             daily_forecast_time: body.daily_forecast_time ?? '07:00',
             weekly_digest_enabled: body.weekly_digest_enabled ?? false,

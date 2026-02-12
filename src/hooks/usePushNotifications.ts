@@ -8,6 +8,8 @@ import { logger } from '@/lib/logger';
 export interface PushNotificationPrefs {
   lowIntensityEnabled: boolean;
   lowIntensityThreshold: number;
+  highIntensityEnabled: boolean;
+  highIntensityThreshold: number;
   dailyForecastEnabled: boolean;
   dailyForecastTime: string;
   weeklyDigestEnabled: boolean;
@@ -19,6 +21,8 @@ export interface PushNotificationPrefs {
 const DEFAULT_PREFS: PushNotificationPrefs = {
   lowIntensityEnabled: false,
   lowIntensityThreshold: 100,
+  highIntensityEnabled: false,
+  highIntensityThreshold: 200,
   dailyForecastEnabled: false,
   dailyForecastTime: '07:00',
   weeklyDigestEnabled: false,
@@ -64,6 +68,8 @@ export function usePushNotifications(postcode: string) {
         setPrefs({
           lowIntensityEnabled: result.data.low_intensity_enabled,
           lowIntensityThreshold: result.data.low_intensity_threshold,
+          highIntensityEnabled: result.data.high_intensity_enabled ?? false,
+          highIntensityThreshold: result.data.high_intensity_threshold ?? 200,
           dailyForecastEnabled: result.data.daily_forecast_enabled,
           dailyForecastTime: result.data.daily_forecast_time,
           weeklyDigestEnabled: result.data.weekly_digest_enabled,
@@ -202,6 +208,8 @@ export function usePushNotifications(postcode: string) {
             postcode: postcode,
             low_intensity_enabled: newPrefs.lowIntensityEnabled,
             low_intensity_threshold: newPrefs.lowIntensityThreshold,
+            high_intensity_enabled: newPrefs.highIntensityEnabled,
+            high_intensity_threshold: newPrefs.highIntensityThreshold,
             daily_forecast_enabled: newPrefs.dailyForecastEnabled,
             daily_forecast_time: newPrefs.dailyForecastTime,
             weekly_digest_enabled: newPrefs.weeklyDigestEnabled,
