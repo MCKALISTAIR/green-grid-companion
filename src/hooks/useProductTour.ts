@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
 import { logger } from '@/lib/logger';
@@ -92,7 +92,7 @@ export function useProductTour() {
         };
     }, []);
 
-    const startTour = () => {
+    const startTour = useCallback(() => {
         const seen = localStorage.getItem('product_tour_seen');
         const onboardingComplete = localStorage.getItem('onboarding_complete');
 
@@ -101,7 +101,7 @@ export function useProductTour() {
                 driverObj.current?.drive();
             }, 1000);
         }
-    };
+    }, []);
 
     return { startTour };
 }
