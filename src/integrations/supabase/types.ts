@@ -200,7 +200,10 @@ export type Database = {
           daily_forecast_enabled: boolean
           daily_forecast_time: string
           device_token: string
+          high_intensity_enabled: boolean
+          high_intensity_threshold: number
           id: string
+          last_high_intensity_state: string | null
           last_intensity_state: string | null
           low_intensity_enabled: boolean
           low_intensity_threshold: number
@@ -217,7 +220,10 @@ export type Database = {
           daily_forecast_enabled?: boolean
           daily_forecast_time?: string
           device_token: string
+          high_intensity_enabled?: boolean
+          high_intensity_threshold?: number
           id?: string
+          last_high_intensity_state?: string | null
           last_intensity_state?: string | null
           low_intensity_enabled?: boolean
           low_intensity_threshold?: number
@@ -234,7 +240,10 @@ export type Database = {
           daily_forecast_enabled?: boolean
           daily_forecast_time?: string
           device_token?: string
+          high_intensity_enabled?: boolean
+          high_intensity_threshold?: number
           id?: string
+          last_high_intensity_state?: string | null
           last_intensity_state?: string | null
           low_intensity_enabled?: boolean
           low_intensity_threshold?: number
