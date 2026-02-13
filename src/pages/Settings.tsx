@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, GraduationCap, Shield, MapPin, History, MessageSquare, Home, Cloud, RefreshCw, Activity, Sparkles, Monitor, Download, Cookie } from 'lucide-react';
+import { ChevronRight, GraduationCap, Shield, MapPin, History, MessageSquare, Home, Cloud, RefreshCw, Activity, Sparkles, Monitor, Download, Cookie, Play } from 'lucide-react';
 import { NotificationSettings } from '@/components/NotificationSettings';
 import { OctopusIntegration } from '@/components/OctopusIntegration';
 import { TeslaIntegration } from '@/components/TeslaIntegration';
@@ -319,6 +319,32 @@ export default function Settings() {
                                 }}
                             >
                                 Reset
+                            </Button>
+                        </div>
+
+                        {/* Replay Product Tour */}
+                        <div className="flex items-center justify-between p-4 bg-card border rounded-lg">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-primary/10 rounded-full">
+                                    <Play className="w-5 h-5 text-primary" />
+                                </div>
+                                <div>
+                                    <h3 className="font-medium">Replay Tour</h3>
+                                    <p className="text-sm text-muted-foreground">Walk through the app guide again</p>
+                                </div>
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                    localStorage.removeItem('product_tour_seen');
+                                    toast.success('Tour reset! Redirecting to home…');
+                                    setTimeout(() => {
+                                        window.location.href = '/';
+                                    }, 500);
+                                }}
+                            >
+                                Replay
                             </Button>
                         </div>
                     </div>
