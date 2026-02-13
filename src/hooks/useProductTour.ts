@@ -39,8 +39,8 @@ export function useProductTour() {
                     popover: {
                         title: '🔋 Generation Mix',
                         description: 'A live breakdown of where your electricity is coming from — wind, solar, gas, nuclear and more.',
-                        side: 'top',
-                        align: 'center'
+                        side: 'bottom',
+                        align: 'start'
                     }
                 },
                 {
