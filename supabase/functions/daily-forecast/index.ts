@@ -73,35 +73,29 @@ Deno.serve(async (req) => {
     const forecastData = await forecastResponse.json();
     const forecasts: ForecastData[] = forecastData.data || [];
 
-    // Find best and worst times
-    let bestTime: ForecastData | null = null;
-    let worstTime: ForecastData | null = null;
+    // Calculate stats
     let totalIntensity = 0;
+    let greenSlots = 0;
 
     for (const forecast of forecasts) {
       totalIntensity += forecast.intensity.forecast;
-      
-      if (!bestTime || forecast.intensity.forecast < bestTime.intensity.forecast) {
-        bestTime = forecast;
-      }
-      if (!worstTime || forecast.intensity.forecast > worstTime.intensity.forecast) {
-        worstTime = forecast;
+      const idx = forecast.intensity.index.toLowerCase();
+      if (idx === 'low' || idx === 'very low') {
+        greenSlots++;
       }
     }
 
     const avgIntensity = Math.round(totalIntensity / forecasts.length);
+    const greenHours = Math.round(greenSlots / 2); // each slot is 30 min
     
     // Generate notification for each subscription
     for (const sub of subscriptions as PushSubscription[]) {
-      const bestTimeFormatted = bestTime ? new Date(bestTime.from).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : 'N/A';
-      const worstTimeFormatted = worstTime ? new Date(worstTime.from).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : 'N/A';
-      
       const emoji = avgIntensity < 100 ? '🌿' : avgIntensity < 200 ? '☁️' : '🏭';
       
       notifications.push({
         token: sub.device_token,
         title: `${emoji} Today's Carbon Forecast`,
-        body: `Average: ${avgIntensity}g CO₂/kWh. Best time: ${bestTimeFormatted} (${bestTime?.intensity.forecast}g). Avoid: ${worstTimeFormatted} (${worstTime?.intensity.forecast}g).`,
+        body: `Today's average: ${avgIntensity}g CO₂/kWh. ${greenHours}h of green energy expected 🌿`,
       });
     }
 
