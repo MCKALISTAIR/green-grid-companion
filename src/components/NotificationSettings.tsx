@@ -25,13 +25,15 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
     updatePreference,
   } = useNotifications();
 
-  // Reusable toggle handler with permission check
-  const createToggleHandler = (prefKey: string) => async (enabled: boolean) => {
+  // Reusable toggle handler with permission check - type-safe for boolean preferences
+  const createToggleHandler = <K extends keyof typeof prefs>(
+    prefKey: K extends string ? (typeof prefs[K] extends boolean ? K : never) : never
+  ) => async (enabled: boolean) => {
     if (enabled && permissionStatus !== 'granted') {
       const granted = await requestPermission();
       if (!granted) return;
     }
-    updatePreference(prefKey as keyof typeof prefs, enabled);
+    updatePreference(prefKey, enabled);
   };
 
   const handleLowIntensityToggle = createToggleHandler('lowIntensityEnabled');

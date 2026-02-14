@@ -500,7 +500,11 @@ export default function Settings() {
                     <div className="pt-2 flex flex-col items-center gap-1">
                         <span
                             onClick={(e) => { e.preventDefault(); onVersionClick(); }}
+                            onKeyPress={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onVersionClick(); } }}
                             className="bg-transparent border-0 p-0 text-primary hover:underline cursor-pointer select-none"
+                            role="button"
+                            aria-label="Tap version number multiple times to unlock developer features"
+                            tabIndex={0}
                         >
                             {VERSION_STRING}
                         </span>
@@ -529,21 +533,26 @@ export default function Settings() {
                                     try {
                                         throw new Error("This is a test error from GridSense Settings");
                                     } catch (error) {
-                                        // We import logger dynamically or from top level. 
-                                        // Settings.tsx doesn't import logger yet. 
-                                        // We need to ensure logger is imported.
-                                        // Actually, I'll update the imports in a separate call or use window.logger if exposed? 
-                                        // No, I should import it.
-                                        // I'll add the import in the next step.
                                         console.error("Test error triggered", error);
-                                        import('@/lib/logger').then(({ logger }) => {
-                                            logger.error("Test error triggered by user", { error });
-                                        });
+                                        import('@/lib/logger')
+                                            .then(({ logger }) => {
+                                                logger.error("Test error triggered by user", { error });
+                                                toast.success("Error logged to Sentry successfully");
+                                            })
+                                            .catch((err) => {
+                                                console.error("Failed to import logger:", err);
+                                                toast.error("Failed to load logging module");
+                                            });
                                     }
                                     // Also direct Sentry capture for verification
-                                    import('@sentry/react').then(Sentry => {
-                                        Sentry.captureMessage("Test Message from GridSense Settings");
-                                    });
+                                    import('@sentry/react')
+                                        .then(Sentry => {
+                                            Sentry.captureMessage("Test Message from GridSense Settings");
+                                        })
+                                        .catch((err) => {
+                                            console.error("Failed to import Sentry:", err);
+                                            toast.error("Failed to load error tracking");
+                                        });
                                 }}
                             >
                                 <Zap className="w-4 h-4 mr-2" />

@@ -3,6 +3,9 @@ import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
 import { logger } from '@/lib/logger';
 
+// Wait for page elements to render and settle before starting the tour
+const TOUR_START_DELAY_MS = 1000;
+
 export function useProductTour() {
     const driverObj = useRef<ReturnType<typeof driver> | null>(null);
 
@@ -99,7 +102,7 @@ export function useProductTour() {
         if (!seen && onboardingComplete === 'true') {
             setTimeout(() => {
                 driverObj.current?.drive();
-            }, 1000);
+            }, TOUR_START_DELAY_MS);
         }
     }, []);
 

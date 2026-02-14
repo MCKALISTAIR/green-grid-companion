@@ -1,41 +1,39 @@
 import { ForecastData } from '@/lib/carbonApi';
-import { format, parseISO, isTomorrow, isToday } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { BatteryCharging, TrendingDown, TrendingUp } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { getDayLabel } from '@/lib/date-utils';
 
 interface BestTimeCardProps {
   forecast: ForecastData[];
 }
 
-function getDayLabel(date: Date) {
-  if (isToday(date)) return '';
-  if (isTomorrow(date)) return 'tomorrow';
-  return format(date, 'EEEE');
-}
+// Number of 30-minute forecast slots to consider for optimal windows (3 hours)
+const OPTIMAL_WINDOW_HOURS = 6;
 
 function useBestWorstTimes(forecast: ForecastData[]) {
-  if (forecast.length < 6) return null;
+  if (forecast.length < OPTIMAL_WINDOW_HOURS) return null;
 
   const now = new Date();
   const futureForecast = forecast.filter(f => new Date(f.to) > now);
-  if (futureForecast.length < 6) return null;
+  if (futureForecast.length < OPTIMAL_WINDOW_HOURS) return null;
 
   let minSum = Infinity, minStartIndex = 0;
   let maxSum = 0, maxStartIndex = 0;
 
-  for (let i = 0; i <= futureForecast.length - 6; i++) {
-    const sum = futureForecast.slice(i, i + 6).reduce((acc, f) => acc + f.intensity.forecast, 0);
+  for (let i = 0; i <= futureForecast.length - OPTIMAL_WINDOW_HOURS; i++) {
+    const sum = futureForecast.slice(i, i + OPTIMAL_WINDOW_HOURS).reduce((acc, f) => acc + f.intensity.forecast, 0);
     if (sum < minSum) { minSum = sum; minStartIndex = i; }
     if (sum > maxSum) { maxSum = sum; maxStartIndex = i; }
   }
 
   return {
     bestStart: parseISO(futureForecast[minStartIndex].from),
-    bestEnd: parseISO(futureForecast[minStartIndex + 5].to),
+    bestEnd: parseISO(futureForecast[minStartIndex + OPTIMAL_WINDOW_HOURS - 1].to),
     worstStart: parseISO(futureForecast[maxStartIndex].from),
-    worstEnd: parseISO(futureForecast[maxStartIndex + 5].to),
-    minAvg: Math.round(minSum / 6),
-    maxAvg: Math.round(maxSum / 6),
+    worstEnd: parseISO(futureForecast[maxStartIndex + OPTIMAL_WINDOW_HOURS - 1].to),
+    minAvg: Math.round(minSum / OPTIMAL_WINDOW_HOURS),
+    maxAvg: Math.round(maxSum / OPTIMAL_WINDOW_HOURS),
   };
 }
 
