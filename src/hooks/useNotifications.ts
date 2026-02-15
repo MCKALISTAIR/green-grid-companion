@@ -144,6 +144,7 @@ export function useNotifications() {
     // Helper to generate forecast summary
     const generateForecastSummary = (forecast: ForecastData[]): string => {
         const today = new Date();
+        today.setHours(0, 0, 0, 0); // Start of day
         const endOfDay = new Date(today);
         endOfDay.setHours(23, 59, 59, 999);
 
