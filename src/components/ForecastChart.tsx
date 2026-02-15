@@ -128,25 +128,24 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
                   ref={isCurrentHour ? currentHourRef : null}
                 >
                   <div className="relative h-24 w-8 flex items-end justify-center">
-                    {/* Forecast Bar (Background/Ghost) */}
+                    {/* Single bar showing actual (if available) or forecast */}
                     <div
-                      className={`absolute bottom-0 w-full rounded-t-md transition-[height,background-color] duration-500 ease-out border-x border-t border-white/10 ${getIntensityColor(item.intensity.index)}`}
+                      className={`relative w-full rounded-t-md transition-[height,background-color] duration-500 ease-out border-x border-t ${item.intensity.actual !== undefined && item.intensity.actual !== null
+                        ? 'border-white/30' // More prominent border for actual
+                        : 'border-white/10'
+                        } ${getIntensityColor(item.intensity.index)}`}
                       style={{
-                        height: `${Math.max(height, 10)}%`,
-                        opacity: item.intensity.actual ? 0.3 : 0.9
+                        height: `${Math.max(
+                          ((item.intensity.actual ?? item.intensity.forecast) / maxForecast) * 100,
+                          10
+                        )}%`,
                       }}
-                    />
-
-                    {/* Actual Bar (Foreground/Solid) */}
-                    {item.intensity.actual !== undefined && item.intensity.actual !== null && (
-                      <div
-                        className={`relative w-4/5 rounded-t-md transition-[height,background-color] duration-500 ease-out ${getIntensityColor(item.intensity.index)} border-x border-t border-white/20`}
-                        style={{ height: `${Math.max((item.intensity.actual / maxForecast) * 100, 10)}%` }}
-                      >
-                        {/* Dotted pattern overlay for actual to distinguish it */}
-                        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNCIgaGVpZ2h0PSI0IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxjaXJjbGUgY3g9IjIiIGN5PSIyIiByPSIxIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMjUpIi8+PC9zdmc+')] opacity-30" />
-                      </div>
-                    )}
+                    >
+                      {/* Subtle pattern overlay for actual values to distinguish from forecast */}
+                      {item.intensity.actual !== undefined && item.intensity.actual !== null && (
+                        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNCIgaGVpZ2h0PSI0IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxjaXJjbGUgY3g9IjIiIGN5PSIyIiByPSIxIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMTUpIi8+PC9zdmc+')] opacity-30" />
+                      )}
+                    </div>
 
                     {isCurrentHour && (
                       <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-2 h-2 bg-primary rounded-full animate-pulse shadow-[0_0_8px_rgba(var(--primary),0.5)] z-20" />
@@ -166,10 +165,14 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
       </div>
 
       {/* Legend */}
-      <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
+      <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground flex-wrap">
         <div className="flex items-center gap-1">
           <div className="w-2 h-2 rounded-full bg-intensity-very-low" />
           <span>Very Low</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-2 h-2 rounded-full bg-intensity-low" />
+          <span>Low</span>
         </div>
         <div className="flex items-center gap-1">
           <div className="w-2 h-2 rounded-full bg-intensity-moderate" />
@@ -182,16 +185,6 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
         <div className="flex items-center gap-1">
           <div className="w-2 h-2 rounded-full bg-intensity-very-high" />
           <span>Very High</span>
-        </div>
-      </div>
-      <div className="flex items-center justify-center gap-4 text-[10px] text-muted-foreground opacity-70">
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-sm bg-primary border" />
-          <span>Actual</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-sm bg-primary/30" />
-          <span>Forecast</span>
         </div>
       </div>
     </div>

@@ -1,5 +1,6 @@
 
-import { Sun, Cloud, Factory, Leaf, Flame, Droplets } from 'lucide-react';
+import { Sun, Cloud, Leaf, Flame, Droplets } from 'lucide-react';
+import { SimpleFactory } from './scene/SimpleFactory';
 import { useHaptics } from '@/hooks/useHaptics';
 import { NotificationType } from '@capacitor/haptics';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -801,15 +802,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
             transition={{ duration: 0.6 }}
           >
             <div className="relative">
-              <Factory className="w-18 h-18 text-secondary" style={{ width: '4.5rem', height: '4.5rem' }} aria-hidden="true" />
-              {/* Glowing windows at night */}
-              {isNight && (
-                <motion.div
-                  className="absolute bottom-3 left-4 w-2 h-2 bg-accent/70 rounded-sm"
-                  animate={{ opacity: [0.5, 1, 0.5] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                />
-              )}
+              <SimpleFactory className="w-18 h-18 text-secondary" style={{ width: '4.5rem', height: '4.5rem' }} isNight={isNight} />
               {sceneConfig.showSmoke && (
                 <>
                   <SmokeParticle delay={0} x={35} />
@@ -827,14 +820,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.2 }}
               >
-                <Factory className="w-14 h-14 text-secondary/90" aria-hidden="true" />
-                {isNight && (
-                  <motion.div
-                    className="absolute bottom-2 left-3 w-1.5 h-1.5 bg-accent/60 rounded-sm"
-                    animate={{ opacity: [0.4, 0.9, 0.4] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  />
-                )}
+                <SimpleFactory className="w-14 h-14 text-secondary/90" isNight={isNight} />
                 {sceneConfig.showSmoke && (
                   <>
                     <SmokeParticle delay={0.3} x={35} />
