@@ -198,9 +198,9 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
               <Zap className="w-5 h-5 text-intensity-very-low" />
             </div>
             <div>
-              <h3 className="font-medium text-foreground">Low Intensity Alert</h3>
+              <h3 className="font-medium text-foreground">Best Time to Use Energy</h3>
               <p className="text-sm text-muted-foreground">
-                Get notified when it's a good time to charge
+                Get notified when it's perfect for running appliances or charging devices
               </p>
             </div>
           </div>
@@ -266,9 +266,9 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
               <Zap className="w-5 h-5 text-destructive" />
             </div>
             <div>
-              <h3 className="font-medium text-foreground">High Intensity Alert</h3>
+              <h3 className="font-medium text-foreground">Avoid High Carbon Times</h3>
               <p className="text-sm text-muted-foreground">
-                Get notified when the grid is dirty
+                Get warned when the grid gets dirty so you can delay heavy usage
               </p>
             </div>
           </div>
@@ -313,9 +313,9 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
               <Clock className="w-5 h-5 text-accent-foreground" />
             </div>
             <div>
-              <h3 className="font-medium text-foreground">Daily Forecast</h3>
+              <h3 className="font-medium text-foreground">Daily Energy Outlook</h3>
               <p className="text-sm text-muted-foreground">
-                Morning summary of today's outlook
+                Morning summary with best times to use energy today
               </p>
             </div>
           </div>

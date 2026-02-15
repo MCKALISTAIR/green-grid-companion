@@ -162,7 +162,44 @@ export function useNotifications() {
         const lowPeriods = todaySlots.filter(slot => slot.intensity.forecast < prefs.lowIntensityThreshold).length;
         const lowHours = lowPeriods * 0.5; // Each slot is 30 min
 
-        return `Today's average: ${avgIntensity}g CO₂/kWh. ${lowHours > 0 ? `${lowHours}h of green energy expected 🌿` : 'Limited green periods today.'}`;
+        // Find longest green period for "best time windows"
+        let longestGreenStart: Date | null = null;
+        let longestGreenDuration = 0;
+        let currentGreenStart: Date | null = null;
+        let currentGreenDuration = 0;
+
+        for (const slot of todaySlots) {
+            const isGreen = slot.intensity.forecast < prefs.lowIntensityThreshold;
+            if (isGreen) {
+                if (!currentGreenStart) {
+                    currentGreenStart = new Date(slot.from);
+                    currentGreenDuration = 0.5;
+                } else {
+                    currentGreenDuration += 0.5;
+                }
+            } else {
+                if (currentGreenDuration > longestGreenDuration) {
+                    longestGreenDuration = currentGreenDuration;
+                    longestGreenStart = currentGreenStart;
+                }
+                currentGreenStart = null;
+                currentGreenDuration = 0;
+            }
+        }
+        // Check final window
+        if (currentGreenDuration > longestGreenDuration) {
+            longestGreenDuration = currentGreenDuration;
+            longestGreenStart = currentGreenStart;
+        }
+
+        let bestTimeStr = '';
+        if (longestGreenStart && longestGreenDuration >= 1) {
+            const endTime = new Date(longestGreenStart.getTime() + longestGreenDuration * 60 * 60 * 1000);
+            const formatTime = (d: Date) => d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
+            bestTimeStr = ` Best window: ${formatTime(longestGreenStart)}-${formatTime(endTime)} (${longestGreenDuration}h).`;
+        }
+
+        return `Today's average: ${avgIntensity}g CO₂/kWh. ${lowHours > 0 ? `${lowHours}h of green energy expected 🌿` : 'Limited green periods today.'}${bestTimeStr}`;
     };
 
     const scheduleDailyForecast = useCallback(async (forecast: ForecastData[]) => {
@@ -189,7 +226,7 @@ export function useNotifications() {
             await LocalNotifications.schedule({
                 notifications: [{
                     id: 9000,
-                    title: '🌅 Daily Grid Forecast',
+                    title: '🌅 Daily Energy Outlook',
                     body: summary,
                     schedule: {
                         on: { hour: hours, minute: minutes },
@@ -273,8 +310,8 @@ export function useNotifications() {
                 // Add Notification
                 pendingNotifications.push({
                     id: Math.floor(startTime.getTime() / 100000), // Unique-ish ID
-                    title: "🌿 Green Grid Forecast",
-                    body: `Grid intensity is now ${slot.intensity.forecast}g! It's a great time to use energy.`,
+                    title: "💚 Perfect Time to Use Energy",
+                    body: `Grid is running clean! Great time to charge devices, run the dishwasher, or do laundry (${slot.intensity.forecast}g CO₂).`,
                     schedule: { at: startTime },
                     smallIcon: 'ic_stat_leaf',
                     actionTypeId: "",
@@ -345,8 +382,8 @@ export function useNotifications() {
                 // Add Notification (use IDs 8000-8999)
                 pendingNotifications.push({
                     id: 8000 + Math.floor(startTime.getTime() / 100000) % 1000,
-                    title: "⚠️ High Carbon Alert",
-                    body: `Grid intensity is now ${slot.intensity.forecast}g. Consider deferring heavy usage.`,
+                    title: "⚠️ High Carbon Period Starting",
+                    body: `The grid is getting dirtier (${slot.intensity.forecast}g CO₂). Consider delaying heavy appliance use if possible.`,
                     schedule: { at: startTime },
                     smallIcon: 'ic_stat_leaf',
                     actionTypeId: "",
