@@ -274,7 +274,7 @@ const Index = () => {
               {viewMode !== 'demand' && (
                 <div className="absolute top-[calc(env(safe-area-inset-top)+1rem)] left-1/2 -translate-x-1/2 text-center w-auto max-w-[90%] z-10"
                   data-tour="intensity-gauge">
-                  <div className="bg-white/30 backdrop-blur-md rounded-2xl p-3 shadow-sm border border-white/20">
+                  <div className="bg-white/15 backdrop-blur-md rounded-2xl p-3 shadow-sm border border-white/20">
                     <div className="flex items-center justify-center gap-2 mb-1">
                       <div className="lg:hidden">
                         <LocationManager

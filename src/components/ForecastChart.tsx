@@ -105,8 +105,8 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
               const isPast = isBefore(time, now);
               const isCurrentHour = time.getTime() === now.getTime();
 
-              // Calculate difference for past hours with actual data
-              const hasActual = item.intensity.actual !== undefined && item.intensity.actual !== null;
+              // Calculate difference ONLY for past hours with actual data (not future)
+              const hasActual = item.intensity.actual !== undefined && item.intensity.actual !== null && isPast;
               const difference = hasActual ? item.intensity.actual - item.intensity.forecast : 0;
               const showDifference = hasActual && Math.abs(difference) > 0;
 
@@ -145,8 +145,8 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
                           {/* Single bar showing actual (if available) or forecast */}
                           <div
                             className={`relative w-full rounded-t-md transition-[height,background-color] duration-500 ease-out border-x border-t ${hasActual
-                                ? 'border-white/30' // More prominent border for actual
-                                : 'border-white/10'
+                              ? 'border-white/30' // More prominent border for actual
+                              : 'border-white/10'
                               } ${getIntensityColor(item.intensity.index)}`}
                             style={{
                               height: `${Math.max(
