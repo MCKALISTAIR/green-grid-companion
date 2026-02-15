@@ -59,7 +59,22 @@ GridSense is a mobile-first companion app designed to help UK (and future) energ
     *   **Smart Charging Impact**: Track how much Carbon (CO₂) you've saved by charging during greener times compared to grid average.
     *   **Seamless Linking**: Secure OAuth connection to your Tesla account.
 
-## 🆕 Recent Updates (v1.5.0 - 2026-02-07)
+## 🆕 Recent Updates (v1.4.3 - 2026-02-15)
+
+### 🎨 UI Improvements
+*   **Hourly Forecast Chart**: Simplified visualization with modern factory icon and improved color scheme.
+*   **Visual Bug Fixes**: Fixed transparency issues and grey bar overlay on home screen.
+*   **Past vs Future Clarity**: Forecast comparison indicators now only appear for historical data.
+
+### 🔔 User-Friendly Notifications
+*   **Actionable Wording**: Rewrote notification labels from technical terms to user-friendly language
+    *   "Low Intensity Alert" → "Best Time to Use Energy"
+    *   "High Intensity Alert" → "Avoid High Carbon Times"
+    *   "Daily Forecast" → "Daily Energy Outlook"
+*   **Best Time Windows**: Daily forecast now shows the longest green energy period (e.g., "Best window: 10:00-14:00 (4h)")
+*   **Whole Day View**: Notifications now count green hours from midnight to midnight for complete daily picture
+
+## Previous Updates (v1.5.0 - 2026-02-07)
 
 ### 🖥️ Desktop Companion & Experience
 *   **macOS Menu Bar App**: Keep an eye on the grid from your desktop. Native performance, tiny footprint.

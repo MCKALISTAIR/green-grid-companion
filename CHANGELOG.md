@@ -2,7 +2,46 @@
 
 All notable changes to GridSense will be documented in this file.
 
-## [v1.4.2] - 2026-02-08
+## [v1.4.3] - 2026-02-15
+
+### Added ✨
+- **Best Time Windows Notification**: Daily forecast now shows the longest green energy period
+  - Displays optimal time window in format: "Best window: 10:00-14:00 (4h)"
+  - Helps users plan energy-intensive tasks like EV charging, laundry, or dishwasher runs
+  - Automatically calculates from full day forecast data
+
+### Changed 🔄
+- **User-Friendly Notifications**: Rewrote notification labels and body text to be more actionable
+  - "Low Intensity Alert" → "Best Time to Use Energy"
+  - "High Intensity Alert" → "Avoid High Carbon Times"
+  - "Daily Forecast" → "Daily Energy Outlook"
+  - Notification bodies now include specific appliance suggestions (e.g., "Great time to charge devices, run the dishwasher, or do laundry")
+  - Technical jargon replaced with clear, user-friendly language
+
+- **Daily Forecast Calculation**: Changed from showing remaining hours to whole day statistics
+  - Notification now counts green energy hours from midnight to midnight
+  - Provides complete picture of daily energy patterns
+  - Example: "24h of green energy expected" instead of just remaining hours
+
+### Fixed 🐛
+- **Forecast Chart Comparison Logic**: Restricted forecast vs. actual comparison to past hours only
+  - Comparison indicators (arrows) now only appear for historical data
+  - Prevents misleading comparisons for future forecast periods
+  - Tooltips correctly show "Actual vs. Forecast" only when actual data exists
+
+- **Transparency Visual Bug**: Fixed grey bar overlay on home screen
+  - Reduced intensity card background opacity from 30% to 15%
+  - Scene now fully visible without grey obstruction
+  - Improved visual cohesion of UI elements with background
+
+### Improved 🎨
+- **Hourly Forecast Chart**: Simplified visualization for better readability
+  - Replaced factory icon with cleaner, modern SVG design
+  - Improved color scheme and visual hierarchy
+  - Enhanced contrast and accessibility
+  - Past hours now clearly distinguished from future forecast
+
+
 
 ### Added ✨
 - **Octopus Energy Auto-Sync**: Automatic background synchronization of consumption data

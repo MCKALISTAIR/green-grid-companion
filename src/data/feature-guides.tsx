@@ -100,13 +100,13 @@ export const FEATURE_GUIDES = [
 
                 <h3 className="text-lg font-semibold pt-2">Types of Alerts</h3>
                 <ul className="list-disc pl-5 space-y-2">
-                    <li><strong>Daily Briefing:</strong> A morning summary of the day's forecast (e.g., "Best time is 2 PM").</li>
-                    <li><strong>High Intensity Alert:</strong> Warns you when the grid is dirty so you can reduce usage.</li>
-                    <li><strong>Low Intensity Alert:</strong> Notifies you when clean energy is abundant—perfect for charging the car!</li>
+                    <li><strong>Daily Energy Outlook:</strong> A morning summary showing best times to use energy and the longest green window (e.g., "Best window: 10:00-14:00 (4h)").</li>
+                    <li><strong>Avoid High Carbon Times:</strong> Warns you when the grid gets dirty so you can delay heavy appliance use.</li>
+                    <li><strong>Best Time to Use Energy:</strong> Notifies you when clean energy is abundant—perfect for charging devices, running the dishwasher, or doing laundry!</li>
                 </ul>
 
                 <p>
-                    Go to <strong>Settings &gt; Notifications</strong> to toggle these alerts and choose your preferred time for the daily briefing.
+                    Go to <strong>Settings &gt; Notifications</strong> to toggle these alerts and choose your preferred time for the daily outlook.
                 </p>
             </div>
         )
