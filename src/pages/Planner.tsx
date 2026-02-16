@@ -8,7 +8,7 @@ import { getErrorInfo } from '@/lib/errorUtils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { WashingMachine, Car, Utensils, Zap, Plus, PenLine, Battery, Leaf } from 'lucide-react';
+import { WashingMachine, Car, Utensils, Zap, Plus, PenLine, Battery, Leaf, X } from 'lucide-react';
 import { getIntensityColor, getIntensityTextColor } from '@/lib/carbonApi';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { format, parseISO, addHours, subMinutes, isFuture } from 'date-fns';
@@ -38,10 +38,18 @@ export default function Planner() {
         batteryCapacity?: number;
     } | null>(null);
     const [isFetchingTesla, setIsFetchingTesla] = useState(false);
+    const [showOnboarding, setShowOnboarding] = useState(() => {
+        return !localStorage.getItem('planner-onboarding-seen');
+    });
 
     const postcode = localStorage.getItem('gridgreen-postcode') || '';
     const { forecast, refetch, isLoading, isError, error } = useCarbonData(postcode);
     const { isLinked: isTeslaLinked, vehicles, fetchVehicleState } = useTeslaEnergy();
+
+    const dismissOnboarding = () => {
+        setShowOnboarding(false);
+        localStorage.setItem('planner-onboarding-seen', 'true');
+    };
 
     // Build dynamic appliance list including Tesla vehicles
     const APPLIANCES = useMemo(() => {
@@ -276,6 +284,33 @@ export default function Planner() {
                         <h1 className="text-2xl font-bold">Power Planner</h1>
                         <p className="text-muted-foreground">Schedule high-energy tasks to save carbon.</p>
                     </div>
+
+                    {showOnboarding && (
+                        <Card className="p-4 bg-primary/10 border-primary/20 relative animate-in fade-in slide-in-from-top-4 duration-500">
+                            <button
+                                onClick={dismissOnboarding}
+                                className="absolute top-2 right-2 p-2 text-muted-foreground hover:text-foreground transition-colors"
+                                aria-label="Dismiss onboarding"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                            <div className="flex items-start gap-4 pr-6">
+                                <div className="p-3 bg-primary/20 rounded-full text-primary mt-1 shrink-0">
+                                    <Leaf className="w-6 h-6" />
+                                </div>
+                                <div className="space-y-2">
+                                    <h3 className="font-semibold text-foreground text-lg">Welcome to Power Planner</h3>
+                                    <p className="text-sm text-muted-foreground leading-relaxed">
+                                        Schedule high-energy tasks like EV charging or washing for when the grid is greenest.
+                                        Simply tap an appliance below to find the best time to run it and save carbon.
+                                    </p>
+                                    <Button size="sm" onClick={dismissOnboarding} className="mt-2 font-medium">
+                                        Got it
+                                    </Button>
+                                </div>
+                            </div>
+                        </Card>
+                    )}
 
                     <div className="grid grid-cols-2 gap-3">
                         {APPLIANCES.map((app) => (

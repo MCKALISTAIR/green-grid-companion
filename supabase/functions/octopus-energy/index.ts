@@ -813,7 +813,7 @@ Deno.serve(async (req: Request) => {
         for (const meterPoint of property.electricity_meter_points || []) {
           // Detect export meters: Octopus API uses is_export flag or profile_class
           // Export MPANs typically have profile_class '00' or is_export=true
-          const isExport = meterPoint.is_export === true || 
+          const isExport = meterPoint.is_export === true ||
             meterPoint.profile_class === 0 ||
             meterPoint.profile_class === '00';
 
@@ -1341,13 +1341,13 @@ Deno.serve(async (req: Request) => {
               const isoTo = endTime.toISOString();
               const intensityUrl = `https://api.carbonintensity.org.uk/intensity/${isoFrom}/${isoTo}`;
               const intensityRes = await fetch(intensityUrl);
-              
+
               if (intensityRes.ok) {
                 const intensityJson = await intensityRes.json();
                 const intervals = intensityJson.data || [];
-                
+
                 if (intervals.length > 0) {
-                  const totalIntensity = intervals.reduce((sum: number, i: any) => 
+                  const totalIntensity = intervals.reduce((sum: number, i: any) =>
                     sum + (i.intensity?.actual ?? i.intensity?.forecast ?? 0), 0);
                   avgIntensity = Math.round(totalIntensity / intervals.length);
                   carbonUsedG = Math.round(chargeKwh * avgIntensity * 100) / 100;
@@ -1385,9 +1385,9 @@ Deno.serve(async (req: Request) => {
         if (dispatchesToUpsert.length > 0) {
           const { error: upsertError } = await supabase
             .from('octopus_intelligent_dispatches')
-            .upsert(dispatchesToUpsert, { 
+            .upsert(dispatchesToUpsert, {
               onConflict: 'user_id,mpan,dispatch_type,start_time',
-              ignoreDuplicates: false 
+              ignoreDuplicates: false
             });
 
           if (upsertError) {
@@ -1445,6 +1445,56 @@ Deno.serve(async (req: Request) => {
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
+    }
+
+    if (action === 'get-available-dates') {
+      // Get date range of available footprint data for date picker
+      const { data: userMeters } = await supabase
+        .from('octopus_meters')
+        .select('mpan')
+        .eq('user_id', userId)
+        .eq('is_active', true);
+
+      if (!userMeters?.length) {
+        return new Response(
+          JSON.stringify({ minDate: null, maxDate: null, dates: [] }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const mpans = userMeters.map(m => m.mpan);
+
+      // Get min date (earliest data)
+      const { data: minData } = await supabase
+        .from('carbon_footprint')
+        .select('interval_start')
+        .in('mpan', mpans)
+        .order('interval_start', { ascending: true })
+        .limit(1);
+
+      // Get max date (most recent data)
+      const { data: maxData } = await supabase
+        .from('carbon_footprint')
+        .select('interval_start')
+        .in('mpan', mpans)
+        .order('interval_start', { ascending: false })
+        .limit(1);
+
+      const minDate = minData?.[0]?.interval_start || null;
+      const maxDate = maxData?.[0]?.interval_start || null;
+
+      // Optionally get distinct dates for calendar highlighting
+      // For now, we'll just return the range and let the frontend determine available dates
+      // based on the data it fetches
+
+      return new Response(
+        JSON.stringify({
+          minDate,
+          maxDate,
+          // Future: could add dates: [...] array of all dates with data
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     if (action === 'get-status') {

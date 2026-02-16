@@ -21,6 +21,7 @@ import { Zap, Trophy, Lock, Construction } from 'lucide-react';
 import { useSettings } from '@/hooks/useSettings';
 import { HouseType, OFGEM_TDCV_2025 } from '@/lib/energy-standards';
 import { toast } from 'sonner';
+import { useProductTour } from '@/hooks/useProductTour';
 
 
 export default function Settings() {
@@ -32,6 +33,7 @@ export default function Settings() {
     const { achievements } = useAchievements();
     const { unlocked, handleVersionTap } = useSceneDirector();
     const { houseType, setHouseType, customAnnualKwh, setCustomAnnualKwh, showGridFrequency, setShowGridFrequency, isAuthenticated, isSyncing, lastSyncedAt, syncNow } = useSettings();
+    const { replayTour } = useProductTour();
 
     const formatLastSync = (date: Date | null) => {
         if (!date) return 'Not yet synced';
@@ -323,28 +325,25 @@ export default function Settings() {
                         </div>
 
                         {/* Replay Product Tour */}
-                        <div className="flex items-center justify-between p-4 bg-card border rounded-lg">
+                        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg hover:from-primary/15 hover:to-primary/10 transition-colors">
                             <div className="flex items-center gap-3">
-                                <div className="p-2 bg-primary/10 rounded-full">
+                                <div className="p-2 bg-primary/20 rounded-full">
                                     <Play className="w-5 h-5 text-primary" />
                                 </div>
                                 <div>
-                                    <h3 className="font-medium">Replay Tour</h3>
-                                    <p className="text-sm text-muted-foreground">Walk through the app guide again</p>
+                                    <h3 className="font-medium">Take a Tour</h3>
+                                    <p className="text-sm text-muted-foreground">Discover all the app's features</p>
                                 </div>
                             </div>
                             <Button
-                                variant="outline"
+                                variant="default"
                                 size="sm"
                                 onClick={() => {
-                                    localStorage.removeItem('product_tour_seen');
-                                    toast.success('Tour reset! Redirecting to home…');
-                                    setTimeout(() => {
-                                        window.location.href = '/';
-                                    }, 500);
+                                    replayTour();
+                                    toast.success('Starting tour...');
                                 }}
                             >
-                                Replay
+                                Start
                             </Button>
                         </div>
                     </div>

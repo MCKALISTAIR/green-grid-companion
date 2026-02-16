@@ -10,6 +10,7 @@ import { useFuelMilestones } from '@/hooks/useFuelMilestones';
 import { FuelInsightBadge } from '@/components/FuelInsightBadge';
 import { FuelRecordList } from '@/components/FuelRecordCelebration';
 import { FuelTrendIndicator } from '@/components/FuelTrendIndicator';
+import { DEFINITIONS } from '@/lib/definitions';
 
 export function DemandView() {
     const { demand, mix, mixWithTrends, frequency: gridFrequency, embeddedSolarMW, isLoading, error, refetch, lastUpdated } = useGridDemand();
@@ -103,6 +104,11 @@ export function DemandView() {
                                     <PopoverContent className="w-[280px] p-3 text-xs bg-card border-border backdrop-blur-xl">
                                         <p className="font-semibold mb-1">UK-Wide Data</p>
                                         <p>This shows total demand for the entire UK electricity grid. The grid operates as a single synchronized system.</p>
+
+                                        <div className="mt-3 pt-2 border-t border-border/50">
+                                            <p className="font-semibold mb-1">Units (GW)</p>
+                                            <p>{DEFINITIONS['GW']}</p>
+                                        </div>
                                     </PopoverContent>
                                 </Popover>
                             </div>
@@ -183,8 +189,8 @@ export function DemandView() {
                     const hasInsight = (streak?.isActive) || milestone;
 
                     return (
-                        <Card 
-                            key={source.id} 
+                        <Card
+                            key={source.id}
                             className={`p-3 shadow-sm hover:bg-accent/5 transition-colors ${hasInsight ? 'ring-1 ring-primary/20' : ''}`}
                         >
                             <div className="flex items-start justify-between">
@@ -229,10 +235,10 @@ export function DemandView() {
                             {/* Show insight badge if applicable */}
                             {hasInsight && (
                                 <div className="mt-2 pt-2 border-t border-border/50">
-                                    <FuelInsightBadge 
-                                        streak={streak?.isActive ? streak : undefined} 
-                                        milestone={milestone} 
-                                        compact 
+                                    <FuelInsightBadge
+                                        streak={streak?.isActive ? streak : undefined}
+                                        milestone={milestone}
+                                        compact
                                     />
                                 </div>
                             )}

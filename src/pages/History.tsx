@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 
 import { ComposedChart, Line, Area, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format, parseISO, subDays, isSameHour, isSameDay } from 'date-fns';
-import { Loader2, TrendingDown, TrendingUp, Zap, BarChart3 } from 'lucide-react';
+import { Loader2, TrendingDown, TrendingUp, Zap, BarChart3, Info, X } from 'lucide-react';
 import { ErrorState } from '@/components/ErrorState';
 import { EmptyState } from '@/components/EmptyState';
 import { getErrorInfo } from '@/lib/errorUtils';
@@ -29,6 +29,12 @@ export default function HistoryPage() {
 
     const [timeRange, setTimeRange] = useState<'24h' | '7d'>('7d');
     const [date, setDate] = useState<Date | undefined>(undefined); // If defined, we are in Time Machine mode
+    const [showChartTip, setShowChartTip] = useState(() => !localStorage.getItem('history-chart-tip-seen'));
+
+    const dismissChartTip = () => {
+        setShowChartTip(false);
+        localStorage.setItem('history-chart-tip-seen', 'true');
+    };
 
     // Standard History Query (Live/Recent)
     const historyQuery = useQuery<ForecastData[]>({
@@ -241,6 +247,29 @@ export default function HistoryPage() {
                     </div>
                 ) : (
                     <>
+                        {showChartTip && (
+                            <Card className="mb-4 bg-muted/30 border-dashed relative animate-in fade-in slide-in-from-top-2">
+                                <button
+                                    onClick={dismissChartTip}
+                                    className="absolute top-2 right-2 p-1 text-muted-foreground hover:text-foreground transition-colors"
+                                    aria-label="Dismiss tip"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                                <div className="p-4 flex gap-3 pr-8">
+                                    <div className="p-2 bg-background rounded-full border shadow-sm h-fit">
+                                        <Info className="w-4 h-4 text-primary shrink-0" />
+                                    </div>
+                                    <div className="text-sm space-y-1">
+                                        <p className="font-semibold">Understanding the Graph</p>
+                                        <p className="text-muted-foreground leading-relaxed">
+                                            The <span className="font-medium text-foreground">solid line</span> shows actual carbon intensity, while the <span className="font-medium text-foreground">dotted line</span> shows the forecast. Compare them to see how accurate the predictions were!
+                                        </p>
+                                    </div>
+                                </div>
+                            </Card>
+                        )}
+
                         {/* Time Machine Scene Visualisation */}
                         {date && data.length > 0 && (
                             <Card className="overflow-hidden border-2 border-primary/20">
@@ -267,7 +296,7 @@ export default function HistoryPage() {
                                         <div>
                                             <div className="font-semibold text-sm">Time Travel Analysis</div>
                                             <div className="text-xs text-muted-foreground">
-                                                This day was <span className="font-bold text-foreground">{Math.abs(avgIntensity - Math.round(historyQuery.data && historyQuery.data.length > 0 ? (historyQuery.data.reduce((acc, curr) => acc + curr.intensity.forecast, 0) / historyQuery.data.length) : avgIntensity))}g {avgIntensity < (historyQuery.data && historyQuery.data.length > 0 ? Math.round(historyQuery.data.reduce((acc, curr) => acc + curr.intensity.forecast, 0) / historyQuery.data.length) : avgIntensity) ? 'cleaner' : 'dirtier'}</span> than the current 7-day average.
+                                                This day was <span className="font-bold text-foreground">{Math.abs(avgIntensity - Math.round(historyQuery.data && historyQuery.data.length > 0 ? (historyQuery.data.reduce((acc, curr) => acc + curr.intensity.forecast, 0) / historyQuery.data.length) : avgIntensity))} gCO2/kWh {avgIntensity < (historyQuery.data && historyQuery.data.length > 0 ? Math.round(historyQuery.data.reduce((acc, curr) => acc + curr.intensity.forecast, 0) / historyQuery.data.length) : avgIntensity) ? 'cleaner' : 'dirtier'}</span> than the current 7-day average.
                                             </div>
                                         </div>
                                     </div>
@@ -279,7 +308,7 @@ export default function HistoryPage() {
                         <div className="grid grid-cols-2 gap-4">
                             <Card className="p-4 border-primary/20 bg-primary/5">
                                 <div className="text-muted-foreground text-xs uppercase font-bold tracking-wider">Average</div>
-                                <div className="text-2xl font-bold mt-1">{avgIntensity}g</div>
+                                <div className="text-2xl font-bold mt-1">{avgIntensity} <span className="text-sm font-normal text-muted-foreground">gCO2/kWh</span></div>
                                 <div className="text-xs text-muted-foreground mt-1">Last {timeRange === '7d' ? '7 Days' : '24 Hours'}</div>
                             </Card>
                             {isLinked && totalConsumption > 0 ? (
@@ -304,7 +333,7 @@ export default function HistoryPage() {
                                             <TrendingUp className="w-6 h-6 text-red-500" />
                                         )}
                                         <span className={`text-sm font-bold ${trend === 'improving' ? 'text-green-600' : 'text-red-600'}`}>
-                                            {Math.abs(endVal - startVal)}g
+                                            {Math.abs(endVal - startVal)} gCO2/kWh
                                         </span>
                                     </div>
                                     <div className="text-xs text-muted-foreground mt-1">Currently {trend === 'improving' ? 'lower' : 'higher'} than start</div>
@@ -376,7 +405,7 @@ export default function HistoryPage() {
                                             tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
                                             tickLine={false}
                                             axisLine={false}
-                                            tickFormatter={(val) => `${val}g`}
+                                            tickFormatter={(val) => `${val} g`}
                                         />
                                         <YAxis
                                             yAxisId="right"

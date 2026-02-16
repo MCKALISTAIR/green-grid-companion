@@ -59,7 +59,20 @@ GridSense is a mobile-first companion app designed to help UK (and future) energ
     *   **Smart Charging Impact**: Track how much Carbon (CO₂) you've saved by charging during greener times compared to grid average.
     *   **Seamless Linking**: Secure OAuth connection to your Tesla account.
 
-## 🆕 Recent Updates (v1.4.3 - 2026-02-15)
+## 🆕 Recent Updates (v1.4.4 - 2026-02-16)
+
+### 🎓 Enhanced User Experience
+*   **Power Planner Onboarding**: Dismissible welcome card explaining how to use the shiftable appliance scheduler
+*   **Terminology Tooltips**: Clear definitions for technical terms like "Gigawatt (GW)" in Demand and Generation Mix views
+*   **History Tab Guidance**: New user tip explaining solid line (actual) vs dotted line (forecast) in charts
+
+### ✨ Premium Tour Experience
+*   **Glassmorphism Styling**: Backdrop blur effects and smooth animations for tour popovers
+*   **Improved Content**: Tour now mentions interactive features (clickable turbines, Time Machine)
+*   **Better Accessibility**: Redesigned "Take a Tour" button in Settings with gradient styling
+*   **Instant Replay**: New `replayTour()` function - no page reload required
+
+## Previous Updates (v1.4.3 - 2026-02-15)
 
 ### 🎨 UI Improvements
 *   **Hourly Forecast Chart**: Simplified visualization with modern factory icon and improved color scheme.

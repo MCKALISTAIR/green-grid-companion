@@ -684,6 +684,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
             isSnowing={weather.isSnowing}
             isChristmas={new Date().getMonth() === 11}
             skipIntro={hasSeenScene}
+            windSpeed={weather.windSpeed}
           />
           <LandscapeMid
             cleanliness={sceneConfig.cleanliness}
@@ -692,6 +693,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
             isSnowing={weather.isSnowing}
             isChristmas={new Date().getMonth() === 11}
             skipIntro={hasSeenScene}
+            windSpeed={weather.windSpeed}
           />
         </svg>
       </div>
@@ -723,6 +725,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
             isSnowing={weather.isSnowing}
             isChristmas={new Date().getMonth() === 11}
             skipIntro={hasSeenScene}
+            windSpeed={weather.windSpeed}
           />
         </svg>
       </div>
@@ -742,13 +745,35 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
               // Base speed 5s for 0 wind, down to 1.5s for 30+ km/h wind
               const baseSpeed = Math.max(1.5, 5 - (sceneConfig.windSpeed / 10));
               const isOverdrive = turbineOverdrive === i;
+
+              // Hint logic for first turbine
+              const showHint = i === 1 && !localStorage.getItem('hasInteractedWithTurbine');
+
               return (
-                <WindTurbine
-                  key={i}
-                  scale={0.7 + (i % 2) * 0.2}
-                  speed={isOverdrive ? 0.2 : (baseSpeed + i * 0.3)} // Super fast if overdrive
-                  onClick={() => handleTurbineClick(i)}
-                />
+                <div key={i} className="relative">
+                  {showHint && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="absolute -top-12 left-1/2 -translate-x-1/2 bg-white/90 text-primary px-2 py-1 rounded text-[10px] font-bold shadow-lg whitespace-nowrap z-50 pointer-events-none"
+                    >
+                      Tap me! 👇
+                      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-white/90 rotate-45"></div>
+                    </motion.div>
+                  )}
+                  <WindTurbine
+                    scale={0.7 + (i % 2) * 0.2}
+                    speed={isOverdrive ? 0.2 : (baseSpeed + i * 0.3)} // Super fast if overdrive
+                    onClick={() => {
+                      handleTurbineClick(i);
+                      if (!localStorage.getItem('hasInteractedWithTurbine')) {
+                        localStorage.setItem('hasInteractedWithTurbine', 'true');
+                        // Force re-render to hide hint (React will handle this if we used state, but component might not update immediately without state change. 
+                        // However, handleTurbineClick causes state change (overdrive), so re-render happens.)
+                      }
+                    }}
+                  />
+                </div>
               );
             })}
           </motion.div>

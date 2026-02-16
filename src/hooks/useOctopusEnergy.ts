@@ -226,6 +226,29 @@ export function useOctopusEnergy(days: number = 30) {
     retry: 1,
   });
 
+  // Fetch available footprint dates for date picker
+  const {
+    data: availableDates,
+    isLoading: availableDatesLoading
+  } = useQuery({
+    queryKey: ['octopus-available-dates'],
+    queryFn: async (): Promise<{ minDate: string | null; maxDate: string | null }> => {
+      const { data, error } = await supabase.functions.invoke('octopus-energy', {
+        body: { action: 'get-available-dates' }
+      });
+      if (error) {
+        logger.warn('Available dates fetch failed', { error: error.message });
+        return { minDate: null, maxDate: null };
+      }
+      return data;
+    },
+    enabled: status?.is_linked ?? cachedIsLinked,
+    staleTime: 1000 * 60 * 10, // 10 minutes - dates don't change frequently
+    gcTime: 1000 * 60 * 30, // 30 minutes cache
+    retry: 1,
+  });
+
+
   // Try to sync pending credentials when auth becomes available
   const syncPendingCredentials = useCallback(async () => {
     const hasPending = localStorage.getItem(LOCAL_STORAGE_KEYS.pendingSync) === 'true';
@@ -537,8 +560,10 @@ export function useOctopusEnergy(days: number = 30) {
     footprint,
     greennessForecast,
     intelligentDispatches,
+    availableDates,
     isLoading: statusLoading || footprintLoading || forecastLoading,
     isLoadingDispatches: dispatchesLoading,
+    isLoadingAvailableDates: availableDatesLoading,
     isSyncing,
     isLinked: status?.is_linked ?? false,
     hasCredentials: status?.has_credentials ?? !!cachedCredentials,

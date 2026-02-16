@@ -1,6 +1,7 @@
 import { ForecastData, getIntensityColor } from '@/lib/carbonApi';
 import { format, parseISO, isBefore, startOfHour } from 'date-fns';
-import { useRef, useLayoutEffect, useState } from 'react';
+import { useRef, useLayoutEffect, useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Target, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,8 +18,11 @@ interface ForecastChartProps {
 
 export function ForecastChart({ forecast }: ForecastChartProps) {
   const [visibleDate, setVisibleDate] = useState<Date>(new Date());
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [popupPosition, setPopupPosition] = useState<{ x: number; y: number } | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const currentHourRef = useRef<HTMLDivElement>(null);
+  const selectedItemRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
   // Scroll to current time
   const scrollToNow = () => {
@@ -47,6 +51,22 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
       setVisibleDate(date);
     }
   };
+
+  // Calculate popup position when selection changes
+  useEffect(() => {
+    if (selectedIndex !== null && selectedItemRefs.current.has(selectedIndex)) {
+      const element = selectedItemRefs.current.get(selectedIndex);
+      if (element) {
+        const rect = element.getBoundingClientRect();
+        setPopupPosition({
+          x: rect.left + rect.width / 2,
+          y: rect.bottom + 8, // 8px below the bar
+        });
+      }
+    } else {
+      setPopupPosition(null);
+    }
+  }, [selectedIndex]);
 
   useLayoutEffect(() => {
     // Initial scroll
@@ -138,8 +158,19 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div
-                        className={`flex flex-col items-center gap-1 w-12 transition-all duration-300 rounded-lg py-1 cursor-default ${isPast ? 'opacity-80' : 'opacity-100'} ${isCurrentHour ? 'bg-accent/20 scale-110 shadow-sm z-10' : ''}`}
-                        ref={isCurrentHour ? currentHourRef : null}
+                        className={`relative flex flex-col items-center gap-1 w-12 transition-all duration-300 rounded-lg py-1 ${hasActual ? 'cursor-pointer' : 'cursor-default'
+                          } ${isPast ? 'opacity-80' : 'opacity-100'} ${isCurrentHour ? 'bg-accent/20 scale-110 shadow-sm z-10' : ''} ${selectedIndex === i ? 'bg-accent/30 ring-2 ring-primary/50' : ''
+                          }`}
+                        ref={(el) => {
+                          if (isCurrentHour && el) currentHourRef.current = el;
+                          if (hasActual && el) selectedItemRefs.current.set(i, el);
+                        }}
+                        onClick={() => {
+                          // Toggle selection on click (for mobile touch)
+                          if (hasActual) {
+                            setSelectedIndex(selectedIndex === i ? null : i);
+                          }
+                        }}
                       >
                         <div className="relative h-24 w-8 flex items-end justify-center">
                           {/* Single bar showing actual (if available) or forecast */}
@@ -237,6 +268,41 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
           <span>Very High</span>
         </div>
       </div>
+
+      {/* Mobile popup rendered via portal for correct positioning */}
+      {selectedIndex !== null && popupPosition && forecast[selectedIndex] && createPortal(
+        <div
+          className="fixed bg-popover border border-border rounded-md p-2 shadow-lg z-50 min-w-[120px] -translate-x-1/2 pointer-events-none"
+          style={{
+            left: `${popupPosition.x}px`,
+            top: `${popupPosition.y}px`,
+          }}
+        >
+          <div className="flex flex-col gap-1 text-xs">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-muted-foreground">Forecast:</span>
+              <span className="font-medium">{forecast[selectedIndex].intensity.forecast}g</span>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-muted-foreground">Actual:</span>
+              <span className="font-medium">{forecast[selectedIndex].intensity.actual}g</span>
+            </div>
+            <div className={`flex items-center justify-between gap-2 text-[10px] ${(forecast[selectedIndex].intensity.actual ?? 0) - forecast[selectedIndex].intensity.forecast > 0
+                ? 'text-destructive'
+                : (forecast[selectedIndex].intensity.actual ?? 0) - forecast[selectedIndex].intensity.forecast < 0
+                  ? 'text-primary'
+                  : 'text-muted-foreground'
+              }`}>
+              <span>Difference:</span>
+              <span className="font-medium">
+                {(forecast[selectedIndex].intensity.actual ?? 0) - forecast[selectedIndex].intensity.forecast > 0 ? '+' : ''}
+                {(forecast[selectedIndex].intensity.actual ?? 0) - forecast[selectedIndex].intensity.forecast}g
+              </span>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
 
   );

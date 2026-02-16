@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -69,30 +70,62 @@ interface Achievement {
 export type TimeRange = 'day' | 'week' | 'month' | 'year';
 
 export function FootprintView() {
+  const navigate = useNavigate();
   const [timeRange, setTimeRange] = useState<TimeRange>('month');
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const { houseType, customAnnualKwh } = useSettings();
 
-  // Determine days to fetch based on range
-  const daysToFetch = useMemo(() => {
-    switch (timeRange) {
-      case 'day': return 1;
-      case 'week': return 7;
-      case 'month': return 31;
-      case 'year': return 365;
-      default: return 31;
-    }
-  }, [timeRange]);
+  // Fetch more data (60 days) to ensure we have historical data available
+  // The UI will filter to show the appropriate range based on selectedDate and timeRange
+  const daysToFetch = 60;
 
-  const { footprint, isLoading, isLinked, status, isSyncing, fullSync, isError, refetchFootprint } = useOctopusEnergy(daysToFetch);
+  const { footprint, isLoading, isLinked, status, isSyncing, fullSync, isError, refetchFootprint, availableDates } = useOctopusEnergy(daysToFetch);
   const { achievements: globalAchievements, unlock } = useAchievements();
 
-  // Aggregate data based on time range
+  // Determine the date range to show based on selectedDate
+  const effectiveDate = useMemo(() => {
+    if (selectedDate) return selectedDate;
+    // Default to most recent available data date
+    if (availableDates?.maxDate) {
+      return startOfDay(parseISO(availableDates.maxDate));
+    }
+    // Fallback to today
+    return new Date();
+  }, [selectedDate, availableDates]);
+
+  // Aggregate data based on time range and selected date
   const dailyData = useMemo(() => {
     if (!footprint?.records?.length) return [];
 
+    // Filter records based on selected date and time range
+    let filteredRecords = footprint.records;
+
+    if (timeRange === 'day') {
+      // Show only data for the selected day
+      const dayStart = startOfDay(effectiveDate);
+      const dayEnd = new Date(dayStart);
+      dayEnd.setDate(dayEnd.getDate() + 1);
+
+      filteredRecords = footprint.records.filter(record => {
+        const recordDate = parseISO(record.interval_start);
+        return recordDate >= dayStart && recordDate < dayEnd;
+      });
+    } else if (timeRange === 'week') {
+      // Show 7 days starting from selected date
+      const weekStart = startOfDay(effectiveDate);
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 7);
+
+      filteredRecords = footprint.records.filter(record => {
+        const recordDate = parseISO(record.interval_start);
+        return recordDate >= weekStart && recordDate < weekEnd;
+      });
+    }
+    // For month and year, use all available data (no filtering needed)
+
     const aggregated: Record<string, { carbon_kg: number; kwh: number; date: Date }> = {};
 
-    for (const record of footprint.records) {
+    for (const record of filteredRecords) {
       let key: string;
       let date: Date;
 
@@ -136,7 +169,7 @@ export function FootprintView() {
           kwh: Number(d.kwh.toFixed(2)),
         };
       });
-  }, [footprint, timeRange]);
+  }, [footprint, timeRange, effectiveDate]);
 
   // Calculate insights
   const insights = useMemo(() => {
@@ -167,9 +200,15 @@ export function FootprintView() {
 
     const impact = getImpactEquivalents(carbonSaved);
 
+
     // Household Comparison
     const benchmarkDaily = getAverageDailyKwh(houseType, customAnnualKwh);
-    const benchmarkTotal = benchmarkDaily * daysToFetch;
+    // Calculate actual days in the period based on filtered data
+    const actualDays = dailyData.length > 0 ? dailyData.length :
+      timeRange === 'day' ? 1 :
+        timeRange === 'week' ? 7 :
+          timeRange === 'month' ? 31 : 365;
+    const benchmarkTotal = benchmarkDaily * actualDays;
     const comparisonDiff = total_kwh - benchmarkTotal;
     const comparisonPercent = benchmarkTotal > 0 ? (comparisonDiff / benchmarkTotal) * 100 : 0;
     const isEfficient = comparisonDiff < 0;
@@ -180,13 +219,15 @@ export function FootprintView() {
       ? dataPoints.reduce((min, d) => d.carbon < min.carbon ? d : min, dataPoints[0])
       : null;
 
-    // Time of day analysis
+    // Time of day analysis - More granular periods
     const hourlyUsage: Record<string, number> = {};
     for (const record of footprint.records || []) {
       const hour = getHours(parseISO(record.interval_start));
-      const period = hour >= 6 && hour < 12 ? 'morning' :
-        hour >= 12 && hour < 18 ? 'afternoon' :
-          hour >= 18 && hour < 22 ? 'evening' : 'night';
+      const period = hour >= 22 || hour < 2 ? 'late evening' :
+        hour >= 2 && hour < 6 ? 'early morning' :
+          hour >= 6 && hour < 10 ? 'morning' :
+            hour >= 10 && hour < 16 ? 'midday' :
+              hour >= 16 && hour < 19 ? 'evening peak' : 'evening';
       hourlyUsage[period] = (hourlyUsage[period] || 0) + Number(record.consumption_kwh);
     }
     const peakPeriod = Object.entries(hourlyUsage).sort((a, b) => b[1] - a[1])[0]?.[0] || 'unknown';
@@ -295,136 +336,53 @@ export function FootprintView() {
 
   if (!isLinked) {
     return (
-      <div className="space-y-4">
-        <Card className="p-6 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-          <div className="text-center space-y-4">
-            <div className="w-20 h-20 mx-auto rounded-full bg-primary/20 flex items-center justify-center">
-              <Leaf className="w-10 h-10 text-primary" />
+      <div className="space-y-6 pt-8 max-w-2xl mx-auto">
+        <Card className="p-8 text-center space-y-6 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+          <div className="w-24 h-24 mx-auto rounded-full bg-primary/10 flex items-center justify-center animate-pulse">
+            <Leaf className="w-12 h-12 text-primary" />
+          </div>
+
+          <div className="space-y-4">
+            <h2 className="text-3xl font-bold text-foreground">Track Your Carbon Footprint</h2>
+            <p className="text-muted-foreground text-lg max-w-md mx-auto">
+              Connect your Octopus Energy account to unlock real insights based on your actual usage.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left max-w-xl mx-auto py-4">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border border-border/50">
+              <div className="p-2 rounded-full bg-green-100 dark:bg-green-900/30">
+                <Leaf className="w-5 h-5 text-green-600 dark:text-green-400" />
+              </div>
+              <span className="text-sm font-medium">Daily Emissions</span>
             </div>
-            <div>
-              <h2 className="text-2xl font-bold text-foreground mb-2">Track Your Carbon Footprint</h2>
-              <p className="text-muted-foreground max-w-md mx-auto">
-                See your real environmental impact based on your actual electricity usage
-              </p>
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border border-border/50">
+              <div className="p-2 rounded-full bg-yellow-100 dark:bg-yellow-900/30">
+                <Sun className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+              </div>
+              <span className="text-sm font-medium">Solar Impact</span>
+            </div>
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border border-border/50">
+              <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/30">
+                <Trophy className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <span className="text-sm font-medium">Achievements</span>
             </div>
           </div>
-        </Card>
 
-        <Card className="p-5">
-          <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-primary" />
-            What you'll unlock
-          </h3>
-          <div className="space-y-3">
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <Award className="w-4 h-4 text-primary" />
-              </div>
-              <div>
-                <p className="font-medium text-sm text-foreground">Green Energy Score</p>
-                <p className="text-xs text-muted-foreground">See what % of your usage came from clean energy</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <TrendingDown className="w-4 h-4 text-primary" />
-              </div>
-              <div>
-                <p className="font-medium text-sm text-foreground">Carbon Trends</p>
-                <p className="text-xs text-muted-foreground">Track your emissions over time with detailed charts</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <Target className="w-4 h-4 text-primary" />
-              </div>
-              <div>
-                <p className="font-medium text-sm text-foreground">Personalised Insights</p>
-                <p className="text-xs text-muted-foreground">Get tips on when to use energy based on your patterns</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <Trophy className="w-4 h-4 text-primary" />
-              </div>
-              <div>
-                <p className="font-medium text-sm text-foreground">Achievements</p>
-                <p className="text-xs text-muted-foreground">Earn badges for eco-friendly energy usage</p>
-              </div>
-            </div>
-          </div>
-        </Card>
+          <Button
+            size="lg"
+            className="w-full max-w-sm font-semibold text-lg h-12 shadow-lg hover:shadow-xl transition-all"
+            onClick={() => navigate('/settings')}
+          >
+            <Zap className="w-5 h-5 mr-2" />
+            Link Octopus Account
+          </Button>
 
-        <Card className="p-5 bg-blue-50 dark:bg-blue-950/20 border-blue-100 dark:border-blue-900">
-          <div className="flex items-start gap-3">
-            <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
-            <div>
-              <h3 className="font-semibold text-sm text-foreground mb-2">Requirements</h3>
-              <ul className="text-xs text-muted-foreground space-y-1.5 list-disc pl-4">
-                <li>An active Octopus Energy account</li>
-                <li>A smart meter installed at your property</li>
-                <li>Your Octopus Energy API key and account number</li>
-              </ul>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-5">
-          <h3 className="font-semibold text-foreground mb-3">How to get started</h3>
-          <ol className="space-y-3 text-sm">
-            <li className="flex items-start gap-3">
-              <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold flex-shrink-0">1</span>
-              <div>
-                <p className="font-medium">Get your API key</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Visit the <a href="https://octopus.energy/dashboard/new/accounts/personal-details/api-access" target="_blank" rel="noopener noreferrer" className="text-primary underline">Octopus Energy Developer Dashboard</a> to generate your API key
-                </p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold flex-shrink-0">2</span>
-              <div>
-                <p className="font-medium">Find your account number</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Your account number starts with "A-" and can be found on your Octopus Energy bills or dashboard
-                </p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold flex-shrink-0">3</span>
-              <div>
-                <p className="font-medium">Link your meter</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Go to Settings → Energy Integrations and enter your credentials to connect
-                </p>
-              </div>
-            </li>
-          </ol>
-        </Card>
-
-        <Button
-          className="w-full"
-          size="lg"
-          onClick={() => window.location.href = '/settings'}
-        >
-          <Zap className="w-4 h-4 mr-2" />
-          Go to Settings
-        </Button>
-
-        {/* Octopus promotional banner */}
-        <div className="text-center pt-2">
-          <p className="text-xs text-muted-foreground">
-            Not with Octopus yet?{' '}
-            <a
-              href="https://share.octopus.energy/vivid-dodo-915"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-purple-600 dark:text-purple-400 hover:underline font-medium"
-            >
-              Join with £50 free credit
-            </a>
+          <p className="text-xs text-muted-foreground pt-4">
+            Your API keys are stored securely on your device.
           </p>
-        </div>
+        </Card>
       </div>
     );
   }
@@ -488,17 +446,30 @@ export function FootprintView() {
         </Tabs>
       </div>
 
-      {!footprint?.records?.length ? (
+      {/* Date Indicator - show which date is being viewed */}
+      {(timeRange === 'day' || timeRange === 'week') && availableDates?.maxDate && (
+        <div className="text-sm text-muted-foreground">
+          {timeRange === 'day'
+            ? `Showing: ${format(effectiveDate, 'EEEE, MMMM d, yyyy')}`
+            : `Showing: ${format(effectiveDate, 'MMM d')} to ${format(new Date(effectiveDate.getTime() + 6 * 24 * 60 * 60 * 1000), 'MMM d, yyyy')}`}
+        </div>
+      )}
+
+      {!dailyData.length ? (
         <Card className="p-6">
           <div className="text-center mb-4">
             <Leaf className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-            <h3 className="font-medium text-foreground mb-2">No Footprint Data Yet</h3>
+            <h3 className="font-medium text-foreground mb-2">No Footprint Data{timeRange === 'day' && selectedDate ? ` for ${format(selectedDate, 'PPP')}` : ''}</h3>
             <p className="text-sm text-muted-foreground mb-4 max-w-xs mx-auto">
-              {timeRange === 'day'
-                ? 'No data for this day.'
-                : !status?.latest_consumption
-                  ? 'Waiting for readings from Octopus Energy. Smart meter data can take 24-48 hours to become available after linking.'
-                  : 'Sync your consumption data to see your carbon footprint.'}
+              {timeRange === 'day' && selectedDate
+                ? `No data available for ${format(selectedDate, 'PPP')}. Smart meter data typically has a 24-48 hour delay.`
+                : timeRange === 'day' && availableDates?.maxDate
+                  ? `Showing most recent data from ${format(parseISO(availableDates.maxDate), 'PPP')}. Today's data will be available in 24-48 hours.`
+                  : !status?.latest_consumption
+                    ? 'Waiting for readings from Octopus Energy. Smart meter data can take 24-48 hours to become available after linking.'
+                    : footprint?.records?.length
+                      ? 'No data in selected date range. Try selecting an earlier date.'
+                      : 'Sync your consumption data to see your carbon footprint.'}
             </p>
           </div>
 
@@ -547,6 +518,32 @@ export function FootprintView() {
         </Card>
       ) : (
         <>
+          {/* Date Range Display */}
+          {dailyData.length > 0 && (
+            <div className="mb-4 text-center">
+              <p className="text-xs text-muted-foreground">
+                {timeRange === 'day' && dailyData[0]?.fullDate && (
+                  format(dailyData[0].fullDate, 'EEEE, MMMM d, yyyy')
+                )}
+                {timeRange === 'week' && dailyData.length > 0 && (
+                  <>
+                    {format(dailyData[0].fullDate, 'MMM d')} - {format(dailyData[dailyData.length - 1].fullDate, 'MMM d, yyyy')}
+                  </>
+                )}
+                {timeRange === 'month' && dailyData.length > 0 && (
+                  <>
+                    {format(dailyData[0].fullDate, 'MMM d')} - {format(dailyData[dailyData.length - 1].fullDate, 'MMM d, yyyy')}
+                  </>
+                )}
+                {timeRange === 'year' && dailyData.length > 0 && (
+                  <>
+                    {format(dailyData[0].fullDate, 'MMM yyyy')} - {format(dailyData[dailyData.length - 1].fullDate, 'MMM yyyy')}
+                  </>
+                )}
+              </p>
+            </div>
+          )}
+
           {/* Summary Cards */}
           <div className={`grid gap-3 ${insights?.hasExport ? 'grid-cols-3' : 'grid-cols-2'}`}>
             <Card className="p-4">
@@ -664,7 +661,7 @@ export function FootprintView() {
                                 </div>
                                 <div className="flex justify-between">
                                   <span className="text-muted-foreground">Below 30%</span>
-                                  <Badge variant="outline" className="text-[10px] h-5">Needs Work</Badge>
+                                  <Badge variant="outline" className="text-[10px] h-5">Growing</Badge>
                                 </div>
                               </div>
                             </div>
@@ -699,8 +696,8 @@ export function FootprintView() {
                       : 'bg-muted text-muted-foreground border-border'} text-center justify-center h-auto py-1`}
                   >
                     {insights.greenPercentage >= 70 ? 'Excellent' :
-                      insights.greenPercentage >= 50 ? 'Good' :
-                        insights.greenPercentage >= 30 ? 'Fair' : 'Needs Work'}
+                      insights.greenPercentage >= 50 ? 'Great' :
+                        insights.greenPercentage >= 30 ? 'Good' : 'Growing'}
                   </Badge>
                 </div>
               </div>

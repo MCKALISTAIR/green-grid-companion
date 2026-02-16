@@ -2,6 +2,51 @@
 
 All notable changes to GridSense will be documented in this file.
 
+## [v1.4.4] - 2026-02-16
+
+### Added ✨
+- **Power Planner Onboarding**: Dismissible welcome card explaining feature purpose
+  - Shows on first visit to Power Planner
+  - Explains how to use the shiftable appliance scheduler
+  - Highlights cost and carbon savings calculations
+  - Persists dismissal state via localStorage
+
+- **Terminology Tooltips**: Clear definitions for technical terms
+  - **Gigawatt (GW)** tooltip in Demand view and Generation Mix breakdown
+  - Centralized definitions in `lib/definitions.ts` for consistency
+  - Info icons with popover explanations
+
+- **History Tab Guidance**: New user tip for understanding the graph
+  - Dismissible "Understanding the Graph" card
+  - Explains solid line (actual) vs dotted line (forecast)
+  - Helps users interpret historical data visualization
+  - Persists dismissal via localStorage
+
+### Improved 🎨
+- **Onboarding Tour Experience**: Premium visual overhaul
+  - **Glassmorphism Effects**: Backdrop blur (20px) with semi-transparent backgrounds
+  - **Smooth Animations**: Entrance animations with scale and translateY effects
+  - **Enhanced Buttons**: Hover effects with lift animations and gradient shadows
+  - **Better Visual Hierarchy**: Primary-colored progress indicators and accents
+  
+- **Tour Content**: More engaging and actionable descriptions
+  - Mentions interactive features (clickable wind turbines, Time Machine)
+  - Highlights practical use cases ("Perfect for charging EVs")
+  - More conversational and user-friendly language
+  - References new features added in recent updates
+
+- **Tour Accessibility**: Easier replay and better discoverability
+  - New `replayTour()` function for programmatic control
+  - Redesigned Settings button with gradient styling for visibility
+  - Changed label from "Replay Tour" to "Take a Tour"
+  - No page reload required to restart tour
+
+### Technical Improvements 🔧
+- **Code Organization**: Centralized term definitions in `lib/definitions.ts`
+- **Type Safety**: Proper TypeScript types for tour hook API
+- **CSS Architecture**: Premium tour styling with CSS custom properties
+- **State Management**: Consistent localStorage patterns for dismissible UI
+
 ## [v1.4.3] - 2026-02-15
 
 ### Added ✨

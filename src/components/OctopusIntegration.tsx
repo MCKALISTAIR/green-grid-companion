@@ -10,7 +10,8 @@ import {
   Leaf,
   MoreVertical,
   LogOut,
-  ArrowRightLeft
+  ArrowRightLeft,
+  Info
 } from 'lucide-react';
 import { TurbineSpinner } from '@/components/ui/turbine-spinner';
 import {
@@ -19,6 +20,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+
 import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
 import { formatDistanceToNow } from 'date-fns';
 import { OctopusSettings } from './OctopusSettings';
@@ -264,8 +271,22 @@ export function OctopusIntegration() {
               <div key={meter.mpan} className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-purple-500" />
-                  <span className="text-muted-foreground">
+                  <span className="text-muted-foreground flex items-center gap-1.5">
                     MPAN: {meter.mpan.slice(-6)}
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button className="inline-flex items-center justify-center rounded-full hover:bg-muted p-0.5">
+                          <Info className="w-3 h-3 text-muted-foreground/60" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[280px] p-3 text-xs" align="start">
+                        <p className="font-medium mb-1">What's an MPAN?</p>
+                        <p className="text-muted-foreground">
+                          MPAN (Meter Point Administration Number) is a unique 13-digit number that identifies your electricity meter.
+                          You can find it on your energy bill.
+                        </p>
+                      </PopoverContent>
+                    </Popover>
                     {meter.meter_type === 'export' && (
                       <Badge variant="outline" className="ml-1.5 text-[9px] h-4 px-1 bg-primary/10 text-primary border-primary/20">
                         Export

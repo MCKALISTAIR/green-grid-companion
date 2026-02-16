@@ -8,6 +8,7 @@ export interface LandscapeProps {
     isSnowing?: boolean;
     isChristmas?: boolean;
     skipIntro?: boolean;
+    windSpeed?: number;
 }
 
 // Get current season based on month
@@ -20,7 +21,7 @@ function getCurrentSeason(): 'spring' | 'summer' | 'autumn' | 'winter' {
 }
 
 // 🌲 Stylized Pine Tree with Shading
-function PineTree({ x, y, scale = 1, colorPrimary, colorShadow, isSnowing, isChristmas }: { x: number; y: number; scale?: number; colorPrimary: string; colorShadow: string; isSnowing?: boolean; isChristmas?: boolean }) {
+function PineTree({ x, y, scale = 1, colorPrimary, colorShadow, isSnowing, isChristmas, windSpeed = 0 }: { x: number; y: number; scale?: number; colorPrimary: string; colorShadow: string; isSnowing?: boolean; isChristmas?: boolean; windSpeed?: number }) {
     const season = getCurrentSeason();
 
     // Seasonal color overrides
@@ -39,8 +40,28 @@ function PineTree({ x, y, scale = 1, colorPrimary, colorShadow, isSnowing, isChr
 
     const seasonalColors = getSeasonalColors();
 
+    // Calculate sway animation based on wind speed
+    const swayIntensity = Math.min(windSpeed / 30, 1); // Normalize 0-1
+    const swayAmount = swayIntensity * 2; // Max 2 degrees
+    const swayDuration = Math.max(1.5, 3 - (swayIntensity * 1.5)); // Faster in high wind
+
+    // Randomize timing slightly per tree for natural effect
+    const randomOffset = Math.random() * 0.5;
+
     return (
-        <g transform={`translate(${x}, ${y}) scale(${scale})`}>
+        <motion.g
+            transform={`translate(${x}, ${y}) scale(${scale})`}
+            animate={{
+                rotate: [0, swayAmount, 0, -swayAmount, 0],
+            }}
+            transition={{
+                duration: swayDuration,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: randomOffset,
+            }}
+            style={{ transformOrigin: 'center bottom' }}
+        >
             {/* Trunk */}
             <rect x="-2" y="-8" width="4" height="18" fill="rgba(60, 40, 20, 0.4)" />
 
@@ -83,7 +104,7 @@ function PineTree({ x, y, scale = 1, colorPrimary, colorShadow, isSnowing, isChr
             {isSnowing && (
                 <path d="M0,-50 L4,-42 L-4,-42 Z" fill="#ffffff" opacity="0.9" />
             )}
-        </g>
+        </motion.g>
     );
 }
 
@@ -96,7 +117,8 @@ function HillLayer({
     delay = 0,
     isSnowing,
     isChristmas,
-    skipIntro
+    skipIntro,
+    windSpeed = 0
 }: {
     d: string;
     fill: string;
@@ -106,6 +128,7 @@ function HillLayer({
     isSnowing?: boolean;
     isChristmas?: boolean;
     skipIntro?: boolean;
+    windSpeed?: number;
 }) {
     return (
         <motion.g
@@ -130,6 +153,7 @@ function HillLayer({
                     colorShadow={treeColors?.shadow || '#22c55e'}
                     isSnowing={isSnowing}
                     isChristmas={isChristmas}
+                    windSpeed={windSpeed}
                 />
             ))}
         </motion.g>
@@ -197,6 +221,7 @@ export function LandscapeBack(props: LandscapeProps) {
                 isSnowing={props.isSnowing}
                 isChristmas={props.isChristmas}
                 skipIntro={props.skipIntro}
+                windSpeed={props.windSpeed}
             />
         </>
     );
@@ -223,6 +248,7 @@ export function LandscapeMid(props: LandscapeProps) {
                 isSnowing={props.isSnowing}
                 isChristmas={props.isChristmas}
                 skipIntro={props.skipIntro}
+                windSpeed={props.windSpeed}
             />
         </>
     );
@@ -249,6 +275,7 @@ export function LandscapeFront(props: LandscapeProps) {
                 isSnowing={props.isSnowing}
                 isChristmas={props.isChristmas}
                 skipIntro={props.skipIntro}
+                windSpeed={props.windSpeed}
             />
         </>
     );
