@@ -265,11 +265,83 @@ Deno.serve(async (req: Request) => {
                 const response = await fetch(consumptionUrl, {
                   headers: { 'Authorization': authHeaderOctopus }
                 });
-
                 if (!response.ok) {
                   console.error(`Octopus API error for meter ${meter.mpan}: ${response.status}`);
                   errorCount++;
                   continue;
+                }
+
+                const consumptionData = await response.json();
+                const consumption: OctopusConsumption[] = consumptionData.results || [];
+
+                if (!consumption?.length) continue;
+
+                const firstRecord = consumption[consumption.length - 1];
+                const lastRecord = consumption[0];
+                const minTime = new Date(firstRecord.interval_start);
+                const maxTime = new Date(lastRecord.interval_end);
+
+                const mpan = meter.mpan;
+                const regionId = getRegionIdFromMpanStatic(mpan);
+
+                let intensityUrl = `https://api.carbonintensity.org.uk/intensity/${minTime.toISOString()}/${maxTime.toISOString()}`;
+                let isRegional = false;
+
+                if (regionId) {
+                  intensityUrl = `https://api.carbonintensity.org.uk/regional/intensity/${minTime.toISOString()}/${maxTime.toISOString()}/regionid/${regionId}`;
+                  isRegional = true;
+                }
+
+                const intensityResponse = await fetch(intensityUrl);
+                if (!intensityResponse.ok) {
+                  console.error(`Carbon intensity API error for ${mpan}: ${intensityResponse.status}`);
+                  // Still store consumption even if intensity fetch fails
+                } else {
+                  const intensityJson = await intensityResponse.json();
+                  const intensityMap = new Map<string, { intensity: number, index: string }>();
+
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  let intensityList: any[] = [];
+                  if (isRegional) {
+                    intensityList = Array.isArray(intensityJson.data)
+                      ? intensityJson.data[0]?.data || []
+                      : intensityJson.data?.data || [];
+                  } else {
+                    intensityList = intensityJson.data || [];
+                  }
+
+                  for (const item of intensityList) {
+                    if (item.from && item.intensity) {
+                      const value = item.intensity.actual ?? item.intensity.forecast ?? 0;
+                      const index = item.intensity.index || 'moderate';
+                      intensityMap.set(item.from, { intensity: value, index });
+                    }
+                  }
+
+                  // Store footprint records if intensity was found
+                  const footprintRecords: FootprintRecord[] = [];
+                  for (const record of consumption) {
+                    const data = intensityMap.get(record.interval_start);
+                    if (data) {
+                      footprintRecords.push({
+                        interval_start: record.interval_start,
+                        interval_end: record.interval_end,
+                        consumption_kwh: record.consumption,
+                        intensity_gco2_kwh: data.intensity,
+                        carbon_g: record.consumption * data.intensity,
+                        intensity_index: data.index,
+                        mpan: mpan
+                      });
+                    }
+                  }
+
+                  if (footprintRecords.length > 0) {
+                    await supabase
+                      .from('carbon_footprint')
+                      .upsert(footprintRecords, { onConflict: 'mpan,interval_start' });
+                  }
+                }
+
                 }
 
                 const consumptionData = await response.json();
@@ -853,7 +925,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    if (action === 'sync-consumption') {
+    async function performSyncConsumption(userId: string, authHeaderOctopus: string, days: number) {
       if (!authHeaderOctopus) throw new Error('Missing credentials');
 
       // Get ALL active meters for this user
@@ -865,10 +937,7 @@ Deno.serve(async (req: Request) => {
 
       if (meterError || !allMeterData?.length) {
         console.error('No active meters found for user:', meterError);
-        return new Response(
-          JSON.stringify({ error: 'No linked meter found. Please link your meter first.' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        throw new Error('No linked meter found. Please link your meter first.');
       }
 
       const daysBack = days;
@@ -934,31 +1003,16 @@ Deno.serve(async (req: Request) => {
         console.log(`Synced ${insertedCount} readings for meter ${mpan}`);
       }
 
-      return new Response(
-        JSON.stringify({
-          success: true,
-          readings_synced: totalInserted,
-          meters_synced: allMeterData.length,
-          period_from: periodFrom.toISOString(),
-          period_to: periodTo.toISOString()
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Helper to map MPAN Area Code (first 2 digits) to NESO Carbon Region ID
-    function getRegionIdFromMpan(mpan: string): number | null {
-      if (!mpan || mpan.length < 2) return null;
-      const areaCode = mpan.substring(0, 2);
-      const mapping: Record<string, number> = {
-        '10': 10, '11': 9, '12': 13, '13': 6, '14': 8, '15': 4, '16': 3,
-        '17': 2, '18': 1, '19': 12, '20': 11, '21': 7, '22': 14, '23': 5,
+      return {
+        success: true,
+        readings_synced: totalInserted,
+        meters_synced: allMeterData.length,
+        period_from: periodFrom.toISOString(),
+        period_to: periodTo.toISOString()
       };
-      return mapping[areaCode] || null;
     }
 
-    if (action === 'calculate-footprint') {
-
+    async function performCalculateFootprint(userId: string) {
       // Find ALL user meters to process both import and export
       const { data: userMeters } = await supabase
         .from('octopus_meters')
@@ -967,10 +1021,7 @@ Deno.serve(async (req: Request) => {
         .eq('is_active', true);
 
       if (!userMeters?.length) {
-        return new Response(
-          JSON.stringify({ error: 'No meter linked' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        throw new Error('No meter linked');
       }
 
       let totalCalculated = 0;
@@ -997,7 +1048,7 @@ Deno.serve(async (req: Request) => {
 
         // Determine Region
         const mpan = consumption[0].mpan;
-        const regionId = getRegionIdFromMpan(mpan);
+        const regionId = getRegionIdFromMpanStatic(mpan);
 
         let intensityUrl = `https://api.carbonintensity.org.uk/intensity/${minTime.toISOString()}/${maxTime.toISOString()}`;
         let isRegional = false;
@@ -1066,14 +1117,72 @@ Deno.serve(async (req: Request) => {
         console.log(`Calculated ${footprintRecords.length} footprint records for meter ${mpan} (${meter.meter_type})`);
       }
 
-      return new Response(
-        JSON.stringify({
-          success: true,
-          records_calculated: totalCalculated,
-          meters_processed: userMeters.length
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return {
+        success: true,
+        records_calculated: totalCalculated,
+        meters_processed: userMeters.length
+      };
+    }
+
+    if (action === 'sync-consumption') {
+      try {
+        const result = await performSyncConsumption(userId, authHeaderOctopus!, days);
+        return new Response(
+          JSON.stringify(result),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        return new Response(
+          JSON.stringify({ error: message }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    if (action === 'calculate-footprint') {
+      try {
+        const result = await performCalculateFootprint(userId);
+        return new Response(
+          JSON.stringify(result),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        return new Response(
+           JSON.stringify({ error: message }),
+           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    if (action === 'full-sync') {
+      if (!authHeaderOctopus) {
+        return new Response(
+          JSON.stringify({ error: 'Missing credentials' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      try {
+        const syncResult = await performSyncConsumption(userId, authHeaderOctopus, days);
+        const calcResult = await performCalculateFootprint(userId);
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            sync: syncResult,
+            calculation: calcResult
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (error: unknown) {
+         const message = error instanceof Error ? error.message : 'Unknown error';
+         return new Response(
+          JSON.stringify({ error: message }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     if (action === 'get-footprint') {
@@ -1281,7 +1390,8 @@ Deno.serve(async (req: Request) => {
 
         const data = await response.json();
         const plannedDispatches = data.plannedDispatches || [];
-        const completedDispatches = data.completedDispatches || [];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const completedDispatches: any[] = data.completedDispatches || [];
 
         console.log(`[${requestId}] Found ${plannedDispatches.length} planned, ${completedDispatches.length} completed dispatches`);
 
@@ -1312,7 +1422,6 @@ Deno.serve(async (req: Request) => {
         const UK_AVG_INTENSITY = 230;
 
         // Get existing dispatches that already have carbon data to avoid re-fetching
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const existingStartTimes = completedDispatches.map((d: any) => d.start || d.startDt);
         const { data: existingDispatches } = await supabase
           .from('octopus_intelligent_dispatches')
