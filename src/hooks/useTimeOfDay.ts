@@ -50,7 +50,7 @@ export function useTimeOfDay(): TimeOfDayState {
       timeOfDay,
       hour,
       sunPosition,
-      isNight: timeOfDay === 'night',
+      isNight: timeOfDay === 'night' || timeOfDay === 'dusk',
       isDawn: timeOfDay === 'dawn',
       isDusk: timeOfDay === 'dusk' || timeOfDay === 'sunset',
     };
