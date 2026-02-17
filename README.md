@@ -204,7 +204,13 @@ GridSense is a mobile-first companion app designed to help UK (and future) energ
     npm install
     ```
 
-3.  **Run the web development server**
+3.  **Configure Environment Variables**
+    Copy `.env.example` to `.env` and fill in your Supabase and Sentry credentials.
+    ```sh
+    cp .env.example .env
+    ```
+
+4.  **Run the web development server**
     ```sh
     npm run dev
     ```
