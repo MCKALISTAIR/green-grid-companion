@@ -269,17 +269,27 @@ Deno.serve(async (req: Request) => {
               const readings: OctopusConsumption[] = consumptionData.results || [];
 
               let insertedCount = 0;
-              for (const reading of readings) {
+              const records = readings.map(reading => ({
+                interval_start: reading.interval_start,
+                interval_end: reading.interval_end,
+                consumption_kwh: reading.consumption,
+                mpan: meter.mpan,
+                serial_number: meter.serial_number
+              }));
+
+              // Process in chunks of 1000 to avoid request size limits
+              const CHUNK_SIZE = 1000;
+              for (let i = 0; i < records.length; i += CHUNK_SIZE) {
+                const chunk = records.slice(i, i + CHUNK_SIZE);
                 const { error } = await supabase
                   .from('octopus_consumption')
-                  .upsert({
-                    interval_start: reading.interval_start,
-                    interval_end: reading.interval_end,
-                    consumption_kwh: reading.consumption,
-                    mpan: meter.mpan,
-                    serial_number: meter.serial_number
-                  }, { onConflict: 'mpan,interval_start' });
-                if (!error) insertedCount++;
+                  .upsert(chunk, { onConflict: 'mpan,interval_start' });
+
+                if (!error) {
+                  insertedCount += chunk.length;
+                } else {
+                  console.error(`Error upserting chunk ${i / CHUNK_SIZE}:`, error);
+                }
               }
 
               // Update last sync time
@@ -880,18 +890,27 @@ Deno.serve(async (req: Request) => {
         console.log(`Received ${readings.length} readings for meter ${mpan}`);
 
         let insertedCount = 0;
-        for (const reading of readings) {
+        const records = readings.map(reading => ({
+          interval_start: reading.interval_start,
+          interval_end: reading.interval_end,
+          consumption_kwh: reading.consumption,
+          mpan,
+          serial_number
+        }));
+
+        // Process in chunks of 1000 to avoid request size limits
+        const CHUNK_SIZE = 1000;
+        for (let i = 0; i < records.length; i += CHUNK_SIZE) {
+          const chunk = records.slice(i, i + CHUNK_SIZE);
           const { error } = await supabase
             .from('octopus_consumption')
-            .upsert({
-              interval_start: reading.interval_start,
-              interval_end: reading.interval_end,
-              consumption_kwh: reading.consumption,
-              mpan,
-              serial_number
-            }, { onConflict: 'mpan,interval_start' });
+            .upsert(chunk, { onConflict: 'mpan,interval_start' });
 
-          if (!error) insertedCount++;
+          if (!error) {
+            insertedCount += chunk.length;
+          } else {
+            console.error(`Error upserting chunk ${i / CHUNK_SIZE}:`, error);
+          }
         }
 
         // Update last sync time for this meter
