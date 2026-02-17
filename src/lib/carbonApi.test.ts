@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calculateIntensityFromMix, getIntensityColor, REGION_IDS } from '@/lib/carbonApi';
+import { calculateIntensityFromMix, getIntensityColor, REGION_IDS, UK_REGIONS, UK_REGIONS_CONFIG } from '@/lib/carbonApi';
 
 describe('carbonApi', () => {
     describe('calculateIntensityFromMix', () => {
@@ -38,6 +38,32 @@ describe('carbonApi', () => {
         it('has correct mapping', () => {
             expect(REGION_IDS.NATIONAL).toBe(0);
             expect(REGION_IDS.SCOTLAND).toBe(16);
+        });
+    });
+
+    describe('UK_REGIONS', () => {
+        it('is derived correctly from UK_REGIONS_CONFIG', () => {
+            // Calculate expected length
+            const expectedLength = UK_REGIONS_CONFIG.reduce((acc, region) => acc + region.postcodes.length, 0);
+            expect(UK_REGIONS.length).toBe(expectedLength);
+        });
+
+        it('contains all expected regions', () => {
+            // Sample checks
+            const northScotland = UK_REGIONS.filter(r => r.name === 'North Scotland');
+            expect(northScotland.length).toBe(6); // AB, IV, KW, PH, ZE, HS
+            expect(northScotland.map(r => r.postcode)).toContain('AB');
+            expect(northScotland.map(r => r.postcode)).toContain('ZE');
+
+            const london = UK_REGIONS.filter(r => r.name === 'London');
+            expect(london.length).toBe(8);
+        });
+
+        it('maintains the correct structure', () => {
+            const region = UK_REGIONS[0];
+            expect(region).toHaveProperty('id');
+            expect(region).toHaveProperty('name');
+            expect(region).toHaveProperty('postcode');
         });
     });
 });
