@@ -19,6 +19,7 @@ import { ComponentErrorBoundary } from "@/components/ComponentErrorBoundary";
 import { SplashScreen } from "@/components/SplashScreen";
 import { DeepLinkHandler } from "@/components/DeepLinkHandler";
 import { CookieConsent } from "@/components/CookieConsent";
+import { LocationProvider } from "@/contexts/LocationContext";
 
 // Lazy load pages
 const Index = lazy(() => import("./pages/Index"));
@@ -160,12 +161,14 @@ const App = () => (
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <TooltipProvider>
         <ErrorBoundary>
-          <AchievementManager />
-          <DirectorPanel />
-          <ComponentErrorBoundary name="Status Bar Manager">
-            <StatusBarManager />
-          </ComponentErrorBoundary>
-          <AppContent />
+          <LocationProvider>
+            <AchievementManager />
+            <DirectorPanel />
+            <ComponentErrorBoundary name="Status Bar Manager">
+              <StatusBarManager />
+            </ComponentErrorBoundary>
+            <AppContent />
+          </LocationProvider>
         </ErrorBoundary>
       </TooltipProvider>
     </ThemeProvider>

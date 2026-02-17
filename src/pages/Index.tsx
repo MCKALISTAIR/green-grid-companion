@@ -39,6 +39,7 @@ import { LocationMismatchPrompt } from '@/components/LocationMismatchPrompt';
 import { YearWrapped } from '@/components/YearWrapped';
 
 import { useProductTour } from '@/hooks/useProductTour';
+import { useAppLocation } from '@/contexts/LocationContext';
 
 // Check if Year Wrapped should auto-show (December, once per year)
 function shouldShowYearWrapped(): { shouldShow: boolean; year: number } {
@@ -64,9 +65,7 @@ function markYearWrappedShown(year: number) {
 
 const Index = () => {
   const navigate = useNavigate();
-  const [postcode, setPostcode] = useState(() => {
-    return localStorage.getItem('gridgreen-postcode') || '';
-  });
+  const { postcode, setPostcode } = useAppLocation();
   const [viewMode, setViewMode] = useState<'intensity' | 'footprint' | 'demand'>('intensity');
   const [showYearWrapped, setShowYearWrapped] = useState(false);
   const [wrappedYear, setWrappedYear] = useState(new Date().getFullYear());
@@ -120,13 +119,6 @@ const Index = () => {
       scheduleHighIntensityAlerts(forecast);
     }
   }, [forecast, scheduleGreenAlerts, scheduleDailyForecast, scheduleHighIntensityAlerts]);
-
-  // Save postcode preference
-  useEffect(() => {
-    if (postcode) {
-      localStorage.setItem('gridgreen-postcode', postcode);
-    }
-  }, [postcode]);
 
   // Start Tour
   const { startTour } = useProductTour();
