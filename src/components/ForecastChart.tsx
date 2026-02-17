@@ -68,12 +68,22 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
     }
   }, [selectedIndex]);
 
-  // Dismiss popup on page scroll so it doesn't persist when scrolling away
+  // Dismiss popup on page scroll or tap outside
   useEffect(() => {
     if (selectedIndex === null) return;
     const dismiss = () => setSelectedIndex(null);
     window.addEventListener('scroll', dismiss, { passive: true });
-    return () => window.removeEventListener('scroll', dismiss);
+    const handleTap = (e: MouseEvent | TouchEvent) => {
+      const container = scrollContainerRef.current;
+      if (container && !container.contains(e.target as Node)) {
+        dismiss();
+      }
+    };
+    document.addEventListener('pointerdown', handleTap);
+    return () => {
+      window.removeEventListener('scroll', dismiss);
+      document.removeEventListener('pointerdown', handleTap);
+    };
   }, [selectedIndex]);
 
   useLayoutEffect(() => {
