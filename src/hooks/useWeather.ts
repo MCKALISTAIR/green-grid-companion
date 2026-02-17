@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAppLocation } from '@/contexts/LocationContext';
 
 export interface WeatherData {
     current: {
@@ -15,15 +16,19 @@ export interface WeatherData {
     };
 }
 
-export function useWeather(lat: number = 51.5074, lon: number = -0.1278) {
-    // Default to London if no coords provided. 
-    // TODO: Integrate with LocationManager context later.
+export function useWeather(lat?: number, lon?: number) {
+    // Integrate with LocationManager context as per TODO
+    const { coordinates } = useAppLocation();
+
+    // Prioritize passed arguments, then context coordinates, then default to London
+    const effectiveLat = lat ?? coordinates?.lat ?? 51.5074;
+    const effectiveLon = lon ?? coordinates?.lon ?? -0.1278;
 
     return useQuery<WeatherData>({
-        queryKey: ['weather', lat, lon],
+        queryKey: ['weather', effectiveLat, effectiveLon],
         queryFn: async () => {
             const { data, error } = await supabase.functions.invoke('weather', {
-                body: { lat, lon }
+                body: { lat: effectiveLat, lon: effectiveLon }
             });
 
             if (error) throw new Error(error.message);
