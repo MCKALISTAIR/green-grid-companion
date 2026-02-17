@@ -27,3 +27,4 @@ dist-ssr
 *.zip
 .build/
 .swiftpm/
+.env
