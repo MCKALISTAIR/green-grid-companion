@@ -13,15 +13,6 @@ export const TIME_SKY_COLORS: Record<TimeOfDay, { start: string; mid: string; en
     dusk: { start: 'hsl(260 50% 35%)', mid: 'hsl(270 45% 40%)', end: 'hsl(240 40% 30%)' },
 };
 
-// Intensity-based adjustments
-export const INTENSITY_ADJUSTMENTS: Record<string, { satMod: number; lightMod: number }> = {
-    'very low': { satMod: 1.1, lightMod: 1.05 },
-    'low': { satMod: 1.0, lightMod: 1.0 },
-    'moderate': { satMod: 0.8, lightMod: 0.95 },
-    'high': { satMod: 0.6, lightMod: 0.9 },
-    'very high': { satMod: 0.4, lightMod: 0.85 },
-};
-
 export function getSkyGradient(index: string, timeOfDay: TimeOfDay, cleanliness: number, weather?: WeatherData): string {
     const params = getSkyParams(index, timeOfDay, cleanliness, weather);
     return params.gradient;
@@ -42,9 +33,6 @@ function getSkyParams(index: string, timeOfDay: TimeOfDay, cleanliness: number, 
             gradient: 'linear-gradient(180deg, hsl(230 70% 25%) 0%, hsl(240 60% 35%) 40%, hsl(250 50% 40%) 100%)'
         };
     }
-    // Note: INTENSITY_ADJUSTMENTS is not currently used in the gradient logic in the original file, 
-    // but we keep it exported if needed.
-
     // Weather modifies sky colors
     if (weather) {
         // Overcast/cloudy weather makes sky grayer
