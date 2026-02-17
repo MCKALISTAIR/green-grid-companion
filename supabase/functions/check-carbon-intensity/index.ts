@@ -76,6 +76,7 @@ Deno.serve(async (req) => {
 
     // Cache for postcode-to-region lookups to avoid redundant searches
     const postcodeCache = new Map<string, { intensity: number; index: string }>();
+    let nationalIntensityCache: { intensity: number; index: string } | null = null;
 
     // Helper function to get region intensity with caching
     const getRegionIntensity = async (postcode: string) => {
@@ -101,12 +102,15 @@ Deno.serve(async (req) => {
 
       // Default to national if no region match
       if (!regionIntensity) {
-        const nationalResponse = await fetch('https://api.carbonintensity.org.uk/intensity');
-        const nationalData = await nationalResponse.json();
-        regionIntensity = {
-          intensity: nationalData.data[0]?.intensity?.forecast || 200,
-          index: nationalData.data[0]?.intensity?.index || 'moderate',
-        };
+        if (!nationalIntensityCache) {
+          const nationalResponse = await fetch('https://api.carbonintensity.org.uk/intensity');
+          const nationalData = await nationalResponse.json();
+          nationalIntensityCache = {
+            intensity: nationalData.data[0]?.intensity?.forecast || 200,
+            index: nationalData.data[0]?.intensity?.index || 'moderate',
+          };
+        }
+        regionIntensity = nationalIntensityCache;
       }
 
       // Cache the result
