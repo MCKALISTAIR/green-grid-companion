@@ -10,58 +10,35 @@ const corsHeaders = {
 };
 
 // --- RATE LIMITING ---
-// In-memory rate limiter for credential operations
-// Note: This resets on function cold starts, but provides protection during active use
-interface RateLimitEntry {
-  count: number;
-  firstAttempt: number;
-  blockedUntil: number;
-}
-
-const rateLimitStore = new Map<string, RateLimitEntry>();
-
+// Persistent rate limiter for credential operations
 const RATE_LIMIT_CONFIG = {
   maxAttempts: 5,        // Max attempts per window
   windowMs: 60 * 1000,   // 1 minute window
   blockDurationMs: 5 * 60 * 1000, // 5 minute block after exceeding limit
 };
 
-function checkRateLimit(userId: string, action: string): { allowed: boolean; retryAfter?: number } {
+async function checkRateLimit(supabase: any, userId: string, action: string): Promise<{ allowed: boolean; retryAfter?: number }> {
   const key = `${userId}:${action}`;
-  const now = Date.now();
-  const entry = rateLimitStore.get(key);
 
-  // Check if currently blocked
-  if (entry && entry.blockedUntil > now) {
-    const retryAfter = Math.ceil((entry.blockedUntil - now) / 1000);
-    return { allowed: false, retryAfter };
-  }
+  const { data, error } = await supabase.rpc('fn_check_rate_limit', {
+    p_key: key,
+    p_max_attempts: RATE_LIMIT_CONFIG.maxAttempts,
+    p_window_ms: RATE_LIMIT_CONFIG.windowMs,
+    p_block_duration_ms: RATE_LIMIT_CONFIG.blockDurationMs
+  });
 
-  // Clean up expired entries
-  if (entry && (now - entry.firstAttempt) > RATE_LIMIT_CONFIG.windowMs) {
-    rateLimitStore.delete(key);
-  }
-
-  const currentEntry = rateLimitStore.get(key);
-
-  if (!currentEntry) {
-    // First attempt in window
-    rateLimitStore.set(key, { count: 1, firstAttempt: now, blockedUntil: 0 });
+  if (error) {
+    console.error('Rate limit check failed:', error);
+    // Fail open if DB is down to not block users, but log error
     return { allowed: true };
   }
 
-  if (currentEntry.count >= RATE_LIMIT_CONFIG.maxAttempts) {
-    // Exceeded limit - block user
-    currentEntry.blockedUntil = now + RATE_LIMIT_CONFIG.blockDurationMs;
-    rateLimitStore.set(key, currentEntry);
-    const retryAfter = Math.ceil(RATE_LIMIT_CONFIG.blockDurationMs / 1000);
-    return { allowed: false, retryAfter };
-  }
-
-  // Increment counter
-  currentEntry.count++;
-  rateLimitStore.set(key, currentEntry);
-  return { allowed: true };
+  // Supabase RPC returns the JSON object directly
+  const result = data as any;
+  return {
+    allowed: result.allowed,
+    retryAfter: result.retry_after
+  };
 }
 
 // --- SECURITY LOGGING ---
@@ -154,15 +131,6 @@ function cleanupAuthFailureTracker() {
   }
 }
 
-// Periodic cleanup of old entries (runs on each request, but is fast)
-function cleanupRateLimitStore() {
-  const now = Date.now();
-  for (const [key, entry] of rateLimitStore.entries()) {
-    if (entry.blockedUntil < now && (now - entry.firstAttempt) > RATE_LIMIT_CONFIG.windowMs) {
-      rateLimitStore.delete(key);
-    }
-  }
-}
 
 interface OctopusConsumption {
   consumption: number;
@@ -472,7 +440,6 @@ Deno.serve(async (req: Request) => {
     console.log(`[${requestId}] Octopus Energy API - Action: ${action}, Days: ${days}, User: ${userId.substring(0, 8)}...`);
 
     // Cleanup old entries periodically
-    cleanupRateLimitStore();
     cleanupAuthFailureTracker();
 
     // --- CREDENTIALS VALIDATION ---
@@ -525,7 +492,7 @@ Deno.serve(async (req: Request) => {
 
     if (action === 'save-credentials') {
       // Rate limiting check
-      const rateLimit = checkRateLimit(userId, 'save-credentials');
+      const rateLimit = await checkRateLimit(supabase, userId, 'save-credentials');
       if (!rateLimit.allowed) {
         logSecurityEvent({
           type: 'RATE_LIMIT',
