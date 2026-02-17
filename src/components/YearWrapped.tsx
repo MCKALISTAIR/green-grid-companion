@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { useYearWrapped, YearWrappedData } from '@/hooks/useYearWrapped';
+import { useYearWrapped } from '@/hooks/useYearWrapped';
+import { YearWrappedData } from '@/lib/yearWrappedUtils';
 import { format, parse } from 'date-fns';
 import { 
     Wind, Sun, Flame, Leaf, TrendingDown, TrendingUp, 
