@@ -51,47 +51,40 @@ export const REGION_IDS = {
   WALES: 17,
 } as const;
 
-export const UK_REGIONS = [
-  { id: REGION_IDS.NATIONAL, name: 'National', postcode: 'GB' },
-  { id: REGION_IDS.SCOTLAND, name: 'Scotland', postcode: 'Scotland' },
-  { id: REGION_IDS.ENGLAND, name: 'England', postcode: 'England' },
-  { id: REGION_IDS.WALES, name: 'Wales', postcode: 'Wales' },
-  { id: 1, name: 'North Scotland', postcode: 'AB' },
-  { id: 2, name: 'South Scotland', postcode: 'EH' },
-  { id: 3, name: 'North West England', postcode: 'M' },
-  { id: 4, name: 'North East England', postcode: 'NE' },
-  { id: 5, name: 'Yorkshire', postcode: 'LS' },
-  { id: 6, name: 'North Wales & Merseyside', postcode: 'LL' },
-  { id: 7, name: 'South Wales', postcode: 'CF' },
-  { id: 8, name: 'West Midlands', postcode: 'B' },
-  { id: 9, name: 'East Midlands', postcode: 'NG' },
-  { id: 10, name: 'East England', postcode: 'CB' },
-  { id: 11, name: 'South West England', postcode: 'BS' },
-  { id: 12, name: 'South England', postcode: 'SO' },
-  { id: 13, name: 'London', postcode: 'SW' },
-  { id: 13, name: 'London', postcode: 'SE' },
-  { id: 13, name: 'London', postcode: 'E' },
-  { id: 13, name: 'London', postcode: 'EC' },
-  { id: 13, name: 'London', postcode: 'N' },
-  { id: 13, name: 'London', postcode: 'NW' },
-  { id: 13, name: 'London', postcode: 'W' },
-  { id: 13, name: 'London', postcode: 'WC' },
-  { id: 14, name: 'South East England', postcode: 'BN' },
-  // Expanded Scottish Regions
-  { id: 1, name: 'North Scotland', postcode: 'IV' },
-  { id: 1, name: 'North Scotland', postcode: 'KW' },
-  { id: 1, name: 'North Scotland', postcode: 'PH' },
-  { id: 1, name: 'North Scotland', postcode: 'ZE' },
-  { id: 1, name: 'North Scotland', postcode: 'HS' },
-  { id: 2, name: 'South Scotland', postcode: 'FK' },
-  { id: 2, name: 'South Scotland', postcode: 'G' },
-  { id: 2, name: 'South Scotland', postcode: 'KA' },
-  { id: 2, name: 'South Scotland', postcode: 'KY' },
-  { id: 2, name: 'South Scotland', postcode: 'ML' },
-  { id: 2, name: 'South Scotland', postcode: 'PA' },
-  { id: 2, name: 'South Scotland', postcode: 'TD' },
-  { id: 2, name: 'South Scotland', postcode: 'DG' },
+interface RegionConfig {
+  id: number;
+  name: string;
+  postcodes: string[];
+}
+
+export const UK_REGIONS_CONFIG: RegionConfig[] = [
+  { id: REGION_IDS.NATIONAL, name: 'National', postcodes: ['GB'] },
+  { id: REGION_IDS.SCOTLAND, name: 'Scotland', postcodes: ['Scotland'] },
+  { id: REGION_IDS.ENGLAND, name: 'England', postcodes: ['England'] },
+  { id: REGION_IDS.WALES, name: 'Wales', postcodes: ['Wales'] },
+  { id: 1, name: 'North Scotland', postcodes: ['AB', 'IV', 'KW', 'PH', 'ZE', 'HS'] },
+  { id: 2, name: 'South Scotland', postcodes: ['EH', 'FK', 'G', 'KA', 'KY', 'ML', 'PA', 'TD', 'DG'] },
+  { id: 3, name: 'North West England', postcodes: ['M'] },
+  { id: 4, name: 'North East England', postcodes: ['NE'] },
+  { id: 5, name: 'Yorkshire', postcodes: ['LS'] },
+  { id: 6, name: 'North Wales & Merseyside', postcodes: ['LL'] },
+  { id: 7, name: 'South Wales', postcodes: ['CF'] },
+  { id: 8, name: 'West Midlands', postcodes: ['B'] },
+  { id: 9, name: 'East Midlands', postcodes: ['NG'] },
+  { id: 10, name: 'East England', postcodes: ['CB'] },
+  { id: 11, name: 'South West England', postcodes: ['BS'] },
+  { id: 12, name: 'South England', postcodes: ['SO'] },
+  { id: 13, name: 'London', postcodes: ['SW', 'SE', 'E', 'EC', 'N', 'NW', 'W', 'WC'] },
+  { id: 14, name: 'South East England', postcodes: ['BN'] },
 ];
+
+export const UK_REGIONS = UK_REGIONS_CONFIG.flatMap((region) =>
+  region.postcodes.map((postcode) => ({
+    id: region.id,
+    name: region.name,
+    postcode,
+  }))
+);
 
 // Helper for fetch (now allows caching)
 const fetchWithNoCache = async (url: string) => {
