@@ -246,6 +246,21 @@ Deno.serve(async (req: Request) => {
       const userIds = [...new Set(allMeters.map(m => m.user_id))].filter(Boolean);
       console.log(`Found ${userIds.length} users with active meters`);
 
+      // Optimize: Fetch all credentials at once if needed to avoid N+1 queries
+      const credsMap = new Map();
+      if (cronAction === 'sync-all-users') {
+        const { data: allCreds } = await supabase
+          .from('octopus_credentials')
+          .select('user_id, api_key')
+          .in('user_id', userIds);
+
+        if (allCreds) {
+          for (const cred of allCreds) {
+            credsMap.set(cred.user_id, cred);
+          }
+        }
+      }
+
       let successCount = 0;
       let errorCount = 0;
 
@@ -254,12 +269,8 @@ Deno.serve(async (req: Request) => {
           const userMeters = allMeters.filter(m => m.user_id === uid);
 
           if (cronAction === 'sync-all-users') {
-            // Get credentials for this user
-            const { data: creds } = await supabase
-              .from('octopus_credentials')
-              .select('api_key')
-              .eq('user_id', uid)
-              .single();
+            // Get credentials for this user from pre-fetched map
+            const creds = credsMap.get(uid);
 
             if (!creds) {
               console.log(`No credentials for user ${uid.substring(0, 8)}..., skipping`);
