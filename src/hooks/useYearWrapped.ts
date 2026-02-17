@@ -55,7 +55,7 @@ const FOSSIL_FUELS = ['coal', 'gas', 'oil'];
 const RENEWABLE_FUELS = ['wind', 'solar', 'hydro'];
 
 // The Carbon Intensity API only allows 30-day queries, so we need to chunk
-const MAX_QUERY_DAYS = 14; // Use 14 for reliability
+const MAX_QUERY_DAYS = 30; // Use 30 for max efficiency
 
 export function useYearWrapped() {
     const [data, setData] = useState<YearWrappedData | null>(null);
@@ -85,24 +85,40 @@ export function useYearWrapped() {
 
             const allData: ForecastData[] = [];
             
-            // Fetch each chunk with progress updates
-            for (let i = 0; i < chunks.length; i++) {
-                const chunk = chunks[i];
+            // Fetch chunks in batches to balance speed and rate limits
+            const BATCH_SIZE = 5;
+            let completedChunks = 0;
+
+            const processChunk = async (chunk: { from: Date; to: Date }, index: number) => {
                 try {
                     const chunkData = await getNationalHistoryAndForecast(
                         chunk.from.toISOString(),
                         chunk.to.toISOString()
                     );
-                    allData.push(...chunkData);
+                    return chunkData;
                 } catch (err) {
-                    console.warn(`Failed to fetch chunk ${i + 1}:`, err);
-                    // Continue with other chunks
+                    console.warn(`Failed to fetch chunk ${index + 1}:`, err);
+                    return [];
+                } finally {
+                    completedChunks++;
+                    setProgress(Math.round((completedChunks / chunks.length) * 100));
                 }
+            };
+
+            for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
+                const batch = chunks.slice(i, i + BATCH_SIZE);
+                const batchPromises = batch.map((chunk, idx) => processChunk(chunk, i + idx));
                 
-                setProgress(Math.round(((i + 1) / chunks.length) * 100));
+                const batchResults = await Promise.all(batchPromises);
                 
-                // Small delay to avoid rate limiting
-                await new Promise(resolve => setTimeout(resolve, 100));
+                for (const result of batchResults) {
+                    allData.push(...result);
+                }
+
+                // Small delay between batches to avoid rate limiting
+                if (i + BATCH_SIZE < chunks.length) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
             }
 
             if (allData.length === 0) {
