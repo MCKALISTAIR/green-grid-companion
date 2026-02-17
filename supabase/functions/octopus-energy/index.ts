@@ -290,17 +290,25 @@ Deno.serve(async (req: Request) => {
               const readings: OctopusConsumption[] = consumptionData.results || [];
 
               let insertedCount = 0;
-              for (const reading of readings) {
-                const { error } = await supabase
+              if (readings.length > 0) {
+                const { error: upsertError } = await supabase
                   .from('octopus_consumption')
-                  .upsert({
-                    interval_start: reading.interval_start,
-                    interval_end: reading.interval_end,
-                    consumption_kwh: reading.consumption,
-                    mpan: meter.mpan,
-                    serial_number: meter.serial_number
-                  }, { onConflict: 'mpan,interval_start' });
-                if (!error) insertedCount++;
+                  .upsert(
+                    readings.map(reading => ({
+                      interval_start: reading.interval_start,
+                      interval_end: reading.interval_end,
+                      consumption_kwh: reading.consumption,
+                      mpan: meter.mpan,
+                      serial_number: meter.serial_number
+                    })),
+                    { onConflict: 'mpan,interval_start' }
+                  );
+
+                if (upsertError) {
+                  console.error(`Error storing readings for meter ${meter.mpan}:`, upsertError);
+                } else {
+                  insertedCount = readings.length;
+                }
               }
 
               // Update last sync time
@@ -832,20 +840,23 @@ Deno.serve(async (req: Request) => {
       console.log(`Found ${meters.length} electricity meters for user ${userId} (${meters.filter(m => m.meter_type === 'export').length} export)`);
 
       // Store meters in database linked to user
-      for (const meter of meters) {
+      if (meters.length > 0) {
         const { error } = await supabase
           .from('octopus_meters')
-          .upsert({
-            user_id: userId,
-            mpan: meter.mpan,
-            serial_number: meter.serial_number,
-            meter_type: meter.meter_type,
-            is_active: true,
-            updated_at: new Date().toISOString()
-          }, { onConflict: 'mpan' });
+          .upsert(
+            meters.map(meter => ({
+              user_id: userId,
+              mpan: meter.mpan,
+              serial_number: meter.serial_number,
+              meter_type: meter.meter_type,
+              is_active: true,
+              updated_at: new Date().toISOString()
+            })),
+            { onConflict: 'mpan' }
+          );
 
         if (error) {
-          console.error(`Error storing meter ${meter.mpan}:`, error);
+          console.error(`Error storing meters for user ${userId}:`, error);
         }
       }
 
@@ -902,18 +913,25 @@ Deno.serve(async (req: Request) => {
         console.log(`Received ${readings.length} readings for meter ${mpan}`);
 
         let insertedCount = 0;
-        for (const reading of readings) {
-          const { error } = await supabase
+        if (readings.length > 0) {
+          const { error: upsertError } = await supabase
             .from('octopus_consumption')
-            .upsert({
-              interval_start: reading.interval_start,
-              interval_end: reading.interval_end,
-              consumption_kwh: reading.consumption,
-              mpan,
-              serial_number
-            }, { onConflict: 'mpan,interval_start' });
+            .upsert(
+              readings.map(reading => ({
+                interval_start: reading.interval_start,
+                interval_end: reading.interval_end,
+                consumption_kwh: reading.consumption,
+                mpan,
+                serial_number
+              })),
+              { onConflict: 'mpan,interval_start' }
+            );
 
-          if (!error) insertedCount++;
+          if (upsertError) {
+            console.error(`Error storing readings for meter ${mpan}:`, upsertError);
+          } else {
+            insertedCount = readings.length;
+          }
         }
 
         // Update last sync time for this meter
