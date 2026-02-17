@@ -516,9 +516,39 @@ export function useOctopusEnergy(days: number = 30) {
 
   // Full sync: consumption + footprint calculation
   const fullSync = useCallback(async (syncDays: number = 7) => {
-    await syncConsumption(syncDays);
-    await calculateFootprint();
-  }, [syncConsumption, calculateFootprint]);
+    setIsSyncing(true);
+    try {
+      // Ensure we have a session
+      const session = await ensureAuthSession();
+
+      if (!session) {
+        toast.error('Please sign in to sync data');
+        return null;
+      }
+
+      const { data, error } = await supabase.functions.invoke('octopus-energy', {
+        body: { action: 'full-sync', days: syncDays }
+      });
+
+      if (error) throw new Error(error.message || 'Failed to sync data');
+
+      if (data?.success) {
+        const readings = data.sync?.readings_synced || 0;
+        const calculations = data.calculation?.records_calculated || 0;
+        toast.success(`Synced ${readings} readings and calculated ${calculations} footprint records`);
+        await refetchStatus();
+        await refetchFootprint();
+      }
+
+      return data;
+    } catch (error: unknown) {
+      const message = parseEdgeFunctionError(error, { feature: 'octopus', action: 'full-sync' });
+      toast.error(message);
+      throw error;
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [refetchStatus, refetchFootprint]);
 
   // Disconnect Account
   const disconnect = useCallback(async () => {

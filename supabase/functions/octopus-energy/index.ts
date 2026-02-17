@@ -2,6 +2,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // Hack to make VS Code happy with Deno globals in a Node workspace
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const Deno: any;
 
 const corsHeaders = {
@@ -350,6 +351,7 @@ Deno.serve(async (req: Request) => {
               const intensityJson = await intensityResponse.json();
               const intensityMap = new Map<string, { intensity: number, index: string }>();
 
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               let intensityList: any[] = [];
               if (isRegional) {
                 intensityList = Array.isArray(intensityJson.data)
@@ -445,6 +447,7 @@ Deno.serve(async (req: Request) => {
     // Parse action and params
     let action: string | null = null;
     let days: number = 7;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let payload: any = {};
 
     if (req.method === 'POST') {
@@ -855,7 +858,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    if (action === 'sync-consumption') {
+    async function performSyncConsumption(userId: string, authHeaderOctopus: string, days: number) {
       if (!authHeaderOctopus) throw new Error('Missing credentials');
 
       // Get ALL active meters for this user
@@ -867,10 +870,7 @@ Deno.serve(async (req: Request) => {
 
       if (meterError || !allMeterData?.length) {
         console.error('No active meters found for user:', meterError);
-        return new Response(
-          JSON.stringify({ error: 'No linked meter found. Please link your meter first.' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        throw new Error('No linked meter found. Please link your meter first.');
       }
 
       const daysBack = days;
@@ -927,31 +927,16 @@ Deno.serve(async (req: Request) => {
         console.log(`Synced ${insertedCount} readings for meter ${mpan}`);
       }
 
-      return new Response(
-        JSON.stringify({
-          success: true,
-          readings_synced: totalInserted,
-          meters_synced: allMeterData.length,
-          period_from: periodFrom.toISOString(),
-          period_to: periodTo.toISOString()
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Helper to map MPAN Area Code (first 2 digits) to NESO Carbon Region ID
-    function getRegionIdFromMpan(mpan: string): number | null {
-      if (!mpan || mpan.length < 2) return null;
-      const areaCode = mpan.substring(0, 2);
-      const mapping: Record<string, number> = {
-        '10': 10, '11': 9, '12': 13, '13': 6, '14': 8, '15': 4, '16': 3,
-        '17': 2, '18': 1, '19': 12, '20': 11, '21': 7, '22': 14, '23': 5,
+      return {
+        success: true,
+        readings_synced: totalInserted,
+        meters_synced: allMeterData.length,
+        period_from: periodFrom.toISOString(),
+        period_to: periodTo.toISOString()
       };
-      return mapping[areaCode] || null;
     }
 
-    if (action === 'calculate-footprint') {
-
+    async function performCalculateFootprint(userId: string) {
       // Find ALL user meters to process both import and export
       const { data: userMeters } = await supabase
         .from('octopus_meters')
@@ -960,10 +945,7 @@ Deno.serve(async (req: Request) => {
         .eq('is_active', true);
 
       if (!userMeters?.length) {
-        return new Response(
-          JSON.stringify({ error: 'No meter linked' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        throw new Error('No meter linked');
       }
 
       let totalCalculated = 0;
@@ -990,7 +972,7 @@ Deno.serve(async (req: Request) => {
 
         // Determine Region
         const mpan = consumption[0].mpan;
-        const regionId = getRegionIdFromMpan(mpan);
+        const regionId = getRegionIdFromMpanStatic(mpan);
 
         let intensityUrl = `https://api.carbonintensity.org.uk/intensity/${minTime.toISOString()}/${maxTime.toISOString()}`;
         let isRegional = false;
@@ -1007,6 +989,7 @@ Deno.serve(async (req: Request) => {
           if (!intensityResponse.ok) throw new Error(`Failed to fetch batch intensity: ${intensityResponse.status}`);
 
           const intensityJson = await intensityResponse.json();
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           let intensityList: any[] = [];
 
           if (isRegional) {
@@ -1058,14 +1041,72 @@ Deno.serve(async (req: Request) => {
         console.log(`Calculated ${footprintRecords.length} footprint records for meter ${mpan} (${meter.meter_type})`);
       }
 
-      return new Response(
-        JSON.stringify({
-          success: true,
-          records_calculated: totalCalculated,
-          meters_processed: userMeters.length
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return {
+        success: true,
+        records_calculated: totalCalculated,
+        meters_processed: userMeters.length
+      };
+    }
+
+    if (action === 'sync-consumption') {
+      try {
+        const result = await performSyncConsumption(userId, authHeaderOctopus!, days);
+        return new Response(
+          JSON.stringify(result),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        return new Response(
+          JSON.stringify({ error: message }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    if (action === 'calculate-footprint') {
+      try {
+        const result = await performCalculateFootprint(userId);
+        return new Response(
+          JSON.stringify(result),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        return new Response(
+           JSON.stringify({ error: message }),
+           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    if (action === 'full-sync') {
+      if (!authHeaderOctopus) {
+        return new Response(
+          JSON.stringify({ error: 'Missing credentials' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      try {
+        const syncResult = await performSyncConsumption(userId, authHeaderOctopus, days);
+        const calcResult = await performCalculateFootprint(userId);
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            sync: syncResult,
+            calculation: calcResult
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (error: unknown) {
+         const message = error instanceof Error ? error.message : 'Unknown error';
+         return new Response(
+          JSON.stringify({ error: message }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     if (action === 'get-footprint') {
@@ -1104,7 +1145,9 @@ Deno.serve(async (req: Request) => {
       }
 
       // Separate import and export records
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const importRecords = (footprint || []).filter((r: any) => !exportMpans.has(r.mpan));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const exportRecords = (footprint || []).filter((r: any) => exportMpans.has(r.mpan));
 
       // Calculate import summary stats
@@ -1269,11 +1312,13 @@ Deno.serve(async (req: Request) => {
 
         const data = await response.json();
         const plannedDispatches = data.plannedDispatches || [];
-        const completedDispatches = data.completedDispatches || [];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const completedDispatches: any[] = data.completedDispatches || [];
 
         console.log(`[${requestId}] Found ${plannedDispatches.length} planned, ${completedDispatches.length} completed dispatches`);
 
         // Store dispatches in database for history and notifications
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const dispatchesToUpsert: any[] = [];
         const newCompletedStarts: string[] = [];
 
@@ -1299,7 +1344,7 @@ Deno.serve(async (req: Request) => {
         const UK_AVG_INTENSITY = 230;
 
         // Get existing dispatches that already have carbon data to avoid re-fetching
-        const existingStartTimes = completedDispatches.map((d: any) => d.start || d.startDt);
+        const existingStartTimes = completedDispatches.map((d) => d.start || d.startDt);
         const { data: existingDispatches } = await supabase
           .from('octopus_intelligent_dispatches')
           .select('start_time, carbon_saved_g, avg_intensity_gco2, carbon_used_g')
@@ -1347,6 +1392,7 @@ Deno.serve(async (req: Request) => {
                 const intervals = intensityJson.data || [];
 
                 if (intervals.length > 0) {
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   const totalIntensity = intervals.reduce((sum: number, i: any) =>
                     sum + (i.intensity?.actual ?? i.intensity?.forecast ?? 0), 0);
                   avgIntensity = Math.round(totalIntensity / intervals.length);
@@ -1511,6 +1557,7 @@ Deno.serve(async (req: Request) => {
 
       if (meters && meters.length > 0) {
         // Assuming single meter for simplicity in status check, or check all
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const mpans = meters.map((m: any) => m.mpan);
 
         const { data: latest } = await supabase
