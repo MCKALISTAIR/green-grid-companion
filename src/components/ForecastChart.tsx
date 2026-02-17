@@ -60,12 +60,20 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
         const rect = element.getBoundingClientRect();
         setPopupPosition({
           x: rect.left + rect.width / 2,
-          y: rect.bottom + 8, // 8px below the bar
+          y: rect.bottom + 8,
         });
       }
     } else {
       setPopupPosition(null);
     }
+  }, [selectedIndex]);
+
+  // Dismiss popup on page scroll so it doesn't persist when scrolling away
+  useEffect(() => {
+    if (selectedIndex === null) return;
+    const dismiss = () => setSelectedIndex(null);
+    window.addEventListener('scroll', dismiss, { passive: true });
+    return () => window.removeEventListener('scroll', dismiss);
   }, [selectedIndex]);
 
   useLayoutEffect(() => {
