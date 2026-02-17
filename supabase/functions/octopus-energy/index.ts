@@ -902,20 +902,23 @@ Deno.serve(async (req: Request) => {
       console.log(`Found ${meters.length} electricity meters for user ${userId} (${meters.filter(m => m.meter_type === 'export').length} export)`);
 
       // Store meters in database linked to user
-      for (const meter of meters) {
+      if (meters.length > 0) {
         const { error } = await supabase
           .from('octopus_meters')
-          .upsert({
-            user_id: userId,
-            mpan: meter.mpan,
-            serial_number: meter.serial_number,
-            meter_type: meter.meter_type,
-            is_active: true,
-            updated_at: new Date().toISOString()
-          }, { onConflict: 'mpan' });
+          .upsert(
+            meters.map(meter => ({
+              user_id: userId,
+              mpan: meter.mpan,
+              serial_number: meter.serial_number,
+              meter_type: meter.meter_type,
+              is_active: true,
+              updated_at: new Date().toISOString()
+            })),
+            { onConflict: 'mpan' }
+          );
 
         if (error) {
-          console.error(`Error storing meter ${meter.mpan}:`, error);
+          console.error(`Error storing meters for user ${userId}:`, error);
         }
       }
 
