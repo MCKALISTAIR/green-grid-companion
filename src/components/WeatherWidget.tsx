@@ -48,7 +48,13 @@ export function WeatherWidget() {
         );
     }
 
-    const { current, current_units } = data;
+    const current = data?.current;
+    const current_units = data?.current_units;
+
+    if (!current || !current_units) {
+        return null;
+    }
+
     const isHighWind = current.wind_speed_10m > 15; // > 15mph is breezy
     const isSunny = current.cloud_cover < 30; // < 30% cloud
 
