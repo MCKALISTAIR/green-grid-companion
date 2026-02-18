@@ -28,6 +28,7 @@ export default defineConfig(({ mode }) => ({
       includeAssets: ['favicon.ico', 'icon-192.png', 'icon-512.png'],
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        navigateFallbackDenylist: [/^\/~oauth/],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true
