@@ -90,9 +90,9 @@ export function useSavedLocations() {
           .from('user_preferences')
           .select('saved_locations, recent_locations')
           .eq('user_id', userId)
-          .single();
+          .maybeSingle();
 
-        if (error && error.code !== 'PGRST116') { // PGRST116 = not found
+        if (error) {
           logger.error('Failed to load preferences', { error });
           return;
         }
@@ -186,59 +186,6 @@ export function useSavedLocations() {
 
 
 
-  // Load from database when authenticated
-  useEffect(() => {
-    if (!userId) {
-      isInitialLoadRef.current = true;
-      return;
-    }
-
-    const loadFromDatabase = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('user_preferences')
-          .select('saved_locations, recent_locations')
-          .eq('user_id', userId)
-          .single();
-
-        if (error && error.code !== 'PGRST116') { // PGRST116 = not found
-          logger.error('Failed to load preferences', { error });
-          return;
-        }
-
-        if (data) {
-          const dbSavedLocations = (data.saved_locations as unknown as SavedLocation[]) || [];
-          const dbRecentLocations = (data.recent_locations as unknown as string[]) || [];
-
-          // Merge local data with database data (database takes precedence)
-          const localSaved = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
-          const localRecent = JSON.parse(localStorage.getItem(LOCAL_RECENT_KEY) || '[]');
-
-          // If DB is empty but local has data, use local (first sync scenario)
-          if (dbSavedLocations.length === 0 && localSaved.length > 0) {
-            setSavedLocations(localSaved);
-            setRecentLocations(localRecent);
-            // Sync local to database
-            await syncToDatabase(localSaved, localRecent);
-          } else {
-            setSavedLocations(dbSavedLocations);
-            setRecentLocations(dbRecentLocations);
-          }
-        } else {
-          // No record exists - create one with local data
-          const localSaved = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
-          const localRecent = JSON.parse(localStorage.getItem(LOCAL_RECENT_KEY) || '[]');
-          await syncToDatabase(localSaved, localRecent);
-        }
-
-        isInitialLoadRef.current = false;
-      } catch (err) {
-        logger.error('Error loading preferences', { error: err });
-      }
-    };
-
-    loadFromDatabase();
-  }, [userId, syncToDatabase]);
 
   // Debounced sync on data changes
   useEffect(() => {
