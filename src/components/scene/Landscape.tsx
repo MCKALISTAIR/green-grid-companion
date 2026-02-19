@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 
+export type TimeOfDayLandscape = 'night' | 'dawn' | 'morning' | 'midday' | 'afternoon' | 'sunset' | 'dusk';
+
 export interface LandscapeProps {
     cleanliness: number;
     isNight: boolean;
@@ -9,6 +11,7 @@ export interface LandscapeProps {
     isChristmas?: boolean;
     skipIntro?: boolean;
     windSpeed?: number;
+    timeOfDay?: TimeOfDayLandscape;
 }
 
 // Get current season based on month
@@ -162,7 +165,7 @@ function HillLayer({
 
 // 🎨 Palette Hook
 // eslint-disable-next-line react-refresh/only-export-components
-export function useLandscapePalette(cleanliness: number, isNight: boolean, synthwaveMode: boolean, isSnowing?: boolean) {
+export function useLandscapePalette(cleanliness: number, isNight: boolean, synthwaveMode: boolean, isSnowing?: boolean, timeOfDay?: TimeOfDayLandscape) {
     return useMemo(() => {
         if (synthwaveMode) {
             return {
@@ -185,7 +188,38 @@ export function useLandscapePalette(cleanliness: number, isNight: boolean, synth
                 treePrimary: '#475569', treeShadow: '#0f172a',
             };
         }
+
         const isClean = cleanliness > 0.5;
+
+        // Time-of-day tinting for landscape
+        if (timeOfDay === 'dawn') {
+            return {
+                backHill: isClean ? '#1a3a2a' : '#3d2810',
+                midHill: isClean ? '#1f4d35' : '#5c3a18',
+                frontHill: isClean ? '#2a6040' : '#6d4520',
+                treePrimary: isClean ? '#6ec89b' : '#b8860b',
+                treeShadow: isClean ? '#3a8a65' : '#8b6914',
+            };
+        }
+        if (timeOfDay === 'sunset') {
+            return {
+                backHill: isClean ? '#2d4a1a' : '#4a2a08',
+                midHill: isClean ? '#3a5c22' : '#6b3d10',
+                frontHill: isClean ? '#4a6e2a' : '#7d4e18',
+                treePrimary: isClean ? '#8bc34a' : '#cd853f',
+                treeShadow: isClean ? '#558b2f' : '#a0522d',
+            };
+        }
+        if (timeOfDay === 'dusk') {
+            return {
+                backHill: isClean ? '#152030' : '#2a1a10',
+                midHill: isClean ? '#1e2d40' : '#3a2818',
+                frontHill: isClean ? '#283a50' : '#4a3520',
+                treePrimary: isClean ? '#5a7a90' : '#7a6040',
+                treeShadow: isClean ? '#2a4a60' : '#5a4030',
+            };
+        }
+
         return {
             backHill: isClean ? '#14532d' : '#422006',
             midHill: isClean ? '#166534' : '#713f12',
@@ -193,13 +227,13 @@ export function useLandscapePalette(cleanliness: number, isNight: boolean, synth
             treePrimary: isClean ? '#4ade80' : '#a16207',
             treeShadow: isClean ? '#16a34a' : '#854d0e',
         };
-    }, [cleanliness, isNight, synthwaveMode, isSnowing]);
+    }, [cleanliness, isNight, synthwaveMode, isSnowing, timeOfDay]);
 }
 
 // --- Independent Layer Components ---
 
 export function LandscapeBack(props: LandscapeProps) {
-    const palette = useLandscapePalette(props.cleanliness, props.isNight, props.synthwaveMode, props.isSnowing);
+    const palette = useLandscapePalette(props.cleanliness, props.isNight, props.synthwaveMode, props.isSnowing, props.timeOfDay);
     // 0,80 -> 200,80 via 100,20 | 200,80 -> 400,60 via 300,140
     const getBackY = (x: number) => (x < 200 ? 80 + (x / 200) * 20 : 80);
     const backTrees = [20, 80, 150, 220, 290, 360].map(x => ({ x, y: 85, scale: 0.6 }));
@@ -228,7 +262,7 @@ export function LandscapeBack(props: LandscapeProps) {
 }
 
 export function LandscapeMid(props: LandscapeProps) {
-    const palette = useLandscapePalette(props.cleanliness, props.isNight, props.synthwaveMode, props.isSnowing);
+    const palette = useLandscapePalette(props.cleanliness, props.isNight, props.synthwaveMode, props.isSnowing, props.timeOfDay);
     const midTrees = [45, 120, 190, 260, 330].map(x => ({ x, y: 105, scale: 0.9 }));
 
     return (
@@ -255,7 +289,7 @@ export function LandscapeMid(props: LandscapeProps) {
 }
 
 export function LandscapeFront(props: LandscapeProps) {
-    const palette = useLandscapePalette(props.cleanliness, props.isNight, props.synthwaveMode, props.isSnowing);
+    const palette = useLandscapePalette(props.cleanliness, props.isNight, props.synthwaveMode, props.isSnowing, props.timeOfDay);
     const frontTrees = [10, 90, 310, 390].map(x => ({ x, y: 130, scale: 1.2 }));
 
     return (
