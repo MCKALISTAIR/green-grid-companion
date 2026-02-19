@@ -122,7 +122,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       if (activeEvent !== 'none') return;
       const rand = Math.random();
       if (isNight && rand > 0.7) setActiveEvent('ufo');
-      else if (!isNight && intensity < 100 && rand > 0.6) setActiveEvent('drone');
+      else if (timeOfDay !== 'night' && timeOfDay !== 'dusk' && intensity < 100 && rand > 0.6) setActiveEvent('drone');
       else if (intensity > 200 && rand > 0.6) setActiveEvent('train');
     };
     const interval = setInterval(triggerRandomEvent, 20000);
@@ -175,6 +175,38 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
     const weatherReducesBirds = weather.isRaining || weather.isSnowing || weather.isThunderstorm;
     const weatherReducesButterflies = weather.isRaining || weather.isSnowing || weather.isFoggy || weather.isThunderstorm;
 
+    // Time-of-day aware visibility flags
+    const isDaytime = timeOfDay === 'morning' || timeOfDay === 'midday' || timeOfDay === 'afternoon';
+    const isGoldenHour = timeOfDay === 'sunset' || timeOfDay === 'dawn';
+    const isDarkPeriod = timeOfDay === 'night' || timeOfDay === 'dusk';
+    const showSun = isDaytime || timeOfDay === 'sunset'; // Sun visible during day + sunset, hidden at dusk/night/dawn(pre-sunrise)
+
+    // Time-based scene filter for atmospheric lighting
+    const getTimeFilter = () => {
+      if (synthwaveMode) return 'contrast(1.2) saturate(1.5) hue-rotate(-10deg)';
+      const baseContrast = 0.8 + cleanliness * 0.4;
+      const baseSaturation = 0.7 + cleanliness * 0.5;
+      const baseSepia = Math.max(0, (0.5 - cleanliness) * 0.5);
+      switch (timeOfDay) {
+        case 'dawn':
+          return `contrast(${baseContrast * 0.95}) saturate(${baseSaturation * 1.1}) sepia(${baseSepia + 0.08}) hue-rotate(-5deg) brightness(0.9)`;
+        case 'morning':
+          return `contrast(${baseContrast}) saturate(${baseSaturation * 1.05}) sepia(${baseSepia}) brightness(1.0)`;
+        case 'midday':
+          return `contrast(${baseContrast * 1.05}) saturate(${baseSaturation}) sepia(${baseSepia}) brightness(1.05)`;
+        case 'afternoon':
+          return `contrast(${baseContrast}) saturate(${baseSaturation * 1.08}) sepia(${baseSepia + 0.03}) hue-rotate(-2deg)`;
+        case 'sunset':
+          return `contrast(${baseContrast * 0.95}) saturate(${baseSaturation * 1.2}) sepia(${baseSepia + 0.12}) hue-rotate(-8deg) brightness(0.92)`;
+        case 'dusk':
+          return `contrast(${baseContrast * 0.9}) saturate(${baseSaturation * 0.85}) sepia(${baseSepia + 0.05}) hue-rotate(5deg) brightness(0.8)`;
+        case 'night':
+          return `contrast(${baseContrast * 0.85}) saturate(${baseSaturation * 0.7}) brightness(0.75) hue-rotate(10deg)`;
+        default:
+          return `contrast(${baseContrast}) saturate(${baseSaturation}) sepia(${baseSepia})`;
+      }
+    };
+
     return {
       cleanliness,
       skyGradient: synthwaveMode
@@ -182,23 +214,25 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
         : getSkyGradient(index, timeOfDay, cleanliness, weather),
       showRenewables: cleanliness > 0.25,
       showFactories: cleanliness < 0.85,
-      showBirds: cleanliness > 0.6 && !isNight && !weatherReducesBirds,
+      showBirds: cleanliness > 0.6 && isDaytime && !weatherReducesBirds,
       showSmoke: cleanliness < 0.5,
       showRain: cleanliness < 0.35 && !weather.isRaining,
-      showSunRays: cleanliness > 0.7 && !isNight && weather.cloudCover < 60 && !weather.isRaining,
-      showStars: isNight && cleanliness > 0.3 && weather.cloudCover < 70,
-      showMoon: isNight && weather.cloudCover < 80,
-      showButterflies: cleanliness > 0.9 && !isNight && !weatherReducesButterflies,
-      showFireflies: isNight && cleanliness > 0.8 && !weather.isRaining,
+      showSunRays: cleanliness > 0.7 && (timeOfDay === 'morning' || timeOfDay === 'midday' || timeOfDay === 'afternoon') && weather.cloudCover < 60 && !weather.isRaining,
+      showStars: (isDarkPeriod || timeOfDay === 'dawn') && cleanliness > 0.3 && weather.cloudCover < 70,
+      showMoon: isDarkPeriod && weather.cloudCover < 80,
+      showSun,
+      showButterflies: cleanliness > 0.9 && isDaytime && !weatherReducesButterflies,
+      showFireflies: (isDarkPeriod || timeOfDay === 'sunset') && cleanliness > 0.8 && !weather.isRaining,
+      isGoldenHour,
+      isDaytime,
+      isDarkPeriod,
       turbineCount: Math.max(1, Math.floor(cleanliness * 4)),
       factoryOpacity: Math.max(0, 1 - cleanliness),
-      solarBrightness: cleanliness * (weather.cloudCover < 50 ? 1 : 0.6),
+      solarBrightness: cleanliness * (weather.cloudCover < 50 ? 1 : 0.6) * (isDaytime ? 1 : isGoldenHour ? 0.6 : 0.2),
       birdCount: Math.floor(cleanliness * 4) + 1,
-      starVisibility: cleanliness * (1 - weather.cloudCover / 100),
+      starVisibility: cleanliness * (1 - weather.cloudCover / 100) * (timeOfDay === 'night' ? 1 : timeOfDay === 'dusk' ? 0.6 : 0.3),
       windSpeed: weather.windSpeed,
-      sceneFilter: synthwaveMode
-        ? 'contrast(1.2) saturate(1.5) hue-rotate(-10deg)'
-        : `contrast(${0.8 + cleanliness * 0.4}) saturate(${0.7 + cleanliness * 0.5}) sepia(${Math.max(0, (0.5 - cleanliness) * 0.5)})`,
+      sceneFilter: getTimeFilter(),
     };
   }, [intensity, index, timeOfDay, isNight, weather, synthwaveMode]);
 
@@ -248,9 +282,9 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       </AnimatePresence>
 
       <AnimatePresence>
-        {!isNight && (
+        {sceneConfig.showSun && (
           <motion.div
-            className="absolute top-8 right-8 cursor-pointer active:scale-90"
+            className="absolute cursor-pointer active:scale-90"
             onClick={() => {
               impactMedium();
               setSynthwaveMode(!synthwaveMode);
@@ -268,19 +302,28 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
             animate={{
               opacity: sceneConfig.cleanliness * 0.3 + 0.7,
               scale: 1,
+              // Position sun based on time: low at sunrise/sunset, high at midday
+              top: timeOfDay === 'sunset' ? '35%' : timeOfDay === 'morning' ? '15%' : timeOfDay === 'afternoon' ? '12%' : '8%',
+              right: timeOfDay === 'sunset' ? '15%' : timeOfDay === 'morning' ? '20%' : '8%',
             }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ duration: 1 }}
+            exit={{ opacity: 0, scale: 0.8, y: 20 }}
+            transition={{ duration: 1.5, ease: 'easeInOut' }}
             style={{
               filter: `brightness(${sceneConfig.solarBrightness + 0.5})`,
             }}
           >
             <motion.div
-              className="absolute inset-0 w-20 h-20 -translate-x-2 -translate-y-2 bg-accent/30 rounded-full blur-xl"
+              className="absolute inset-0 w-20 h-20 -translate-x-2 -translate-y-2 rounded-full blur-xl"
+              style={{
+                backgroundColor: timeOfDay === 'sunset' ? 'hsl(30 90% 55% / 0.4)' : 'hsl(var(--accent) / 0.3)',
+              }}
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
             />
-            <Sun className="w-16 h-16 text-accent relative z-10" aria-hidden="true" />
+            <Sun
+              className={`w-16 h-16 relative z-10 ${timeOfDay === 'sunset' ? 'text-orange-400' : 'text-accent'}`}
+              aria-hidden="true"
+            />
           </motion.div>
         )}
       </AnimatePresence>
@@ -411,6 +454,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
             isChristmas={new Date().getMonth() === 11}
             skipIntro={hasSeenScene}
             windSpeed={weather.windSpeed}
+            timeOfDay={timeOfDay}
           />
           <LandscapeMid
             cleanliness={sceneConfig.cleanliness}
@@ -420,6 +464,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
             isChristmas={new Date().getMonth() === 11}
             skipIntro={hasSeenScene}
             windSpeed={weather.windSpeed}
+            timeOfDay={timeOfDay}
           />
         </svg>
       </div>
@@ -452,6 +497,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
             isChristmas={new Date().getMonth() === 11}
             skipIntro={hasSeenScene}
             windSpeed={weather.windSpeed}
+            timeOfDay={timeOfDay}
           />
         </svg>
       </div>
@@ -508,7 +554,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
 
       {/* Solar panels with reflection animation */}
       <AnimatePresence>
-        {sceneConfig.showRenewables && !isNight && (
+        {sceneConfig.showRenewables && sceneConfig.showSun && (
           <motion.div
             className="absolute bottom-6 right-6 flex gap-1.5"
             initial={{ opacity: 0, scale: 0.9 }}
@@ -587,7 +633,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
 
       {/* Floating leaves for very clean */}
       <AnimatePresence>
-        {sceneConfig.cleanliness > 0.75 && !isNight && (
+        {sceneConfig.cleanliness > 0.75 && sceneConfig.isDaytime && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -698,7 +744,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
 
       {/* Rainbow - appears during/after rain when sun is visible (daytime + rain) */}
       <AnimatePresence>
-        {intensity < 50 && weather.isRaining && !isNight && <Rainbow />}
+        {intensity < 50 && weather.isRaining && sceneConfig.isDaytime && <Rainbow />}
       </AnimatePresence>
 
       {/* Pollution Warning - High carbon (>300g) */}
@@ -715,7 +761,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
 
       {/* Flowers for bees */}
       <AnimatePresence>
-        {sceneConfig.cleanliness > 0.8 && !isNight && (
+        {sceneConfig.cleanliness > 0.8 && sceneConfig.isDaytime && (
           <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-12">
             <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <Flowers positions={[
@@ -732,7 +778,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
 
       {/* Bees visiting flowers */}
       <AnimatePresence>
-        {sceneConfig.cleanliness > 0.8 && !isNight && (
+        {sceneConfig.cleanliness > 0.8 && sceneConfig.isDaytime && (
           <>
             <Bee startX={15} startY={18} delay={0} />
             <Bee startX={50} startY={22} delay={2} />
