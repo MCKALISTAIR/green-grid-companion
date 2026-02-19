@@ -13,11 +13,13 @@ import useEmblaCarousel from 'embla-carousel-react';
 import { HouseType, OFGEM_TDCV_2025 } from '@/lib/energy-standards';
 import { useSettings } from '@/hooks/useSettings';
 import { cn } from '@/lib/utils';
+import { useAppLocation } from '@/contexts/LocationContext';
 
 type OnboardingStep = 'welcome' | 'household' | 'location' | 'notifications';
 
 const Onboarding = () => {
     const navigate = useNavigate();
+    const { setPostcode: setAppPostcode } = useAppLocation();
     const [step, setStep] = useState<OnboardingStep>('welcome');
     const [isLoadingLocation, setIsLoadingLocation] = useState(false);
     const [manualPostcode, setManualPostcode] = useState('');
@@ -80,7 +82,7 @@ const Onboarding = () => {
             if (data.status === 200 && data.result && data.result.length > 0) {
                 const postcode = data.result[0].outcode; // e.g., "SW1A"
 
-                localStorage.setItem('gridgreen-postcode', postcode);
+                setAppPostcode(postcode);
                 toast.success(`Location set to ${postcode}`);
                 setStep('notifications');
             } else {
@@ -103,7 +105,7 @@ const Onboarding = () => {
         if (!manualPostcode.trim()) return;
 
         const cleanPostcode = manualPostcode.trim().toUpperCase();
-        localStorage.setItem('gridgreen-postcode', cleanPostcode);
+        setAppPostcode(cleanPostcode);
         setStep('notifications');
     };
 
