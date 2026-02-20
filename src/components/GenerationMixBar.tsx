@@ -127,7 +127,7 @@ export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolar
         </button>
       </DialogTrigger>
 
-      <DialogContent className="max-w-md max-h-[85vh] flex flex-col">
+      <DialogContent className="max-w-md max-h-[85vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>Generation Mix Breakdown</span>
@@ -150,8 +150,8 @@ export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolar
             )}
           </DialogTitle>
         </DialogHeader>
-        <ScrollArea className="flex-1 pr-4 -mr-4">
-          <div className="space-y-4 py-4">
+        <ScrollArea className="flex-1 min-h-0 pr-4 -mr-4">
+          <div className="space-y-4 py-4 pr-1">
             {sortedMix.map((item) => {
               const fuelKey = item.fuel.charAt(0).toUpperCase() + item.fuel.slice(1);
               const definition = DEFINITIONS[fuelKey as keyof typeof DEFINITIONS] || DEFINITIONS['Other'];
