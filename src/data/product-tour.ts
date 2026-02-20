@@ -24,8 +24,8 @@ export const PRODUCT_TOUR_STEPS: DriveStep[] = [
         popover: {
             title: '🔋 Generation Mix',
             description: 'See where your electricity comes from right now. Tap to explore the full breakdown of wind, solar, gas, nuclear and more. Pro tip: Try clicking the wind turbines in the scene above!',
-            side: 'bottom',
-            align: 'start'
+            side: 'top',
+            align: 'center'
         }
     },
     {
