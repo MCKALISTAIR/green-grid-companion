@@ -275,7 +275,7 @@ export function OctopusIntegration() {
                     MPAN: {meter.mpan.slice(-6)}
                     <Popover>
                       <PopoverTrigger asChild>
-                        <button className="inline-flex items-center justify-center rounded-full hover:bg-muted p-0.5">
+                        <button className="inline-flex items-center justify-center rounded-full hover:bg-muted p-0.5" aria-label="What is an MPAN?">
                           <Info className="w-3 h-3 text-muted-foreground/60" />
                         </button>
                       </PopoverTrigger>

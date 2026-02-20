@@ -17,7 +17,7 @@ export interface WeatherData {
 }
 
 export function useWeather(lat?: number, lon?: number) {
-    // Integrate with LocationManager context as per TODO
+    // Integrate with LocationManager context
     const { coordinates } = useAppLocation();
 
     // Prioritize passed arguments, then context coordinates, then default to London

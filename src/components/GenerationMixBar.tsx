@@ -12,12 +12,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { DEFINITIONS } from '@/lib/definitions';
 import { ChevronRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { MixItem, getSortedMix, getRenewablesPercentage, getEmbeddedSolarPercentage, getTotalSolarMW } from '@/lib/generationUtils';
 
-export interface MixItem {
-  fuel: string;
-  perc: number;
-  mw?: number;
-}
+export type { MixItem };
 
 interface GenerationMixBarProps {
   mix: MixItem[];
@@ -29,21 +26,10 @@ interface GenerationMixBarProps {
 
 
 export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolarMW }: GenerationMixBarProps) {
-  // Filter out zero values and sort by percentage
-  const sortedMix = [...mix]
-    .filter(m => m.perc > 0)
-    .sort((a, b) => b.perc - a.perc);
-
-  const renewables = mix
-    .filter(m => ['wind', 'solar', 'hydro', 'biomass'].includes(m.fuel.toLowerCase()))
-    .reduce((acc, m) => acc + m.perc, 0);
-
-  // Calculate embedded solar share within the solar segment
-  const solarItem = sortedMix.find(m => m.fuel.toLowerCase() === 'solar');
-  const totalSolarMW = solarItem?.mw ?? null;
-  const embeddedSolarPerc = (totalSolarMW && embeddedSolarMW && totalSolarMW > 0)
-    ? Math.min((embeddedSolarMW / totalSolarMW) * 100, 100)
-    : null;
+  const sortedMix = getSortedMix(mix);
+  const renewables = getRenewablesPercentage(mix);
+  const embeddedSolarPerc = getEmbeddedSolarPercentage(mix, embeddedSolarMW);
+  const totalSolarMW = getTotalSolarMW(mix);
 
   return (
     <Dialog>

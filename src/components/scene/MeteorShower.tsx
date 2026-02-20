@@ -1,8 +1,31 @@
 import { motion } from 'framer-motion';
+import { useMemo } from 'react';
 
 export function MeteorShower() {
     // Grounded at Y=10-80 (sky layer)
     // Diagonal streaks from top to mid-sky
+
+    const meteors = useMemo(() => {
+        return Array.from({ length: 12 }).map((_, i) => {
+            const startX = 50 + i * 30;
+            const startY = 5 + Math.random() * 20;
+            const length = 40 + Math.random() * 30;
+            const angle = 45 + Math.random() * 20; // Diagonal fall
+            const duration = 1.5 + Math.random() * 0.5;
+            const strokeWidth = 1.5 + Math.random();
+
+            return {
+                id: i,
+                startX,
+                startY,
+                length,
+                angle,
+                duration,
+                strokeWidth,
+                delay: i * 0.2,
+            };
+        });
+    }, []);
 
     return (
         <motion.div
@@ -23,67 +46,60 @@ export function MeteorShower() {
                 </defs>
 
                 {/* Multiple meteors with staggered timing */}
-                {Array.from({ length: 12 }).map((_, i) => {
-                    const startX = 50 + i * 30;
-                    const startY = 5 + Math.random() * 20;
-                    const length = 40 + Math.random() * 30;
-                    const angle = 45 + Math.random() * 20; // Diagonal fall
+                {meteors.map((meteor) => (
+                    <motion.g key={meteor.id}>
+                        {/* Meteor trail */}
+                        <motion.line
+                            x1={meteor.startX}
+                            y1={meteor.startY}
+                            x2={meteor.startX + meteor.length * Math.cos((meteor.angle * Math.PI) / 180)}
+                            y2={meteor.startY + meteor.length * Math.sin((meteor.angle * Math.PI) / 180)}
+                            stroke="url(#meteorGrad)"
+                            strokeWidth={meteor.strokeWidth}
+                            strokeLinecap="round"
+                            initial={{
+                                pathLength: 0,
+                                opacity: 0,
+                                x: 0,
+                                y: 0,
+                            }}
+                            animate={{
+                                pathLength: [0, 1, 1],
+                                opacity: [0, 1, 0],
+                                x: [0, 60],
+                                y: [0, 60],
+                            }}
+                            transition={{
+                                duration: meteor.duration,
+                                delay: meteor.delay,
+                                ease: 'easeOut',
+                            }}
+                        />
 
-                    return (
-                        <motion.g key={i}>
-                            {/* Meteor trail */}
-                            <motion.line
-                                x1={startX}
-                                y1={startY}
-                                x2={startX + length * Math.cos((angle * Math.PI) / 180)}
-                                y2={startY + length * Math.sin((angle * Math.PI) / 180)}
-                                stroke="url(#meteorGrad)"
-                                strokeWidth={1.5 + Math.random()}
-                                strokeLinecap="round"
-                                initial={{
-                                    pathLength: 0,
-                                    opacity: 0,
-                                    x: 0,
-                                    y: 0,
-                                }}
-                                animate={{
-                                    pathLength: [0, 1, 1],
-                                    opacity: [0, 1, 0],
-                                    x: [0, 60],
-                                    y: [0, 60],
-                                }}
-                                transition={{
-                                    duration: 1.5 + Math.random() * 0.5,
-                                    delay: i * 0.2,
-                                    ease: 'easeOut',
-                                }}
-                            />
-
-                            {/* Meteor head (bright point) */}
-                            <motion.circle
-                                cx={startX + length * Math.cos((angle * Math.PI) / 180)}
-                                cy={startY + length * Math.sin((angle * Math.PI) / 180)}
-                                r={2}
-                                fill="white"
-                                initial={{
-                                    opacity: 0,
-                                    x: 0,
-                                    y: 0,
-                                }}
-                                animate={{
-                                    opacity: [0, 1, 0],
-                                    x: [0, 60],
-                                    y: [0, 60],
-                                }}
-                                transition={{
-                                    duration: 1.5 + Math.random() * 0.5,
-                                    delay: i * 0.2,
-                                    ease: 'easeOut',
-                                }}
-                            />
-                        </motion.g>
-                    );
-                })}
+                        {/* Meteor head (bright point) */}
+                        <motion.circle
+                            cx={meteor.startX + meteor.length * Math.cos((meteor.angle * Math.PI) / 180)}
+                            cy={meteor.startY + meteor.length * Math.sin((meteor.angle * Math.PI) / 180)}
+                            r={2}
+                            fill="white"
+                            initial={{
+                                opacity: 0,
+                                x: 0,
+                                y: 0,
+                            }}
+                            animate={{
+                                opacity: [0, 1, 0],
+                                x: [0, 60],
+                                y: [0, 60],
+                            }}
+                            transition={{
+                                duration: meteor.duration,
+                                delay: meteor.delay,
+                                ease: 'easeOut',
+                            }}
+                        />
+                    </motion.g>
+                ))}
             </svg>
         </motion.div>
     );

@@ -1,6 +1,17 @@
+import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 
 export function PollutionWarning() {
+    const particles = useMemo(() => {
+        return Array.from({ length: 8 }).map((_, i) => ({
+            id: i,
+            left: `${10 + i * 12}%`,
+            top: `${20 + Math.random() * 40}%`,
+            duration: 3 + i * 0.5,
+            delay: i * 0.3
+        }));
+    }, []);
+
     return (
         <motion.div
             className="absolute inset-0 pointer-events-none"
@@ -64,21 +75,21 @@ export function PollutionWarning() {
             </motion.div>
 
             {/* Floating pollution particles */}
-            {[...Array(8)].map((_, i) => (
+            {particles.map((particle) => (
                 <motion.div
-                    key={i}
+                    key={particle.id}
                     className="absolute w-2 h-2 bg-gray-600/40 rounded-full blur-sm"
                     style={{
-                        left: `${10 + i * 12}%`,
-                        top: `${20 + Math.random() * 40}%`,
+                        left: particle.left,
+                        top: particle.top,
                     }}
                     animate={{
                         y: [0, -30, 0],
                         opacity: [0.3, 0.6, 0.3],
                     }}
                     transition={{
-                        duration: 3 + i * 0.5,
-                        delay: i * 0.3,
+                        duration: particle.duration,
+                        delay: particle.delay,
                         repeat: Infinity,
                         ease: 'easeInOut',
                     }}

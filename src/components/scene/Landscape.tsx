@@ -49,7 +49,7 @@ function PineTree({ x, y, scale = 1, colorPrimary, colorShadow, isSnowing, isChr
     const swayDuration = Math.max(1.5, 3 - (swayIntensity * 1.5)); // Faster in high wind
 
     // Randomize timing slightly per tree for natural effect
-    const randomOffset = Math.random() * 0.5;
+    const randomOffset = useMemo(() => Math.random() * 0.5, []);
 
     return (
         <motion.g
@@ -65,20 +65,20 @@ function PineTree({ x, y, scale = 1, colorPrimary, colorShadow, isSnowing, isChr
             }}
             style={{ transformOrigin: 'center bottom' }}
         >
-            {/* Trunk */}
-            <rect x="-2" y="-8" width="4" height="18" fill="rgba(60, 40, 20, 0.4)" />
+            {/* Trunk - slightly rounded base */}
+            <path d="M-2,-8 L2,-8 L2,10 Q0,11 -2,10 Z" fill="rgba(60, 40, 20, 0.4)" />
 
-            {/* Bottom Tier */}
-            <path d="M0,-25 L15,-5 L0,-5 Z" fill={seasonalColors.shadow} />
-            <path d="M0,-25 L-15,-5 L0,-5 Z" fill={seasonalColors.primary} />
+            {/* Bottom Tier - fluffy */}
+            <path d="M0,-22 Q8,-18 14,-6 Q4,-8 0,-8" fill={seasonalColors.shadow} />
+            <path d="M0,-22 Q-8,-18 -14,-6 Q-4,-8 0,-8" fill={seasonalColors.primary} />
 
-            {/* Middle Tier */}
-            <path d="M0,-40 L12,-20 L0,-20 Z" fill={seasonalColors.shadow} />
-            <path d="M0,-40 L-12,-20 L0,-20 Z" fill={seasonalColors.primary} />
+            {/* Middle Tier - fluffy */}
+            <path d="M0,-36 Q6,-32 11,-16 Q4,-18 0,-18" fill={seasonalColors.shadow} />
+            <path d="M0,-36 Q-6,-32 -11,-16 Q-4,-18 0,-18" fill={seasonalColors.primary} />
 
-            {/* Top Tier */}
-            <path d="M0,-50 L8,-35 L0,-35 Z" fill={seasonalColors.shadow} />
-            <path d="M0,-50 L-8,-35 L0,-35 Z" fill={seasonalColors.primary} />
+            {/* Top Tier - fluffy */}
+            <path d="M0,-48 Q4,-42 8,-30 Q3,-32 0,-32" fill={seasonalColors.shadow} />
+            <path d="M0,-48 Q-4,-42 -8,-30 Q-3,-32 0,-32" fill={seasonalColors.primary} />
 
             {/* Spring Blossoms 🌸 */}
             {season === 'spring' && !isChristmas && (
@@ -139,7 +139,13 @@ function HillLayer({
             animate={{ y: 0, opacity: 1 }}
             transition={skipIntro ? { duration: 0 } : { duration: 1.5, delay, ease: "easeOut" }}
         >
-            <path d={d} fill={fill} />
+            <path
+                d={d}
+                fill={fill}
+                stroke="rgba(255,255,255,0.15)"
+                strokeWidth="2"
+                strokeLinecap="round"
+            />
 
             {/* Snow layer on top of hill curve if snowing */}
             {isSnowing && (
@@ -164,8 +170,7 @@ function HillLayer({
 }
 
 // 🎨 Palette Hook
-// eslint-disable-next-line react-refresh/only-export-components
-export function useLandscapePalette(cleanliness: number, isNight: boolean, synthwaveMode: boolean, isSnowing?: boolean, timeOfDay?: TimeOfDayLandscape) {
+function useLandscapePalette(cleanliness: number, isNight: boolean, synthwaveMode: boolean, isSnowing?: boolean, timeOfDay?: TimeOfDayLandscape) {
     return useMemo(() => {
         if (synthwaveMode) {
             return {
@@ -234,9 +239,16 @@ export function useLandscapePalette(cleanliness: number, isNight: boolean, synth
 
 export function LandscapeBack(props: LandscapeProps) {
     const palette = useLandscapePalette(props.cleanliness, props.isNight, props.synthwaveMode, props.isSnowing, props.timeOfDay);
-    // 0,80 -> 200,80 via 100,20 | 200,80 -> 400,60 via 300,140
-    const getBackY = (x: number) => (x < 200 ? 80 + (x / 200) * 20 : 80);
-    const backTrees = [20, 80, 150, 220, 290, 360].map(x => ({ x, y: 85, scale: 0.6 }));
+
+    // Explicit tree placements on the new curve to stay grounded
+    const backTrees = [
+        { x: 20, y: 91, scale: 0.6 },
+        { x: 80, y: 76, scale: 0.6 },
+        { x: 150, y: 81, scale: 0.6 },
+        { x: 220, y: 107, scale: 0.6 },
+        { x: 290, y: 116, scale: 0.6 },
+        { x: 360, y: 100, scale: 0.6 }
+    ];
 
     return (
         <>
@@ -247,9 +259,9 @@ export function LandscapeBack(props: LandscapeProps) {
                 </linearGradient>
             </defs>
             <HillLayer
-                d="M0,150 L0,80 Q100,20 200,80 Q300,140 400,60 L400,150 Z"
+                d="M0,150 L0,100 Q100,50 200,100 Q300,140 400,80 L400,150 Z"
                 fill="url(#gradBack)"
-                trees={backTrees.map(t => ({ ...t, y: getBackY(t.x) }))}
+                trees={backTrees}
                 treeColors={{ primary: palette.treePrimary, shadow: palette.treeShadow }}
                 delay={0}
                 isSnowing={props.isSnowing}
@@ -263,7 +275,14 @@ export function LandscapeBack(props: LandscapeProps) {
 
 export function LandscapeMid(props: LandscapeProps) {
     const palette = useLandscapePalette(props.cleanliness, props.isNight, props.synthwaveMode, props.isSnowing, props.timeOfDay);
-    const midTrees = [45, 120, 190, 260, 330].map(x => ({ x, y: 105, scale: 0.9 }));
+
+    const midTrees = [
+        { x: 45, y: 126, scale: 0.9 },
+        { x: 120, y: 116, scale: 0.9 },
+        { x: 190, y: 88, scale: 0.9 },
+        { x: 260, y: 85, scale: 0.9 },
+        { x: 330, y: 112, scale: 0.9 }
+    ];
 
     return (
         <>
@@ -274,9 +293,9 @@ export function LandscapeMid(props: LandscapeProps) {
                 </linearGradient>
             </defs>
             <HillLayer
-                d="M0,150 L0,110 Q80,140 160,90 Q240,40 320,100 Q360,130 400,90 L400,150 Z"
+                d="M0,150 L0,120 Q80,140 160,100 Q240,60 320,110 Q360,130 400,100 L400,150 Z"
                 fill="url(#gradMid)"
-                trees={midTrees.map(t => ({ ...t, y: 100 }))}
+                trees={midTrees}
                 treeColors={{ primary: palette.treePrimary, shadow: palette.treeShadow }}
                 delay={0.2}
                 isSnowing={props.isSnowing}
@@ -290,7 +309,12 @@ export function LandscapeMid(props: LandscapeProps) {
 
 export function LandscapeFront(props: LandscapeProps) {
     const palette = useLandscapePalette(props.cleanliness, props.isNight, props.synthwaveMode, props.isSnowing, props.timeOfDay);
-    const frontTrees = [10, 90, 310, 390].map(x => ({ x, y: 130, scale: 1.2 }));
+
+    const frontTrees = [
+        { x: 10, y: 130, scale: 1.2 },
+        { x: 90, y: 116, scale: 1.2 },
+        { x: 370, y: 134, scale: 1.2 }
+    ];
 
     return (
         <>
@@ -301,9 +325,9 @@ export function LandscapeFront(props: LandscapeProps) {
                 </linearGradient>
             </defs>
             <HillLayer
-                d="M0,150 L0,130 Q120,80 200,130 Q280,180 400,110 L400,150 Z"
+                d="M0,150 L0,135 Q120,100 200,135 Q280,180 400,120 L400,150 Z"
                 fill="url(#gradFront)"
-                trees={frontTrees.map(t => ({ ...t, y: 140 }))}
+                trees={frontTrees}
                 treeColors={{ primary: palette.treePrimary, shadow: palette.treeShadow }}
                 delay={0.4}
                 isSnowing={props.isSnowing}

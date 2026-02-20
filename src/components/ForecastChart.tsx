@@ -1,6 +1,7 @@
 import { ForecastData, getIntensityColor } from '@/lib/carbonApi';
 import { format, parseISO, isBefore, startOfHour } from 'date-fns';
 import { useRef, useLayoutEffect, useState, useEffect } from 'react';
+import { getForecastMax, getForecastDifferences } from '@/lib/forecastUtils';
 import { createPortal } from 'react-dom';
 import { Target, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -99,7 +100,7 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
     }
   }, [forecast]);
 
-  const maxForecast = Math.max(...forecast.map(d => d.intensity.forecast), 200);
+  const maxForecast = getForecastMax(forecast);
   const now = startOfHour(new Date());
 
   // Format header date
@@ -137,16 +138,8 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
         >
           <div className="flex gap-2 min-w-max px-4">
             {forecast.map((item, i) => {
+              const { time, isUnknown, isPast, isCurrentHour, hasActual, difference, showDifference } = getForecastDifferences(item, now);
               const height = (item.intensity.forecast / maxForecast) * 100;
-              const time = parseISO(item.from);
-              const isUnknown = item.intensity.forecast === null || item.intensity.forecast === 0;
-              const isPast = isBefore(time, now);
-              const isCurrentHour = time.getTime() === now.getTime();
-
-              // Calculate difference ONLY for past hours with actual data (not future)
-              const hasActual = item.intensity.actual !== undefined && item.intensity.actual !== null && isPast;
-              const difference = hasActual ? item.intensity.actual - item.intensity.forecast : 0;
-              const showDifference = hasActual && Math.abs(difference) > 0;
 
               // Determine if we need a separator
               const prevItem = forecast[i - 1];
@@ -306,10 +299,10 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
               <span className="font-medium">{forecast[selectedIndex].intensity.actual}g</span>
             </div>
             <div className={`flex items-center justify-between gap-2 text-[10px] ${(forecast[selectedIndex].intensity.actual ?? 0) - forecast[selectedIndex].intensity.forecast > 0
-                ? 'text-destructive'
-                : (forecast[selectedIndex].intensity.actual ?? 0) - forecast[selectedIndex].intensity.forecast < 0
-                  ? 'text-primary'
-                  : 'text-muted-foreground'
+              ? 'text-destructive'
+              : (forecast[selectedIndex].intensity.actual ?? 0) - forecast[selectedIndex].intensity.forecast < 0
+                ? 'text-primary'
+                : 'text-muted-foreground'
               }`}>
               <span>Difference:</span>
               <span className="font-medium">

@@ -1,9 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsHeaders } from '../_shared/cors.ts';
 
 interface FootprintRecord {
   interval_start: string;
@@ -34,8 +31,8 @@ interface WeeklyData {
 }
 
 function getMonthName(month: number): string {
-  const months = ['January', 'February', 'March', 'April', 'May', 'June', 
-                  'July', 'August', 'September', 'October', 'November', 'December'];
+  const months = ['January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'];
   return months[month] || 'Unknown';
 }
 
@@ -110,7 +107,7 @@ Deno.serve(async (req) => {
     for (const record of (footprint || []) as FootprintRecord[]) {
       const recordDate = new Date(record.interval_start);
       const weekNum = getWeekOfMonth(recordDate);
-      
+
       totalCarbonG += Number(record.carbon_g);
       totalKwh += Number(record.consumption_kwh);
       totalIntensity += record.intensity_gco2_kwh;
@@ -197,17 +194,17 @@ Deno.serve(async (req) => {
     // Generate notification for each subscription
     for (const sub of (subscriptions || []) as PushSubscription[]) {
       const emoji = getIntensityEmoji(avgIntensity);
-      
+
       let body: string;
       if (footprint && footprint.length > 0) {
         body = `📊 ${getMonthName(lastMonth)}: ${totalCarbonKg.toFixed(1)}kg CO₂ from ${totalKwh.toFixed(1)}kWh. ` +
-               `${greenPercentage}% green! ` +
-               `Best: ${bestWeek?.weekLabel || 'N/A'} (${bestWeek?.greenPercentage || 0}% green)`;
+          `${greenPercentage}% green! ` +
+          `Best: ${bestWeek?.weekLabel || 'N/A'} (${bestWeek?.greenPercentage || 0}% green)`;
       } else {
         body = `📊 Your ${getMonthName(lastMonth)} report is ready! ` +
-               `Link your Octopus meter for detailed carbon insights.`;
+          `Link your Octopus meter for detailed carbon insights.`;
       }
-      
+
       notifications.push({
         token: sub.device_token,
         title: `${emoji} ${getMonthName(lastMonth)} Carbon Report`,

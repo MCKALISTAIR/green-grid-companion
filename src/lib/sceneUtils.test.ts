@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'bun:test';
+import { describe, it, expect } from 'vitest';
 import { getSkyGradient, getSkyTopColor, getCarbonIndex, TIME_SKY_COLORS } from './sceneUtils';
 import { TimeOfDay } from '../hooks/useTimeOfDay';
 import { WeatherData } from '../hooks/useWeatherData';
@@ -58,7 +58,7 @@ describe('sceneUtils', () => {
   });
 
   describe('getSkyTopColor', () => {
-     it('returns default start color for given time of day', () => {
+    it('returns default start color for given time of day', () => {
       const timeOfDay: TimeOfDay = 'midday';
       const color = getSkyTopColor('low', timeOfDay, 100);
       const expectedStart = TIME_SKY_COLORS[timeOfDay].start;

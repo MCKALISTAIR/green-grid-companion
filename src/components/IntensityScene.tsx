@@ -112,6 +112,23 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
     }));
   }, []);
 
+  const fireflyConfig = useMemo(() => {
+    return Array.from({ length: 8 }).map((_, i) => ({
+      id: i,
+      delay: i * 0.5,
+      x: 10 + Math.random() * 80,
+      y: 10 + Math.random() * 40
+    }));
+  }, []);
+
+  const rainConfig = useMemo(() => {
+    return Array.from({ length: 20 }).map((_, i) => ({
+      id: i,
+      delay: Math.random() * 2,
+      x: 5 + (i * 4.5)
+    }));
+  }, []);
+
   const { isRaining } = weather;
 
   const [activeEvent, setActiveEvent] = useState<'none' | 'ufo' | 'drone' | 'train'>('none');
@@ -128,7 +145,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
     };
     const interval = setInterval(triggerRandomEvent, 20000);
     return () => clearInterval(interval);
-  }, [activeEvent, isNight, intensity]);
+  }, [activeEvent, isNight, intensity, timeOfDay]);
 
   const handleTurbineClick = (i: number) => {
     setTurbineOverdrive(i);
@@ -235,7 +252,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       windSpeed: weather.windSpeed,
       sceneFilter: getTimeFilter(),
     };
-  }, [intensity, index, timeOfDay, isNight, weather, synthwaveMode]);
+  }, [intensity, index, timeOfDay, weather, synthwaveMode]);
 
   return (
     <motion.div
@@ -340,8 +357,8 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
               exit={{ opacity: 0 }}
               transition={{ duration: 0.5 }}
             >
-              {[...Array(20)].map((_, i) => (
-                <RainDrop key={i} delay={Math.random() * 2} x={5 + (i * 4.5)} />
+              {rainConfig.map((drop) => (
+                <RainDrop key={drop.id} delay={drop.delay} x={drop.x} />
               ))}
             </motion.div>
           )
@@ -431,12 +448,12 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            {[...Array(8)].map((_, i) => (
+            {fireflyConfig.map((firefly) => (
               <Firefly
-                key={i}
-                delay={i * 0.5}
-                x={10 + Math.random() * 80}
-                y={10 + Math.random() * 40}
+                key={firefly.id}
+                delay={firefly.delay}
+                x={firefly.x}
+                y={firefly.y}
               />
             ))}
           </motion.div>
@@ -446,7 +463,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       {/* High Fidelity Landscape (Hills + Trees) */}
       {/* Background Landscape Layer (Back + Mid Hills) */}
       <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-0">
-        <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+        <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
           <LandscapeBack
             cleanliness={sceneConfig.cleanliness}
             isNight={isNight}
@@ -489,7 +506,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
 
       {/* Foreground Landscape Layer (Front Hill) - Occludes Sheep */}
       <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-20">
-        <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+        <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
           <LandscapeFront
             cleanliness={sceneConfig.cleanliness}
             isNight={isNight}
@@ -519,32 +536,12 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
               const baseSpeed = Math.max(1.5, 5 - (sceneConfig.windSpeed / 10));
               const isOverdrive = turbineOverdrive === i;
 
-              // Hint logic for first turbine
-              const showHint = i === 1 && !localStorage.getItem('hasInteractedWithTurbine');
-
               return (
                 <div key={i} className="relative">
-                  {showHint && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="absolute -top-12 left-1/2 -translate-x-1/2 bg-white/90 text-primary px-2 py-1 rounded text-[10px] font-bold shadow-lg whitespace-nowrap z-50 pointer-events-none"
-                    >
-                      Tap me! 👇
-                      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-white/90 rotate-45"></div>
-                    </motion.div>
-                  )}
                   <WindTurbine
                     scale={0.7 + (i % 2) * 0.2}
                     speed={isOverdrive ? 0.2 : (baseSpeed + i * 0.3)} // Super fast if overdrive
-                    onClick={() => {
-                      handleTurbineClick(i);
-                      if (!localStorage.getItem('hasInteractedWithTurbine')) {
-                        localStorage.setItem('hasInteractedWithTurbine', 'true');
-                        // Force re-render to hide hint (React will handle this if we used state, but component might not update immediately without state change. 
-                        // However, handleTurbineClick causes state change (overdrive), so re-render happens.)
-                      }
-                    }}
+                    onClick={() => handleTurbineClick(i)}
                   />
                 </div>
               );

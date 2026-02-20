@@ -1,9 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsHeaders } from '../_shared/cors.ts';
 
 interface FootprintRecord {
   interval_start: string;
@@ -140,22 +137,22 @@ Deno.serve(async (req) => {
     // Fetch this week's forecast for best times
     const forecastResponse = await fetch('https://api.carbonintensity.org.uk/intensity/date');
     let bestTimeToday = 'N/A';
-    
+
     if (forecastResponse.ok) {
       const forecastData = await forecastResponse.json();
       const forecasts: ForecastSlot[] = forecastData.data || [];
-      
+
       let lowestForecast: ForecastSlot | null = null;
       for (const slot of forecasts) {
         if (!lowestForecast || slot.intensity.forecast < lowestForecast.intensity.forecast) {
           lowestForecast = slot;
         }
       }
-      
+
       if (lowestForecast) {
-        bestTimeToday = new Date(lowestForecast.from).toLocaleTimeString('en-GB', { 
-          hour: '2-digit', 
-          minute: '2-digit' 
+        bestTimeToday = new Date(lowestForecast.from).toLocaleTimeString('en-GB', {
+          hour: '2-digit',
+          minute: '2-digit'
         });
       }
     }
@@ -170,17 +167,17 @@ Deno.serve(async (req) => {
     // Generate notification for each subscription
     for (const sub of (subscriptions || []) as PushSubscription[]) {
       const emoji = getIntensityEmoji(avgIntensity);
-      
+
       let body: string;
       if (footprint && footprint.length > 0) {
         body = `📊 This week: ${totalCarbonKg.toFixed(1)}kg CO₂ from ${totalKwh.toFixed(1)}kWh. ` +
-               `${greenPercentage}% green energy! ` +
-               `💡 Best time today: ${bestTimeToday}`;
+          `${greenPercentage}% green energy! ` +
+          `💡 Best time today: ${bestTimeToday}`;
       } else {
         body = `💡 Best time to use energy today: ${bestTimeToday}. ` +
-               `Link your Octopus meter for personalized insights!`;
+          `Link your Octopus meter for personalized insights!`;
       }
-      
+
       notifications.push({
         token: sub.device_token,
         title: `${emoji} Your Weekly Carbon Digest`,

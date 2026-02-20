@@ -1,12 +1,10 @@
 // Deno context wrapper
 const _ignore = null;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const Deno: any;
 
-export const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { corsHeaders } from '../_shared/cors.ts';
 
 Deno.serve(async (req: Request) => {
     // Handle CORS
@@ -16,7 +14,7 @@ Deno.serve(async (req: Request) => {
 
     try {
         const body = await req.json()
-        
+
         // Parse and validate coordinates
         const lat = parseFloat(body.lat)
         const lon = parseFloat(body.lon)
@@ -27,7 +25,7 @@ Deno.serve(async (req: Request) => {
                 { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             )
         }
-        
+
         if (isNaN(lon) || lon < -180 || lon > 180) {
             return new Response(
                 JSON.stringify({ error: 'Invalid longitude: must be between -180 and 180' }),

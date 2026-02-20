@@ -40,29 +40,33 @@ function FogLayer({ intensity = 0.5, layer = 1 }: { intensity?: number; layer?: 
 
 // Snowflake Component
 function Snowflake({ delay, x, size = 'md' }: { delay: number; x: number; size?: 'sm' | 'md' | 'lg' }) {
-  const sizes = { sm: 2, md: 4, lg: 6 };
-  const pixelSize = sizes[size];
-  const duration = 4 + Math.random() * 3;
-  const drift = 20 + Math.random() * 30;
+  const params = useMemo(() => {
+    const sizes = { sm: 2, md: 4, lg: 6 };
+    return {
+      pixelSize: sizes[size],
+      duration: 4 + Math.random() * 3,
+      drift: 20 + Math.random() * 30,
+    };
+  }, [size]);
 
   return (
     <motion.div
       className="absolute rounded-full bg-card"
       style={{
         left: `${x}%`,
-        width: pixelSize,
-        height: pixelSize,
+        width: params.pixelSize,
+        height: params.pixelSize,
         filter: 'blur(0.5px)',
       }}
       initial={{ y: '-5%', opacity: 0 }}
       animate={{
         y: '110%',
-        x: [`0px`, `${drift}px`, `${-drift}px`, `${drift / 2}px`],
+        x: [`0px`, `${params.drift}px`, `${-params.drift}px`, `${params.drift / 2}px`],
         opacity: [0, 0.9, 0.9, 0],
         rotate: [0, 180, 360],
       }}
       transition={{
-        duration,
+        duration: params.duration,
         delay,
         repeat: Infinity,
         ease: 'linear',
@@ -97,6 +101,8 @@ function LightningFlash({ active }: { active: boolean }) {
 
 // Lightning Bolt SVG
 function LightningBolt({ x, delay }: { x: number; delay: number }) {
+  const repeatDelay = useMemo(() => 4 + Math.random() * 6, []);
+
   return (
     <motion.svg
       className="absolute pointer-events-none"
@@ -112,7 +118,7 @@ function LightningBolt({ x, delay }: { x: number; delay: number }) {
         duration: 0.5,
         delay,
         repeat: Infinity,
-        repeatDelay: 4 + Math.random() * 6,
+        repeatDelay,
       }}
     >
       <motion.path

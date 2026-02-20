@@ -1,12 +1,10 @@
 // Deno context wrapper
 const _ignore = null;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const Deno: any;
 
-export const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { corsHeaders } from '../_shared/cors.ts';
 
 interface IntensityResponse {
   data: {

@@ -61,7 +61,7 @@ export function BestTimeSlot({ forecast }: BestTimeCardProps) {
             )}
           </div>
           <p className="text-lg font-bold text-intensity-very-low">
-            {format(data.bestStart, 'HH:mm')} → {format(data.bestEnd, 'HH:mm')} <span className="text-sm font-medium ml-1 text-muted-foreground">{getDayLabel(data.bestStart)}</span>
+            {format(data.bestStart, 'HH:mm')} → {format(data.bestEnd, 'HH:mm')} <span className="text-sm font-medium ml-1 text-muted-foreground">{getDayLabel(new Date(data.bestStart.getTime() - 60000))}</span>
           </p>
           <p className="text-xs text-muted-foreground">
             Average: {data.minAvg} gCO₂/kWh
@@ -87,7 +87,7 @@ export function WorstTimeSlot({ forecast }: BestTimeCardProps) {
             <span className="text-sm font-medium text-foreground">Avoid high usage</span>
           </div>
           <p className="text-lg font-bold text-intensity-high">
-            {format(data.worstStart, 'HH:mm')} → {format(data.worstEnd, 'HH:mm')} <span className="text-sm font-medium ml-1 text-muted-foreground">{getDayLabel(data.worstStart)}</span>
+            {format(data.worstStart, 'HH:mm')} → {format(data.worstEnd, 'HH:mm')} <span className="text-sm font-medium ml-1 text-muted-foreground">{getDayLabel(new Date(data.worstStart.getTime() - 60000))}</span>
           </p>
           <p className="text-xs text-muted-foreground">
             Average: {data.maxAvg} gCO₂/kWh

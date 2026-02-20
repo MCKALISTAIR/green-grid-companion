@@ -8,6 +8,16 @@ import { useMemo } from 'react';
 export function SnowGround({ intensity = 0.6 }: { intensity?: number }) {
   const opacity = 0.5 + intensity * 0.4;
 
+  const snowSparkles = useMemo(() => {
+    return Array.from({ length: 12 }).map((_, i) => ({
+      id: i,
+      cx: 15 + i * 33,
+      cy: 18 + (i % 3) * 4,
+      duration: 2 + Math.random(),
+      delay: Math.random() * 2,
+    }));
+  }, []);
+
   return (
     <motion.div
       className="absolute bottom-0 left-0 right-0 pointer-events-none z-28"
@@ -35,17 +45,17 @@ export function SnowGround({ intensity = 0.6 }: { intensity?: number }) {
           fillOpacity={opacity * 0.7}
         />
         {/* Snow sparkle dots */}
-        {Array.from({ length: 12 }).map((_, i) => (
+        {snowSparkles.map((sparkle) => (
           <motion.circle
-            key={i}
-            cx={15 + i * 33}
-            cy={18 + (i % 3) * 4}
+            key={sparkle.id}
+            cx={sparkle.cx}
+            cy={sparkle.cy}
             r={0.8}
             fill="white"
             animate={{ opacity: [0.3, 1, 0.3] }}
             transition={{
-              duration: 2 + Math.random(),
-              delay: Math.random() * 2,
+              duration: sparkle.duration,
+              delay: sparkle.delay,
               repeat: Infinity,
             }}
           />

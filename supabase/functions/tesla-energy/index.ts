@@ -1,9 +1,6 @@
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsHeaders } from '../_shared/cors.ts';
 
 // Tesla API endpoints
 const TESLA_AUTH_URL = 'https://auth.tesla.com/oauth2/v3';
@@ -19,21 +16,21 @@ const RATE_LIMIT = { maxAttempts: 10, windowMs: 60000, blockDurationMs: 300000 }
 function checkRateLimit(key: string): { allowed: boolean; retryAfter?: number } {
   const now = Date.now();
   const record = rateLimitStore.get(key);
-  
+
   if (record?.blockedUntil && now < record.blockedUntil) {
     return { allowed: false, retryAfter: Math.ceil((record.blockedUntil - now) / 1000) };
   }
-  
+
   if (!record || now > record.resetAt) {
     rateLimitStore.set(key, { count: 1, resetAt: now + RATE_LIMIT.windowMs });
     return { allowed: true };
   }
-  
+
   if (record.count >= RATE_LIMIT.maxAttempts) {
     record.blockedUntil = now + RATE_LIMIT.blockDurationMs;
     return { allowed: false, retryAfter: Math.ceil(RATE_LIMIT.blockDurationMs / 1000) };
   }
-  
+
   record.count++;
   return { allowed: true };
 }
@@ -45,7 +42,7 @@ function logSecurityEvent(event: { type: string; severity: string; details: Reco
     ...event,
     timestamp: new Date().toISOString(),
   })}`;
-  
+
   if (event.severity === 'CRITICAL' || event.severity === 'HIGH') {
     console.error(logMessage);
   } else {
@@ -91,7 +88,7 @@ Deno.serve(async (req) => {
 
     const token = authHeader.replace('Bearer ', '');
     const { data: claimsData, error: claimsError } = await userClient.auth.getUser(token);
-    
+
     if (claimsError || !claimsData?.user) {
       logSecurityEvent({
         type: 'AUTH_FAILURE',
@@ -147,7 +144,7 @@ Deno.serve(async (req) => {
           .eq('user_id', userId);
 
         const isLinked = credentials && new Date(credentials.token_expires_at) > new Date();
-        
+
         return new Response(JSON.stringify({
           configured: teslaConfigured,
           linked: isLinked,
@@ -161,7 +158,7 @@ Deno.serve(async (req) => {
 
       case 'get-auth-url': {
         if (!teslaConfigured) {
-          return new Response(JSON.stringify({ 
+          return new Response(JSON.stringify({
             error: 'Tesla integration not configured',
             message: 'Tesla API credentials have not been set up yet.'
           }), {
@@ -180,7 +177,7 @@ Deno.serve(async (req) => {
 
         // Generate state for CSRF protection
         const state = crypto.randomUUID();
-        
+
         const authUrl = new URL(`${TESLA_AUTH_URL}/authorize`);
         authUrl.searchParams.set('client_id', teslaClientId!);
         authUrl.searchParams.set('redirect_uri', redirectUri);
@@ -188,7 +185,7 @@ Deno.serve(async (req) => {
         authUrl.searchParams.set('scope', 'openid offline_access vehicle_device_data vehicle_charging_cmds energy_device_data');
         authUrl.searchParams.set('state', state);
 
-        return new Response(JSON.stringify({ 
+        return new Response(JSON.stringify({
           authUrl: authUrl.toString(),
           state,
         }), {
@@ -304,7 +301,7 @@ Deno.serve(async (req) => {
         }
 
         const vehicleState = await fetchVehicleState(accessToken, vehicleId);
-        
+
         return new Response(JSON.stringify(vehicleState), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
@@ -328,7 +325,7 @@ Deno.serve(async (req) => {
         }
 
         const energyData = await fetchEnergyData(accessToken, siteId, period);
-        
+
         return new Response(JSON.stringify(energyData), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
@@ -416,7 +413,7 @@ async function getValidAccessToken(
 
   // Refresh token
   console.log(`Refreshing Tesla token for user: ${userId}`);
-  
+
   const refreshResponse = await fetch(`${TESLA_AUTH_URL}/token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -492,7 +489,7 @@ async function syncTeslaProducts(
             site_id: String(product.energy_site_id),
             site_name: product.site_name || 'Energy Site',
             solar_capacity_kw: product.solar_power || null,
-            battery_capacity_kwh: product.backup_reserve_percent ? 
+            battery_capacity_kwh: product.backup_reserve_percent ?
               (product.total_pack_energy || null) : null,
           }, { onConflict: 'user_id,site_id' });
         }

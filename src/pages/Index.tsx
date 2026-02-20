@@ -5,10 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { IntensityScene } from '@/components/IntensityScene';
-import { useTimeOfDay } from '@/hooks/useTimeOfDay';
-import { useWeatherData } from '@/hooks/useWeatherData';
-import { useSceneDirector } from '@/hooks/useSceneDirector';
-import { getSkyTopColor, getCarbonIndex } from '@/lib/sceneUtils';
 import { getErrorInfo } from "@/lib/errorUtils";
 import { GenerationMixBar } from '@/components/GenerationMixBar';
 import { ForecastChart } from '@/components/ForecastChart';
@@ -38,54 +34,20 @@ import { logger } from '@/lib/logger';
 import { LocationMismatchPrompt } from '@/components/LocationMismatchPrompt';
 import { YearWrapped } from '@/components/YearWrapped';
 
-import { useProductTour } from '@/hooks/useProductTour';
 import { useAppLocation } from '@/contexts/LocationContext';
-
-// Check if Year Wrapped should auto-show (December, once per year)
-function shouldShowYearWrapped(): { shouldShow: boolean; year: number } {
-  const now = new Date();
-  const currentMonth = now.getMonth(); // 0-indexed, December = 11
-  const currentYear = now.getFullYear();
-
-  // Only show in December
-  if (currentMonth !== 11) {
-    return { shouldShow: false, year: currentYear };
-  }
-
-  // Check if already shown this year
-  const storageKey = `year-wrapped-auto-shown-${currentYear}`;
-  const alreadyShown = localStorage.getItem(storageKey) === 'true';
-
-  return { shouldShow: !alreadyShown, year: currentYear };
-}
-
-function markYearWrappedShown(year: number) {
-  localStorage.setItem(`year-wrapped-auto-shown-${year}`, 'true');
-}
+import { useProductTour } from '@/hooks/useProductTour';
+import { useYearWrappedAutoShow } from '@/hooks/useYearWrappedAutoShow';
+import { usePeriodicRefresh } from '@/hooks/usePeriodicRefresh';
+import { useEnvironmentalConditions } from '@/hooks/useEnvironmentalConditions';
 
 const Index = () => {
   const navigate = useNavigate();
   const { postcode, setPostcode } = useAppLocation();
   const [viewMode, setViewMode] = useState<'intensity' | 'footprint' | 'demand'>('intensity');
-  const [showYearWrapped, setShowYearWrapped] = useState(false);
-  const [wrappedYear, setWrappedYear] = useState(new Date().getFullYear());
+  const { showYearWrapped, setShowYearWrapped, wrappedYear } = useYearWrappedAutoShow();
 
   const { scheduleGreenAlerts, scheduleDailyForecast, scheduleHighIntensityAlerts, prefs } = useNotifications();
   const { isLinked: isOctopusLinked } = useOctopusEnergy();
-
-  // Auto-show Year Wrapped in December (once per year)
-  useEffect(() => {
-    const { shouldShow, year } = shouldShowYearWrapped();
-    if (shouldShow) {
-      // Delay slightly so the main UI loads first
-      const timer = setTimeout(() => {
-        setWrappedYear(year);
-        setShowYearWrapped(true);
-        markYearWrappedShown(year);
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, []);
 
   useEffect(() => {
     if (!postcode) {
@@ -128,31 +90,7 @@ const Index = () => {
     }
   }, [isLoading, intensity, startTour]);
 
-  // Periodic stale data check - ensures data refreshes even if intervals miss
-  useEffect(() => {
-    const checkAndRefresh = () => {
-      if (lastUpdated) {
-        const nextExpected = new Date(lastUpdated).getTime() + (30 * 60 * 1000);
-        const now = Date.now();
-
-        // If we're more than 2 minutes past expected update, force refresh
-        if (now > nextExpected + (2 * 60 * 1000)) {
-          logger.info('Carbon data appears stale, triggering refresh');
-          refetch();
-        }
-      }
-    };
-
-    // Check every minute
-    const intervalId = setInterval(checkAndRefresh, 60 * 1000);
-
-    // Also check immediately on mount
-    checkAndRefresh();
-
-    return () => clearInterval(intervalId);
-  }, [lastUpdated, refetch]);
-
-
+  usePeriodicRefresh(lastUpdated, refetch);
 
   const handleRefresh = async () => {
     await refetch();
@@ -186,28 +124,7 @@ const Index = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const { timeOfDay: realTimeOfDay, isNight: realIsNight } = useTimeOfDay();
-  const { weather: realWeather } = useWeatherData(postcode);
-  const { active: isDirectorMode, overrides } = useSceneDirector();
-
-  // Compute overrides
-  const timeOfDay = (isDirectorMode && overrides.timeOfDay) ? overrides.timeOfDay : realTimeOfDay;
-
-  const derivedIntensity = (isDirectorMode && overrides.intensity !== undefined)
-    ? overrides.intensity
-    : intensity;
-
-  const weather = (isDirectorMode && overrides.weather)
-    ? { ...realWeather, ...overrides.weather }
-    : realWeather;
-
-  // Derive cleanliness from intensity (reused formula)
-  const cleanliness = Math.max(0, Math.min(1, 1 - (derivedIntensity - 50) / 300));
-
-  // Use the effective intensity for the effective index string
-  const effectiveIndex = getCarbonIndex(derivedIntensity);
-
-  const skyColor = getSkyTopColor(effectiveIndex, timeOfDay, cleanliness, weather);
+  const { skyColor } = useEnvironmentalConditions(postcode, intensity);
 
   if (isError) {
     const errorInfo = getErrorInfo(error);
@@ -439,7 +356,7 @@ const Index = () => {
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {/* Energy Insights */}
-                      <Card className="p-4 shadow-lg bg-accent/30 border-accent/50">
+                      <Card className="p-4 shadow-lg bg-accent/30 border-accent/50 md:col-span-2 lg:col-span-1 lg:row-span-2 flex flex-col justify-between">
                         <div className="flex items-start gap-3">
                           <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
                             <Zap className="w-4 h-4 text-accent-foreground" />
@@ -469,21 +386,21 @@ const Index = () => {
                         </div>
                       </Card>
 
-                      {/* Best time - under Energy Insights */}
+                      {/* Generation Mix */}
+                      <Card className="p-4 shadow-lg md:col-span-2 lg:col-span-2 flex flex-col justify-center" data-tour="generation-mix">
+                        <ComponentErrorBoundary name="Generation Mix">
+                          <GenerationMixBar mix={generationMix} frequency={gridFrequency} />
+                        </ComponentErrorBoundary>
+                      </Card>
+
+                      {/* Best time */}
                       {forecast.length > 0 && (
                         <ComponentErrorBoundary name="Best Time">
                           <BestTimeSlot forecast={forecast} />
                         </ComponentErrorBoundary>
                       )}
 
-                      {/* Generation Mix */}
-                      <Card className="p-4 shadow-lg" data-tour="generation-mix">
-                        <ComponentErrorBoundary name="Generation Mix">
-                          <GenerationMixBar mix={generationMix} frequency={gridFrequency} />
-                        </ComponentErrorBoundary>
-                      </Card>
-
-                      {/* Worst time - under Generation Mix */}
+                      {/* Worst time */}
                       {forecast.length > 0 && (
                         <ComponentErrorBoundary name="Worst Time">
                           <WorstTimeSlot forecast={forecast} />

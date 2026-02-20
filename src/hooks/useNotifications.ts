@@ -142,7 +142,7 @@ export function useNotifications() {
     };
 
     // Helper to generate forecast summary
-    const generateForecastSummary = (forecast: ForecastData[]): string => {
+    const generateForecastSummary = useCallback((forecast: ForecastData[]): string => {
         const today = new Date();
         today.setHours(0, 0, 0, 0); // Start of day
         const endOfDay = new Date(today);
@@ -200,7 +200,7 @@ export function useNotifications() {
         }
 
         return `Today's average: ${avgIntensity}g CO₂/kWh. ${lowHours > 0 ? `${lowHours}h of green energy expected 🌿` : 'Limited green periods today.'}${bestTimeStr}`;
-    };
+    }, [prefs.lowIntensityThreshold]);
 
     const scheduleDailyForecast = useCallback(async (forecast: ForecastData[]) => {
         if (!prefs.dailyForecastEnabled || permissionStatus !== 'granted') {
@@ -245,7 +245,7 @@ export function useNotifications() {
         } catch (error) {
             logger.error('Failed to schedule daily forecast', { error });
         }
-    }, [prefs.dailyForecastEnabled, prefs.dailyForecastTime, prefs.lowIntensityThreshold, permissionStatus, generateForecastSummary]);
+    }, [prefs.dailyForecastEnabled, prefs.dailyForecastTime, permissionStatus, generateForecastSummary]);
 
     const updatePreference = <K extends keyof NotificationPrefs>(key: K, value: NotificationPrefs[K]) => {
         setPrefs(prev => ({ ...prev, [key]: value }));

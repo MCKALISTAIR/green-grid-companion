@@ -2,12 +2,10 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // Hack to make VS Code happy with Deno globals in a Node workspace
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const Deno: any;
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsHeaders } from '../_shared/cors.ts';
 
 // --- RATE LIMITING ---
 // Persistent rate limiter for credential operations
@@ -17,6 +15,7 @@ const RATE_LIMIT_CONFIG = {
   blockDurationMs: 5 * 60 * 1000, // 5 minute block after exceeding limit
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function checkRateLimit(supabase: any, userId: string, action: string): Promise<{ allowed: boolean; retryAfter?: number }> {
   const key = `${userId}:${action}`;
 
@@ -34,6 +33,7 @@ async function checkRateLimit(supabase: any, userId: string, action: string): Pr
   }
 
   // Supabase RPC returns the JSON object directly
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const result = data as any;
   return {
     allowed: result.allowed,
@@ -211,7 +211,8 @@ Deno.serve(async (req: Request) => {
       }
 
       // De-duplicate by user_id
-      const userIds = [...new Set(allMeters.map(m => m.user_id))].filter(Boolean);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const userIds = [...new Set(allMeters.map((m: any) => m.user_id))].filter(Boolean) as string[];
       console.log(`Found ${userIds.length} users with active meters`);
 
       // Optimize: Fetch all credentials at once if needed to avoid N+1 queries
@@ -234,7 +235,8 @@ Deno.serve(async (req: Request) => {
 
       for (const uid of userIds) {
         try {
-          const userMeters = allMeters.filter(m => m.user_id === uid);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const userMeters = allMeters.filter((m: any) => m.user_id === uid);
 
           if (cronAction === 'sync-all-users') {
             // Get credentials for this user from pre-fetched map
@@ -339,6 +341,7 @@ Deno.serve(async (req: Request) => {
               const intensityJson = await intensityResponse.json();
               const intensityMap = new Map<string, { intensity: number, index: string }>();
 
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               let intensityList: any[] = [];
               if (isRegional) {
                 intensityList = Array.isArray(intensityJson.data)
@@ -434,6 +437,7 @@ Deno.serve(async (req: Request) => {
     // Parse action and params
     let action: string | null = null;
     let days: number = 7;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let payload: any = {};
 
     if (req.method === 'POST') {
@@ -1004,6 +1008,7 @@ Deno.serve(async (req: Request) => {
           if (!intensityResponse.ok) throw new Error(`Failed to fetch batch intensity: ${intensityResponse.status}`);
 
           const intensityJson = await intensityResponse.json();
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           let intensityList: any[] = [];
 
           if (isRegional) {
@@ -1080,8 +1085,10 @@ Deno.serve(async (req: Request) => {
         );
       }
 
-      const mpans = userMeters.map(m => m.mpan);
-      const exportMpans = new Set(userMeters.filter(m => m.meter_type === 'export').map(m => m.mpan));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mpans = userMeters.map((m: any) => m.mpan);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const exportMpans = new Set(userMeters.filter((m: any) => m.meter_type === 'export').map((m: any) => m.mpan));
 
       const periodFrom = new Date();
       periodFrom.setDate(periodFrom.getDate() - days);
@@ -1101,7 +1108,9 @@ Deno.serve(async (req: Request) => {
       }
 
       // Separate import and export records
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const importRecords = (footprint || []).filter((r: any) => !exportMpans.has(r.mpan));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const exportRecords = (footprint || []).filter((r: any) => exportMpans.has(r.mpan));
 
       // Calculate import summary stats
@@ -1271,6 +1280,7 @@ Deno.serve(async (req: Request) => {
         console.log(`[${requestId}] Found ${plannedDispatches.length} planned, ${completedDispatches.length} completed dispatches`);
 
         // Store dispatches in database for history and notifications
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const dispatchesToUpsert: any[] = [];
         const newCompletedStarts: string[] = [];
 
@@ -1296,6 +1306,7 @@ Deno.serve(async (req: Request) => {
         const UK_AVG_INTENSITY = 230;
 
         // Get existing dispatches that already have carbon data to avoid re-fetching
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const existingStartTimes = completedDispatches.map((d: any) => d.start || d.startDt);
         const { data: existingDispatches } = await supabase
           .from('octopus_intelligent_dispatches')
@@ -1344,6 +1355,7 @@ Deno.serve(async (req: Request) => {
                 const intervals = intensityJson.data || [];
 
                 if (intervals.length > 0) {
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   const totalIntensity = intervals.reduce((sum: number, i: any) =>
                     sum + (i.intensity?.actual ?? i.intensity?.forecast ?? 0), 0);
                   avgIntensity = Math.round(totalIntensity / intervals.length);
@@ -1459,7 +1471,8 @@ Deno.serve(async (req: Request) => {
         );
       }
 
-      const mpans = userMeters.map(m => m.mpan);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mpans = userMeters.map((m: any) => m.mpan);
 
       // Get min date (earliest data)
       const { data: minData } = await supabase
@@ -1508,6 +1521,7 @@ Deno.serve(async (req: Request) => {
 
       if (meters && meters.length > 0) {
         // Assuming single meter for simplicity in status check, or check all
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const mpans = meters.map((m: any) => m.mpan);
 
         const { data: latest } = await supabase

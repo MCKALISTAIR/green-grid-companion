@@ -49,7 +49,7 @@ export const CookieConsent = () => {
               </Button>
             </div>
           </div>
-          <button onClick={decline} className="text-muted-foreground hover:text-foreground">
+          <button onClick={decline} className="text-muted-foreground hover:text-foreground" aria-label="Close cookie consent banner (Decline)">
             <X className="h-4 w-4" />
           </button>
         </div>

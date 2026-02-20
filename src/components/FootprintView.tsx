@@ -257,7 +257,7 @@ export function FootprintView() {
       exportCarbonKg,
       netCarbonKg,
     };
-  }, [footprint, dailyData, customAnnualKwh, daysToFetch, houseType]);
+  }, [footprint, dailyData, customAnnualKwh, houseType, timeRange]);
 
   // Check and unlock achievements based on insights
   useMemo(() => {
@@ -370,18 +370,29 @@ export function FootprintView() {
             </div>
           </div>
 
-          <Button
-            size="lg"
-            className="w-full max-w-sm font-semibold text-lg h-12 shadow-lg hover:shadow-xl transition-all"
-            onClick={() => navigate('/settings')}
-          >
-            <Zap className="w-5 h-5 mr-2" />
-            Link Octopus Account
-          </Button>
+          <div className="flex flex-col items-center gap-3 pt-4">
+            <Button
+              size="lg"
+              className="w-full max-w-sm font-semibold text-lg h-12 shadow-lg hover:shadow-xl transition-all"
+              onClick={() => navigate('/settings')}
+            >
+              <Zap className="w-5 h-5 mr-2" />
+              Link Octopus Account
+            </Button>
 
-          <p className="text-xs text-muted-foreground pt-4">
-            Your API keys are stored securely on your device.
-          </p>
+            <a
+              href="https://share.octopus.energy/light-sheep-695"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-primary hover:text-primary/80 font-medium underline-offset-4 hover:underline transition-all"
+            >
+              Not with Octopus? Get £50 credit when you switch
+            </a>
+
+            <p className="text-xs text-muted-foreground pt-2">
+              Your API keys are stored securely on your device.
+            </p>
+          </div>
         </Card>
       </div>
     );

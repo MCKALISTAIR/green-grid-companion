@@ -1,9 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
-};
+import { corsHeaders } from '../_shared/cors.ts';
 
 interface PushSubscriptionData {
   device_token: string;
@@ -49,7 +46,7 @@ Deno.serve(async (req) => {
       case 'get': {
         // Get subscription by device token
         const deviceToken = url.searchParams.get('device_token');
-        
+
         if (!deviceToken) {
           return new Response(
             JSON.stringify({ error: 'device_token is required' }),
@@ -112,8 +109,8 @@ Deno.serve(async (req) => {
         }
 
         // Validate threshold range
-        if (body.low_intensity_threshold !== undefined && 
-            (body.low_intensity_threshold < 0 || body.low_intensity_threshold > 500)) {
+        if (body.low_intensity_threshold !== undefined &&
+          (body.low_intensity_threshold < 0 || body.low_intensity_threshold > 500)) {
           return new Response(
             JSON.stringify({ error: 'Intensity threshold must be between 0 and 500' }),
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -121,8 +118,8 @@ Deno.serve(async (req) => {
         }
 
         // Validate high intensity threshold range
-        if (body.high_intensity_threshold !== undefined && 
-            (body.high_intensity_threshold < 0 || body.high_intensity_threshold > 500)) {
+        if (body.high_intensity_threshold !== undefined &&
+          (body.high_intensity_threshold < 0 || body.high_intensity_threshold > 500)) {
           return new Response(
             JSON.stringify({ error: 'High intensity threshold must be between 0 and 500' }),
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -130,8 +127,8 @@ Deno.serve(async (req) => {
         }
 
         // Validate weekly digest day (0-6)
-        if (body.weekly_digest_day !== undefined && 
-            (body.weekly_digest_day < 0 || body.weekly_digest_day > 6)) {
+        if (body.weekly_digest_day !== undefined &&
+          (body.weekly_digest_day < 0 || body.weekly_digest_day > 6)) {
           return new Response(
             JSON.stringify({ error: 'Weekly digest day must be between 0 (Sunday) and 6 (Saturday)' }),
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -139,8 +136,8 @@ Deno.serve(async (req) => {
         }
 
         // Validate monthly report day (1-28)
-        if (body.monthly_report_day !== undefined && 
-            (body.monthly_report_day < 1 || body.monthly_report_day > 28)) {
+        if (body.monthly_report_day !== undefined &&
+          (body.monthly_report_day < 1 || body.monthly_report_day > 28)) {
           return new Response(
             JSON.stringify({ error: 'Monthly report day must be between 1 and 28' }),
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -199,7 +196,7 @@ Deno.serve(async (req) => {
       case 'delete': {
         // Delete subscription by device token
         const deviceToken = url.searchParams.get('device_token');
-        
+
         if (!deviceToken) {
           return new Response(
             JSON.stringify({ error: 'device_token is required' }),

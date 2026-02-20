@@ -1,12 +1,13 @@
+// @ts-expect-error: Suppress Deno namespace error
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+// Hack to make VS Code happy with Deno globals in a Node workspace
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const Deno: any;
 
-Deno.serve(async (req) => {
+import { corsHeaders } from '../_shared/cors.ts';
+
+Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -54,17 +55,18 @@ Deno.serve(async (req) => {
       .select("mpan")
       .eq("user_id", userId);
 
-    const mpans = meters?.map((m) => m.mpan) || [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mpans = meters?.map((m: any) => m.mpan) || [];
 
     // Delete all user data across all tables (order matters for dependencies)
     const deletions = [
       // Octopus data via MPANs
       ...(mpans.length > 0
         ? [
-            adminClient.from("carbon_footprint").delete().in("mpan", mpans),
-            adminClient.from("octopus_consumption").delete().in("mpan", mpans),
-            adminClient.from("octopus_intelligent_dispatches").delete().eq("user_id", userId),
-          ]
+          adminClient.from("carbon_footprint").delete().in("mpan", mpans),
+          adminClient.from("octopus_consumption").delete().in("mpan", mpans),
+          adminClient.from("octopus_intelligent_dispatches").delete().eq("user_id", userId),
+        ]
         : []),
       // Octopus account data
       adminClient.from("octopus_meters").delete().eq("user_id", userId),
@@ -89,8 +91,9 @@ Deno.serve(async (req) => {
 
     // Count deleted records
     const successResults = results
-      .filter((r): r is PromiseFulfilledResult<any> => r.status === "fulfilled")
-      .map((r) => r.value);
+      .filter((r): r is PromiseFulfilledResult<unknown> => r.status === "fulfilled")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .map((r) => (r.value as any));
 
     const totalDeleted = successResults.reduce((sum, r) => {
       return sum + (r.data?.length || 0);

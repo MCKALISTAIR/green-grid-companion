@@ -5,8 +5,8 @@ import { Progress } from '@/components/ui/progress';
 import { useYearWrapped } from '@/hooks/useYearWrapped';
 import { YearWrappedData } from '@/lib/yearWrappedUtils';
 import { format, parse } from 'date-fns';
-import { 
-    Wind, Sun, Flame, Leaf, TrendingDown, TrendingUp, 
+import {
+    Wind, Sun, Flame, Leaf, TrendingDown, TrendingUp,
     Calendar, Sparkles, ChevronRight, ChevronLeft, X,
     Zap, Trophy, TreeDeciduous
 } from 'lucide-react';
@@ -75,11 +75,11 @@ export function YearWrapped({ open, onOpenChange, year = new Date().getFullYear(
                             {SLIDES[currentSlide] === 'intensity' && <IntensitySlide data={data} />}
                             {SLIDES[currentSlide] === 'highlights' && <HighlightsSlide data={data} />}
                             {SLIDES[currentSlide] === 'summary' && <SummarySlide data={data} onClose={handleClose} />}
-                            
+
                             {/* Navigation */}
                             <div className="p-4 flex items-center justify-between border-t border-border/50">
-                                <Button 
-                                    variant="ghost" 
+                                <Button
+                                    variant="ghost"
                                     size="sm"
                                     onClick={prevSlide}
                                     disabled={currentSlide === 0}
@@ -88,25 +88,26 @@ export function YearWrapped({ open, onOpenChange, year = new Date().getFullYear(
                                     <ChevronLeft className="w-4 h-4" />
                                     Back
                                 </Button>
-                                
+
                                 <div className="flex gap-1.5">
                                     {SLIDES.map((_, i) => (
                                         <button
                                             key={i}
                                             onClick={() => setCurrentSlide(i)}
+                                            aria-label={`Go to slide ${i + 1}`}
                                             className={cn(
                                                 "w-2 h-2 rounded-full transition-all",
-                                                i === currentSlide 
-                                                    ? "bg-primary w-4" 
+                                                i === currentSlide
+                                                    ? "bg-primary w-4"
                                                     : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
                                             )}
                                         />
                                     ))}
                                 </div>
-                                
+
                                 {currentSlide < SLIDES.length - 1 ? (
-                                    <Button 
-                                        variant="ghost" 
+                                    <Button
+                                        variant="ghost"
                                         size="sm"
                                         onClick={nextSlide}
                                         className="gap-1"
@@ -115,8 +116,8 @@ export function YearWrapped({ open, onOpenChange, year = new Date().getFullYear(
                                         <ChevronRight className="w-4 h-4" />
                                     </Button>
                                 ) : (
-                                    <Button 
-                                        variant="default" 
+                                    <Button
+                                        variant="default"
                                         size="sm"
                                         onClick={handleClose}
                                     >
@@ -216,7 +217,7 @@ function CoalSlide({ data }: { data: YearWrappedData }) {
                     <X className="w-5 h-5" />
                 </motion.div>
             </motion.div>
-            
+
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -259,7 +260,7 @@ function RenewablesSlide({ data }: { data: YearWrappedData }) {
                 <Wind className="w-12 h-12 text-gen-wind" />
                 <Sun className="w-12 h-12 text-gen-solar" />
             </motion.div>
-            
+
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -283,7 +284,7 @@ function RenewablesSlide({ data }: { data: YearWrappedData }) {
                         <p className="text-xs text-muted-foreground">{data.peakWind.date}</p>
                     </motion.div>
                 )}
-                
+
                 {data.peakSolar && (
                     <motion.div
                         initial={{ opacity: 0, x: 20 }}
@@ -312,7 +313,7 @@ function IntensitySlide({ data }: { data: YearWrappedData }) {
             >
                 <Leaf className="w-16 h-16 text-primary" />
             </motion.div>
-            
+
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -336,7 +337,7 @@ function IntensitySlide({ data }: { data: YearWrappedData }) {
                         <p className="text-lg font-bold text-primary">{data.bestMonth}</p>
                     </motion.div>
                 )}
-                
+
                 {data.worstMonth && (
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -375,7 +376,7 @@ function HighlightsSlide({ data }: { data: YearWrappedData }) {
             >
                 <Sparkles className="w-16 h-16 text-chart-4" />
             </motion.div>
-            
+
             <motion.h2
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -448,7 +449,7 @@ function SummarySlide({ data, onClose }: { data: YearWrappedData; onClose: () =>
             >
                 <Trophy className="w-16 h-16 text-chart-4" />
             </motion.div>
-            
+
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

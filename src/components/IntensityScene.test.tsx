@@ -60,7 +60,9 @@ vi.mock('framer-motion', async () => {
   const motion = new Proxy({}, {
     get: (target, prop) => {
       // Returns a component that renders the tag with the property name
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return React.forwardRef(({ children, ...props }: any, ref) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const Tag = prop as any;
         // Filter out framer-motion specific props if necessary,
         // but React usually ignores unknown props or warns.
@@ -84,12 +86,12 @@ describe('IntensityScene', () => {
     expect(screen.getByRole('img')).toBeInTheDocument();
   });
 
-    it('renders wind turbines when clean', () => {
-        // Mock cleanliness to be high by setting intensity low
-        render(<IntensityScene intensity={20} index="very low" />);
-        // WindTurbine uses role="button"
-        // cleanliness = 1. Turbine count = 4.
-        const turbines = screen.getAllByRole('button', { name: /Wind Turbine/i });
-        expect(turbines.length).toBeGreaterThan(0);
-    });
+  it('renders wind turbines when clean', () => {
+    // Mock cleanliness to be high by setting intensity low
+    render(<IntensityScene intensity={20} index="very low" />);
+    // WindTurbine uses role="button"
+    // cleanliness = 1. Turbine count = 4.
+    const turbines = screen.getAllByRole('button', { name: /Wind Turbine/i });
+    expect(turbines.length).toBeGreaterThan(0);
+  });
 });

@@ -119,6 +119,7 @@ export function LocationMismatchPrompt({ currentPostcode, onUpdate }: LocationMi
                             <button
                                 onClick={() => setIsVisible(false)}
                                 className="text-muted-foreground hover:text-foreground"
+                                aria-label="Dismiss location prompt"
                             >
                                 <X className="w-4 h-4" />
                             </button>

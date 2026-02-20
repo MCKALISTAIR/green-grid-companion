@@ -1,49 +1,66 @@
 import { motion } from 'framer-motion';
+import { useId } from 'react';
 
 interface BackgroundMountainsProps {
     isNight: boolean;
 }
 
 export function BackgroundMountains({ isNight }: BackgroundMountainsProps) {
+    const id = useId();
     // Grounded at Y=30-70 (far background, distant horizon)
 
-    const mountainColor = isNight ? '#1e293b' : '#475569';
+    const baseColor = isNight ? '#0f172a' : '#475569';
+    const midColor = isNight ? '#1e293b' : '#64748b';
+    const highlightColor = isNight ? '#334155' : '#94a3b8';
 
     return (
         <motion.g
             initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 0.4, y: 0 }}
+            animate={{ opacity: 0.6, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 2 }}
         >
-            {/* Distant mountain range silhouette */}
-            {/* Left peak */}
+            <defs>
+                <linearGradient id={`${id}-mountain-back`} x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor={baseColor} stopOpacity="0.4" />
+                    <stop offset="100%" stopColor={baseColor} stopOpacity="0.1" />
+                </linearGradient>
+
+                <linearGradient id={`${id}-mountain-mid`} x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor={midColor} stopOpacity="0.5" />
+                    <stop offset="100%" stopColor={midColor} stopOpacity="0.1" />
+                </linearGradient>
+
+                <linearGradient id={`${id}-mountain-front`} x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor={highlightColor} stopOpacity="0.4" />
+                    <stop offset="100%" stopColor={highlightColor} stopOpacity="0.1" />
+                </linearGradient>
+            </defs>
+
+            {/* Farthest layer - soft, tall sweeping curves */}
             <path
-                d="M0,70 L50,45 L100,60 L100,150 L0,150 Z"
-                fill={mountainColor}
-                opacity="0.3"
+                d="M-50,100 Q20,50 90,80 T250,60 T450,90 L450,150 L-50,150 Z"
+                fill={`url(#${id}-mountain-back)`}
             />
 
-            {/* Center peak (tallest) */}
+            {/* Mid layer - distinct jagged but rounded peaks */}
             <path
-                d="M80,70 L150,30 L220,55 L220,150 L80,150 Z"
-                fill={mountainColor}
-                opacity="0.4"
+                d="M0,110 Q40,65 80,95 C120,50 150,45 180,80 C220,30 260,55 290,85 Q350,40 400,100 L400,150 L0,150 Z"
+                fill={`url(#${id}-mountain-mid)`}
             />
 
-            {/* Right peak */}
+            {/* Frontmost background layer - rolling foothills */}
             <path
-                d="M200,70 L280,40 L350,62 L400,68 L400,150 L200,150 Z"
-                fill={mountainColor}
-                opacity="0.35"
+                d="M-20,120 Q60,80 140,110 T320,90 T420,120 L420,150 L-20,150 Z"
+                fill={`url(#${id}-mountain-front)`}
             />
 
-            {/* Snow caps on peaks (if not night) */}
+            {/* Snow caps on highest mid-layer peaks (if not night) */}
             {!isNight && (
-                <>
-                    <path d="M145,30 L150,27 L155,30 L150,32 Z" fill="white" opacity="0.7" />
-                    <path d="M275,40 L280,37 L285,40 Z" fill="white" opacity="0.6" />
-                </>
+                <g opacity="0.4">
+                    <path d="M135,55 Q150,45 160,60 Q150,60 135,55 Z" fill="white" />
+                    <path d="M225,45 Q240,35 250,55 Q240,50 225,45 Z" fill="white" />
+                </g>
             )}
         </motion.g>
     );
