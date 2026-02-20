@@ -10,11 +10,12 @@ export function SideNav() {
 
     const isActive = (path: string) => location.pathname === path;
 
-    const NavItem = ({ path, icon: Icon, label }: { path: string; icon: LucideIcon; label: string }) => (
+    const NavItem = ({ path, icon: Icon, label, dataTour }: { path: string; icon: LucideIcon; label: string; dataTour?: string }) => (
         <Button
             variant={isActive(path) ? 'secondary' : 'ghost'}
             className={`w-full justify-start gap-3 h-10 ${isActive(path) ? 'font-medium' : 'text-muted-foreground'}`}
             onClick={() => navigate(path)}
+            data-tour={dataTour}
         >
             <Icon className="w-5 h-5" />
             {label}
@@ -37,9 +38,9 @@ export function SideNav() {
             {/* Navigation */}
             <nav className="flex-1 space-y-1">
                 <NavItem path="/" icon={Home} label="Dashboard" />
-                <NavItem path="/planner" icon={Calendar} label="Power Planner" />
-                <NavItem path="/history" icon={Clock} label="History" />
-                <NavItem path="/map" icon={ListOrdered} label="Region Rank" />
+                <NavItem path="/planner" icon={Calendar} label="Power Planner" dataTour="nav-plan" />
+                <NavItem path="/history" icon={Clock} label="History" dataTour="nav-history" />
+                <NavItem path="/map" icon={ListOrdered} label="Region Rank" dataTour="nav-rank" />
             </nav>
 
             {/* Footer / Settings */}

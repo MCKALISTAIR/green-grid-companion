@@ -302,20 +302,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       <AnimatePresence>
         {sceneConfig.showSun && (
           <motion.div
-            className="absolute cursor-pointer active:scale-90"
-            onClick={() => {
-              impactMedium();
-              setSynthwaveMode(!synthwaveMode);
-            }}
-            role="button"
-            tabIndex={0}
-            aria-label={`Toggle synthwave mode ${synthwaveMode ? 'off' : 'on'}`}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                impactMedium();
-                setSynthwaveMode(!synthwaveMode);
-              }
-            }}
+            className="absolute z-20 pointer-events-auto"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{
               opacity: sceneConfig.cleanliness * 0.3 + 0.7,
@@ -330,18 +317,35 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
               filter: `brightness(${sceneConfig.solarBrightness + 0.5})`,
             }}
           >
-            <motion.div
-              className="absolute inset-0 w-20 h-20 -translate-x-2 -translate-y-2 rounded-full blur-xl"
-              style={{
-                backgroundColor: timeOfDay === 'sunset' ? 'hsl(30 90% 55% / 0.4)' : 'hsl(var(--accent) / 0.3)',
+            <div
+              className="cursor-pointer active:scale-90 transition-transform relative"
+              role="button"
+              tabIndex={0}
+              aria-label={`Toggle synthwave mode ${synthwaveMode ? 'off' : 'on'}`}
+              onClick={() => {
+                impactMedium();
+                setSynthwaveMode(!synthwaveMode);
               }}
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-            />
-            <Sun
-              className={`w-16 h-16 relative z-10 ${timeOfDay === 'sunset' ? 'text-orange-400' : 'text-accent'}`}
-              aria-hidden="true"
-            />
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  impactMedium();
+                  setSynthwaveMode(!synthwaveMode);
+                }
+              }}
+            >
+              <motion.div
+                className="absolute inset-0 w-20 h-20 -translate-x-2 -translate-y-2 rounded-full blur-xl pointer-events-none"
+                style={{
+                  backgroundColor: timeOfDay === 'sunset' ? 'hsl(30 90% 55% / 0.4)' : 'hsl(var(--accent) / 0.3)',
+                }}
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+              />
+              <Sun
+                className={`w-16 h-16 relative z-10 pointer-events-none ${timeOfDay === 'sunset' ? 'text-orange-400' : 'text-accent'}`}
+                aria-hidden="true"
+              />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

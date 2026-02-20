@@ -390,7 +390,7 @@ export function FootprintView() {
             </a>
 
             <p className="text-xs text-muted-foreground pt-2">
-              Your API keys are stored securely on your device.
+              Your API keys are stored securely on your device, and synced via end-to-end encryption if signed in.
             </p>
           </div>
         </Card>
