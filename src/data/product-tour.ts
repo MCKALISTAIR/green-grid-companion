@@ -11,19 +11,19 @@ export const PRODUCT_TOUR_STEPS: DriveStep[] = [
         }
     },
     {
-        element: '[data-tour="forecast-chart"]',
+        element: '[data-tour="generation-mix"]',
         popover: {
-            title: '📊 24-Hour Forecast',
-            description: 'Plan ahead! Tap any bar to see detailed predictions. The green zones are perfect for charging EVs or running dishwashers.',
+            title: '🔋 Generation Mix',
+            description: 'See where your electricity comes from right now. Tap to explore the full breakdown of wind, solar, gas, nuclear and more. Pro tip: Try clicking the wind turbines in the scene above!',
             side: 'top',
             align: 'center'
         }
     },
     {
-        element: '[data-tour="generation-mix"]',
+        element: '[data-tour="forecast-chart"]',
         popover: {
-            title: '🔋 Generation Mix',
-            description: 'See where your electricity comes from right now. Tap to explore the full breakdown of wind, solar, gas, nuclear and more. Pro tip: Try clicking the wind turbines in the scene above!',
+            title: '📊 24-Hour Forecast',
+            description: 'Plan ahead! Tap any bar to see detailed predictions. The green zones are perfect for charging EVs or running dishwashers.',
             side: 'top',
             align: 'center'
         }
@@ -34,7 +34,7 @@ export const PRODUCT_TOUR_STEPS: DriveStep[] = [
             title: '🗓️ Power Planner',
             description: 'Schedule high-energy tasks for the greenest times. Perfect for EV charging, washing machines, and dishwashers. Save money and reduce your carbon footprint!',
             side: 'top',
-            align: 'center'
+            align: 'start'
         }
     },
     {
@@ -52,7 +52,7 @@ export const PRODUCT_TOUR_STEPS: DriveStep[] = [
             title: '🏆 Regional Rankings',
             description: 'See how your region compares to the rest of the UK. Find out which areas have the cleanest energy right now.',
             side: 'top',
-            align: 'center'
+            align: 'end'
         }
     },
     {
