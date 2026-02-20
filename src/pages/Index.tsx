@@ -293,7 +293,7 @@ const Index = () => {
             </div>
 
             {/* Content cards */}
-            <div className="flex-1 px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-6 space-y-4 -mt-4 relative z-10 bg-background lg:max-w-7xl lg:mx-auto w-full lg:rounded-t-3xl lg:shadow-xl lg:mt-0 lg:space-y-6">
+            <div className="flex-1 px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-6 space-y-4 -mt-4 relative z-10 bg-background lg:max-w-7xl lg:mx-auto w-full lg:rounded-t-3xl lg:shadow-xl lg:-mt-8 lg:pt-8 lg:space-y-6">
 
               {/* View Toggle - Always show all views */}
 

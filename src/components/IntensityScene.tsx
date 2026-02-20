@@ -712,7 +712,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       <AnimatePresence>
         {sceneConfig.showRenewables && nuclearPercentage > 5 && (
           <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-15">
-            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <NuclearCoolingTower x={280} steamIntensity={nuclearPercentage / 100} isNight={isNight} />
               {nuclearPercentage > 15 && <NuclearCoolingTower x={240} steamIntensity={0.5} isNight={isNight} />}
             </svg>
@@ -724,7 +724,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       <AnimatePresence>
         {windPercentage > 10 && (
           <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-5">
-            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <OffshoreWind count={Math.min(3, Math.floor(windPercentage / 10))} windSpeed={weather.windSpeed} />
             </svg>
           </div>
@@ -877,7 +877,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       <AnimatePresence>
         {biomassPercentage > 5 && sceneConfig.showRenewables && (
           <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-15">
-            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <BiomassSmoke x={180} intensity={biomassPercentage / 100} />
               {biomassPercentage > 15 && <BiomassSmoke x={220} intensity={0.6} />}
             </svg>
