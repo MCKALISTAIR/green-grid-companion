@@ -40,6 +40,7 @@ import { SmokeParticle } from './scene/SmokeParticle';
 import { RainDrop } from './scene/RainDrop';
 import { SunRay } from './scene/SunRay';
 import { Firefly } from './scene/Firefly';
+import { SnowGround, FrozenPond, BreathMist, SnowOnPanels } from './scene/WinterElements';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useSceneDirector } from '@/hooks/useSceneDirector';
 
@@ -881,6 +882,34 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
             </svg>
           </div>
         )}
+      </AnimatePresence>
+
+      {/* ===== WINTER ELEMENTS ===== */}
+
+      {/* Snow ground cover */}
+      <AnimatePresence>
+        {weather.isSnowing && <SnowGround intensity={weather.precipitationIntensity} />}
+      </AnimatePresence>
+
+      {/* Frozen pond */}
+      <AnimatePresence>
+        {weather.isSnowing && sceneConfig.cleanliness > 0.4 && <FrozenPond />}
+      </AnimatePresence>
+
+      {/* Breath mist from sheep in cold weather */}
+      <AnimatePresence>
+        {weather.isSnowing && sceneConfig.cleanliness > 0.4 && (
+          <>
+            <BreathMist x={22} y={18} />
+            <BreathMist x={47} y={20} />
+            <BreathMist x={76} y={17} />
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Snow accumulation on solar panels */}
+      <AnimatePresence>
+        {weather.isSnowing && sceneConfig.showRenewables && sceneConfig.showSun && <SnowOnPanels />}
       </AnimatePresence>
     </motion.div >
   );
