@@ -59,7 +59,16 @@ GridSense is a mobile-first companion app designed to help UK (and future) energ
     *   **Smart Charging Impact**: Track how much Carbon (CO₂) you've saved by charging during greener times compared to grid average.
     *   **Seamless Linking**: Secure OAuth connection to your Tesla account.
 
-## 🆕 Recent Updates (v1.4.4 - 2026-02-16)
+## 🆕 Recent Updates (v1.4.5 - 2026-02-20)
+
+### 🐛 Visual & UI Fixes
+*   **Scene SVG Clipping**: Fixed layout overlapping and standardized `preserveAspectRatio` on generation layers (Nuclear, Offshore Wind, Biomass) ensuring they stretch to fill wide desktop viewports perfectly without revealing the background.
+*   **Dialog Scroll Lock**: Enforced flexbox boundaries (`overflow-hidden`, `min-h-0`) on the "Generation Mix Breakdown" dialog so users can smoothly scroll through all items on smaller screens.
+*   **Desktop Tour Anchors**: Restored missing `data-tour` targets to the desktop navigation sidebar to prevent the Product Tour from floating aimlessly.
+*   **Sun Render Styling**: Removed the faint transparent bounding box appearing around the `Sun` SVG during interactive clicks.
+*   **API Key Storage Copy**: Clarified the Octopus Integration empty-state warning to explicitly mention "synced via end-to-end encryption" for cross-device iCloud/Google Keychain setups.
+
+## Previous Updates (v1.4.4 - 2026-02-16)
 
 ### 🎓 Enhanced User Experience
 *   **Power Planner Onboarding**: Dismissible welcome card explaining how to use the shiftable appliance scheduler

@@ -2,9 +2,18 @@
 
 All notable changes to GridSense will be documented in this file.
 
-## [v1.4.4] - 2026-02-16
+## [v1.4.5] - 2026-02-20
 
-### Added ✨
+### Fixed 🐛
+- **Scene SVG Clipping**: Fixed an issue where the bottom of the `IntensityScene` artwork was clipping unevenly on wider desktop screens by replacing `preserveAspectRatio="xMidYMax slice"` with `"none"` across the Nuclear, Offshore, and Biomass layers, allowing them to stretch properly. Re-aligned the Index overlay margin to neatly hide the canvas edge.
+- **Dialog Scroll Lock**: Fixed an issue where the "Generation Mix Breakdown" dialog container was growing indefinitely beyond its viewport bounds rather than engaging its internal Radix `ScrollArea` component. Bounded the flexbox with `overflow-hidden` and `min-h-0`.
+- **Desktop Tour Anchors**: The `data-tour` attribute targets for navigating to the Planner, History, and Rankings pages were missing from the Desktop `SideNav.tsx` components causing the Product Tour tooltips to float over empty space. Added the correct attributes.
+- **Sun Render Styling**: Separated interactive `onClick` boundaries from the `motion.div` styling the `Sun` SVG in `IntensityScene.tsx` to prevent a faint bounding-box backdrop filter from appearing around the sun icon.
+
+### Changed 🔄
+- **API Key Storage Copy**: Updated the Octopus Integration empty-state warning from "Your API keys are stored securely on your device" to "Your API keys are stored securely on your device, and synced via end-to-end encryption if signed in", accurately reflecting iOS/Android cross-device Keychain sync capabilities.
+
+## [v1.4.4] - 2026-02-16### Added ✨
 - **Power Planner Onboarding**: Dismissible welcome card explaining feature purpose
   - Shows on first visit to Power Planner
   - Explains how to use the shiftable appliance scheduler
