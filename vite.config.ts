@@ -45,7 +45,41 @@ export default defineConfig(({ mode }) => {
         navigateFallbackDenylist: [/^\/~oauth/],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
-        skipWaiting: true
+        skipWaiting: true,
+        runtimeCaching: [
+          {
+            // Carbon Intensity API - network first, fall back to cache
+            urlPattern: /^https:\/\/api\.carbonintensity\.org\.uk\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'carbon-api-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24, // 24 hours
+              },
+              networkTimeoutSeconds: 10,
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
+            // Supabase edge functions - network first
+            urlPattern: /^https:\/\/.*\.supabase\.co\/functions\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'edge-functions-cache',
+              expiration: {
+                maxEntries: 30,
+                maxAgeSeconds: 60 * 60 * 4, // 4 hours
+              },
+              networkTimeoutSeconds: 15,
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+        ],
       },
       manifest: {
         name: 'GridSense Companion',

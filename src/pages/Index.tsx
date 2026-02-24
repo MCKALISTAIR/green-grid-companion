@@ -31,6 +31,7 @@ import { GreenerNightsCard } from '@/components/GreenerNightsCard';
 import { AnimatedIntensity } from '@/components/AnimatedIntensity';
 import { EnergyFactBubble } from '@/components/scene/EnergyFactBubble';
 import { logger } from '@/lib/logger';
+import { StaleDataBadge } from '@/components/StaleDataBadge';
 import { LocationMismatchPrompt } from '@/components/LocationMismatchPrompt';
 import { YearWrapped } from '@/components/YearWrapped';
 
@@ -389,6 +390,10 @@ const Index = () => {
                       {/* Generation Mix */}
                       <Card className="p-4 shadow-lg md:col-span-2 lg:col-span-2 flex flex-col justify-center" data-tour="generation-mix">
                         <ComponentErrorBoundary name="Generation Mix">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="sr-only">Generation Mix</span>
+                            <StaleDataBadge lastUpdated={lastUpdated} />
+                          </div>
                           <GenerationMixBar mix={generationMix} frequency={gridFrequency} />
                         </ComponentErrorBoundary>
                       </Card>
