@@ -1,10 +1,4 @@
-// @ts-expect-error: Suppress Deno namespace error
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-// Hack to make VS Code happy with Deno globals in a Node workspace
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const Deno: any;
-
 import { corsHeaders } from '../_shared/cors.ts';
 
 Deno.serve(async (req: Request) => {
@@ -91,11 +85,10 @@ Deno.serve(async (req: Request) => {
 
     // Count deleted records
     const successResults = results
-      .filter((r): r is PromiseFulfilledResult<unknown> => r.status === "fulfilled")
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .map((r) => (r.value as any));
+      .filter((r) => r.status === "fulfilled")
+      .map((r) => (r as PromiseFulfilledResult<any>).value);
 
-    const totalDeleted = successResults.reduce((sum, r) => {
+    const totalDeleted = successResults.reduce((sum: number, r: any) => {
       return sum + (r.data?.length || 0);
     }, 0);
 
