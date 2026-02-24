@@ -1,7 +1,9 @@
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useCapacitor } from "@/hooks/useCapacitor";
 import { useEffect, Suspense, lazy, useState } from "react";
@@ -74,8 +76,8 @@ const queryClient = new QueryClient({
     queries: {
       // Keep data fresh for 5 minutes
       staleTime: 5 * 60 * 1000,
-      // Cache data for 30 minutes for offline use
-      gcTime: 30 * 60 * 1000,
+      // Cache data for 24 hours to survive app restarts / offline
+      gcTime: 1000 * 60 * 60 * 24,
       // Retry failed requests
       retry: 2,
       // Refetch on window focus
@@ -86,6 +88,13 @@ const queryClient = new QueryClient({
       refetchOnMount: 'always',
     },
   },
+});
+
+const persister = createSyncStoragePersister({
+  storage: window.localStorage,
+  key: 'gridsense-query-cache',
+  // Throttle writes to 2s to avoid perf impact
+  throttleTime: 2000,
 });
 
 function AppContent() {
@@ -157,7 +166,7 @@ function AppContent() {
 }
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
+  <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, maxAge: 1000 * 60 * 60 * 24 }}>
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <TooltipProvider>
         <ErrorBoundary>
@@ -172,7 +181,7 @@ const App = () => (
         </ErrorBoundary>
       </TooltipProvider>
     </ThemeProvider>
-  </QueryClientProvider>
+  </PersistQueryClientProvider>
 );
 
 export default App;
