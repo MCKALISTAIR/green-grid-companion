@@ -11,6 +11,7 @@ import { FuelInsightBadge } from '@/components/FuelInsightBadge';
 import { FuelRecordList } from '@/components/FuelRecordCelebration';
 import { FuelTrendIndicator } from '@/components/FuelTrendIndicator';
 import { DEFINITIONS } from '@/lib/definitions';
+import { StaleDataBadge } from '@/components/StaleDataBadge';
 
 export function DemandView() {
     const { demand, mix, mixWithTrends, frequency: gridFrequency, embeddedSolarMW, isLoading, error, refetch, lastUpdated } = useGridDemand();
@@ -122,10 +123,13 @@ export function DemandView() {
                                 )}
                             </h2>
                             {lastUpdated && (
-                                <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1.5">
-                                    <RefreshCw className="w-3 h-3" />
-                                    Updated {updatedTime}
-                                </p>
+                                <div className="flex items-center gap-2 mt-2">
+                                    <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                                        <RefreshCw className="w-3 h-3" />
+                                        Updated {updatedTime}
+                                    </p>
+                                    <StaleDataBadge lastUpdated={lastUpdated} />
+                                </div>
                             )}
                         </div>
                         <div className="p-3 bg-primary/10 rounded-full">

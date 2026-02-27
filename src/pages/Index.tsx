@@ -246,7 +246,7 @@ const Index = () => {
                       </div>
                     )}
                     {!isLoading && lastUpdated && (
-                      <div className="flex flex-col items-center mt-2">
+                      <div className="flex flex-col items-center mt-2 gap-1.5">
                         <div className="flex items-center gap-1.5 text-xs text-card/80 font-medium bg-white/20 px-2 py-0.5 rounded-md">
                           <span>Updated {new Date(lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                           <span>•</span>
@@ -276,7 +276,7 @@ const Index = () => {
 
                           <Popover>
                             <PopoverTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-4 w-4 rounded-full p-0 hover:bg-transparent ml-0.5">
+                              <Button variant="ghost" size="icon" className="h-4 w-4 rounded-full p-0 hover:bg-transparent ml-0.5" aria-label="More information about data refresh schedule">
                                 <Info className="w-3 h-3 text-card/70" />
                               </Button>
                             </PopoverTrigger>
@@ -286,6 +286,7 @@ const Index = () => {
                             </PopoverContent>
                           </Popover>
                         </div>
+                        <StaleDataBadge lastUpdated={lastUpdated} />
                       </div>
                     )}
                   </div>
@@ -371,14 +372,14 @@ const Index = () => {
 
 
                             {prefs.showWeatherInInsights && (
-                              <div className="mt-3">
+                              <div className="mt-4 pt-4 border-t border-accent-foreground/10">
                                 <ComponentErrorBoundary name="Weather Widget">
                                   <WeatherWidget />
                                 </ComponentErrorBoundary>
                               </div>
                             )}
 
-                            <div className="mt-3">
+                            <div className="mt-4">
                               <ComponentErrorBoundary name="Greener Nights">
                                 <GreenerNightsCard />
                               </ComponentErrorBoundary>

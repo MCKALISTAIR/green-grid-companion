@@ -466,6 +466,18 @@
 /* Reduced Motion Preferences */
 @media (prefers-reduced-motion: reduce) {
 
+  *,
+  ::before,
+  ::after {
+    animation-delay: -1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    background-attachment: initial !important;
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
+    transition-delay: -1ms !important;
+  }
+
   .animate-float,
   .animate-drift,
   .animate-smoke,
@@ -480,9 +492,14 @@
   .animate-leaf-float,
   .animate-flame,
   .animate-shimmer,
-  .animate-water-ripple {
+  .animate-water-ripple,
+  .animate-spin,
+  .animate-ping,
+  .animate-pulse,
+  .animate-bounce,
+  .animate-in,
+  .animate-out {
     animation: none !important;
-    transition: none !important;
     transform: none !important;
     opacity: 1 !important;
   }
@@ -496,7 +513,7 @@
   color: hsl(var(--card-foreground));
   border: 1px solid hsl(var(--primary) / 0.2);
   border-radius: var(--radius);
-  box-shadow: 
+  box-shadow:
     0 20px 40px -15px hsl(var(--foreground) / 0.15),
     0 0 0 1px hsl(var(--primary) / 0.1),
     inset 0 1px 0 0 hsl(var(--background) / 0.5);
@@ -510,6 +527,7 @@
     opacity: 0;
     transform: scale(0.95) translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: scale(1) translateY(0);

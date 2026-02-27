@@ -198,6 +198,19 @@ export function useSavedLocations() {
     return () => clearTimeout(timeoutId);
   }, [savedLocations, recentLocations, userId, syncToDatabase]);
 
+  // Handle reconnecting to network
+  useEffect(() => {
+    if (!userId) return;
+
+    const handleOnline = () => {
+      logger.info('Device came online. Retrying saved locations sync.');
+      syncToDatabase(savedLocations, recentLocations);
+    };
+
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+  }, [userId, savedLocations, recentLocations, syncToDatabase]);
+
   const saveLocation = useCallback((name: string, postcode: string) => {
     const newLocation: SavedLocation = {
       id: crypto.randomUUID(),

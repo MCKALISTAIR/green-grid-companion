@@ -208,6 +208,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
             checked={prefs.lowIntensityEnabled}
             onCheckedChange={handleLowIntensityToggle}
             disabled={!isSupported}
+            aria-label="Toggle low carbon intensity alerts"
           />
         </div>
 
@@ -244,6 +245,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
                 <Switch
                   checked={prefs.useBackgroundFetch}
                   onCheckedChange={(checked) => updatePreference('useBackgroundFetch', checked)}
+                  aria-label="Toggle live accuracy mode background fetch"
                 />
               </div>
             </div>
@@ -276,6 +278,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
             checked={prefs.highIntensityEnabled}
             onCheckedChange={handleHighIntensityToggle}
             disabled={!isSupported}
+            aria-label="Toggle high carbon intensity alerts"
           />
         </div>
 
@@ -323,6 +326,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
             checked={prefs.dailyForecastEnabled}
             onCheckedChange={handleDailyForecastToggle}
             disabled={!isSupported}
+            aria-label="Toggle daily energy outlook forecast"
           />
         </div>
 
@@ -363,6 +367,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
             checked={prefs.weeklyDigestEnabled}
             onCheckedChange={handleWeeklyDigestToggle}
             disabled={!isSupported}
+            aria-label="Toggle weekly digest"
           />
         </div>
 
@@ -415,6 +420,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
             checked={prefs.monthlyReportEnabled}
             onCheckedChange={handleMonthlyReportToggle}
             disabled={!isSupported}
+            aria-label="Toggle monthly report"
           />
         </div>
 
@@ -477,6 +483,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
             <Switch
               checked={prefs.showWeatherInInsights}
               onCheckedChange={(checked) => updatePreference('showWeatherInInsights', checked)}
+              aria-label="Toggle weather display in energy insights"
             />
           </div>
         </Card>

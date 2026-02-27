@@ -12,6 +12,7 @@ import { registerServiceWorker } from "@/hooks/useOffline";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { useSmartPrefetch } from "@/hooks/useSmartPrefetch";
 import ScrollToTop from "@/components/ScrollToTop";
 import { logger } from "@/lib/logger";
 import { AchievementManager } from "@/components/AchievementManager";
@@ -40,6 +41,7 @@ const GuideDetail = lazy(() => import("./pages/GuideDetail"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const TurbineTest = lazy(() => import("./pages/TurbineTest"));
 const ChargingHistory = lazy(() => import("./pages/ChargingHistory"));
+const AchievementsPage = lazy(() => import('./pages/Achievements'));
 import AuthCallback from "./pages/AuthCallback";
 
 // Loading fallback with wind turbine spinner
@@ -103,6 +105,9 @@ function AppContent() {
   // Initialize Capacitor for native platforms
   useCapacitor();
 
+  // Smart prefetch saved locations in the background
+  useSmartPrefetch();
+
   // Register service worker for offline support
   useEffect(() => {
     registerServiceWorker();
@@ -153,6 +158,7 @@ function AppContent() {
             <Route path="/feature-guides" element={<Suspense fallback={<PageLoader />}><FeatureGuides /></Suspense>} />
             <Route path="/guides/:id" element={<Suspense fallback={<PageLoader />}><GuideDetail /></Suspense>} />
             <Route path="/charging-history" element={<Suspense fallback={<PageLoader />}><ChargingHistory /></Suspense>} />
+            <Route path="/achievements" element={<Suspense fallback={<PageLoader />}><AchievementsPage /></Suspense>} />
             <Route path="/__turbine-test" element={<Suspense fallback={<PageLoader />}><TurbineTest /></Suspense>} />
             <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />
           </Route>

@@ -23,7 +23,7 @@ export function SideNav() {
     );
 
     return (
-        <div className="hidden lg:flex flex-col w-64 h-full border-r border-border bg-card/50 backdrop-blur-xl fixed left-0 top-0 z-50 p-4">
+        <div id="side-nav" className="hidden lg:flex flex-col w-64 h-full border-r border-border bg-card/50 backdrop-blur-xl fixed left-0 top-0 z-50 p-4">
             {/* Logo / Brand */}
             <div className="flex items-center gap-2 px-2 py-4 mb-6">
                 <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">

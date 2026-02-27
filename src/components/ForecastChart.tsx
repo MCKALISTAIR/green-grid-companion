@@ -130,6 +130,27 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
         </div>
       </div>
 
+      <div className="sr-only">
+        <table aria-label="Hourly Carbon Intensity Forecast">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Forecast (gCO₂/kWh)</th>
+              <th>Actual (gCO₂/kWh)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {forecast.map((item, i) => (
+              <tr key={i}>
+                <td>{format(parseISO(item.from), 'PPpp')}</td>
+                <td>{item.intensity.forecast}</td>
+                <td>{item.intensity.actual ?? 'N/A'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
       <TooltipProvider delayDuration={200}>
         <div
           ref={scrollContainerRef}
@@ -145,6 +166,17 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
               const prevItem = forecast[i - 1];
               const prevTime = prevItem ? parseISO(prevItem.from) : null;
               const showSeparator = !prevTime || time.getDate() !== prevTime.getDate();
+
+              const nextItem = forecast[i + 1];
+              const nextTime = nextItem ? parseISO(nextItem.from) : null;
+              const nextHasSeparator = nextTime && time.getDate() !== nextTime.getDate();
+
+              const isBest = !isPast && item.intensity.index === 'very low';
+              const isPrevBest = prevItem && !getForecastDifferences(prevItem, now).isPast && prevItem.intensity.index === 'very low';
+              const isNextBest = nextItem && !getForecastDifferences(nextItem, now).isPast && nextItem.intensity.index === 'very low';
+
+              const connectPrev = isBest && isPrevBest && !showSeparator;
+              const connectNext = isBest && isNextBest && !nextHasSeparator;
 
               let dateLabel = '';
               if (showSeparator) {
@@ -171,7 +203,7 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
                       <div
                         className={`relative flex flex-col items-center gap-1 w-12 transition-all duration-300 rounded-lg py-1 ${hasActual ? 'cursor-pointer' : 'cursor-default'
                           } ${isPast ? 'opacity-80' : 'opacity-100'} ${isCurrentHour ? 'bg-accent/20 scale-110 shadow-sm z-10' : ''} ${selectedIndex === i ? 'bg-accent/30 ring-2 ring-primary/50' : ''
-                          }`}
+                          } ${!isPast && item.intensity.index === 'very low' ? 'bg-green-500/10 shadow-[inset_0_0_10px_rgba(34,197,94,0.1)]' : ''}`}
                         ref={(el) => {
                           if (isCurrentHour && el) currentHourRef.current = el;
                           if (hasActual && el) selectedItemRefs.current.set(i, el);
@@ -183,7 +215,26 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
                           }
                         }}
                       >
-                        <div className="relative h-24 w-8 flex items-end justify-center">
+                        {/* Best Time Ribbon Connectors */}
+                        {isBest && connectNext && (
+                          <div className="absolute -top-3 bottom-auto left-1/2 right-[-0.5rem] h-[18px] bg-green-100 dark:bg-green-900 z-10 pointer-events-none transition-colors" />
+                        )}
+                        {isBest && connectPrev && (
+                          <div className="absolute -top-3 bottom-auto left-[-0.5rem] right-1/2 h-[18px] bg-green-100 dark:bg-green-900 z-10 pointer-events-none transition-colors" />
+                        )}
+
+                        {/* Start of block (or standalone) badge */}
+                        {isBest && !connectPrev && (
+                          <div className={`absolute -top-3 left-1/2 -translate-x-1/2 h-[18px] flex items-center justify-center text-[8px] font-bold text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-900 px-1.5 rounded-md whitespace-nowrap pointer-events-none z-20 transition-colors ${!connectNext ? 'shadow-sm' : ''}`}>
+                            BEST
+                          </div>
+                        )}
+
+                        {/* End of block cap */}
+                        {isBest && connectPrev && !connectNext && (
+                          <div className="absolute -top-3 left-1/2 h-[18px] w-3 bg-green-100 dark:bg-green-900 rounded-r-md pointer-events-none z-10 transition-colors" />
+                        )}
+                        <div className="relative h-24 w-8 flex items-end justify-center mt-2">
                           {/* Single bar showing actual (if available) or forecast */}
                           <div
                             className={`relative w-full rounded-t-md transition-[height,background-color] duration-500 ease-out border-x border-t ${hasActual

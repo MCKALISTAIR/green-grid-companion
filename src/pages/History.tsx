@@ -5,7 +5,7 @@ import { useCarbonData } from '@/hooks/useCarbonData';
 import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
-import { ComposedChart, Line, Area, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { ComposedChart, Line, Area, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Brush } from 'recharts';
 import { format, parseISO, subDays, isSameHour, isSameDay } from 'date-fns';
 import { Loader2, TrendingDown, TrendingUp, Zap, BarChart3, Info, X } from 'lucide-react';
 import { ErrorState } from '@/components/ErrorState';
@@ -184,7 +184,7 @@ export default function HistoryPage() {
                         </p>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 mt-4 md:mt-0">
                         <Popover>
                             <PopoverTrigger asChild>
                                 <Button
@@ -379,6 +379,28 @@ export default function HistoryPage() {
                                     </div>
                                 </div>
                             </CardHeader>
+                            <div className="sr-only">
+                                <table aria-label={`Carbon Intensity History for ${timeRange === '24h' ? '24 Hours' : '7 Days'}`}>
+                                    <thead>
+                                        <tr>
+                                            <th>Time</th>
+                                            <th>Forecast (gCO₂/kWh)</th>
+                                            <th>Actual (gCO₂/kWh)</th>
+                                            {isLinked && <th>Usage (kWh)</th>}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {chartData.map((item, i) => (
+                                            <tr key={i}>
+                                                <td>{item.formattedTime}</td>
+                                                <td>{item.forecast}</td>
+                                                <td>{item.actual ?? 'N/A'}</td>
+                                                {isLinked && <td>{item.consumption ?? 'N/A'}</td>}
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                             <div className="h-[300px] w-full">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <ComposedChart data={chartData}>
@@ -392,6 +414,7 @@ export default function HistoryPage() {
                                                 <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
                                             </linearGradient>
                                         </defs>
+
                                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                                         <XAxis
                                             dataKey="formattedTime"
@@ -469,6 +492,14 @@ export default function HistoryPage() {
                                             fillOpacity={1}
                                             fill="url(#colorActual)"
                                             strokeWidth={2}
+                                        />
+                                        {/* Interactive Brush for zooming/panning */}
+                                        <Brush
+                                            dataKey="formattedTime"
+                                            height={30}
+                                            stroke="hsl(var(--primary))"
+                                            fill="hsl(var(--muted))"
+                                            tickFormatter={() => ''}
                                         />
                                     </ComposedChart>
                                 </ResponsiveContainer>

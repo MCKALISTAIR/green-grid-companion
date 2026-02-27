@@ -3,6 +3,7 @@ import { useMemo, useEffect, useRef, useCallback, useState } from 'react';
 import {
   getRegionalForecastById,
   getRegionalHistoryAndForecast,
+  getNationalHistoryAndForecast,
   getRegionalIntensityById,
   getRegionalIntensity,
   getGenerationMix,
@@ -134,17 +135,21 @@ export function useCarbonData(postcode: string) {
   });
 
   const forecastQuery = useQuery<ForecastData[]>({
-    queryKey: ['forecast', regionId],
+    queryKey: ['forecast', regionId, postcode],
     queryFn: () => {
-      if (!regionId) return Promise.resolve([]);
       const now = new Date();
       // 24 hours ago
       const from = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
       // 48 hours in future (API limit usually)
       const to = new Date(now.getTime() + 48 * 60 * 60 * 1000).toISOString();
+
+      if (postcode === 'GB' || regionId === 0 || !regionId) {
+        // If no specific region, fetch the National forecast which will always succeed.
+        return getNationalHistoryAndForecast(from, to);
+      }
       return getRegionalHistoryAndForecast(regionId, from, to);
     },
-    enabled: !!regionId,
+    enabled: true, // Always enable to ensure we get at least national data
     staleTime: 1000 * 60 * 30,
     gcTime: 1000 * 60 * 60, // 1 hour
     retry: 2,

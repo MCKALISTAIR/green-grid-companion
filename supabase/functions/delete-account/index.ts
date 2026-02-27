@@ -86,9 +86,9 @@ Deno.serve(async (req: Request) => {
     // Count deleted records
     const successResults = results
       .filter((r) => r.status === "fulfilled")
-      .map((r) => (r as PromiseFulfilledResult<any>).value);
+      .map((r) => (r as PromiseFulfilledResult<{ data?: unknown[] }>).value);
 
-    const totalDeleted = successResults.reduce((sum: number, r: any) => {
+    const totalDeleted = successResults.reduce((sum: number, r: { data?: unknown[] }) => {
       return sum + (r.data?.length || 0);
     }, 0);
 

@@ -33,9 +33,11 @@ export function OfflineIndicator() {
           transition={{ type: 'spring', damping: 20, stiffness: 300 }}
           className="fixed top-0 left-0 right-0 z-[100] bg-amber-500 text-amber-950 px-4 py-3 shadow-lg"
           style={{ paddingTop: 'calc(max(env(safe-area-inset-top), 40px) + 0.75rem)' }}
+          role="alert"
+          aria-live="assertive"
         >
           <div className="flex items-center justify-center gap-3 max-w-md mx-auto">
-            <WifiOff className="w-5 h-5 shrink-0" />
+            <WifiOff className="w-5 h-5 shrink-0" aria-hidden="true" />
             <span className="text-sm font-medium">
               You're offline. Showing cached data.
             </span>
@@ -51,10 +53,12 @@ export function OfflineIndicator() {
           transition={{ type: 'spring', damping: 20, stiffness: 300 }}
           className="fixed top-0 left-0 right-0 z-[100] bg-emerald-500 text-emerald-950 px-4 py-3 shadow-lg"
           style={{ paddingTop: 'calc(max(env(safe-area-inset-top), 40px) + 0.75rem)' }}
+          role="alert"
+          aria-live="assertive"
         >
           <div className="flex items-center justify-between max-w-md mx-auto">
             <div className="flex items-center gap-3">
-              <Wifi className="w-5 h-5 shrink-0" />
+              <Wifi className="w-5 h-5 shrink-0" aria-hidden="true" />
               <span className="text-sm font-medium">
                 Back online!
               </span>

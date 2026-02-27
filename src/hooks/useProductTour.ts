@@ -11,6 +11,24 @@ export function useProductTour() {
     const driverObj = useRef<ReturnType<typeof driver> | null>(null);
 
     useEffect(() => {
+        // Driver.js struggles when multiple elements match the same CSS selector (like when 
+        // a mobile BottomNav and desktop SideNav both render but one is hidden via CSS).
+        // To fix this, we map over the base steps and prefix navigation selectors 
+        // strictly based on the current viewport width when the tour initializes.
+        const isMobile = window.innerWidth < 1024; // Tailwind 'lg' breakpoint matches SideNav visibility
+        const navPrefix = isMobile ? '#bottom-nav' : '#side-nav';
+
+        const viewportAwareSteps = PRODUCT_TOUR_STEPS.map(step => {
+            if (typeof step.element === 'string' && step.element.includes('nav-')) {
+                // Prepend the active navigation container's ID to strictly target the visible element
+                return {
+                    ...step,
+                    element: `${navPrefix} ${step.element}`
+                };
+            }
+            return step;
+        });
+
         driverObj.current = driver({
             showProgress: true,
             animate: true,
@@ -19,7 +37,7 @@ export function useProductTour() {
             nextBtnText: 'Next →',
             prevBtnText: '← Back',
             popoverClass: 'gridsense-tour-popover',
-            steps: PRODUCT_TOUR_STEPS,
+            steps: viewportAwareSteps,
             onDestroyed: () => {
                 localStorage.setItem('product_tour_seen', 'true');
             }

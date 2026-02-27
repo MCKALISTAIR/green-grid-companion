@@ -2,6 +2,19 @@
 
 All notable changes to GridSense will be documented in this file.
 
+## [v1.4.6] - 2026-02-27
+
+### Fixed 🐛
+- **Product Tour Viewports**: The Driver.js tour was struggling to attach to Elements because the mobile `<BottomNav>` and desktop `<SideNav>` structurally shared identical `data-tour` classes. Hooked `useProductTour.ts` to natively evaluate `window.innerWidth` and dynamically target `#bottom-nav` or `#side-nav` IDs based on breakpoints, preventing DOM crossover issues.
+- **Redundant CSS Overlay**: Removed overlapping `md:hidden` classes from nested routing containers that confused automated testing tools and layout queries during boundary renders.
+
+### Improved 🎨
+- **Forecast "BEST" Ribbon**: Refactored the 'BEST' intensity label rendering in `ForecastChart.tsx`. Instead of repeating the badge over consecutive optimal hours, the UI now generates a continuous, seamless green ribbon bridging interconnected hours together to minimize visual clutter.
+- **Advanced Accessibility (WCAG AA)**: 
+  - **Screen Reader Tables**: Injected `<table className="sr-only">` data components mirroring the Recharts visual canvasses for full interpretation.
+  - **Dynamic State ARIA**: Forced critical offline indicators and stale data badges to assert as `role="alert"` and `aria-live="polite"` so screen readers narrate connectivity failures.
+  - **Reduced Motion**: Centralized all tailwind animations via `index.css` `@media (prefers-reduced-motion: reduce)` block to automatically restrict CSS transition limits to `1ms` for severe vestibular disorder adherence without hunting down individual `animate-` utilities.
+
 ## [v1.4.5] - 2026-02-20
 
 ### Fixed 🐛

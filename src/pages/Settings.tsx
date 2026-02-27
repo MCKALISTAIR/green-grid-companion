@@ -22,6 +22,9 @@ import { useSettings } from '@/hooks/useSettings';
 import { HouseType, OFGEM_TDCV_2025 } from '@/lib/energy-standards';
 import { toast } from 'sonner';
 import { useProductTour } from '@/hooks/useProductTour';
+import { useCarbonData } from '@/hooks/useCarbonData';
+import { useAppLocation } from '@/contexts/LocationContext';
+import { useOffline } from '@/hooks/useOffline';
 
 
 export default function Settings() {
@@ -34,6 +37,9 @@ export default function Settings() {
     const { unlocked, handleVersionTap } = useSceneDirector();
     const { houseType, setHouseType, customAnnualKwh, setCustomAnnualKwh, showGridFrequency, setShowGridFrequency, isAuthenticated, isSyncing, lastSyncedAt, syncNow } = useSettings();
     const { replayTour } = useProductTour();
+    const { postcode } = useAppLocation();
+    const { lastUpdated: gridLastUpdated, refetch: refetchGrid, isBackgroundFetching: isGridFetching } = useCarbonData(postcode);
+    const { isOffline } = useOffline();
 
     const formatLastSync = (date: Date | null) => {
         if (!date) return 'Not yet synced';
@@ -64,29 +70,7 @@ export default function Settings() {
     // Simple platform detection
     const isMac = typeof navigator !== 'undefined' && navigator.userAgent.includes('Macintosh');
 
-    const AchievementsList = () => (
-        <>
-            {achievements.map((achievement) => (
-                <div
-                    key={achievement.id}
-                    className={`p-3 border rounded-lg flex flex-col items-center text-center gap-2 transition-all ${achievement.unlocked ? 'bg-primary/5 border-primary/20' : 'bg-muted/50 border-muted opacity-60 grayscale'}`}
-                >
-                    <div className="text-2xl filter drop-shadow-sm">
-                        {achievement.unlocked ? achievement.icon : <Lock className="w-6 h-6 text-muted-foreground" />}
-                    </div>
-                    <div>
-                        <div className="font-semibold text-xs mb-1">{achievement.title}</div>
-                        <div className="text-[10px] text-muted-foreground leading-tight">{achievement.description}</div>
-                    </div>
-                    {achievement.progress !== undefined && !achievement.unlocked && achievement.maxProgress && (
-                        <div className="w-full h-1 bg-muted mt-1 rounded-full overflow-hidden">
-                            <div className="h-full bg-primary/50" style={{ width: `${(achievement.progress / achievement.maxProgress) * 100}%` }} />
-                        </div>
-                    )}
-                </div>
-            ))}
-        </>
-    );
+    // Achievements link will be rendered below
 
     return (
         <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
@@ -115,9 +99,20 @@ export default function Settings() {
                         <Trophy className="w-5 h-5 text-yellow-500" />
                         Badges
                     </h2>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <AchievementsList />
-                    </div>
+                    <Link to="/achievements">
+                        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg hover:from-primary/15 hover:to-primary/10 transition-colors">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-primary/20 rounded-full">
+                                    <Trophy className="w-5 h-5 text-yellow-600 dark:text-yellow-500" />
+                                </div>
+                                <div>
+                                    <h3 className="font-medium">Trophy Room</h3>
+                                    <p className="text-sm text-muted-foreground">View your unlocked achievements</p>
+                                </div>
+                            </div>
+                            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                        </div>
+                    </Link>
                 </div>
 
                 <div className="space-y-4">
@@ -513,6 +508,37 @@ export default function Settings() {
                                 Director Mode Unlocked
                             </Badge>
                         )}
+                    </div>
+                </div>
+
+                {/* Data Sync Section */}
+                <div className="space-y-4">
+                    <h2 className="text-xl font-semibold">Data Sync</h2>
+                    <div className="p-4 bg-card border rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-primary/10 rounded-full">
+                                <Cloud className="w-5 h-5 text-primary" />
+                            </div>
+                            <div>
+                                <h3 className="font-medium">Grid Network Data</h3>
+                                <p className="text-sm text-muted-foreground flex items-center gap-2">
+                                    Last checked: {gridLastUpdated ? new Date(gridLastUpdated).toLocaleTimeString() : 'Unknown'}
+                                    {isOffline && <Badge variant="secondary" className="text-[10px] bg-amber-100 text-amber-800 border-amber-200">Offline</Badge>}
+                                </p>
+                            </div>
+                        </div>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                                refetchGrid();
+                                toast.info("Checking for new data...");
+                            }}
+                            disabled={isGridFetching || isOffline}
+                        >
+                            <RefreshCw className={`w-4 h-4 mr-2 ${isGridFetching ? 'animate-spin' : ''}`} />
+                            Force Refresh
+                        </Button>
                     </div>
                 </div>
 

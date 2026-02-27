@@ -172,16 +172,16 @@ export function useSettings() {
   }, [settings]);
   // Sync on settings changes (debounced) - only when user actively changes something
   const prevSettingsRef = useRef<string>(JSON.stringify(settings));
-  
+
   useEffect(() => {
     if (!userId || isInitialLoadRef.current) return;
 
     const currentSettingsStr = JSON.stringify(settings);
     // Only sync if settings actually changed (user made a change)
     if (currentSettingsStr === prevSettingsRef.current) return;
-    
+
     prevSettingsRef.current = currentSettingsStr;
-    
+
     // Debounce for 1 second to batch rapid changes
     const timeoutId = setTimeout(() => {
       syncToDatabase(settings);
@@ -195,13 +195,13 @@ export function useSettings() {
     if (!userId) return;
 
     const FORTY_EIGHT_HOURS = 48 * 60 * 60 * 1000;
-    
+
     const checkAndSync = () => {
       if (!lastSyncedAt) {
         syncToDatabase(settings);
         return;
       }
-      
+
       const timeSinceSync = Date.now() - lastSyncedAt.getTime();
       if (timeSinceSync >= FORTY_EIGHT_HOURS) {
         syncToDatabase(settings);
@@ -216,6 +216,19 @@ export function useSettings() {
 
     return () => clearInterval(intervalId);
   }, [userId, lastSyncedAt, settings, syncToDatabase]);
+
+  // Handle reconnecting to network (retry sync if coming back online)
+  useEffect(() => {
+    if (!userId) return;
+
+    const handleOnline = () => {
+      logger.info('Device came online. Retrying settings sync.');
+      syncToDatabase(settings);
+    };
+
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+  }, [userId, settings, syncToDatabase]);
 
   const updateSetting = <K extends keyof Settings>(key: K, value: Settings[K]) => {
     setSettings((prev) => ({ ...prev, [key]: value }));

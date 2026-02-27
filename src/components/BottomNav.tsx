@@ -23,7 +23,7 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
     };
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
+        <div id="bottom-nav" className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
 
             {/* Nav Bar */}
             <div className="pointer-events-auto pb-[env(safe-area-inset-bottom)] bg-background/80 backdrop-blur-lg border-t border-border/40">

@@ -32,9 +32,13 @@ export function StaleDataBadge({ lastUpdated, thresholdMinutes = 35 }: StaleData
         : 'Old data';
 
   return (
-    <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-1.5 py-0.5 rounded-full">
-      <Clock className="w-2.5 h-2.5" />
-      {label}
+    <span
+      className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-1.5 py-0.5 rounded-full"
+      role="status"
+      aria-live="polite"
+    >
+      <Clock className="w-2.5 h-2.5" aria-hidden="true" />
+      <span>{label}</span>
     </span>
   );
 }

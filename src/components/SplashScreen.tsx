@@ -38,7 +38,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
 
     return (
         <div
-            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background touch-none transition-opacity duration-500"
+            className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background transition-opacity duration-500 ${opacity === 0 ? 'pointer-events-none' : 'touch-none'}`}
             style={{ opacity }}
         >
             <div className="flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-500">
