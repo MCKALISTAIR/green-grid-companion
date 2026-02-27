@@ -105,6 +105,16 @@ const Onboarding = () => {
         if (!manualPostcode.trim()) return;
 
         const cleanPostcode = manualPostcode.trim().toUpperCase();
+
+        // Basic validation for UK Postcodes (Full or Outcode)
+        // e.g. SW1A 1AA or SW1A
+        const POSTCODE_REGEX = /^([A-Z]{1,2}\d[A-Z\d]?)(\s*\d[A-Z]{2})?$/i;
+
+        if (!POSTCODE_REGEX.test(cleanPostcode)) {
+            toast.error("Please enter a valid UK postcode (e.g., SW1A 1AA or SW1A)");
+            return;
+        }
+
         setAppPostcode(cleanPostcode);
         setStep('notifications');
     };

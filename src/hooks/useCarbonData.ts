@@ -259,6 +259,9 @@ export function useCarbonData(postcode: string) {
       ? ((regionalListQuery.isError || regionalDataQuery.isError) && nationalQuery.isError)
       : nationalQuery.isError,
 
+    // Flag to explicitly identify graceful degradation so UI can warn the user
+    isDegraded: !!postcode && (regionalDataQuery.isError || regionalListQuery.isError) && !nationalQuery.isError,
+
     error: (postcode && nationalQuery.isError) ? (regionalDataQuery.error || nationalQuery.error) : nationalQuery.error,
 
     // Next expected update from API data (valid until)

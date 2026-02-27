@@ -5,10 +5,15 @@ All notable changes to GridSense will be documented in this file.
 ## [v1.4.6] - 2026-02-27
 
 ### Fixed 🐛
+- **Postcode Validation**: Added strict regex validation for UK postcodes during onboarding to prevent invalid data from silently failing back to national averages.
+- **Permission Re-verification**: Adjusted internal toggle handlers in Settings to explicitly re-prompt OS-level permissions when enabling notifications, patching an edge case where users could revoke access via system settings and trigger silent failures in the app.
 - **Product Tour Viewports**: The Driver.js tour was struggling to attach to Elements because the mobile `<BottomNav>` and desktop `<SideNav>` structurally shared identical `data-tour` classes. Hooked `useProductTour.ts` to natively evaluate `window.innerWidth` and dynamically target `#bottom-nav` or `#side-nav` IDs based on breakpoints, preventing DOM crossover issues.
 - **Redundant CSS Overlay**: Removed overlapping `md:hidden` classes from nested routing containers that confused automated testing tools and layout queries during boundary renders.
 
 ### Improved 🎨
+- **Offline UX**: Strengthened network resilience by embedding the `useOffline` hook directly into `EmptyState.tsx`, ensuring users receive explicit, actionable warnings when content fails to load due to missing internet connection rather than an ambiguous empty screen.
+- **Graceful API Degradation**: Integrated a new `AlertBanner` into the main dashboard. If regional APIs fail or time out but the national API succeeds, the UI gracefully degrades to National Grid averages while rendering a clear warning ribbon explaining the substitution.
+- **Backend Sync Scaling**: Restructured the Octopus Energy `sync-all-users` edge function cron job to process user footprints in chunked, parallel `Promise.all` batches, mitigating serverless timeout vulnerabilities as the user base expands.
 - **Forecast "BEST" Ribbon**: Refactored the 'BEST' intensity label rendering in `ForecastChart.tsx`. Instead of repeating the badge over consecutive optimal hours, the UI now generates a continuous, seamless green ribbon bridging interconnected hours together to minimize visual clutter.
 - **Advanced Accessibility (WCAG AA)**: 
   - **Screen Reader Tables**: Injected `<table className="sr-only">` data components mirroring the Recharts visual canvasses for full interpretation.

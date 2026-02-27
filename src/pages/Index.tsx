@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { RefreshCw, Zap, Info, Leaf, Activity, MapPin, ChevronDown } from 'lucide-react';
+import { RefreshCw, Zap, Info, Leaf, Activity, MapPin, ChevronDown, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -65,6 +65,7 @@ const Index = () => {
     forecast,
     lastUpdated,
     isLoading,
+    isDegraded,
     isError,
     error,
     refetch,
@@ -296,6 +297,17 @@ const Index = () => {
 
             {/* Content cards */}
             <div className="flex-1 px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-6 space-y-4 -mt-4 relative z-10 bg-background lg:max-w-7xl lg:mx-auto w-full lg:rounded-t-3xl lg:shadow-xl lg:-mt-8 lg:pt-8 lg:space-y-6">
+
+              {/* Degradation Alert */}
+              {isDegraded && (
+                <div className="mx-2 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-lg flex items-start gap-3 text-sm text-amber-800 dark:text-amber-200 animate-in fade-in">
+                  <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-500" />
+                  <div>
+                    <p className="font-semibold">Regional data degraded</p>
+                    <p>We're currently unable to fetch data for {postcode} and are showing National Grid averages instead.</p>
+                  </div>
+                </div>
+              )}
 
               {/* View Toggle - Always show all views */}
 

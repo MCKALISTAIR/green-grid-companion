@@ -29,7 +29,8 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
   const createToggleHandler = <K extends keyof typeof prefs>(
     prefKey: K extends string ? (typeof prefs[K] extends boolean ? K : never) : never
   ) => async (enabled: boolean) => {
-    if (enabled && permissionStatus !== 'granted') {
+    if (enabled) {
+      // Always re-verify permission to catch edge cases where user revoked it in OS settings
       const granted = await requestPermission();
       if (!granted) return;
     }
