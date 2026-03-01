@@ -268,7 +268,7 @@ export function useSavedLocations() {
     clearRecentLocations,
     isLocationSaved,
     getSavedLocationByPostcode,
-    isSyncing,
+    isSyncing: isSyncingRef.current,
     isAuthenticated: !!userId,
   };
 }
