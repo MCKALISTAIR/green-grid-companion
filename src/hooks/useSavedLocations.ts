@@ -156,6 +156,9 @@ export function useSavedLocations() {
           filter: `user_id=eq.${userId}`,
         },
         (payload) => {
+          // Ignore self-triggered events (within 2 seconds of our own write)
+          if (Date.now() - lastWriteRef.current < 2000) return;
+
           logger.debug('Realtime preferences update', { event: payload.eventType });
 
           if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
