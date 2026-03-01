@@ -86,8 +86,8 @@ const queryClient = new QueryClient({
       refetchOnWindowFocus: true,
       // Refetch when reconnecting to network
       refetchOnReconnect: true,
-      // Always check freshness on mount
-      refetchOnMount: 'always',
+      // Only refetch on mount if data is stale (respects staleTime)
+      refetchOnMount: true,
     },
   },
 });
