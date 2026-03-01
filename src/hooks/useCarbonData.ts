@@ -35,36 +35,42 @@ const getMsUntilNextHalfHour = (): number => {
 
 // Hook for precise setTimeout-based refetching aligned to grid schedule
 function useSmartRefetch(refetchFn: () => Promise<void>, enabled: boolean) {
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  const scheduleNextFetch = useCallback(() => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-
-    const msUntilNext = getMsUntilNextHalfHour();
-    logger.debug(`Next carbon data fetch scheduled in ${Math.round(msUntilNext / 1000)}s`);
-
-    timeoutRef.current = setTimeout(async () => {
-      logger.info('Smart refetch triggered at half-hour boundary');
-      await refetchFn();
-      // Schedule the next fetch after this one completes
-      scheduleNextFetch();
-    }, msUntilNext);
-  }, [refetchFn]);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Use a ref so the timeout always calls the latest refetch without re-scheduling
+  const refetchRef = useRef(refetchFn);
+  refetchRef.current = refetchFn;
 
   useEffect(() => {
     if (!enabled) return;
 
-    // Schedule initial fetch
-    scheduleNextFetch();
+    const scheduleNext = () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      const msUntilNext = getMsUntilNextHalfHour();
+      logger.debug(`Next carbon data fetch scheduled in ${Math.round(msUntilNext / 1000)}s`);
+
+      timeoutRef.current = setTimeout(async () => {
+        logger.info('Smart refetch triggered at half-hour boundary');
+        try {
+          await refetchRef.current();
+        } catch (e) {
+          logger.warn('Smart refetch failed', e);
+        }
+        // Schedule the next fetch after this one completes
+        scheduleNext();
+      }, msUntilNext);
+    };
+
+    scheduleNext();
 
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [enabled, scheduleNextFetch]);
+  }, [enabled]); // Only depends on enabled — refetchRef handles the rest
 }
 
 export function useCarbonData(postcode: string) {
