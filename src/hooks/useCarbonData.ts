@@ -183,16 +183,22 @@ export function useCarbonData(postcode: string) {
     // No refetchInterval - we use smart setTimeout instead
   });
 
-  // Refetch function for smart scheduling
+  // Stable refetch — use refs to avoid re-creating this on every render
+  const nationalRefetch = nationalQuery.refetch;
+  const regionalListRefetch = regionalListQuery.refetch;
+  const regionalDataRefetch = regionalDataQuery.refetch;
+  const forecastRefetch = forecastQuery.refetch;
+  const generationRefetch = generationQuery.refetch;
+
   const refetch = useCallback(async () => {
     await Promise.all([
-      nationalQuery.refetch(),
-      regionalListQuery.refetch(),
-      regionalDataQuery.refetch(),
-      forecastQuery.refetch(),
-      generationQuery.refetch(),
+      nationalRefetch(),
+      regionalListRefetch(),
+      regionalDataRefetch(),
+      forecastRefetch(),
+      generationRefetch(),
     ]);
-  }, [nationalQuery, regionalListQuery, regionalDataQuery, forecastQuery, generationQuery]);
+  }, [nationalRefetch, regionalListRefetch, regionalDataRefetch, forecastRefetch, generationRefetch]);
 
   // Use smart refetch aligned to grid schedule
   useSmartRefetch(refetch, !!postcode);
