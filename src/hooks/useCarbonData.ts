@@ -33,44 +33,56 @@ const getMsUntilNextHalfHour = (): number => {
   return ((minutesToNext * 60) - seconds) * 1000 - ms + 90000;
 };
 
-// Hook for precise setTimeout-based refetching aligned to grid schedule
+// Global singleton for smart refetch — ensures only one timer exists
+// even if multiple useCarbonData instances are active
+let globalRefetchTimer: ReturnType<typeof setTimeout> | null = null;
+let globalRefetchFn: (() => Promise<void>) | null = null;
+let globalRefetchSubscribers = 0;
+
 function useSmartRefetch(refetchFn: () => Promise<void>, enabled: boolean) {
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Use a ref so the timeout always calls the latest refetch without re-scheduling
   const refetchRef = useRef(refetchFn);
   refetchRef.current = refetchFn;
 
   useEffect(() => {
     if (!enabled) return;
 
-    const scheduleNext = () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
+    // Register this instance's refetch as the global one
+    globalRefetchFn = () => refetchRef.current();
+    globalRefetchSubscribers++;
 
-      const msUntilNext = getMsUntilNextHalfHour();
-      logger.debug(`Next carbon data fetch scheduled in ${Math.round(msUntilNext / 1000)}s`);
-
-      timeoutRef.current = setTimeout(async () => {
-        logger.info('Smart refetch triggered at half-hour boundary');
-        try {
-          await refetchRef.current();
-        } catch (e) {
-          logger.warn('Smart refetch failed', e);
+    // Only start the timer if we're the first subscriber
+    if (globalRefetchSubscribers === 1) {
+      const scheduleNext = () => {
+        if (globalRefetchTimer) {
+          clearTimeout(globalRefetchTimer);
         }
-        // Schedule the next fetch after this one completes
-        scheduleNext();
-      }, msUntilNext);
-    };
 
-    scheduleNext();
+        const msUntilNext = getMsUntilNextHalfHour();
+        logger.debug(`Next carbon data fetch scheduled in ${Math.round(msUntilNext / 1000)}s`);
+
+        globalRefetchTimer = setTimeout(async () => {
+          logger.info('Smart refetch triggered at half-hour boundary');
+          try {
+            if (globalRefetchFn) await globalRefetchFn();
+          } catch (e) {
+            logger.warn('Smart refetch failed', e);
+          }
+          scheduleNext();
+        }, msUntilNext);
+      };
+
+      scheduleNext();
+    }
 
     return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
+      globalRefetchSubscribers--;
+      if (globalRefetchSubscribers === 0 && globalRefetchTimer) {
+        clearTimeout(globalRefetchTimer);
+        globalRefetchTimer = null;
+        globalRefetchFn = null;
       }
     };
-  }, [enabled]); // Only depends on enabled — refetchRef handles the rest
+  }, [enabled]);
 }
 
 export function useCarbonData(postcode: string) {
