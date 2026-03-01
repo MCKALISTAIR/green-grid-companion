@@ -34,9 +34,11 @@ export function useSavedLocations() {
   });
 
   const [userId, setUserId] = useState<string | null>(null);
-  const [isSyncing, setIsSyncing] = useState(false);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const isInitialLoadRef = useRef(true);
+  const isSyncingRef = useRef(false);
+  // Track last write timestamp to ignore self-triggered realtime events
+  const lastWriteRef = useRef(0);
 
   // Track auth state
   useEffect(() => {
@@ -53,9 +55,10 @@ export function useSavedLocations() {
 
   // Sync to database when data changes (if authenticated)
   const syncToDatabase = useCallback(async (locations: SavedLocation[], recent: string[]) => {
-    if (!userId || isSyncing) return;
+    if (!userId || isSyncingRef.current) return;
 
-    setIsSyncing(true);
+    isSyncingRef.current = true;
+    lastWriteRef.current = Date.now();
     try {
       const { error } = await supabase
         .from('user_preferences')
@@ -73,9 +76,9 @@ export function useSavedLocations() {
     } catch (err) {
       logger.error('Error syncing preferences', { error: err });
     } finally {
-      setIsSyncing(false);
+      isSyncingRef.current = false;
     }
-  }, [userId, isSyncing]);
+  }, [userId]);
 
   // Load from database when authenticated
   useEffect(() => {
@@ -153,6 +156,9 @@ export function useSavedLocations() {
           filter: `user_id=eq.${userId}`,
         },
         (payload) => {
+          // Ignore self-triggered events (within 2 seconds of our own write)
+          if (Date.now() - lastWriteRef.current < 2000) return;
+
           logger.debug('Realtime preferences update', { event: payload.eventType });
 
           if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
@@ -265,7 +271,7 @@ export function useSavedLocations() {
     clearRecentLocations,
     isLocationSaved,
     getSavedLocationByPostcode,
-    isSyncing,
+    isSyncing: isSyncingRef.current,
     isAuthenticated: !!userId,
   };
 }
