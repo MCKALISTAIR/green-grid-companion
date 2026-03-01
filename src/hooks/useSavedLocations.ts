@@ -34,9 +34,11 @@ export function useSavedLocations() {
   });
 
   const [userId, setUserId] = useState<string | null>(null);
-  const [isSyncing, setIsSyncing] = useState(false);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const isInitialLoadRef = useRef(true);
+  const isSyncingRef = useRef(false);
+  // Track last write timestamp to ignore self-triggered realtime events
+  const lastWriteRef = useRef(0);
 
   // Track auth state
   useEffect(() => {
@@ -53,9 +55,10 @@ export function useSavedLocations() {
 
   // Sync to database when data changes (if authenticated)
   const syncToDatabase = useCallback(async (locations: SavedLocation[], recent: string[]) => {
-    if (!userId || isSyncing) return;
+    if (!userId || isSyncingRef.current) return;
 
-    setIsSyncing(true);
+    isSyncingRef.current = true;
+    lastWriteRef.current = Date.now();
     try {
       const { error } = await supabase
         .from('user_preferences')
@@ -73,9 +76,9 @@ export function useSavedLocations() {
     } catch (err) {
       logger.error('Error syncing preferences', { error: err });
     } finally {
-      setIsSyncing(false);
+      isSyncingRef.current = false;
     }
-  }, [userId, isSyncing]);
+  }, [userId]);
 
   // Load from database when authenticated
   useEffect(() => {
