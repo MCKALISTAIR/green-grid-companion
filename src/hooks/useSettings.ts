@@ -32,13 +32,14 @@ export function useSettings() {
   });
 
   const [userId, setUserId] = useState<string | null>(null);
-  const [isSyncing, setIsSyncing] = useState(false);
+  const isSyncingRef = useRef(false);
   const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(() => {
     const saved = localStorage.getItem(LAST_SYNC_KEY);
     return saved ? new Date(saved) : null;
   });
   const channelRef = useRef<RealtimeChannel | null>(null);
   const isInitialLoadRef = useRef(true);
+  const lastWriteRef = useRef(0);
 
   // Track auth state
   useEffect(() => {
@@ -55,15 +56,16 @@ export function useSettings() {
 
   // Sync to database
   const syncToDatabase = useCallback(async (newSettings: Settings) => {
-    if (!userId || isSyncing) return;
+    if (!userId || isSyncingRef.current) return;
 
-    setIsSyncing(true);
+    isSyncingRef.current = true;
+    lastWriteRef.current = Date.now();
     try {
       const { error } = await supabase
         .from('user_preferences')
         .upsert({
           user_id: userId,
-          settings: newSettings as unknown as Record<string, unknown>, // Supabase expects JSON/object types
+          settings: newSettings as unknown as Record<string, unknown>,
           updated_at: new Date().toISOString(),
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any, { onConflict: 'user_id' });
@@ -78,9 +80,9 @@ export function useSettings() {
     } catch (err) {
       logger.error('Error syncing settings', { error: err });
     } finally {
-      setIsSyncing(false);
+      isSyncingRef.current = false;
     }
-  }, [userId, isSyncing]);
+  }, [userId]);
 
   // Load settings from database when authenticated
   useEffect(() => {
@@ -143,6 +145,9 @@ export function useSettings() {
           filter: `user_id=eq.${userId}`,
         },
         (payload) => {
+          // Ignore self-triggered events (within 2 seconds of our own write)
+          if (Date.now() - lastWriteRef.current < 2000) return;
+
           logger.debug('Realtime settings update', { event: payload.eventType });
 
           if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
@@ -235,10 +240,10 @@ export function useSettings() {
   };
 
   const syncNow = useCallback(() => {
-    if (userId && !isSyncing) {
+    if (userId && !isSyncingRef.current) {
       syncToDatabase(settings);
     }
-  }, [userId, isSyncing, settings, syncToDatabase]);
+  }, [userId, settings, syncToDatabase]);
 
   return {
     settings,
@@ -250,7 +255,7 @@ export function useSettings() {
     setCustomAnnualKwh: (kwh: number) => updateSetting('customAnnualKwh', kwh),
     showGridFrequency: settings.showGridFrequency,
     setShowGridFrequency: (show: boolean) => updateSetting('showGridFrequency', show),
-    isSyncing,
+    isSyncing: isSyncingRef.current,
     isAuthenticated: !!userId,
     lastSyncedAt,
     syncNow,
