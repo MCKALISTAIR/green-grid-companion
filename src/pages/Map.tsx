@@ -29,7 +29,7 @@ export default function MapPage() {
         const errorInfo = getErrorInfo(error);
         return (
             <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
-                <div className="p-4 pt-[max(2rem,env(safe-area-inset-top))]">
+                <div className="p-4 pt-[max(env(safe-area-inset-top),59px)]">
                     <h1 className="text-2xl font-bold mb-4">Leaderboard</h1>
                     <ErrorState
                         title={errorInfo.title}
