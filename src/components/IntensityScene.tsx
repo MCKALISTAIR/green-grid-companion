@@ -169,18 +169,24 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
     // Predefined slots across the scene at different depth layers
     // Each slot: { left%, bottom%, scale, zIndex, layer }
     // layer: 'back' (behind mid hills), 'mid' (between hills), 'front' (foreground)
+    // Positions calculated from actual hill SVG paths in Landscape.tsx
+    // SVG viewBox 0-400 x, 0-150 y; container is h-[50%] at bottom-0
+    // Formula: scene bottom% = (1 - hillY/150) * 50%
+    // Back hill: "M0,150 L0,100 Q100,50 200,100 Q300,140 400,80"
+    // Mid hill:  "M0,150 L0,120 Q80,140 160,100 Q240,60 320,110 Q360,130 400,100"
+    // Front hill:"M0,150 L0,135 Q120,100 200,135 Q280,180 400,120"
     const allSlots = [
-      // Background turbines (smaller, on back hills ~35-38% from bottom)
-      { left: 8,  bottom: 36, scale: 0.35, z: 1,  layer: 'back' },
-      { left: 22, bottom: 37, scale: 0.30, z: 1,  layer: 'back' },
-      { left: 88, bottom: 35, scale: 0.32, z: 1,  layer: 'back' },
-      // Mid-ground turbines (medium, on mid hills ~24-28%)
-      { left: 15, bottom: 25, scale: 0.55, z: 15, layer: 'mid' },
-      { left: 55, bottom: 27, scale: 0.50, z: 15, layer: 'mid' },
-      { left: 78, bottom: 24, scale: 0.58, z: 15, layer: 'mid' },
-      // Foreground turbines (large, on front hills ~14-18%)
-      { left: 35, bottom: 15, scale: 0.80, z: 25, layer: 'front' },
-      { left: 65, bottom: 13, scale: 0.75, z: 25, layer: 'front' },
+      // Background turbines – on back hill ridge
+      { left: 18, bottom: 23, scale: 0.35, z: 1,  layer: 'back' },  // back hill ~y=82 → 22.7%
+      { left: 25, bottom: 25, scale: 0.30, z: 1,  layer: 'back' },  // back hill peak ~y=75 → 25%
+      { left: 92, bottom: 18, scale: 0.32, z: 1,  layer: 'back' },  // back hill ~y=88 → 20.7%
+      // Mid-ground turbines – on mid hill ridge
+      { left: 50, bottom: 21, scale: 0.55, z: 15, layer: 'mid' },   // mid hill ~y=86 → 21.3%
+      { left: 60, bottom: 22, scale: 0.50, z: 15, layer: 'mid' },   // mid hill ~y=83 → 22.3%
+      { left: 72, bottom: 18, scale: 0.52, z: 15, layer: 'mid' },   // mid hill ~y=96 → 18%
+      // Foreground turbines – on front hill ridge
+      { left: 30, bottom: 11, scale: 0.80, z: 25, layer: 'front' }, // front hill ~y=117 → 11%
+      { left: 45, bottom: 9,  scale: 0.75, z: 25, layer: 'front' }, // front hill ~y=123 → 9%
     ];
 
     // How many turbines to show based on wind percentage
