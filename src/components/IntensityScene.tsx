@@ -244,7 +244,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       isGoldenHour,
       isDaytime,
       isDarkPeriod,
-      turbineCount: Math.max(1, Math.floor(cleanliness * 4)),
+      turbineCount: Math.max(1, Math.floor(cleanliness * 4)), // legacy, kept for compat
       factoryOpacity: Math.max(0, 1 - cleanliness),
       solarBrightness: cleanliness * (weather.cloudCover < 50 ? 1 : 0.6) * (isDaytime ? 1 : isGoldenHour ? 0.6 : 0.2),
       birdCount: Math.floor(cleanliness * 4) + 1,
