@@ -46,6 +46,7 @@ import { useSceneDirector } from '@/hooks/useSceneDirector';
 
 import { GenerationMix } from '@/lib/carbonApi';
 import { getSkyGradient } from '@/lib/sceneUtils';
+import { getTurbineBottomPct } from '@/lib/sceneUtils';
 
 interface IntensitySceneProps {
   intensity: number;
