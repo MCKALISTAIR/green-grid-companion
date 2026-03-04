@@ -167,34 +167,29 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
 
   // Dynamic turbine layout: positions vary by depth layer, count driven by wind %
   const turbineLayout = useMemo(() => {
-    // Predefined slots across the scene at different depth layers
-    // Each slot: { left%, bottom%, scale, zIndex, layer }
-    // layer: 'back' (behind mid hills), 'mid' (between hills), 'front' (foreground)
-    // Positions calculated from actual hill SVG paths in Landscape.tsx
-    // SVG viewBox 0-400 x, 0-150 y; container is h-[65%] at bottom-0
-    // Formula: scene bottom% = (1 - hillY/150) * 65%
-    // Back hill: "M0,150 L0,100 Q100,50 200,100 Q300,140 400,80"
-    // Mid hill:  "M0,150 L0,120 Q80,140 160,100 Q240,60 320,110 Q360,130 400,100"
-    // Front hill:"M0,150 L0,135 Q120,100 200,135 Q280,180 400,120"
+    // Turbine slots defined by layer + left%.
+    // Bottom% is computed dynamically from the actual hill Bézier curves
+    // via getTurbineBottomPct(), so they always sit on the ridge line
+    // even if the hill paths or container height change.
+    const CONTAINER_PCT = 65; // must match h-[65%] on landscape container
     const allSlots = [
       // Background turbines – on back hill ridge
-      { left: 18, bottom: 30, scale: 0.35, z: 1,  layer: 'back' },  // back hill ~y=82 → 29.5%
-      { left: 25, bottom: 33, scale: 0.30, z: 1,  layer: 'back' },  // back hill peak ~y=75 → 32.5%
-      { left: 92, bottom: 24, scale: 0.32, z: 1,  layer: 'back' },  // back hill ~y=88 → 26.9%
+      { left: 18, scale: 0.35, z: 1,  layer: 'back' as const },
+      { left: 25, scale: 0.30, z: 1,  layer: 'back' as const },
+      { left: 92, scale: 0.32, z: 1,  layer: 'back' as const },
       // Mid-ground turbines – on mid hill ridge
-      { left: 50, bottom: 28, scale: 0.55, z: 15, layer: 'mid' },   // mid hill ~y=86 → 27.7%
-      { left: 60, bottom: 29, scale: 0.50, z: 15, layer: 'mid' },   // mid hill ~y=83 → 29%
-      { left: 72, bottom: 24, scale: 0.52, z: 15, layer: 'mid' },   // mid hill ~y=96 → 23.4%
+      { left: 50, scale: 0.55, z: 15, layer: 'mid' as const },
+      { left: 60, scale: 0.50, z: 15, layer: 'mid' as const },
+      { left: 72, scale: 0.52, z: 15, layer: 'mid' as const },
       // Foreground turbines – on front hill ridge
-      { left: 30, bottom: 14, scale: 0.80, z: 25, layer: 'front' }, // front hill ~y=117 → 14.3%
-      { left: 45, bottom: 12, scale: 0.75, z: 25, layer: 'front' }, // front hill ~y=123 → 11.7%
-    ];
+      { left: 30, scale: 0.80, z: 25, layer: 'front' as const },
+      { left: 45, scale: 0.75, z: 25, layer: 'front' as const },
+    ].map(slot => ({
+      ...slot,
+      bottom: getTurbineBottomPct(slot.layer, slot.left, CONTAINER_PCT, -1),
+    }));
 
     // How many turbines to show based on wind percentage
-    // 0-5% wind: 2 turbines (barely any wind, a couple visible but slow/still)
-    // 5-15%: 3-4 turbines
-    // 15-25%: 5-6
-    // 25%+: all 8
     let count: number;
     if (windPercentage <= 0) count = 2;
     else if (windPercentage < 5) count = 2;
@@ -203,15 +198,12 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
     else count = allSlots.length;
 
     // Pick slots: always include one from each visible layer, then fill
-    // Prioritize: 1 front, 1 mid, then back, then remaining
     const picked: typeof allSlots = [];
     const byLayer = { front: allSlots.filter(s => s.layer === 'front'), mid: allSlots.filter(s => s.layer === 'mid'), back: allSlots.filter(s => s.layer === 'back') };
     
-    // Always show at least one foreground and one mid
     if (count >= 1) picked.push(byLayer.front[0]);
     if (count >= 2) picked.push(byLayer.mid[0]);
     
-    // Fill remaining from all slots not yet picked
     const remaining = allSlots.filter(s => !picked.includes(s));
     for (let i = 0; i < Math.min(count - picked.length, remaining.length); i++) {
       picked.push(remaining[i]);
