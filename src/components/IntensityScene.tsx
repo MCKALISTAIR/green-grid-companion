@@ -170,17 +170,17 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
     // Each slot: { left%, bottom%, scale, zIndex, layer }
     // layer: 'back' (behind mid hills), 'mid' (between hills), 'front' (foreground)
     const allSlots = [
-      // Background turbines (smaller, behind mid hills)
-      { left: 8,  bottom: 42, scale: 0.35, z: 1,  layer: 'back' },
-      { left: 22, bottom: 44, scale: 0.30, z: 1,  layer: 'back' },
-      { left: 88, bottom: 43, scale: 0.32, z: 1,  layer: 'back' },
-      // Mid-ground turbines (medium, between hill layers)  
-      { left: 15, bottom: 28, scale: 0.55, z: 15, layer: 'mid' },
-      { left: 55, bottom: 30, scale: 0.50, z: 15, layer: 'mid' },
-      { left: 78, bottom: 27, scale: 0.58, z: 15, layer: 'mid' },
-      // Foreground turbines (large, in front)
-      { left: 35, bottom: 18, scale: 0.80, z: 25, layer: 'front' },
-      { left: 65, bottom: 16, scale: 0.75, z: 25, layer: 'front' },
+      // Background turbines (smaller, on back hills ~35-38% from bottom)
+      { left: 8,  bottom: 36, scale: 0.35, z: 1,  layer: 'back' },
+      { left: 22, bottom: 37, scale: 0.30, z: 1,  layer: 'back' },
+      { left: 88, bottom: 35, scale: 0.32, z: 1,  layer: 'back' },
+      // Mid-ground turbines (medium, on mid hills ~24-28%)
+      { left: 15, bottom: 25, scale: 0.55, z: 15, layer: 'mid' },
+      { left: 55, bottom: 27, scale: 0.50, z: 15, layer: 'mid' },
+      { left: 78, bottom: 24, scale: 0.58, z: 15, layer: 'mid' },
+      // Foreground turbines (large, on front hills ~14-18%)
+      { left: 35, bottom: 15, scale: 0.80, z: 25, layer: 'front' },
+      { left: 65, bottom: 13, scale: 0.75, z: 25, layer: 'front' },
     ];
 
     // How many turbines to show based on wind percentage
@@ -305,7 +305,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
 
   return (
     <motion.div
-      className={`relative w-full h-[300px] md:h-[50vh] overflow-hidden rounded-xl md:rounded-l-xl transition-colors duration-1000 ${isVintage ? 'sepia-[.6] contrast-125 grayscale-[.3]' : ''} ${className || ''}`}
+      className={`relative w-full min-h-[320px] h-[40vh] md:h-[50vh] overflow-hidden rounded-xl md:rounded-l-xl transition-colors duration-1000 ${isVintage ? 'sepia-[.6] contrast-125 grayscale-[.3]' : ''} ${className || ''}`}
       animate={{
         background: sceneConfig.skyGradient,
         filter: sceneConfig.sceneFilter,
