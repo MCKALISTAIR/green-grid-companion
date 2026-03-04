@@ -99,3 +99,96 @@ export function getCarbonIndex(intensity: number): string {
     if (intensity < 350) return 'high';
     return 'very high';
 }
+
+// ── Hill path sampling ──────────────────────────────────────────────
+// Evaluates the ridge-line Y for a given X on each hill layer.
+// SVG viewBox is 0-400 x, 0-150 y.  The paths are defined in Landscape.tsx.
+// Any time those paths change, update the segment definitions here too.
+
+/** Evaluate a quadratic Bézier at parameter t */
+function quadBezier(t: number, p0: number, p1: number, p2: number): number {
+    const u = 1 - t;
+    return u * u * p0 + 2 * u * t * p1 + t * t * p2;
+}
+
+/** Find t for a given X on a quadratic Bézier (monotonic in x) via binary search */
+function solveT(targetX: number, sx: number, cx: number, ex: number): number {
+    let lo = 0, hi = 1;
+    for (let i = 0; i < 20; i++) {
+        const mid = (lo + hi) / 2;
+        if (quadBezier(mid, sx, cx, ex) < targetX) lo = mid;
+        else hi = mid;
+    }
+    return (lo + hi) / 2;
+}
+
+interface BezierSegment { sx: number; sy: number; cx: number; cy: number; ex: number; ey: number }
+
+function sampleSegments(segments: BezierSegment[], x: number): number {
+    for (const seg of segments) {
+        if (x >= seg.sx && x <= seg.ex) {
+            const t = solveT(x, seg.sx, seg.cx, seg.ex);
+            return quadBezier(t, seg.sy, seg.cy, seg.ey);
+        }
+    }
+    // Fallback: clamp to last segment end
+    return segments[segments.length - 1].ey;
+}
+
+// Hill path definitions (must match Landscape.tsx paths)
+// Back: "M0,150 L0,100 Q100,50 200,100 Q300,140 400,80"
+const BACK_HILL_SEGMENTS: BezierSegment[] = [
+    { sx: 0, sy: 100, cx: 100, cy: 50, ex: 200, ey: 100 },
+    { sx: 200, sy: 100, cx: 300, cy: 140, ex: 400, ey: 80 },
+];
+
+// Mid: "M0,150 L0,120 Q80,140 160,100 Q240,60 320,110 Q360,130 400,100"
+const MID_HILL_SEGMENTS: BezierSegment[] = [
+    { sx: 0, sy: 120, cx: 80, cy: 140, ex: 160, ey: 100 },
+    { sx: 160, sy: 100, cx: 240, cy: 60, ex: 320, ey: 110 },
+    { sx: 320, sy: 110, cx: 360, cy: 130, ex: 400, ey: 100 },
+];
+
+// Front: "M0,150 L0,135 Q120,100 200,135 Q280,180 400,120"
+const FRONT_HILL_SEGMENTS: BezierSegment[] = [
+    { sx: 0, sy: 135, cx: 120, cy: 100, ex: 200, ey: 135 },
+    { sx: 200, sy: 135, cx: 280, cy: 180, ex: 400, ey: 120 },
+];
+
+export type HillLayer = 'back' | 'mid' | 'front';
+
+/**
+ * Get the Y coordinate of a hill ridge at a given X position (SVG coords 0-400).
+ * Returns the SVG Y value on the ridge line.
+ */
+export function getHillRidgeY(layer: HillLayer, svgX: number): number {
+    const clampedX = Math.max(0, Math.min(400, svgX));
+    switch (layer) {
+        case 'back': return sampleSegments(BACK_HILL_SEGMENTS, clampedX);
+        case 'mid': return sampleSegments(MID_HILL_SEGMENTS, clampedX);
+        case 'front': return sampleSegments(FRONT_HILL_SEGMENTS, clampedX);
+    }
+}
+
+/**
+ * Convert an SVG Y value to a CSS bottom% within the landscape container.
+ * @param svgY - Y value in SVG coords (0=top, 150=bottom)
+ * @param containerPct - Height of landscape container as % of scene (default 65)
+ */
+export function hillYToBottomPct(svgY: number, containerPct = 65): number {
+    return (1 - svgY / 150) * containerPct;
+}
+
+/**
+ * Get the CSS bottom% for a turbine placed on a hill ridge.
+ * @param layer - Which hill layer
+ * @param leftPct - CSS left% (0-100) of the turbine in the scene
+ * @param containerPct - Height of landscape container as % of scene (default 65)
+ * @param nudge - Additional offset in bottom% (positive = higher, use small negative to sink base into ground)
+ */
+export function getTurbineBottomPct(layer: HillLayer, leftPct: number, containerPct = 65, nudge = -1): number {
+    // Convert CSS left% (0-100) to SVG X (0-400)
+    const svgX = (leftPct / 100) * 400;
+    const svgY = getHillRidgeY(layer, svgX);
+    return hillYToBottomPct(svgY, containerPct) + nudge;
+}
