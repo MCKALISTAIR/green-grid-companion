@@ -218,7 +218,7 @@ export default function Planner() {
         const errorInfo = getErrorInfo(error);
         return (
             <div className="h-[100dvh] overflow-hidden bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
-                <div className="p-4 space-y-6 pt-[max(2rem,env(safe-area-inset-top))]">
+                <div className="p-4 space-y-6 pt-[max(env(safe-area-inset-top),59px)]">
                     <div>
                         <h1 className="text-2xl font-bold">Power Planner</h1>
                         <p className="text-muted-foreground">Schedule high-energy tasks to save carbon.</p>
