@@ -164,6 +164,55 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
     m.fuel.toLowerCase().includes('marine') || m.fuel.toLowerCase().includes('tidal')
   )?.perc || 0;
 
+  // Dynamic turbine layout: positions vary by depth layer, count driven by wind %
+  const turbineLayout = useMemo(() => {
+    // Predefined slots across the scene at different depth layers
+    // Each slot: { left%, bottom%, scale, zIndex, layer }
+    // layer: 'back' (behind mid hills), 'mid' (between hills), 'front' (foreground)
+    const allSlots = [
+      // Background turbines (smaller, behind mid hills)
+      { left: 8,  bottom: 42, scale: 0.35, z: 1,  layer: 'back' },
+      { left: 22, bottom: 44, scale: 0.30, z: 1,  layer: 'back' },
+      { left: 88, bottom: 43, scale: 0.32, z: 1,  layer: 'back' },
+      // Mid-ground turbines (medium, between hill layers)  
+      { left: 15, bottom: 28, scale: 0.55, z: 15, layer: 'mid' },
+      { left: 55, bottom: 30, scale: 0.50, z: 15, layer: 'mid' },
+      { left: 78, bottom: 27, scale: 0.58, z: 15, layer: 'mid' },
+      // Foreground turbines (large, in front)
+      { left: 35, bottom: 18, scale: 0.80, z: 25, layer: 'front' },
+      { left: 65, bottom: 16, scale: 0.75, z: 25, layer: 'front' },
+    ];
+
+    // How many turbines to show based on wind percentage
+    // 0-5% wind: 2 turbines (barely any wind, a couple visible but slow/still)
+    // 5-15%: 3-4 turbines
+    // 15-25%: 5-6
+    // 25%+: all 8
+    let count: number;
+    if (windPercentage <= 0) count = 2;
+    else if (windPercentage < 5) count = 2;
+    else if (windPercentage < 15) count = Math.min(4, 2 + Math.floor(windPercentage / 5));
+    else if (windPercentage < 25) count = Math.min(6, 4 + Math.floor((windPercentage - 15) / 5));
+    else count = allSlots.length;
+
+    // Pick slots: always include one from each visible layer, then fill
+    // Prioritize: 1 front, 1 mid, then back, then remaining
+    const picked: typeof allSlots = [];
+    const byLayer = { front: allSlots.filter(s => s.layer === 'front'), mid: allSlots.filter(s => s.layer === 'mid'), back: allSlots.filter(s => s.layer === 'back') };
+    
+    // Always show at least one foreground and one mid
+    if (count >= 1) picked.push(byLayer.front[0]);
+    if (count >= 2) picked.push(byLayer.mid[0]);
+    
+    // Fill remaining from all slots not yet picked
+    const remaining = allSlots.filter(s => !picked.includes(s));
+    for (let i = 0; i < Math.min(count - picked.length, remaining.length); i++) {
+      picked.push(remaining[i]);
+    }
+
+    return picked;
+  }, [windPercentage]);
+
   const [showFox, setShowFox] = useState(false);
   const isDawnOrDusk = timeOfDay === 'dawn' || timeOfDay === 'dusk';
 
