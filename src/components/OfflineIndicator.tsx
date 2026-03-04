@@ -32,7 +32,7 @@ export function OfflineIndicator() {
           exit={{ y: -100, opacity: 0 }}
           transition={{ type: 'spring', damping: 20, stiffness: 300 }}
           className="fixed top-0 left-0 right-0 z-[100] bg-amber-500 text-amber-950 px-4 py-3 shadow-lg"
-          style={{ paddingTop: 'calc(max(env(safe-area-inset-top), 40px) + 0.75rem)' }}
+          style={{ paddingTop: 'calc(max(env(safe-area-inset-top), 59px) + 0.75rem)' }}
           role="alert"
           aria-live="assertive"
         >
@@ -52,7 +52,7 @@ export function OfflineIndicator() {
           exit={{ y: -100, opacity: 0 }}
           transition={{ type: 'spring', damping: 20, stiffness: 300 }}
           className="fixed top-0 left-0 right-0 z-[100] bg-emerald-500 text-emerald-950 px-4 py-3 shadow-lg"
-          style={{ paddingTop: 'calc(max(env(safe-area-inset-top), 40px) + 0.75rem)' }}
+          style={{ paddingTop: 'calc(max(env(safe-area-inset-top), 59px) + 0.75rem)' }}
           role="alert"
           aria-live="assertive"
         >

@@ -87,7 +87,7 @@ export function PullToRefresh({ onRefresh, children, disabled = false }: PullToR
             <div
                 className="fixed top-0 left-0 right-0 flex justify-center pointer-events-none z-50 transition-all duration-300"
                 style={{
-                    paddingTop: 'calc(max(env(safe-area-inset-top), 40px) + 1rem)',
+                    paddingTop: 'calc(max(env(safe-area-inset-top), 59px) + 1rem)',
                     transform: `translateY(${Math.max(pullDistance, isRefreshing ? THRESHOLD : 0) - 100}px)`,
                     opacity: Math.min(pullDistance / (THRESHOLD * 0.5), 1)
                 }}
