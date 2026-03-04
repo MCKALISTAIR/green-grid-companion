@@ -132,7 +132,7 @@ export default function HistoryPage() {
         const errorInfo = getErrorInfo(regionError || error);
         return (
             <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
-                <div className="p-4 space-y-6 pt-[calc(env(safe-area-inset-top)+2rem)]">
+                <div className="p-4 space-y-6 pt-[calc(max(env(safe-area-inset-top),59px)+2rem)]">
                     <div>
                         <h1 className="text-2xl font-bold">Grid History</h1>
                         <p className="text-muted-foreground">{region || 'National'} carbon intensity over time.</p>
@@ -152,7 +152,7 @@ export default function HistoryPage() {
     if (!isRegionLoading && !isLoading && data.length === 0) {
         return (
             <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
-                <div className="p-4 space-y-6 pt-[calc(env(safe-area-inset-top)+2rem)]">
+                <div className="p-4 space-y-6 pt-[calc(max(env(safe-area-inset-top),59px)+2rem)]">
                     <div>
                         <h1 className="text-2xl font-bold">Grid History</h1>
                         <p className="text-muted-foreground">{region || 'National'} carbon intensity over time.</p>
@@ -170,7 +170,7 @@ export default function HistoryPage() {
 
     return (
         <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
-            <div className="p-4 space-y-6 pt-[calc(env(safe-area-inset-top)+2rem)]">
+            <div className="p-4 space-y-6 pt-[calc(max(env(safe-area-inset-top),59px)+2rem)]">
                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <div>
                         <h1 className="text-2xl font-bold flex items-center gap-2">

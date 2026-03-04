@@ -13,7 +13,7 @@ export default function AchievementsPage() {
 
     return (
         <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
-            <div className="p-4 space-y-6 pt-[calc(env(safe-area-inset-top)+2rem)]">
+            <div className="p-4 space-y-6 pt-[calc(max(env(safe-area-inset-top),59px)+2rem)]">
                 <div>
                     <h1 className="text-2xl font-bold flex items-center gap-2">
                         <Trophy className="w-6 h-6 text-yellow-500" />

@@ -77,7 +77,7 @@ export default function Glossary() {
     return (
         <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
             {/* Header */}
-            <div className="md:hidden sticky top-0 z-40 flex items-center px-4 pb-4 pt-[calc(env(safe-area-inset-top)+1rem)] bg-background/80 backdrop-blur-md border-b">
+            <div className="md:hidden sticky top-0 z-40 flex items-center px-4 pb-4 pt-[calc(max(env(safe-area-inset-top),59px)+1rem)] bg-background/80 backdrop-blur-md border-b">
                 <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="-ml-2">
                     <ArrowLeft className="w-5 h-5" />
                 </Button>

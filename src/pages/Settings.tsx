@@ -74,7 +74,7 @@ export default function Settings() {
 
     return (
         <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
-            <div className="p-4 pt-[calc(env(safe-area-inset-top)+2rem)] space-y-8">
+            <div className="p-4 pt-[calc(max(env(safe-area-inset-top),59px)+2rem)] space-y-8">
                 <div>
                     <h1 className="text-2xl font-bold">Settings</h1>
                     <p className="text-muted-foreground">Manage notifications and preferences.</p>

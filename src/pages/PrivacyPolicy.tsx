@@ -9,7 +9,7 @@ export default function PrivacyPolicy() {
     return (
         <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
             {/* Header */}
-            <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border/50 px-4 pb-4 pt-[calc(env(safe-area-inset-top)+1rem)]">
+            <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border/50 px-4 pb-4 pt-[calc(max(env(safe-area-inset-top),59px)+1rem)]">
                 <div className="flex items-center gap-2 max-w-2xl mx-auto">
                     <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="-ml-2">
                         <ArrowLeft className="w-5 h-5" />
