@@ -45,7 +45,7 @@ export default function MapPage() {
     return (
         <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
             <PullToRefresh onRefresh={async () => { await refetch(); }}>
-                <div className="p-4 space-y-4 pt-[max(2rem,env(safe-area-inset-top))]">
+                <div className="p-4 space-y-4 pt-[max(env(safe-area-inset-top),59px)]">
                     <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-2xl font-bold">Leaderboard</h1>

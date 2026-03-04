@@ -13,7 +13,7 @@ export default function FeatureGuides() {
 
     return (
         <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
-            <div className="p-4 pt-[calc(env(safe-area-inset-top)+1rem)] space-y-6">
+            <div className="p-4 pt-[calc(max(env(safe-area-inset-top),59px)+1rem)] space-y-6">
                 <Button variant="ghost" onClick={() => navigate(-1)} className="-ml-4">
                     <ChevronLeft className="w-4 h-4 mr-1" /> Back
                 </Button>
