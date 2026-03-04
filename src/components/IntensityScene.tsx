@@ -170,23 +170,23 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
     // Each slot: { left%, bottom%, scale, zIndex, layer }
     // layer: 'back' (behind mid hills), 'mid' (between hills), 'front' (foreground)
     // Positions calculated from actual hill SVG paths in Landscape.tsx
-    // SVG viewBox 0-400 x, 0-150 y; container is h-[50%] at bottom-0
-    // Formula: scene bottom% = (1 - hillY/150) * 50%
+    // SVG viewBox 0-400 x, 0-150 y; container is h-[65%] at bottom-0
+    // Formula: scene bottom% = (1 - hillY/150) * 65%
     // Back hill: "M0,150 L0,100 Q100,50 200,100 Q300,140 400,80"
     // Mid hill:  "M0,150 L0,120 Q80,140 160,100 Q240,60 320,110 Q360,130 400,100"
     // Front hill:"M0,150 L0,135 Q120,100 200,135 Q280,180 400,120"
     const allSlots = [
       // Background turbines – on back hill ridge
-      { left: 18, bottom: 23, scale: 0.35, z: 1,  layer: 'back' },  // back hill ~y=82 → 22.7%
-      { left: 25, bottom: 25, scale: 0.30, z: 1,  layer: 'back' },  // back hill peak ~y=75 → 25%
-      { left: 92, bottom: 18, scale: 0.32, z: 1,  layer: 'back' },  // back hill ~y=88 → 20.7%
+      { left: 18, bottom: 30, scale: 0.35, z: 1,  layer: 'back' },  // back hill ~y=82 → 29.5%
+      { left: 25, bottom: 33, scale: 0.30, z: 1,  layer: 'back' },  // back hill peak ~y=75 → 32.5%
+      { left: 92, bottom: 24, scale: 0.32, z: 1,  layer: 'back' },  // back hill ~y=88 → 26.9%
       // Mid-ground turbines – on mid hill ridge
-      { left: 50, bottom: 21, scale: 0.55, z: 15, layer: 'mid' },   // mid hill ~y=86 → 21.3%
-      { left: 60, bottom: 22, scale: 0.50, z: 15, layer: 'mid' },   // mid hill ~y=83 → 22.3%
-      { left: 72, bottom: 18, scale: 0.52, z: 15, layer: 'mid' },   // mid hill ~y=96 → 18%
+      { left: 50, bottom: 28, scale: 0.55, z: 15, layer: 'mid' },   // mid hill ~y=86 → 27.7%
+      { left: 60, bottom: 29, scale: 0.50, z: 15, layer: 'mid' },   // mid hill ~y=83 → 29%
+      { left: 72, bottom: 24, scale: 0.52, z: 15, layer: 'mid' },   // mid hill ~y=96 → 23.4%
       // Foreground turbines – on front hill ridge
-      { left: 30, bottom: 11, scale: 0.80, z: 25, layer: 'front' }, // front hill ~y=117 → 11%
-      { left: 45, bottom: 9,  scale: 0.75, z: 25, layer: 'front' }, // front hill ~y=123 → 9%
+      { left: 30, bottom: 14, scale: 0.80, z: 25, layer: 'front' }, // front hill ~y=117 → 14.3%
+      { left: 45, bottom: 12, scale: 0.75, z: 25, layer: 'front' }, // front hill ~y=123 → 11.7%
     ];
 
     // How many turbines to show based on wind percentage
@@ -521,7 +521,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
 
       {/* High Fidelity Landscape (Hills + Trees) */}
       {/* Background Landscape Layer (Back + Mid Hills) */}
-      <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-0">
+      <div className="absolute bottom-0 left-0 right-0 h-[65%] pointer-events-none z-0">
         <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
           <LandscapeBack
             cleanliness={sceneConfig.cleanliness}
@@ -564,7 +564,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       </AnimatePresence>
 
       {/* Foreground Landscape Layer (Front Hill) - Occludes Sheep */}
-      <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-20">
+      <div className="absolute bottom-0 left-0 right-0 h-[65%] pointer-events-none z-20">
         <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
           <LandscapeFront
             cleanliness={sceneConfig.cleanliness}
