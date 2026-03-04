@@ -573,34 +573,43 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
         </svg>
       </div>
 
-      {/* Wind Turbines for clean energy */}
+      {/* Wind Turbines - dynamically positioned across the scene */}
       <AnimatePresence>
-        {sceneConfig.showRenewables && (
-          <motion.div
-            className="absolute bottom-[18%] left-0 right-0 flex justify-around px-12"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5, staggerChildren: 0.1 }}
-          >
-            {Array.from({ length: sceneConfig.turbineCount }).map((_, i) => {
-              // Wind speed affects turbine rotation (faster wind = faster spin)
-              // Base speed 5s for 0 wind, down to 1.5s for 30+ km/h wind
-              const baseSpeed = Math.max(1.5, 5 - (sceneConfig.windSpeed / 10));
-              const isOverdrive = turbineOverdrive === i;
+        {sceneConfig.showRenewables && turbineLayout.map((slot, i) => {
+          // Wind speed drives rotation: near-zero wind → very slow / stopped
+          const effectiveWindSpeed = sceneConfig.windSpeed ?? 0;
+          const baseSpeed = effectiveWindSpeed < 2
+            ? 30 // Almost still
+            : Math.max(1.5, 6 - (effectiveWindSpeed / 8));
+          const isOverdrive = turbineOverdrive === i;
+          // Background turbines slightly slower for parallax feel
+          const layerSpeedMod = slot.layer === 'back' ? 1.3 : slot.layer === 'mid' ? 1.1 : 1;
+          // Opacity based on depth layer
+          const layerOpacity = slot.layer === 'back' ? 0.5 : slot.layer === 'mid' ? 0.75 : 1;
 
-              return (
-                <div key={i} className="relative">
-                  <WindTurbine
-                    scale={0.7 + (i % 2) * 0.2}
-                    speed={isOverdrive ? 0.2 : (baseSpeed + i * 0.3)} // Super fast if overdrive
-                    onClick={() => handleTurbineClick(i)}
-                  />
-                </div>
-              );
-            })}
-          </motion.div>
-        )}
+          return (
+            <motion.div
+              key={`turbine-${slot.left}-${slot.bottom}`}
+              className="absolute"
+              style={{
+                left: `${slot.left}%`,
+                bottom: `${slot.bottom}%`,
+                zIndex: slot.z,
+                opacity: layerOpacity,
+              }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: layerOpacity, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.6, delay: i * 0.1 }}
+            >
+              <WindTurbine
+                scale={slot.scale}
+                speed={isOverdrive ? 0.2 : (baseSpeed * layerSpeedMod + i * 0.2)}
+                onClick={() => handleTurbineClick(i)}
+              />
+            </motion.div>
+          );
+        })}
       </AnimatePresence>
 
       {/* Solar panels with reflection animation */}
