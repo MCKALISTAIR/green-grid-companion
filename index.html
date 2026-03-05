@@ -100,16 +100,22 @@
         var key = 'gridsense_sw_cleared_v1';
         if (sessionStorage.getItem(key)) return;
 
+        var hadSW = false;
+        var hadCache = false;
         Promise.all([
           navigator.serviceWorker.getRegistrations().then(function (regs) {
+            hadSW = regs.length > 0;
             return Promise.all(regs.map(function (r) { return r.unregister(); }));
           }),
           ('caches' in window)
-            ? caches.keys().then(function (names) { return Promise.all(names.map(function (n) { return caches.delete(n); })); })
+            ? caches.keys().then(function (names) {
+                hadCache = names.length > 0;
+                return Promise.all(names.map(function (n) { return caches.delete(n); }));
+              })
             : Promise.resolve(),
         ]).finally(function () {
           sessionStorage.setItem(key, '1');
-          window.location.reload();
+          if (hadSW || hadCache) window.location.reload();
         });
       } catch (e) {
         // no-op
