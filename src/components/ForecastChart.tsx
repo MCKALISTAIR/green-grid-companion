@@ -103,6 +103,32 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
   const maxForecast = getForecastMax(forecast);
   const now = startOfHour(new Date());
 
+  // Pre-calculate separator presence for background blocks
+  const hasSeparatorArray = forecast.map((item, i) => {
+    const prevItem = forecast[i - 1];
+    const time = parseISO(item.from);
+    const prevTime = prevItem ? parseISO(prevItem.from) : null;
+    return !prevTime || time.getDate() !== prevTime.getDate();
+  });
+
+  const bestBlocks: { start: number; end: number }[] = [];
+  let currentBlock: { start: number; end: number } | null = null;
+
+  forecast.forEach((item, i) => {
+    const isPast = getForecastDifferences(item, now).isPast;
+    const isBest = !isPast && item.intensity.index === 'very low';
+    if (isBest) {
+      if (!currentBlock) currentBlock = { start: i, end: i };
+      else currentBlock.end = i;
+    } else {
+      if (currentBlock) {
+        bestBlocks.push(currentBlock);
+        currentBlock = null;
+      }
+    }
+  });
+  if (currentBlock) bestBlocks.push(currentBlock);
+
   // Format header date
   const isToday = visibleDate.getDate() === now.getDate();
   const isTomorrow = visibleDate.getDate() === new Date(now.getTime() + 86400000).getDate();
@@ -157,7 +183,31 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
           onScroll={handleScroll}
           className="overflow-x-auto pb-4 pt-4 -mt-2 scrollbar-thin scrollbar-thumb-muted-foreground/20"
         >
-          <div className="flex gap-2 min-w-max px-4">
+          <div className="flex gap-2 min-w-max px-4 relative">
+            {bestBlocks.map((block, idx) => {
+              // Count separators before this block (including the separator on the first element if any)
+              const sepsBeforeStart = hasSeparatorArray.slice(0, block.start + 1).filter(Boolean).length;
+              // Count separators inside this block (not including the first element)
+              const sepsInBlock = hasSeparatorArray.slice(block.start + 1, block.end + 1).filter(Boolean).length;
+
+              const leftRem = 1.0 + block.start * 3.5 + sepsBeforeStart * 2.0;
+              const widthRem = (block.end - block.start) * 3.5 + sepsInBlock * 2.0 + 3.0;
+
+              return (
+                <div
+                  key={`best-block-${idx}`}
+                  className="absolute top-0 bottom-0 bg-green-500/10 dark:bg-green-400/10 rounded-xl pointer-events-none"
+                  style={{
+                    left: `${leftRem}rem`,
+                    width: `${widthRem}rem`,
+                  }}
+                >
+                  <div className="absolute -top-3 left-[1.5rem] -translate-x-1/2 h-[18px] flex items-center justify-center text-[8px] font-bold text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-900 px-1.5 rounded-md whitespace-nowrap shadow-sm">
+                    BEST
+                  </div>
+                </div>
+              );
+            })}
             {forecast.map((item, i) => {
               const { time, isUnknown, isPast, isCurrentHour, hasActual, difference, showDifference } = getForecastDifferences(item, now);
               const height = (item.intensity.forecast / maxForecast) * 100;
@@ -166,17 +216,6 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
               const prevItem = forecast[i - 1];
               const prevTime = prevItem ? parseISO(prevItem.from) : null;
               const showSeparator = !prevTime || time.getDate() !== prevTime.getDate();
-
-              const nextItem = forecast[i + 1];
-              const nextTime = nextItem ? parseISO(nextItem.from) : null;
-              const nextHasSeparator = nextTime && time.getDate() !== nextTime.getDate();
-
-              const isBest = !isPast && item.intensity.index === 'very low';
-              const isPrevBest = prevItem && !getForecastDifferences(prevItem, now).isPast && prevItem.intensity.index === 'very low';
-              const isNextBest = nextItem && !getForecastDifferences(nextItem, now).isPast && nextItem.intensity.index === 'very low';
-
-              const connectPrev = isBest && isPrevBest && !showSeparator;
-              const connectNext = isBest && isNextBest && !nextHasSeparator;
 
               let dateLabel = '';
               if (showSeparator) {
@@ -203,7 +242,7 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
                       <div
                         className={`relative flex flex-col items-center gap-1 w-12 transition-all duration-300 rounded-lg py-1 ${hasActual ? 'cursor-pointer' : 'cursor-default'
                           } ${isPast ? 'opacity-80' : 'opacity-100'} ${isCurrentHour ? 'bg-accent/20 scale-110 shadow-sm z-10' : ''} ${selectedIndex === i ? 'bg-accent/30 ring-2 ring-primary/50' : ''
-                          } ${!isPast && item.intensity.index === 'very low' ? 'bg-green-500/10 shadow-[inset_0_0_10px_rgba(34,197,94,0.1)]' : ''}`}
+                          }`}
                         ref={(el) => {
                           if (isCurrentHour && el) currentHourRef.current = el;
                           if (hasActual && el) selectedItemRefs.current.set(i, el);
@@ -215,25 +254,6 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
                           }
                         }}
                       >
-                        {/* Best Time Ribbon Connectors */}
-                        {isBest && connectNext && (
-                          <div className="absolute -top-3 bottom-auto left-1/2 right-[-0.5rem] h-[18px] bg-green-100 dark:bg-green-900 z-10 pointer-events-none transition-colors" />
-                        )}
-                        {isBest && connectPrev && (
-                          <div className="absolute -top-3 bottom-auto left-[-0.5rem] right-1/2 h-[18px] bg-green-100 dark:bg-green-900 z-10 pointer-events-none transition-colors" />
-                        )}
-
-                        {/* Start of block (or standalone) badge */}
-                        {isBest && !connectPrev && (
-                          <div className={`absolute -top-3 left-1/2 -translate-x-1/2 h-[18px] flex items-center justify-center text-[8px] font-bold text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-900 px-1.5 rounded-md whitespace-nowrap pointer-events-none z-20 transition-colors ${!connectNext ? 'shadow-sm' : ''}`}>
-                            BEST
-                          </div>
-                        )}
-
-                        {/* End of block cap */}
-                        {isBest && connectPrev && !connectNext && (
-                          <div className="absolute -top-3 left-1/2 h-[18px] w-3 bg-green-100 dark:bg-green-900 rounded-r-md pointer-events-none z-10 transition-colors" />
-                        )}
                         <div className="relative h-24 w-8 flex items-end justify-center mt-2">
                           {/* Single bar showing actual (if available) or forecast */}
                           <div
