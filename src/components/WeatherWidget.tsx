@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Cloud, Wind, Sun, CloudRain, CloudSnow, CloudLightning, Thermometer, Droplets, X, Eye } from 'lucide-react';
+import { Cloud, Wind, Sun, CloudRain, CloudSnow, CloudLightning, Thermometer, X, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useWeather } from '@/hooks/useWeather';
 import { Skeleton } from '@/components/ui/skeleton';
