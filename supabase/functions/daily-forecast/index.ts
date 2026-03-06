@@ -86,27 +86,54 @@ Deno.serve(async (req) => {
 
     const notifications: Array<{ token: string; title: string; body: string }> = [];
 
-    // Fetch today's forecast
-    const forecastResponse = await fetch('https://api.carbonintensity.org.uk/intensity/date');
-    if (!forecastResponse.ok) {
-      throw new Error('Failed to fetch forecast data');
+    // Fetch today's and tomorrow's forecast so we always have future windows
+    const tomorrow = new Date(now);
+    tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().slice(0, 10);
+
+    const [todayRes, tomorrowRes] = await Promise.all([
+      fetch('https://api.carbonintensity.org.uk/intensity/date'),
+      fetch(`https://api.carbonintensity.org.uk/intensity/date/${tomorrowStr}`),
+    ]);
+
+    if (!todayRes.ok) {
+      throw new Error('Failed to fetch today forecast data');
     }
 
-    const forecastData = await forecastResponse.json();
-    const forecasts: ForecastData[] = forecastData.data || [];
+    const todayData = await todayRes.json();
+    const todayForecasts: ForecastData[] = todayData.data || [];
 
-    // Calculate stats
+    let tomorrowForecasts: ForecastData[] = [];
+    if (tomorrowRes.ok) {
+      const tomorrowData = await tomorrowRes.json();
+      tomorrowForecasts = tomorrowData.data || [];
+    }
+
+    // All forecasts for stats, but only future slots for best/worst windows
+    const allForecasts = [...todayForecasts, ...tomorrowForecasts];
+    const futureForecasts = allForecasts.filter(f => new Date(f.to) > now);
+
+    // Calculate today's overall stats (for context)
     let totalIntensity = 0;
     let greenSlots = 0;
-    let bestTime: ForecastData | null = null;
-    let worstTime: ForecastData | null = null;
-
-    for (const forecast of forecasts) {
+    for (const forecast of todayForecasts) {
       totalIntensity += forecast.intensity.forecast;
       const idx = forecast.intensity.index.toLowerCase();
       if (idx === 'low' || idx === 'very low') {
         greenSlots++;
       }
+    }
+
+    const avgIntensity = todayForecasts.length > 0
+      ? Math.round(totalIntensity / todayForecasts.length)
+      : 0;
+    const greenHours = Math.round(greenSlots / 2);
+
+    // Find best/worst from FUTURE slots only
+    let bestTime: ForecastData | null = null;
+    let worstTime: ForecastData | null = null;
+
+    for (const forecast of futureForecasts) {
       if (!bestTime || forecast.intensity.forecast < bestTime.intensity.forecast) {
         bestTime = forecast;
       }
@@ -115,24 +142,42 @@ Deno.serve(async (req) => {
       }
     }
 
-    const avgIntensity = Math.round(totalIntensity / forecasts.length);
-    const greenHours = Math.round(greenSlots / 2);
+    // Helper: format time in UK timezone and add "tomorrow" if needed
+    function formatUKTime(isoStr: string): string {
+      const d = new Date(isoStr);
+      const ukH = (d.getUTCHours() + ukOffset) % 24;
+      const ukM = d.getUTCMinutes();
+      return `${ukH.toString().padStart(2, '0')}:${ukM.toString().padStart(2, '0')}`;
+    }
+
+    function isTomorrowSlot(isoStr: string): boolean {
+      const d = new Date(isoStr);
+      // Adjust to UK date
+      const ukDate = new Date(d.getTime() + ukOffset * 60 * 60 * 1000);
+      const nowUK = new Date(now.getTime() + ukOffset * 60 * 60 * 1000);
+      return ukDate.getUTCDate() !== nowUK.getUTCDate()
+        || ukDate.getUTCMonth() !== nowUK.getUTCMonth();
+    }
 
     // Generate notification for each subscription
     for (const sub of subscriptions as PushSubscription[]) {
       const emoji = avgIntensity < 100 ? '🌿' : avgIntensity < 200 ? '☁️' : '🏭';
-      const bestFmt = bestTime ? new Date(bestTime.from).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : 'N/A';
-      const worstFmt = worstTime ? new Date(worstTime.from).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : 'N/A';
 
+      const bestFmt = bestTime ? formatUKTime(bestTime.from) : 'N/A';
+      const worstFmt = worstTime ? formatUKTime(worstTime.from) : 'N/A';
+      const bestLabel = bestTime && isTomorrowSlot(bestTime.from) ? ` (tomorrow)` : '';
+      const worstLabel = worstTime && isTomorrowSlot(worstTime.from) ? ` (tomorrow)` : '';
+
+      // Use "Daily Energy Outlook" title
       notifications.push({
         token: sub.device_token,
-        title: `${emoji} Today's Carbon Forecast`,
+        title: `🌅 Daily Energy Outlook`,
         body: [
-          `Today's Average: ${avgIntensity}g CO₂/kWh`,
+          `Today's average: ${avgIntensity}g CO₂/kWh.`,
           `${greenHours}h of green energy expected 🌿`,
-          `Best: ${bestFmt} (${bestTime?.intensity.forecast}g)`,
-          `Worst: ${worstFmt} (${worstTime?.intensity.forecast}g)`
-        ].join(' · '),
+          `Best window: ${bestFmt}${bestLabel} (${bestTime?.intensity.forecast}g)`,
+          `· Worst: ${worstFmt}${worstLabel} (${worstTime?.intensity.forecast}g)`
+        ].join(' '),
       });
     }
 
