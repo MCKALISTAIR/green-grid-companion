@@ -163,19 +163,40 @@ Deno.serve(async (req) => {
     for (const sub of subscriptions as PushSubscription[]) {
       const emoji = avgIntensity < 100 ? '🌿' : avgIntensity < 200 ? '☁️' : '🏭';
 
-      const bestFmt = bestTime ? formatUKTime(bestTime.from) : 'N/A';
-      const worstFmt = worstTime ? formatUKTime(worstTime.from) : 'N/A';
-      const bestLabel = bestTime && isTomorrowSlot(bestTime.from) ? ` (tomorrow)` : '';
-      const worstLabel = worstTime && isTomorrowSlot(worstTime.from) ? ` (tomorrow)` : '';
+      // Find the best consecutive green window (contiguous slots at or below best intensity + 20g tolerance)
+      let bestWindowStart = bestTime?.from || '';
+      let bestWindowEnd = bestTime?.to || '';
+      if (bestTime && futureForecasts.length > 0) {
+        const threshold = bestTime.intensity.forecast + 20;
+        const bestIdx = futureForecasts.indexOf(bestTime);
+        let startIdx = bestIdx;
+        let endIdx = bestIdx;
+        // Expand backward while adjacent and within threshold
+        while (startIdx > 0 && futureForecasts[startIdx - 1].intensity.forecast <= threshold) {
+          startIdx--;
+        }
+        // Expand forward while adjacent and within threshold
+        while (endIdx < futureForecasts.length - 1 && futureForecasts[endIdx + 1].intensity.forecast <= threshold) {
+          endIdx++;
+        }
+        bestWindowStart = futureForecasts[startIdx].from;
+        bestWindowEnd = futureForecasts[endIdx].to;
+      }
 
-      // Use "Daily Energy Outlook" title
+      const bestStartFmt = formatUKTime(bestWindowStart);
+      const bestEndFmt = formatUKTime(bestWindowEnd);
+      const bestDurationH = Math.round((new Date(bestWindowEnd).getTime() - new Date(bestWindowStart).getTime()) / (1000 * 60 * 60));
+      const bestLabel = bestTime && isTomorrowSlot(bestWindowStart) ? ', tomorrow' : '';
+      const worstFmt = worstTime ? formatUKTime(worstTime.from) : 'N/A';
+      const worstLabel = worstTime && isTomorrowSlot(worstTime.from) ? ' (tomorrow)' : '';
+
       notifications.push({
         token: sub.device_token,
         title: `🌅 Daily Energy Outlook`,
         body: [
           `Today's average: ${avgIntensity}g CO₂/kWh.`,
           `${greenHours}h of green energy expected 🌿`,
-          `Best window: ${bestFmt}${bestLabel} (${bestTime?.intensity.forecast}g)`,
+          `Best window: ${bestStartFmt}–${bestEndFmt} (${bestDurationH}h${bestLabel})`,
           `· Worst: ${worstFmt}${worstLabel} (${worstTime?.intensity.forecast}g)`
         ].join(' '),
       });
