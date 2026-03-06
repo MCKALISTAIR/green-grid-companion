@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Cloud, Wind, Sun, CloudRain, CloudSnow, CloudLightning, X, Eye } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import { Cloud, Wind, Sun, CloudRain, CloudSnow, CloudLightning, Thermometer, Droplets, X, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useWeather } from '@/hooks/useWeather';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -17,23 +16,17 @@ export function WeatherWidget() {
         localStorage.setItem(WEATHER_WIDGET_HIDDEN_KEY, isHidden.toString());
     }, [isHidden]);
 
-    const handleHide = () => {
-        setIsHidden(true);
-    };
-
-    const handleShow = () => {
-        setIsHidden(false);
-    };
+    const handleHide = () => setIsHidden(true);
+    const handleShow = () => setIsHidden(false);
 
     if (isLoading) {
-        return <Skeleton className="h-24 w-full rounded-xl" />;
+        return <Skeleton className="h-16 w-full rounded-xl" />;
     }
 
     if (error || !data) {
-        return null; // Hide if weather fails, it's secondary info
+        return null;
     }
 
-    // If hidden, show a compact button to restore it
     if (isHidden) {
         return (
             <Button
@@ -55,52 +48,80 @@ export function WeatherWidget() {
         return null;
     }
 
-    const isHighWind = current.wind_speed_10m > 15; // > 15mph is breezy
-    const isSunny = current.cloud_cover < 30; // < 30% cloud
+    const isHighWind = current.wind_speed_10m > 15;
+    const isSunny = current.cloud_cover < 30;
 
-    // Map WMO codes to icons
     const getWeatherIcon = (code: number) => {
-        if (code <= 3) return <Sun className="w-5 h-5 text-orange-500" />;
-        if (code <= 48) return <Cloud className="w-5 h-5 text-gray-400" />;
-        if (code <= 67) return <CloudRain className="w-5 h-5 text-blue-400" />;
-        if (code <= 77) return <CloudSnow className="w-5 h-5 text-white" />;
-        return <CloudLightning className="w-5 h-5 text-purple-400" />;
+        if (code <= 3) return <Sun className="w-5 h-5 text-amber-500" />;
+        if (code <= 48) return <Cloud className="w-5 h-5 text-muted-foreground" />;
+        if (code <= 67) return <CloudRain className="w-5 h-5 text-blue-500" />;
+        if (code <= 77) return <CloudSnow className="w-5 h-5 text-sky-300" />;
+        return <CloudLightning className="w-5 h-5 text-purple-500" />;
+    };
+
+    const getWeatherLabel = (code: number) => {
+        if (code <= 1) return 'Clear';
+        if (code <= 3) return 'Partly cloudy';
+        if (code <= 48) return 'Overcast';
+        if (code <= 57) return 'Drizzle';
+        if (code <= 67) return 'Rain';
+        if (code <= 77) return 'Snow';
+        return 'Thunderstorm';
     };
 
     return (
-        <Card className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-100 dark:border-blue-900 relative">
-            {/* Close button */}
-            <Button
-                variant="ghost"
-                size="icon"
+        <div className="relative rounded-xl border border-border/50 bg-card/60 backdrop-blur-sm overflow-hidden">
+            {/* Dismiss button */}
+            <button
                 onClick={handleHide}
-                className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-white/80 dark:bg-black/40 hover:bg-white dark:hover:bg-black/60 shadow-sm"
+                className="absolute top-2 right-2 p-1 rounded-full text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/50 transition-colors z-10"
                 aria-label="Hide weather widget"
             >
-                <X className="w-3 h-3" />
-            </Button>
+                <X className="w-3.5 h-3.5" />
+            </button>
 
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 bg-white/50 dark:bg-white/10 rounded-full shadow-sm">
+            <div className="px-4 py-3 flex items-center gap-4">
+                {/* Weather icon & condition */}
+                <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="shrink-0 p-1.5 rounded-lg bg-muted/50">
                         {getWeatherIcon(current.weather_code)}
                     </div>
-                    <div>
-                        <h3 className="font-semibold text-sm">Local Conditions</h3>
-                        <p className="text-xs text-muted-foreground">
-                            {current.temperature_2m}{current_units.temperature_2m} • {current.wind_speed_10m}{current_units.wind_speed_10m} Wind
-                        </p>
+                    <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{getWeatherLabel(current.weather_code)}</p>
+                        <p className="text-xs text-muted-foreground">Local conditions</p>
                     </div>
                 </div>
 
-                {/* Insight Badge */}
-                {(isHighWind || isSunny) && (
-                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/60 dark:bg-black/20 text-xs font-medium text-blue-700 dark:text-blue-300">
-                        {isHighWind ? <Wind className="w-3 h-3" /> : <Sun className="w-3 h-3" />}
-                        <span>{isHighWind ? 'Windy boost' : 'Solar boost'}</span>
+                {/* Stats */}
+                <div className="flex items-center gap-3 ml-auto mr-6 shrink-0">
+                    <div className="flex items-center gap-1 text-sm">
+                        <Thermometer className="w-3.5 h-3.5 text-muted-foreground/70" />
+                        <span className="font-medium tabular-nums">{current.temperature_2m}°</span>
                     </div>
-                )}
+                    <div className="flex items-center gap-1 text-sm">
+                        <Wind className="w-3.5 h-3.5 text-muted-foreground/70" />
+                        <span className="font-medium tabular-nums">{current.wind_speed_10m}<span className="text-xs text-muted-foreground ml-0.5">{current_units.wind_speed_10m}</span></span>
+                    </div>
+                    {current.cloud_cover !== undefined && (
+                        <div className="flex items-center gap-1 text-sm">
+                            <Droplets className="w-3.5 h-3.5 text-muted-foreground/70" />
+                            <span className="font-medium tabular-nums">{current.cloud_cover}<span className="text-xs text-muted-foreground">%</span></span>
+                        </div>
+                    )}
+                </div>
             </div>
-        </Card>
+
+            {/* Renewable boost indicator */}
+            {(isHighWind || isSunny) && (
+                <div className={`px-4 py-1.5 text-xs font-medium flex items-center gap-1.5 ${
+                    isHighWind
+                        ? 'bg-sky-500/10 text-sky-700 dark:text-sky-300'
+                        : 'bg-amber-500/10 text-amber-700 dark:text-amber-300'
+                }`}>
+                    {isHighWind ? <Wind className="w-3 h-3" /> : <Sun className="w-3 h-3" />}
+                    {isHighWind ? 'Windy conditions — good for wind generation' : 'Clear skies — good for solar generation'}
+                </div>
+            )}
+        </div>
     );
 }
