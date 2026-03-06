@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Cloud, Wind, Sun, CloudRain, CloudSnow, CloudLightning, Thermometer, Droplets, X, Eye } from 'lucide-react';
+import { Cloud, Wind, Sun, CloudRain, CloudSnow, CloudLightning, Thermometer, X, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useWeather } from '@/hooks/useWeather';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -80,35 +80,35 @@ export function WeatherWidget() {
                 <X className="w-3.5 h-3.5" />
             </button>
 
-            <div className="px-4 py-3 flex items-center gap-4">
+            <div className="px-3 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-2">
                 {/* Weather icon & condition */}
-                <div className="flex items-center gap-2.5 min-w-0">
+                <div className="flex items-center gap-2 min-w-0">
                     <div className="shrink-0 p-1.5 rounded-lg bg-muted/50">
                         {getWeatherIcon(current.weather_code)}
                     </div>
-                    <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">{getWeatherLabel(current.weather_code)}</p>
-                        <p className="text-xs text-muted-foreground">Local conditions</p>
-                    </div>
+                    <p className="text-sm font-medium truncate">{getWeatherLabel(current.weather_code)}</p>
                 </div>
 
-                {/* Stats */}
-                <div className="flex items-center gap-3 ml-auto mr-6 shrink-0">
-                    <div className="flex items-center gap-1 text-sm">
+                {/* Stats - compact */}
+                <div className="flex items-center gap-2.5 text-sm">
+                    <span className="flex items-center gap-1">
                         <Thermometer className="w-3.5 h-3.5 text-muted-foreground/70" />
                         <span className="font-medium tabular-nums">{current.temperature_2m}°</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-sm">
+                    </span>
+                    <span className="flex items-center gap-1">
                         <Wind className="w-3.5 h-3.5 text-muted-foreground/70" />
-                        <span className="font-medium tabular-nums">{current.wind_speed_10m}<span className="text-xs text-muted-foreground ml-0.5">{current_units.wind_speed_10m}</span></span>
-                    </div>
-                    {current.cloud_cover !== undefined && (
-                        <div className="flex items-center gap-1 text-sm">
-                            <Droplets className="w-3.5 h-3.5 text-muted-foreground/70" />
-                            <span className="font-medium tabular-nums">{current.cloud_cover}<span className="text-xs text-muted-foreground">%</span></span>
-                        </div>
-                    )}
+                        <span className="font-medium tabular-nums">{current.wind_speed_10m}<span className="text-xs text-muted-foreground">{current_units.wind_speed_10m}</span></span>
+                    </span>
                 </div>
+
+                {/* Dismiss */}
+                <button
+                    onClick={handleHide}
+                    className="ml-auto p-1 rounded-full text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted/50 transition-colors"
+                    aria-label="Hide weather widget"
+                >
+                    <X className="w-3.5 h-3.5" />
+                </button>
             </div>
 
             {/* Renewable boost indicator */}

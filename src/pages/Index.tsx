@@ -370,7 +370,7 @@ const Index = () => {
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {/* Energy Insights */}
-                      <Card className="p-4 shadow-lg bg-accent/30 border-accent/50 md:col-span-2 lg:col-span-1 lg:row-span-2 flex flex-col justify-between">
+                      <Card className="p-4 shadow-lg bg-accent/30 border-accent/50 md:col-span-2 lg:col-span-1 lg:row-span-2 flex flex-col">
                         <div className="flex items-start gap-3">
                           <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
                             <Zap className="w-4 h-4 text-accent-foreground" />
@@ -380,23 +380,21 @@ const Index = () => {
                             <p className="text-sm text-muted-foreground mt-1">
                               {getSmartTip(intensity, forecast)}
                             </p>
-
-
-
-                            {prefs.showWeatherInInsights && (
-                              <div className="mt-4 pt-4 border-t border-accent-foreground/10">
-                                <ComponentErrorBoundary name="Weather Widget">
-                                  <WeatherWidget />
-                                </ComponentErrorBoundary>
-                              </div>
-                            )}
-
-                            <div className="mt-4">
-                              <ComponentErrorBoundary name="Greener Nights">
-                                <GreenerNightsCard />
-                              </ComponentErrorBoundary>
-                            </div>
                           </div>
+                        </div>
+
+                        {prefs.showWeatherInInsights && (
+                          <div className="mt-3 pt-3 border-t border-accent-foreground/10">
+                            <ComponentErrorBoundary name="Weather Widget">
+                              <WeatherWidget />
+                            </ComponentErrorBoundary>
+                          </div>
+                        )}
+
+                        <div className="mt-3">
+                          <ComponentErrorBoundary name="Greener Nights">
+                            <GreenerNightsCard />
+                          </ComponentErrorBoundary>
                         </div>
                       </Card>
 
