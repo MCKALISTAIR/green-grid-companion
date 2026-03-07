@@ -171,12 +171,12 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
     // Bottom% is computed dynamically from the actual hill Bézier curves
     // via getTurbineBottomPct(), so they always sit on the ridge line
     // even if the hill paths or container height change.
-    const CONTAINER_PCT = 65; // must match h-[65%] on landscape container
+    const CONTAINER_PCT = 85; // must match h-[85%] on landscape container
     const allSlots = [
       // Background turbines – on back hill ridge
-      { left: 18, scale: 0.35, z: 1,  layer: 'back' as const },
-      { left: 25, scale: 0.30, z: 1,  layer: 'back' as const },
-      { left: 92, scale: 0.32, z: 1,  layer: 'back' as const },
+      { left: 18, scale: 0.35, z: 1, layer: 'back' as const },
+      { left: 25, scale: 0.30, z: 1, layer: 'back' as const },
+      { left: 92, scale: 0.32, z: 1, layer: 'back' as const },
       // Mid-ground turbines – on mid hill ridge
       { left: 50, scale: 0.55, z: 15, layer: 'mid' as const },
       { left: 60, scale: 0.50, z: 15, layer: 'mid' as const },
@@ -200,10 +200,10 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
     // Pick slots: always include one from each visible layer, then fill
     const picked: typeof allSlots = [];
     const byLayer = { front: allSlots.filter(s => s.layer === 'front'), mid: allSlots.filter(s => s.layer === 'mid'), back: allSlots.filter(s => s.layer === 'back') };
-    
+
     if (count >= 1) picked.push(byLayer.front[0]);
     if (count >= 2) picked.push(byLayer.mid[0]);
-    
+
     const remaining = allSlots.filter(s => !picked.includes(s));
     for (let i = 0; i < Math.min(count - picked.length, remaining.length); i++) {
       picked.push(remaining[i]);
@@ -514,7 +514,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
 
       {/* High Fidelity Landscape (Hills + Trees) */}
       {/* Background Landscape Layer (Back + Mid Hills) */}
-      <div className="absolute bottom-0 left-0 right-0 h-[65%] pointer-events-none z-0">
+      <div className="absolute bottom-0 left-0 right-0 h-[85%] pointer-events-none z-0">
         <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
           <LandscapeBack
             cleanliness={sceneConfig.cleanliness}
@@ -557,7 +557,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       </AnimatePresence>
 
       {/* Foreground Landscape Layer (Front Hill) - Occludes Sheep */}
-      <div className="absolute bottom-0 left-0 right-0 h-[65%] pointer-events-none z-20">
+      <div className="absolute bottom-0 left-0 right-0 h-[85%] pointer-events-none z-20">
         <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
           <LandscapeFront
             cleanliness={sceneConfig.cleanliness}
@@ -768,7 +768,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       {/* Nuclear Cooling Towers - Show when nuclear % > 5 */}
       <AnimatePresence>
         {sceneConfig.showRenewables && nuclearPercentage > 5 && (
-          <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-15">
+          <div className="absolute bottom-0 left-0 right-0 h-[65%] pointer-events-none z-15">
             <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <NuclearCoolingTower x={280} steamIntensity={nuclearPercentage / 100} isNight={isNight} />
               {nuclearPercentage > 15 && <NuclearCoolingTower x={240} steamIntensity={0.5} isNight={isNight} />}
@@ -780,7 +780,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       {/* Offshore Wind Turbines - Show when wind % > 10 */}
       <AnimatePresence>
         {windPercentage > 10 && (
-          <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-5">
+          <div className="absolute bottom-0 left-0 right-0 h-[65%] pointer-events-none z-5">
             <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <OffshoreWind count={Math.min(3, Math.floor(windPercentage / 10))} windSpeed={weather.windSpeed} />
             </svg>
@@ -791,7 +791,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       {/* Tidal Waves - Show when hydro/marine % > 5 */}
       <AnimatePresence>
         {(hydroPercentage > 5 || marinePercentage > 0) && (
-          <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-25">
+          <div className="absolute bottom-0 left-0 right-0 h-[65%] pointer-events-none z-25">
             <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <TidalWaves intensity={(hydroPercentage + marinePercentage) / 100} />
             </svg>
