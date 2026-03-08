@@ -515,7 +515,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       {/* High Fidelity Landscape (Hills + Trees) */}
       {/* Background Landscape Layer (Back + Mid Hills) */}
       <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-0 overflow-hidden">
-        <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+        <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
           <LandscapeBack
             cleanliness={sceneConfig.cleanliness}
             isNight={isNight}
@@ -558,7 +558,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
 
       {/* Foreground Landscape Layer (Front Hill) - Occludes Sheep */}
       <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-20 overflow-hidden">
-        <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+        <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
           <LandscapeFront
             cleanliness={sceneConfig.cleanliness}
             isNight={isNight}
@@ -769,7 +769,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       <AnimatePresence>
         {sceneConfig.showRenewables && nuclearPercentage > 5 && (
           <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-15">
-            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <NuclearCoolingTower x={280} steamIntensity={nuclearPercentage / 100} isNight={isNight} />
               {nuclearPercentage > 15 && <NuclearCoolingTower x={240} steamIntensity={0.5} isNight={isNight} />}
             </svg>
@@ -781,7 +781,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       <AnimatePresence>
         {windPercentage > 10 && (
           <div className="absolute bottom-0 left-0 right-0 h-[65%] pointer-events-none z-5">
-            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <OffshoreWind count={Math.min(3, Math.floor(windPercentage / 10))} windSpeed={weather.windSpeed} />
             </svg>
           </div>
@@ -792,7 +792,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       <AnimatePresence>
         {(hydroPercentage > 5 || marinePercentage > 0) && (
           <div className="absolute bottom-0 left-0 right-0 h-[65%] pointer-events-none z-25">
-            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <TidalWaves intensity={(hydroPercentage + marinePercentage) / 100} />
             </svg>
           </div>
@@ -822,7 +822,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       <AnimatePresence>
         {sceneConfig.cleanliness > 0.8 && sceneConfig.isDaytime && (
           <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-12">
-            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <Flowers positions={[
                 { x: 50, y: 120 },
                 { x: 120, y: 115 },
@@ -855,7 +855,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       <AnimatePresence>
         {isNight && sceneConfig.cleanliness > 0.7 && (
           <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-12">
-            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <Owl treeX={80} treeY={85} />
               <Owl treeX={320} treeY={95} />
             </svg>
@@ -878,7 +878,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       <AnimatePresence>
         {sceneConfig.cleanliness > 0.5 && (
           <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-1">
-            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <BackgroundMountains isNight={isNight} />
             </svg>
           </div>
@@ -889,7 +889,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       <AnimatePresence>
         {sceneConfig.cleanliness > 0.6 && (
           <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-30">
-            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <ForegroundGrass windSpeed={weather.windSpeed} />
             </svg>
           </div>
@@ -907,7 +907,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       <AnimatePresence>
         {isNight && sceneConfig.cleanliness > 0.7 && (
           <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-16">
-            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <EVChargingStation isCharging={sceneConfig.cleanliness > 0.8} />
             </svg>
           </div>
@@ -918,7 +918,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       <AnimatePresence>
         {isRaining && hydroPercentage > 10 && (
           <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-14">
-            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <HydroDam flowIntensity={Math.min(hydroPercentage / 50, 1)} />
             </svg>
           </div>
@@ -934,7 +934,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       <AnimatePresence>
         {biomassPercentage > 5 && sceneConfig.showRenewables && (
           <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-15">
-            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <BiomassSmoke x={180} intensity={biomassPercentage / 100} />
               {biomassPercentage > 15 && <BiomassSmoke x={220} intensity={0.6} />}
             </svg>
