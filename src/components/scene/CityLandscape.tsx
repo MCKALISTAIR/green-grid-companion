@@ -536,6 +536,10 @@ export function CityLandscapeMid(props: CityLandscapeProps) {
           skipIntro={props.skipIntro}
         />
       ))}
+      {/* Landmark: Dome building (museum) */}
+      <DomeBuilding x={160} width={36} height={70} fill={palette.skylineMid} isNight={props.isNight} delay={0.25} skipIntro={props.skipIntro} />
+      {/* Landmark: Clock tower */}
+      <ClockTower x={300} height={82} fill={palette.skylineMid} isNight={props.isNight} delay={0.28} skipIntro={props.skipIntro} />
     </g>
   );
 }
