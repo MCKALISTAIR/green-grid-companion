@@ -74,6 +74,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
   // Scene type: director override or auto-detected
   const sceneType: SceneType = (isDirectorMode && overrides.sceneType) ? overrides.sceneType : autoSceneType;
   const isCity = sceneType === 'city';
+  const isCoastal = sceneType === 'coastal';
 
   // ... (timeOfDay, isNight, etc.)
 
