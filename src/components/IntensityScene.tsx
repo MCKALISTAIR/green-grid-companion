@@ -922,7 +922,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
 
       {/* Bees visiting flowers */}
       <AnimatePresence>
-        {sceneConfig.cleanliness > 0.8 && sceneConfig.isDaytime && (
+        {!isCity && sceneConfig.cleanliness > 0.8 && sceneConfig.isDaytime && (
           <>
             <Bee startX={15} startY={18} delay={0} />
             <Bee startX={50} startY={22} delay={2} />
