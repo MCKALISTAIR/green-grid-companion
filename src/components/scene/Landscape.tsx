@@ -335,6 +335,9 @@ export function LandscapeFront(props: LandscapeProps) {
                 skipIntro={props.skipIntro}
                 windSpeed={props.windSpeed}
             />
+            {/* Ground strip at the very bottom for visible earth */}
+            <rect x={0} y={145} width={400} height={5} fill={palette.frontHill} />
+            <rect x={0} y={148} width={400} height={2} fill="rgba(0,0,0,0.1)" />
         </>
     );
 }
