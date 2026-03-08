@@ -150,18 +150,21 @@ function Building({ x, width, height, fill, windowLit, windowDark, isNight, clea
       {/* Rooftop solar panels when clean */}
       {cleanliness > 0.6 && width > 20 && (
         <g>
-          {Array.from({ length: Math.floor(width / 12) }).map((_, i) => (
-            <rect
-              key={`solar-${i}`}
-              x={x + 4 + i * 12}
-              y={150 - height - 3}
-              width={8}
-              height={2}
-              fill="#1e40af"
-              opacity={0.7}
-              rx={0.3}
-            />
-          ))}
+          {Array.from({ length: Math.floor(width / 12) }).map((_, i) => {
+            const panelX = x + 4 + i * 12;
+            const roofY = 150 - height;
+            return (
+              <g key={`solar-${i}`}>
+                {/* Mounting bracket / leg */}
+                <rect x={panelX + 1} y={roofY - 2} width={1} height={2.5} fill="rgba(150,150,150,0.6)" />
+                <rect x={panelX + 6} y={roofY - 2} width={1} height={2.5} fill="rgba(150,150,150,0.6)" />
+                {/* Panel (tilted appearance via slight y offset) */}
+                <rect x={panelX} y={roofY - 3.5} width={8} height={2} fill="#1e40af" opacity={0.75} rx={0.3} />
+                {/* Panel highlight strip */}
+                <rect x={panelX + 0.5} y={roofY - 3.2} width={7} height={0.4} fill="rgba(150,200,255,0.3)" />
+              </g>
+            );
+          })}
         </g>
       )}
 
