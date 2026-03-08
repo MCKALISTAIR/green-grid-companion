@@ -768,7 +768,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       {/* Nuclear Cooling Towers - Show when nuclear % > 5 */}
       <AnimatePresence>
         {sceneConfig.showRenewables && nuclearPercentage > 5 && (
-          <div className="absolute bottom-0 left-0 right-0 h-[85%] pointer-events-none z-15">
+          <div className="absolute bottom-0 left-0 right-0 h-[95%] pointer-events-none z-15">
             <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <NuclearCoolingTower x={280} steamIntensity={nuclearPercentage / 100} isNight={isNight} />
               {nuclearPercentage > 15 && <NuclearCoolingTower x={240} steamIntensity={0.5} isNight={isNight} />}
