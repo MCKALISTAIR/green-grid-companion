@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAppLocation } from '@/contexts/LocationContext';
 
-export type SceneType = 'countryside' | 'city';
+export type SceneType = 'countryside' | 'city' | 'coastal';
 
 const STORAGE_KEY = 'gridgreen-scene-type';
 const PREFERENCE_KEY = 'gridgreen-scene-preference'; // 'auto' | 'countryside' | 'city'
