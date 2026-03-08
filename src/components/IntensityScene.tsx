@@ -629,6 +629,8 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
                 windSpeed={weather.windSpeed}
                 timeOfDay={timeOfDay}
               />
+              {/* London Eye – between back and mid layers */}
+              <LondonEye x={42} y={52} radius={28} isNight={isNight} skipIntro={hasSeenScene} />
               <CityLandscapeMid
                 cleanliness={sceneConfig.cleanliness}
                 isNight={isNight}
