@@ -523,7 +523,79 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       </AnimatePresence>
 
       {/* ===== LANDSCAPE LAYERS ===== */}
-      {isCity ? (
+      {isCoastal ? (
+        <>
+          {/* Coastal: Ocean + horizon */}
+          <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-0 overflow-hidden">
+            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+              <CoastalLandscapeBack
+                cleanliness={sceneConfig.cleanliness}
+                isNight={isNight}
+                synthwaveMode={synthwaveMode}
+                isSnowing={weather.isSnowing}
+                skipIntro={hasSeenScene}
+                windSpeed={weather.windSpeed}
+                timeOfDay={timeOfDay}
+              />
+              <CoastalLandscapeMid
+                cleanliness={sceneConfig.cleanliness}
+                isNight={isNight}
+                synthwaveMode={synthwaveMode}
+                isSnowing={weather.isSnowing}
+                skipIntro={hasSeenScene}
+                windSpeed={weather.windSpeed}
+                timeOfDay={timeOfDay}
+              />
+            </svg>
+          </div>
+
+          {/* Coastal: Offshore wind turbines */}
+          <AnimatePresence>
+            {windPercentage > 5 && (
+              <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-5 overflow-hidden">
+                <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+                  <CoastalOffshoreWind count={Math.min(4, Math.floor(windPercentage / 8))} windSpeed={weather.windSpeed} />
+                </svg>
+              </div>
+            )}
+          </AnimatePresence>
+
+          {/* Coastal: Boats */}
+          <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-10 overflow-hidden">
+            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+              <SailingBoat x={120} delay={0} isNight={isNight} />
+              <FishingBoat x={250} delay={5} isNight={isNight} />
+              {sceneConfig.cleanliness > 0.6 && <SailingBoat x={200} delay={12} isNight={isNight} />}
+            </svg>
+          </div>
+
+          {/* Coastal: Foreground (beach + cliffs) */}
+          <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-20 overflow-hidden">
+            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+              <CoastalLandscapeFront
+                cleanliness={sceneConfig.cleanliness}
+                isNight={isNight}
+                synthwaveMode={synthwaveMode}
+                isSnowing={weather.isSnowing}
+                skipIntro={hasSeenScene}
+                windSpeed={weather.windSpeed}
+                timeOfDay={timeOfDay}
+              />
+            </svg>
+          </div>
+
+          {/* Coastal: Seagulls */}
+          <AnimatePresence>
+            {sceneConfig.isDaytime && sceneConfig.cleanliness > 0.3 && (
+              <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-[23] overflow-hidden">
+                <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+                  <SeagullFlock count={sceneConfig.cleanliness > 0.6 ? 5 : 3} isNight={isNight} />
+                </svg>
+              </div>
+            )}
+          </AnimatePresence>
+        </>
+      ) : isCity ? (
         <>
           {/* City: Background skyline */}
           <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-0 overflow-hidden">
