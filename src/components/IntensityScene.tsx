@@ -933,7 +933,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       {/* Biomass Smoke - Green tinted smoke when biomass > 5% */}
       <AnimatePresence>
         {biomassPercentage > 5 && sceneConfig.showRenewables && (
-          <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-15">
+          <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-15">
             <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <BiomassSmoke x={180} intensity={biomassPercentage / 100} />
               {biomassPercentage > 15 && <BiomassSmoke x={220} intensity={0.6} />}
