@@ -792,7 +792,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       <AnimatePresence>
         {(hydroPercentage > 5 || marinePercentage > 0) && (
           <div className="absolute bottom-0 left-0 right-0 h-[65%] pointer-events-none z-25">
-            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <TidalWaves intensity={(hydroPercentage + marinePercentage) / 100} />
             </svg>
           </div>
