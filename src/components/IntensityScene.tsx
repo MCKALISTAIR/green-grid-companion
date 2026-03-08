@@ -304,7 +304,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
 
   return (
     <motion.div
-      className={`relative w-full min-h-[320px] h-[40vh] md:h-[50vh] overflow-hidden rounded-xl md:rounded-l-xl transition-colors duration-1000 ${isVintage ? 'sepia-[.6] contrast-125 grayscale-[.3]' : ''} ${className || ''}`}
+      className={`relative w-full min-h-[380px] h-[50vh] md:h-[55vh] overflow-hidden rounded-xl md:rounded-l-xl transition-colors duration-1000 ${isVintage ? 'sepia-[.6] contrast-125 grayscale-[.3]' : ''} ${className || ''}`}
       animate={{
         background: sceneConfig.skyGradient,
         filter: sceneConfig.sceneFilter,
