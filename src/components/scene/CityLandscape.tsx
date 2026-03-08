@@ -177,6 +177,251 @@ function Building({ x, width, height, fill, windowLit, windowDark, isNight, clea
   );
 }
 
+// ⛪ Church with spire
+function ChurchSpire({ x, height, fill, isNight, delay = 0, skipIntro }: {
+  x: number; height: number; fill: string; isNight: boolean; delay?: number; skipIntro?: boolean;
+}) {
+  const baseWidth = 28;
+  const spireHeight = height * 0.4;
+  const bodyHeight = height - spireHeight;
+  const baseY = 150 - height;
+
+  return (
+    <motion.g
+      initial={skipIntro ? { y: 0, opacity: 1 } : { y: 30, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={skipIntro ? { duration: 0 } : { duration: 1.2, delay, ease: 'easeOut' }}
+    >
+      {/* Church body */}
+      <rect x={x} y={baseY + spireHeight} width={baseWidth} height={bodyHeight} fill={fill} />
+      {/* Pitched roof */}
+      <polygon
+        points={`${x},${baseY + spireHeight} ${x + baseWidth / 2},${baseY + spireHeight - 8} ${x + baseWidth},${baseY + spireHeight}`}
+        fill={fill}
+      />
+      {/* Spire */}
+      <polygon
+        points={`${x + baseWidth / 2 - 3},${baseY + spireHeight - 8} ${x + baseWidth / 2},${baseY} ${x + baseWidth / 2 + 3},${baseY + spireHeight - 8}`}
+        fill={fill}
+      />
+      {/* Cross on top */}
+      <line x1={x + baseWidth / 2} y1={baseY - 4} x2={x + baseWidth / 2} y2={baseY + 4} stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+      <line x1={x + baseWidth / 2 - 3} y1={baseY - 1} x2={x + baseWidth / 2 + 3} y2={baseY - 1} stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+      {/* Rose window */}
+      <circle cx={x + baseWidth / 2} cy={baseY + spireHeight + bodyHeight * 0.3} r={4} fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.15)" strokeWidth="0.5" />
+      {/* Stained glass glow at night */}
+      {isNight && (
+        <circle cx={x + baseWidth / 2} cy={baseY + spireHeight + bodyHeight * 0.3} r={4} fill="#c084fc" opacity={0.3} />
+      )}
+      {/* Door */}
+      <rect x={x + baseWidth / 2 - 3} y={150 - 10} width={6} height={10} rx={3} fill="rgba(0,0,0,0.2)" />
+    </motion.g>
+  );
+}
+
+// 🕌 Domed building (museum/gallery)
+function DomeBuilding({ x, width, height, fill, isNight, delay = 0, skipIntro }: {
+  x: number; width: number; height: number; fill: string; isNight: boolean; delay?: number; skipIntro?: boolean;
+}) {
+  const domeRadius = width * 0.4;
+  const bodyHeight = height - domeRadius;
+  const baseY = 150 - height;
+
+  return (
+    <motion.g
+      initial={skipIntro ? { y: 0, opacity: 1 } : { y: 30, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={skipIntro ? { duration: 0 } : { duration: 1.2, delay, ease: 'easeOut' }}
+    >
+      {/* Building base with columns */}
+      <rect x={x} y={baseY + domeRadius} width={width} height={bodyHeight} fill={fill} />
+      {/* Dome */}
+      <ellipse cx={x + width / 2} cy={baseY + domeRadius} rx={domeRadius} ry={domeRadius} fill={fill} />
+      {/* Dome highlight */}
+      <ellipse cx={x + width / 2 - 2} cy={baseY + domeRadius - 3} rx={domeRadius * 0.6} ry={domeRadius * 0.5} fill="rgba(255,255,255,0.08)" />
+      {/* Cupola on top */}
+      <rect x={x + width / 2 - 2} y={baseY + 2} width={4} height={6} fill={fill} />
+      <circle cx={x + width / 2} cy={baseY + 1} r={2.5} fill={fill} />
+      {/* Columns */}
+      {Array.from({ length: Math.floor(width / 8) }).map((_, i) => (
+        <rect key={i} x={x + 4 + i * 8} y={baseY + domeRadius + 4} width={1.5} height={bodyHeight - 8} fill="rgba(255,255,255,0.12)" />
+      ))}
+      {/* Night dome glow */}
+      {isNight && (
+        <ellipse cx={x + width / 2} cy={baseY + domeRadius} rx={domeRadius + 3} ry={domeRadius + 3} fill="#818cf8" opacity={0.04} />
+      )}
+    </motion.g>
+  );
+}
+
+// 🏢 Modern glass tower (Shard-like)
+function GlassTower({ x, width, height, fill, windowLit, isNight, cleanliness, delay = 0, skipIntro }: {
+  x: number; width: number; height: number; fill: string; windowLit: string;
+  isNight: boolean; cleanliness: number; delay?: number; skipIntro?: boolean;
+}) {
+  const baseY = 150 - height;
+  const taperWidth = width * 0.3;
+
+  return (
+    <motion.g
+      initial={skipIntro ? { y: 0, opacity: 1 } : { y: 30, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={skipIntro ? { duration: 0 } : { duration: 1.2, delay, ease: 'easeOut' }}
+    >
+      {/* Tapered glass body */}
+      <polygon
+        points={`${x + (width - taperWidth) / 2},${baseY} ${x},${150} ${x + width},${150} ${x + (width + taperWidth) / 2},${baseY}`}
+        fill={fill}
+        opacity={0.9}
+      />
+      {/* Glass reflection strips */}
+      {Array.from({ length: Math.floor(height / 8) }).map((_, i) => {
+        const y = baseY + 4 + i * 8;
+        const progress = i / Math.floor(height / 8);
+        const leftX = x + (width - taperWidth) / 2 * (1 - progress);
+        const stripWidth = taperWidth + (width - taperWidth) * progress;
+        return (
+          <rect
+            key={i}
+            x={leftX + 1}
+            y={y}
+            width={stripWidth - 2}
+            height={1}
+            fill="rgba(150,200,255,0.15)"
+          />
+        );
+      })}
+      {/* Lit floors at night */}
+      {isNight && Array.from({ length: Math.floor(height / 10) }).map((_, i) => {
+        const seed = (x * 13 + i * 29) % 100;
+        if (seed > (cleanliness > 0.7 ? 40 : 70)) return null;
+        const y = baseY + 6 + i * 10;
+        const progress = (i * 10) / height;
+        const leftX = x + (width - taperWidth) / 2 * (1 - progress);
+        const stripWidth = taperWidth + (width - taperWidth) * progress;
+        return (
+          <rect key={i} x={leftX + 2} y={y} width={stripWidth - 4} height={3} fill={windowLit} opacity={0.5} rx={0.5} />
+        );
+      })}
+      {/* Antenna/spire at top */}
+      <line
+        x1={x + width / 2} y1={baseY}
+        x2={x + width / 2} y2={baseY - 10}
+        stroke="rgba(200,200,200,0.3)" strokeWidth="0.8"
+      />
+      {/* Aviation warning light */}
+      {isNight && (
+        <motion.circle
+          cx={x + width / 2} cy={baseY - 10}
+          r={1}
+          fill="#ef4444"
+          animate={{ opacity: [1, 0.2, 1] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+        />
+      )}
+    </motion.g>
+  );
+}
+
+// 🏛️ Clock tower (Big Ben style)
+function ClockTower({ x, height, fill, isNight, delay = 0, skipIntro }: {
+  x: number; height: number; fill: string; isNight: boolean; delay?: number; skipIntro?: boolean;
+}) {
+  const baseWidth = 16;
+  const baseY = 150 - height;
+
+  return (
+    <motion.g
+      initial={skipIntro ? { y: 0, opacity: 1 } : { y: 30, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={skipIntro ? { duration: 0 } : { duration: 1.2, delay, ease: 'easeOut' }}
+    >
+      {/* Tower body */}
+      <rect x={x} y={baseY + 15} width={baseWidth} height={height - 15} fill={fill} />
+      {/* Upper section (narrower) */}
+      <rect x={x + 2} y={baseY + 8} width={baseWidth - 4} height={10} fill={fill} />
+      {/* Pointed roof */}
+      <polygon points={`${x + 2},${baseY + 8} ${x + baseWidth / 2},${baseY} ${x + baseWidth - 2},${baseY + 8}`} fill={fill} />
+      {/* Clock face */}
+      <circle cx={x + baseWidth / 2} cy={baseY + 22} r={5} fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.2)" strokeWidth="0.5" />
+      {/* Clock hands */}
+      <line x1={x + baseWidth / 2} y1={baseY + 22} x2={x + baseWidth / 2} y2={baseY + 18} stroke="rgba(255,255,255,0.3)" strokeWidth="0.5" />
+      <line x1={x + baseWidth / 2} y1={baseY + 22} x2={x + baseWidth / 2 + 3} y2={baseY + 22} stroke="rgba(255,255,255,0.3)" strokeWidth="0.5" />
+      {/* Clock glow at night */}
+      {isNight && (
+        <circle cx={x + baseWidth / 2} cy={baseY + 22} r={6} fill="#fbbf24" opacity={0.15} />
+      )}
+    </motion.g>
+  );
+}
+
+// 🎨 Art Deco building (stepped/ziggurat top)
+function ArtDecoBuilding({ x, width, height, fill, windowLit, windowDark, isNight, cleanliness, delay = 0, skipIntro }: {
+  x: number; width: number; height: number; fill: string;
+  windowLit: string; windowDark: string; isNight: boolean; cleanliness: number;
+  delay?: number; skipIntro?: boolean;
+}) {
+  const baseY = 150 - height;
+  const stepCount = 3;
+  const stepHeight = 6;
+
+  return (
+    <motion.g
+      initial={skipIntro ? { y: 0, opacity: 1 } : { y: 30, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={skipIntro ? { duration: 0 } : { duration: 1.2, delay, ease: 'easeOut' }}
+    >
+      {/* Main body */}
+      <rect x={x} y={baseY + stepCount * stepHeight} width={width} height={height - stepCount * stepHeight} fill={fill} />
+      {/* Stepped crown */}
+      {Array.from({ length: stepCount }).map((_, i) => {
+        const inset = (i + 1) * 3;
+        return (
+          <rect
+            key={i}
+            x={x + inset}
+            y={baseY + i * stepHeight}
+            width={width - inset * 2}
+            height={stepHeight + 1}
+            fill={fill}
+          />
+        );
+      })}
+      {/* Decorative vertical lines */}
+      {Array.from({ length: Math.floor(width / 6) }).map((_, i) => (
+        <line
+          key={i}
+          x1={x + 3 + i * 6} y1={baseY + stepCount * stepHeight}
+          x2={x + 3 + i * 6} y2={150}
+          stroke="rgba(255,255,255,0.06)"
+          strokeWidth="0.5"
+        />
+      ))}
+      {/* Art deco windows (taller, narrower) */}
+      {Array.from({ length: Math.floor((height - stepCount * stepHeight) / 14) }).map((_, row) =>
+        Array.from({ length: Math.floor(width / 10) }).map((_, col) => {
+          const seed = (x * 11 + row * 23 + col * 13) % 100;
+          const litProb = isNight ? (cleanliness > 0.7 ? 30 : 65) : 15;
+          return (
+            <rect
+              key={`${row}-${col}`}
+              x={x + 4 + col * 10}
+              y={baseY + stepCount * stepHeight + 4 + row * 14}
+              width={3}
+              height={8}
+              rx={1.5}
+              fill={seed < litProb ? windowLit : windowDark}
+              opacity={seed < litProb ? (isNight ? 0.85 : 0.5) : 0.25}
+            />
+          );
+        })
+      )}
+      {/* Pinnacle */}
+      <line x1={x + width / 2} y1={baseY} x2={x + width / 2} y2={baseY - 6} stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
+    </motion.g>
+  );
+}
+
 // Road with lane markings
 function CityRoad({ fill, skipIntro }: { fill: string; skipIntro?: boolean }) {
   return (
