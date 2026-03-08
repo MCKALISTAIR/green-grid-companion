@@ -66,7 +66,7 @@ function PineTree({ x, y, scale = 1, colorPrimary, colorShadow, isSnowing, isChr
             style={{ transformOrigin: 'center bottom' }}
         >
             {/* Trunk - slightly rounded base */}
-            <path d="M-2,-8 L2,-8 L2,10 Q0,11 -2,10 Z" fill="rgba(60, 40, 20, 0.4)" />
+            <path d="M-2,-8 L2,-8 L2,10 Q0,11 -2,10 Z" fill="rgba(60, 40, 20, 0.85)" />
 
             {/* Bottom Tier - fluffy */}
             <path d="M0,-22 Q8,-18 14,-6 Q4,-8 0,-8" fill={seasonalColors.shadow} />
@@ -311,9 +311,9 @@ export function LandscapeFront(props: LandscapeProps) {
     const palette = useLandscapePalette(props.cleanliness, props.isNight, props.synthwaveMode, props.isSnowing, props.timeOfDay);
 
     const frontTrees = [
-        { x: 40, y: 126, scale: 1.2 },
-        { x: 90, y: 116, scale: 1.2 },
-        { x: 370, y: 134, scale: 1.2 }
+        { x: 40, y: 130, scale: 1.2 },
+        { x: 90, y: 122, scale: 1.2 },
+        { x: 370, y: 130, scale: 1.2 }
     ];
 
     return (
@@ -335,6 +335,9 @@ export function LandscapeFront(props: LandscapeProps) {
                 skipIntro={props.skipIntro}
                 windSpeed={props.windSpeed}
             />
+            {/* Ground strip at the very bottom for visible earth */}
+            <rect x={0} y={145} width={400} height={5} fill={palette.frontHill} />
+            <rect x={0} y={148} width={400} height={2} fill="rgba(0,0,0,0.1)" />
         </>
     );
 }
