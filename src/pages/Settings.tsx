@@ -313,6 +313,7 @@ export default function Settings() {
                             </RadioGroup>
                         </div>
 
+                        <Link to="/locations">
                             <div className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-colors">
                                 <div className="flex items-center gap-3">
                                     <div className="p-2 bg-primary/10 rounded-full">
