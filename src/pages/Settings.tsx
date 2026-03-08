@@ -25,6 +25,7 @@ import { useProductTour } from '@/hooks/useProductTour';
 import { useCarbonData } from '@/hooks/useCarbonData';
 import { useAppLocation } from '@/contexts/LocationContext';
 import { useOffline } from '@/hooks/useOffline';
+import { useSceneType } from '@/hooks/useSceneType';
 
 
 export default function Settings() {
