@@ -169,8 +169,200 @@ export function CoastalOffshoreWind({ count = 3, windSpeed = 10 }: {
   );
 }
 
+// 🪨 Rock pool with water and starfish/anemones
+export function RockPool({ x = 260, y = 116, isNight = false }: {
+  x?: number; y?: number; isNight?: boolean;
+}) {
+  const rockColor = isNight ? '#334155' : '#78716c';
+  const poolColor = isNight ? '#1e3a5f' : '#7dd3fc';
+  const accentColor = isNight ? '#94a3b8' : '#a8a29e';
+
+  return (
+    <g>
+      {/* Outer rocks */}
+      <ellipse cx={x} cy={y} rx={12} ry={5} fill={rockColor} />
+      <ellipse cx={x - 8} cy={y - 1} rx={4} ry={3} fill={accentColor} opacity={0.6} />
+      <ellipse cx={x + 7} cy={y - 1} rx={3} ry={2.5} fill={accentColor} opacity={0.5} />
+      {/* Pool water */}
+      <motion.ellipse
+        cx={x} cy={y - 0.5} rx={8} ry={3}
+        fill={poolColor} opacity={0.6}
+        animate={{ rx: [8, 8.3, 8], ry: [3, 3.2, 3] }}
+        transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      {/* Starfish */}
+      <g transform={`translate(${x - 3}, ${y - 1}) scale(0.4)`}>
+        <motion.g animate={{ rotate: [0, 5, -5, 0] }} transition={{ duration: 8, repeat: Infinity }}>
+          {[0, 72, 144, 216, 288].map(angle => (
+            <line key={angle} x1={0} y1={0} x2={0} y2={-4} stroke="#f97316" strokeWidth="1.5" strokeLinecap="round"
+              transform={`rotate(${angle})`} />
+          ))}
+        </motion.g>
+      </g>
+      {/* Anemone */}
+      <g transform={`translate(${x + 4}, ${y - 1})`}>
+        {[-2, -1, 0, 1, 2].map(i => (
+          <motion.line key={i} x1={i * 0.8} y1={0} x2={i * 1.2} y2={-2.5}
+            stroke="#c084fc" strokeWidth="0.6" strokeLinecap="round"
+            animate={{ x2: [i * 1.2, i * 1.5, i * 1.2] }}
+            transition={{ duration: 2, repeat: Infinity, delay: i * 0.15 }}
+          />
+        ))}
+      </g>
+      {/* Seaweed strand */}
+      <motion.path
+        d={`M${x + 9},${y} Q${x + 11},${y - 3} ${x + 10},${y - 5}`}
+        stroke="#22c55e" strokeWidth="0.8" fill="none" opacity={0.5}
+        animate={{ d: [
+          `M${x + 9},${y} Q${x + 11},${y - 3} ${x + 10},${y - 5}`,
+          `M${x + 9},${y} Q${x + 12},${y - 2} ${x + 11},${y - 5}`,
+          `M${x + 9},${y} Q${x + 11},${y - 3} ${x + 10},${y - 5}`,
+        ] }}
+        transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+      />
+    </g>
+  );
+}
+
+// 🦀 Crab — scuttles sideways
+export function Crab({ x = 280, y = 118, delay = 0 }: {
+  x?: number; y?: number; delay?: number;
+}) {
+  return (
+    <motion.g
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1, x: [x, x + 8, x + 12, x + 8, x] }}
+      transition={{ duration: 6, delay, repeat: Infinity, repeatDelay: 4, ease: 'easeInOut' }}
+    >
+      <motion.g
+        animate={{ y: [y, y - 0.5, y] }}
+        transition={{ duration: 0.4, repeat: Infinity, ease: 'easeInOut' }}
+      >
+        {/* Body */}
+        <ellipse cx={0} cy={0} rx={3} ry={2} fill="#dc2626" />
+        {/* Eyes */}
+        <circle cx={-1.5} cy={-2} r={0.6} fill="#1f2937" />
+        <circle cx={1.5} cy={-2} r={0.6} fill="#1f2937" />
+        <line x1={-1.5} y1={-2} x2={-1.8} y2={-3} stroke="#dc2626" strokeWidth="0.4" />
+        <line x1={1.5} y1={-2} x2={1.8} y2={-3} stroke="#dc2626" strokeWidth="0.4" />
+        {/* Claws */}
+        <motion.g animate={{ rotate: [0, -10, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
+          <path d="M-3,0 L-5,-1 L-6,0.5 L-5,0" fill="#ef4444" />
+        </motion.g>
+        <motion.g animate={{ rotate: [0, 10, 0] }} transition={{ duration: 1.5, repeat: Infinity, delay: 0.3 }}>
+          <path d="M3,0 L5,-1 L6,0.5 L5,0" fill="#ef4444" />
+        </motion.g>
+        {/* Legs */}
+        {[-1, 0, 1].map(i => (
+          <g key={i}>
+            <line x1={-2.5} y1={i * 1} x2={-4} y2={i * 1 + 1} stroke="#dc2626" strokeWidth="0.3" />
+            <line x1={2.5} y1={i * 1} x2={4} y2={i * 1 + 1} stroke="#dc2626" strokeWidth="0.3" />
+          </g>
+        ))}
+      </motion.g>
+    </motion.g>
+  );
+}
+
+// 🦭 Harbour seal — pops up from the water, looks around, dives back
+export function HarbourSeal({ x = 170, y = 96, delay = 0 }: {
+  x?: number; y?: number; delay?: number;
+}) {
+  return (
+    <motion.g
+      initial={{ y: y + 8, opacity: 0 }}
+      animate={{
+        y: [y + 8, y, y - 1, y, y + 8],
+        opacity: [0, 1, 1, 1, 0],
+      }}
+      transition={{
+        duration: 8,
+        delay,
+        repeat: Infinity,
+        repeatDelay: 12 + delay,
+        times: [0, 0.15, 0.5, 0.85, 1],
+        ease: 'easeInOut',
+      }}
+    >
+      {/* Water splash ring */}
+      <motion.ellipse
+        cx={x} cy={y + 4} rx={6} ry={1.5}
+        fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.5"
+        animate={{ rx: [4, 8, 4], opacity: [0.4, 0.1, 0.4] }}
+        transition={{ duration: 3, repeat: Infinity }}
+      />
+      {/* Body (partially submerged) */}
+      <ellipse cx={x} cy={y + 3} rx={5} ry={3} fill="#6b7280" />
+      {/* Head */}
+      <circle cx={x} cy={y} r={3.5} fill="#78716c" />
+      {/* Lighter belly/chin */}
+      <ellipse cx={x} cy={y + 1} rx={2.5} ry={1.5} fill="#a8a29e" opacity={0.5} />
+      {/* Eyes — blink */}
+      <motion.g
+        animate={{ scaleY: [1, 1, 0.1, 1, 1] }}
+        transition={{ duration: 4, repeat: Infinity, times: [0, 0.7, 0.75, 0.8, 1] }}
+        style={{ transformOrigin: `${x}px ${y - 1}px` }}
+      >
+        <circle cx={x - 1.5} cy={y - 1} r={0.7} fill="#1f2937" />
+        <circle cx={x + 1.5} cy={y - 1} r={0.7} fill="#1f2937" />
+        {/* Eye shine */}
+        <circle cx={x - 1.2} cy={y - 1.3} r={0.25} fill="#f1f5f9" />
+        <circle cx={x + 1.8} cy={y - 1.3} r={0.25} fill="#f1f5f9" />
+      </motion.g>
+      {/* Nose */}
+      <ellipse cx={x} cy={y + 0.5} rx={1} ry={0.6} fill="#57534e" />
+      {/* Whiskers */}
+      {[-1, 1].map(side => (
+        <g key={side}>
+          <line x1={x + side * 1.5} y1={y + 0.3} x2={x + side * 5} y2={y - 0.5} stroke="#9ca3af" strokeWidth="0.25" />
+          <line x1={x + side * 1.5} y1={y + 0.7} x2={x + side * 5} y2={y + 0.8} stroke="#9ca3af" strokeWidth="0.25" />
+        </g>
+      ))}
+      {/* Head turn animation */}
+      <motion.g
+        animate={{ x: [0, -1, 0, 1, 0] }}
+        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+      />
+    </motion.g>
+  );
+}
+
+// Collection: Rock pools group
+export function RockPoolGroup({ cleanliness, isNight }: { cleanliness: number; isNight: boolean }) {
+  if (cleanliness < 0.5) return null;
+
+  return (
+    <g>
+      <RockPool x={250} y={116} isNight={isNight} />
+      {cleanliness > 0.7 && <RockPool x={300} y={118} isNight={isNight} />}
+      {cleanliness > 0.8 && <RockPool x={340} y={115} isNight={isNight} />}
+      <Crab x={260} y={117} delay={2} />
+      {cleanliness > 0.7 && <Crab x={315} y={119} delay={6} />}
+    </g>
+  );
+}
+
 // Collection: Seagull flock
 export function SeagullFlock({ count = 4, isNight = false }: { count?: number; isNight?: boolean }) {
+  const gulls = useMemo(() =>
+    Array.from({ length: count }).map((_, i) => ({
+      id: i,
+      startX: -20 + i * 15,
+      startY: 15 + (i % 3) * 8,
+      delay: i * 3,
+      scale: 0.7 + Math.random() * 0.4,
+    })), [count]);
+
+  if (isNight) return null;
+
+  return (
+    <g>
+      {gulls.map(g => (
+        <Seagull key={g.id} {...g} />
+      ))}
+    </g>
+  );
+}
   const gulls = useMemo(() =>
     Array.from({ length: count }).map((_, i) => ({
       id: i,
