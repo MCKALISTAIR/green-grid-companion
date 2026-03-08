@@ -490,6 +490,10 @@ export function CityLandscapeBack(props: CityLandscapeProps) {
           skipIntro={props.skipIntro}
         />
       ))}
+      {/* Landmark: Church spire in far background */}
+      <ChurchSpire x={155} height={85} fill={palette.skylineFar} isNight={props.isNight} delay={0.1} skipIntro={props.skipIntro} />
+      {/* Landmark: Glass tower silhouette */}
+      <GlassTower x={85} width={14} height={100} fill={palette.skylineFar} windowLit={palette.windowLit} isNight={props.isNight} cleanliness={props.cleanliness} delay={0.12} skipIntro={props.skipIntro} />
       {/* Snow layer */}
       {props.isSnowing && (
         <rect x={0} y={133} width={400} height={17} fill="white" fillOpacity={0.15} />
