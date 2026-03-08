@@ -47,6 +47,9 @@ import { useSceneDirector } from '@/hooks/useSceneDirector';
 import { GenerationMix } from '@/lib/carbonApi';
 import { getSkyGradient } from '@/lib/sceneUtils';
 import { getTurbineBottomPct } from '@/lib/sceneUtils';
+import { useSceneType, SceneType } from '@/hooks/useSceneType';
+import { CityLandscapeBack, CityLandscapeMid, CityLandscapeFront } from './scene/CityLandscape';
+import { CityTraffic, Pigeon, ConstructionCrane } from './scene/CityElements';
 
 interface IntensitySceneProps {
   intensity: number;
