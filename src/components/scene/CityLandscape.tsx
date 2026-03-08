@@ -574,6 +574,10 @@ export function CityLandscapeFront(props: CityLandscapeProps) {
           skipIntro={props.skipIntro}
         />
       ))}
+      {/* Landmark: Art Deco building in foreground */}
+      <ArtDecoBuilding x={92} width={32} height={52} fill={palette.skylineNear} windowLit={palette.windowLit} windowDark={palette.windowDark} isNight={props.isNight} cleanliness={props.cleanliness} delay={0.45} skipIntro={props.skipIntro} />
+      {/* Landmark: Glass tower (Shard-like) prominent in foreground */}
+      <GlassTower x={195} width={22} height={65} fill={palette.skylineNear} windowLit={palette.windowLit} isNight={props.isNight} cleanliness={props.cleanliness} delay={0.48} skipIntro={props.skipIntro} />
 
       {/* Road */}
       <CityRoad fill={palette.road} skipIntro={props.skipIntro} />
