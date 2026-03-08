@@ -171,7 +171,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
     // Bottom% is computed dynamically from the actual hill Bézier curves
     // via getTurbineBottomPct(), so they always sit on the ridge line
     // even if the hill paths or container height change.
-    const CONTAINER_PCT = 95; // must match h-[95%] on landscape container
+    const CONTAINER_PCT = 100; // must match h-[100%] on landscape container
     const allSlots = [
       // Background turbines – on back hill ridge
       { left: 18, scale: 0.35, z: 1, layer: 'back' as const },
@@ -514,7 +514,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
 
       {/* High Fidelity Landscape (Hills + Trees) */}
       {/* Background Landscape Layer (Back + Mid Hills) */}
-      <div className="absolute bottom-0 left-0 right-0 h-[95%] pointer-events-none z-0 overflow-hidden">
+      <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-0 overflow-hidden">
         <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
           <LandscapeBack
             cleanliness={sceneConfig.cleanliness}
@@ -557,7 +557,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       </AnimatePresence>
 
       {/* Foreground Landscape Layer (Front Hill) - Occludes Sheep */}
-      <div className="absolute bottom-0 left-0 right-0 h-[95%] pointer-events-none z-20 overflow-hidden">
+      <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-20 overflow-hidden">
         <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
           <LandscapeFront
             cleanliness={sceneConfig.cleanliness}
@@ -768,7 +768,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       {/* Nuclear Cooling Towers - Show when nuclear % > 5 */}
       <AnimatePresence>
         {sceneConfig.showRenewables && nuclearPercentage > 5 && (
-          <div className="absolute bottom-0 left-0 right-0 h-[95%] pointer-events-none z-15">
+          <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-15">
             <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <NuclearCoolingTower x={280} steamIntensity={nuclearPercentage / 100} isNight={isNight} />
               {nuclearPercentage > 15 && <NuclearCoolingTower x={240} steamIntensity={0.5} isNight={isNight} />}
