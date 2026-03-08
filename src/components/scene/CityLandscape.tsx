@@ -159,7 +159,7 @@ function Building({ x, width, height, fill, windowLit, windowDark, isNight, clea
               height={2}
               fill="#1e40af"
               opacity={0.7}
-              transform={`skewX(-10)`}
+              rx={0.3}
             />
           ))}
         </g>
