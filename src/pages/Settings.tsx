@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, GraduationCap, Shield, MapPin, History, MessageSquare, Home, Cloud, RefreshCw, Activity, Sparkles, Monitor, Download, Cookie, Play } from 'lucide-react';
+import { ChevronRight, GraduationCap, Shield, MapPin, History, MessageSquare, Home, Cloud, RefreshCw, Activity, Sparkles, Monitor, Download, Cookie, Play, Paintbrush } from 'lucide-react';
 import { NotificationSettings } from '@/components/NotificationSettings';
 import { OctopusIntegration } from '@/components/OctopusIntegration';
 import { TeslaIntegration } from '@/components/TeslaIntegration';
@@ -25,6 +25,7 @@ import { useProductTour } from '@/hooks/useProductTour';
 import { useCarbonData } from '@/hooks/useCarbonData';
 import { useAppLocation } from '@/contexts/LocationContext';
 import { useOffline } from '@/hooks/useOffline';
+import { useSceneType } from '@/hooks/useSceneType';
 
 
 export default function Settings() {
@@ -40,6 +41,7 @@ export default function Settings() {
     const { postcode } = useAppLocation();
     const { lastUpdated: gridLastUpdated, refetch: refetchGrid, isBackgroundFetching: isGridFetching } = useCarbonData(postcode);
     const { isOffline } = useOffline();
+    const { preference: scenePreference, setPreference: setScenePreference, autoDetected } = useSceneType();
 
     const formatLastSync = (date: Date | null) => {
         if (!date) return 'Not yet synced';
@@ -274,6 +276,41 @@ export default function Settings() {
                                     />
                                 </button>
                             </div>
+                        </div>
+
+                        {/* Scene Type Preference */}
+                        <div className="p-4 bg-card border rounded-lg space-y-3">
+                            <div className="flex items-center gap-2">
+                                <Paintbrush className="w-5 h-5 text-primary" />
+                                <div>
+                                    <h3 className="font-medium">Scene Theme</h3>
+                                    <p className="text-sm text-muted-foreground">
+                                        Choose your landscape style
+                                        {scenePreference === 'auto' && (
+                                            <span className="ml-1 text-xs text-primary">(detected: {autoDetected})</span>
+                                        )}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <RadioGroup
+                                value={scenePreference}
+                                onValueChange={(val) => setScenePreference(val as 'auto' | 'countryside' | 'city')}
+                                className="flex gap-4 pt-1"
+                            >
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="auto" id="scene-auto" />
+                                    <Label htmlFor="scene-auto">Auto</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="countryside" id="scene-countryside" />
+                                    <Label htmlFor="scene-countryside">🌿 Countryside</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="city" id="scene-city" />
+                                    <Label htmlFor="scene-city">🏙️ City</Label>
+                                </div>
+                            </RadioGroup>
                         </div>
 
                         <Link to="/locations">
