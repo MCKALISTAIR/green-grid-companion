@@ -821,7 +821,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       {/* Flowers for bees */}
       <AnimatePresence>
         {sceneConfig.cleanliness > 0.8 && sceneConfig.isDaytime && (
-          <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-12">
+          <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-12">
             <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <Flowers positions={[
                 { x: 50, y: 120 },
@@ -854,7 +854,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       {/* Owls perched on trees at night */}
       <AnimatePresence>
         {isNight && sceneConfig.cleanliness > 0.7 && (
-          <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-12">
+          <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-12">
             <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <Owl treeX={80} treeY={85} />
               <Owl treeX={320} treeY={95} />
@@ -877,7 +877,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       {/* Background mountains for parallax */}
       <AnimatePresence>
         {sceneConfig.cleanliness > 0.5 && (
-          <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-1">
+          <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-1">
             <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <BackgroundMountains isNight={isNight} />
             </svg>
@@ -888,7 +888,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       {/* Foreground grass with wind sway */}
       <AnimatePresence>
         {sceneConfig.cleanliness > 0.6 && (
-          <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-30">
+          <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-30">
             <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <ForegroundGrass windSpeed={weather.windSpeed} />
             </svg>
@@ -906,7 +906,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       {/* EV Charging Station at night when clean */}
       <AnimatePresence>
         {isNight && sceneConfig.cleanliness > 0.7 && (
-          <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-16">
+          <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-16">
             <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <EVChargingStation isCharging={sceneConfig.cleanliness > 0.8} />
             </svg>
@@ -917,7 +917,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       {/* Hydro Dam when rainy + hydro */}
       <AnimatePresence>
         {isRaining && hydroPercentage > 10 && (
-          <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-14">
+          <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-14">
             <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <HydroDam flowIntensity={Math.min(hydroPercentage / 50, 1)} />
             </svg>
@@ -933,7 +933,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       {/* Biomass Smoke - Green tinted smoke when biomass > 5% */}
       <AnimatePresence>
         {biomassPercentage > 5 && sceneConfig.showRenewables && (
-          <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-15">
+          <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-15">
             <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <BiomassSmoke x={180} intensity={biomassPercentage / 100} />
               {biomassPercentage > 15 && <BiomassSmoke x={220} intensity={0.6} />}
