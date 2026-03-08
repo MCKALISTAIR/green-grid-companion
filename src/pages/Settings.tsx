@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, GraduationCap, Shield, MapPin, History, MessageSquare, Home, Cloud, RefreshCw, Activity, Sparkles, Monitor, Download, Cookie, Play } from 'lucide-react';
+import { ChevronRight, GraduationCap, Shield, MapPin, History, MessageSquare, Home, Cloud, RefreshCw, Activity, Sparkles, Monitor, Download, Cookie, Play, Paintbrush } from 'lucide-react';
 import { NotificationSettings } from '@/components/NotificationSettings';
 import { OctopusIntegration } from '@/components/OctopusIntegration';
 import { TeslaIntegration } from '@/components/TeslaIntegration';
