@@ -191,22 +191,48 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
               const leftRem = 1.0 + block.start * 3.5 + sepsBeforeStart * 2.0;
               const widthRem = (block.end - block.start) * 3.5 + sepsInBlock * 2.0 + 3.0;
 
+              const startTime = format(parseISO(forecast[block.start].from), 'HH:mm');
+              const endTime = format(parseISO(forecast[block.end].to), 'HH:mm');
+              const slotCount = block.end - block.start + 1;
+              const avgIntensity = Math.round(
+                forecast.slice(block.start, block.end + 1).reduce((s, f) => s + f.intensity.forecast, 0) / slotCount
+              );
+
               return (
-                <div
-                  key={`best-block-${idx}`}
-                  className="absolute top-0 bottom-0 pointer-events-none"
-                  style={{
-                    left: `${leftRem}rem`,
-                    width: `${widthRem}rem`,
-                  }}
-                >
-                  {/* Light background tint spanning the full block */}
-                  <div className="absolute inset-x-0 inset-y-2 bg-intensity-very-low/8 dark:bg-intensity-very-low/10 rounded-lg border border-intensity-very-low/20 border-dashed" />
-                  {/* Top center label */}
-                  <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 flex items-center gap-0.5 bg-background border border-intensity-very-low/40 px-1.5 py-px rounded-md whitespace-nowrap shadow-sm z-10">
-                    <span className="text-[8px] font-bold tracking-wider text-intensity-very-low uppercase">★ Best</span>
-                  </div>
-                </div>
+                <Tooltip key={`best-block-${idx}`}>
+                  <TooltipTrigger asChild>
+                    <div
+                      className="absolute top-0 bottom-0 cursor-help"
+                      style={{
+                        left: `${leftRem}rem`,
+                        width: `${widthRem}rem`,
+                      }}
+                    >
+                      {/* Gradient background */}
+                      <div className="absolute inset-x-0 top-1 bottom-6 rounded-lg bg-gradient-to-b from-intensity-very-low/15 to-intensity-very-low/5 dark:from-intensity-very-low/20 dark:to-intensity-very-low/8" />
+                      {/* Left bracket */}
+                      <div className="absolute left-0 top-1 bottom-6 w-[2px] bg-intensity-very-low/60 rounded-full" />
+                      <div className="absolute left-0 top-1 w-2 h-[2px] bg-intensity-very-low/60 rounded-full" />
+                      <div className="absolute left-0 bottom-6 w-2 h-[2px] bg-intensity-very-low/60 rounded-full" />
+                      {/* Right bracket */}
+                      <div className="absolute right-0 top-1 bottom-6 w-[2px] bg-intensity-very-low/60 rounded-full" />
+                      <div className="absolute right-0 top-1 w-2 h-[2px] bg-intensity-very-low/60 rounded-full" />
+                      <div className="absolute right-0 bottom-6 w-2 h-[2px] bg-intensity-very-low/60 rounded-full" />
+                      {/* Top center label with time range */}
+                      <div className="absolute -top-2 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-intensity-very-low/15 dark:bg-intensity-very-low/25 border border-intensity-very-low/30 px-2 py-0.5 rounded-full whitespace-nowrap shadow-sm z-10">
+                        <span className="text-[8px] font-bold tracking-wide text-intensity-very-low">★</span>
+                        <span className="text-[8px] font-semibold text-intensity-very-low">{startTime}–{endTime}</span>
+                      </div>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="text-xs max-w-[200px]">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="font-semibold text-intensity-very-low">★ Best window</span>
+                      <span>{startTime} → {endTime} ({slotCount * 0.5}h)</span>
+                      <span className="text-muted-foreground">Avg: {avgIntensity} gCO₂/kWh</span>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
               );
             })}
             {forecast.map((item, i) => {
