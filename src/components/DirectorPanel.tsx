@@ -71,7 +71,7 @@ export function DirectorPanel() {
                         <Label>Scene Type</Label>
                         <Select
                             value={overrides.sceneType || 'auto'}
-                            onValueChange={(val) => setExactOverride('sceneType', val === 'auto' ? undefined : val as 'countryside' | 'city')}
+                            onValueChange={(val) => setExactOverride('sceneType', val === 'auto' ? undefined : val as 'countryside' | 'city' | 'coastal')}
                         >
                             <SelectTrigger>
                                 <SelectValue placeholder="Auto-detect" />
@@ -80,6 +80,7 @@ export function DirectorPanel() {
                                 <SelectItem value="auto">Auto-detect</SelectItem>
                                 <SelectItem value="countryside">🌿 Countryside</SelectItem>
                                 <SelectItem value="city">🏙️ City</SelectItem>
+                                <SelectItem value="coastal">🌊 Coastal</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>

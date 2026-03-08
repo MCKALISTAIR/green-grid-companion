@@ -50,6 +50,8 @@ import { getTurbineBottomPct } from '@/lib/sceneUtils';
 import { useSceneType, SceneType } from '@/hooks/useSceneType';
 import { CityLandscapeBack, CityLandscapeMid, CityLandscapeFront } from './scene/CityLandscape';
 import { CityTraffic, Pigeon, ConstructionCrane } from './scene/CityElements';
+import { CoastalLandscapeBack, CoastalLandscapeMid, CoastalLandscapeFront } from './scene/CoastalLandscape';
+import { SeagullFlock, SailingBoat, FishingBoat, CoastalOffshoreWind } from './scene/CoastalElements';
 
 interface IntensitySceneProps {
   intensity: number;
@@ -72,6 +74,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
   // Scene type: director override or auto-detected
   const sceneType: SceneType = (isDirectorMode && overrides.sceneType) ? overrides.sceneType : autoSceneType;
   const isCity = sceneType === 'city';
+  const isCoastal = sceneType === 'coastal';
 
   // ... (timeOfDay, isNight, etc.)
 
@@ -520,7 +523,79 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       </AnimatePresence>
 
       {/* ===== LANDSCAPE LAYERS ===== */}
-      {isCity ? (
+      {isCoastal ? (
+        <>
+          {/* Coastal: Ocean + horizon */}
+          <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-0 overflow-hidden">
+            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+              <CoastalLandscapeBack
+                cleanliness={sceneConfig.cleanliness}
+                isNight={isNight}
+                synthwaveMode={synthwaveMode}
+                isSnowing={weather.isSnowing}
+                skipIntro={hasSeenScene}
+                windSpeed={weather.windSpeed}
+                timeOfDay={timeOfDay}
+              />
+              <CoastalLandscapeMid
+                cleanliness={sceneConfig.cleanliness}
+                isNight={isNight}
+                synthwaveMode={synthwaveMode}
+                isSnowing={weather.isSnowing}
+                skipIntro={hasSeenScene}
+                windSpeed={weather.windSpeed}
+                timeOfDay={timeOfDay}
+              />
+            </svg>
+          </div>
+
+          {/* Coastal: Offshore wind turbines */}
+          <AnimatePresence>
+            {windPercentage > 5 && (
+              <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-5 overflow-hidden">
+                <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+                  <CoastalOffshoreWind count={Math.min(4, Math.floor(windPercentage / 8))} windSpeed={weather.windSpeed} />
+                </svg>
+              </div>
+            )}
+          </AnimatePresence>
+
+          {/* Coastal: Boats */}
+          <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-10 overflow-hidden">
+            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+              <SailingBoat x={120} delay={0} isNight={isNight} />
+              <FishingBoat x={250} delay={5} isNight={isNight} />
+              {sceneConfig.cleanliness > 0.6 && <SailingBoat x={200} delay={12} isNight={isNight} />}
+            </svg>
+          </div>
+
+          {/* Coastal: Foreground (beach + cliffs) */}
+          <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-20 overflow-hidden">
+            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+              <CoastalLandscapeFront
+                cleanliness={sceneConfig.cleanliness}
+                isNight={isNight}
+                synthwaveMode={synthwaveMode}
+                isSnowing={weather.isSnowing}
+                skipIntro={hasSeenScene}
+                windSpeed={weather.windSpeed}
+                timeOfDay={timeOfDay}
+              />
+            </svg>
+          </div>
+
+          {/* Coastal: Seagulls */}
+          <AnimatePresence>
+            {sceneConfig.isDaytime && sceneConfig.cleanliness > 0.3 && (
+              <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-[23] overflow-hidden">
+                <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+                  <SeagullFlock count={sceneConfig.cleanliness > 0.6 ? 5 : 3} isNight={isNight} />
+                </svg>
+              </div>
+            )}
+          </AnimatePresence>
+        </>
+      ) : isCity ? (
         <>
           {/* City: Background skyline */}
           <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-0 overflow-hidden">
@@ -659,7 +734,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
 
       {/* Wind Turbines - dynamically positioned across the scene */}
       <AnimatePresence>
-        {!isCity && sceneConfig.showRenewables && turbineLayout.map((slot, i) => {
+        {!isCity && !isCoastal && sceneConfig.showRenewables && turbineLayout.map((slot, i) => {
           // Wind speed drives rotation: near-zero wind → very slow / stopped
           const effectiveWindSpeed = sceneConfig.windSpeed ?? 0;
           const baseSpeed = effectiveWindSpeed < 2
@@ -905,7 +980,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
 
       {/* Flowers for bees */}
       <AnimatePresence>
-        {!isCity && sceneConfig.cleanliness > 0.8 && sceneConfig.isDaytime && (
+        {!isCity && !isCoastal && sceneConfig.cleanliness > 0.8 && sceneConfig.isDaytime && (
           <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-12">
             <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <Flowers positions={[
@@ -922,7 +997,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
 
       {/* Bees visiting flowers */}
       <AnimatePresence>
-        {!isCity && sceneConfig.cleanliness > 0.8 && sceneConfig.isDaytime && (
+        {!isCity && !isCoastal && sceneConfig.cleanliness > 0.8 && sceneConfig.isDaytime && (
           <>
             <Bee startX={15} startY={18} delay={0} />
             <Bee startX={50} startY={22} delay={2} />
@@ -933,7 +1008,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
 
       {/* Rabbit hopping at dawn/dusk */}
       <AnimatePresence>
-        {!isCity && isDawnOrDusk && sceneConfig.cleanliness > 0.6 && <Rabbit delay={0} />}
+        {!isCity && !isCoastal && isDawnOrDusk && sceneConfig.cleanliness > 0.6 && <Rabbit delay={0} />}
       </AnimatePresence>
 
       {/* Owls perched on trees at night */}
@@ -961,7 +1036,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
 
       {/* Background mountains for parallax */}
       <AnimatePresence>
-        {!isCity && sceneConfig.cleanliness > 0.5 && (
+        {!isCity && !isCoastal && sceneConfig.cleanliness > 0.5 && (
           <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-1">
             <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <BackgroundMountains isNight={isNight} />
@@ -972,7 +1047,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
 
       {/* Foreground grass with wind sway */}
       <AnimatePresence>
-        {!isCity && sceneConfig.cleanliness > 0.6 && (
+        {!isCity && !isCoastal && sceneConfig.cleanliness > 0.6 && (
           <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-30">
             <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <ForegroundGrass windSpeed={weather.windSpeed} />
