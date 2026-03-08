@@ -933,7 +933,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
 
       {/* Rabbit hopping at dawn/dusk */}
       <AnimatePresence>
-        {isDawnOrDusk && sceneConfig.cleanliness > 0.6 && <Rabbit delay={0} />}
+        {!isCity && isDawnOrDusk && sceneConfig.cleanliness > 0.6 && <Rabbit delay={0} />}
       </AnimatePresence>
 
       {/* Owls perched on trees at night */}
