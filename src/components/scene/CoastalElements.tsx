@@ -362,3 +362,4 @@ export function SeagullFlock({ count = 4, isNight = false }: { count?: number; i
       ))}
     </g>
   );
+}
