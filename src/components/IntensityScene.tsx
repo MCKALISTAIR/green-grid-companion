@@ -515,7 +515,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       {/* High Fidelity Landscape (Hills + Trees) */}
       {/* Background Landscape Layer (Back + Mid Hills) */}
       <div className="absolute bottom-0 left-0 right-0 h-[85%] pointer-events-none z-0">
-        <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+        <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true" style={{ overflow: 'visible' }}>
           <LandscapeBack
             cleanliness={sceneConfig.cleanliness}
             isNight={isNight}
