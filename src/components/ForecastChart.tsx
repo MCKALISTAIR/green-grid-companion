@@ -72,10 +72,26 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
     }
   }, [selectedIndex]);
 
-  // Dismiss popup on page scroll or tap outside
+  // Calculate best block popup position
   useEffect(() => {
-    if (selectedIndex === null) return;
-    const dismiss = () => setSelectedIndex(null);
+    if (selectedBestBlock !== null && bestBlockRefs.current.has(selectedBestBlock)) {
+      const element = bestBlockRefs.current.get(selectedBestBlock);
+      if (element) {
+        const rect = element.getBoundingClientRect();
+        setBestBlockPopupPos({
+          x: rect.left + rect.width / 2,
+          y: rect.top - 8,
+        });
+      }
+    } else {
+      setBestBlockPopupPos(null);
+    }
+  }, [selectedBestBlock]);
+
+  // Dismiss popups on page scroll or tap outside
+  useEffect(() => {
+    if (selectedIndex === null && selectedBestBlock === null) return;
+    const dismiss = () => { setSelectedIndex(null); setSelectedBestBlock(null); };
     window.addEventListener('scroll', dismiss, { passive: true });
     const handleTap = (e: MouseEvent | TouchEvent) => {
       const container = scrollContainerRef.current;
@@ -88,7 +104,7 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
       window.removeEventListener('scroll', dismiss);
       document.removeEventListener('pointerdown', handleTap);
     };
-  }, [selectedIndex]);
+  }, [selectedIndex, selectedBestBlock]);
 
   useLayoutEffect(() => {
     // Initial scroll
