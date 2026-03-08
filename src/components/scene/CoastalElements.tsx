@@ -362,23 +362,3 @@ export function SeagullFlock({ count = 4, isNight = false }: { count?: number; i
       ))}
     </g>
   );
-}
-  const gulls = useMemo(() =>
-    Array.from({ length: count }).map((_, i) => ({
-      id: i,
-      startX: -20 + i * 15,
-      startY: 15 + (i % 3) * 8,
-      delay: i * 3,
-      scale: 0.7 + Math.random() * 0.4,
-    })), [count]);
-
-  if (isNight) return null;
-
-  return (
-    <g>
-      {gulls.map(g => (
-        <Seagull key={g.id} {...g} />
-      ))}
-    </g>
-  );
-}
