@@ -242,7 +242,7 @@ export function LandscapeBack(props: LandscapeProps) {
 
     // Explicit tree placements on the new curve to stay grounded
     const backTrees = [
-        { x: 20, y: 91, scale: 0.6 },
+        { x: 40, y: 95, scale: 0.6 },
         { x: 80, y: 76, scale: 0.6 },
         { x: 150, y: 81, scale: 0.6 },
         { x: 220, y: 107, scale: 0.6 },
