@@ -888,7 +888,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       {/* Foreground grass with wind sway */}
       <AnimatePresence>
         {sceneConfig.cleanliness > 0.6 && (
-          <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-30">
+          <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-30">
             <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <ForegroundGrass windSpeed={weather.windSpeed} />
             </svg>
