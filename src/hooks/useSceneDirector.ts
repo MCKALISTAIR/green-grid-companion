@@ -14,7 +14,7 @@ export interface SceneOverrides {
     timeOfDay?: TimeOfDay;
     intensity?: number; // 0-500
     season?: 'spring' | 'summer' | 'autumn' | 'winter';
-    sceneType?: 'countryside' | 'city';
+    sceneType?: 'countryside' | 'city' | 'coastal';
     elements?: {
         showUFO?: boolean;
         showTrain?: boolean;

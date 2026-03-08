@@ -48,6 +48,7 @@ export function useSceneType() {
   const { postcode } = useAppLocation();
   
   const [preference, setPreferenceState] = useState<'auto' | SceneType>(() => {
+    // @ts-ignore - handle legacy values
     try {
       return (localStorage.getItem(PREFERENCE_KEY) as 'auto' | SceneType) || 'auto';
     } catch { return 'auto'; }

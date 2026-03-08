@@ -295,8 +295,8 @@ export default function Settings() {
 
                             <RadioGroup
                                 value={scenePreference}
-                                onValueChange={(val) => setScenePreference(val as 'auto' | 'countryside' | 'city')}
-                                className="flex gap-4 pt-1"
+                                onValueChange={(val) => setScenePreference(val as 'auto' | 'countryside' | 'city' | 'coastal')}
+                                className="flex flex-wrap gap-4 pt-1"
                             >
                                 <div className="flex items-center space-x-2">
                                     <RadioGroupItem value="auto" id="scene-auto" />
@@ -309,6 +309,10 @@ export default function Settings() {
                                 <div className="flex items-center space-x-2">
                                     <RadioGroupItem value="city" id="scene-city" />
                                     <Label htmlFor="scene-city">🏙️ City</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="coastal" id="scene-coastal" />
+                                    <Label htmlFor="scene-coastal">🌊 Coastal</Label>
                                 </div>
                             </RadioGroup>
                         </div>
