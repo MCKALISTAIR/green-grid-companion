@@ -877,7 +877,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       {/* Background mountains for parallax */}
       <AnimatePresence>
         {sceneConfig.cleanliness > 0.5 && (
-          <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-1">
+          <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-1">
             <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <BackgroundMountains isNight={isNight} />
             </svg>
