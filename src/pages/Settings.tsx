@@ -41,6 +41,7 @@ export default function Settings() {
     const { postcode } = useAppLocation();
     const { lastUpdated: gridLastUpdated, refetch: refetchGrid, isBackgroundFetching: isGridFetching } = useCarbonData(postcode);
     const { isOffline } = useOffline();
+    const { preference: scenePreference, setPreference: setScenePreference, autoDetected } = useSceneType();
 
     const formatLastSync = (date: Date | null) => {
         if (!date) return 'Not yet synced';
