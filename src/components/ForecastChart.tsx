@@ -20,10 +20,13 @@ interface ForecastChartProps {
 export function ForecastChart({ forecast }: ForecastChartProps) {
   const [visibleDate, setVisibleDate] = useState<Date>(new Date());
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [selectedBestBlock, setSelectedBestBlock] = useState<number | null>(null);
   const [popupPosition, setPopupPosition] = useState<{ x: number; y: number } | null>(null);
+  const [bestBlockPopupPos, setBestBlockPopupPos] = useState<{ x: number; y: number } | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const currentHourRef = useRef<HTMLDivElement>(null);
   const selectedItemRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  const bestBlockRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
   // Scroll to current time
   const scrollToNow = () => {
