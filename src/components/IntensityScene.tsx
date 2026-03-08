@@ -171,7 +171,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
     // Bottom% is computed dynamically from the actual hill Bézier curves
     // via getTurbineBottomPct(), so they always sit on the ridge line
     // even if the hill paths or container height change.
-    const CONTAINER_PCT = 95; // must match h-[95%] on landscape container
+    const CONTAINER_PCT = 100; // must match h-[100%] on landscape container
     const allSlots = [
       // Background turbines – on back hill ridge
       { left: 18, scale: 0.35, z: 1, layer: 'back' as const },
