@@ -49,7 +49,7 @@ import { getSkyGradient } from '@/lib/sceneUtils';
 import { getTurbineBottomPct } from '@/lib/sceneUtils';
 import { useSceneType, SceneType } from '@/hooks/useSceneType';
 import { CityLandscapeBack, CityLandscapeMid, CityLandscapeFront } from './scene/CityLandscape';
-import { CityTraffic, Pigeon, ConstructionCrane } from './scene/CityElements';
+import { CityTraffic, Pigeon, ConstructionCrane, LondonEye } from './scene/CityElements';
 import { CoastalLandscapeBack, CoastalLandscapeMid, CoastalLandscapeFront } from './scene/CoastalLandscape';
 import { SeagullFlock, SailingBoat, FishingBoat, CoastalOffshoreWind, RockPoolGroup, HarbourSeal } from './scene/CoastalElements';
 

@@ -148,6 +148,79 @@ export function ConstructionCrane({ x = 350, isNight }: { x?: number; isNight: b
   );
 }
 
+// 🎡 London Eye / Ferris Wheel
+export function LondonEye({ x = 42, y = 50, radius = 28, isNight, skipIntro }: {
+  x?: number; y?: number; radius?: number; isNight: boolean; skipIntro?: boolean;
+}) {
+  const podCount = 16;
+  const podRadius = 2.2;
+  const spokeColor = isNight ? 'rgba(180,200,220,0.35)' : 'rgba(120,140,160,0.45)';
+  const rimColor = isNight ? 'rgba(180,200,220,0.25)' : 'rgba(120,140,160,0.35)';
+  const podFill = isNight ? '#fbbf24' : 'rgba(200,210,220,0.6)';
+  const podGlow = isNight ? 0.7 : 0;
+
+  return (
+    <motion.g
+      initial={skipIntro ? { opacity: 1 } : { opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={skipIntro ? { duration: 0 } : { duration: 1.5, delay: 0.3 }}
+    >
+      {/* Support structure – A-frame legs */}
+      <line x1={x - 6} y1={y + radius + 12} x2={x} y2={y} stroke={spokeColor} strokeWidth="1.5" />
+      <line x1={x + 6} y1={y + radius + 12} x2={x} y2={y} stroke={spokeColor} strokeWidth="1.5" />
+      {/* Cross-brace */}
+      <line x1={x - 3} y1={y + radius * 0.6} x2={x + 3} y2={y + radius * 0.6} stroke={spokeColor} strokeWidth="0.6" />
+
+      {/* Rotating wheel group */}
+      <motion.g
+        animate={{ rotate: 360 }}
+        transition={{ duration: 120, repeat: Infinity, ease: 'linear' }}
+        style={{ transformOrigin: `${x}px ${y}px` }}
+      >
+        {/* Outer rim */}
+        <circle cx={x} cy={y} r={radius} fill="none" stroke={rimColor} strokeWidth="1.2" />
+        {/* Inner rim */}
+        <circle cx={x} cy={y} r={radius - 2.5} fill="none" stroke={rimColor} strokeWidth="0.4" />
+
+        {/* Spokes */}
+        {Array.from({ length: 8 }).map((_, i) => {
+          const angle = (i / 8) * Math.PI * 2;
+          return (
+            <line
+              key={`spoke-${i}`}
+              x1={x} y1={y}
+              x2={x + Math.cos(angle) * (radius - 1)}
+              y2={y + Math.sin(angle) * (radius - 1)}
+              stroke={spokeColor}
+              strokeWidth="0.4"
+            />
+          );
+        })}
+
+        {/* Pods */}
+        {Array.from({ length: podCount }).map((_, i) => {
+          const angle = (i / podCount) * Math.PI * 2;
+          const px = x + Math.cos(angle) * radius;
+          const py = y + Math.sin(angle) * radius;
+          return (
+            <g key={`pod-${i}`}>
+              {/* Pod capsule */}
+              <ellipse cx={px} cy={py} rx={podRadius} ry={podRadius * 0.7} fill={podFill} opacity={isNight ? 0.9 : 0.7} />
+              {/* Night glow */}
+              {isNight && (
+                <ellipse cx={px} cy={py} rx={podRadius + 1.5} ry={podRadius} fill="#fbbf24" opacity={podGlow * 0.12} />
+              )}
+            </g>
+          );
+        })}
+      </motion.g>
+
+      {/* Hub / axle */}
+      <circle cx={x} cy={y} r={2} fill={isNight ? '#475569' : '#9ca3af'} />
+    </motion.g>
+  );
+}
+
 // City traffic - collection of vehicles responding to intensity
 export function CityTraffic({ cleanliness, isNight }: { cleanliness: number; isNight: boolean }) {
   // More EVs when cleaner
