@@ -51,7 +51,7 @@ import { useSceneType, SceneType } from '@/hooks/useSceneType';
 import { CityLandscapeBack, CityLandscapeMid, CityLandscapeFront } from './scene/CityLandscape';
 import { CityTraffic, Pigeon, ConstructionCrane } from './scene/CityElements';
 import { CoastalLandscapeBack, CoastalLandscapeMid, CoastalLandscapeFront } from './scene/CoastalLandscape';
-import { SeagullFlock, SailingBoat, FishingBoat, CoastalOffshoreWind } from './scene/CoastalElements';
+import { SeagullFlock, SailingBoat, FishingBoat, CoastalOffshoreWind, RockPoolGroup, HarbourSeal } from './scene/CoastalElements';
 
 interface IntensitySceneProps {
   intensity: number;
