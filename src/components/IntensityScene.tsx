@@ -659,7 +659,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
 
       {/* Wind Turbines - dynamically positioned across the scene */}
       <AnimatePresence>
-        {sceneConfig.showRenewables && turbineLayout.map((slot, i) => {
+        {!isCity && sceneConfig.showRenewables && turbineLayout.map((slot, i) => {
           // Wind speed drives rotation: near-zero wind → very slow / stopped
           const effectiveWindSpeed = sceneConfig.windSpeed ?? 0;
           const baseSpeed = effectiveWindSpeed < 2
