@@ -222,6 +222,11 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
                   <TooltipTrigger asChild>
                     <div
                       className="absolute top-0 bottom-0 cursor-help"
+                      ref={(el) => { if (el) bestBlockRefs.current.set(idx, el); }}
+                      onClick={() => {
+                        setSelectedIndex(null);
+                        setSelectedBestBlock(selectedBestBlock === idx ? null : idx);
+                      }}
                       style={{
                         left: `${leftRem}rem`,
                         width: `${widthRem}rem`,
