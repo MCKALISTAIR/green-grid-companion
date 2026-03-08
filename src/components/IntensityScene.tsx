@@ -519,65 +519,143 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
         )}
       </AnimatePresence>
 
-      {/* High Fidelity Landscape (Hills + Trees) */}
-      {/* Background Landscape Layer (Back + Mid Hills) */}
-      <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-0 overflow-hidden">
-        <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-          <LandscapeBack
-            cleanliness={sceneConfig.cleanliness}
-            isNight={isNight}
-            synthwaveMode={synthwaveMode}
-            isSnowing={weather.isSnowing}
-            isChristmas={new Date().getMonth() === 11}
-            skipIntro={hasSeenScene}
-            windSpeed={weather.windSpeed}
-            timeOfDay={timeOfDay}
-          />
-          <LandscapeMid
-            cleanliness={sceneConfig.cleanliness}
-            isNight={isNight}
-            synthwaveMode={synthwaveMode}
-            isSnowing={weather.isSnowing}
-            isChristmas={new Date().getMonth() === 11}
-            skipIntro={hasSeenScene}
-            windSpeed={weather.windSpeed}
-            timeOfDay={timeOfDay}
-          />
-        </svg>
-      </div>
+      {/* ===== LANDSCAPE LAYERS ===== */}
+      {isCity ? (
+        <>
+          {/* City: Background skyline */}
+          <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-0 overflow-hidden">
+            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+              <CityLandscapeBack
+                cleanliness={sceneConfig.cleanliness}
+                isNight={isNight}
+                synthwaveMode={synthwaveMode}
+                isSnowing={weather.isSnowing}
+                isChristmas={new Date().getMonth() === 11}
+                skipIntro={hasSeenScene}
+                windSpeed={weather.windSpeed}
+                timeOfDay={timeOfDay}
+              />
+              <CityLandscapeMid
+                cleanliness={sceneConfig.cleanliness}
+                isNight={isNight}
+                synthwaveMode={synthwaveMode}
+                isSnowing={weather.isSnowing}
+                isChristmas={new Date().getMonth() === 11}
+                skipIntro={hasSeenScene}
+                windSpeed={weather.windSpeed}
+                timeOfDay={timeOfDay}
+              />
+            </svg>
+          </div>
 
-      {/* Flock of Sheep (Sandwiched between Mid and Front layers) */}
-      <AnimatePresence>
-        {sceneConfig.cleanliness > 0.4 && !synthwaveMode && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="z-10 relative" // Ensure z-index is handled by container order usually, but explicit helpful
-          >
-            {/* Positioning them roughly where the gap between Mid and Front hills is */}
-            <Sheep x={20} y={15} scale={0.7} isNight={isNight} delay={0.5} />
-            <Sheep x={45} y={18} scale={0.65} isNight={isNight} delay={1.2} />
-            <Sheep x={75} y={14} scale={0.7} isNight={isNight} delay={2.0} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+          {/* City: Foreground buildings + road */}
+          <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-20 overflow-hidden">
+            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+              <CityLandscapeFront
+                cleanliness={sceneConfig.cleanliness}
+                isNight={isNight}
+                synthwaveMode={synthwaveMode}
+                isSnowing={weather.isSnowing}
+                isChristmas={new Date().getMonth() === 11}
+                skipIntro={hasSeenScene}
+                windSpeed={weather.windSpeed}
+                timeOfDay={timeOfDay}
+              />
+            </svg>
+          </div>
 
-      {/* Foreground Landscape Layer (Front Hill) - Occludes Sheep */}
-      <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-20 overflow-hidden">
-        <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-          <LandscapeFront
-            cleanliness={sceneConfig.cleanliness}
-            isNight={isNight}
-            synthwaveMode={synthwaveMode}
-            isSnowing={weather.isSnowing}
-            isChristmas={new Date().getMonth() === 11}
-            skipIntro={hasSeenScene}
-            windSpeed={weather.windSpeed}
-            timeOfDay={timeOfDay}
-          />
-        </svg>
-      </div>
+          {/* City: Traffic on the road */}
+          <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-[22] overflow-hidden">
+            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+              <CityTraffic cleanliness={sceneConfig.cleanliness} isNight={isNight} />
+            </svg>
+          </div>
+
+          {/* City: Pigeons during daytime when clean */}
+          <AnimatePresence>
+            {sceneConfig.isDaytime && sceneConfig.cleanliness > 0.4 && (
+              <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-[23] overflow-hidden">
+                <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+                  <Pigeon x={60} y={135} delay={0} />
+                  <Pigeon x={180} y={136} delay={1.5} />
+                  <Pigeon x={300} y={134} delay={3} />
+                </svg>
+              </div>
+            )}
+          </AnimatePresence>
+
+          {/* City: Construction crane when dirty */}
+          <AnimatePresence>
+            {sceneConfig.cleanliness < 0.4 && (
+              <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-5 overflow-hidden">
+                <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+                  <ConstructionCrane x={350} isNight={isNight} />
+                </svg>
+              </div>
+            )}
+          </AnimatePresence>
+        </>
+      ) : (
+        <>
+          {/* Countryside: Background Landscape Layer (Back + Mid Hills) */}
+          <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-0 overflow-hidden">
+            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+              <LandscapeBack
+                cleanliness={sceneConfig.cleanliness}
+                isNight={isNight}
+                synthwaveMode={synthwaveMode}
+                isSnowing={weather.isSnowing}
+                isChristmas={new Date().getMonth() === 11}
+                skipIntro={hasSeenScene}
+                windSpeed={weather.windSpeed}
+                timeOfDay={timeOfDay}
+              />
+              <LandscapeMid
+                cleanliness={sceneConfig.cleanliness}
+                isNight={isNight}
+                synthwaveMode={synthwaveMode}
+                isSnowing={weather.isSnowing}
+                isChristmas={new Date().getMonth() === 11}
+                skipIntro={hasSeenScene}
+                windSpeed={weather.windSpeed}
+                timeOfDay={timeOfDay}
+              />
+            </svg>
+          </div>
+
+          {/* Countryside: Flock of Sheep */}
+          <AnimatePresence>
+            {sceneConfig.cleanliness > 0.4 && !synthwaveMode && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="z-10 relative"
+              >
+                <Sheep x={20} y={15} scale={0.7} isNight={isNight} delay={0.5} />
+                <Sheep x={45} y={18} scale={0.65} isNight={isNight} delay={1.2} />
+                <Sheep x={75} y={14} scale={0.7} isNight={isNight} delay={2.0} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Countryside: Foreground Landscape Layer (Front Hill) */}
+          <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-20 overflow-hidden">
+            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+              <LandscapeFront
+                cleanliness={sceneConfig.cleanliness}
+                isNight={isNight}
+                synthwaveMode={synthwaveMode}
+                isSnowing={weather.isSnowing}
+                isChristmas={new Date().getMonth() === 11}
+                skipIntro={hasSeenScene}
+                windSpeed={weather.windSpeed}
+                timeOfDay={timeOfDay}
+              />
+            </svg>
+          </div>
+        </>
+      )}
 
       {/* Wind Turbines - dynamically positioned across the scene */}
       <AnimatePresence>
