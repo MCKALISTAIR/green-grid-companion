@@ -436,6 +436,35 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
         </div>,
         document.body
       )}
+
+      {/* Mobile popup for best block - rendered via portal */}
+      {selectedBestBlock !== null && bestBlockPopupPos && bestBlocks[selectedBestBlock] && createPortal(
+        (() => {
+          const block = bestBlocks[selectedBestBlock];
+          const startTime = format(parseISO(forecast[block.start].from), 'HH:mm');
+          const endTime = format(parseISO(forecast[block.end].to), 'HH:mm');
+          const slotCount = block.end - block.start + 1;
+          const avgIntensity = Math.round(
+            forecast.slice(block.start, block.end + 1).reduce((s, f) => s + f.intensity.forecast, 0) / slotCount
+          );
+          return (
+            <div
+              className="fixed bg-popover border border-intensity-very-low/30 rounded-lg p-2.5 shadow-lg z-50 min-w-[140px] -translate-x-1/2 -translate-y-full pointer-events-none"
+              style={{
+                left: `${bestBlockPopupPos.x}px`,
+                top: `${bestBlockPopupPos.y}px`,
+              }}
+            >
+              <div className="flex flex-col gap-0.5 text-xs">
+                <span className="font-semibold text-intensity-very-low">★ Best window</span>
+                <span className="text-foreground">{startTime} → {endTime} ({slotCount * 0.5}h)</span>
+                <span className="text-muted-foreground">Avg: {avgIntensity} gCO₂/kWh</span>
+              </div>
+            </div>
+          );
+        })(),
+        document.body
+      )}
     </div>
 
   );
