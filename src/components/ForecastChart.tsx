@@ -185,9 +185,7 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
         >
           <div className="flex gap-2 min-w-max px-4 relative">
             {bestBlocks.map((block, idx) => {
-              // Count separators before this block (including the separator on the first element if any)
               const sepsBeforeStart = hasSeparatorArray.slice(0, block.start + 1).filter(Boolean).length;
-              // Count separators inside this block (not including the first element)
               const sepsInBlock = hasSeparatorArray.slice(block.start + 1, block.end + 1).filter(Boolean).length;
 
               const leftRem = 1.0 + block.start * 3.5 + sepsBeforeStart * 2.0;
@@ -196,14 +194,18 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
               return (
                 <div
                   key={`best-block-${idx}`}
-                  className="absolute top-0 bottom-0 bg-green-500/10 dark:bg-green-400/10 rounded-xl pointer-events-none"
+                  className="absolute top-0 bottom-0 pointer-events-none flex flex-col items-center"
                   style={{
                     left: `${leftRem}rem`,
                     width: `${widthRem}rem`,
                   }}
                 >
-                  <div className="absolute -top-3 left-[1.5rem] -translate-x-1/2 h-[18px] flex items-center justify-center text-[8px] font-bold text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-900 px-1.5 rounded-md whitespace-nowrap shadow-sm">
-                    BEST
+                  {/* Subtle side borders */}
+                  <div className="absolute inset-y-2 left-0 w-px bg-intensity-very-low/40 rounded-full" />
+                  <div className="absolute inset-y-2 right-0 w-px bg-intensity-very-low/40 rounded-full" />
+                  {/* Bottom label */}
+                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-intensity-very-low/15 dark:bg-intensity-very-low/20 border border-intensity-very-low/30 px-2 py-0.5 rounded-full whitespace-nowrap">
+                    <span className="text-[9px] font-bold tracking-wide text-intensity-very-low uppercase">★ Best</span>
                   </div>
                 </div>
               );
