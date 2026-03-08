@@ -68,6 +68,23 @@ export function DirectorPanel() {
                     </div>
 
                     <div className="space-y-2">
+                        <Label>Scene Type</Label>
+                        <Select
+                            value={overrides.sceneType || 'auto'}
+                            onValueChange={(val) => setExactOverride('sceneType', val === 'auto' ? undefined : val as 'countryside' | 'city')}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Auto-detect" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="auto">Auto-detect</SelectItem>
+                                <SelectItem value="countryside">🌿 Countryside</SelectItem>
+                                <SelectItem value="city">🏙️ City</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="space-y-2">
                         <div className="flex justify-between">
                             <Label>Intensity</Label>
                             <span className="text-xs text-muted-foreground">{overrides.intensity ?? 'Live'}g</span>
