@@ -51,7 +51,7 @@ import { useSceneType, SceneType } from '@/hooks/useSceneType';
 import { CityLandscapeBack, CityLandscapeMid, CityLandscapeFront } from './scene/CityLandscape';
 import { CityTraffic, Pigeon, ConstructionCrane } from './scene/CityElements';
 import { CoastalLandscapeBack, CoastalLandscapeMid, CoastalLandscapeFront } from './scene/CoastalLandscape';
-import { SeagullFlock, SailingBoat, FishingBoat, CoastalOffshoreWind } from './scene/CoastalElements';
+import { SeagullFlock, SailingBoat, FishingBoat, CoastalOffshoreWind, RockPoolGroup, HarbourSeal } from './scene/CoastalElements';
 
 interface IntensitySceneProps {
   intensity: number;
@@ -581,6 +581,25 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
                 windSpeed={weather.windSpeed}
                 timeOfDay={timeOfDay}
               />
+            </svg>
+          </div>
+
+          {/* Coastal: Rock pools & crabs (clean energy = low tide) */}
+          <AnimatePresence>
+            {sceneConfig.cleanliness > 0.5 && (
+              <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-[22] overflow-hidden">
+                <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+                  <RockPoolGroup cleanliness={sceneConfig.cleanliness} isNight={isNight} />
+                </svg>
+              </div>
+            )}
+          </AnimatePresence>
+
+          {/* Coastal: Harbour seal */}
+          <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-[15] overflow-hidden">
+            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+              <HarbourSeal x={165} y={96} delay={3} />
+              {sceneConfig.cleanliness > 0.7 && <HarbourSeal x={220} y={98} delay={15} />}
             </svg>
           </div>
 
