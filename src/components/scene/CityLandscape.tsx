@@ -159,7 +159,7 @@ function Building({ x, width, height, fill, windowLit, windowDark, isNight, clea
               height={2}
               fill="#1e40af"
               opacity={0.7}
-              transform={`skewX(-10)`}
+              rx={0.3}
             />
           ))}
         </g>
@@ -561,25 +561,37 @@ export function CityLandscapeFront(props: CityLandscapeProps) {
 
   return (
     <>
-      {buildings.map((b, i) => (
-        <Building
-          key={i}
-          {...b}
-          fill={palette.skylineNear}
-          windowLit={palette.windowLit}
-          windowDark={palette.windowDark}
-          isNight={props.isNight}
-          cleanliness={props.cleanliness}
-          delay={0.4 + i * 0.03}
-          skipIntro={props.skipIntro}
-        />
-      ))}
-      {/* Landmark: Art Deco building in foreground */}
-      <ArtDecoBuilding x={92} width={32} height={52} fill={palette.skylineNear} windowLit={palette.windowLit} windowDark={palette.windowDark} isNight={props.isNight} cleanliness={props.cleanliness} delay={0.45} skipIntro={props.skipIntro} />
-      {/* Landmark: Glass tower (Shard-like) prominent in foreground */}
-      <GlassTower x={195} width={22} height={65} fill={palette.skylineNear} windowLit={palette.windowLit} isNight={props.isNight} cleanliness={props.cleanliness} delay={0.48} skipIntro={props.skipIntro} />
+      {/* Clip definition to stop buildings at sidewalk */}
+      <defs>
+        <clipPath id="foreground-building-clip">
+          <rect x={0} y={0} width={400} height={133} />
+        </clipPath>
+      </defs>
 
-      {/* Road */}
+      {/* Buildings clipped above road */}
+      <g clipPath="url(#foreground-building-clip)">
+        {buildings.map((b, i) => (
+          <Building
+            key={i}
+            x={b.x}
+            width={b.width}
+            height={b.height}
+            fill={palette.skylineNear}
+            windowLit={palette.windowLit}
+            windowDark={palette.windowDark}
+            isNight={props.isNight}
+            cleanliness={props.cleanliness}
+            delay={0.4 + i * 0.03}
+            skipIntro={props.skipIntro}
+          />
+        ))}
+        {/* Landmark: Art Deco building in foreground */}
+        <ArtDecoBuilding x={92} width={32} height={52} fill={palette.skylineNear} windowLit={palette.windowLit} windowDark={palette.windowDark} isNight={props.isNight} cleanliness={props.cleanliness} delay={0.45} skipIntro={props.skipIntro} />
+        {/* Landmark: Glass tower (Shard-like) prominent in foreground */}
+        <GlassTower x={195} width={22} height={65} fill={palette.skylineNear} windowLit={palette.windowLit} isNight={props.isNight} cleanliness={props.cleanliness} delay={0.48} skipIntro={props.skipIntro} />
+      </g>
+
+      {/* Road rendered on top */}
       <CityRoad fill={palette.road} skipIntro={props.skipIntro} />
 
       {/* Urban green spaces when clean */}
