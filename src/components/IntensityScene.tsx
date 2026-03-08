@@ -854,7 +854,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       {/* Owls perched on trees at night */}
       <AnimatePresence>
         {isNight && sceneConfig.cleanliness > 0.7 && (
-          <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-12">
+          <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-12">
             <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <Owl treeX={80} treeY={85} />
               <Owl treeX={320} treeY={95} />
