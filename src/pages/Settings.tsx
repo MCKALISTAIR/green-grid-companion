@@ -300,7 +300,10 @@ export default function Settings() {
                             >
                                 <div className="flex items-center space-x-2">
                                     <RadioGroupItem value="auto" id="scene-auto" />
-                                    <Label htmlFor="scene-auto">Auto</Label>
+                                    <Label htmlFor="scene-auto" className="flex items-center gap-1.5">
+                                        <Sparkles className="w-3.5 h-3.5 text-primary" />
+                                        Auto
+                                    </Label>
                                 </div>
                                 <div className="flex items-center space-x-2">
                                     <RadioGroupItem value="countryside" id="scene-countryside" />
