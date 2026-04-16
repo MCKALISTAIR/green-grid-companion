@@ -195,6 +195,10 @@ export function useSettings() {
     return () => clearTimeout(timeoutId);
   }, [settings, userId, syncToDatabase]);
 
+  // Keep a ref to the latest settings so the periodic interval never captures stale values
+  const settingsRef = useRef(settings);
+  useEffect(() => { settingsRef.current = settings; }, [settings]);
+
   // Periodic sync every 48 hours
   useEffect(() => {
     if (!userId) return;
@@ -203,13 +207,13 @@ export function useSettings() {
 
     const checkAndSync = () => {
       if (!lastSyncedAt) {
-        syncToDatabase(settings);
+        syncToDatabase(settingsRef.current);
         return;
       }
 
       const timeSinceSync = Date.now() - lastSyncedAt.getTime();
       if (timeSinceSync >= FORTY_EIGHT_HOURS) {
-        syncToDatabase(settings);
+        syncToDatabase(settingsRef.current);
       }
     };
 
@@ -220,7 +224,7 @@ export function useSettings() {
     const intervalId = setInterval(checkAndSync, 60 * 60 * 1000);
 
     return () => clearInterval(intervalId);
-  }, [userId, lastSyncedAt, settings, syncToDatabase]);
+  }, [userId, lastSyncedAt, syncToDatabase]);
 
   // Handle reconnecting to network (retry sync if coming back online)
   useEffect(() => {
@@ -228,12 +232,12 @@ export function useSettings() {
 
     const handleOnline = () => {
       logger.info('Device came online. Retrying settings sync.');
-      syncToDatabase(settings);
+      syncToDatabase(settingsRef.current);
     };
 
     window.addEventListener('online', handleOnline);
     return () => window.removeEventListener('online', handleOnline);
-  }, [userId, settings, syncToDatabase]);
+  }, [userId, syncToDatabase]);
 
   const updateSetting = <K extends keyof Settings>(key: K, value: Settings[K]) => {
     setSettings((prev) => ({ ...prev, [key]: value }));

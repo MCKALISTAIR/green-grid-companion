@@ -134,7 +134,7 @@ export function useCarbonData(postcode: string) {
     // GB/National falls through to undefined, handled by fallback
   }
 
-  logger.info('useCarbonData resolution', {
+  logger.debug('useCarbonData resolution', {
     postcode,
     targetRegionName,
     foundRegionShortname: foundRegion?.shortname,
