@@ -86,11 +86,9 @@ export const UK_REGIONS = UK_REGIONS_CONFIG.flatMap((region) =>
   }))
 );
 
-// Helper for fetch (now allows caching)
-const fetchWithNoCache = async (url: string) => {
-  // We allow browser caching now to save bandwidth
-  // The API sends correct ETag/Cache-Control headers
-  const response = await fetch(url);
+// Helper for fetch with optional AbortSignal
+const fetchWithNoCache = async (url: string, signal?: AbortSignal) => {
+  const response = await fetch(url, { signal });
   return response;
 };
 
