@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { RefreshCw, Zap, Info, Leaf, Activity, MapPin, ChevronDown, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -30,16 +29,15 @@ import { WeatherWidget } from '@/components/WeatherWidget';
 import { GreenerNightsCard } from '@/components/GreenerNightsCard';
 import { AnimatedIntensity } from '@/components/AnimatedIntensity';
 import { EnergyFactBubble } from '@/components/scene/EnergyFactBubble';
-import { logger } from '@/lib/logger';
 import { StaleDataBadge } from '@/components/StaleDataBadge';
 import { LocationMismatchPrompt } from '@/components/LocationMismatchPrompt';
 import { YearWrapped } from '@/components/YearWrapped';
 
 import { useAppLocation } from '@/contexts/LocationContext';
-import { useProductTour } from '@/hooks/useProductTour';
 import { useYearWrappedAutoShow } from '@/hooks/useYearWrappedAutoShow';
-import { usePeriodicRefresh } from '@/hooks/usePeriodicRefresh';
 import { useEnvironmentalConditions } from '@/hooks/useEnvironmentalConditions';
+import { useIndexPageEffects } from '@/hooks/useIndexPageEffects';
+import { useThrottledRefetch } from '@/hooks/useThrottledRefetch';
 
 const Index = () => {
   const navigate = useNavigate();
