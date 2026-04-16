@@ -72,7 +72,7 @@ export function NetZeroCelebration() {
 
             {/* Success badge */}
             <motion.div
-                className="absolute top-8 left-1/2 -translate-x-1/2 z-50"
+                className="absolute top-8 inset-x-0 flex justify-center z-50"
                 initial={{ y: -50, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.8, ease: 'easeOut' }}
