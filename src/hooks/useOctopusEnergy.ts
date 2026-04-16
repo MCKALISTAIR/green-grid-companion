@@ -542,7 +542,7 @@ export function useOctopusEnergy(days: number = 30) {
 
       return data;
     } catch (error: unknown) {
-      const message = parseEdgeFunctionError(error, { feature: 'octopus', action: 'full-sync' });
+      const message = parseEdgeFunctionError(error, { feature: 'octopus', action: 'sync' });
       toast.error(message);
       throw error;
     } finally {
