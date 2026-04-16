@@ -40,19 +40,12 @@ import { useIndexPageEffects } from '@/hooks/useIndexPageEffects';
 import { useThrottledRefetch } from '@/hooks/useThrottledRefetch';
 
 const Index = () => {
-  const navigate = useNavigate();
   const { postcode, setPostcode } = useAppLocation();
   const [viewMode, setViewMode] = useState<'intensity' | 'footprint' | 'demand'>('intensity');
   const { showYearWrapped, setShowYearWrapped, wrappedYear } = useYearWrappedAutoShow();
 
   const { scheduleGreenAlerts, scheduleDailyForecast, scheduleHighIntensityAlerts, prefs } = useNotifications();
   const { isLinked: isOctopusLinked } = useOctopusEnergy();
-
-  useEffect(() => {
-    if (!postcode) {
-      navigate('/onboarding');
-    }
-  }, [postcode, navigate]);
 
   const {
     intensity,
@@ -73,24 +66,21 @@ const Index = () => {
 
   const { frequency: gridFrequency } = useGridDemand();
 
-  // Auto-schedule notifications when forecast updates
-  useEffect(() => {
-    if (forecast && forecast.length > 0) {
-      scheduleGreenAlerts(forecast);
-      scheduleDailyForecast(forecast);
-      scheduleHighIntensityAlerts(forecast);
-    }
-  }, [forecast, scheduleGreenAlerts, scheduleDailyForecast, scheduleHighIntensityAlerts]);
+  // Composite hook for all page-level effects (notifications, tour, periodic refresh, routing)
+  useIndexPageEffects({
+    postcode,
+    intensity,
+    isLoading,
+    lastUpdated,
+    forecast,
+    refetch,
+    scheduleGreenAlerts,
+    scheduleDailyForecast,
+    scheduleHighIntensityAlerts,
+  });
 
-  // Start Tour
-  const { startTour } = useProductTour();
-  useEffect(() => {
-    if (!isLoading && intensity) {
-      startTour();
-    }
-  }, [isLoading, intensity, startTour]);
-
-  usePeriodicRefresh(lastUpdated, refetch);
+  // Throttle manual refreshes to prevent rapid-fire API calls
+  const throttledRefetch = useThrottledRefetch(refetch);
 
   const handleRefresh = async () => {
     await refetch();
