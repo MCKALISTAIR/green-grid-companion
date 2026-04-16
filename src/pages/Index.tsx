@@ -83,7 +83,7 @@ const Index = () => {
   const throttledRefetch = useThrottledRefetch(refetch);
 
   const handleRefresh = async () => {
-    await refetch();
+    await throttledRefetch();
     // Simple feedback logic:
     // If the data hasn't changed (checked via lastUpdated timestamp comparison or just assume usually valid),
     // and the last update was recent, we inform the user.
