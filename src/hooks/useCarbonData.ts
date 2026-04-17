@@ -95,7 +95,7 @@ export function useCarbonData(postcode: string) {
   // National intensity as fallback
   const nationalQuery = useQuery<IntensityData>({
     queryKey: ['national'],
-    queryFn: getCurrentIntensity,
+    queryFn: ({ signal }) => getCurrentIntensity(signal),
     staleTime: 1000 * 60 * 10, // 10 minutes - more aggressive staleness
     gcTime: 1000 * 60 * 60, // 1 hour
     // No refetchInterval - we use smart setTimeout instead
@@ -103,7 +103,7 @@ export function useCarbonData(postcode: string) {
 
   const regionalListQuery = useQuery<RegionListItem[]>({
     queryKey: ['regional', 'all'],
-    queryFn: getAllRegions,
+    queryFn: ({ signal }) => getAllRegions(signal),
     staleTime: 1000 * 60 * 5,
     retry: 2,
   });
@@ -144,7 +144,7 @@ export function useCarbonData(postcode: string) {
   // Fetch detailed regional data by ID (avoids CORS issues with postcode endpoint)
   const regionalDataQuery = useQuery<RegionalData | null>({
     queryKey: ['regional', regionId],
-    queryFn: () => regionId ? getRegionalIntensityById(regionId) : Promise.resolve(null),
+    queryFn: ({ signal }) => regionId ? getRegionalIntensityById(regionId, signal) : Promise.resolve(null),
     enabled: !!regionId,
     staleTime: 1000 * 60 * 10, // 10 minutes
     gcTime: 1000 * 60 * 60, // 1 hour
@@ -154,7 +154,7 @@ export function useCarbonData(postcode: string) {
 
   const forecastQuery = useQuery<ForecastData[]>({
     queryKey: ['forecast', regionId, postcode],
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       const now = new Date();
       // 24 hours ago
       const from = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
@@ -163,9 +163,9 @@ export function useCarbonData(postcode: string) {
 
       if (postcode === 'GB' || regionId === 0 || !regionId) {
         // If no specific region, fetch the National forecast which will always succeed.
-        return getNationalHistoryAndForecast(from, to);
+        return getNationalHistoryAndForecast(from, to, signal);
       }
-      return getRegionalHistoryAndForecast(regionId, from, to);
+      return getRegionalHistoryAndForecast(regionId, from, to, signal);
     },
     enabled: true, // Always enable to ensure we get at least national data
     staleTime: 1000 * 60 * 30,
@@ -177,7 +177,7 @@ export function useCarbonData(postcode: string) {
   // We can try to fetch the specific postcode data which INCLUDES the regionid.
   const postcodeQuery = useQuery<RegionalData>({
     queryKey: ['regional', postcode],
-    queryFn: () => getRegionalIntensity(postcode),
+    queryFn: ({ signal }) => getRegionalIntensity(postcode, signal),
     enabled: !!postcode && !regionId, // Only run if we failed to resolve ID locally
     staleTime: 1000 * 60 * 30, // 30 mins
   });
@@ -189,7 +189,7 @@ export function useCarbonData(postcode: string) {
 
   const generationQuery = useQuery<GenerationMix[]>({
     queryKey: ['generation'],
-    queryFn: getGenerationMix,
+    queryFn: ({ signal }) => getGenerationMix(signal),
     staleTime: 1000 * 60 * 10, // 10 minutes
     gcTime: 1000 * 60 * 60, // 1 hour
     // No refetchInterval - we use smart setTimeout instead

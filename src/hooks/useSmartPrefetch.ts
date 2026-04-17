@@ -34,11 +34,11 @@ export function useSmartPrefetch() {
                 // and provides the current intensity.
                 queryClient.prefetchQuery({
                     queryKey: ['regional', loc.postcode],
-                    queryFn: async () => {
+                    queryFn: async ({ signal }) => {
                         // In actual use, getRegionalIntensity(postcode) is used.
                         // We can dynamically import it to avoid circular depends if necessary.
                         const { getRegionalIntensity } = await import('@/lib/carbonApi');
-                        return getRegionalIntensity(loc.postcode);
+                        return getRegionalIntensity(loc.postcode, signal);
                     },
                     staleTime: 1000 * 60 * 30,
                 }).then(() => {

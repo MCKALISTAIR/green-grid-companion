@@ -10,7 +10,7 @@ export function useHistoricalCarbon(date: Date | undefined) {
 
     const query = useQuery<ForecastData[]>({
         queryKey: ['historical', regionId, date?.toISOString()],
-        queryFn: async () => {
+        queryFn: async ({ signal }) => {
             if (!date) return [];
 
             // Format dates for API: YYYY-MM-DDThh:mmZ
@@ -19,9 +19,9 @@ export function useHistoricalCarbon(date: Date | undefined) {
             const to = endOfDay(date).toISOString();
 
             if (regionId) {
-                return getRegionalHistoryAndForecast(regionId, from, to);
+                return getRegionalHistoryAndForecast(regionId, from, to, signal);
             } else {
-                return getNationalHistoryAndForecast(from, to);
+                return getNationalHistoryAndForecast(from, to, signal);
             }
         },
         enabled: !!date,
@@ -31,7 +31,7 @@ export function useHistoricalCarbon(date: Date | undefined) {
 
     const comparisonQuery = useQuery<ForecastData[]>({
         queryKey: ['historical_comparison', regionId, date?.toISOString()],
-        queryFn: async () => {
+        queryFn: async ({ signal }) => {
             if (!date) return [];
 
             // Compare with 1 year prior to the selected date
@@ -41,9 +41,9 @@ export function useHistoricalCarbon(date: Date | undefined) {
             const to = endOfDay(compareDate).toISOString();
 
             if (regionId) {
-                return getRegionalHistoryAndForecast(regionId, from, to);
+                return getRegionalHistoryAndForecast(regionId, from, to, signal);
             } else {
-                return getNationalHistoryAndForecast(from, to);
+                return getNationalHistoryAndForecast(from, to, signal);
             }
         },
         enabled: !!date,
