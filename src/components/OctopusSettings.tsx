@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, forwardRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -32,7 +32,12 @@ const credentialsSchema = z.object({
 type CredentialsFormData = z.infer<typeof credentialsSchema>;
 type ValidationErrors = Partial<Record<keyof CredentialsFormData, string>>;
 
-export function OctopusSettings({ onSaved, onCancel }: { onSaved: () => void; onCancel?: () => void }) {
+interface OctopusSettingsProps {
+    onSaved: () => void;
+    onCancel?: () => void;
+}
+
+export const OctopusSettings = forwardRef<HTMLDivElement, OctopusSettingsProps>(({ onSaved, onCancel }, ref) => {
     const [apiKey, setApiKey] = useState('');
     const [accountNumber, setAccountNumber] = useState('');
     const [showKey, setShowKey] = useState(false);
@@ -110,7 +115,7 @@ export function OctopusSettings({ onSaved, onCancel }: { onSaved: () => void; on
     const isValid = !errors.accountNumber && !errors.apiKey && accountNumber && apiKey;
 
     return (
-        <Card className="p-4 border-purple-500/20 bg-purple-500/5">
+        <Card ref={ref} className="p-4 border-purple-500/20 bg-purple-500/5">
             <div className="space-y-4">
                 <div>
                     <h3 className="font-medium text-foreground">Connect Octopus Energy</h3>
@@ -224,4 +229,6 @@ export function OctopusSettings({ onSaved, onCancel }: { onSaved: () => void; on
             </div>
         </Card>
     );
-}
+});
+
+OctopusSettings.displayName = 'OctopusSettings';
