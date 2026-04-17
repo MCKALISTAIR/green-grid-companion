@@ -93,16 +93,16 @@ const fetchWithNoCache = async (url: string, signal?: AbortSignal) => {
 };
 
 // Get current national intensity
-export async function getCurrentIntensity(): Promise<IntensityData> {
-  const response = await fetchWithNoCache(`${BASE_URL}/intensity`);
+export async function getCurrentIntensity(signal?: AbortSignal): Promise<IntensityData> {
+  const response = await fetchWithNoCache(`${BASE_URL}/intensity`, signal);
   const data = await response.json();
   return data.data[0];
 }
 
 // Get intensity for a specific postcode
-export async function getRegionalIntensity(postcode: string): Promise<RegionalData> {
+export async function getRegionalIntensity(postcode: string, signal?: AbortSignal): Promise<RegionalData> {
   const cleanPostcode = postcode.split(' ')[0].toUpperCase();
-  const response = await fetchWithNoCache(`${BASE_URL}/regional/postcode/${cleanPostcode}`);
+  const response = await fetchWithNoCache(`${BASE_URL}/regional/postcode/${cleanPostcode}`, signal);
   if (!response.ok) {
     throw new Error(`Failed to fetch regional data: ${response.status}`);
   }
@@ -112,10 +112,10 @@ export async function getRegionalIntensity(postcode: string): Promise<RegionalDa
 }
 
 // Get 48hr forecast for a postcode  
-export async function getRegionalForecast(postcode: string): Promise<ForecastData[]> {
+export async function getRegionalForecast(postcode: string, signal?: AbortSignal): Promise<ForecastData[]> {
   const cleanPostcode = postcode.split(' ')[0].toUpperCase();
   const now = new Date().toISOString();
-  const response = await fetchWithNoCache(`${BASE_URL}/regional/intensity/${now}/fw48h/postcode/${cleanPostcode}`);
+  const response = await fetchWithNoCache(`${BASE_URL}/regional/intensity/${now}/fw48h/postcode/${cleanPostcode}`, signal);
   if (!response.ok) {
     throw new Error(`Failed to fetch forecast: ${response.status}`);
   }
@@ -125,10 +125,10 @@ export async function getRegionalForecast(postcode: string): Promise<ForecastDat
 }
 
 // Get 48hr forecast for a region ID
-export async function getRegionalForecastById(regionId: number): Promise<ForecastData[]> {
+export async function getRegionalForecastById(regionId: number, signal?: AbortSignal): Promise<ForecastData[]> {
   const now = new Date().toISOString();
   // Valid endpoint format: /regional/intensity/{from}/fw48h/regionid/{regionid}
-  const response = await fetchWithNoCache(`${BASE_URL}/regional/intensity/${now}/fw48h/regionid/${regionId}`);
+  const response = await fetchWithNoCache(`${BASE_URL}/regional/intensity/${now}/fw48h/regionid/${regionId}`, signal);
   if (!response.ok) {
     throw new Error(`Failed to fetch forecast: ${response.status}`);
   }
@@ -138,9 +138,9 @@ export async function getRegionalForecastById(regionId: number): Promise<Forecas
 }
 
 // Get 48hr forecast + history for a region ID
-export async function getRegionalHistoryAndForecast(regionId: number, from: string, to: string): Promise<ForecastData[]> {
+export async function getRegionalHistoryAndForecast(regionId: number, from: string, to: string, signal?: AbortSignal): Promise<ForecastData[]> {
   // Endpoint: /regional/intensity/{from}/{to}/regionid/{regionid}
-  const response = await fetchWithNoCache(`${BASE_URL}/regional/intensity/${from}/${to}/regionid/${regionId}`);
+  const response = await fetchWithNoCache(`${BASE_URL}/regional/intensity/${from}/${to}/regionid/${regionId}`, signal);
   if (!response.ok) {
     throw new Error(`Failed to fetch history/forecast: ${response.status}`);
   }
@@ -160,9 +160,9 @@ export async function getRegionalHistoryAndForecast(regionId: number, from: stri
 }
 
 // Get National history + forecast
-export async function getNationalHistoryAndForecast(from: string, to: string): Promise<ForecastData[]> {
+export async function getNationalHistoryAndForecast(from: string, to: string, signal?: AbortSignal): Promise<ForecastData[]> {
   // Endpoint: /intensity/{from}/{to}
-  const response = await fetchWithNoCache(`${BASE_URL}/intensity/${from}/${to}`);
+  const response = await fetchWithNoCache(`${BASE_URL}/intensity/${from}/${to}`, signal);
   if (!response.ok) {
     throw new Error(`Failed to fetch national history: ${response.status}`);
   }
@@ -172,8 +172,8 @@ export async function getNationalHistoryAndForecast(from: string, to: string): P
 }
 
 // Get intensity for a specific region ID
-export async function getRegionalIntensityById(regionId: number): Promise<RegionalData> {
-  const response = await fetchWithNoCache(`${BASE_URL}/regional/regionid/${regionId}`);
+export async function getRegionalIntensityById(regionId: number, signal?: AbortSignal): Promise<RegionalData> {
+  const response = await fetchWithNoCache(`${BASE_URL}/regional/regionid/${regionId}`, signal);
   if (!response.ok) {
     throw new Error(`Failed to fetch regional data: ${response.status}`);
   }
@@ -182,8 +182,8 @@ export async function getRegionalIntensityById(regionId: number): Promise<Region
 }
 
 // Get national generation mix
-export async function getGenerationMix(): Promise<GenerationMix[]> {
-  const response = await fetchWithNoCache(`${BASE_URL}/generation`);
+export async function getGenerationMix(signal?: AbortSignal): Promise<GenerationMix[]> {
+  const response = await fetchWithNoCache(`${BASE_URL}/generation`, signal);
   const data = await response.json();
   return data.data.generationmix;
 }
@@ -201,8 +201,8 @@ export interface RegionListItem {
 }
 
 // Get all regions
-export async function getAllRegions(): Promise<RegionListItem[]> {
-  const response = await fetchWithNoCache(`${BASE_URL}/regional`);
+export async function getAllRegions(signal?: AbortSignal): Promise<RegionListItem[]> {
+  const response = await fetchWithNoCache(`${BASE_URL}/regional`, signal);
   const data = await response.json();
   return data.data[0]?.regions || [];
 }
