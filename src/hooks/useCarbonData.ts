@@ -95,7 +95,7 @@ export function useCarbonData(postcode: string) {
   // National intensity as fallback
   const nationalQuery = useQuery<IntensityData>({
     queryKey: ['national'],
-    queryFn: getCurrentIntensity,
+    queryFn: ({ signal }) => getCurrentIntensity(signal),
     staleTime: 1000 * 60 * 10, // 10 minutes - more aggressive staleness
     gcTime: 1000 * 60 * 60, // 1 hour
     // No refetchInterval - we use smart setTimeout instead
@@ -103,7 +103,7 @@ export function useCarbonData(postcode: string) {
 
   const regionalListQuery = useQuery<RegionListItem[]>({
     queryKey: ['regional', 'all'],
-    queryFn: getAllRegions,
+    queryFn: ({ signal }) => getAllRegions(signal),
     staleTime: 1000 * 60 * 5,
     retry: 2,
   });
