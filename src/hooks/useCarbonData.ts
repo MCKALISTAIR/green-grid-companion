@@ -189,7 +189,7 @@ export function useCarbonData(postcode: string) {
 
   const generationQuery = useQuery<GenerationMix[]>({
     queryKey: ['generation'],
-    queryFn: getGenerationMix,
+    queryFn: ({ signal }) => getGenerationMix(signal),
     staleTime: 1000 * 60 * 10, // 10 minutes
     gcTime: 1000 * 60 * 60, // 1 hour
     // No refetchInterval - we use smart setTimeout instead
