@@ -79,15 +79,16 @@ const Index = () => {
     scheduleHighIntensityAlerts,
   });
 
-  // Throttle manual refreshes to prevent rapid-fire API calls
-  const throttledRefetch = useThrottledRefetch(refetch);
+  // Throttle manual refreshes to prevent rapid-fire API calls.
+  // The hook surfaces its own toast when a refresh is skipped.
+  const throttledRefetch = useThrottledRefetch(refetch, {
+    cooldownMs: 10_000,
+    skipToastDescription: 'Grid data updates every 30 minutes — give it a sec.',
+  });
 
   const handleRefresh = async () => {
-    await throttledRefetch();
-    // Simple feedback logic:
-    // If the data hasn't changed (checked via lastUpdated timestamp comparison or just assume usually valid),
-    // and the last update was recent, we inform the user.
-    // For now, simpler approach:
+    const ran = await throttledRefetch();
+    if (!ran) return; // Throttled — hook already showed feedback
 
     if (lastUpdated) {
       // Calculate next expected update time
