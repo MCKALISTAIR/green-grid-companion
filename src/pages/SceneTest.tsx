@@ -1,6 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { IntensityScene } from '@/components/IntensityScene';
-import { Helmet } from 'react-helmet-async';
 
 /**
  * Dev-only visual regression test page for IntensityScene.
@@ -43,13 +42,14 @@ export default function SceneTest() {
   const [scaleToFit, setScaleToFit] = useState(true);
   const [selectedCase, setSelectedCase] = useState<SceneCase>(SCENE_CASES[0]);
 
+  useEffect(() => {
+    const prev = document.title;
+    document.title = 'Scene Visual Test — GridSense Dev';
+    return () => { document.title = prev; };
+  }, []);
+
   return (
     <div className="min-h-screen bg-background p-6">
-      <Helmet>
-        <title>Scene Visual Test — GridSense Dev</title>
-        <meta name="robots" content="noindex,nofollow" />
-      </Helmet>
-
       <header className="mb-6 max-w-4xl">
         <h1 className="text-2xl font-bold mb-2">Scene Visual Test</h1>
         <p className="text-muted-foreground text-sm">
