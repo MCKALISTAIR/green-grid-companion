@@ -276,12 +276,15 @@ export function LandscapeBack(props: LandscapeProps) {
 export function LandscapeMid(props: LandscapeProps) {
     const palette = useLandscapePalette(props.cleanliness, props.isNight, props.synthwaveMode, props.isSnowing, props.timeOfDay);
 
+    // Trees positioned so trunk base sits just into the mid hill ridge.
+    // Ridge curve: M0,120 Q80,140 160,100 Q240,60 320,110 Q360,130 400,100
+    // y = (sampled ridge y at x) - ~8 (trunk base offset at scale 0.9)
     const midTrees = [
-        { x: 45, y: 126, scale: 0.9 },
-        { x: 120, y: 116, scale: 0.9 },
-        { x: 190, y: 88, scale: 0.9 },
-        { x: 260, y: 85, scale: 0.9 },
-        { x: 330, y: 112, scale: 0.9 }
+        { x: 45, y: 119, scale: 0.9 },   // ridge ≈127
+        { x: 120, y: 110, scale: 0.9 },  // ridge ≈118
+        { x: 190, y: 81, scale: 0.9 },   // ridge ≈88
+        { x: 260, y: 78, scale: 0.9 },   // ridge ≈85
+        { x: 330, y: 107, scale: 0.9 },  // ridge ≈114
     ];
 
     return (
