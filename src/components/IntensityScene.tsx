@@ -314,7 +314,14 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
 
   return (
     <motion.div
-      className={`relative w-full min-h-[400px] h-[60vh] md:h-[65vh] overflow-hidden rounded-xl md:rounded-l-xl transition-colors duration-1000 ${isVintage ? 'sepia-[.6] contrast-125 grayscale-[.3]' : ''} ${className || ''}`}
+      // Aspect-ratio aware height: cap scene height proportional to width on tall narrow
+      // viewports (e.g. iPhone 17 Pro Max ~440x956) so the sky doesn't dominate. The
+      // min() takes the smaller of the viewport-relative height and a width-based cap
+      // (75% of the viewport width). Bounded by min/max to avoid extremes.
+      className={`relative w-full overflow-hidden rounded-xl md:rounded-l-xl transition-colors duration-1000 ${isVintage ? 'sepia-[.6] contrast-125 grayscale-[.3]' : ''} ${className || ''}`}
+      style={{
+        height: 'clamp(400px, min(60vh, 75vw), 620px)',
+      }}
       animate={{
         background: sceneConfig.skyGradient,
         filter: sceneConfig.sceneFilter,
