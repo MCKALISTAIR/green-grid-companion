@@ -46,17 +46,19 @@ export function MeteorShower() {
                 </defs>
 
                 {/* Multiple meteors with staggered timing */}
-                {meteors.map((meteor) => (
+                {meteors.map((meteor) => {
+                    const endX = meteor.startX + meteor.length * Math.cos((meteor.angle * Math.PI) / 180);
+                    const endY = meteor.startY + meteor.length * Math.sin((meteor.angle * Math.PI) / 180);
+                    const trailPath = `M${meteor.startX},${meteor.startY} L${endX},${endY}`;
+                    return (
                     <motion.g key={meteor.id}>
                         {/* Meteor trail */}
-                        <motion.line
-                            x1={meteor.startX}
-                            y1={meteor.startY}
-                            x2={meteor.startX + meteor.length * Math.cos((meteor.angle * Math.PI) / 180)}
-                            y2={meteor.startY + meteor.length * Math.sin((meteor.angle * Math.PI) / 180)}
+                        <motion.path
+                            d={trailPath}
                             stroke="url(#meteorGrad)"
                             strokeWidth={meteor.strokeWidth}
                             strokeLinecap="round"
+                            fill="none"
                             initial={{
                                 pathLength: 0,
                                 opacity: 0,
@@ -99,7 +101,8 @@ export function MeteorShower() {
                             }}
                         />
                     </motion.g>
-                ))}
+                    );
+                })}
             </svg>
         </motion.div>
     );
