@@ -101,7 +101,8 @@ export function MeteorShower() {
                             }}
                         />
                     </motion.g>
-                ))}
+                    );
+                })}
             </svg>
         </motion.div>
     );
