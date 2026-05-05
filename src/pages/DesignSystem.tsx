@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
-import { Copy, ExternalLink, Moon, Sun } from "lucide-react";
+import { Copy, ExternalLink, Inbox, Moon, Sun } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import {
   contrastRatio,
@@ -359,7 +359,7 @@ function PatternsShowcase() {
       <Card>
         <CardHeader><CardTitle className="text-base">Stale data</CardTitle></CardHeader>
         <CardContent>
-          <StaleDataBadge lastUpdated={new Date(Date.now() - 1000 * 60 * 45)} />
+          <StaleDataBadge lastUpdated={new Date(Date.now() - 1000 * 60 * 45).toISOString()} />
           <p className="mt-2 text-xs text-muted-foreground">Shown when data is &gt; 35 minutes old.</p>
         </CardContent>
       </Card>
@@ -367,6 +367,7 @@ function PatternsShowcase() {
         <CardHeader><CardTitle className="text-base">Empty state</CardTitle></CardHeader>
         <CardContent>
           <EmptyState
+            icon={Inbox}
             title="No data yet"
             description="Connect Octopus Energy to see your real footprint."
           />
@@ -377,7 +378,7 @@ function PatternsShowcase() {
         <CardContent>
           <ErrorState
             title="Couldn't load forecast"
-            message="Check your connection and try again."
+            description="Check your connection and try again."
           />
         </CardContent>
       </Card>
