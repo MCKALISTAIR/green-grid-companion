@@ -41,6 +41,7 @@ const GuideDetail = lazy(() => import("./pages/GuideDetail"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const TurbineTest = lazy(() => import("./pages/TurbineTest"));
 const SceneTestPage = lazy(() => import("./pages/SceneTest"));
+const DesignSystemPage = lazy(() => import("./pages/DesignSystem"));
 const ChargingHistory = lazy(() => import("./pages/ChargingHistory"));
 const AchievementsPage = lazy(() => import('./pages/Achievements'));
 import AuthCallback from "./pages/AuthCallback";
@@ -162,6 +163,7 @@ function AppContent() {
             <Route path="/achievements" element={<Suspense fallback={<PageLoader />}><AchievementsPage /></Suspense>} />
             <Route path="/__turbine-test" element={<Suspense fallback={<PageLoader />}><TurbineTest /></Suspense>} />
             <Route path="/__scene-test" element={<Suspense fallback={<PageLoader />}><SceneTestPage /></Suspense>} />
+            <Route path="/__design-system" element={<Suspense fallback={<PageLoader />}><DesignSystemPage /></Suspense>} />
             <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />
           </Route>
           <Route path="/onboarding" element={<Suspense fallback={<PageLoader />}><Onboarding /></Suspense>} />
