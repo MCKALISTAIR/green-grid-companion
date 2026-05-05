@@ -20,6 +20,7 @@ import { TurbineSpinner } from "@/components/ui/turbine-spinner";
 import { StaleDataBadge } from "@/components/StaleDataBadge";
 import { EmptyState } from "@/components/EmptyState";
 import { ErrorState } from "@/components/ErrorState";
+import { SceneContrastMatrix } from "@/components/SceneContrastMatrix";
 
 const SEMANTIC_TOKENS = [
   "background",
@@ -557,8 +558,46 @@ export default function DesignSystemPage() {
             <CardContent><AccessibilityNotes /></CardContent>
           </Card>
           <Card>
-            <CardHeader><CardTitle>Live contrast matrix</CardTitle></CardHeader>
+            <CardHeader><CardTitle>Live contrast matrix (static tokens)</CardTitle></CardHeader>
             <CardContent><ContrastTable version={version} /></CardContent>
+          </Card>
+          <Card>
+            <CardHeader><CardTitle>Scene contrast (dynamic backgrounds)</CardTitle></CardHeader>
+            <CardContent><SceneContrastMatrix /></CardContent>
+          </Card>
+          <Card>
+            <CardHeader><CardTitle>Audit log</CardTitle></CardHeader>
+            <CardContent>
+              <div className="space-y-3 text-sm">
+                <p className="text-muted-foreground">
+                  We don't claim WCAG AA on faith — we measure it. Automated audits live alongside the code.
+                </p>
+                <ul className="list-inside list-disc space-y-1 text-muted-foreground">
+                  <li>
+                    <strong className="text-foreground">Tool:</strong> axe-core via Playwright, run from{" "}
+                    <code className="font-mono">scripts/a11y-audit.ts</code>.
+                  </li>
+                  <li>
+                    <strong className="text-foreground">Cadence:</strong> on demand before any release that touches
+                    structural HTML, plus a manual VoiceOver pass on iOS.
+                  </li>
+                  <li>
+                    <strong className="text-foreground">Reports:</strong> dated Markdown files under{" "}
+                    <code className="font-mono">docs/a11y/YYYY-MM-DD.md</code>, committed to the repo so reviewers can see
+                    real evidence rather than a marketing claim.
+                  </li>
+                  <li>
+                    <strong className="text-foreground">Scope of automation:</strong> ~30–40% of WCAG issues — the rest
+                    is keyboard, screen-reader narration and cognitive review.
+                  </li>
+                </ul>
+                <pre className="overflow-x-auto rounded-md bg-muted/50 p-3 font-mono text-xs">
+{`bun run build
+bunx playwright install chromium
+bun scripts/a11y-audit.ts`}
+                </pre>
+              </div>
+            </CardContent>
           </Card>
         </TabsContent>
 
