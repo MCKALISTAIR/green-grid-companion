@@ -253,7 +253,7 @@ GridSense is a mobile-first companion app designed to help UK (and future) energ
 
 ## 📱 Developer Structure
 
-*   `src/pages`: Main application screens (Index, Planner, History, Settings, Glossary, Help, FeatureGuides).
+*   `src/pages`: Main application screens (Index, Planner, History, Settings, Glossary, Help, FeatureGuides). Internal reference routes: `/__design-system` (live tokens, components, accessibility — see [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md)), `/__scene-test`, `/__turbine-test`.
 *   `src/components`: Reusable UI blocks and Widgets.
     *   `src/components/scene`: Interactive scene elements (Landscape, Sheep, CarrotEvents).
     *   Error boundaries (ComponentErrorBoundary, ErrorBoundary, ErrorState) for robust error handling.

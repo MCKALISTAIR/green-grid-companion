@@ -1,0 +1,50 @@
+# GridSense Design System
+
+A lightweight, single-source-of-truth reference for everyone touching the GridSense UI — designers, UX researchers, engineers, and reviewers.
+
+> **Live page:** open the running app at `/__design-system` for an always-current view of every token, swatch, contrast ratio and component pattern. The page reads CSS custom properties at runtime, so it cannot drift from the codebase.
+
+## Why this exists
+
+- **Designers** — see exactly which tokens, primitives and patterns are available before designing a new screen.
+- **UX** — verify accessibility commitments (contrast, reduced motion, screen-reader patterns) at a glance.
+- **Engineers** — one place to copy semantic class names instead of hand-rolling colours.
+- **Reviewers / hiring managers** — evidence that the system has been considered, not just assembled.
+
+## Foundations at a glance
+
+| Layer | Where it lives | Notes |
+|---|---|---|
+| Color tokens | `src/index.css` (`:root`, `.dark`) | All tokens are HSL triples consumed via `hsl(var(--token))`. |
+| Tailwind aliases | `tailwind.config.ts` | Semantic colour, radius, shadow and font families. |
+| Typography | Work Sans (UI), Lora (editorial), Inconsolata (data). | Loaded via Google Fonts in `index.css`. |
+| Radius | `--radius: 1rem` (lg). md/sm derived. | Soft, friendly shapes throughout. |
+| Spacing | Tailwind default `4px` scale. | No custom spacing scale needed. |
+| Shadow | `--shadow-sm/md/lg/xl`. | Used sparingly; surfaces favour borders + elevation through colour. |
+
+## Color families
+
+- **Semantic** — `background`, `foreground`, `card`, `primary`, `secondary`, `muted`, `accent`, `destructive`.
+- **Intensity** — `intensity-very-low → very-high` (the carbon-intensity scale).
+- **Generation mix** — `gen-wind`, `gen-solar`, `gen-nuclear`, `gen-gas`, `gen-coal`, `gen-hydro`, `gen-biomass`, `gen-imports`, `gen-other`.
+- **Sky gradients** — `--sky-clean`, `--sky-moderate`, `--sky-dirty` (used by `IntensityScene`).
+
+## Component inventory
+
+- **Primitives** — shadcn/Radix wrappers in `src/components/ui/*` (Button, Card, Dialog, Tabs, Tooltip, Toast/Sonner, etc.).
+- **App components** — `IntensityGauge`, `GenerationMixBar`, `ForecastChart`, `StaleDataBadge`, `OfflineIndicator`, `TurbineSpinner`, `ErrorState`, `EmptyState`.
+- **Scene** — see `/__scene-test` for the full living scene catalogue, and [`SCENE_VISUAL_QA.md`](./SCENE_VISUAL_QA.md) for the QA checklist.
+
+## Accessibility commitments
+
+- WCAG 2.1 **AA** as the floor. Body text ≥ 4.5:1, large text ≥ 3:1.
+- `prefers-reduced-motion: reduce` collapses all CSS animations/transitions to ≤ 1ms (see `src/index.css`).
+- Recharts canvases are mirrored as `sr-only` data tables for screen readers.
+- Connectivity changes use `role="alert"` / `aria-live="polite"`.
+- Focus rings use the `--ring` token; never removed without a replacement.
+
+## Adding to the system
+
+1. **A new token** — add it to `:root` and `.dark` in `src/index.css`, then expose it under `theme.extend.colors` in `tailwind.config.ts`. The `/__design-system` page picks it up automatically.
+2. **A new component** — prefer composing existing primitives. If you need a new one, add it to `src/components/ui/` and reference it from the inventory section of the live page.
+3. **A new pattern** — document it in the Patterns section so the next contributor doesn't reinvent it.
