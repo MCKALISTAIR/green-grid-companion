@@ -148,16 +148,17 @@ export function ConstructionCrane({ x = 350, isNight }: { x?: number; isNight: b
   );
 }
 
-// 🎡 London Eye / Ferris Wheel
-export function LondonEye({ x = 42, y = 50, radius = 28, isNight, skipIntro }: {
+// 🎡 London Eye / Ferris Wheel — grounded with A-frame legs touching the road
+export function LondonEye({ x = 60, y = 110, radius = 22, isNight, skipIntro }: {
   x?: number; y?: number; radius?: number; isNight: boolean; skipIntro?: boolean;
 }) {
   const podCount = 16;
-  const podRadius = 2.2;
-  const spokeColor = isNight ? 'rgba(180,200,220,0.35)' : 'rgba(120,140,160,0.45)';
-  const rimColor = isNight ? 'rgba(180,200,220,0.25)' : 'rgba(120,140,160,0.35)';
-  const podFill = isNight ? '#fbbf24' : 'rgba(200,210,220,0.6)';
-  const podGlow = isNight ? 0.7 : 0;
+  const podRadius = 1.8;
+  const groundY = 138; // road surface
+  const spokeColor = isNight ? 'rgba(180,200,220,0.4)' : 'rgba(120,140,160,0.5)';
+  const rimColor = isNight ? 'rgba(180,200,220,0.3)' : 'rgba(120,140,160,0.4)';
+  const podFill = isNight ? '#fbbf24' : 'rgba(200,210,220,0.7)';
+  const legColor = isNight ? 'rgba(160,180,200,0.55)' : 'rgba(100,120,140,0.7)';
 
   return (
     <motion.g
@@ -165,11 +166,13 @@ export function LondonEye({ x = 42, y = 50, radius = 28, isNight, skipIntro }: {
       animate={{ opacity: 1 }}
       transition={skipIntro ? { duration: 0 } : { duration: 1.5, delay: 0.3 }}
     >
-      {/* Support structure – A-frame legs */}
-      <line x1={x - 6} y1={y + radius + 12} x2={x} y2={y} stroke={spokeColor} strokeWidth="1.5" />
-      <line x1={x + 6} y1={y + radius + 12} x2={x} y2={y} stroke={spokeColor} strokeWidth="1.5" />
+      {/* A-frame support legs from hub down to ground */}
+      <line x1={x - 12} y1={groundY} x2={x} y2={y} stroke={legColor} strokeWidth="1.8" strokeLinecap="round" />
+      <line x1={x + 12} y1={groundY} x2={x} y2={y} stroke={legColor} strokeWidth="1.8" strokeLinecap="round" />
       {/* Cross-brace */}
-      <line x1={x - 3} y1={y + radius * 0.6} x2={x + 3} y2={y + radius * 0.6} stroke={spokeColor} strokeWidth="0.6" />
+      <line x1={x - 6} y1={(groundY + y) / 2} x2={x + 6} y2={(groundY + y) / 2} stroke={legColor} strokeWidth="0.6" />
+      {/* Concrete plinth */}
+      <rect x={x - 16} y={groundY - 2} width={32} height={3} rx={0.5} fill={isNight ? '#334155' : '#94a3b8'} opacity={0.8} />
 
       {/* Rotating wheel group */}
       <motion.g
@@ -180,7 +183,7 @@ export function LondonEye({ x = 42, y = 50, radius = 28, isNight, skipIntro }: {
         {/* Outer rim */}
         <circle cx={x} cy={y} r={radius} fill="none" stroke={rimColor} strokeWidth="1.2" />
         {/* Inner rim */}
-        <circle cx={x} cy={y} r={radius - 2.5} fill="none" stroke={rimColor} strokeWidth="0.4" />
+        <circle cx={x} cy={y} r={radius - 2} fill="none" stroke={rimColor} strokeWidth="0.4" />
 
         {/* Spokes */}
         {Array.from({ length: 8 }).map((_, i) => {
@@ -204,11 +207,9 @@ export function LondonEye({ x = 42, y = 50, radius = 28, isNight, skipIntro }: {
           const py = y + Math.sin(angle) * radius;
           return (
             <g key={`pod-${i}`}>
-              {/* Pod capsule */}
-              <ellipse cx={px} cy={py} rx={podRadius} ry={podRadius * 0.7} fill={podFill} opacity={isNight ? 0.9 : 0.7} />
-              {/* Night glow */}
+              <ellipse cx={px} cy={py} rx={podRadius} ry={podRadius * 0.7} fill={podFill} opacity={isNight ? 0.9 : 0.75} />
               {isNight && (
-                <ellipse cx={px} cy={py} rx={podRadius + 1.5} ry={podRadius} fill="#fbbf24" opacity={podGlow * 0.12} />
+                <ellipse cx={px} cy={py} rx={podRadius + 1.2} ry={podRadius} fill="#fbbf24" opacity={0.1} />
               )}
             </g>
           );
@@ -216,7 +217,97 @@ export function LondonEye({ x = 42, y = 50, radius = 28, isNight, skipIntro }: {
       </motion.g>
 
       {/* Hub / axle */}
-      <circle cx={x} cy={y} r={2} fill={isNight ? '#475569' : '#9ca3af'} />
+      <circle cx={x} cy={y} r={1.8} fill={isNight ? '#475569' : '#9ca3af'} />
+    </motion.g>
+  );
+}
+
+// 🌫️ Smog band — brownish haze layer behind skyline when grid is dirty
+export function SmogBand({ cleanliness }: { cleanliness: number }) {
+  if (cleanliness >= 0.5) return null;
+  const opacity = Math.min(0.55, (0.5 - cleanliness) * 1.1);
+  const gradId = `smog-${Math.round(cleanliness * 100)}`;
+  return (
+    <g aria-hidden="true">
+      <defs>
+        <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="hsl(30, 25%, 55%)" stopOpacity="0" />
+          <stop offset="50%" stopColor="hsl(28, 30%, 50%)" stopOpacity={opacity} />
+          <stop offset="100%" stopColor="hsl(25, 35%, 45%)" stopOpacity={opacity * 0.7} />
+        </linearGradient>
+      </defs>
+      <rect x={0} y={55} width={400} height={60} fill={`url(#${gradId})`} />
+    </g>
+  );
+}
+
+// 🏭 Distant stack on the far horizon — only when grid is very dirty
+export function DistantStack({ x = 365, isNight }: { x?: number; isNight: boolean }) {
+  const stackColor = isNight ? 'rgba(60,70,85,0.7)' : 'rgba(120,130,140,0.6)';
+  const baseY = 95;
+  return (
+    <motion.g
+      aria-hidden="true"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 1.2 }}
+    >
+      {/* Thin chimney */}
+      <rect x={x} y={baseY - 22} width={2} height={22} fill={stackColor} />
+      <rect x={x - 1} y={baseY - 24} width={4} height={2} fill={stackColor} />
+      {/* Wispy steam plume */}
+      <motion.ellipse
+        cx={x + 1} cy={baseY - 28}
+        rx={3} ry={2}
+        fill={isNight ? 'rgba(180,180,180,0.3)' : 'rgba(220,220,220,0.5)'}
+        animate={{ cy: [baseY - 28, baseY - 36, baseY - 28], opacity: [0.5, 0.2, 0.5] }}
+        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+      />
+    </motion.g>
+  );
+}
+
+// 🔋 Grid-scale battery storage container (BESS) — status LED tracks cleanliness
+export function BatteryStorageContainer({ x = 320, cleanliness, isNight }: {
+  x?: number; cleanliness: number; isNight: boolean;
+}) {
+  const isClean = cleanliness > 0.6;
+  const ledColor = isClean ? '#22c55e' : cleanliness > 0.3 ? '#f59e0b' : '#ef4444';
+  const bodyColor = isNight ? '#1e293b' : '#475569';
+  const groundY = 138;
+  const w = 22;
+  const h = 8;
+
+  return (
+    <motion.g
+      aria-hidden="true"
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8, delay: 0.6 }}
+    >
+      {/* Container body */}
+      <rect x={x} y={groundY - h} width={w} height={h} rx={0.5} fill={bodyColor} />
+      {/* Corrugation lines */}
+      {Array.from({ length: 6 }).map((_, i) => (
+        <line
+          key={i}
+          x1={x + 2 + i * 3} y1={groundY - h + 1}
+          x2={x + 2 + i * 3} y2={groundY - 1}
+          stroke="rgba(0,0,0,0.2)" strokeWidth="0.3"
+        />
+      ))}
+      {/* Door panel */}
+      <rect x={x + w - 6} y={groundY - h + 1.5} width={5} height={h - 2.5} fill="rgba(255,255,255,0.08)" rx={0.3} />
+      {/* Status LED */}
+      <motion.circle
+        cx={x + 2.5} cy={groundY - h + 2}
+        r={0.9}
+        fill={ledColor}
+        animate={{ opacity: [1, 0.4, 1] }}
+        transition={{ duration: isClean ? 2.5 : 1.2, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      {/* "BESS" label */}
+      <text x={x + w / 2} y={groundY - 2.5} textAnchor="middle" fontSize="2" fill="rgba(255,255,255,0.5)" fontFamily="monospace">BESS</text>
     </motion.g>
   );
 }

@@ -51,6 +51,16 @@ For each device, verify:
 - [ ] Very low (clean: many turbines, butterflies, rainbow)
 - [ ] Very high (dirty: factories, smoke, pollution warning)
 
+## City scene logic
+- [ ] No nuclear cooling towers visible in city theme
+- [ ] No factory chimneys visible in city theme
+- [ ] No offshore wind turbines floating over city skyline
+- [ ] London Eye support legs touch the road
+- [ ] London Eye plinth visible at base
+- [ ] Brown smog band visible behind skyline at >300 gCO₂/kWh
+- [ ] Distant horizon stack appears only at very high intensity
+- [ ] Battery storage (BESS) container visible at street level; LED green when clean, amber/red when dirty
+
 ## Quick dev test page
 Visit `/__scene-test` in dev to see a grid of viewport×scene combinations
 side-by-side without manually resizing.

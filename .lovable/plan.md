@@ -1,84 +1,49 @@
 ## Goal
+Make the city scene logical (no reactors on the high street, no floating Ferris wheel) and informative (visual cleanliness clearly tracks gCO₂/kWh).
 
-Create a single, lightweight design-system reference page inside the app — accessible at `/__design-system` — that any designer, UX researcher or new engineer can open to understand GridSense's visual language, component vocabulary and accessibility commitments without reading the codebase.
+## Changes
 
-This is documentation-as-code: it reads tokens directly from CSS variables so it stays in sync automatically.
+### 1. `src/components/IntensityScene.tsx` — gate power-station visuals by scene type
+Three one-line guard additions:
 
-## Scope
+- **Line 839** — Factories block: add `&& !isCity && !isCoastal`
+- **Line 958** — Nuclear cooling towers: add `&& !isCity && !isCoastal`
+- **Line 970** — Offshore wind turbines: add `&& !isCity` (still allowed in coastal)
 
-In scope:
-- One new route `/__design-system` (sibling to `/__scene-test`, `/__turbine-test`)
-- Sourced from live CSS tokens — no hard-coded duplicates
-- Sectioned single page, no auth, no nav entry (discoverable by URL only)
+Result: cooling towers and chimneys only appear in the countryside scene, where they belong.
 
-Out of scope:
-- Figma library or external design tool
-- Storybook (overkill for this stage)
-- Refactoring components
+### 2. `src/components/scene/CityElements.tsx` — ground the London Eye
+Rework `LondonEye`:
+- Default `y = 110, radius = 22` (was `y = 50, radius = 28`) so the wheel's lowest point sits ~6px above the road (y≈138), like the real South Bank wheel.
+- Extend the A-frame support legs from the hub all the way down to y=138.
+- Add a small concrete plinth `<rect>` at the base.
+- Bump support stroke width slightly so legs read as structural.
+- Update the call site in `IntensityScene.tsx:640` to `<LondonEye x={60} isNight={isNight} skipIntro={hasSeenScene} />` (use new defaults).
 
-## Page structure
+### 3. `src/components/scene/CityElements.tsx` — three new components
+- **`SmogBand`** — horizontal gradient `<rect>` (brownish) drawn behind the back skyline, opacity = `(1 - cleanliness) * 0.6`. Renders only when `cleanliness < 0.5`.
+- **`BatteryStorageContainer`** — small shipping-container BESS at street level (~x=320, y=130) with a status LED: green pulse when `cleanliness > 0.6`, amber when lower. Always visible in city.
+- **`DistantStack`** — single thin chimney with faint steam, drawn far back on the horizon (y≈70, small scale, low opacity), only when `cleanliness < 0.2`. Communicates "dirty power exists, but it's not next door".
 
-```text
-/__design-system
-├── 1. Foundations
-│   ├── Brand & voice (1 paragraph)
-│   ├── Color tokens (semantic + intensity + generation mix)
-│   ├── Typography (Work Sans / Lora / Inconsolata samples)
-│   ├── Spacing & radius scale
-│   ├── Shadow scale
-│   └── Sky gradients (clean / moderate / dirty)
-├── 2. Component inventory
-│   ├── Primitives (Button, Input, Card, Badge, Dialog, Tooltip, Tabs)
-│   ├── App components (IntensityGauge, GenerationMixBar, ForecastChart,
-│   │   StaleDataBadge, OfflineIndicator, TurbineSpinner)
-│   └── Scene elements (link to /__scene-test)
-├── 3. Patterns
-│   ├── Loading (TurbineSpinner + skeletons)
-│   ├── Empty state
-│   ├── Error state
-│   ├── Stale data badge
-│   └── Toast (sonner top-center)
-├── 4. Accessibility
-│   ├── Commitments (WCAG AA, reduced motion, sr-only tables, ARIA live)
-│   ├── Contrast matrix (token vs token, computed live)
-│   ├── Reduced-motion behaviour
-│   └── Screen-reader patterns
-└── 5. Handover notes
-    ├── How to add a token
-    ├── How to add a component
-    └── Links: /__scene-test, /__turbine-test, docs/SCENE_VISUAL_QA.md
-```
+### 4. `src/components/IntensityScene.tsx` — wire the city signals in
+Inside the existing `isCity` block (around lines 624–700):
+- Add `<SmogBand cleanliness={sceneConfig.cleanliness} />` as a layer between the sky and `CityLandscapeBack` (z=-1 inside the same SVG).
+- Add `<DistantStack />` in the back-skyline SVG, conditional on `cleanliness < 0.2`.
+- Add `<BatteryStorageContainer cleanliness={sceneConfig.cleanliness} />` in the front-layer SVG.
 
-## Files to create
+### 5. `docs/SCENE_VISUAL_QA.md` — add city checks
+Append a "City scene logic" section:
+- [ ] No nuclear cooling towers visible in city theme
+- [ ] No factory chimneys visible in city theme
+- [ ] London Eye support legs touch the road
+- [ ] London Eye plinth visible at base
+- [ ] At intensity > 300 gCO₂/kWh, brown smog band visible behind skyline
+- [ ] Battery storage container LED is green when intensity is very low
 
-- `src/pages/DesignSystem.tsx` — the page itself, broken into small section components inline
-- `src/lib/designTokens.ts` — pure helper that reads computed CSS variables at runtime and returns `{ name, hsl, hex, contrastVsBg }` so the page stays automatically in sync with `index.css`
-- `docs/DESIGN_SYSTEM.md` — short markdown companion (one-screen summary + link to the live page) for portfolio/recruiter readers who don't run the app
+## Out of scope
+- Per-postcode landmark accuracy (real Shard / Canary Wharf shapes).
+- Animating traffic queue length by intensity.
+- Coastal scene cleanup (separate pass if you want it).
 
-## Files to edit
-
-- `src/App.tsx` — register the lazy-loaded route `/__design-system`
-- `README.md` — add a single line under "Developer Structure" pointing to the new route and the markdown doc
-
-## Technical notes
-
-- Read tokens live with `getComputedStyle(document.documentElement).getPropertyValue('--primary')` so the page automatically reflects light and dark mode. A small theme toggle at the top of the page lets reviewers flip between them in place.
-- Compute contrast ratios with a tiny inline `hslToRgb` + WCAG luminance helper — no new dependency.
-- Render swatches as accessible `button` elements with copyable token names (clipboard) so designers can grab `--primary` / `bg-primary` without inspecting the DOM.
-- Use existing shadcn primitives (`Card`, `Tabs`, `Badge`, `Tooltip`) so the page itself is a working example of the system.
-- Keep the route URL-only (no nav link) — it is a contributor/reviewer surface, not a user surface. Same convention as `/__scene-test`.
-- No tests required for a static reference page; rely on visual review.
-
-## Why this matters (per earlier audit)
-
-- **Design lead's ask** — "show me what you cut and what's actually in the system": the inventory makes the surface area visible and editable.
-- **UX lead's ask** — "show me your accessibility rigour": the contrast matrix and reduced-motion notes turn claims into evidence.
-- **Engineering lead's ask** — "show me you can sustain this": a single source of truth for tokens reduces drift as the app grows.
-
-## Acceptance
-
-- Visiting `/__design-system` renders without errors in light and dark mode.
-- All swatches reflect the current values in `src/index.css` (verified by editing one token and reloading).
-- Contrast ratios are shown with pass/fail badges against WCAG AA (4.5:1 body, 3:1 large text).
-- `docs/DESIGN_SYSTEM.md` exists and links to the route.
-- README mentions the new route in one line.
+## Verification
+After implementation, I'll spot-check the preview at `/onboarding` (current city scene) and confirm the wheel is grounded and no chimneys appear.
