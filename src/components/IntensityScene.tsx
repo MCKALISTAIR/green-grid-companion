@@ -49,7 +49,7 @@ import { getSkyGradient } from '@/lib/sceneUtils';
 import { getTurbineBottomPct } from '@/lib/sceneUtils';
 import { useSceneType, SceneType } from '@/hooks/useSceneType';
 import { CityLandscapeBack, CityLandscapeMid, CityLandscapeFront } from './scene/CityLandscape';
-import { CityTraffic, Pigeon, ConstructionCrane, LondonEye } from './scene/CityElements';
+import { CityTraffic, Pigeon, ConstructionCrane, LondonEye, SmogBand, DistantStack, BatteryStorageContainer } from './scene/CityElements';
 import { CoastalLandscapeBack, CoastalLandscapeMid, CoastalLandscapeFront } from './scene/CoastalLandscape';
 import { SeagullFlock, SailingBoat, FishingBoat, CoastalOffshoreWind, RockPoolGroup, HarbourSeal } from './scene/CoastalElements';
 
@@ -626,6 +626,10 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
           {/* City: Background skyline */}
           <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-0 overflow-hidden">
             <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+              {/* Smog band behind skyline when grid is dirty */}
+              <SmogBand cleanliness={sceneConfig.cleanliness} />
+              {/* Distant stack on horizon when very dirty */}
+              {sceneConfig.cleanliness < 0.2 && <DistantStack isNight={isNight} />}
               <CityLandscapeBack
                 cleanliness={sceneConfig.cleanliness}
                 isNight={isNight}
@@ -636,8 +640,8 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
                 windSpeed={weather.windSpeed}
                 timeOfDay={timeOfDay}
               />
-              {/* London Eye – between back and mid layers */}
-              <LondonEye x={42} y={52} radius={28} isNight={isNight} skipIntro={hasSeenScene} />
+              {/* London Eye – grounded with legs touching the road */}
+              <LondonEye isNight={isNight} skipIntro={hasSeenScene} />
               <CityLandscapeMid
                 cleanliness={sceneConfig.cleanliness}
                 isNight={isNight}
