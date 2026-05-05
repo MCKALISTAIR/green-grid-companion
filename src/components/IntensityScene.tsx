@@ -668,6 +668,8 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
                 windSpeed={weather.windSpeed}
                 timeOfDay={timeOfDay}
               />
+              {/* Grid-scale battery storage with status LED */}
+              <BatteryStorageContainer cleanliness={sceneConfig.cleanliness} isNight={isNight} />
             </svg>
           </div>
 
