@@ -21,6 +21,13 @@ To audit the deployed site instead of the local build:
 BASE_URL=https://gridsense-app.lovable.app bun scripts/a11y-audit.ts
 ```
 
+## CI
+
+Every pull request to `main` runs `.github/workflows/a11y.yml`, which executes
+this script against the production build, uploads the dated Markdown report as
+a workflow artifact (`a11y-report-YYYY-MM-DD`), and posts a summary comment on
+the PR. Trigger manually via **Actions → Accessibility audit → Run workflow**.
+
 ## What automated tooling does and doesn't catch
 
 Axe-core finds roughly **30–40%** of WCAG issues — programmatic checks like
