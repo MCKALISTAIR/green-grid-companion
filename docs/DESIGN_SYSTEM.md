@@ -43,6 +43,35 @@ A lightweight, single-source-of-truth reference for everyone touching the GridSe
 - Connectivity changes use `role="alert"` / `aria-live="polite"`.
 - Focus rings use the `--ring` token; never removed without a replacement.
 
+## How we measure accessibility
+
+We treat AA as a thing to **prove**, not declare:
+
+| Layer | Tool | Evidence |
+|---|---|---|
+| Static token contrast | live matrix on `/__design-system → Accessibility` | computed from the active theme at runtime |
+| Page-level a11y rules | [axe-core](https://github.com/dequelabs/axe-core) via Playwright (`scripts/a11y-audit.ts`) | dated reports in [`docs/a11y/`](./a11y/) |
+| Dynamic scene contrast | `SceneContrastMatrix` on `/__design-system → Accessibility` | sky colour sampled per (time × intensity) and graded vs white / near-black |
+| Manual screen reader | VoiceOver / NVDA walkthrough | recorded in `docs/a11y/MANUAL_*.md` when performed |
+
+To run a fresh axe pass:
+
+```bash
+bun run build
+bunx playwright install chromium   # one-off
+bun scripts/a11y-audit.ts          # writes docs/a11y/YYYY-MM-DD.md
+```
+
+Override `BASE_URL` to audit a deployed environment instead of the local preview.
+
+## Scene contrast (dynamic backgrounds)
+
+`IntensityScene` paints a sky gradient that varies with time-of-day, weather and grid carbon intensity, so a single text colour cannot pass AA in every state. The system rule:
+
+> Any text overlaying the scene **must sit inside a scrim** — `bg-background/70 backdrop-blur-md` — so its contrast is judged against `--background`, not the live sky.
+
+The `/__design-system → Accessibility → Scene contrast` tab samples the sky-top colour for every (time × intensity) cell and grades it, and flags any cell that needs the scrim.
+
 ## Adding to the system
 
 1. **A new token** — add it to `:root` and `.dark` in `src/index.css`, then expose it under `theme.extend.colors` in `tailwind.config.ts`. The `/__design-system` page picks it up automatically.
