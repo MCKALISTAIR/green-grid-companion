@@ -837,7 +837,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
 
       {/* Factories for dirty energy */}
       <AnimatePresence>
-        {sceneConfig.showFactories && (
+        {sceneConfig.showFactories && !isCity && !isCoastal && (
           <motion.div
             className="absolute bottom-14 left-6 flex gap-6"
             initial={{ opacity: 0, x: -20 }}
@@ -955,7 +955,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
 
       {/* Nuclear Cooling Towers - Show when nuclear % > 5 */}
       <AnimatePresence>
-        {sceneConfig.showRenewables && nuclearPercentage > 5 && (
+        {sceneConfig.showRenewables && nuclearPercentage > 5 && !isCity && !isCoastal && (
           <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-15">
             <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <NuclearCoolingTower x={280} steamIntensity={nuclearPercentage / 100} isNight={isNight} />
@@ -967,7 +967,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
 
       {/* Offshore Wind Turbines - Show when wind % > 10 */}
       <AnimatePresence>
-        {windPercentage > 10 && (
+        {windPercentage > 10 && !isCity && (
           <div className="absolute bottom-0 left-0 right-0 h-[65%] pointer-events-none z-5">
             <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <OffshoreWind count={Math.min(3, Math.floor(windPercentage / 10))} windSpeed={weather.windSpeed} />
