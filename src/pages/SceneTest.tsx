@@ -57,17 +57,21 @@ export default function SceneTest() {
   }, []);
 
   // Force a scene type for the duration of the test page; restore on unmount.
+  // Write happens synchronously in the click handler (below) so the next render's
+  // child remount (via key={sceneTypePref}) sees the new value when its hook
+  // reads localStorage on mount.
   useEffect(() => {
     const previous = localStorage.getItem(PREFERENCE_KEY);
-    localStorage.setItem(PREFERENCE_KEY, sceneTypePref);
-    // Notify any listeners in this tab (useSceneType reads on mount only,
-    // but a remount via key change below ensures the scene picks it up).
-    window.dispatchEvent(new StorageEvent('storage', { key: PREFERENCE_KEY }));
     return () => {
       if (previous === null) localStorage.removeItem(PREFERENCE_KEY);
       else localStorage.setItem(PREFERENCE_KEY, previous);
     };
-  }, [sceneTypePref]);
+  }, []);
+
+  const handleSceneTypeChange = (t: SceneTypeOpt) => {
+    localStorage.setItem(PREFERENCE_KEY, t);
+    setSceneTypePref(t);
+  };
 
   return (
     <div className="min-h-screen bg-background p-6">
