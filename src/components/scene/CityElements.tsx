@@ -8,7 +8,7 @@ export function CityVehicle({ direction = 'right', isEV = false, delay = 0, spee
   delay?: number;
   speed?: number;
 }) {
-  const y = direction === 'right' ? 141 : 145;
+  const y = direction === 'right' ? 139.5 : 143.5;
   const startX = direction === 'right' ? -20 : 420;
   const endX = direction === 'right' ? 420 : -20;
 
@@ -50,7 +50,7 @@ export function CityBus({ direction = 'right', isElectric = false, delay = 0 }: 
   isElectric?: boolean;
   delay?: number;
 }) {
-  const y = direction === 'right' ? 139 : 143;
+  const y = direction === 'right' ? 137.5 : 140;
   const startX = direction === 'right' ? -30 : 430;
   const endX = direction === 'right' ? 430 : -30;
 

@@ -3,10 +3,10 @@ import { motion } from 'framer-motion';
 export function FlyingBird({ delay, duration, startX, top, scale }: { delay: number; duration: number; startX: number; top: number; scale: number }) {
   return (
     <motion.svg
-      className="absolute w-8 h-8"
+      className="absolute w-4 h-4"
       initial={{ left: `${startX}%`, opacity: 0 }}
       animate={{
-        left: ['${startX}%', '120%'],
+        left: [`${startX}%`, '120%'],
         opacity: [0, 1, 1, 0],
       }}
       transition={{
@@ -37,7 +37,7 @@ export function FlyingBird({ delay, duration, startX, top, scale }: { delay: num
           ],
         }}
         transition={{
-          duration: 0.4,
+          duration: 0.9,
           repeat: Infinity,
           ease: 'easeInOut',
         }}

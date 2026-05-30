@@ -692,19 +692,6 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
             </svg>
           </div>
 
-          {/* City: Pavement / kerb foreground band — softens the hard horizon cut */}
-          <div className="absolute bottom-0 left-0 right-0 pointer-events-none z-[24]" aria-hidden="true">
-            <div
-              className="w-full"
-              style={{
-                height: '28px',
-                background: isNight
-                  ? 'linear-gradient(to bottom, rgba(15,23,42,0) 0%, rgba(15,23,42,0.55) 45%, rgba(2,6,23,0.9) 100%)'
-                  : 'linear-gradient(to bottom, rgba(71,85,105,0) 0%, rgba(71,85,105,0.5) 45%, rgba(30,41,59,0.85) 100%)',
-              }}
-            />
-          </div>
-
           {/* City: Pigeons during daytime when clean */}
           <AnimatePresence>
             {sceneConfig.isDaytime && sceneConfig.cleanliness > 0.4 && (

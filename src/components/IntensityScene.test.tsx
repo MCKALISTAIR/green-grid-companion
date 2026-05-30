@@ -47,6 +47,15 @@ vi.mock('@/hooks/useAchievements', () => ({
   }),
 }));
 
+vi.mock('@/hooks/useSceneType', () => ({
+  useSceneType: () => ({
+    sceneType: 'countryside',
+    preference: 'auto',
+    setPreference: vi.fn(),
+    autoDetected: 'countryside',
+  }),
+}));
+
 vi.mock('@/hooks/useSceneDirector', () => ({
   useSceneDirector: () => ({
     active: false,
