@@ -223,17 +223,21 @@ export function LondonEye({ x = 60, y = 110, radius = 22, isNight, skipIntro }: 
 }
 
 // 🌫️ Smog band — brownish haze layer behind skyline when grid is dirty
-export function SmogBand({ cleanliness }: { cleanliness: number }) {
+export function SmogBand({ cleanliness, isNight = false }: { cleanliness: number; isNight?: boolean }) {
   if (cleanliness >= 0.5) return null;
-  const opacity = Math.min(0.55, (0.5 - cleanliness) * 1.1);
-  const gradId = `smog-${Math.round(cleanliness * 100)}`;
+  // Boost opacity at night so dirty state stays readable on dark skies.
+  const base = Math.min(0.55, (0.5 - cleanliness) * 1.1);
+  const opacity = isNight ? Math.min(0.75, base * 1.45) : base;
+  // Hue shifts cooler/more sickly at night so it doesn't blend into navy.
+  const hue = isNight ? 22 : 28;
+  const gradId = `smog-${Math.round(cleanliness * 100)}-${isNight ? 'n' : 'd'}`;
   return (
     <g aria-hidden="true">
       <defs>
         <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="hsl(30, 25%, 55%)" stopOpacity="0" />
-          <stop offset="50%" stopColor="hsl(28, 30%, 50%)" stopOpacity={opacity} />
-          <stop offset="100%" stopColor="hsl(25, 35%, 45%)" stopOpacity={opacity * 0.7} />
+          <stop offset="0%" stopColor={`hsl(${hue}, 30%, ${isNight ? 30 : 55}%)`} stopOpacity="0" />
+          <stop offset="50%" stopColor={`hsl(${hue}, 35%, ${isNight ? 28 : 50}%)`} stopOpacity={opacity} />
+          <stop offset="100%" stopColor={`hsl(${hue}, 40%, ${isNight ? 24 : 45}%)`} stopOpacity={opacity * 0.7} />
         </linearGradient>
       </defs>
       <rect x={0} y={55} width={400} height={60} fill={`url(#${gradId})`} />
@@ -243,7 +247,8 @@ export function SmogBand({ cleanliness }: { cleanliness: number }) {
 
 // 🏭 Distant stack on the far horizon — only when grid is very dirty
 export function DistantStack({ x = 365, isNight }: { x?: number; isNight: boolean }) {
-  const stackColor = isNight ? 'rgba(60,70,85,0.7)' : 'rgba(120,130,140,0.6)';
+  // Lift stack contrast at night so it reads against dark sky.
+  const stackColor = isNight ? 'rgba(190,170,140,0.85)' : 'rgba(120,130,140,0.6)';
   const baseY = 95;
   return (
     <motion.g
