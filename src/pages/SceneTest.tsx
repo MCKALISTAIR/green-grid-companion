@@ -114,7 +114,7 @@ export default function SceneTest() {
             {SCENE_TYPES.map((t) => (
               <button
                 key={t}
-                onClick={() => setSceneTypePref(t)}
+                onClick={() => handleSceneTypeChange(t)}
                 className={`px-3 py-1 text-sm rounded-md border capitalize transition-colors ${
                   sceneTypePref === t
                     ? 'bg-secondary text-secondary-foreground border-secondary'
