@@ -119,7 +119,7 @@ export default function SceneTest() {
                 <div
                   style={{
                     width: vp.width,
-                    height: vp.height,
+                    height: sceneIntrinsicH,
                     transform: `scale(${scale})`,
                     transformOrigin: 'top left',
                   }}
