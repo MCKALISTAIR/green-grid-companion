@@ -43,6 +43,9 @@ import { Firefly } from './scene/Firefly';
 import { SnowGround, FrozenPond, BreathMist, SnowOnPanels } from './scene/WinterElements';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useSceneDirector } from '@/hooks/useSceneDirector';
+import { useCleanlinessBand } from '@/hooks/useCleanlinessBand';
+import { SceneColorGrade } from './scene/SceneColorGrade';
+import { StateTransitionFX } from './scene/StateTransitionFX';
 
 import { GenerationMix } from '@/lib/carbonApi';
 import { getSkyGradient } from '@/lib/sceneUtils';
@@ -338,6 +341,8 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
 
 
       <WeatherEffects weather={weather} isNight={isNight} />
+      <SceneColorGrade cleanliness={sceneConfig.cleanliness} isNight={isNight} />
+      <StateTransitionFX transition={bandTransition} />
       <AnimatePresence>
         {sceneConfig.showStars && (
           <Stars count={40} visibility={sceneConfig.starVisibility} />
