@@ -47,6 +47,7 @@ import { useCleanlinessBand } from '@/hooks/useCleanlinessBand';
 import { SceneColorGrade } from './scene/SceneColorGrade';
 import { StateTransitionFX } from './scene/StateTransitionFX';
 import { SceneHeroSpotlight, SceneAtmosphericDepth } from './scene/SceneComposition';
+import { SceneHotspots, type HotspotDef } from './scene/SceneHotspots';
 
 import { GenerationMix } from '@/lib/carbonApi';
 import { getSkyGradient } from '@/lib/sceneUtils';
