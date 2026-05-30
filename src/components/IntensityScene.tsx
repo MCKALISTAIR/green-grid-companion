@@ -102,6 +102,9 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
     ? (overrides.intensity < 50 ? 'very low' : overrides.intensity < 150 ? 'low' : overrides.intensity < 250 ? 'moderate' : overrides.intensity < 350 ? 'high' : 'very high')
     : propIndex;
 
+  // Cleanliness band + transition flourish trigger
+  const { transition: bandTransition } = useCleanlinessBand(intensity);
+
   const sunPosition = realSunPosition;
 
   // Check if user has seen the scene intro during this session
