@@ -89,11 +89,14 @@ export default function SceneTest() {
 
       <div className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
         {VIEWPORTS.map((vp) => {
-          // Cap preview width to keep page readable; scale uniformly
+          // Match the scene's actual height cap from IntensityScene
+          // (clamp(400px, min(60vh, 75vw), 620px)) so previews reflect real usage
+          // instead of stretching to fill the entire device viewport.
+          const sceneIntrinsicH = Math.min(620, Math.max(400, Math.min(vp.height * 0.6, vp.width * 0.75)));
           const maxPreviewWidth = 380;
           const scale = scaleToFit ? Math.min(1, maxPreviewWidth / vp.width) : 1;
           const displayW = vp.width * scale;
-          const displayH = vp.height * scale;
+          const displayH = sceneIntrinsicH * scale;
 
           return (
             <div
@@ -116,7 +119,7 @@ export default function SceneTest() {
                 <div
                   style={{
                     width: vp.width,
-                    height: vp.height,
+                    height: sceneIntrinsicH,
                     transform: `scale(${scale})`,
                     transformOrigin: 'top left',
                   }}

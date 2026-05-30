@@ -267,13 +267,16 @@ export function DistantStack({ x = 365, isNight }: { x?: number; isNight: boolea
   );
 }
 
-// 🔋 Grid-scale battery storage container (BESS) — status LED tracks cleanliness
+// 🔋 Grid-scale battery storage container (BESS) — navy/charcoal with green decal
 export function BatteryStorageContainer({ x = 320, cleanliness, isNight }: {
   x?: number; cleanliness: number; isNight: boolean;
 }) {
   const isClean = cleanliness > 0.6;
-  const ledColor = isClean ? '#22c55e' : cleanliness > 0.3 ? '#f59e0b' : '#ef4444';
-  const bodyColor = isNight ? '#1e293b' : '#475569';
+  // LED: green when storing/discharging clean energy, dim amber otherwise.
+  // Avoid red — it made the container read as a fire engine.
+  const ledColor = isClean ? '#22c55e' : '#f59e0b';
+  const bodyColor = isNight ? '#0f172a' : '#1e293b'; // navy/charcoal, never red
+  const accentColor = isClean ? '#16a34a' : '#475569';
   const groundY = 138;
   const w = 22;
   const h = 8;
@@ -287,27 +290,31 @@ export function BatteryStorageContainer({ x = 320, cleanliness, isNight }: {
     >
       {/* Container body */}
       <rect x={x} y={groundY - h} width={w} height={h} rx={0.5} fill={bodyColor} />
+      {/* Subtle top edge highlight */}
+      <line x1={x} y1={groundY - h + 0.3} x2={x + w} y2={groundY - h + 0.3} stroke="rgba(255,255,255,0.12)" strokeWidth="0.3" />
       {/* Corrugation lines */}
       {Array.from({ length: 6 }).map((_, i) => (
         <line
           key={i}
           x1={x + 2 + i * 3} y1={groundY - h + 1}
           x2={x + 2 + i * 3} y2={groundY - 1}
-          stroke="rgba(0,0,0,0.2)" strokeWidth="0.3"
+          stroke="rgba(0,0,0,0.25)" strokeWidth="0.3"
         />
       ))}
+      {/* Green accent stripe along the base */}
+      <rect x={x} y={groundY - 1.2} width={w} height={1.2} fill={accentColor} opacity={0.85} />
       {/* Door panel */}
-      <rect x={x + w - 6} y={groundY - h + 1.5} width={5} height={h - 2.5} fill="rgba(255,255,255,0.08)" rx={0.3} />
+      <rect x={x + w - 6} y={groundY - h + 1.5} width={5} height={h - 2.5} fill="rgba(255,255,255,0.06)" rx={0.3} />
       {/* Status LED */}
       <motion.circle
         cx={x + 2.5} cy={groundY - h + 2}
-        r={0.9}
+        r={0.7}
         fill={ledColor}
-        animate={{ opacity: [1, 0.4, 1] }}
-        transition={{ duration: isClean ? 2.5 : 1.2, repeat: Infinity, ease: 'easeInOut' }}
+        animate={{ opacity: [1, 0.45, 1] }}
+        transition={{ duration: isClean ? 2.5 : 1.6, repeat: Infinity, ease: 'easeInOut' }}
       />
-      {/* "BESS" label */}
-      <text x={x + w / 2} y={groundY - 2.5} textAnchor="middle" fontSize="2" fill="rgba(255,255,255,0.5)" fontFamily="monospace">BESS</text>
+      {/* "BESS" label — bigger so it reads */}
+      <text x={x + w / 2} y={groundY - 3} textAnchor="middle" fontSize="2.4" fontWeight="700" fill="rgba(255,255,255,0.55)" fontFamily="monospace" letterSpacing="0.2">BESS</text>
     </motion.g>
   );
 }
