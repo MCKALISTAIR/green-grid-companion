@@ -46,6 +46,7 @@ import { useSceneDirector } from '@/hooks/useSceneDirector';
 import { useCleanlinessBand } from '@/hooks/useCleanlinessBand';
 import { SceneColorGrade } from './scene/SceneColorGrade';
 import { StateTransitionFX } from './scene/StateTransitionFX';
+import { SceneHeroSpotlight, SceneAtmosphericDepth } from './scene/SceneComposition';
 
 import { GenerationMix } from '@/lib/carbonApi';
 import { getSkyGradient } from '@/lib/sceneUtils';
@@ -103,7 +104,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
     : propIndex;
 
   // Cleanliness band + transition flourish trigger
-  const { transition: bandTransition } = useCleanlinessBand(intensity);
+  const { band: cleanlinessBand, transition: bandTransition } = useCleanlinessBand(intensity);
 
   const sunPosition = realSunPosition;
 
@@ -344,6 +345,8 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
 
 
       <WeatherEffects weather={weather} isNight={isNight} />
+      <SceneAtmosphericDepth cleanliness={sceneConfig.cleanliness} isNight={isNight} />
+      <SceneHeroSpotlight band={cleanlinessBand} isCity={isCity} isNight={isNight} />
       <SceneColorGrade cleanliness={sceneConfig.cleanliness} isNight={isNight} />
       <StateTransitionFX transition={bandTransition} />
       <AnimatePresence>

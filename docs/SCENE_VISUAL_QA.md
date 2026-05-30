@@ -68,3 +68,41 @@ side-by-side without manually resizing.
 ## Known constraints
 See `mem://constraints/scene-visual-integrity` for foreground priority rules
 that must not be violated.
+
+## Game-design composition (Phase 2)
+
+### Hero per cleanliness band
+Each band has ONE focal element receiving a soft `SceneHeroSpotlight` halo.
+Verify the halo lands on the listed prop and the eye is drawn there first:
+
+| Band        | Intensity (gCO₂/kWh) | Hero prop              | Halo tint   |
+|-------------|----------------------|------------------------|-------------|
+| very-clean  | < 50                 | London Eye             | mint        |
+| clean       | 50–149               | upper-mid skyline      | green-mint  |
+| moderate    | 150–249              | BESS container         | amber       |
+| dirty       | 250–349              | distant stack          | rust        |
+| very-dirty  | ≥ 350                | smog band (upper)      | red-brown   |
+
+- [ ] Halo follows band changes when cycling intensity in `/__scene-test`
+- [ ] Halo never overlaps the intensity card or fact bubble
+- [ ] At night, halo is dimmed but still visible
+
+### Atmospheric depth band
+`SceneAtmosphericDepth` adds a horizontal haze across the horizon.
+- [ ] Cool blue tint on clean days, warm sepia on dirty days
+- [ ] Visible at the 40–68% vertical band only (does not wash out foreground)
+- [ ] Distant skyline reads as further away than mid skyline
+
+### Scale audit (city)
+Locked prop scale ratios (approx, against a 400×150 SVG viewBox):
+| Prop              | Width  | Height | Notes                                   |
+|-------------------|--------|--------|-----------------------------------------|
+| London Eye wheel  | ~32u   | ~32u   | Plinth bottom touches road              |
+| BESS container    | 22u    | 8u     | Sits on ground line at y=138            |
+| Distant stack     | 2u     | 22u    | Far horizon only                        |
+| Cars              | ~10u   | ~5u    | Must be shorter than ground-floor windows |
+| EV charger        | ~4u    | ~10u   | Taller than cars, shorter than ground floor |
+| Pigeon            | ~6u    | ~4u    | Smallest moving element                 |
+
+- [ ] No car taller than a building's ground-floor windows
+- [ ] EV charger reads as street furniture, not signage
