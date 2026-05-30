@@ -300,13 +300,13 @@ const Index = () => {
 
               {/* View Toggle - Always show all views */}
 
-              {/* Energy Commentary Quote */}
-              <div className="px-2 pb-2">
+              {/* Energy Commentary Quote — constrained so it can't push into the tabs row */}
+              <div className="px-2 pb-3 pt-1">
                 <EnergyFactBubble
                   intensity={intensity}
                   generationMix={generationMix}
                   variant="plain"
-                  className="flex justify-center"
+                  className="mx-auto max-w-prose text-center"
                 />
               </div>
 
