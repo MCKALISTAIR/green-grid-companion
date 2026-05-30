@@ -635,7 +635,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
           <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-0 overflow-hidden">
             <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               {/* Smog band behind skyline when grid is dirty */}
-              <SmogBand cleanliness={sceneConfig.cleanliness} />
+              <SmogBand cleanliness={sceneConfig.cleanliness} isNight={isNight} />
               {/* Distant stack on horizon when very dirty */}
               {sceneConfig.cleanliness < 0.2 && <DistantStack isNight={isNight} />}
               <CityLandscapeBack
