@@ -38,15 +38,40 @@ const SCENE_CASES: SceneCase[] = [
   { label: 'Very dirty', intensity: 380, index: 'very high' },
 ];
 
+type SceneTypeOpt = 'auto' | 'countryside' | 'city' | 'coastal';
+const SCENE_TYPES: SceneTypeOpt[] = ['auto', 'countryside', 'city', 'coastal'];
+const PREFERENCE_KEY = 'gridgreen-scene-preference';
+
 export default function SceneTest() {
   const [scaleToFit, setScaleToFit] = useState(true);
   const [selectedCase, setSelectedCase] = useState<SceneCase>(SCENE_CASES[0]);
+  const [sceneTypePref, setSceneTypePref] = useState<SceneTypeOpt>(() => {
+    try { return (localStorage.getItem(PREFERENCE_KEY) as SceneTypeOpt) || 'auto'; }
+    catch { return 'auto'; }
+  });
 
   useEffect(() => {
     const prev = document.title;
     document.title = 'Scene Visual Test — GridSense Dev';
     return () => { document.title = prev; };
   }, []);
+
+  // Force a scene type for the duration of the test page; restore on unmount.
+  // Write happens synchronously in the click handler (below) so the next render's
+  // child remount (via key={sceneTypePref}) sees the new value when its hook
+  // reads localStorage on mount.
+  useEffect(() => {
+    const previous = localStorage.getItem(PREFERENCE_KEY);
+    return () => {
+      if (previous === null) localStorage.removeItem(PREFERENCE_KEY);
+      else localStorage.setItem(PREFERENCE_KEY, previous);
+    };
+  }, []);
+
+  const handleSceneTypeChange = (t: SceneTypeOpt) => {
+    localStorage.setItem(PREFERENCE_KEY, t);
+    setSceneTypePref(t);
+  };
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -69,7 +94,7 @@ export default function SceneTest() {
             Scale previews to fit page
           </label>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2" role="group" aria-label="Intensity state">
             {SCENE_CASES.map((c) => (
               <button
                 key={c.label}
@@ -81,6 +106,22 @@ export default function SceneTest() {
                 }`}
               >
                 {c.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex gap-2" role="group" aria-label="Scene type">
+            {SCENE_TYPES.map((t) => (
+              <button
+                key={t}
+                onClick={() => handleSceneTypeChange(t)}
+                className={`px-3 py-1 text-sm rounded-md border capitalize transition-colors ${
+                  sceneTypePref === t
+                    ? 'bg-secondary text-secondary-foreground border-secondary'
+                    : 'bg-card hover:bg-accent'
+                }`}
+              >
+                {t}
               </button>
             ))}
           </div>
@@ -125,6 +166,7 @@ export default function SceneTest() {
                   }}
                 >
                   <IntensityScene
+                    key={sceneTypePref}
                     intensity={selectedCase.intensity}
                     index={selectedCase.index}
                   />
