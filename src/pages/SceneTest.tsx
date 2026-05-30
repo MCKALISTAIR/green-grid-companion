@@ -162,6 +162,7 @@ export default function SceneTest() {
                   }}
                 >
                   <IntensityScene
+                    key={sceneTypePref}
                     intensity={selectedCase.intensity}
                     index={selectedCase.index}
                   />
