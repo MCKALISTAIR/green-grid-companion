@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // 🚗 Car/Vehicle on the road
@@ -74,39 +74,247 @@ export function CityBus({ direction = 'right', isElectric = false, delay = 0 }: 
 }
 
 // 🐦 Pigeon
-export function Pigeon({ x, y, delay = 0 }: { x: number; y: number; delay?: number }) {
+export function Pigeon({ x: initialX, y: initialY, delay = 0 }: { x: number; y: number; delay?: number }) {
+  const [pos, setPos] = useState({ x: initialX, y: initialY });
+  const [scaleX, setScaleX] = useState(0.35); // Horizontal scale/flip
+  const [state, setState] = useState<'idle' | 'walking' | 'pecking' | 'flying' | 'landing'>('idle');
+  const [wingFlap, setWingFlap] = useState(false);
+  const [peckAngle, setPeckAngle] = useState(0);
+  const [headBob, setHeadBob] = useState(0);
+  const [transitionConfig, setTransitionConfig] = useState<{ duration: number; ease?: string }>({ duration: 1.0, ease: 'easeOut' });
+
+  // Use a ref to store position so the useEffect loop does not re-trigger on position changes
+  const positionRef = useRef({ x: initialX, y: initialY });
+
+  const updatePosition = (newPos: { x: number; y: number }, config: { duration: number; ease?: string }) => {
+    positionRef.current = newPos;
+    setTransitionConfig(config);
+    setPos(newPos);
+  };
+
+  useEffect(() => {
+    let active = true;
+    let timeoutId: NodeJS.Timeout;
+
+    const run = async () => {
+      // Wait for the initial staggered delay
+      await new Promise(r => { timeoutId = setTimeout(r, delay * 1000); });
+      if (!active) return;
+
+      while (active) {
+        const rand = Math.random();
+        const currentPos = positionRef.current;
+
+        // Choose next behavior state
+        if (rand < 0.1) {
+          // 1. FLY AWAY
+          setState('flying');
+          setWingFlap(true);
+
+          const flyLeft = Math.random() > 0.5;
+          setScaleX(flyLeft ? -0.35 : 0.35);
+
+          // Fly off screen diagonally upwards
+          const targetX = flyLeft ? -50 : 450;
+          const targetY = -40;
+          updatePosition({ x: targetX, y: targetY }, { duration: 2.5, ease: 'easeOut' });
+
+          // Wait for flight to finish
+          await new Promise(r => { timeoutId = setTimeout(r, 2500); });
+          if (!active) return;
+
+          setWingFlap(false);
+
+          // Remain off-screen for a random interval
+          await new Promise(r => { timeoutId = setTimeout(r, 3000 + Math.random() * 5000); });
+          if (!active) return;
+
+          // Swoop back down to land at a random sidewalk spot
+          setState('landing');
+          setWingFlap(true);
+
+          // Swoop start position is offscreen on the opposite side
+          const startLeft = Math.random() > 0.5;
+          const landX = 40 + Math.random() * 320;
+          const landY = 133 + Math.random() * 4;
+
+          // Instantly snap starting offscreen coordinates before animating landing
+          updatePosition({ x: startLeft ? -30 : 430, y: -20 }, { duration: 0 });
+          await new Promise(r => { timeoutId = setTimeout(r, 50); });
+          if (!active) return;
+
+          setScaleX(landX > (startLeft ? -30 : 430) ? 0.35 : -0.35);
+          updatePosition({ x: landX, y: landY }, { duration: 2.2, ease: 'easeInOut' });
+
+          // Wait for landing swoop to complete
+          await new Promise(r => { timeoutId = setTimeout(r, 2200); });
+          if (!active) return;
+
+          // Tiny landing hop bounce
+          setWingFlap(false);
+          updatePosition({ x: landX, y: landY - 2 }, { duration: 0.15, ease: 'easeOut' });
+          await new Promise(r => { timeoutId = setTimeout(r, 150); });
+          if (!active) return;
+
+          updatePosition({ x: landX, y: landY }, { duration: 0.15, ease: 'easeIn' });
+          await new Promise(r => { timeoutId = setTimeout(r, 150); });
+          if (!active) return;
+
+          setState('idle');
+
+        } else if (rand < 0.55) {
+          // 2. WALKING
+          setState('walking');
+          const walkDist = Math.random() * 60 - 30; // walk up to 30 units left or right
+          const targetX = Math.max(20, Math.min(380, currentPos.x + walkDist));
+          const targetY = Math.max(133, Math.min(137, currentPos.y + (Math.random() * 4 - 2)));
+
+          // Turn to face target
+          setScaleX(targetX > currentPos.x ? 0.35 : -0.35);
+
+          const distance = Math.abs(targetX - currentPos.x);
+          const duration = Math.max(800, distance * 30); // ~33 units/sec
+          updatePosition({ x: targetX, y: targetY }, { duration: duration / 1000, ease: 'easeInOut' });
+
+          // Staggered head bobs matching the walk time
+          const bobCount = Math.floor(duration / 250);
+          for (let i = 0; i < bobCount; i++) {
+            if (!active) return;
+            setHeadBob(i % 2 === 0 ? 1.5 : -1.5);
+            await new Promise(r => { timeoutId = setTimeout(r, 250); });
+          }
+          setHeadBob(0);
+          setState('idle');
+
+        } else if (rand < 0.85) {
+          // 3. PECKING
+          setState('pecking');
+          const pecks = 2 + Math.floor(Math.random() * 3);
+          for (let p = 0; p < pecks; p++) {
+            if (!active) return;
+            // Peck down
+            setPeckAngle(35);
+            setHeadBob(1.5);
+            await new Promise(r => { timeoutId = setTimeout(r, 160); });
+            if (!active) return;
+            // Peck up
+            setPeckAngle(0);
+            setHeadBob(0);
+            await new Promise(r => { timeoutId = setTimeout(r, 160); });
+            if (!active) return;
+            // Pause
+            await new Promise(r => { timeoutId = setTimeout(r, 100 + Math.random() * 200); });
+          }
+          setState('idle');
+
+        } else {
+          // 4. IDLE / LOOK ALERT
+          setState('idle');
+          if (Math.random() > 0.5) {
+            // Flip direction
+            setScaleX(prev => -prev);
+          }
+          // Hold alert look for a moment
+          await new Promise(r => { timeoutId = setTimeout(r, 1000 + Math.random() * 1500); });
+        }
+
+        // Delay between states
+        await new Promise(r => { timeoutId = setTimeout(r, 600 + Math.random() * 800); });
+      }
+    };
+
+    run();
+
+    return () => {
+      active = false;
+      clearTimeout(timeoutId);
+    };
+  }, [delay]);
+
+  // Tilt body slightly while flying/landing
+  const isFlying = state === 'flying' || state === 'landing';
+
   return (
     <motion.g
       initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay }}
+      animate={{
+        opacity: 1,
+        x: pos.x,
+        y: pos.y,
+        scaleX: scaleX,
+        scaleY: 0.35,
+        rotate: isFlying ? [-5, 5, -5] : 0,
+      }}
+      transition={{
+        opacity: { duration: 0.3 },
+        x: transitionConfig,
+        y: transitionConfig,
+        rotate: isFlying ? { duration: 0.2, repeat: Infinity, ease: 'easeInOut' } : { duration: 0.2 },
+      }}
     >
-      <motion.g
-        animate={{
-          x: [x, x + 3, x - 2, x + 1, x],
-          y: [y, y, y, y, y],
-        }}
-        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-      >
-        {/* Body */}
-        <ellipse cx={0} cy={0} rx={3} ry={2} fill="#9ca3af" />
-        {/* Head */}
-        <circle cx={3} cy={-1} r={1.5} fill="#6b7280" />
-        {/* Beak */}
-        <polygon points="4.5,-1 5.5,-0.5 4.5,-0.5" fill="#f59e0b" />
-        {/* Eye */}
-        <circle cx={3.5} cy={-1.3} r={0.3} fill="#ef4444" />
-        {/* Pecking animation */}
+      <g style={{ transformOrigin: '0px 0px' }}>
+        {/* Feet (pink/coral legs) - only visible when not flying */}
+        {!isFlying && (
+          <>
+            <line x1={-0.8} y1={2} x2={-0.8} y2={4} stroke="#f43f5e" strokeWidth={0.6} strokeLinecap="round" />
+            <line x1={0.8} y1={2} x2={0.8} y2={4} stroke="#f43f5e" strokeWidth={0.6} strokeLinecap="round" />
+            <line x1={-0.8} y1={4} x2={-1.8} y2={4.3} stroke="#f43f5e" strokeWidth={0.5} strokeLinecap="round" />
+            <line x1={0.8} y1={4} x2={-0.2} y2={4.3} stroke="#f43f5e" strokeWidth={0.5} strokeLinecap="round" />
+          </>
+        )}
+
+        {/* Body (main pigeon shell) */}
+        <ellipse cx={0} cy={0} rx={4} ry={2.5} fill="#78716c" />
+
+        {/* Wing (flaps when flying) */}
         <motion.g
-          animate={{ rotate: [0, 15, 0, 0, 0, 15, 0] }}
-          transition={{ duration: 4, repeat: Infinity, delay: delay * 0.7 }}
-          style={{ transformOrigin: '3px -1px' }}
+          animate={{
+            rotate: wingFlap ? [-40, 50, -40] : 0,
+            scaleY: wingFlap ? [1, -0.7, 1] : 1,
+          }}
+          transition={{
+            duration: 0.12,
+            repeat: wingFlap ? Infinity : 0,
+            ease: 'easeInOut',
+          }}
+          style={{ transformOrigin: '-1px -0.5px' }}
         >
-          <circle cx={3} cy={-1} r={1.5} fill="#6b7280" />
-          <polygon points="4.5,-1 5.5,-0.5 4.5,-0.5" fill="#f59e0b" />
-          <circle cx={3.5} cy={-1.3} r={0.3} fill="#ef4444" />
+          {/* Wing shape */}
+          <path d="M -2,-1 C -3.5,1.5 -2.5,2.5 1.2,1.2 C 2.5,0.5 1,-1 -2,-1 Z" fill="#a8a29e" />
+          {/* Feather details */}
+          <line x1={-1.5} y1={0.5} x2={-0.5} y2={1.5} stroke="#44403c" strokeWidth={0.5} />
+          <line x1={-0.5} y1={0.2} x2={0.5} y2={1.2} stroke="#44403c" strokeWidth={0.5} />
         </motion.g>
-      </motion.g>
+
+        {/* Neck and Head (animated for pecking/bobbing) */}
+        <motion.g
+          animate={{
+            rotate: peckAngle,
+            y: headBob,
+          }}
+          transition={{
+            type: 'spring',
+            stiffness: 250,
+            damping: 18,
+          }}
+          style={{ transformOrigin: '1.5px 0.5px' }}
+        >
+          {/* Neck */}
+          <path d="M 0.8,0.5 C 0.8,-1.5 2.5,-1.5 2.5,-0.2 C 2.5,0.8 2,1.2 0.8,0.5 Z" fill="#1e293b" />
+          {/* Iridescent neck patch */}
+          <ellipse cx={1.8} cy={-0.5} rx={0.6} ry={0.4} fill="#10b981" opacity={0.7} />
+          
+          {/* Head */}
+          <circle cx={2.5} cy={-1.8} r={1.2} fill="#57534e" />
+          
+          {/* Beak */}
+          <polygon points="3.4,-2.0 4.4,-1.7 3.4,-1.5" fill="#e7e5e4" />
+          
+          {/* Eye */}
+          <circle cx={2.8} cy={-2.0} r={0.35} fill="#f97316" />
+          <circle cx={2.8} cy={-2.0} r={0.15} fill="#000000" />
+        </motion.g>
+      </g>
     </motion.g>
   );
 }
@@ -149,16 +357,16 @@ export function ConstructionCrane({ x = 350, isNight }: { x?: number; isNight: b
 }
 
 // 🎡 London Eye / Ferris Wheel — grounded with A-frame legs touching the road
-export function LondonEye({ x = 60, y = 110, radius = 22, isNight, skipIntro }: {
+export function LondonEye({ x = 75, y = 85, radius = 30, isNight, skipIntro }: {
   x?: number; y?: number; radius?: number; isNight: boolean; skipIntro?: boolean;
 }) {
   const podCount = 16;
   const podRadius = 1.8;
   const groundY = 138; // road surface
-  const spokeColor = isNight ? 'rgba(180,200,220,0.4)' : 'rgba(120,140,160,0.5)';
-  const rimColor = isNight ? 'rgba(180,200,220,0.3)' : 'rgba(120,140,160,0.4)';
-  const podFill = isNight ? '#fbbf24' : 'rgba(200,210,220,0.7)';
-  const legColor = isNight ? 'rgba(160,180,200,0.55)' : 'rgba(100,120,140,0.7)';
+  const spokeColor = isNight ? 'rgba(180,200,220,0.65)' : 'rgba(100,120,140,0.7)';
+  const rimColor = isNight ? 'rgba(180,200,220,0.55)' : 'rgba(100,120,140,0.6)';
+  const podFill = isNight ? '#fbbf24' : 'rgba(180,190,200,0.85)';
+  const legColor = isNight ? 'rgba(160,180,200,0.8)' : 'rgba(90,110,130,0.9)';
 
   return (
     <motion.g
@@ -167,12 +375,12 @@ export function LondonEye({ x = 60, y = 110, radius = 22, isNight, skipIntro }: 
       transition={skipIntro ? { duration: 0 } : { duration: 1.5, delay: 0.3 }}
     >
       {/* A-frame support legs from hub down to ground */}
-      <line x1={x - 12} y1={groundY} x2={x} y2={y} stroke={legColor} strokeWidth="1.8" strokeLinecap="round" />
-      <line x1={x + 12} y1={groundY} x2={x} y2={y} stroke={legColor} strokeWidth="1.8" strokeLinecap="round" />
+      <line x1={x - 15} y1={groundY} x2={x} y2={y} stroke={legColor} strokeWidth="1.8" strokeLinecap="round" />
+      <line x1={x + 15} y1={groundY} x2={x} y2={y} stroke={legColor} strokeWidth="1.8" strokeLinecap="round" />
       {/* Cross-brace */}
-      <line x1={x - 6} y1={(groundY + y) / 2} x2={x + 6} y2={(groundY + y) / 2} stroke={legColor} strokeWidth="0.6" />
+      <line x1={x - 8} y1={(groundY + y) / 2} x2={x + 8} y2={(groundY + y) / 2} stroke={legColor} strokeWidth="0.6" />
       {/* Concrete plinth */}
-      <rect x={x - 16} y={groundY - 2} width={32} height={3} rx={0.5} fill={isNight ? '#334155' : '#94a3b8'} opacity={0.8} />
+      <rect x={x - 20} y={groundY - 2} width={40} height={3} rx={0.5} fill={isNight ? '#334155' : '#94a3b8'} opacity={0.8} />
 
       {/* Rotating wheel group */}
       <motion.g

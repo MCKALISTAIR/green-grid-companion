@@ -112,11 +112,14 @@ function Building({ x, width, height, fill, windowLit, windowDark, isNight, clea
     for (let row = 0; row < windowRows; row++) {
       for (let col = 0; col < windowCols; col++) {
         const seed = (x * 17 + row * 31 + col * 7) % 100;
-        result.push({
-          wx: x + 3 + col * 10,
-          wy: 150 - height + 8 + row * 12,
-          lit: seed < litProbability * 100,
-        });
+        const wy = 150 - height + 8 + row * 12;
+        if (wy + windowHeight <= 133) {
+          result.push({
+            wx: x + 3 + col * 10,
+            wy,
+            lit: seed < litProbability * 100,
+          });
+        }
       }
     }
     return result;
@@ -299,6 +302,7 @@ function GlassTower({ x, width, height, fill, windowLit, isNight, cleanliness, d
         const seed = (x * 13 + i * 29) % 100;
         if (seed > (cleanliness > 0.7 ? 40 : 70)) return null;
         const y = baseY + 6 + i * 10;
+        if (y + 3 > 133) return null;
         const progress = (i * 10) / height;
         const leftX = x + (width - taperWidth) / 2 * (1 - progress);
         const stripWidth = taperWidth + (width - taperWidth) * progress;

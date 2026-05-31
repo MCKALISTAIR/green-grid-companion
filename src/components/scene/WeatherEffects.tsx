@@ -6,12 +6,15 @@ import { WeatherData } from '@/hooks/useWeatherData';
 interface WeatherEffectsProps {
   weather: WeatherData;
   isNight: boolean;
+  cleanliness: number;
 }
 
-// Fog Layer Component
-function FogLayer({ intensity = 0.5, layer = 1 }: { intensity?: number; layer?: number }) {
+function FogLayer({ intensity = 0.5, layer = 1, cleanliness = 0.5 }: { intensity?: number; layer?: number; cleanliness?: number }) {
   const duration = 20 + layer * 10;
   const yOffset = layer * 15;
+  const fogHue = cleanliness > 0.6 ? 190 : 40;
+  const fogSaturation = cleanliness > 0.6 ? '20%' : '10%';
+  const fogLightness = cleanliness > 0.6 ? (layer === 1 ? 95 : 90) : (layer === 1 ? 80 : 75);
 
   return (
     <motion.div
@@ -26,9 +29,9 @@ function FogLayer({ intensity = 0.5, layer = 1 }: { intensity?: number; layer?: 
         style={{
           background: `linear-gradient(180deg, 
             transparent 0%, 
-            hsl(0 0% 90% / ${intensity * 0.4}) ${30 + yOffset}%, 
-            hsl(0 0% 85% / ${intensity * 0.6}) ${60 + yOffset}%, 
-            hsl(0 0% 80% / ${intensity * 0.3}) 100%
+            hsl(${fogHue} ${fogSaturation} ${fogLightness}% / ${intensity * 0.4}) ${30 + yOffset}%, 
+            hsl(${fogHue} ${fogSaturation} ${fogLightness - 5}% / ${intensity * 0.6}) ${60 + yOffset}%, 
+            hsl(${fogHue} ${fogSaturation} ${fogLightness - 10}% / ${intensity * 0.3}) 100%
           )`,
         }}
         animate={{ x: ['-5%', '5%', '-5%'] }}
@@ -38,7 +41,6 @@ function FogLayer({ intensity = 0.5, layer = 1 }: { intensity?: number; layer?: 
   );
 }
 
-// Snowflake Component
 function Snowflake({ delay, x, size = 'md' }: { delay: number; x: number; size?: 'sm' | 'md' | 'lg' }) {
   const params = useMemo(() => {
     const sizes = { sm: 2, md: 4, lg: 6 };
@@ -75,7 +77,6 @@ function Snowflake({ delay, x, size = 'md' }: { delay: number; x: number; size?:
   );
 }
 
-// Lightning Flash Component
 function LightningFlash({ active }: { active: boolean }) {
   return (
     <AnimatePresence>
@@ -83,23 +84,15 @@ function LightningFlash({ active }: { active: boolean }) {
         <motion.div
           className="absolute inset-0 pointer-events-none"
           initial={{ opacity: 0 }}
-          animate={{
-            opacity: [0, 1, 0, 0.7, 0],
-          }}
-          transition={{
-            duration: 0.3,
-            times: [0, 0.1, 0.2, 0.25, 0.4],
-          }}
-          style={{
-            background: 'linear-gradient(180deg, hsl(60 100% 95% / 0.4) 0%, hsl(60 100% 90% / 0.2) 50%, transparent 100%)',
-          }}
+          animate={{ opacity: [0, 1, 0, 0.7, 0] }}
+          transition={{ duration: 0.3, times: [0, 0.1, 0.2, 0.25, 0.4] }}
+          style={{ background: 'linear-gradient(180deg, hsl(60 100% 95% / 0.4) 0%, hsl(60 100% 90% / 0.2) 50%, transparent 100%)' }}
         />
       )}
     </AnimatePresence>
   );
 }
 
-// Lightning Bolt SVG
 function LightningBolt({ x, delay }: { x: number; delay: number }) {
   const repeatDelay = useMemo(() => 4 + Math.random() * 6, []);
 
@@ -111,15 +104,8 @@ function LightningBolt({ x, delay }: { x: number; delay: number }) {
       height="80"
       viewBox="0 0 30 80"
       initial={{ opacity: 0 }}
-      animate={{
-        opacity: [0, 1, 1, 0],
-      }}
-      transition={{
-        duration: 0.5,
-        delay,
-        repeat: Infinity,
-        repeatDelay,
-      }}
+      animate={{ opacity: [0, 1, 1, 0] }}
+      transition={{ duration: 0.5, delay, repeat: Infinity, repeatDelay }}
     >
       <motion.path
         d="M15 0 L10 30 L18 30 L8 80 L20 40 L12 40 L20 0 Z"
@@ -130,24 +116,27 @@ function LightningBolt({ x, delay }: { x: number; delay: number }) {
   );
 }
 
-// Weather-aware Clouds Component
 function WeatherClouds({
   cloudCover,
   isRaining,
-  isNight
+  isNight,
+  cleanliness
 }: {
   cloudCover: number;
   isRaining: boolean;
   isNight: boolean;
+  cleanliness: number;
 }) {
-  const cloudCount = Math.ceil(cloudCover / 25); // 1-4 clouds based on coverage
+  const cloudCount = Math.ceil(cloudCover / 25);
   const cloudOpacity = isNight ? 0.4 : 0.7;
-  const cloudColor = isRaining ? 'hsl(220 10% 50%)' : 'hsl(0 0% 95%)';
+  const cloudColor = isRaining 
+    ? (cleanliness > 0.6 ? 'hsl(200 20% 75%)' : 'hsl(220 10% 45%)') 
+    : 'hsl(0 0% 95%)';
 
   const clouds = useMemo(() => {
     return Array.from({ length: cloudCount }, (_, i) => ({
       id: i,
-      top: 15 + (i % 3) * 8, // Started at 5%, now 15% to clear status bar
+      top: 15 + (i % 3) * 8,
       size: 16 + (i % 2) * 8,
       duration: 30 + i * 5,
       delay: -i * 8,
@@ -174,7 +163,7 @@ function WeatherClouds({
               width: `${cloud.size * 4}px`,
               height: `${cloud.size * 2.5}px`,
               color: cloudColor,
-              filter: isRaining ? 'brightness(0.7)' : 'none',
+              filter: isRaining ? (cleanliness > 0.6 ? 'brightness(0.95)' : 'brightness(0.65)') : 'none',
             }}
             aria-hidden="true"
           />
@@ -184,8 +173,7 @@ function WeatherClouds({
   );
 }
 
-// Heavy Rain Component (different from carbon-based rain)
-function HeavyRain({ intensity = 0.5 }: { intensity: number }) {
+function HeavyRain({ intensity = 0.5, cleanliness = 0.5 }: { intensity: number; cleanliness?: number }) {
   const dropCount = Math.floor(30 * intensity);
 
   const drops = useMemo(() => {
@@ -198,6 +186,8 @@ function HeavyRain({ intensity = 0.5 }: { intensity: number }) {
     }));
   }, [dropCount]);
 
+  const rainColor = cleanliness > 0.6 ? 'rgba(34, 197, 94, 0.45)' : 'rgba(100, 116, 139, 0.3)';
+
   return (
     <motion.div
       className="absolute inset-0 overflow-hidden pointer-events-none"
@@ -209,10 +199,11 @@ function HeavyRain({ intensity = 0.5 }: { intensity: number }) {
       {drops.map((drop) => (
         <motion.div
           key={drop.id}
-          className="absolute w-0.5 rounded-full bg-gen-hydro/40"
+          className="absolute w-0.5 rounded-full"
           style={{
             left: `${drop.x}%`,
             height: drop.height,
+            backgroundColor: rainColor,
           }}
           initial={{ y: '-10%', opacity: 0 }}
           animate={{ y: '110%', opacity: [0, 0.7, 0] }}
@@ -228,9 +219,7 @@ function HeavyRain({ intensity = 0.5 }: { intensity: number }) {
   );
 }
 
-// Main Weather Effects Component
-export function WeatherEffects({ weather, isNight }: WeatherEffectsProps) {
-  // Randomize lightning timing
+export function WeatherEffects({ weather, isNight, cleanliness }: WeatherEffectsProps) {
   const lightningActive = useMemo(() => {
     if (!weather.isThunderstorm) return false;
     return true;
@@ -238,34 +227,31 @@ export function WeatherEffects({ weather, isNight }: WeatherEffectsProps) {
 
   return (
     <>
-      {/* Fog Effect */}
       <AnimatePresence>
         {weather.isFoggy && (
           <>
-            <FogLayer intensity={0.6} layer={1} />
-            <FogLayer intensity={0.4} layer={2} />
-            <FogLayer intensity={0.3} layer={3} />
+            <FogLayer intensity={0.6} layer={1} cleanliness={cleanliness} />
+            <FogLayer intensity={0.4} layer={2} cleanliness={cleanliness} />
+            <FogLayer intensity={0.3} layer={3} cleanliness={cleanliness} />
           </>
         )}
       </AnimatePresence>
 
-      {/* Weather-based Clouds (in addition to carbon-based) */}
       {weather.cloudCover > 40 && (
         <WeatherClouds
           cloudCover={weather.cloudCover}
           isRaining={weather.isRaining}
           isNight={isNight}
+          cleanliness={cleanliness}
         />
       )}
 
-      {/* Rain Effect (weather-based, heavier than carbon rain) */}
       <AnimatePresence>
         {weather.isRaining && (
-          <HeavyRain intensity={weather.precipitationIntensity} />
+          <HeavyRain intensity={weather.precipitationIntensity} cleanliness={cleanliness} />
         )}
       </AnimatePresence>
 
-      {/* Snow Effect */}
       <AnimatePresence>
         {weather.isSnowing && (
           <motion.div
@@ -286,7 +272,6 @@ export function WeatherEffects({ weather, isNight }: WeatherEffectsProps) {
         )}
       </AnimatePresence>
 
-      {/* Thunderstorm Effects */}
       <AnimatePresence>
         {weather.isThunderstorm && (
           <>
@@ -300,5 +285,4 @@ export function WeatherEffects({ weather, isNight }: WeatherEffectsProps) {
   );
 }
 
-// Export sub-components for individual use
 export { FogLayer, Snowflake, LightningFlash, LightningBolt, WeatherClouds, HeavyRain };

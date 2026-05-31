@@ -7,7 +7,7 @@ export function getForecastMax(forecast: ForecastData[]): number {
 
 export function getForecastDifferences(item: ForecastData, now: Date) {
     const time = parseISO(item.from);
-    const isUnknown = item.intensity.forecast === null || item.intensity.forecast === 0;
+    const isUnknown = !item.intensity || item.intensity.forecast === null || item.intensity.forecast === undefined;
     const isPast = isBefore(time, now);
     const isCurrentHour = time.getTime() === now.getTime();
 
