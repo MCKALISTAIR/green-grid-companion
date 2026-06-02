@@ -1,4 +1,5 @@
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import { useTransitionNavigate } from '@/hooks/useTransitionNavigate';
 import { Home, ListOrdered, Calendar, Settings, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
@@ -9,7 +10,7 @@ interface BottomNavProps {
 }
 
 export function BottomNav({ onHomeClick }: BottomNavProps) {
-    const navigate = useNavigate();
+    const navigate = useTransitionNavigate();
     const location = useLocation();
 
     const isActive = (path: string) => location.pathname === path;

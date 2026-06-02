@@ -620,3 +620,127 @@
   box-shadow: 0 0 0 4px hsl(var(--primary) / 0.3) !important;
   border-radius: 8px !important;
 }
+
+/* ==========================================
+   Modern CSS & UX Design Patterns
+   ========================================== */
+
+/* 1. View Transitions API Styling */
+::view-transition-old(root) {
+  animation: fade-out 0.25s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+::view-transition-new(root) {
+  animation: fade-in 0.25s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Reduced Motion Override for View Transitions */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+/* 2. Container Queries for GenerationMixBar */
+.generation-mix-container {
+  container-type: inline-size;
+}
+
+.generation-mix-legend-compact {
+  display: flex;
+  width: 100%;
+}
+
+.generation-mix-legend-grid {
+  display: none;
+  width: 100%;
+}
+
+@container (min-width: 480px) {
+  .generation-mix-legend-compact {
+    display: none;
+  }
+  .generation-mix-legend-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem 1.5rem;
+  }
+}
+
+@container (min-width: 768px) and (max-width: 1024px) {
+  .generation-mix-legend-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+}
+
+/* 3. Container Queries for WeatherWidget */
+.weather-widget-container {
+  container-type: inline-size;
+}
+
+.weather-widget-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 0.5rem;
+  width: 100%;
+}
+
+.weather-widget-stats {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.weather-widget-close-btn {
+  display: inline-flex;
+}
+
+.weather-widget-absolute-close {
+  display: none;
+}
+
+/* Adapt Weather Widget layout in narrow containers (e.g. Insights Card) */
+@container (max-width: 320px) {
+  .weather-widget-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.75rem;
+  }
+  
+  .weather-widget-stats {
+    width: 100%;
+    justify-content: space-between;
+    padding-left: 2rem;
+  }
+  
+  .weather-widget-close-btn {
+    display: none; /* Hide standard inline close button */
+  }
+  
+  .weather-widget-absolute-close {
+    display: inline-flex; /* Show absolute positioned close button in top right */
+  }
+}
+
+/* 4. Premium Typography Updates */
+h1, h2, h3, h4, h5, h6 {
+  text-wrap: balance;
+}
+
+p, blockquote {
+  text-wrap: pretty;
+}

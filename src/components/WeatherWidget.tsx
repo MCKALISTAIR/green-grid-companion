@@ -70,17 +70,17 @@ export function WeatherWidget() {
     };
 
     return (
-        <div className="relative rounded-xl border border-border/50 bg-card/60 backdrop-blur-sm overflow-hidden">
+        <div className="relative rounded-xl border border-border/50 bg-card/60 backdrop-blur-sm overflow-hidden weather-widget-container">
             {/* Dismiss button */}
             <button
                 onClick={handleHide}
-                className="absolute top-2 right-2 p-1 rounded-full text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/50 transition-colors z-10"
+                className="absolute top-2 right-2 p-1 rounded-full text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/50 transition-colors z-10 weather-widget-absolute-close"
                 aria-label="Hide weather widget"
             >
                 <X className="w-3.5 h-3.5" />
             </button>
 
-            <div className="px-3 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-2">
+            <div className="px-3 py-2.5 weather-widget-inner">
                 {/* Weather icon & condition */}
                 <div className="flex items-center gap-2 min-w-0">
                     <div className="shrink-0 p-1.5 rounded-lg bg-muted/50">
@@ -90,7 +90,7 @@ export function WeatherWidget() {
                 </div>
 
                 {/* Stats - compact */}
-                <div className="flex items-center gap-2.5 text-sm">
+                <div className="flex items-center gap-2.5 text-sm weather-widget-stats">
                     <span className="flex items-center gap-1">
                         <Thermometer className="w-3.5 h-3.5 text-muted-foreground/70" />
                         <span className="font-medium tabular-nums">{current.temperature_2m}°</span>
@@ -104,7 +104,7 @@ export function WeatherWidget() {
                 {/* Dismiss */}
                 <button
                     onClick={handleHide}
-                    className="ml-auto p-1 rounded-full text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted/50 transition-colors"
+                    className="ml-auto p-1 rounded-full text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted/50 transition-colors weather-widget-close-btn"
                     aria-label="Hide weather widget"
                 >
                     <X className="w-3.5 h-3.5" />

@@ -34,7 +34,7 @@ export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolar
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <button type="button" className="w-full text-left space-y-4 cursor-pointer hover:opacity-80 transition-opacity" aria-label="View generation mix details">
+        <button type="button" className="w-full text-left space-y-4 cursor-pointer hover:opacity-80 transition-opacity generation-mix-container" aria-label="View generation mix details">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
               Generation Mix
@@ -81,9 +81,9 @@ export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolar
             })}
           </div>
 
-          {/* Legend - Responsive Grid */}
-          <div className="block md:hidden">
-            {/* Mobile: Compact Flex Wrap (Top 6) */}
+          {/* Legend - Container Responsive */}
+          <div className="generation-mix-legend-compact">
+            {/* Mobile/Compact layout: Flex Wrap (Top 6) */}
             <div className="flex flex-wrap gap-2">
               {sortedMix.slice(0, 6).map((item) => (
                 <div
@@ -105,12 +105,12 @@ export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolar
             </div>
           </div>
 
-          <div className="hidden md:grid grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-y-2 gap-x-6 pt-2">
-            {/* Desktop: Full Grid showing all items */}
+          <div className="generation-mix-legend-grid pt-2">
+            {/* Desktop/Wide layout: Full Grid showing all items */}
             {sortedMix.map((item) => (
               <div
                 key={item.fuel}
-                className="flex items-center justify-between text-sm"
+                className="flex items-center justify-between text-sm w-full"
               >
                 <div className="flex items-center gap-2">
                   <div className={`w-3 h-3 rounded-full ${getFuelColor(item.fuel)}`} />

@@ -1,11 +1,12 @@
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import { useTransitionNavigate } from '@/hooks/useTransitionNavigate';
 import { Home, ListOrdered, Calendar, Settings, Clock, Zap, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { VERSION_STRING } from '@/lib/version';
 
 export function SideNav() {
-    const navigate = useNavigate();
+    const navigate = useTransitionNavigate();
     const location = useLocation();
 
     const isActive = (path: string) => location.pathname === path;
