@@ -32,6 +32,7 @@ import { EnergyFactBubble } from '@/components/scene/EnergyFactBubble';
 import { StaleDataBadge } from '@/components/StaleDataBadge';
 import { LocationMismatchPrompt } from '@/components/LocationMismatchPrompt';
 import { YearWrapped } from '@/components/YearWrapped';
+import { Skeleton } from '@/components/ui/skeleton';
 
 import { useAppLocation } from '@/contexts/LocationContext';
 import { useYearWrappedAutoShow } from '@/hooks/useYearWrappedAutoShow';
@@ -342,6 +343,8 @@ const Index = () => {
                     retry={refetch}
                   />
                 </div>
+              ) : isLoading && forecast.length === 0 ? (
+                <DashboardSkeleton />
               ) : (
                 <>
                   <div 
@@ -585,6 +588,109 @@ function getSmartTip(current: number, forecast: ForecastData[]): string {
 
   // Default: Stable/Moderate
   return "Carbon levels are stable. Check the 'Best Time' chart for specific charging slots.";
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-4 animate-in fade-in duration-500">
+      {/* Segmented Control tablist skeleton */}
+      <div className="flex p-1 bg-muted rounded-lg w-full h-10 mb-2">
+        <Skeleton className="flex-1 h-full rounded-md" />
+        <Skeleton className="flex-1 h-full rounded-md ml-2" />
+        <Skeleton className="flex-1 h-full rounded-md ml-2" />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Energy Insights Skeleton */}
+        <Card className="p-5 shadow-lg flex flex-col justify-between h-[220px]">
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <Skeleton className="w-8 h-8 rounded-full" />
+              <Skeleton className="h-5 w-1/3 rounded-md" />
+            </div>
+            <div className="space-y-2 pt-2">
+              <Skeleton className="h-4 w-full rounded-md" />
+              <Skeleton className="h-4 w-5/6 rounded-md" />
+              <Skeleton className="h-4 w-2/3 rounded-md" />
+            </div>
+          </div>
+          <Skeleton className="h-10 w-full rounded-xl mt-4" />
+        </Card>
+
+        {/* Generation Mix Skeleton */}
+        <Card className="p-5 shadow-lg md:col-span-2 lg:col-span-2 flex flex-col justify-between h-[220px]">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-5 w-1/4 rounded-md" />
+              <Skeleton className="h-4 w-12 rounded-md" />
+            </div>
+            {/* Simulated bars */}
+            <div className="space-y-4 pt-2">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-4 w-16 rounded-md" />
+                <Skeleton className="h-3 flex-1 rounded-full" />
+                <Skeleton className="h-4 w-8 rounded-md" />
+              </div>
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-4 w-16 rounded-md" />
+                <Skeleton className="h-3 flex-1 rounded-full" />
+                <Skeleton className="h-4 w-8 rounded-md" />
+              </div>
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-4 w-16 rounded-md" />
+                <Skeleton className="h-3 flex-1 rounded-full" />
+                <Skeleton className="h-4 w-8 rounded-md" />
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Best time Skeleton */}
+        <Card className="p-5 shadow-lg flex flex-col justify-between h-[150px]">
+          <div className="space-y-3">
+            <Skeleton className="h-4 w-1/2 rounded-md" />
+            <Skeleton className="h-8 w-2/3 rounded-md" />
+          </div>
+          <Skeleton className="h-3 w-1/3 rounded-md" />
+        </Card>
+
+        {/* Worst time Skeleton */}
+        <Card className="p-5 shadow-lg flex flex-col justify-between h-[150px]">
+          <div className="space-y-3">
+            <Skeleton className="h-4 w-1/2 rounded-md" />
+            <Skeleton className="h-8 w-2/3 rounded-md" />
+          </div>
+          <Skeleton className="h-3 w-1/3 rounded-md" />
+        </Card>
+
+        {/* Forecast Chart Skeleton */}
+        <Card className="p-5 shadow-lg md:col-span-2 lg:col-span-3 h-[280px] flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-5 w-1/6 rounded-md" />
+            <div className="flex gap-2">
+              <Skeleton className="h-7 w-12 rounded-md" />
+              <Skeleton className="h-7 w-12 rounded-md" />
+            </div>
+          </div>
+          {/* Simulated chart bars */}
+          <div className="flex items-end justify-between h-40 px-2 pt-4">
+            <Skeleton className="h-[20%] w-6 rounded-t-sm" />
+            <Skeleton className="h-[40%] w-6 rounded-t-sm" />
+            <Skeleton className="h-[60%] w-6 rounded-t-sm" />
+            <Skeleton className="h-[80%] w-6 rounded-t-sm" />
+            <Skeleton className="h-[90%] w-6 rounded-t-sm" />
+            <Skeleton className="h-[70%] w-6 rounded-t-sm" />
+            <Skeleton className="h-[50%] w-6 rounded-t-sm" />
+            <Skeleton className="h-[30%] w-6 rounded-t-sm" />
+            <Skeleton className="h-[20%] w-6 rounded-t-sm" />
+            <Skeleton className="h-[40%] w-6 rounded-t-sm" />
+            <Skeleton className="h-[60%] w-6 rounded-t-sm" />
+            <Skeleton className="h-[75%] w-6 rounded-t-sm" />
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
 }
 
 export default Index;
