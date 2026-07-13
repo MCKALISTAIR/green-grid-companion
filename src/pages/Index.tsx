@@ -47,6 +47,7 @@ const Index = () => {
   const { scheduleGreenAlerts, scheduleDailyForecast, scheduleHighIntensityAlerts, prefs } = useNotifications();
   const { isLinked: isOctopusLinked } = useOctopusEnergy();
 
+  const {
     intensity,
     previousIntensity,
     index,
