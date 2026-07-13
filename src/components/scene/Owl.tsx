@@ -4,9 +4,10 @@ import { useState } from 'react';
 interface OwlProps {
     treeX: number; // X position to perch on tree (0-400 SVG coords)
     treeY: number; // Y position on tree branch
+    scale?: number; // Optional scale factor
 }
 
-export function Owl({ treeX, treeY }: OwlProps) {
+export function Owl({ treeX, treeY, scale = 1 }: OwlProps) {
     const [isHooting, setIsHooting] = useState(false);
 
     // Trigger random hoots
@@ -22,7 +23,7 @@ export function Owl({ treeX, treeY }: OwlProps) {
 
     return (
         <motion.g
-            transform={`translate(${treeX}, ${treeY})`}
+            transform={`translate(${treeX}, ${treeY}) scale(${scale})`}
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}

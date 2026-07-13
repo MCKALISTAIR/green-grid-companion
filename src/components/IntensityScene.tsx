@@ -1249,12 +1249,27 @@ export function IntensityScene({
       {/* Owls perched on trees at night */}
       <AnimatePresence>
         {isNight && sceneConfig.cleanliness > 0.7 && (
-          <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-12">
-            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
-              <Owl treeX={80} treeY={85} />
-              <Owl treeX={320} treeY={95} />
-            </svg>
-          </div>
+          <>
+            {/* Left Owl (Back hill - backY) */}
+            <motion.div
+              style={{ y: shouldReduceMotion ? 0 : backY }}
+              className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-12"
+            >
+              <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+                <Owl treeX={80} treeY={85} scale={0.25} />
+              </svg>
+            </motion.div>
+
+            {/* Right Owl (Mid hill - midY) */}
+            <motion.div
+              style={{ y: shouldReduceMotion ? 0 : midY }}
+              className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-12"
+            >
+              <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+                <Owl treeX={320} treeY={95} scale={0.4} />
+              </svg>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 
