@@ -1,6 +1,9 @@
 import { AnimatePresence, motion } from 'framer-motion';
+import { useEffect } from 'react';
 import { BandTransition } from '@/hooks/useCleanlinessBand';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { useHaptics } from '@/hooks/useHaptics';
+import { NotificationType } from '@capacitor/haptics';
 
 interface Props {
     transition: BandTransition | null;
@@ -15,6 +18,18 @@ interface Props {
  */
 export function StateTransitionFX({ transition }: Props) {
     const reduced = useReducedMotion();
+    const { notification } = useHaptics();
+
+    useEffect(() => {
+        if (!transition || reduced) return;
+        
+        if (transition.direction === 'cleaner') {
+            notification(NotificationType.Success);
+        } else {
+            notification(NotificationType.Warning);
+        }
+    }, [transition, reduced, notification]);
+
     if (reduced || !transition) return null;
 
     const cleaner = transition.direction === 'cleaner';
