@@ -24,7 +24,7 @@ export function Sheep({ x, y, scale = 1, isNight, delay = 0 }: SheepProps) {
 
     return (
         <motion.div
-            className="absolute z-10 cursor-pointer"
+            className="absolute z-10 cursor-pointer pointer-events-auto"
             style={{ left: `${x}%`, bottom: `${y}%`, transform: `scale(${scale})` }}
             onClick={handleClick}
             initial={{ opacity: 0 }}

@@ -12,6 +12,7 @@ import { Stars } from './scene/Stars';
 import { Moon } from './scene/Moon';
 import { Landscape, LandscapeBack, LandscapeMid, LandscapeFront } from './scene/Landscape';
 import { ValleyMist } from './scene/ValleyMist';
+import { JumpingFish } from './scene/JumpingFish';
 import { Butterfly } from './scene/Butterfly';
 import { Sheep } from './scene/Sheep';
 import { WeatherEffects } from './scene/WeatherEffects';
@@ -654,6 +655,21 @@ export function IntensityScene({
               {sceneConfig.cleanliness > 0.7 && <HarbourSeal x={220} y={98} delay={15} />}
             </svg>
           </motion.div>
+
+          {/* Coastal: Splashing Jumping Fish on clean days */}
+          <AnimatePresence>
+            {sceneConfig.cleanliness > 0.6 && (
+              <motion.div
+                style={{ y: shouldReduceMotion ? 0 : midY }}
+                className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-[14] overflow-hidden"
+              >
+                <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+                  <JumpingFish x={110} y={95} delay={4} />
+                  <JumpingFish x={280} y={97} delay={10} />
+                </svg>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Coastal: Foreground (beach + cliffs - static for ground flush) */}
           <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-20 overflow-hidden">

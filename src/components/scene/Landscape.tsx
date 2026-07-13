@@ -1,5 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useHaptics } from '@/hooks/useHaptics';
 
 export type TimeOfDayLandscape = 'night' | 'dawn' | 'morning' | 'midday' | 'afternoon' | 'sunset' | 'dusk';
 
@@ -314,6 +315,69 @@ export function LandscapeMid(props: LandscapeProps) {
     );
 }
 
+function Cottage({ x, y, scale = 1, isNight }: { x: number; y: number; scale?: number; isNight: boolean }) {
+  const [windowLit, setWindowLit] = useState(isNight);
+  const { impactLight } = useHaptics();
+
+  // Keep window in sync with isNight unless clicked
+  useMemo(() => {
+    setWindowLit(isNight);
+  }, [isNight]);
+
+  const handleClick = () => {
+    setWindowLit(!windowLit);
+    impactLight();
+  };
+
+  return (
+    <motion.g
+      transform={`translate(${x}, ${y}) scale(${scale})`}
+      className="cursor-pointer pointer-events-auto"
+      onClick={handleClick}
+      role="button"
+      tabIndex={0}
+      aria-label="Countryside cottage - click to toggle lights"
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          handleClick();
+        }
+      }}
+    >
+      {/* Stone walls */}
+      <rect x="-10" y="-8" width="20" height="9" fill="#e4e4e7" stroke="#71717a" strokeWidth="0.5" rx="0.5" />
+      
+      {/* Timber accents / framing */}
+      <line x1="-10" y1="-4" x2="10" y2="-4" stroke="#7f1d1d" strokeWidth="0.5" opacity="0.3" />
+
+      {/* Door */}
+      <rect x="-2" y="-4" width="4" height="5" fill="#78350f" rx="0.2" />
+      <circle cx="-1" cy="-1.5" r="0.2" fill="#fbbf24" />
+
+      {/* Roof */}
+      <polygon points="-12,-8 0,-16 12,-8" fill="#450a0a" stroke="#7f1d1d" strokeWidth="0.5" />
+      
+      {/* Tiny solar panels on the roof */}
+      <polygon points="-9,-10 0,-14 -1,-11 -8,-8" fill="#1e1b4b" opacity="0.8" />
+      <line x1="-9" y1="-10" x2="-8" y2="-8" stroke="#38bdf8" strokeWidth="0.3" opacity="0.5" />
+      
+      {/* Chimney */}
+      <rect x="6" y="-14" width="3" height="6" fill="#3f3f46" rx="0.2" />
+      
+      {/* Windows with night glow */}
+      <rect x="-7" y="-5" width="3" height="3" fill={windowLit ? "#fbbf24" : "#93c5fd"} rx="0.5" stroke="#4b5563" strokeWidth="0.3" />
+      <rect x="4" y="-5" width="3" height="3" fill={windowLit ? "#fbbf24" : "#93c5fd"} rx="0.5" stroke="#4b5563" strokeWidth="0.3" />
+      
+      {/* Ambient window glow */}
+      {windowLit && (
+        <>
+          <circle cx="-5.5" cy="-3.5" r="2.5" fill="#fbbf24" opacity={0.3} filter="blur(1px)" />
+          <circle cx="5.5" cy="-3.5" r="2.5" fill="#fbbf24" opacity={0.3} filter="blur(1px)" />
+        </>
+      )}
+    </motion.g>
+  );
+}
+
 export function LandscapeFront(props: LandscapeProps) {
     const palette = useLandscapePalette(props.cleanliness, props.isNight, props.synthwaveMode, props.isSnowing, props.timeOfDay);
 
@@ -342,6 +406,9 @@ export function LandscapeFront(props: LandscapeProps) {
                 skipIntro={props.skipIntro}
                 windSpeed={props.windSpeed}
             />
+            {/* Countryside Cottage */}
+            <Cottage x={210} y={135} scale={0.9} isNight={props.isNight} />
+
             {/* Ground strip at the very bottom for visible earth */}
             <rect x={0} y={145} width={400} height={5} fill={palette.frontHillShadow} />
             <rect x={0} y={148} width={400} height={2} fill="rgba(0,0,0,0.15)" />

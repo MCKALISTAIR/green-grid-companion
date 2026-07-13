@@ -1,5 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useHaptics } from '@/hooks/useHaptics';
 
 export interface CoastalLandscapeProps {
   cleanliness: number;
@@ -110,11 +111,33 @@ function OceanWaves({ sea, seaHighlight, foam, skipIntro }: { sea: string; seaHi
 
 // Lighthouse
 function Lighthouse({ x, isNight, fill, skipIntro }: { x: number; isNight: boolean; fill: string; skipIntro?: boolean }) {
+  const [isFlashing, setIsFlashing] = useState(false);
+  const { impactMedium } = useHaptics();
+
+  const handleClick = () => {
+    if (isFlashing) return;
+    setIsFlashing(true);
+    impactMedium();
+    setTimeout(() => {
+      setIsFlashing(false);
+    }, 2500);
+  };
+
   return (
     <motion.g
       initial={skipIntro ? { y: 0, opacity: 1 } : { y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={skipIntro ? { duration: 0 } : { duration: 1.2, delay: 0.3, ease: 'easeOut' }}
+      className="cursor-pointer pointer-events-auto"
+      onClick={handleClick}
+      role="button"
+      tabIndex={0}
+      aria-label="Lighthouse - click to strobe light"
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          handleClick();
+        }
+      }}
     >
       {/* Tower base (wider) */}
       <polygon points={`${x - 6},108 ${x - 4},70 ${x + 4},70 ${x + 6},108`} fill={fill} />
@@ -127,25 +150,46 @@ function Lighthouse({ x, isNight, fill, skipIntro }: { x: number; isNight: boole
       <rect x={x - 6} y={65} width={12} height={2} fill="#374151" />
       {/* Dome */}
       <path d={`M${x - 4},65 Q${x},60 ${x + 4},65`} fill="#374151" />
-      {/* Light beam */}
+      
+      {/* Interactive Strobe / Light beam */}
       {isNight && (
-        <motion.g
-          animate={{ opacity: [0, 1, 1, 0] }}
-          transition={{ duration: 4, repeat: Infinity, times: [0, 0.1, 0.5, 0.6] }}
-        >
-          <polygon
-            points={`${x},67 ${x - 60},50 ${x - 50},45`}
-            fill="#fbbf24"
-            opacity={0.15}
-          />
-          <polygon
-            points={`${x},67 ${x + 60},50 ${x + 50},45`}
-            fill="#fbbf24"
-            opacity={0.15}
-          />
-          <circle cx={x} cy={67} r={3} fill="#fbbf24" opacity={0.6} />
-        </motion.g>
+        <>
+          {isFlashing ? (
+            // Rapid strobe flash when clicked
+            <motion.g
+              animate={{ opacity: [1, 0.1, 1, 0.1, 1, 0.1, 1] }}
+              transition={{ duration: 2.5, ease: 'easeInOut' }}
+            >
+              {/* Massive ambient light glow */}
+              <circle cx={x} cy={67} r={18} fill="#fbbf24" opacity={0.35} filter="blur(2px)" />
+              <circle cx={x} cy={67} r={6} fill="#fbbf24" opacity={0.9} />
+              <polygon points={`${x},67 ${x - 120},20 ${x - 100},10`} fill="#fbbf24" opacity={0.25} />
+              <polygon points={`${x},67 ${x + 120},20 ${x + 100},10`} fill="#fbbf24" opacity={0.25} />
+            </motion.g>
+          ) : (
+            // Normal rotating/sweeping light beam
+            <motion.g
+              animate={{ rotate: [-22, 22, -22] }}
+              transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+              style={{ transformOrigin: `${x}px 67px` }}
+            >
+              {/* Sweeping light cones */}
+              <polygon
+                points={`${x},67 ${x - 70},54 ${x - 60},42`}
+                fill="#fbbf24"
+                opacity={0.16}
+              />
+              <polygon
+                points={`${x},67 ${x + 70},54 ${x + 60},42`}
+                fill="#fbbf24"
+                opacity={0.16}
+              />
+              <circle cx={x} cy={67} r={3} fill="#fbbf24" opacity={0.7} />
+            </motion.g>
+          )}
+        </>
       )}
+      
       {/* Daytime lamp glass */}
       {!isNight && (
         <rect x={x - 3} y={67} width={6} height={3} fill="rgba(200,230,255,0.4)" rx={1} />
