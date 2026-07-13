@@ -16,23 +16,24 @@ function useCoastalPalette(cleanliness: number, isNight: boolean, synthwaveMode:
   return useMemo(() => {
     if (synthwaveMode) {
       return {
-        sea: '#240046', seaHighlight: '#7597de', sand: '#3c096c',
-        cliff: '#5a189a', cliffHighlight: '#9d4edd', lighthouse: '#e0aaff',
+        seaHighlight: '#7597de', seaShadow: '#240046', sand: '#3c096c',
+        cliffHighlight: '#9d4edd', cliffShadow: '#5a189a', lighthouse: '#e0aaff',
         foam: '#c77dff',
       };
     }
     if (isSnowing) {
       return {
-        sea: isNight ? '#0f172a' : '#475569', seaHighlight: isNight ? '#1e293b' : '#64748b',
-        sand: isNight ? '#1e293b' : '#cbd5e1', cliff: isNight ? '#334155' : '#94a3b8',
-        cliffHighlight: isNight ? '#475569' : '#e2e8f0', lighthouse: '#f1f5f9',
+        seaHighlight: isNight ? '#1e293b' : '#64748b', seaShadow: isNight ? '#0f172a' : '#475569',
+        sand: isNight ? '#1e293b' : '#cbd5e1', 
+        cliffHighlight: isNight ? '#475569' : '#e2e8f0', cliffShadow: isNight ? '#334155' : '#94a3b8',
+        lighthouse: '#f1f5f9',
         foam: isNight ? '#64748b' : '#f1f5f9',
       };
     }
     if (isNight) {
       return {
-        sea: '#0c1929', seaHighlight: '#1e3a5f', sand: '#1a1a2e',
-        cliff: '#1e293b', cliffHighlight: '#334155', lighthouse: '#e2e8f0',
+        seaHighlight: '#1e3a5f', seaShadow: '#0c1929', sand: '#1a1a2e',
+        cliffHighlight: '#334155', cliffShadow: '#1e293b', lighthouse: '#e2e8f0',
         foam: 'rgba(255,255,255,0.15)',
       };
     }
@@ -41,15 +42,17 @@ function useCoastalPalette(cleanliness: number, isNight: boolean, synthwaveMode:
 
     if (isSunsetish) {
       return {
-        sea: isClean ? '#1e3a5f' : '#374151', seaHighlight: isClean ? '#f97316' : '#92400e',
-        sand: '#d4a574', cliff: '#6b7280', cliffHighlight: '#9ca3af',
+        seaHighlight: isClean ? '#f97316' : '#92400e', seaShadow: isClean ? '#1e3a5f' : '#111827',
+        sand: '#d4a574', 
+        cliffHighlight: '#9ca3af', cliffShadow: '#374151',
         lighthouse: '#f1f5f9', foam: 'rgba(255,255,255,0.4)',
       };
     }
     return {
-      sea: isClean ? '#0369a1' : '#475569', seaHighlight: isClean ? '#38bdf8' : '#6b7280',
-      sand: isClean ? '#f5d0a9' : '#d6d3d1', cliff: isClean ? '#78716c' : '#57534e',
-      cliffHighlight: isClean ? '#a8a29e' : '#78716c', lighthouse: '#f1f5f9',
+      seaHighlight: isClean ? '#38bdf8' : '#6b7280', seaShadow: isClean ? '#0369a1' : '#374151',
+      sand: isClean ? '#f5d0a9' : '#cbd5e1', 
+      cliffHighlight: isClean ? '#a8a29e' : '#78716c', cliffShadow: isClean ? '#57534e' : '#44403c',
+      lighthouse: '#f1f5f9',
       foam: 'rgba(255,255,255,0.5)',
     };
   }, [cleanliness, isNight, synthwaveMode, isSnowing, timeOfDay]);
@@ -218,7 +221,13 @@ export function CoastalLandscapeBack(props: CoastalLandscapeProps) {
 
   return (
     <g>
-      <OceanWaves sea={palette.sea} seaHighlight={palette.seaHighlight} foam={palette.foam} skipIntro={props.skipIntro} />
+      <defs>
+        <linearGradient id="gradSea" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={palette.seaHighlight} />
+          <stop offset="100%" stopColor={palette.seaShadow} />
+        </linearGradient>
+      </defs>
+      <OceanWaves sea="url(#gradSea)" seaHighlight={palette.seaHighlight} foam={palette.foam} skipIntro={props.skipIntro} />
     </g>
   );
 }
@@ -229,7 +238,13 @@ export function CoastalLandscapeMid(props: CoastalLandscapeProps) {
 
   return (
     <g>
-      <Cliff side="left" fill={palette.cliff} highlight={palette.cliffHighlight} skipIntro={props.skipIntro} />
+      <defs>
+        <linearGradient id="gradCliff" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={palette.cliffHighlight} />
+          <stop offset="100%" stopColor={palette.cliffShadow} />
+        </linearGradient>
+      </defs>
+      <Cliff side="left" fill="url(#gradCliff)" highlight={palette.cliffHighlight} skipIntro={props.skipIntro} />
       <Lighthouse x={35} isNight={props.isNight} fill={palette.lighthouse} skipIntro={props.skipIntro} />
     </g>
   );
@@ -241,7 +256,13 @@ export function CoastalLandscapeFront(props: CoastalLandscapeProps) {
 
   return (
     <g>
-      <Cliff side="right" fill={palette.cliff} highlight={palette.cliffHighlight} skipIntro={props.skipIntro} />
+      <defs>
+        <linearGradient id="gradCliff" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={palette.cliffHighlight} />
+          <stop offset="100%" stopColor={palette.cliffShadow} />
+        </linearGradient>
+      </defs>
+      <Cliff side="right" fill="url(#gradCliff)" highlight={palette.cliffHighlight} skipIntro={props.skipIntro} />
       <Beach sand={palette.sand} skipIntro={props.skipIntro} />
       <HarbourWall skipIntro={props.skipIntro} />
     </g>

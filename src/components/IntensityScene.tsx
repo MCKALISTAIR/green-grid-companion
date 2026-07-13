@@ -5,12 +5,13 @@ import { useHaptics } from '@/hooks/useHaptics';
 import { NotificationType } from '@capacitor/haptics';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useMemo, useId, useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { useTimeOfDay, TimeOfDay } from '@/hooks/useTimeOfDay';
 import { useWeatherData, WeatherData } from '@/hooks/useWeatherData';
 import { Stars } from './scene/Stars';
 import { Moon } from './scene/Moon';
 import { Landscape, LandscapeBack, LandscapeMid, LandscapeFront } from './scene/Landscape';
+import { ValleyMist } from './scene/ValleyMist';
 import { Butterfly } from './scene/Butterfly';
 import { Sheep } from './scene/Sheep';
 import { WeatherEffects } from './scene/WeatherEffects';
@@ -89,6 +90,11 @@ export function IntensityScene({
   const { impactMedium, notification } = useHaptics();
   const shouldReduceMotion = useReducedMotion();
   const { sceneType: autoSceneType } = useSceneType();
+
+  const { scrollY } = useScroll();
+  const skyY = useTransform(scrollY, [0, 400], [0, 75]);
+  const backY = useTransform(scrollY, [0, 400], [0, 45]);
+  const midY = useTransform(scrollY, [0, 400], [0, 20]);
   
   // Scene type: override, director override or auto-detected
   const sceneType: SceneType = sceneTypeOverride
@@ -365,87 +371,96 @@ export function IntensityScene({
       )}
 
 
-      <WeatherEffects weather={weather} isNight={isNight} cleanliness={sceneConfig.cleanliness} />
+      {/* Sky/Celestial Parallax Group */}
+      <motion.div
+        style={{ y: shouldReduceMotion ? 0 : skyY }}
+        className="absolute inset-0 pointer-events-none z-[1]"
+      >
+        <WeatherEffects weather={weather} isNight={isNight} cleanliness={sceneConfig.cleanliness} />
+        
+        {/* Aurora Borealis for ultra-clean winter nights (moved here to parallax with sky) */}
+        <AnimatePresence>
+          {isNight && propIntensity < 30 && (new Date().getMonth() >= 11 || new Date().getMonth() <= 2) && (
+            <AuroraBorealis intensity={(30 - propIntensity) / 30} />
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {sceneConfig.showStars && (
+            <Stars count={40} visibility={sceneConfig.starVisibility} />
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {sceneConfig.showMoon && <Moon position={sunPosition} onDoubleClick={handleMoonDoubleClick} />}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {sceneConfig.showSunRays && (
+            <div className="absolute top-0 right-0 overflow-hidden w-48 h-48">
+              {[...Array(5)].map((_, i) => (
+                <SunRay key={i} angle={20 + i * 15} delay={i * 0.3} />
+              ))}
+            </div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {sceneConfig.showSun && (
+            <motion.div
+              className="absolute z-20 pointer-events-auto"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{
+                opacity: sceneConfig.cleanliness * 0.3 + 0.7,
+                scale: 1,
+                // Position sun based on time: low at sunrise/sunset, high at midday
+                top: timeOfDay === 'sunset' ? '35%' : timeOfDay === 'morning' ? '15%' : timeOfDay === 'afternoon' ? '12%' : '8%',
+                right: timeOfDay === 'sunset' ? '15%' : timeOfDay === 'morning' ? '20%' : '8%',
+              }}
+              exit={{ opacity: 0, scale: 0.8, y: 20 }}
+              transition={{ duration: 1.5, ease: 'easeInOut' }}
+              style={{
+                filter: `brightness(${sceneConfig.solarBrightness + 0.5})`,
+              }}
+            >
+              <div
+                className="cursor-pointer active:scale-90 transition-transform relative"
+                role="button"
+                tabIndex={0}
+                aria-label={`Toggle synthwave mode ${synthwaveMode ? 'off' : 'on'}`}
+                onClick={() => {
+                  impactMedium();
+                  setSynthwaveMode(!synthwaveMode);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    impactMedium();
+                    setSynthwaveMode(!synthwaveMode);
+                  }
+                }}
+              >
+                <motion.div
+                  className="absolute inset-0 w-20 h-20 -translate-x-2 -translate-y-2 rounded-full blur-xl pointer-events-none"
+                  style={{
+                    backgroundColor: timeOfDay === 'sunset' ? 'hsl(30 90% 55% / 0.4)' : 'hsl(var(--accent) / 0.3)',
+                  }}
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                />
+                <Sun
+                  className={`w-16 h-16 relative z-10 pointer-events-none ${timeOfDay === 'sunset' ? 'text-orange-400' : 'text-accent'}`}
+                  aria-hidden="true"
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+
       <SceneAtmosphericDepth cleanliness={sceneConfig.cleanliness} isNight={isNight} />
       <SceneHeroSpotlight band={cleanlinessBand} isCity={isCity} isCoastal={isCoastal} isNight={isNight} />
       <SceneColorGrade cleanliness={sceneConfig.cleanliness} isNight={isNight} />
       <StateTransitionFX transition={bandTransition} />
-      <AnimatePresence>
-        {sceneConfig.showStars && (
-          <Stars count={40} visibility={sceneConfig.starVisibility} />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {sceneConfig.showMoon && <Moon position={sunPosition} onDoubleClick={handleMoonDoubleClick} />}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {sceneConfig.showSunRays && (
-          <motion.div
-            className="absolute top-0 right-0 overflow-hidden w-48 h-48"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1 }}
-          >
-            {[...Array(5)].map((_, i) => (
-              <SunRay key={i} angle={20 + i * 15} delay={i * 0.3} />
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {sceneConfig.showSun && (
-          <motion.div
-            className="absolute z-20 pointer-events-auto"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{
-              opacity: sceneConfig.cleanliness * 0.3 + 0.7,
-              scale: 1,
-              // Position sun based on time: low at sunrise/sunset, high at midday
-              top: timeOfDay === 'sunset' ? '35%' : timeOfDay === 'morning' ? '15%' : timeOfDay === 'afternoon' ? '12%' : '8%',
-              right: timeOfDay === 'sunset' ? '15%' : timeOfDay === 'morning' ? '20%' : '8%',
-            }}
-            exit={{ opacity: 0, scale: 0.8, y: 20 }}
-            transition={{ duration: 1.5, ease: 'easeInOut' }}
-            style={{
-              filter: `brightness(${sceneConfig.solarBrightness + 0.5})`,
-            }}
-          >
-            <div
-              className="cursor-pointer active:scale-90 transition-transform relative"
-              role="button"
-              tabIndex={0}
-              aria-label={`Toggle synthwave mode ${synthwaveMode ? 'off' : 'on'}`}
-              onClick={() => {
-                impactMedium();
-                setSynthwaveMode(!synthwaveMode);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  impactMedium();
-                  setSynthwaveMode(!synthwaveMode);
-                }
-              }}
-            >
-              <motion.div
-                className="absolute inset-0 w-20 h-20 -translate-x-2 -translate-y-2 rounded-full blur-xl pointer-events-none"
-                style={{
-                  backgroundColor: timeOfDay === 'sunset' ? 'hsl(30 90% 55% / 0.4)' : 'hsl(var(--accent) / 0.3)',
-                }}
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-              />
-              <Sun
-                className={`w-16 h-16 relative z-10 pointer-events-none ${timeOfDay === 'sunset' ? 'text-orange-400' : 'text-accent'}`}
-                aria-hidden="true"
-              />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Rain effect for dirty energy */}
       <AnimatePresence>
@@ -565,7 +580,10 @@ export function IntensityScene({
       {isCoastal ? (
         <>
           {/* Coastal: Ocean + horizon */}
-          <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-0 overflow-hidden">
+          <motion.div
+            style={{ y: shouldReduceMotion ? 0 : backY }}
+            className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-0 overflow-hidden"
+          >
             <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <CoastalLandscapeBack
                 cleanliness={sceneConfig.cleanliness}
@@ -576,6 +594,29 @@ export function IntensityScene({
                 windSpeed={weather.windSpeed}
                 timeOfDay={timeOfDay}
               />
+            </svg>
+          </motion.div>
+
+          {/* Coastal: Offshore wind turbines */}
+          <AnimatePresence>
+            {windPercentage > 5 && (
+              <motion.div
+                style={{ y: shouldReduceMotion ? 0 : backY }}
+                className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-5 overflow-hidden"
+              >
+                <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+                  <CoastalOffshoreWind count={Math.min(4, Math.floor(windPercentage / 8))} windSpeed={weather.windSpeed} />
+                </svg>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Coastal: Midground cliffs & lighthouse */}
+          <motion.div
+            style={{ y: shouldReduceMotion ? 0 : midY }}
+            className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-6 overflow-hidden"
+          >
+            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <CoastalLandscapeMid
                 cleanliness={sceneConfig.cleanliness}
                 isNight={isNight}
@@ -586,29 +627,35 @@ export function IntensityScene({
                 timeOfDay={timeOfDay}
               />
             </svg>
-          </div>
-
-          {/* Coastal: Offshore wind turbines */}
-          <AnimatePresence>
-            {windPercentage > 5 && (
-              <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-5 overflow-hidden">
-                <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-                  <CoastalOffshoreWind count={Math.min(4, Math.floor(windPercentage / 8))} windSpeed={weather.windSpeed} />
-                </svg>
-              </div>
-            )}
-          </AnimatePresence>
+          </motion.div>
 
           {/* Coastal: Boats */}
-          <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-10 overflow-hidden">
+          <motion.div
+            style={{ y: shouldReduceMotion ? 0 : midY }}
+            className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-10 overflow-hidden"
+          >
             <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <SailingBoat x={120} delay={0} isNight={isNight} />
               <FishingBoat x={250} delay={5} isNight={isNight} />
               {sceneConfig.cleanliness > 0.6 && <SailingBoat x={200} delay={12} isNight={isNight} />}
             </svg>
-          </div>
+          </motion.div>
 
-          {/* Coastal: Foreground (beach + cliffs) */}
+          {/* Coastal: Valley Mist */}
+          <ValleyMist cleanliness={sceneConfig.cleanliness} timeOfDay={timeOfDay} isNight={isNight} />
+
+          {/* Coastal: Harbour seal */}
+          <motion.div
+            style={{ y: shouldReduceMotion ? 0 : midY }}
+            className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-[15] overflow-hidden"
+          >
+            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+              <HarbourSeal x={165} y={96} delay={3} />
+              {sceneConfig.cleanliness > 0.7 && <HarbourSeal x={220} y={98} delay={15} />}
+            </svg>
+          </motion.div>
+
+          {/* Coastal: Foreground (beach + cliffs - static for ground flush) */}
           <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-20 overflow-hidden">
             <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <CoastalLandscapeFront
@@ -633,14 +680,6 @@ export function IntensityScene({
               </div>
             )}
           </AnimatePresence>
-
-          {/* Coastal: Harbour seal */}
-          <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-[15] overflow-hidden">
-            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-              <HarbourSeal x={165} y={96} delay={3} />
-              {sceneConfig.cleanliness > 0.7 && <HarbourSeal x={220} y={98} delay={15} />}
-            </svg>
-          </div>
 
           {/* Coastal: Seagulls */}
           <AnimatePresence>
@@ -682,8 +721,11 @@ export function IntensityScene({
         </>
       ) : isCity ? (
         <>
-          {/* City: Background skyline */}
-          <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-0 overflow-hidden">
+          {/* City: Background skyline (backY) */}
+          <motion.div
+            style={{ y: shouldReduceMotion ? 0 : backY }}
+            className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-0 overflow-hidden"
+          >
             <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               {/* Smog band behind skyline when grid is dirty */}
               <SmogBand cleanliness={sceneConfig.cleanliness} isNight={isNight} />
@@ -701,6 +743,15 @@ export function IntensityScene({
               />
               {/* London Eye – grounded with legs touching the road */}
               <LondonEye isNight={isNight} skipIntro={hasSeenScene} />
+            </svg>
+          </motion.div>
+
+          {/* City: Mid skyline (midY) */}
+          <motion.div
+            style={{ y: shouldReduceMotion ? 0 : midY }}
+            className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-10 overflow-hidden"
+          >
+            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <CityLandscapeMid
                 cleanliness={sceneConfig.cleanliness}
                 isNight={isNight}
@@ -712,7 +763,10 @@ export function IntensityScene({
                 timeOfDay={timeOfDay}
               />
             </svg>
-          </div>
+          </motion.div>
+
+          {/* City: Valley Mist */}
+          <ValleyMist cleanliness={sceneConfig.cleanliness} timeOfDay={timeOfDay} isNight={isNight} />
 
           {/* City: Foreground buildings + road */}
           <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-20 overflow-hidden">
@@ -803,8 +857,11 @@ export function IntensityScene({
         </>
       ) : (
         <>
-          {/* Countryside: Background Landscape Layer (Back + Mid Hills) */}
-          <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-0 overflow-hidden">
+          {/* Countryside: Background Landscape Layer (Back Hills - backY) */}
+          <motion.div
+            style={{ y: shouldReduceMotion ? 0 : backY }}
+            className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-0 overflow-hidden"
+          >
             <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <LandscapeBack
                 cleanliness={sceneConfig.cleanliness}
@@ -816,6 +873,15 @@ export function IntensityScene({
                 windSpeed={weather.windSpeed}
                 timeOfDay={timeOfDay}
               />
+            </svg>
+          </motion.div>
+
+          {/* Countryside: Background Landscape Layer (Mid Hills - midY) */}
+          <motion.div
+            style={{ y: shouldReduceMotion ? 0 : midY }}
+            className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-10 overflow-hidden"
+          >
+            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <LandscapeMid
                 cleanliness={sceneConfig.cleanliness}
                 isNight={isNight}
@@ -827,7 +893,10 @@ export function IntensityScene({
                 timeOfDay={timeOfDay}
               />
             </svg>
-          </div>
+          </motion.div>
+
+          {/* Countryside: Valley Mist */}
+          <ValleyMist cleanliness={sceneConfig.cleanliness} timeOfDay={timeOfDay} isNight={isNight} />
 
           {/* Countryside: Flock of Sheep */}
           <AnimatePresence>
@@ -836,7 +905,8 @@ export function IntensityScene({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="z-10 relative"
+                style={{ y: shouldReduceMotion ? 0 : midY }}
+                className="z-10 absolute inset-0 pointer-events-none"
               >
                 <Sheep x={20} y={15} scale={0.7} isNight={isNight} delay={0.5} />
                 <Sheep x={45} y={18} scale={0.65} isNight={isNight} delay={1.2} />
@@ -1221,12 +1291,7 @@ export function IntensityScene({
         )}
       </AnimatePresence>
 
-      {/* Aurora Borealis for ultra-clean winter nights */}
-      <AnimatePresence>
-        {isNight && intensity < 30 && (new Date().getMonth() >= 11 || new Date().getMonth() <= 2) && (
-          <AuroraBorealis intensity={(30 - intensity) / 30} />
-        )}
-      </AnimatePresence>
+
 
       {/* EV Charging Station at night when clean */}
       <AnimatePresence>

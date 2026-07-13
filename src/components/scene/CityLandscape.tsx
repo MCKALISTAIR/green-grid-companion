@@ -18,9 +18,9 @@ function useCityPalette(cleanliness: number, isNight: boolean, synthwaveMode: bo
   return useMemo(() => {
     if (synthwaveMode) {
       return {
-        skylineFar: '#240046',
-        skylineMid: '#3c096c',
-        skylineNear: '#5a189a',
+        skylineFarHighlight: '#3c096c', skylineFarShadow: '#15002b',
+        skylineMidHighlight: '#5a189a', skylineMidShadow: '#240046',
+        skylineNearHighlight: '#7b2cbf', skylineNearShadow: '#3c096c',
         road: '#10002b',
         windowLit: '#e0aaff',
         windowDark: '#3c096c',
@@ -28,9 +28,9 @@ function useCityPalette(cleanliness: number, isNight: boolean, synthwaveMode: bo
     }
     if (isSnowing) {
       return {
-        skylineFar: isNight ? '#1e293b' : '#94a3b8',
-        skylineMid: isNight ? '#334155' : '#cbd5e1',
-        skylineNear: isNight ? '#475569' : '#e2e8f0',
+        skylineFarHighlight: isNight ? '#2d3748' : '#cbd5e1', skylineFarShadow: isNight ? '#0c1222' : '#94a3b8',
+        skylineMidHighlight: isNight ? '#334155' : '#e2e8f0', skylineMidShadow: isNight ? '#151d30' : '#cbd5e1',
+        skylineNearHighlight: isNight ? '#475569' : '#ffffff', skylineNearShadow: isNight ? '#1e293b' : '#e2e8f0',
         road: isNight ? '#0f172a' : '#64748b',
         windowLit: '#fbbf24',
         windowDark: isNight ? '#0f172a' : '#94a3b8',
@@ -38,9 +38,9 @@ function useCityPalette(cleanliness: number, isNight: boolean, synthwaveMode: bo
     }
     if (isNight) {
       return {
-        skylineFar: '#0c1222',
-        skylineMid: '#151d30',
-        skylineNear: '#1e293b',
+        skylineFarHighlight: '#151d30', skylineFarShadow: '#0c1222',
+        skylineMidHighlight: '#1e293b', skylineMidShadow: '#151d30',
+        skylineNearHighlight: '#334155', skylineNearShadow: '#1e293b',
         road: '#0f172a',
         windowLit: '#fbbf24',
         windowDark: '#0f172a',
@@ -51,9 +51,9 @@ function useCityPalette(cleanliness: number, isNight: boolean, synthwaveMode: bo
 
     if (timeOfDay === 'dawn') {
       return {
-        skylineFar: isClean ? '#374151' : '#44403c',
-        skylineMid: isClean ? '#4b5563' : '#57534e',
-        skylineNear: isClean ? '#6b7280' : '#78716c',
+        skylineFarHighlight: isClean ? '#4b5563' : '#57534e', skylineFarShadow: isClean ? '#1f2937' : '#292524',
+        skylineMidHighlight: isClean ? '#6b7280' : '#78716c', skylineMidShadow: isClean ? '#374151' : '#44403c',
+        skylineNearHighlight: isClean ? '#9ca3af' : '#a8a29e', skylineNearShadow: isClean ? '#4b5563' : '#57534e',
         road: '#374151',
         windowLit: '#fcd34d',
         windowDark: '#374151',
@@ -61,9 +61,9 @@ function useCityPalette(cleanliness: number, isNight: boolean, synthwaveMode: bo
     }
     if (timeOfDay === 'sunset') {
       return {
-        skylineFar: isClean ? '#374151' : '#44403c',
-        skylineMid: isClean ? '#4b5563' : '#57534e',
-        skylineNear: isClean ? '#6b7280' : '#78716c',
+        skylineFarHighlight: isClean ? '#f97316' : '#ea580c', skylineFarShadow: isClean ? '#374151' : '#44403c',
+        skylineMidHighlight: isClean ? '#fdba74' : '#f97316', skylineMidShadow: isClean ? '#4b5563' : '#57534e',
+        skylineNearHighlight: isClean ? '#ffedd5' : '#fdb574', skylineNearShadow: isClean ? '#6b7280' : '#78716c',
         road: '#374151',
         windowLit: '#fb923c',
         windowDark: '#374151',
@@ -71,9 +71,9 @@ function useCityPalette(cleanliness: number, isNight: boolean, synthwaveMode: bo
     }
     if (timeOfDay === 'dusk') {
       return {
-        skylineFar: '#1e293b',
-        skylineMid: '#334155',
-        skylineNear: '#475569',
+        skylineFarHighlight: '#334155', skylineFarShadow: '#1e293b',
+        skylineMidHighlight: '#475569', skylineMidShadow: '#334155',
+        skylineNearHighlight: '#64748b', skylineNearShadow: '#475569',
         road: '#1e293b',
         windowLit: '#fbbf24',
         windowDark: '#1e293b',
@@ -81,9 +81,9 @@ function useCityPalette(cleanliness: number, isNight: boolean, synthwaveMode: bo
     }
 
     return {
-      skylineFar: isClean ? '#6b7280' : '#78716c',
-      skylineMid: isClean ? '#9ca3af' : '#a8a29e',
-      skylineNear: isClean ? '#d1d5db' : '#d6d3d1',
+      skylineFarHighlight: isClean ? '#9ca3af' : '#a8a29e', skylineFarShadow: isClean ? '#4b5563' : '#57534e',
+      skylineMidHighlight: isClean ? '#d1d5db' : '#d6d3d1', skylineMidShadow: isClean ? '#6b7280' : '#78716c',
+      skylineNearHighlight: isClean ? '#f3f4f6' : '#f5f5f4', skylineNearShadow: isClean ? '#9ca3af' : '#a8a29e',
       road: '#4b5563',
       windowLit: '#fbbf24',
       windowDark: isClean ? '#9ca3af' : '#a8a29e',
@@ -484,11 +484,17 @@ export function CityLandscapeBack(props: CityLandscapeProps) {
 
   return (
     <g opacity={0.5}>
+      <defs>
+        <linearGradient id="gradCityFar" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={palette.skylineFarHighlight} />
+          <stop offset="100%" stopColor={palette.skylineFarShadow} />
+        </linearGradient>
+      </defs>
       {buildings.map((b, i) => (
         <Building
           key={i}
           {...b}
-          fill={palette.skylineFar}
+          fill="url(#gradCityFar)"
           windowLit={palette.windowLit}
           windowDark={palette.windowDark}
           isNight={props.isNight}
@@ -498,9 +504,9 @@ export function CityLandscapeBack(props: CityLandscapeProps) {
         />
       ))}
       {/* Landmark: Church spire in far background */}
-      <ChurchSpire x={155} height={85} fill={palette.skylineFar} isNight={props.isNight} delay={0.1} skipIntro={props.skipIntro} />
+      <ChurchSpire x={155} height={85} fill="url(#gradCityFar)" isNight={props.isNight} delay={0.1} skipIntro={props.skipIntro} />
       {/* Landmark: Glass tower silhouette */}
-      <GlassTower x={85} width={14} height={100} fill={palette.skylineFar} windowLit={palette.windowLit} isNight={props.isNight} cleanliness={props.cleanliness} delay={0.12} skipIntro={props.skipIntro} />
+      <GlassTower x={85} width={14} height={100} fill="url(#gradCityFar)" windowLit={palette.windowLit} isNight={props.isNight} cleanliness={props.cleanliness} delay={0.12} skipIntro={props.skipIntro} />
       {/* Snow layer */}
       {props.isSnowing && (
         <rect x={0} y={133} width={400} height={17} fill="white" fillOpacity={0.15} />
@@ -530,11 +536,17 @@ export function CityLandscapeMid(props: CityLandscapeProps) {
 
   return (
     <g opacity={0.75}>
+      <defs>
+        <linearGradient id="gradCityMid" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={palette.skylineMidHighlight} />
+          <stop offset="100%" stopColor={palette.skylineMidShadow} />
+        </linearGradient>
+      </defs>
       {buildings.map((b, i) => (
         <Building
           key={i}
           {...b}
-          fill={palette.skylineMid}
+          fill="url(#gradCityMid)"
           windowLit={palette.windowLit}
           windowDark={palette.windowDark}
           isNight={props.isNight}
@@ -544,9 +556,9 @@ export function CityLandscapeMid(props: CityLandscapeProps) {
         />
       ))}
       {/* Landmark: Dome building (museum) */}
-      <DomeBuilding x={160} width={36} height={70} fill={palette.skylineMid} isNight={props.isNight} delay={0.25} skipIntro={props.skipIntro} />
+      <DomeBuilding x={160} width={36} height={70} fill="url(#gradCityMid)" isNight={props.isNight} delay={0.25} skipIntro={props.skipIntro} />
       {/* Landmark: Clock tower */}
-      <ClockTower x={300} height={82} fill={palette.skylineMid} isNight={props.isNight} delay={0.28} skipIntro={props.skipIntro} />
+      <ClockTower x={300} height={82} fill="url(#gradCityMid)" isNight={props.isNight} delay={0.28} skipIntro={props.skipIntro} />
     </g>
   );
 }
@@ -573,6 +585,10 @@ export function CityLandscapeFront(props: CityLandscapeProps) {
         <clipPath id="foreground-building-clip">
           <rect x={0} y={0} width={400} height={133} />
         </clipPath>
+        <linearGradient id="gradCityNear" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={palette.skylineNearHighlight} />
+          <stop offset="100%" stopColor={palette.skylineNearShadow} />
+        </linearGradient>
       </defs>
 
       {/* Buildings clipped above road */}
@@ -583,7 +599,7 @@ export function CityLandscapeFront(props: CityLandscapeProps) {
             x={b.x}
             width={b.width}
             height={b.height}
-            fill={palette.skylineNear}
+            fill="url(#gradCityNear)"
             windowLit={palette.windowLit}
             windowDark={palette.windowDark}
             isNight={props.isNight}
@@ -593,9 +609,9 @@ export function CityLandscapeFront(props: CityLandscapeProps) {
           />
         ))}
         {/* Landmark: Art Deco building in foreground */}
-        <ArtDecoBuilding x={92} width={32} height={52} fill={palette.skylineNear} windowLit={palette.windowLit} windowDark={palette.windowDark} isNight={props.isNight} cleanliness={props.cleanliness} delay={0.45} skipIntro={props.skipIntro} />
+        <ArtDecoBuilding x={92} width={32} height={52} fill="url(#gradCityNear)" windowLit={palette.windowLit} windowDark={palette.windowDark} isNight={props.isNight} cleanliness={props.cleanliness} delay={0.45} skipIntro={props.skipIntro} />
         {/* Landmark: Glass tower (Shard-like) prominent in foreground */}
-        <GlassTower x={195} width={22} height={65} fill={palette.skylineNear} windowLit={palette.windowLit} isNight={props.isNight} cleanliness={props.cleanliness} delay={0.48} skipIntro={props.skipIntro} />
+        <GlassTower x={195} width={22} height={65} fill="url(#gradCityNear)" windowLit={palette.windowLit} isNight={props.isNight} cleanliness={props.cleanliness} delay={0.48} skipIntro={props.skipIntro} />
       </g>
 
       {/* Road rendered on top */}

@@ -142,14 +142,14 @@ function HillLayer({
             <path
                 d={d}
                 fill={fill}
-                stroke="rgba(255,255,255,0.15)"
-                strokeWidth="2"
+                stroke="rgba(255,255,255,0.12)"
+                strokeWidth="1.5"
                 strokeLinecap="round"
             />
 
             {/* Snow layer on top of hill curve if snowing */}
             {isSnowing && (
-                <path d={d} fill="white" fillOpacity="0.3" stroke="white" strokeWidth="2" strokeOpacity="0.5" strokeDasharray="10 20" />
+                <path d={d} fill="white" fillOpacity="0.25" stroke="white" strokeWidth="1.5" strokeOpacity="0.4" strokeDasharray="10 20" />
             )}
 
             {trees.map((tree, i) => (
@@ -174,22 +174,26 @@ function useLandscapePalette(cleanliness: number, isNight: boolean, synthwaveMod
     return useMemo(() => {
         if (synthwaveMode) {
             return {
-                backHill: '#240046', midHill: '#3c096c', frontHill: '#5a189a',
+                backHillHighlight: '#3c096c', backHillShadow: '#1a0033',
+                midHillHighlight: '#5a189a', midHillShadow: '#240046',
+                frontHillHighlight: '#7b2cbf', frontHillShadow: '#3c096c',
                 treePrimary: '#e0aaff', treeShadow: '#9d4edd',
             };
         }
         if (isSnowing) {
             return {
-                backHill: isNight ? '#1e293b' : '#cbd5e1',
-                midHill: isNight ? '#334155' : '#e2e8f0',
-                frontHill: isNight ? '#475569' : '#f1f5f9',
+                backHillHighlight: isNight ? '#2d3748' : '#e2e8f0', backHillShadow: isNight ? '#0f172a' : '#cbd5e1',
+                midHillHighlight: isNight ? '#334155' : '#f1f5f9', midHillShadow: isNight ? '#1e293b' : '#e2e8f0',
+                frontHillHighlight: isNight ? '#475569' : '#ffffff', frontHillShadow: isNight ? '#334155' : '#f1f5f9',
                 treePrimary: isNight ? '#0f172a' : '#14532d',
                 treeShadow: isNight ? '#020617' : '#052e16',
             };
         }
         if (isNight) {
             return {
-                backHill: '#0f172a', midHill: '#1e293b', frontHill: '#334155',
+                backHillHighlight: '#1e293b', backHillShadow: '#020617',
+                midHillHighlight: '#334155', midHillShadow: '#0f172a',
+                frontHillHighlight: '#475569', frontHillShadow: '#1e293b',
                 treePrimary: '#475569', treeShadow: '#0f172a',
             };
         }
@@ -199,36 +203,37 @@ function useLandscapePalette(cleanliness: number, isNight: boolean, synthwaveMod
         // Time-of-day tinting for landscape
         if (timeOfDay === 'dawn') {
             return {
-                backHill: isClean ? '#1a3a2a' : '#3d2810',
-                midHill: isClean ? '#1f4d35' : '#5c3a18',
-                frontHill: isClean ? '#2a6040' : '#6d4520',
+                backHillHighlight: isClean ? '#2b5a3e' : '#5c3e1a', backHillShadow: isClean ? '#13281a' : '#2b1a08',
+                midHillHighlight: isClean ? '#34704b' : '#734e26', midHillShadow: isClean ? '#1a3d25' : '#3d250f',
+                frontHillHighlight: isClean ? '#3e8c5b' : '#8c5e32', frontHillShadow: isClean ? '#204d30' : '#4d3215',
                 treePrimary: isClean ? '#6ec89b' : '#b8860b',
                 treeShadow: isClean ? '#3a8a65' : '#8b6914',
             };
         }
         if (timeOfDay === 'sunset') {
             return {
-                backHill: isClean ? '#2d4a1a' : '#4a2a08',
-                midHill: isClean ? '#3a5c22' : '#6b3d10',
-                frontHill: isClean ? '#4a6e2a' : '#7d4e18',
+                backHillHighlight: isClean ? '#4a702e' : '#733e0d', backHillShadow: isClean ? '#203610' : '#381c03',
+                midHillHighlight: isClean ? '#5c8a39' : '#8c4e12', midHillShadow: isClean ? '#2a4714' : '#4c2505',
+                frontHillHighlight: isClean ? '#70a644' : '#a65f1a', frontHillShadow: isClean ? '#365a18' : '#5c3209',
                 treePrimary: isClean ? '#8bc34a' : '#cd853f',
                 treeShadow: isClean ? '#558b2f' : '#a0522d',
             };
         }
         if (timeOfDay === 'dusk') {
             return {
-                backHill: isClean ? '#152030' : '#2a1a10',
-                midHill: isClean ? '#1e2d40' : '#3a2818',
-                frontHill: isClean ? '#283a50' : '#4a3520',
+                backHillHighlight: isClean ? '#25354c' : '#3d281a', backHillShadow: isClean ? '#0f1824' : '#1f130a',
+                midHillHighlight: isClean ? '#324a6b' : '#543b27', midHillShadow: isClean ? '#172538' : '#2a1a0f',
+                frontHillHighlight: isClean ? '#44608c' : '#6b4e36', frontHillShadow: isClean ? '#21334c' : '#3a2818',
                 treePrimary: isClean ? '#5a7a90' : '#7a6040',
                 treeShadow: isClean ? '#2a4a60' : '#5a4030',
             };
         }
 
+        // Midday / Normal daylight
         return {
-            backHill: isClean ? '#14532d' : '#422006',
-            midHill: isClean ? '#166534' : '#713f12',
-            frontHill: isClean ? '#15803d' : '#854d0e',
+            backHillHighlight: isClean ? '#1f6e3c' : '#61330b', backHillShadow: isClean ? '#0e3a1d' : '#2d1402',
+            midHillHighlight: isClean ? '#22c55e' : '#854d0e', midHillShadow: isClean ? '#14532d' : '#451a03',
+            frontHillHighlight: isClean ? '#4ade80' : '#a16207', frontHillShadow: isClean ? '#16a34a' : '#713f12',
             treePrimary: isClean ? '#4ade80' : '#a16207',
             treeShadow: isClean ? '#16a34a' : '#854d0e',
         };
@@ -254,8 +259,8 @@ export function LandscapeBack(props: LandscapeProps) {
         <>
             <defs>
                 <linearGradient id="gradBack" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={palette.backHill} stopOpacity="0.8" />
-                    <stop offset="100%" stopColor={palette.backHill} />
+                    <stop offset="0%" stopColor={palette.backHillHighlight} />
+                    <stop offset="100%" stopColor={palette.backHillShadow} />
                 </linearGradient>
             </defs>
             <HillLayer
@@ -278,7 +283,6 @@ export function LandscapeMid(props: LandscapeProps) {
 
     // Trees positioned so trunk base sits just into the mid hill ridge.
     // Ridge curve: M0,120 Q80,140 160,100 Q240,60 320,110 Q360,130 400,100
-    // y = (sampled ridge y at x) - ~8 (trunk base offset at scale 0.9)
     const midTrees = [
         { x: 45, y: 119, scale: 0.9 },   // ridge ≈127
         { x: 120, y: 110, scale: 0.9 },  // ridge ≈118
@@ -291,8 +295,8 @@ export function LandscapeMid(props: LandscapeProps) {
         <>
             <defs>
                 <linearGradient id="gradMid" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={palette.midHill} stopOpacity="0.9" />
-                    <stop offset="100%" stopColor={palette.midHill} />
+                    <stop offset="0%" stopColor={palette.midHillHighlight} />
+                    <stop offset="100%" stopColor={palette.midHillShadow} />
                 </linearGradient>
             </defs>
             <HillLayer
@@ -323,8 +327,8 @@ export function LandscapeFront(props: LandscapeProps) {
         <>
             <defs>
                 <linearGradient id="gradFront" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={palette.frontHill} stopOpacity="1" />
-                    <stop offset="100%" stopColor={palette.frontHill} />
+                    <stop offset="0%" stopColor={palette.frontHillHighlight} />
+                    <stop offset="100%" stopColor={palette.frontHillShadow} />
                 </linearGradient>
             </defs>
             <HillLayer
@@ -339,8 +343,8 @@ export function LandscapeFront(props: LandscapeProps) {
                 windSpeed={props.windSpeed}
             />
             {/* Ground strip at the very bottom for visible earth */}
-            <rect x={0} y={145} width={400} height={5} fill={palette.frontHill} />
-            <rect x={0} y={148} width={400} height={2} fill="rgba(0,0,0,0.1)" />
+            <rect x={0} y={145} width={400} height={5} fill={palette.frontHillShadow} />
+            <rect x={0} y={148} width={400} height={2} fill="rgba(0,0,0,0.15)" />
         </>
     );
 }
