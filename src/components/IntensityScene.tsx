@@ -345,7 +345,7 @@ export function IntensityScene({
       // viewports (e.g. iPhone 17 Pro Max ~440x956) so the sky doesn't dominate. The
       // min() takes the smaller of the viewport-relative height and a width-based cap
       // (75% of the viewport width). Bounded by min/max to avoid extremes.
-      className={`relative w-full overflow-hidden rounded-xl md:rounded-l-xl pb-4 lg:pb-8 transition-colors duration-1000 ${isVintage ? 'sepia-[.6] contrast-125 grayscale-[.3]' : ''} ${className || ''}`}
+      className={`relative w-full overflow-hidden pb-4 lg:pb-8 transition-colors duration-1000 ${isVintage ? 'sepia-[.6] contrast-125 grayscale-[.3]' : ''} ${className || ''}`}
       style={{
         height: 'clamp(400px, min(60vh, 75vw), 620px)',
         ...style
