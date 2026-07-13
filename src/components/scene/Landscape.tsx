@@ -343,6 +343,30 @@ function Cottage({ x, y, scale = 1, isNight }: { x: number; y: number; scale?: n
         }
       }}
     >
+      {/* 1. Ground Drop Shadow (Ambient Occlusion) */}
+      <ellipse cx="0" cy="3" rx="14" ry="2.5" fill="rgba(15, 23, 42, 0.35)" />
+
+      {/* 2. Stone Retaining Foundation (Grounds the house into the sloped hill) */}
+      {/* It extends down to y=7 on the right to fill the gap on the sloped hillside */}
+      <path d="M-10.5,1 L10.5,1 L10.5,7 L-10.5,4 Z" fill="#4b5563" stroke="#27272a" strokeWidth="0.5" />
+      
+      {/* Foundation details (individual stone blocks) */}
+      <line x1="-5" y1="1" x2="-5" y2="5" stroke="#3f3f46" strokeWidth="0.5" />
+      <line x1="5" y1="1" x2="5" y2="6" stroke="#3f3f46" strokeWidth="0.5" />
+      <line x1="-10.5" y1="3" x2="10.5" y2="3.5" stroke="#3f3f46" strokeWidth="0.5" />
+
+      {/* 3. Winding Pathway leading from the door */}
+      <path
+        d="M-1.5,1 Q-2,5 -5,8 Q-8,11 -6,14 L-2,14 Q-4,11 -1,8 Q0,5 1.5,1 Z"
+        fill="rgba(115, 115, 115, 0.4)"
+        opacity="0.8"
+      />
+      {/* Pathway pebbles */}
+      <circle cx="-3" cy="6" r="0.6" fill="#888" opacity="0.6" />
+      <circle cx="-5" cy="10" r="0.5" fill="#aaa" opacity="0.6" />
+      <circle cx="-4" cy="12" r="0.7" fill="#777" opacity="0.6" />
+
+      {/* 4. Main House Structure */}
       {/* Stone walls */}
       <rect x="-10" y="-8" width="20" height="9" fill="#e4e4e7" stroke="#71717a" strokeWidth="0.5" rx="0.5" />
       
@@ -367,13 +391,29 @@ function Cottage({ x, y, scale = 1, isNight }: { x: number; y: number; scale?: n
       <rect x="-7" y="-5" width="3" height="3" fill={windowLit ? "#fbbf24" : "#93c5fd"} rx="0.5" stroke="#4b5563" strokeWidth="0.3" />
       <rect x="4" y="-5" width="3" height="3" fill={windowLit ? "#fbbf24" : "#93c5fd"} rx="0.5" stroke="#4b5563" strokeWidth="0.3" />
       
-      {/* Ambient window glow */}
+      {/* Ambient window glow cast onto walls/ground */}
       {windowLit && (
         <>
-          <circle cx="-5.5" cy="-3.5" r="2.5" fill="#fbbf24" opacity={0.3} filter="blur(1px)" />
-          <circle cx="5.5" cy="-3.5" r="2.5" fill="#fbbf24" opacity={0.3} filter="blur(1px)" />
+          <circle cx="-5.5" cy="-3.5" r="2.5" fill="#fbbf24" opacity="0.3" filter="blur(1px)" />
+          <circle cx="5.5" cy="-3.5" r="2.5" fill="#fbbf24" opacity="0.3" filter="blur(1px)" />
+          <polygon points="-7,-2 -10,3 -4,3" fill="#fbbf24" opacity="0.15" filter="blur(1px)" />
+          <polygon points="4,-2 1,3 7,3" fill="#fbbf24" opacity="0.15" filter="blur(1px)" />
         </>
       )}
+
+      {/* 5. Flanking Shrubbery (Blends house corners organically into hill) */}
+      {/* Left Shrub */}
+      <g transform="translate(-11, 1) scale(0.8)">
+        <circle cx="-2" cy="-1" r="3.5" fill="#15803d" />
+        <circle cx="1" cy="-2" r="3" fill="#166534" />
+        <circle cx="0" cy="1" r="3.2" fill="#14532d" />
+      </g>
+      {/* Right Shrub */}
+      <g transform="translate(11, 2) scale(0.7)">
+        <circle cx="-1" cy="-2" r="3" fill="#166534" />
+        <circle cx="2" cy="-1" r="3.5" fill="#15803d" />
+        <circle cx="0" cy="1" r="3.2" fill="#14532d" />
+      </g>
     </motion.g>
   );
 }
