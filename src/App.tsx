@@ -103,8 +103,17 @@ const persister = createSyncStoragePersister({
 
 function AppContent() {
   const [showSplash, setShowSplash] = useState(() => {
+    const hasShownSession = sessionStorage.getItem('gridsense-splash-shown') === 'true';
+    if (hasShownSession) {
+      return false;
+    }
     return localStorage.getItem('skip_splash') !== 'true';
   });
+
+  const handleSplashComplete = () => {
+    setShowSplash(false);
+    sessionStorage.setItem('gridsense-splash-shown', 'true');
+  };
 
   // Initialize Capacitor for native platforms
   useCapacitor();
@@ -141,7 +150,7 @@ function AppContent() {
 
   return (
     <>
-      {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
+      {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
       <OfflineIndicator />
       <Sonner position="top-center" />
       <BrowserRouter>
