@@ -1,7 +1,8 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle } from 'lucide-react';
-import { TeslaIntegration } from '@/components/TeslaIntegration';
+// import { TeslaIntegration } from '@/components/TeslaIntegration';
+
 
 const OctopusLogo = ({ className }: { className?: string }) => (
     <img
@@ -41,7 +42,7 @@ export function Integrations() {
             </Card>
 
             {/* Tesla Integration */}
-            <TeslaIntegration />
+            {/* <TeslaIntegration /> */}
 
             <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800 text-xs text-muted-foreground flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />

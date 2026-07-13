@@ -17,6 +17,7 @@ export default defineConfig(({ mode }) => {
   if (!process.env.VITE_SUPABASE_PROJECT_ID) {
     fallbackEnv['import.meta.env.VITE_SUPABASE_PROJECT_ID'] = JSON.stringify('klwezcjmlrdwvvzisdtd');
   }
+  fallbackEnv['import.meta.env.PACKAGE_VERSION'] = JSON.stringify(process.env.npm_package_version || '1.4.6');
 
   return ({
   define: fallbackEnv,

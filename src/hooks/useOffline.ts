@@ -87,6 +87,22 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
             // New content available, notify user
             logger.info('New service worker content available');
+            
+            // Trigger Sonner toast update notification dynamically to preserve modularity
+            import('sonner').then(({ toast }) => {
+              toast.info('GridSense has an update ready!', {
+                description: 'Reload to get the latest features and reliability updates.',
+                action: {
+                  label: 'Reload',
+                  onClick: () => {
+                    window.location.reload();
+                  }
+                },
+                duration: Infinity, // Keep open until user actions it
+              });
+            }).catch((err) => {
+              logger.error('Failed to import sonner for PWA update notification', { err });
+            });
           }
         });
       }

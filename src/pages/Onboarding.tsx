@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Navigation, ArrowRight, Bell, Zap, Home, Leaf, ChevronRight, Check } from 'lucide-react';
+import { MapPin, Navigation, ArrowRight, Bell, Zap, Home, Leaf, ChevronRight, Check, RefreshCw } from 'lucide-react';
 import { Geolocation as CapacitorGeolocation } from '@capacitor/geolocation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
 import { TurbineSpinner } from '@/components/ui/turbine-spinner';
+import { IntensityScene } from '@/components/IntensityScene';
 import { useNotifications } from '@/hooks/useNotifications';
 import useEmblaCarousel from 'embla-carousel-react';
 import { HouseType, OFGEM_TDCV_2025 } from '@/lib/energy-standards';
@@ -83,7 +84,13 @@ const Onboarding = () => {
                 const postcode = data.result[0].outcode; // e.g., "SW1A"
 
                 setAppPostcode(postcode);
-                toast.success(`Location set to ${postcode}`);
+                if (postcode.toUpperCase().startsWith('BT')) {
+                    toast.warning("Northern Ireland grid data is not supported. GB National average will be shown.", {
+                        duration: 6000
+                    });
+                } else {
+                    toast.success(`Location set to ${postcode}`);
+                }
                 setStep('notifications');
             } else {
                 throw new Error("Could not determine postcode from location");
@@ -116,6 +123,11 @@ const Onboarding = () => {
         }
 
         setAppPostcode(cleanPostcode);
+        if (cleanPostcode.startsWith('BT')) {
+            toast.warning("Northern Ireland grid data is not supported. GB National average will be shown.", {
+                duration: 6000
+            });
+        }
         setStep('notifications');
     };
 
@@ -323,18 +335,31 @@ const Onboarding = () => {
     );
 
     return (
-        <div className="min-h-screen min-h-[100dvh] bg-background flex items-center justify-center p-4">
-            <Card className="w-full max-w-md shadow-xl border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
+        <div className="dark relative min-h-screen min-h-[100dvh] w-full flex items-center justify-center p-4 overflow-hidden bg-slate-950">
+            {/* Immersive backdrop scene */}
+            <div className="absolute inset-0 w-full h-full -z-10 opacity-70 pointer-events-none select-none">
+                <IntensityScene 
+                    intensity={30} 
+                    index="very low"
+                    sceneTypeOverride="countryside"
+                    timeOfDayOverride="midday"
+                    weatherOverride={{ condition: 'clear', windSpeed: 6 }}
+                    className="w-full h-full scale-105"
+                    style={{ height: '100%' }}
+                />
+            </div>
+            {/* Glassmorphic card overlay */}
+            <Card className="w-full max-w-md shadow-2xl border-white/10 bg-slate-900/60 dark:bg-slate-950/60 backdrop-blur-xl text-white overflow-hidden">
                 <CardContent className="p-6">
                     {step === 'welcome' && renderWelcomeStep()}
                     {step === 'household' && renderHouseholdStep()}
                     {step === 'location' && renderLocationStep()}
                     {step === 'notifications' && renderNotificationsStep()}
                 </CardContent>
-                <CardFooter className="justify-center py-4 bg-muted/20 text-xs text-muted-foreground">
+                <CardFooter className="justify-center py-4 bg-white/5 border-t border-white/5 text-xs text-white/60">
                     <p>
                         By continuing, you agree to our{' '}
-                        <a href="/privacy" className="underline hover:text-foreground transition-colors">
+                        <a href="/privacy" className="underline hover:text-white/95 hover:text-foreground transition-colors">
                             Privacy Policy
                         </a>
                     </p>

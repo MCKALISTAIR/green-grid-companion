@@ -213,11 +213,11 @@ export function LocationManager({ value, onChange, showPostcode = true, trigger 
                 )}
                 <div className="flex flex-col items-start truncate">
                   <span className="truncate text-sm font-medium">
-                    {savedLocation?.name || selectedRegion?.name || 'Select location'}
+                    {savedLocation?.name || selectedRegion?.name || value || 'Select location'}
                   </span>
-                  {showPostcode && selectedRegion && (
+                  {showPostcode && (selectedRegion || value) && (
                     <span className="text-xs text-muted-foreground truncate">
-                      {selectedRegion.postcode}
+                      {selectedRegion?.postcode || value}
                     </span>
                   )}
                 </div>
@@ -355,7 +355,7 @@ export function LocationManager({ value, onChange, showPostcode = true, trigger 
                       className="cursor-pointer text-primary"
                     >
                       <Plus className="mr-2 h-4 w-4" />
-                      Save "{selectedRegion?.name}" as...
+                      Save "{selectedRegion?.name || value}" as...
                     </CommandItem>
                   </CommandGroup>
                 </>
@@ -414,7 +414,7 @@ export function LocationManager({ value, onChange, showPostcode = true, trigger 
               />
             </div>
             <p className="text-sm text-muted-foreground">
-              Region: {selectedRegion?.name} ({value})
+              Region: {selectedRegion?.name || 'Local Region'} ({value})
             </p>
           </div>
           <DialogFooter>

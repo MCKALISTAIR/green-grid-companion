@@ -152,6 +152,24 @@ export function useCarbonData(postcode: string) {
     // No refetchInterval - we use smart setTimeout instead
   });
 
+  const isLocalRegionResolvable = postcode === 'GB' || postcode === 'Scotland' || postcode === 'England' || postcode === 'Wales' || !!targetRegionName;
+
+  // START FALLBACK: If we couldn't resolve regionId locally, maybe we can get it from the API directly?
+  // We can try to fetch the specific postcode data which INCLUDES the regionid.
+  const postcodeQuery = useQuery<RegionalData>({
+    queryKey: ['regional', postcode],
+    queryFn: ({ signal }) => getRegionalIntensity(postcode, signal),
+    enabled: !!postcode && !isLocalRegionResolvable && !regionId, // Only run if we failed to resolve ID locally
+    staleTime: 1000 * 60 * 30, // 30 mins
+  });
+
+  // If local resolution failed, try to use the ID from the direct postcode lookup
+  if (!regionId && postcodeQuery.data?.regionid) {
+    regionId = postcodeQuery.data.regionid;
+  }
+
+  const isPostcodeResolved = isLocalRegionResolvable || !!regionId || postcodeQuery.isError || (!postcodeQuery.isLoading && postcodeQuery.isFetched);
+
   const forecastQuery = useQuery<ForecastData[]>({
     queryKey: ['forecast', regionId, postcode],
     queryFn: ({ signal }) => {
@@ -167,25 +185,11 @@ export function useCarbonData(postcode: string) {
       }
       return getRegionalHistoryAndForecast(regionId, from, to, signal);
     },
-    enabled: true, // Always enable to ensure we get at least national data
+    enabled: isPostcodeResolved, // Wait for postcode resolution if needed
     staleTime: 1000 * 60 * 30,
     gcTime: 1000 * 60 * 60, // 1 hour
     retry: 2,
   });
-
-  // START FALLBACK: If we couldn't resolve regionId locally, maybe we can get it from the API directly?
-  // We can try to fetch the specific postcode data which INCLUDES the regionid.
-  const postcodeQuery = useQuery<RegionalData>({
-    queryKey: ['regional', postcode],
-    queryFn: ({ signal }) => getRegionalIntensity(postcode, signal),
-    enabled: !!postcode && !regionId, // Only run if we failed to resolve ID locally
-    staleTime: 1000 * 60 * 30, // 30 mins
-  });
-
-  // If local resolution failed, try to use the ID from the direct postcode lookup
-  if (!regionId && postcodeQuery.data?.regionid) {
-    regionId = postcodeQuery.data.regionid;
-  }
 
   const generationQuery = useQuery<GenerationMix[]>({
     queryKey: ['generation'],
@@ -236,9 +240,10 @@ export function useCarbonData(postcode: string) {
 
   // Use the name from the found region metadata (from list) or fallback
   // If regional data failed to load, explicit fallback to "National"
-  const region = (regionalDataQuery.isSuccess && foundRegion?.shortname)
-    ? foundRegion.shortname
-    : (nationalQuery.data ? 'National Grid' : '');
+  const region = regionalDataQuery.data?.shortname
+    ?? postcodeQuery.data?.shortname
+    ?? foundRegion?.shortname
+    ?? (nationalQuery.data ? 'National Grid' : '');
 
   // Generation mix from regional or national
   const generationMix = regionalData?.generationmix ?? generationQuery.data ?? [];

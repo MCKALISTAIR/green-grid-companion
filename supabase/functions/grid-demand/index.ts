@@ -5,6 +5,7 @@ const _ignore = null;
 declare const Deno: any;
 
 import { corsHeaders } from '../_shared/cors.ts';
+import { checkRateLimit } from '../_shared/rate-limit.ts';
 
 interface IntensityResponse {
   data: {
@@ -35,6 +36,24 @@ Deno.serve(async (req: Request) => {
     return new Response(null, { headers: corsHeaders })
   }
 
+  const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  const rateLimit = await checkRateLimit(clientIP, 30, 60); // 30 req/min
+
+  if (!rateLimit.allowed) {
+    console.warn(`[RATE LIMIT] Blocked request from IP ${clientIP}. Retry after ${rateLimit.retryAfter}s`);
+    return new Response(
+      JSON.stringify({ error: 'Too many requests', retryAfter: rateLimit.retryAfter }),
+      {
+        status: 429,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+          'Retry-After': String(rateLimit.retryAfter),
+        },
+      }
+    );
+  }
+
   try {
     console.log('Fetching grid demand data...');
 
@@ -51,37 +70,33 @@ Deno.serve(async (req: Request) => {
 
     const demandPromise = fetch(nesoUrl).then(res => res.json() as Promise<NesoResponse>);
 
-    // 3. Fetch real-time frequency from NESO's live system data page
-    // This endpoint provides live grid frequency updated every few seconds
+    // 3. Fetch real-time frequency from Elexon Insights Solution REST API (public, no key required)
     const frequencyPromise = (async () => {
       try {
-        console.log('Fetching real-time frequency from NESO...');
-        const realTimeUrl = 'https://extranet.neso.energy/NesoRealTime/Home/SystemData';
-        const freqRes = await fetch(realTimeUrl, {
-          headers: { 'Accept': 'text/html' }
-        });
+        console.log('Fetching real-time frequency from Elexon...');
+        const freqRes = await fetch('https://data.elexon.co.uk/bmrs/api/v1/system/frequency');
 
         if (!freqRes.ok) {
           console.warn(`Real-time frequency request failed: ${freqRes.status}`);
           return null;
         }
 
-        const html = await freqRes.text();
-
-        // Parse frequency from HTML: look for pattern like "50.11 Hz" in the Frequency row
-        // The HTML structure has: <th>Frequency</th><td>50.11 Hz</td>
-        const frequencyMatch = html.match(/Frequency<\/th>\s*<td>\s*([\d.]+)\s*Hz/i);
-
-        if (frequencyMatch && frequencyMatch[1]) {
-          const frequency = parseFloat(frequencyMatch[1]);
-          console.log(`Real-time frequency: ${frequency} Hz`);
+        const data = await freqRes.json();
+        if (Array.isArray(data) && data.length > 0) {
+          // Sort by measurementTime descending to find the latest
+          const sorted = [...data].sort((a: any, b: any) => 
+            new Date(b.measurementTime).getTime() - new Date(a.measurementTime).getTime()
+          );
+          const latest = sorted[0];
+          const frequency = latest.frequency;
+          console.log(`Real-time frequency: ${frequency} Hz (measured at ${latest.measurementTime})`);
           return { frequency };
         }
 
-        console.warn('Could not parse frequency from NESO real-time page');
+        console.warn('Could not parse frequency from Elexon API: empty or invalid array');
         return null;
       } catch (err) {
-        console.error('Error fetching real-time frequency:', err);
+        console.error('Error fetching real-time frequency from Elexon:', err);
         return null;
       }
     })();

@@ -95,9 +95,9 @@ export function PullToRefresh({ onRefresh, children, disabled = false }: PullToR
                 <div className="bg-background/90 backdrop-blur shadow-md rounded-full p-2 border border-border">
                     <RefreshCw
                         className={`w-6 h-6 text-primary ${isRefreshing ? 'animate-spin' : ''}`}
-                        style={{
+                        style={!isRefreshing ? {
                             transform: `rotate(${pullDistance * 2}deg)`
-                        }}
+                        } : undefined}
                     />
                 </div>
             </div>

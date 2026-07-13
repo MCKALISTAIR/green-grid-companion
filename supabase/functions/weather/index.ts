@@ -5,11 +5,30 @@ const _ignore = null;
 declare const Deno: any;
 
 import { corsHeaders } from '../_shared/cors.ts';
+import { checkRateLimit } from '../_shared/rate-limit.ts';
 
 Deno.serve(async (req: Request) => {
     // Handle CORS
     if (req.method === 'OPTIONS') {
         return new Response(null, { headers: corsHeaders })
+    }
+
+    const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    const rateLimit = await checkRateLimit(clientIP, 20, 60); // 20 req/min
+
+    if (!rateLimit.allowed) {
+        console.warn(`[RATE LIMIT] Blocked weather request from IP ${clientIP}. Retry after ${rateLimit.retryAfter}s`);
+        return new Response(
+            JSON.stringify({ error: 'Too many requests', retryAfter: rateLimit.retryAfter }),
+            {
+                status: 429,
+                headers: {
+                    ...corsHeaders,
+                    'Content-Type': 'application/json',
+                    'Retry-After': String(rateLimit.retryAfter),
+                },
+            }
+        );
     }
 
     try {

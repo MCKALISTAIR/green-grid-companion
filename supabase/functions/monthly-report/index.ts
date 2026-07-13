@@ -1,6 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
 import { corsHeaders } from '../_shared/cors.ts';
+import { sendPushNotifications } from '../_shared/push.ts';
 
 interface FootprintRecord {
   interval_start: string;
@@ -19,6 +19,7 @@ interface PushSubscription {
   monthly_report_enabled: boolean;
   monthly_report_day: number;
   platform: string;
+  is_sandbox: boolean;
 }
 
 interface WeeklyData {
@@ -189,7 +190,7 @@ Deno.serve(async (req) => {
     // Calculate month-over-month comparison (we'd need previous month data for this)
     // For now, we'll just provide the current month stats
 
-    const notifications: Array<{ token: string; title: string; body: string }> = [];
+    const notifications: Array<{ token: string; title: string; body: string; platform: string; isSandbox?: boolean }> = [];
 
     // Generate notification for each subscription
     for (const sub of (subscriptions || []) as PushSubscription[]) {
@@ -209,11 +210,20 @@ Deno.serve(async (req) => {
         token: sub.device_token,
         title: `${emoji} ${getMonthName(lastMonth)} Carbon Report`,
         body,
+        platform: sub.platform,
+        isSandbox: sub.is_sandbox,
       });
     }
 
     console.log(`Generated ${notifications.length} monthly report notifications`);
     console.log(`Stats: ${totalCarbonKg.toFixed(2)}kg CO₂, ${totalKwh.toFixed(2)}kWh, ${greenPercentage}% green`);
+
+    // Actually deliver the push notifications to APNs/FCM
+    try {
+      await sendPushNotifications(notifications);
+    } catch (e) {
+      console.error("[PUSH] Error sending push notifications:", e);
+    }
 
     return new Response(
       JSON.stringify({

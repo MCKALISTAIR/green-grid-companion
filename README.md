@@ -59,7 +59,19 @@ GridSense is a mobile-first companion app designed to help UK (and future) energ
     *   **Smart Charging Impact**: Track how much Carbon (CO₂) you've saved by charging during greener times compared to grid average.
     *   **Seamless Linking**: Secure OAuth connection to your Tesla account.
 
-## 🆕 Recent Updates (v1.4.6 - 2026-02-27)
+## 🆕 Recent Updates (v1.4.7 - 2026-07-13)
+
+### ✨ Premium Polish & Interaction Design
+*   **Dynamic Versioning**: Injected the real `npm_package_version` into Vite build definitions, ensuring the custom React Splash Screen displays the correct version (e.g. `v1.2.1`) instead of `v1.0.0`.
+*   **Bottom Nav Active Tab Slide**: Added a physics-based layout-animated `motion.div` active tab pill behind the navigation buttons, enabling a smooth sliding transition between views.
+*   **Accessible Tablist Switcher**: Refactored the Intensity/Demand/Footprint segmented control into a semantic `role="tablist"` + `role="tab"` element with full arrow-key keyboard navigation and a sliding active background pill.
+*   **Background Refresh Loader**: Added a rotating `RefreshCw` spinner next to the location selection headers on both mobile and desktop views when background fetching is active.
+*   **Accessible Fact Bubble**: Integrated keyboard accessibility (`role="button"`, `tabIndex={0}`, Space/Enter triggers) and a discoverable `(tap to cycle)` hint label for the `EnergyFactBubble` component.
+*   **Immersive Onboarding**: Set the dynamic `IntensityScene` (at clean midday state) as a full-bleed backdrop behind a glassmorphic steps card in forced dark mode.
+*   **Reduced Motion**: Wired `useReducedMotion()` into `AnimatedIntensity`, `EnergyFactBubble`, and other core components to disable number counting springs and scale/position animations when requested.
+*   **Landscape Height Clipping Fix**: Updated `IntensityScene` to support style overrides and merge them reactively (`...style`) over the default `clamp(...)` values. Passed `style={{ height: "100%" }}` from all parent pages (`Index`, `History`, `Onboarding`, and `SceneTest`) to prevent gaps and cut-off trees on tall-aspect viewports and snapshot cards.
+
+## Previous Updates (v1.4.6 - 2026-02-27)
 
 ### 🐛 Visual & Tour Fixes
 *   **Product Tour Viewports**: The interactive tour properly distinguishing between Desktop (`#side-nav`) and Mobile (`#bottom-nav`) viewports to prevent layout anchors from floating aimlessly on window resizes.
@@ -221,18 +233,133 @@ GridSense is a mobile-first companion app designed to help UK (and future) energ
     ```
 
 3.  **Configure Environment Variables**
-    Copy `.env.example` to `.env` and fill in your Supabase and Sentry credentials.
+    Copy `.env.example` to `.env`.
     ```sh
     cp .env.example .env
     ```
+
+    | Variable | Required | Description |
+    |---|---|---|
+    | `VITE_SUPABASE_URL` | Optional* | Supabase project REST URL |
+    | `VITE_SUPABASE_PUBLISHABLE_KEY` | Optional* | Supabase anon/public JWT key |
+    | `VITE_SUPABASE_PROJECT_ID` | Optional* | Supabase project reference ID |
+    | `VITE_SENTRY_DSN` | Optional | Sentry error monitoring DSN |
+
+    > **⚠️ Important:** If you skip the `.env` file, `npm run dev` will silently use the **production** Supabase database via hardcoded fallback values in `vite.config.ts`. Always configure `.env` if you want an isolated local environment.
 
 4.  **Run the web development server**
     ```sh
     npm run dev
     ```
     Visit `http://localhost:8080` to see the app in your browser.
+## 🗄️ Backend & Local Database
 
-### Mobile Development (iOS)
+GridSense uses [Supabase](https://supabase.com) for auth, database, and edge functions.
+The web app works out of the box against the production project for public features, but
+you'll need the Supabase CLI to run migrations or develop edge functions locally.
+
+### Supabase CLI Setup
+
+```sh
+# Install the CLI (macOS)
+brew install supabase/tap/supabase
+
+# Start local Supabase stack (Postgres + Auth + Storage + Studio)
+supabase start
+```
+
+Once running, Studio is available at `http://localhost:54323`.
+Update your `.env` to point at the local instance:
+```sh
+VITE_SUPABASE_URL="http://localhost:54321"
+VITE_SUPABASE_PUBLISHABLE_KEY="<anon key from supabase start output>"
+VITE_SUPABASE_PROJECT_ID="local"
+```
+
+### Running Migrations
+
+```sh
+# Apply all 27 migrations to the local database
+supabase db reset
+```
+
+> **Note:** The `setup_cron_schedules` migration enables `pg_cron` and hardcodes the
+> **production** Supabase project URL in its cron jobs. It is safe to exclude locally:
+> ```sh
+> supabase db reset --exclude 20260713210000_setup_cron_schedules.sql
+> ```
+
+### Developing Edge Functions Locally
+
+```sh
+# Serve all edge functions on http://localhost:54321/functions/v1/
+supabase functions serve
+```
+
+The project includes 12 edge functions under `supabase/functions/`:
+`check-carbon-intensity`, `daily-forecast`, `weekly-digest`, `monthly-report`,
+`tesla-energy`, `push-subscriptions`, `delete-account`, `export-data`,
+`grid-demand`, `octopus-energy`, `weather`.
+
+### Push Notifications (APNs / FCM)
+
+Push notification secrets are **not** in `.env` — they are set as Supabase Edge
+Function secrets in the Dashboard (Settings → Edge Functions → Secrets):
+
+| Secret | Description |
+|---|---|
+| `APNS_PRIVATE_KEY` | iOS push: PEM private key from Apple developer portal (.p8) |
+| `APNS_KEY_ID` | 10-character Apple key ID |
+| `APNS_TEAM_ID` | 10-character Apple team ID |
+| `APNS_BUNDLE_ID` | App bundle identifier |
+| `APNS_USE_SANDBOX` | `"true"` for development APNs, `"false"` for production |
+| `FCM_PROJECT_ID` | Firebase project ID (Android/Web push) |
+| `FCM_CLIENT_EMAIL` | Firebase service account email |
+| `FCM_PRIVATE_KEY` | Firebase PEM private key |
+
+---
+
+## 🧪 Testing
+
+### Unit Tests (Vitest)
+
+```sh
+# Run all unit tests once
+npm run test
+
+# Watch mode (re-runs on file changes)
+npm run test:watch
+```
+
+62 unit tests cover the core hooks, API clients, utility libraries, and scene components.
+
+### E2E & Visual Regression Tests (Playwright)
+
+E2E tests live in `e2e/`. The Playwright config (`playwright.config.ts`) will start
+the dev server automatically if it isn't already running.
+
+```sh
+# Run all e2e tests
+npx playwright test
+
+# Generate baseline VRT screenshots (first run, or after intentional visual changes)
+npx playwright test e2e/scene-vrt.spec.ts --update-snapshots
+
+# Run VRT regression check (compare against baselines)
+npx playwright test e2e/scene-vrt.spec.ts
+```
+
+### Developer-Only UI Routes
+
+| Route | Purpose |
+|---|---|
+| `/__scene-test` | Visual QA grid — renders `IntensityScene` at 7 device sizes with controls for intensity, theme, time of day, weather, and wind speed |
+| `/__design-system` | Live design token reference, components, and accessibility audit |
+| `/__turbine-test` | Isolated wind turbine animation test |
+
+---
+
+## 📱 Mobile Development (iOS)
 
 1.  **Sync web assets to native**
     After making changes to the React code, build and sync:

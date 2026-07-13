@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { motion, useSpring, useTransform, AnimatePresence } from 'framer-motion';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { useHaptics } from '@/hooks/useHaptics';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { cn } from '@/lib/utils';
 
 interface AnimatedIntensityProps {
@@ -20,6 +21,7 @@ export function AnimatedIntensity({
   const [showArrow, setShowArrow] = useState(false);
   const [direction, setDirection] = useState<'up' | 'down' | null>(null);
   const { impactLight } = useHaptics();
+  const shouldReduceMotion = useReducedMotion();
   const hasAnimatedRef = useRef(false);
 
   // Spring animation for smooth number counting
@@ -35,16 +37,24 @@ export function AnimatedIntensity({
 
   // Subscribe to displayValue changes
   useEffect(() => {
+    if (shouldReduceMotion) {
+      setDisplayNumber(value);
+      return;
+    }
     const unsubscribe = displayValue.on('change', (latest) => {
       setDisplayNumber(latest);
     });
     return unsubscribe;
-  }, [displayValue]);
+  }, [displayValue, shouldReduceMotion, value]);
 
   // Update spring target when value changes
   useEffect(() => {
-    springValue.set(value);
-  }, [value, springValue]);
+    if (!shouldReduceMotion) {
+      springValue.set(value);
+    } else {
+      setDisplayNumber(value);
+    }
+  }, [value, springValue, shouldReduceMotion]);
 
   // Detect value changes and trigger animations
   useEffect(() => {
@@ -70,11 +80,11 @@ export function AnimatedIntensity({
   }, [value, previousValue, impactLight]);
 
   return (
-    <div className={cn('flex items-center gap-1', className)}>
+    <div className={cn('flex items-center gap-1', className)} aria-live="polite" aria-atomic="true">
       <motion.span
         className="text-6xl font-bold text-card drop-shadow-md tabular-nums"
         key={value}
-        initial={previousValue !== null && previousValue !== value ? { scale: 1.05 } : false}
+        initial={!shouldReduceMotion && previousValue !== null && previousValue !== value ? { scale: 1.05 } : false}
         animate={{ scale: 1 }}
         transition={{ duration: 0.3 }}
       >
@@ -84,9 +94,9 @@ export function AnimatedIntensity({
       <AnimatePresence>
         {showArrow && direction && (
           <motion.div
-            initial={{ opacity: 0, x: -5 }}
+            initial={!shouldReduceMotion ? { opacity: 0, x: -5 } : { opacity: 0 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 5 }}
+            exit={{ opacity: 0, x: !shouldReduceMotion ? 5 : 0 }}
             transition={{ duration: 0.3 }}
             className="flex items-center"
           >

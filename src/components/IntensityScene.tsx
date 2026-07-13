@@ -64,10 +64,24 @@ interface IntensitySceneProps {
   generationMix?: GenerationMix[];
   isVintage?: boolean;
   className?: string;
+  sceneTypeOverride?: SceneType;
+  timeOfDayOverride?: TimeOfDay;
+  weatherOverride?: Partial<WeatherData>;
+  style?: React.CSSProperties;
 }
 
 
-export function IntensityScene({ intensity: propIntensity, index: propIndex, generationMix = [], isVintage = false, className }: IntensitySceneProps) {
+export function IntensityScene({
+  intensity: propIntensity,
+  index: propIndex,
+  generationMix = [],
+  isVintage = false,
+  className,
+  sceneTypeOverride,
+  timeOfDayOverride,
+  weatherOverride,
+  style,
+}: IntensitySceneProps) {
   const { timeOfDay: realTimeOfDay, isNight: realIsNight, sunPosition: realSunPosition } = useTimeOfDay();
   const { weather: realWeather } = useWeatherData();
   const { unlock } = useAchievements();
@@ -76,24 +90,29 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
   const shouldReduceMotion = useReducedMotion();
   const { sceneType: autoSceneType } = useSceneType();
   
-  // Scene type: director override or auto-detected
-  const sceneType: SceneType = (isDirectorMode && overrides.sceneType) ? overrides.sceneType : autoSceneType;
+  // Scene type: override, director override or auto-detected
+  const sceneType: SceneType = sceneTypeOverride
+    ?? ((isDirectorMode && overrides.sceneType) ? overrides.sceneType : autoSceneType);
   const isCity = sceneType === 'city';
   const isCoastal = sceneType === 'coastal';
 
-  // ... (timeOfDay, isNight, etc.)
+  // Helper to determine active time of day (override, director override or real)
+  const timeOfDay = timeOfDayOverride
+    ?? ((isDirectorMode && overrides.timeOfDay) ? overrides.timeOfDay : realTimeOfDay);
 
-  // Helper to determine active time of day (override or real)
-  const timeOfDay = (isDirectorMode && overrides.timeOfDay) ? overrides.timeOfDay : realTimeOfDay;
-
-  const isNight = (isDirectorMode && overrides.timeOfDay)
-    ? (overrides.timeOfDay === 'night' || overrides.timeOfDay === 'dusk' || overrides.timeOfDay === 'dawn')
-    : realIsNight;
+  const isNight = timeOfDayOverride
+    ? (timeOfDayOverride === 'night' || timeOfDayOverride === 'dusk' || timeOfDayOverride === 'dawn')
+    : ((isDirectorMode && overrides.timeOfDay)
+      ? (overrides.timeOfDay === 'night' || overrides.timeOfDay === 'dusk' || overrides.timeOfDay === 'dawn')
+      : realIsNight);
 
   // Override Weather - wrapped in useMemo to prevent dependency issues
   const weather = useMemo(() => {
+    if (weatherOverride) {
+      return { ...realWeather, ...weatherOverride };
+    }
     return (isDirectorMode && overrides.weather) ? { ...realWeather, ...overrides.weather } : realWeather;
-  }, [isDirectorMode, overrides.weather, realWeather]);
+  }, [weatherOverride, isDirectorMode, overrides.weather, realWeather]);
 
   const [synthwaveMode, setSynthwaveMode] = useState(false);
 
@@ -329,6 +348,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
       className={`relative w-full overflow-hidden rounded-xl md:rounded-l-xl pb-4 lg:pb-8 transition-colors duration-1000 ${isVintage ? 'sepia-[.6] contrast-125 grayscale-[.3]' : ''} ${className || ''}`}
       style={{
         height: 'clamp(400px, min(60vh, 75vw), 620px)',
+        ...style
       }}
       animate={{
         background: sceneConfig.skyGradient,
@@ -347,7 +367,7 @@ export function IntensityScene({ intensity: propIntensity, index: propIndex, gen
 
       <WeatherEffects weather={weather} isNight={isNight} cleanliness={sceneConfig.cleanliness} />
       <SceneAtmosphericDepth cleanliness={sceneConfig.cleanliness} isNight={isNight} />
-      <SceneHeroSpotlight band={cleanlinessBand} isCity={isCity} isNight={isNight} />
+      <SceneHeroSpotlight band={cleanlinessBand} isCity={isCity} isCoastal={isCoastal} isNight={isNight} />
       <SceneColorGrade cleanliness={sceneConfig.cleanliness} isNight={isNight} />
       <StateTransitionFX transition={bandTransition} />
       <AnimatePresence>

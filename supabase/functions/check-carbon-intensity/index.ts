@@ -1,6 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
 import { corsHeaders } from '../_shared/cors.ts';
+import { sendPushNotifications } from '../_shared/push.ts';
 
 interface CarbonIntensityResponse {
   data: Array<{
@@ -27,6 +27,7 @@ interface PushSubscription {
   platform: string;
   last_intensity_state: string | null; // 'above' | 'below' | null
   last_high_intensity_state: string | null; // 'above' | 'below' | null
+  is_sandbox: boolean;
 }
 
 Deno.serve(async (req) => {
@@ -68,7 +69,7 @@ Deno.serve(async (req) => {
       throw subError;
     }
 
-    const notifications: Array<{ token: string; title: string; body: string }> = [];
+    const notifications: Array<{ token: string; title: string; body: string; platform: string; isSandbox?: boolean }> = [];
     const stateUpdates: Array<{ id: string; low_state?: string; high_state?: string }> = [];
 
     // Cache for postcode-to-region lookups to avoid redundant searches
@@ -131,12 +132,16 @@ Deno.serve(async (req) => {
               token: sub.device_token,
               title: '⚡ Low Carbon — Start Load Shifting!',
               body: `Carbon intensity dropped to ${regionIntensity.intensity}g CO₂/kWh (${regionIntensity.index}). Great time to charge your EV or run appliances!`,
+              platform: sub.platform,
+              isSandbox: sub.is_sandbox,
             });
           } else if (currentState === 'above' && previousState === 'below') {
             notifications.push({
               token: sub.device_token,
               title: '📈 Carbon Rising — Load Shifting Window Closed',
               body: `Carbon intensity is now ${regionIntensity.intensity}g CO₂/kWh (${regionIntensity.index}). Consider pausing non-essential usage until it drops again.`,
+              platform: sub.platform,
+              isSandbox: sub.is_sandbox,
             });
           }
           stateUpdates.push({ id: sub.id, low_state: currentState });
@@ -154,12 +159,16 @@ Deno.serve(async (req) => {
               token: sub.device_token,
               title: '🔴 High Carbon — Reduce Usage!',
               body: `Carbon intensity rose to ${regionIntensity.intensity}g CO₂/kWh (${regionIntensity.index}). Consider delaying heavy appliance use until the grid is cleaner.`,
+              platform: sub.platform,
+              isSandbox: sub.is_sandbox,
             });
           } else if (currentHighState === 'below' && previousHighState === 'above') {
             notifications.push({
               token: sub.device_token,
               title: '🟢 Carbon Dropping — High Intensity Period Over',
               body: `Carbon intensity is now ${regionIntensity.intensity}g CO₂/kWh (${regionIntensity.index}). The grid is getting cleaner again.`,
+              platform: sub.platform,
+              isSandbox: sub.is_sandbox,
             });
           }
           stateUpdates.push({ id: sub.id, high_state: currentHighState });
@@ -190,6 +199,13 @@ Deno.serve(async (req) => {
     );
 
     console.log(`Checked ${subscriptions?.length || 0} subscriptions, ${stateUpdates.length} state changes, ${notifications.length} notifications to send`);
+
+    // Actually deliver the push notifications to APNs/FCM
+    try {
+      await sendPushNotifications(notifications);
+    } catch (e) {
+      console.error("[PUSH] Error sending push notifications:", e);
+    }
 
     return new Response(
       JSON.stringify({

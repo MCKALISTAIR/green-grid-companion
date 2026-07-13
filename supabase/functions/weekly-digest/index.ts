@@ -1,6 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
 import { corsHeaders } from '../_shared/cors.ts';
+import { sendPushNotifications } from '../_shared/push.ts';
 
 interface FootprintRecord {
   interval_start: string;
@@ -19,6 +19,7 @@ interface PushSubscription {
   weekly_digest_enabled: boolean;
   weekly_digest_day: number;
   platform: string;
+  is_sandbox: boolean;
 }
 
 interface ForecastSlot {
@@ -162,7 +163,7 @@ Deno.serve(async (req) => {
     const totalCount = footprint?.length || 1;
     const greenPercentage = Math.round((greenCount / totalCount) * 100);
 
-    const notifications: Array<{ token: string; title: string; body: string }> = [];
+    const notifications: Array<{ token: string; title: string; body: string; platform: string; isSandbox?: boolean }> = [];
 
     // Generate notification for each subscription
     for (const sub of (subscriptions || []) as PushSubscription[]) {
@@ -182,11 +183,20 @@ Deno.serve(async (req) => {
         token: sub.device_token,
         title: `${emoji} Your Weekly Carbon Digest`,
         body,
+        platform: sub.platform,
+        isSandbox: sub.is_sandbox,
       });
     }
 
     console.log(`Generated ${notifications.length} weekly digest notifications`);
     console.log(`Stats: ${totalCarbonKg.toFixed(2)}kg CO₂, ${totalKwh.toFixed(2)}kWh, ${greenPercentage}% green`);
+
+    // Actually deliver the push notifications to APNs/FCM
+    try {
+      await sendPushNotifications(notifications);
+    } catch (e) {
+      console.error("[PUSH] Error sending push notifications:", e);
+    }
 
     return new Response(
       JSON.stringify({

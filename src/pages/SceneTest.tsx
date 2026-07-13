@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { IntensityScene } from '@/components/IntensityScene';
+import type { TimeOfDay } from '@/hooks/useTimeOfDay';
+import type { WeatherData } from '@/hooks/useWeatherData';
 
 /**
  * Dev-only visual regression test page for IntensityScene.
@@ -33,14 +35,19 @@ interface SceneCase {
 }
 
 const SCENE_CASES: SceneCase[] = [
-  { label: 'Very clean', intensity: 30, index: 'very low' },
-  { label: 'Moderate', intensity: 180, index: 'moderate' },
+  { label: 'Very clean', intensity: 30,  index: 'very low'  },
+  { label: 'Clean',      intensity: 100, index: 'low'       },
+  { label: 'Moderate',   intensity: 180, index: 'moderate'  },
+  { label: 'Dirty',      intensity: 300, index: 'high'      },
   { label: 'Very dirty', intensity: 380, index: 'very high' },
 ];
 
 type SceneTypeOpt = 'auto' | 'countryside' | 'city' | 'coastal';
 const SCENE_TYPES: SceneTypeOpt[] = ['auto', 'countryside', 'city', 'coastal'];
 const PREFERENCE_KEY = 'gridgreen-scene-preference';
+
+const TIMES_OF_DAY: TimeOfDay[] = ['midday', 'sunset', 'night', 'dawn', 'dusk', 'morning', 'afternoon'];
+const WEATHER_CONDITIONS: WeatherData['condition'][] = ['clear', 'clouds', 'rain', 'snow', 'fog', 'thunderstorm'];
 
 export default function SceneTest() {
   const [scaleToFit, setScaleToFit] = useState(true);
@@ -49,6 +56,10 @@ export default function SceneTest() {
     try { return (localStorage.getItem(PREFERENCE_KEY) as SceneTypeOpt) || 'auto'; }
     catch { return 'auto'; }
   });
+  
+  const [selectedTimeOfDay, setSelectedTimeOfDay] = useState<TimeOfDay>('midday');
+  const [selectedWeather, setSelectedWeather] = useState<WeatherData['condition']>('clear');
+  const [windSpeed, setWindSpeed] = useState<number>(5);
 
   useEffect(() => {
     const prev = document.title;
@@ -84,46 +95,111 @@ export default function SceneTest() {
           container itself; the cards below show fixed device sizes.
         </p>
 
-        <div className="mt-4 flex flex-wrap gap-3 items-center">
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={scaleToFit}
-              onChange={(e) => setScaleToFit(e.target.checked)}
-            />
-            Scale previews to fit page
-          </label>
+        <div className="mt-4 flex flex-col gap-4">
+          <div className="flex flex-wrap gap-3 items-center">
+            <label className="flex items-center gap-2 text-sm font-medium">
+              <input
+                type="checkbox"
+                checked={scaleToFit}
+                onChange={(e) => setScaleToFit(e.target.checked)}
+                className="rounded border-border text-primary focus:ring-primary"
+              />
+              Scale previews to fit page
+            </label>
 
-          <div className="flex gap-2" role="group" aria-label="Intensity state">
-            {SCENE_CASES.map((c) => (
-              <button
-                key={c.label}
-                onClick={() => setSelectedCase(c)}
-                className={`px-3 py-1 text-sm rounded-md border transition-colors ${
-                  selectedCase.label === c.label
-                    ? 'bg-primary text-primary-foreground border-primary'
-                    : 'bg-card hover:bg-accent'
-                }`}
-              >
-                {c.label}
-              </button>
-            ))}
+            <div className="h-4 w-[1px] bg-border hidden sm:block" />
+
+            <div className="flex items-center gap-1.5" role="group" aria-label="Intensity state">
+              <span className="text-xs text-muted-foreground font-medium mr-1">Intensity:</span>
+              {SCENE_CASES.map((c) => (
+                <button
+                  key={c.label}
+                  onClick={() => setSelectedCase(c)}
+                  className={`px-3 py-1 text-xs rounded-md border font-medium transition-colors ${
+                    selectedCase.label === c.label
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'bg-card hover:bg-accent'
+                  }`}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="h-4 w-[1px] bg-border hidden md:block" />
+
+            <div className="flex items-center gap-1.5" role="group" aria-label="Scene type">
+              <span className="text-xs text-muted-foreground font-medium mr-1">Theme:</span>
+              {SCENE_TYPES.map((t) => (
+                <button
+                  key={t}
+                  onClick={() => handleSceneTypeChange(t)}
+                  className={`px-3 py-1 text-xs rounded-md border capitalize font-medium transition-colors ${
+                    sceneTypePref === t
+                      ? 'bg-secondary text-secondary-foreground border-secondary'
+                      : 'bg-card hover:bg-accent'
+                  }`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="flex gap-2" role="group" aria-label="Scene type">
-            {SCENE_TYPES.map((t) => (
-              <button
-                key={t}
-                onClick={() => handleSceneTypeChange(t)}
-                className={`px-3 py-1 text-sm rounded-md border capitalize transition-colors ${
-                  sceneTypePref === t
-                    ? 'bg-secondary text-secondary-foreground border-secondary'
-                    : 'bg-card hover:bg-accent'
-                }`}
-              >
-                {t}
-              </button>
-            ))}
+          <div className="flex flex-wrap gap-3 items-center pt-2 border-t border-border/40">
+            <div className="flex items-center gap-1.5" role="group" aria-label="Time of day">
+              <span className="text-xs text-muted-foreground font-medium mr-1">Time:</span>
+              {TIMES_OF_DAY.map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setSelectedTimeOfDay(t)}
+                  className={`px-2.5 py-1 text-xs rounded-md border capitalize font-medium transition-colors ${
+                    selectedTimeOfDay === t
+                      ? 'bg-orange-500 text-white border-orange-500'
+                      : 'bg-card hover:bg-accent'
+                  }`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+
+            <div className="h-4 w-[1px] bg-border hidden sm:block" />
+
+            <div className="flex items-center gap-1.5" role="group" aria-label="Weather condition">
+              <span className="text-xs text-muted-foreground font-medium mr-1">Weather:</span>
+              {WEATHER_CONDITIONS.map((w) => (
+                <button
+                  key={w}
+                  onClick={() => setSelectedWeather(w)}
+                  className={`px-2.5 py-1 text-xs rounded-md border capitalize font-medium transition-colors ${
+                    selectedWeather === w
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-card hover:bg-accent'
+                  }`}
+                >
+                  {w}
+                </button>
+              ))}
+            </div>
+
+            <div className="h-4 w-[1px] bg-border hidden md:block" />
+
+            <div className="flex items-center gap-3">
+              <label htmlFor="wind-slider" className="text-xs text-muted-foreground font-medium whitespace-nowrap">
+                Wind: <span className="font-mono text-foreground font-bold">{windSpeed}m/s</span>
+              </label>
+              <input
+                id="wind-slider"
+                type="range"
+                min="0"
+                max="25"
+                step="1"
+                value={windSpeed}
+                onChange={(e) => setWindSpeed(Number(e.target.value))}
+                className="w-24 h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
+              />
+            </div>
           </div>
         </div>
       </header>
@@ -166,9 +242,17 @@ export default function SceneTest() {
                   }}
                 >
                   <IntensityScene
-                    key={sceneTypePref}
+                    key={`${sceneTypePref}-${selectedCase.label}-${selectedTimeOfDay}-${selectedWeather}-${windSpeed}`}
                     intensity={selectedCase.intensity}
                     index={selectedCase.index}
+                    sceneTypeOverride={sceneTypePref === 'auto' ? undefined : sceneTypePref}
+                    timeOfDayOverride={selectedTimeOfDay}
+                    weatherOverride={{
+                      condition: selectedWeather,
+                      temp: 15,
+                      windSpeed: windSpeed
+                    }}
+                    style={{ height: '100%' }}
                   />
                 </div>
               </div>

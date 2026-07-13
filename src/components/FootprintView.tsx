@@ -946,8 +946,8 @@ export function FootprintView() {
                           <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                         </linearGradient>
                         <linearGradient id="energyGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#fbbf24" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="#fbbf24" stopOpacity={0} />
+                          <stop offset="5%" stopColor="hsl(var(--chart-3))" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="hsl(var(--chart-3))" stopOpacity={0} />
                         </linearGradient>
                       </defs>
                       <XAxis
@@ -971,7 +971,7 @@ export function FootprintView() {
                         fontSize={10}
                         tickLine={false}
                         axisLine={false}
-                        stroke="#fbbf24"
+                        stroke="hsl(var(--chart-3))"
                         tickFormatter={(value) => `${value}`}
                       />
                       <Tooltip
@@ -1000,7 +1000,7 @@ export function FootprintView() {
                         yAxisId="energy"
                         type="monotone"
                         dataKey="kwh"
-                        stroke="#fbbf24"
+                        stroke="hsl(var(--chart-3))"
                         strokeWidth={2}
                         fill="url(#energyGradient)"
                         name="kwh"

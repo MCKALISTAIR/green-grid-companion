@@ -47,7 +47,6 @@ const Index = () => {
   const { scheduleGreenAlerts, scheduleDailyForecast, scheduleHighIntensityAlerts, prefs } = useNotifications();
   const { isLinked: isOctopusLinked } = useOctopusEnergy();
 
-  const {
     intensity,
     previousIntensity,
     index,
@@ -56,6 +55,7 @@ const Index = () => {
     forecast,
     lastUpdated,
     isLoading,
+    isBackgroundFetching,
     isDegraded,
     isError,
     error,
@@ -111,28 +111,37 @@ const Index = () => {
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const tabs: ('intensity' | 'demand' | 'footprint')[] = ['intensity', 'demand', 'footprint'];
+    const currentIndex = tabs.indexOf(viewMode);
+    let nextIndex = currentIndex;
+
+    if (e.key === 'ArrowRight') {
+      nextIndex = (currentIndex + 1) % tabs.length;
+    } else if (e.key === 'ArrowLeft') {
+      nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+    } else if (e.key === 'Home') {
+      nextIndex = 0;
+    } else if (e.key === 'End') {
+      nextIndex = tabs.length - 1;
+    }
+
+    if (nextIndex !== currentIndex) {
+      setViewMode(tabs[nextIndex]);
+      setTimeout(() => {
+        const activeTabEl = document.querySelector(`[role="tab"][aria-selected="true"]`) as HTMLButtonElement | null;
+        activeTabEl?.focus();
+      }, 50);
+    }
+  };
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const { skyColor } = useEnvironmentalConditions(postcode, intensity);
 
-  if (isError) {
-    const errorInfo = getErrorInfo(error);
-    return (
-      <div className="min-h-screen bg-background flex flex-col">
-        <div className="flex-1 flex items-center justify-center p-4">
-          <ErrorState
-            title={errorInfo.title}
-            description={errorInfo.description}
-            steps={errorInfo.steps}
-            retry={refetch}
-            fullScreen
-          />
-        </div>
-      </div>
-    );
-  }
+
 
   return (
     <TooltipProvider>
@@ -148,7 +157,7 @@ const Index = () => {
             <div className="relative w-full h-[60vh] min-h-[400px]">
               {/* Animated scene */}
               <ComponentErrorBoundary name="Scene">
-                <IntensityScene intensity={intensity} index={index} generationMix={generationMix} className="h-full" />
+                <IntensityScene intensity={intensity} index={index} generationMix={generationMix} className="h-full" style={{ height: '100%' }} />
 
                 {/* Desktop Region Selector - Top Left */}
                 <div className="absolute top-6 left-6 z-30 hidden lg:block">
@@ -159,7 +168,11 @@ const Index = () => {
                       <button className="flex items-center gap-2 text-white/90 text-sm font-medium uppercase tracking-wide transition-all cursor-pointer bg-black/20 hover:bg-black/30 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 hover:border-white/20 shadow-sm group">
                         <MapPin className="w-3.5 h-3.5" />
                         <span>{isLoading ? 'Loading...' : region || 'Select location'}</span>
-                        <ChevronDown className="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity" />
+                        {isBackgroundFetching ? (
+                          <RefreshCw className="w-3 h-3 animate-spin opacity-70" />
+                        ) : (
+                          <ChevronDown className="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity" />
+                        )}
                       </button>
                     }
                   />
@@ -184,7 +197,11 @@ const Index = () => {
                             <button className="flex items-center gap-1.5 text-card/90 text-sm font-medium uppercase tracking-wide hover:text-card transition-colors cursor-pointer group">
                               <MapPin className="w-3.5 h-3.5" />
                               <span>{isLoading ? 'Loading...' : region || 'Select location'}</span>
-                              <ChevronDown className="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity" />
+                              {isBackgroundFetching ? (
+                                <RefreshCw className="w-3.5 h-3.5 animate-spin opacity-75" />
+                              ) : (
+                                <ChevronDown className="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity" />
+                              )}
                             </button>
                           }
                         />
@@ -206,6 +223,11 @@ const Index = () => {
                     <div className="flex items-baseline justify-center gap-2">
                       {isLoading ? (
                         <RefreshCw className="w-10 h-10 text-card animate-spin" aria-label="Loading data" />
+                      ) : isError ? (
+                        <div className="flex flex-col items-center py-1">
+                          <AlertTriangle className="w-8 h-8 text-white/95 animate-pulse mb-1" />
+                          <span className="text-sm font-semibold text-white/90 uppercase tracking-wider">Offline</span>
+                        </div>
                       ) : (
                         <>
                           <AnimatedIntensity
@@ -228,7 +250,7 @@ const Index = () => {
                         </>
                       )}
                     </div>
-                    {!isLoading && (
+                    {!isLoading && !isError && (
                       <div className="inline-block mt-2 px-3 py-1 rounded-full bg-white/40 shadow-sm">
                         <p className="text-lg font-semibold capitalize text-card">
                           {index}
@@ -310,129 +332,188 @@ const Index = () => {
                 />
               </div>
 
-              <div className="flex gap-2 p-1 bg-muted rounded-lg overflow-x-auto scrollbar-none">
-                <Button
-                  variant={viewMode === 'intensity' ? 'default' : 'ghost'}
-                  size="sm"
-                  className="flex-1 min-w-[100px]"
-                  onClick={() => setViewMode('intensity')}
-                >
-                  <Activity className="w-4 h-4 mr-2" />
-                  Intensity
-                </Button>
-                <Button
-                  variant={viewMode === 'demand' ? 'default' : 'ghost'}
-                  size="sm"
-                  className="flex-1 min-w-[100px]"
-                  onClick={() => setViewMode('demand')}
-                >
-                  <Zap className="w-4 h-4 mr-2" />
-                  Demand
-                </Button>
-                <Button
-                  variant={viewMode === 'footprint' ? 'default' : 'ghost'}
-                  size="sm"
-                  className="flex-1 min-w-[100px]"
-                  onClick={() => setViewMode('footprint')}
-                  data-tour="view-footprint"
-                >
-                  <Leaf className="w-4 h-4 mr-2" />
-                  Footprint
-                </Button>
-              </div>
+              {isError ? (
+                <div className="py-8 bg-card rounded-2xl border border-border shadow-lg">
+                  <ErrorState
+                    title={getErrorInfo(error).title}
+                    description={getErrorInfo(error).description}
+                    steps={getErrorInfo(error).steps}
+                    retry={refetch}
+                  />
+                </div>
+              ) : (
+                <>
+                  <div 
+                    role="tablist" 
+                    aria-label="Dashboard Views" 
+                    onKeyDown={handleKeyDown}
+                    className="relative flex p-1 bg-muted rounded-lg overflow-hidden select-none"
+                  >
+                    <button
+                      role="tab"
+                      tabIndex={viewMode === 'intensity' ? 0 : -1}
+                      aria-selected={viewMode === 'intensity'}
+                      aria-controls="dashboard-tab-content"
+                      className={`relative flex-1 min-w-[100px] h-8 rounded-md text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 z-10 ${
+                        viewMode === 'intensity' ? 'text-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                      onClick={() => setViewMode('intensity')}
+                    >
+                      {viewMode === 'intensity' && (
+                        <motion.div
+                          layoutId="dashboard-view-pill"
+                          className="absolute inset-0 bg-background shadow-sm rounded-md"
+                          transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                        />
+                      )}
+                      <span className="relative z-20 flex items-center justify-center h-full">
+                        <Activity className="w-4 h-4 mr-2" />
+                        Intensity
+                      </span>
+                    </button>
+
+                    <button
+                      role="tab"
+                      tabIndex={viewMode === 'demand' ? 0 : -1}
+                      aria-selected={viewMode === 'demand'}
+                      aria-controls="dashboard-tab-content"
+                      className={`relative flex-1 min-w-[100px] h-8 rounded-md text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 z-10 ${
+                        viewMode === 'demand' ? 'text-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                      onClick={() => setViewMode('demand')}
+                    >
+                      {viewMode === 'demand' && (
+                        <motion.div
+                          layoutId="dashboard-view-pill"
+                          className="absolute inset-0 bg-background shadow-sm rounded-md"
+                          transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                        />
+                      )}
+                      <span className="relative z-20 flex items-center justify-center h-full">
+                        <Zap className="w-4 h-4 mr-2" />
+                        Demand
+                      </span>
+                    </button>
+
+                    <button
+                      role="tab"
+                      tabIndex={viewMode === 'footprint' ? 0 : -1}
+                      aria-selected={viewMode === 'footprint'}
+                      aria-controls="dashboard-tab-content"
+                      className={`relative flex-1 min-w-[100px] h-8 rounded-md text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 z-10 ${
+                        viewMode === 'footprint' ? 'text-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                      onClick={() => setViewMode('footprint')}
+                      data-tour="view-footprint"
+                    >
+                      {viewMode === 'footprint' && (
+                        <motion.div
+                          layoutId="dashboard-view-pill"
+                          className="absolute inset-0 bg-background shadow-sm rounded-md"
+                          transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                        />
+                      )}
+                      <span className="relative z-20 flex items-center justify-center h-full">
+                        <Leaf className="w-4 h-4 mr-2" />
+                        Footprint
+                      </span>
+                    </button>
+                  </div>
 
 
-              {/* Render View */}
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={viewMode}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                  className="w-full overflow-auto max-h-[calc(100vh-24rem)] pb-20"
-                >
-                  {viewMode === 'demand' ? (
-                    <DemandView />
-                  ) : viewMode === 'footprint' ? (
-                    <FootprintView />
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {/* Energy Insights */}
-                      <Card className="p-4 shadow-lg bg-accent/30 border-accent/50 md:col-span-2 lg:col-span-1 lg:row-span-2 flex flex-col">
-                        <div className="flex items-start gap-3">
-                          <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
-                            <Zap className="w-4 h-4 text-accent-foreground" />
-                          </div>
-                          <div>
-                            <h3 className="font-medium text-foreground">Energy Insights</h3>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {getSmartTip(intensity, forecast)}
-                            </p>
-                          </div>
-                        </div>
+                  {/* Render View */}
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={viewMode}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.3, ease: "easeOut" }}
+                      className="w-full overflow-auto max-h-[calc(100vh-24rem)] pb-20"
+                    >
+                      {viewMode === 'demand' ? (
+                        <DemandView />
+                      ) : viewMode === 'footprint' ? (
+                        <FootprintView />
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {/* Energy Insights */}
+                          <Card className="p-4 shadow-lg bg-accent/30 border-accent/50 md:col-span-2 lg:col-span-1 lg:row-span-2 flex flex-col">
+                            <div className="flex items-start gap-3">
+                              <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                                <Zap className="w-4 h-4 text-accent-foreground" />
+                              </div>
+                              <div>
+                                <h3 className="font-medium text-foreground">Energy Insights</h3>
+                                <p className="text-sm text-muted-foreground mt-1">
+                                  {getSmartTip(intensity, forecast)}
+                                </p>
+                              </div>
+                            </div>
 
-                        {prefs.showWeatherInInsights && (
-                          <div className="mt-3 pt-3 border-t border-accent-foreground/10">
-                            <ComponentErrorBoundary name="Weather Widget">
-                              <WeatherWidget />
+                            {prefs.showWeatherInInsights && (
+                              <div className="mt-3 pt-3 border-t border-accent-foreground/10">
+                                <ComponentErrorBoundary name="Weather Widget">
+                                  <WeatherWidget />
+                                </ComponentErrorBoundary>
+                              </div>
+                            )}
+
+                            <div className="mt-3">
+                              <ComponentErrorBoundary name="Greener Nights">
+                                <GreenerNightsCard />
+                              </ComponentErrorBoundary>
+                            </div>
+                          </Card>
+
+                          {/* Generation Mix */}
+                          <Card className="p-4 shadow-lg md:col-span-2 lg:col-span-2 flex flex-col justify-center glass-card" data-tour="generation-mix">
+                            <ComponentErrorBoundary name="Generation Mix">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="sr-only">Generation Mix</span>
+                                <StaleDataBadge lastUpdated={lastUpdated} />
+                              </div>
+                              <GenerationMixBar mix={generationMix} frequency={gridFrequency} />
                             </ComponentErrorBoundary>
-                          </div>
-                        )}
+                          </Card>
 
-                        <div className="mt-3">
-                          <ComponentErrorBoundary name="Greener Nights">
-                            <GreenerNightsCard />
-                          </ComponentErrorBoundary>
-                        </div>
-                      </Card>
+                          {/* Best time */}
+                          {forecast.length > 0 && (
+                            <ComponentErrorBoundary name="Best Time">
+                              <BestTimeSlot forecast={forecast} />
+                            </ComponentErrorBoundary>
+                          )}
 
-                      {/* Generation Mix */}
-                      <Card className="p-4 shadow-lg md:col-span-2 lg:col-span-2 flex flex-col justify-center" data-tour="generation-mix">
-                        <ComponentErrorBoundary name="Generation Mix">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="sr-only">Generation Mix</span>
-                            <StaleDataBadge lastUpdated={lastUpdated} />
-                          </div>
-                          <GenerationMixBar mix={generationMix} frequency={gridFrequency} />
-                        </ComponentErrorBoundary>
-                      </Card>
+                          {/* Worst time */}
+                          {forecast.length > 0 && (
+                            <ComponentErrorBoundary name="Worst Time">
+                              <WorstTimeSlot forecast={forecast} />
+                            </ComponentErrorBoundary>
+                          )}
 
-                      {/* Best time */}
-                      {forecast.length > 0 && (
-                        <ComponentErrorBoundary name="Best Time">
-                          <BestTimeSlot forecast={forecast} />
-                        </ComponentErrorBoundary>
-                      )}
+                          {/* Hourly Forecast */}
+                          {forecast.length > 0 && (
+                            <Card className="p-4 shadow-lg md:col-span-2 lg:col-span-3 glass-card" data-tour="forecast-chart">
+                              <ComponentErrorBoundary name="Hourly Forecast">
+                                <ForecastChart forecast={forecast} showNext={24} />
+                              </ComponentErrorBoundary>
+                            </Card>
+                          )}
 
-                      {/* Worst time */}
-                      {forecast.length > 0 && (
-                        <ComponentErrorBoundary name="Worst Time">
-                          <WorstTimeSlot forecast={forecast} />
-                        </ComponentErrorBoundary>
-                      )}
-
-                      {/* Hourly Forecast */}
-                      {forecast.length > 0 && (
-                        <Card className="p-4 shadow-lg md:col-span-2 lg:col-span-3" data-tour="forecast-chart">
-                          <ComponentErrorBoundary name="Hourly Forecast">
-                            <ForecastChart forecast={forecast} showNext={24} />
-                          </ComponentErrorBoundary>
-                        </Card>
-                      )}
-
-                      {/* Daily Summary */}
-                      {forecast.length > 0 && (
-                        <div className="md:col-span-2 lg:col-span-3">
-                          <ComponentErrorBoundary name="Daily Forecast">
-                            <ForecastSummary forecast={forecast} />
-                          </ComponentErrorBoundary>
+                          {/* Daily Summary */}
+                          {forecast.length > 0 && (
+                            <div className="md:col-span-2 lg:col-span-3">
+                              <ComponentErrorBoundary name="Daily Forecast">
+                                <ForecastSummary forecast={forecast} />
+                              </ComponentErrorBoundary>
+                            </div>
+                          )}
                         </div>
                       )}
-                    </div>
-                  )}
-                </motion.div>
-              </AnimatePresence>
+                    </motion.div>
+                  </AnimatePresence>
+                </>
+              )}
             </div>
           </main>
         </PullToRefresh >

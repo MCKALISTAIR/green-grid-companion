@@ -41,20 +41,21 @@ export function usePushNotifications(postcode: string) {
   // Load preferences via edge function (secure server-side access)
   const loadPreferences = useCallback(async (token: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke('push-subscriptions', {
-        body: null,
-        method: 'GET',
-      });
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+      };
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
 
       // Use query params for GET request
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/push-subscriptions?action=get&device_token=${encodeURIComponent(token)}`,
         {
           method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          },
+          headers,
         }
       );
 
@@ -195,14 +196,20 @@ export function usePushNotifications(postcode: string) {
       // Optimistic update
       setPrefs(newPrefs);
 
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+      };
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/push-subscriptions?action=upsert`,
         {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          },
+          headers,
           body: JSON.stringify({
             device_token: token,
             postcode: postcode,
@@ -217,6 +224,8 @@ export function usePushNotifications(postcode: string) {
             monthly_report_enabled: newPrefs.monthlyReportEnabled,
             monthly_report_day: newPrefs.monthlyReportDay,
             platform: Capacitor.getPlatform(),
+            is_sandbox: import.meta.env.DEV, // Send true in dev environments, false in production builds
+            attestation_token: null, // Scaffolding placeholder for Apple DeviceCheck/Play Integrity native tokens
           }),
         }
       );
@@ -249,14 +258,20 @@ export function usePushNotifications(postcode: string) {
     if (!deviceToken) return;
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+      };
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/push-subscriptions?action=delete&device_token=${encodeURIComponent(deviceToken)}`,
         {
           method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          },
+          headers,
         }
       );
 

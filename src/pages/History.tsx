@@ -279,6 +279,8 @@ export default function HistoryPage() {
                                         index={data[Math.floor(data.length / 2)]?.intensity.index || 'moderate'}
                                         generationMix={data[Math.floor(data.length / 2)]?.generationmix}
                                         isVintage={true}
+                                        className="h-full"
+                                        style={{ height: '100%' }}
                                     />
                                     <div className="absolute top-2 left-2 bg-black/50 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-mono">
                                         SNAPSHOT: {format(date, 'yyyy')}
@@ -406,12 +408,12 @@ export default function HistoryPage() {
                                     <ComposedChart data={chartData}>
                                         <defs>
                                             <linearGradient id="colorForecast" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                                                <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.3} />
+                                                <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0} />
                                             </linearGradient>
                                             <linearGradient id="colorActual" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} />
-                                                <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                                                <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.3} />
+                                                <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0} />
                                             </linearGradient>
                                         </defs>
 
@@ -466,7 +468,7 @@ export default function HistoryPage() {
                                             yAxisId="right"
                                             dataKey="consumption"
                                             name="Usage (kWh)"
-                                            fill="#facc15"
+                                            fill="hsl(var(--chart-3))"
                                             opacity={0.6}
                                             barSize={8}
                                             radius={[2, 2, 0, 0]}
@@ -477,7 +479,7 @@ export default function HistoryPage() {
                                             type="monotone"
                                             dataKey="forecast"
                                             name="Forecast"
-                                            stroke="#3b82f6"
+                                            stroke="hsl(var(--chart-2))"
                                             fillOpacity={1}
                                             fill="url(#colorForecast)"
                                             strokeWidth={2}
@@ -488,7 +490,7 @@ export default function HistoryPage() {
                                             type="monotone"
                                             dataKey="actual"
                                             name="Actual"
-                                            stroke="#22c55e"
+                                            stroke="hsl(var(--chart-1))"
                                             fillOpacity={1}
                                             fill="url(#colorActual)"
                                             strokeWidth={2}

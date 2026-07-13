@@ -7,7 +7,7 @@ import { useWeatherData } from '@/hooks/useWeatherData';
 import { useCoalFreeStreak, formatStreak } from '@/hooks/useCoalFreeStreak';
 import { GenerationMix } from '@/lib/carbonApi';
 import { MessageCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface EnergyFactBubbleProps {
     intensity: number;
@@ -22,8 +22,8 @@ export function EnergyFactBubble({ intensity, generationMix, className, variant 
     const { weather } = useWeatherData();
     const coalStreak = useCoalFreeStreak(generationMix);
     const [isVisible, setIsVisible] = useState(true);
+    const shouldReduceMotion = useReducedMotion();
 
-    // Refresh fact on mount and when interactions occur
     // Refresh fact on mount and when interactions occur
     const handleRefresh = useCallback(() => {
         refreshFact({
@@ -55,18 +55,21 @@ export function EnergyFactBubble({ intensity, generationMix, className, variant 
         <AnimatePresence>
             {isVisible && (
                 <motion.div
-                    initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                    initial={!shouldReduceMotion ? { opacity: 0, y: 10, scale: 0.9 } : { opacity: 0 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
+                    exit={{ opacity: 0, scale: !shouldReduceMotion ? 0.9 : 1 }}
                     className={variant === 'bubble'
                         ? `absolute bottom-4 right-4 pr-[env(safe-area-inset-right)] z-40 max-w-[200px] md:max-w-[260px] ${className || ''}`
                         : `w-full ${className || ''}`
                     }
                 >
                     <div
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`${currentFact.text}. Press to cycle facts.`}
                         className={`
               relative rounded-2xl text-xs md:text-sm font-medium
-              cursor-pointer select-none transition-colors
+              cursor-pointer select-none transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary/50
               ${variant === 'bubble' ? 'p-3 shadow-lg backdrop-blur-md border border-white/20' : 'py-2 px-4 bg-muted/30 border border-border/40 rounded-full mx-auto w-fit max-w-[90%]'}
               ${variant === 'bubble' && tone === 'snarky'
                                 ? 'bg-purple-900/40 text-purple-50 hover:bg-purple-900/50'
@@ -79,6 +82,13 @@ export function EnergyFactBubble({ intensity, generationMix, className, variant 
                             // Click to cycle
                             if (variant === 'bubble') setIsVisible(false); // Only hide if bubble
                             setTimeout(() => handleRefresh(), 300);
+                        }}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                if (variant === 'bubble') setIsVisible(false);
+                                setTimeout(() => handleRefresh(), 300);
+                            }
                         }}
                     >
                         {/* Speech bubble tail - only for bubble variant */}
@@ -94,20 +104,27 @@ export function EnergyFactBubble({ intensity, generationMix, className, variant 
                             {variant === 'bubble' && (
                                 <MessageCircle className="w-3.5 h-3.5 mt-0.5 opacity-70 shrink-0" />
                             )}
-                            <p className="leading-snug">
-                                {variant === 'plain' && (
-                                    <span className="text-primary/60 text-lg leading-none select-none align-top mr-1">"</span>
+                            <div className="flex flex-col gap-0.5 leading-snug">
+                                <p>
+                                    {variant === 'plain' && (
+                                        <span className="text-primary/60 text-lg leading-none select-none align-top mr-1">"</span>
+                                    )}
+                                    {currentFact.id === 'coal_free_current' && coalStreak.isActive && coalStreak.days * 24 + coalStreak.hours >= 24
+                                        ? `The UK has been coal-free for ${formatStreak(coalStreak)}!`
+                                        : currentFact.id === 'coal_free_current'
+                                            ? null // Don't show this fact if streak < 24h
+                                            : currentFact.text
+                                    }
+                                    {variant === 'plain' && (
+                                        <span className="text-primary/60 text-lg leading-none select-none align-top ml-1 rotate-180 inline-block transform translate-y-0.5">"</span>
+                                    )}
+                                </p>
+                                {variant === 'bubble' && (
+                                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal self-end mt-1 block">
+                                        ↻ tap to cycle
+                                    </span>
                                 )}
-                                {currentFact.id === 'coal_free_current' && coalStreak.isActive && coalStreak.days * 24 + coalStreak.hours >= 24
-                                    ? `The UK has been coal-free for ${formatStreak(coalStreak)}!`
-                                    : currentFact.id === 'coal_free_current'
-                                        ? null // Don't show this fact if streak < 24h
-                                        : currentFact.text
-                                }
-                                {variant === 'plain' && (
-                                    <span className="text-primary/60 text-lg leading-none select-none align-top ml-1 rotate-180 inline-block transform translate-y-0.5">"</span>
-                                )}
-                            </p>
+                            </div>
                         </div>
                     </div>
                 </motion.div>

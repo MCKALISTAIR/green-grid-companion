@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ChevronRight, GraduationCap, Shield, MapPin, History, MessageSquare, Home, Cloud, RefreshCw, Activity, Sparkles, Monitor, Download, Cookie, Play, Paintbrush } from 'lucide-react';
 import { NotificationSettings } from '@/components/NotificationSettings';
 import { OctopusIntegration } from '@/components/OctopusIntegration';
-import { TeslaIntegration } from '@/components/TeslaIntegration';
+// import { TeslaIntegration } from '@/components/TeslaIntegration';
 import { AccountBackup } from '@/components/AccountBackup';
 import { YearWrapped } from '@/components/YearWrapped';
 import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
@@ -93,7 +93,7 @@ export default function Settings() {
                 </div>
 
                 <OctopusIntegration />
-                <TeslaIntegration />
+                {/* <TeslaIntegration /> */}
                 <NotificationSettings />
 
                 <div className="space-y-4">

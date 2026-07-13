@@ -1,8 +1,9 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { BottomNav } from '@/components/BottomNav';
 import { SideNav } from './SideNav';
 
 export function AppLayout() {
+    const location = useLocation();
     const handleScrollToTop = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -14,9 +15,11 @@ export function AppLayout() {
 
             {/* Main Content Area */}
             <div className="lg:pl-64 flex flex-col min-h-[100vh]" style={{ minHeight: 'calc(100vh + env(safe-area-inset-top) + env(safe-area-inset-bottom))' }}>
-                <main className="flex-1 w-full max-w-7xl mx-auto">
-                    {/* Outlet renders the current route's element */}
-                    <Outlet />
+                <main className="flex-1 w-full max-w-7xl mx-auto pb-24 lg:pb-0">
+                    {/* Wrap outlet in a keyed transition container to trigger animations on path changes */}
+                    <div key={location.pathname} className="animate-page-enter">
+                        <Outlet />
+                    </div>
                 </main>
 
                 {/* Mobile Bottom Nav - Hidden on lg screens */}

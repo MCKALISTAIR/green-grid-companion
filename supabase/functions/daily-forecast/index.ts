@@ -1,6 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
 import { corsHeaders } from '../_shared/cors.ts';
+import { sendPushNotifications } from '../_shared/push.ts';
 
 interface ForecastData {
   from: string;
@@ -18,6 +18,7 @@ interface PushSubscription {
   daily_forecast_enabled: boolean;
   daily_forecast_time: string;
   platform: string;
+  is_sandbox: boolean;
 }
 
 function getIntensityEmoji(index: string): string {
@@ -84,7 +85,7 @@ Deno.serve(async (req) => {
       return parseInt(minute) <= ukMinute;
     }) || [];
 
-    const notifications: Array<{ token: string; title: string; body: string }> = [];
+    const notifications: Array<{ token: string; title: string; body: string; platform: string; isSandbox?: boolean }> = [];
 
     // Fetch today's and tomorrow's forecast so we always have future windows
     const tomorrow = new Date(now);
@@ -199,10 +200,19 @@ Deno.serve(async (req) => {
           `Best window: ${bestStartFmt}–${bestEndFmt} (${bestDurationH}h${bestLabel})`,
           `· Worst: ${worstFmt}${worstLabel} (${worstTime?.intensity.forecast}g)`
         ].join(' '),
+        platform: sub.platform,
+        isSandbox: sub.is_sandbox,
       });
     }
 
     console.log(`Sending ${notifications.length} daily forecast notifications`);
+
+    // Actually deliver the push notifications to APNs/FCM
+    try {
+      await sendPushNotifications(notifications);
+    } catch (e) {
+      console.error("[PUSH] Error sending push notifications:", e);
+    }
 
     return new Response(
       JSON.stringify({

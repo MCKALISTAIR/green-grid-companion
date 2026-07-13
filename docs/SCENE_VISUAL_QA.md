@@ -72,23 +72,28 @@ that must not be violated.
 ## Game-design composition (Phase 2)
 
 ### Hero per cleanliness band
-Each band has ONE focal element receiving a soft `SceneHeroSpotlight` halo.
-Verify the halo lands on the listed prop and the eye is drawn there first:
+`SceneHeroSpotlight` is **universal** — it renders for all three scene types (city,
+countryside, coastal). Each band has ONE focal element per theme receiving a soft
+radial halo. Verify the eye is drawn to the correct prop before other elements.
 
-| Band        | Intensity (gCO₂/kWh) | Hero prop              | Halo tint   |
-|-------------|----------------------|------------------------|-------------|
-| very-clean  | < 50                 | London Eye             | mint        |
-| clean       | 50–149               | upper-mid skyline      | green-mint  |
-| moderate    | 150–249              | BESS container         | amber       |
-| dirty       | 250–349              | distant stack          | rust        |
-| very-dirty  | ≥ 350                | smog band (upper)      | red-brown   |
+Layering note: spotlight sits at **z-[3]**, above `SceneAtmosphericDepth` (z-[2]) so
+heavy haze on dirty days does not mute the halo.
 
-- [ ] Halo follows band changes when cycling intensity in `/__scene-test`
+| Band        | Intensity (gCO₂/kWh) | City hero              | Countryside hero        | Coastal hero           | Halo tint  |
+|-------------|----------------------|------------------------|-------------------------|------------------------|------------|
+| very-clean  | < 50                 | London Eye             | wind turbine cluster    | offshore wind          | mint       |
+| clean       | 50–149               | upper-mid skyline      | hillside                | sailing boat           | green-mint |
+| moderate    | 150–249              | BESS container         | hydro dam               | rock pool area         | amber      |
+| dirty       | 250–349              | distant stack          | factory smoke           | horizon smog           | rust       |
+| very-dirty  | ≥ 350                | smog band (upper)      | smog band               | smog band              | red-brown  |
+
+- [ ] Halo follows band changes when cycling all 5 intensity presets in `/__scene-test`
+- [ ] Halo is visible in **all three themes** (countryside, city, coastal)
 - [ ] Halo never overlaps the intensity card or fact bubble
 - [ ] At night, halo is dimmed but still visible
 
 ### Atmospheric depth band
-`SceneAtmosphericDepth` adds a horizontal haze across the horizon.
+`SceneAtmosphericDepth` adds a horizontal haze across the horizon (z-[2], below spotlight).
 - [ ] Cool blue tint on clean days, warm sepia on dirty days
 - [ ] Visible at the 40–68% vertical band only (does not wash out foreground)
 - [ ] Distant skyline reads as further away than mid skyline

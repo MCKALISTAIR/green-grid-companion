@@ -102,7 +102,9 @@ const persister = createSyncStoragePersister({
 });
 
 function AppContent() {
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(() => {
+    return localStorage.getItem('skip_splash') !== 'true';
+  });
 
   // Initialize Capacitor for native platforms
   useCapacitor();
