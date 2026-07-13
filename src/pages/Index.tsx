@@ -13,6 +13,7 @@ import { BestTimeSlot, WorstTimeSlot } from '@/components/BestTimeCard';
 import { FootprintView } from '@/components/FootprintView';
 import { DemandView } from '@/components/DemandView';
 import { useCarbonData } from '@/hooks/useCarbonData';
+import { useHaptics } from '@/hooks/useHaptics';
 import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
 import { useNotifications } from '@/hooks/useNotifications';
 import { toast } from 'sonner';
@@ -44,6 +45,7 @@ const Index = () => {
   const { postcode, setPostcode } = useAppLocation();
   const [viewMode, setViewMode] = useState<'intensity' | 'footprint' | 'demand'>('intensity');
   const { showYearWrapped, setShowYearWrapped, wrappedYear } = useYearWrappedAutoShow();
+  const { selection } = useHaptics();
 
   const { scheduleGreenAlerts, scheduleDailyForecast, scheduleHighIntensityAlerts, prefs } = useNotifications();
   const { isLinked: isOctopusLinked } = useOctopusEnergy();
@@ -361,7 +363,7 @@ const Index = () => {
                       className={`relative flex-1 min-w-[100px] h-8 rounded-md text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 z-10 ${
                         viewMode === 'intensity' ? 'text-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'
                       }`}
-                      onClick={() => setViewMode('intensity')}
+                      onClick={() => { selection(); setViewMode('intensity'); }}
                     >
                       {viewMode === 'intensity' && (
                         <motion.div
@@ -384,7 +386,7 @@ const Index = () => {
                       className={`relative flex-1 min-w-[100px] h-8 rounded-md text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 z-10 ${
                         viewMode === 'demand' ? 'text-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'
                       }`}
-                      onClick={() => setViewMode('demand')}
+                      onClick={() => { selection(); setViewMode('demand'); }}
                     >
                       {viewMode === 'demand' && (
                         <motion.div
@@ -407,7 +409,7 @@ const Index = () => {
                       className={`relative flex-1 min-w-[100px] h-8 rounded-md text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 z-10 ${
                         viewMode === 'footprint' ? 'text-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'
                       }`}
-                      onClick={() => setViewMode('footprint')}
+                      onClick={() => { selection(); setViewMode('footprint'); }}
                       data-tour="view-footprint"
                     >
                       {viewMode === 'footprint' && (

@@ -3,6 +3,7 @@ import { useTransitionNavigate } from '@/hooks/useTransitionNavigate';
 import { Home, ListOrdered, Calendar, Settings, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
+import { useHaptics } from '@/hooks/useHaptics';
 
 interface BottomNavProps {
     onHomeClick?: () => void;
@@ -11,10 +12,12 @@ interface BottomNavProps {
 export function BottomNav({ onHomeClick }: BottomNavProps) {
     const navigate = useTransitionNavigate();
     const location = useLocation();
+    const { selection } = useHaptics();
 
     const isActive = (path: string) => location.pathname === path;
 
     const handleHome = () => {
+        selection();
         if (location.pathname === '/' && onHomeClick) {
             onHomeClick();
         } else {
@@ -55,7 +58,7 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
                             ? 'text-primary font-semibold'
                             : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
                             }`}
-                        onClick={() => navigate('/planner')}
+                        onClick={() => { selection(); navigate('/planner'); }}
                     >
                         {isActive('/planner') && (
                             <motion.div
@@ -75,7 +78,7 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
                             ? 'text-primary font-semibold'
                             : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
                             }`}
-                        onClick={() => navigate('/history')}
+                        onClick={() => { selection(); navigate('/history'); }}
                     >
                         {isActive('/history') && (
                             <motion.div
@@ -95,7 +98,7 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
                             ? 'text-primary font-semibold'
                             : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
                             }`}
-                        onClick={() => navigate('/map')}
+                        onClick={() => { selection(); navigate('/map'); }}
                     >
                         {isActive('/map') && (
                             <motion.div
@@ -114,7 +117,7 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
                             ? 'text-primary font-semibold'
                             : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
                             }`}
-                        onClick={() => navigate('/settings')}
+                        onClick={() => { selection(); navigate('/settings'); }}
                     >
                         {isActive('/settings') && (
                             <motion.div
