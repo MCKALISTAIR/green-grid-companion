@@ -203,6 +203,7 @@ export type Database = {
           high_intensity_enabled: boolean
           high_intensity_threshold: number
           id: string
+          is_sandbox: boolean
           last_high_intensity_state: string | null
           last_intensity_state: string | null
           low_intensity_enabled: boolean
@@ -212,6 +213,7 @@ export type Database = {
           platform: string
           postcode: string
           updated_at: string
+          user_id: string | null
           weekly_digest_day: number
           weekly_digest_enabled: boolean
         }
@@ -223,6 +225,7 @@ export type Database = {
           high_intensity_enabled?: boolean
           high_intensity_threshold?: number
           id?: string
+          is_sandbox?: boolean
           last_high_intensity_state?: string | null
           last_intensity_state?: string | null
           low_intensity_enabled?: boolean
@@ -232,6 +235,7 @@ export type Database = {
           platform?: string
           postcode: string
           updated_at?: string
+          user_id?: string | null
           weekly_digest_day?: number
           weekly_digest_enabled?: boolean
         }
@@ -243,6 +247,7 @@ export type Database = {
           high_intensity_enabled?: boolean
           high_intensity_threshold?: number
           id?: string
+          is_sandbox?: boolean
           last_high_intensity_state?: string | null
           last_intensity_state?: string | null
           low_intensity_enabled?: boolean
@@ -252,6 +257,7 @@ export type Database = {
           platform?: string
           postcode?: string
           updated_at?: string
+          user_id?: string | null
           weekly_digest_day?: number
           weekly_digest_enabled?: boolean
         }
