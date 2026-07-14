@@ -81,12 +81,12 @@ export function Pigeon({ x: initialX, y: initialY, delay = 0 }: { x: number; y: 
   const [wingFlap, setWingFlap] = useState(false);
   const [peckAngle, setPeckAngle] = useState(0);
   const [headBob, setHeadBob] = useState(0);
-  const [transitionConfig, setTransitionConfig] = useState<{ duration: number; ease?: string }>({ duration: 1.0, ease: 'easeOut' });
+  const [transitionConfig, setTransitionConfig] = useState<{ duration: number; ease?: 'easeOut' | 'easeIn' | 'easeInOut' | 'linear' }>({ duration: 1.0, ease: 'easeOut' });
 
   // Use a ref to store position so the useEffect loop does not re-trigger on position changes
   const positionRef = useRef({ x: initialX, y: initialY });
 
-  const updatePosition = (newPos: { x: number; y: number }, config: { duration: number; ease?: string }) => {
+  const updatePosition = (newPos: { x: number; y: number }, config: { duration: number; ease?: 'easeOut' | 'easeIn' | 'easeInOut' | 'linear' }) => {
     positionRef.current = newPos;
     setTransitionConfig(config);
     setPos(newPos);
