@@ -86,7 +86,7 @@ export function Pigeon({ x: initialX, y: initialY, delay = 0 }: { x: number; y: 
   // Use a ref to store position so the useEffect loop does not re-trigger on position changes
   const positionRef = useRef({ x: initialX, y: initialY });
 
-  const updatePosition = (newPos: { x: number; y: number }, config: { duration: number; ease?: string }) => {
+  const updatePosition = (newPos: { x: number; y: number }, config: { duration: number; ease?: 'easeOut' | 'easeIn' | 'easeInOut' | 'linear' }) => {
     positionRef.current = newPos;
     setTransitionConfig(config);
     setPos(newPos);
