@@ -47,7 +47,7 @@ const SCENE_TYPES: SceneTypeOpt[] = ['auto', 'countryside', 'city', 'coastal'];
 const PREFERENCE_KEY = 'gridgreen-scene-preference';
 
 const TIMES_OF_DAY: TimeOfDay[] = ['midday', 'sunset', 'night', 'dawn', 'dusk', 'morning', 'afternoon'];
-const WEATHER_CONDITIONS: WeatherData['condition'][] = ['clear', 'clouds', 'rain', 'snow', 'fog', 'thunderstorm'];
+const WEATHER_CONDITIONS: WeatherData['condition'][] = ['clear', 'cloudy', 'rain', 'snow', 'fog', 'thunderstorm'];
 
 export default function SceneTest() {
   const [scaleToFit, setScaleToFit] = useState(true);
