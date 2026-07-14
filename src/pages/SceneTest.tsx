@@ -249,7 +249,7 @@ export default function SceneTest() {
                     timeOfDayOverride={selectedTimeOfDay}
                     weatherOverride={{
                       condition: selectedWeather,
-                      temp: 15,
+                      temperature: 15,
                       windSpeed: windSpeed
                     }}
                     style={{ height: '100%' }}
