@@ -1,6 +1,7 @@
 import { Zap, RefreshCw, AlertTriangle, Info, Activity, Home } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
-import { GenerationMixBar } from '@/components/GenerationMixBar';
+import { GenerationMixBar, getFuelIcon, getFuelHex } from '@/components/GenerationMixBar';
 import { useGridDemand, MixWithTrend } from '@/hooks/useGridDemand';
 import { useSettings } from '@/hooks/useSettings';
 import { Button } from '@/components/ui/button';
@@ -186,67 +187,139 @@ export function DemandView() {
             </Card>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                {sortedMixWithTrends.map((source) => {
+                {sortedMixWithTrends.map((source, idx) => {
                     const fuelKey = source.fuel?.toLowerCase() || source.name?.toLowerCase() || '';
                     const streak = streakByFuel[fuelKey];
                     const milestone = milestoneByFuel[fuelKey];
                     const hasInsight = (streak?.isActive) || milestone;
+                    const Icon = getFuelIcon(fuelKey);
+                    const hex = getFuelHex(fuelKey);
+                    const r = parseInt(hex.slice(1, 3), 16);
+                    const g = parseInt(hex.slice(3, 5), 16);
+                    const b = parseInt(hex.slice(5, 7), 16);
+                    const isRenewable = ['wind', 'solar', 'hydro', 'biomass'].includes(fuelKey);
+                    const isZero = source.perc === 0;
 
                     return (
-                        <Card
+                        <motion.div
                             key={source.id}
-                            className={`p-3 shadow-sm hover:bg-accent/5 transition-colors ${hasInsight ? 'ring-1 ring-primary/20' : ''}`}
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.04, duration: 0.35, ease: 'easeOut' }}
+                            whileHover={{ y: -2 }}
                         >
-                            <div className="flex items-start justify-between">
-                                <div className="flex items-center gap-1.5">
-                                    <span className="text-sm font-medium capitalize">{source.name}</span>
-                                    <FuelTrendIndicator
-                                        currentPerc={source.perc}
-                                        previousPerc={source.previousPerc}
-                                        trend={source.trend}
-                                        showDiff={false}
-                                    />
-                                </div>
-                                <div className="text-right">
-                                    {source.mw !== null && (
-                                        <span className="block text-sm font-bold">{(source.mw / 1000).toFixed(2)} GW</span>
-                                    )}
-                                    <div className="flex items-center justify-end gap-1">
-                                        <span className="text-xs text-muted-foreground">{source.perc}%</span>
-                                        {source.previousPerc !== null && source.trend && source.trend !== 'stable' && (
-                                            <span className={`text-[10px] ${source.trend === 'up' ? 'text-primary' : 'text-destructive'}`}>
-                                                ({source.trend === 'up' ? '+' : ''}{(source.perc - source.previousPerc).toFixed(1)}%)
+                            <Card
+                                className={`relative p-3 pb-4 overflow-hidden shadow-sm hover:shadow-md transition-shadow ${hasInsight ? 'ring-1 ring-primary/30' : ''}`}
+                                style={{
+                                    background: `linear-gradient(135deg, rgba(${r},${g},${b},0.10) 0%, rgba(${r},${g},${b},0.02) 60%, transparent 100%)`,
+                                    borderColor: `rgba(${r},${g},${b},0.25)`,
+                                }}
+                            >
+                                {/* Accent stripe */}
+                                <div
+                                    className="absolute left-0 top-0 bottom-0 w-1"
+                                    style={{ backgroundColor: hex, opacity: isZero ? 0.2 : 0.85 }}
+                                    aria-hidden
+                                />
+
+                                <div className="flex items-start justify-between gap-2">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                        <motion.div
+                                            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm"
+                                            style={{ backgroundColor: hex, opacity: isZero ? 0.35 : 1 }}
+                                            animate={
+                                                !isZero && fuelKey === 'solar'
+                                                    ? { rotate: [0, 8, -8, 0] }
+                                                    : !isZero && fuelKey === 'wind'
+                                                        ? { rotate: [0, 360] }
+                                                        : !isZero && fuelKey === 'gas'
+                                                            ? { scale: [1, 1.08, 1] }
+                                                            : {}
+                                            }
+                                            transition={
+                                                fuelKey === 'wind'
+                                                    ? { duration: 8, repeat: Infinity, ease: 'linear' }
+                                                    : { duration: fuelKey === 'gas' ? 1.6 : 4, repeat: Infinity, ease: 'easeInOut' }
+                                            }
+                                        >
+                                            <Icon className="w-4 h-4 text-white" aria-hidden="true" />
+                                        </motion.div>
+                                        <div className="min-w-0">
+                                            <div className="flex items-center gap-1">
+                                                <span className="text-sm font-semibold capitalize truncate">{source.name}</span>
+                                                <FuelTrendIndicator
+                                                    currentPerc={source.perc}
+                                                    previousPerc={source.previousPerc}
+                                                    trend={source.trend}
+                                                    showDiff={false}
+                                                />
+                                            </div>
+                                            {isRenewable && !isZero && (
+                                                <span className="text-[10px] font-medium uppercase tracking-wide" style={{ color: hex }}>
+                                                    Renewable
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        {source.mw !== null && (
+                                            <span className="block text-base font-bold tabular-nums leading-tight">
+                                                {(source.mw / 1000).toFixed(2)}
+                                                <span className="text-xs font-medium text-muted-foreground ml-0.5">GW</span>
                                             </span>
                                         )}
+                                        <div className="flex items-center justify-end gap-1">
+                                            <span className="text-xs text-muted-foreground tabular-nums">{source.perc}%</span>
+                                            {source.previousPerc !== null && source.trend && source.trend !== 'stable' && (
+                                                <span className={`text-[10px] tabular-nums ${source.trend === 'up' ? 'text-emerald-500' : 'text-destructive'}`}>
+                                                    ({source.trend === 'up' ? '+' : ''}{(source.perc - source.previousPerc).toFixed(1)})
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            {/* Solar: show utility vs rooftop split */}
-                            {fuelKey === 'solar' && embeddedSolarMW !== null && source.mw !== null && source.mw > 0 && (
-                                <div className="mt-2 pt-2 border-t border-border/50 space-y-1">
-                                    <div className="flex items-center justify-between text-xs">
-                                        <span className="text-muted-foreground">Utility-scale</span>
-                                        <span className="font-medium">{((source.mw - embeddedSolarMW) / 1000).toFixed(2)} GW</span>
-                                    </div>
-                                    <div className="flex items-center justify-between text-xs">
-                                        <span className="text-muted-foreground flex items-center gap-1">
-                                            <Home className="w-3 h-3" /> Rooftop
-                                        </span>
-                                        <span className="font-medium">{(embeddedSolarMW / 1000).toFixed(2)} GW</span>
-                                    </div>
-                                </div>
-                            )}
-                            {/* Show insight badge if applicable */}
-                            {hasInsight && (
-                                <div className="mt-2 pt-2 border-t border-border/50">
-                                    <FuelInsightBadge
-                                        streak={streak?.isActive ? streak : undefined}
-                                        milestone={milestone}
-                                        compact
+
+                                {/* Animated share bar */}
+                                <div
+                                    className="mt-3 h-1.5 w-full rounded-full overflow-hidden"
+                                    style={{ backgroundColor: `rgba(${r},${g},${b},0.15)` }}
+                                >
+                                    <motion.div
+                                        className="h-full rounded-full"
+                                        style={{ backgroundColor: hex, opacity: isZero ? 0.2 : 0.9 }}
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${Math.min(source.perc, 100)}%` }}
+                                        transition={{ duration: 0.8, ease: 'easeOut', delay: idx * 0.04 }}
                                     />
                                 </div>
-                            )}
-                        </Card>
+
+                                {/* Solar: show utility vs rooftop split */}
+                                {fuelKey === 'solar' && embeddedSolarMW !== null && source.mw !== null && source.mw > 0 && (
+                                    <div className="mt-2 pt-2 border-t border-border/40 space-y-1">
+                                        <div className="flex items-center justify-between text-xs">
+                                            <span className="text-muted-foreground">Utility-scale</span>
+                                            <span className="font-medium tabular-nums">{((source.mw - embeddedSolarMW) / 1000).toFixed(2)} GW</span>
+                                        </div>
+                                        <div className="flex items-center justify-between text-xs">
+                                            <span className="text-muted-foreground flex items-center gap-1">
+                                                <Home className="w-3 h-3" /> Rooftop
+                                            </span>
+                                            <span className="font-medium tabular-nums">{(embeddedSolarMW / 1000).toFixed(2)} GW</span>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {hasInsight && (
+                                    <div className="mt-2 pt-2 border-t border-border/40">
+                                        <FuelInsightBadge
+                                            streak={streak?.isActive ? streak : undefined}
+                                            milestone={milestone}
+                                            compact
+                                        />
+                                    </div>
+                                )}
+                            </Card>
+                        </motion.div>
                     );
                 })}
             </div>
