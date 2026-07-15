@@ -17,7 +17,7 @@ import { MixItem, getSortedMix, getRenewablesPercentage, getEmbeddedSolarPercent
 export type { MixItem };
 
 /** Returns a thematic Lucide icon component for a given fuel type string */
-function getFuelIcon(fuel: string): LucideIcon {
+export function getFuelIcon(fuel: string): LucideIcon {
   switch (fuel.toLowerCase()) {
     case 'gas':           return Flame;
     case 'wind':          return Wind;
@@ -33,7 +33,7 @@ function getFuelIcon(fuel: string): LucideIcon {
 }
 
 /** Raw hex for each fuel — used for rgba() card tinting and fill bars */
-function getFuelHex(fuel: string): string {
+export function getFuelHex(fuel: string): string {
   switch (fuel.toLowerCase()) {
     case 'gas':     return '#f97316'; // orange
     case 'wind':    return '#38bdf8'; // sky blue
