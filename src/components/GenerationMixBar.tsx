@@ -1,5 +1,6 @@
 import { GenerationMix, getFuelColor } from '@/lib/carbonApi';
-import { Home, Factory } from 'lucide-react';
+import { Home, Factory, Flame, Wind, Sun, Atom, Droplets, Leaf, Mountain, ArrowLeftRight, Zap, Cable, type LucideIcon } from 'lucide-react';
+import { motion } from 'framer-motion';
 import {
   Dialog,
   DialogContent,
@@ -8,13 +9,43 @@ import {
   DialogTrigger,
   DialogClose,
 } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { DEFINITIONS } from '@/lib/definitions';
-import { ChevronRight, X } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MixItem, getSortedMix, getRenewablesPercentage, getEmbeddedSolarPercentage, getTotalSolarMW } from '@/lib/generationUtils';
 
 export type { MixItem };
+
+/** Returns a thematic Lucide icon component for a given fuel type string */
+function getFuelIcon(fuel: string): LucideIcon {
+  switch (fuel.toLowerCase()) {
+    case 'gas':           return Flame;
+    case 'wind':          return Wind;
+    case 'solar':         return Sun;
+    case 'nuclear':       return Atom;
+    case 'hydro':         return Droplets;
+    case 'biomass':       return Leaf;
+    case 'coal':          return Mountain;
+    case 'imports':       return ArrowLeftRight;
+    case 'interconnectors': return Cable;
+    default:              return Zap;
+  }
+}
+
+/** Raw hex for each fuel — used for rgba() card tinting and fill bars */
+function getFuelHex(fuel: string): string {
+  switch (fuel.toLowerCase()) {
+    case 'gas':     return '#f97316'; // orange
+    case 'wind':    return '#38bdf8'; // sky blue
+    case 'solar':   return '#facc15'; // yellow
+    case 'nuclear': return '#a78bfa'; // purple
+    case 'hydro':   return '#34d399'; // emerald
+    case 'biomass': return '#4ade80'; // green
+    case 'coal':    return '#78716c'; // stone
+    case 'imports': return '#f472b6'; // pink
+    default:        return '#94a3b8'; // slate
+  }
+}
 
 interface GenerationMixBarProps {
   mix: MixItem[];
@@ -34,11 +65,18 @@ export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolar
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <button type="button" className="w-full text-left space-y-4 cursor-pointer hover:opacity-80 transition-opacity generation-mix-container" aria-label="View generation mix details">
+        <button type="button" className="w-full text-left space-y-4 cursor-pointer group transition-transform active:scale-[0.985] generation-mix-container" aria-label="View generation mix details">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
               Generation Mix
-              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              <motion.span
+                className="inline-flex"
+                initial={false}
+                whileHover={{ x: 3 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              >
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              </motion.span>
             </h3>
             <span className="text-xs text-primary font-medium">
               {showMW ? `Total ${(mix.reduce((a, b) => a + (b.mw || 0), 0) / 1000).toFixed(1)} GW` : `${renewables.toFixed(0)}% Renewable`}
@@ -46,9 +84,17 @@ export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolar
           </div>
 
           {/* Bar visualization */}
-          <div className="h-4 md:h-6 rounded-full overflow-hidden flex shadow-inner bg-muted/30" role="progressbar" aria-label="Generation Mix">
-            {sortedMix.map((item) => {
+          <motion.div
+            className="h-4 md:h-6 rounded-full overflow-hidden flex shadow-inner bg-muted/30"
+            role="progressbar"
+            aria-label="Generation Mix"
+            whileHover={{ scaleY: 1.18 }}
+            style={{ originY: 1 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+          >
+            {sortedMix.map((item, idx) => {
               const isSolar = item.fuel.toLowerCase() === 'solar';
+              const entranceDelay = `${idx * 35}ms`;
               // For solar, show a sub-segment with a striped pattern for embedded/rooftop
               if (isSolar && embeddedSolarPerc !== null && embeddedSolarPerc > 0) {
                 const utilitySolarWidth = 100 - embeddedSolarPerc;
@@ -56,7 +102,7 @@ export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolar
                   <div
                     key={item.fuel}
                     className="flex h-full transition-all duration-500"
-                    style={{ width: `${item.perc}%` }}
+                    style={{ width: `${item.perc}%`, transitionDelay: entranceDelay }}
                   >
                     {/* Utility-scale solar */}
                     <div
@@ -75,30 +121,33 @@ export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolar
                 <div
                   key={item.fuel}
                   className={`${getFuelColor(item.fuel)} transition-all duration-500`}
-                  style={{ width: `${item.perc}%` }}
+                  style={{ width: `${item.perc}%`, transitionDelay: entranceDelay }}
                 />
               );
             })}
-          </div>
+          </motion.div>
 
           {/* Legend - Container Responsive */}
           <div className="generation-mix-legend-compact">
             {/* Mobile/Compact layout: Flex Wrap (Top 6) */}
             <div className="flex flex-wrap gap-2">
-              {sortedMix.slice(0, 6).map((item) => (
-                <div
-                  key={item.fuel}
-                  className="flex items-center gap-1.5 text-xs text-muted-foreground"
-                >
-                  <div className={`w-2.5 h-2.5 rounded-full ${getFuelColor(item.fuel)}`} />
-                  <span className="capitalize">{item.fuel}</span>
-                  <span className="font-medium text-foreground">
-                    {showMW && item.mw
-                      ? `${(item.mw / 1000).toFixed(1)}GW`
-                      : `${item.perc.toFixed(0)}%`}
-                  </span>
-                </div>
-              ))}
+              {sortedMix.slice(0, 6).map((item) => {
+                const Icon = getFuelIcon(item.fuel);
+                return (
+                  <div
+                    key={item.fuel}
+                    className="flex items-center gap-1.5 text-xs text-muted-foreground"
+                  >
+                    <Icon className={`w-3 h-3`} style={{ color: 'currentColor' }} />
+                    <span className="capitalize">{item.fuel}</span>
+                    <span className="font-medium text-foreground">
+                      {showMW && item.mw
+                        ? `${(item.mw / 1000).toFixed(1)}GW`
+                        : `${item.perc.toFixed(0)}%`}
+                    </span>
+                  </div>
+                );
+              })}
               {sortedMix.length > 6 && (
                 <span className="text-xs text-muted-foreground self-center">+{sortedMix.length - 6} more</span>
               )}
@@ -107,22 +156,27 @@ export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolar
 
           <div className="generation-mix-legend-grid pt-2">
             {/* Desktop/Wide layout: Full Grid showing all items */}
-            {sortedMix.map((item) => (
-              <div
-                key={item.fuel}
-                className="flex items-center justify-between text-sm w-full"
-              >
-                <div className="flex items-center gap-2">
-                  <div className={`w-3 h-3 rounded-full ${getFuelColor(item.fuel)}`} />
-                  <span className="capitalize text-muted-foreground pr-2">{item.fuel}</span>
+            {sortedMix.map((item) => {
+              const Icon = getFuelIcon(item.fuel);
+              return (
+                <div
+                  key={item.fuel}
+                  className="flex items-center justify-between text-sm w-full"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 ${getFuelColor(item.fuel)}`}>
+                      <Icon className="w-3 h-3 text-white" aria-hidden="true" />
+                    </div>
+                    <span className="capitalize text-muted-foreground pr-2">{item.fuel}</span>
+                  </div>
+                  <span className="font-semibold tabular-nums">
+                    {showMW && item.mw
+                      ? `${(item.mw / 1000).toFixed(2)} GW`
+                      : `${item.perc}%`}
+                  </span>
                 </div>
-                <span className="font-semibold tabular-nums">
-                  {showMW && item.mw
-                    ? `${(item.mw / 1000).toFixed(2)} GW`
-                    : `${item.perc}%`}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </button>
       </DialogTrigger>
@@ -150,74 +204,93 @@ export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolar
             )}
           </DialogTitle>
         </DialogHeader>
-        <ScrollArea className="flex-1 min-h-0 pr-4 -mr-4">
-          <div className="space-y-4 py-4 pr-1">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain -mx-6 px-6">
+          <div className="space-y-4 py-4">
             {sortedMix.map((item) => {
               const fuelKey = item.fuel.charAt(0).toUpperCase() + item.fuel.slice(1);
               const definition = DEFINITIONS[fuelKey as keyof typeof DEFINITIONS] || DEFINITIONS['Other'];
 
+              const Icon = getFuelIcon(item.fuel);
+              const hex = getFuelHex(item.fuel);
+              const [r, g, b] = [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)];
+
               return (
-                <div key={item.fuel} className="space-y-2 p-3 rounded-lg bg-accent/20 border border-border/50">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-4 h-4 rounded-full ${getFuelColor(item.fuel)}`} />
-                      <span className="font-medium capitalize text-lg">{item.fuel}</span>
+                <div
+                  key={item.fuel}
+                  className="rounded-xl border border-border/60 overflow-hidden"
+                  style={{ background: `linear-gradient(135deg, rgba(${r},${g},${b},0.08) 0%, transparent 55%)` }}
+                >
+                  {/* Header row */}
+                  <div className="flex items-center justify-between px-3 pt-3 pb-1">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${getFuelColor(item.fuel)}`}>
+                        <Icon className="w-5 h-5 text-white" aria-hidden="true" />
+                      </div>
+                      <span className="font-semibold capitalize text-base">{item.fuel}</span>
                     </div>
                     <div className="text-right">
-                      <span className="block text-xl font-bold">
+                      <span className="block text-lg font-bold tabular-nums">
                         {showMW && item.mw
                           ? `${(item.mw / 1000).toFixed(2)} GW`
                           : `${item.perc.toFixed(1)}%`}
                       </span>
-                      {showMW && (
-                        <span className="text-sm text-muted-foreground">{item.perc.toFixed(1)}%</span>
-                      )}
+                      <span className="text-xs text-muted-foreground tabular-nums">
+                        {showMW
+                          ? `${item.perc.toFixed(1)}%`
+                          : (item.mw ? `${(item.mw / 1000).toFixed(2)} GW` : '')}
+                      </span>
                     </div>
                   </div>
-                  <p className="text-sm text-muted-foreground pl-6 leading-relaxed">
+
+                  {/* Description */}
+                  <p className="text-xs text-muted-foreground px-3 pb-2 pl-[3.25rem] leading-relaxed">
                     {definition}
                   </p>
 
+                  {/* Imports: interconnector country tags */}
                   {item.fuel === 'imports' && (
-                    <div className="pl-6 pt-2 flex flex-wrap gap-2">
+                    <div className="px-3 pb-2 pl-[3.25rem] flex flex-wrap gap-1.5">
                       {['France', 'Netherlands', 'Belgium', 'Norway', 'Denmark', 'Ireland'].map(country => (
-                        <span key={country} className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-muted text-muted-foreground ring-1 ring-inset ring-border/50">
+                        <span key={country} className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-muted text-muted-foreground ring-1 ring-inset ring-border/50">
                           {country}
                         </span>
                       ))}
                     </div>
                   )}
 
+                  {/* Solar: utility vs rooftop sub-breakdown */}
                   {item.fuel.toLowerCase() === 'solar' && embeddedSolarMW !== null && totalSolarMW !== null && totalSolarMW > 0 && (
-                    <div className="pl-6 pt-2 space-y-2">
-                      <div className="flex items-center gap-2 text-sm">
-                        <div className={`w-3 h-3 rounded-full ${getFuelColor('solar')}`} />
-                        <span className="text-muted-foreground flex items-center gap-1">
-                          <Factory className="w-3 h-3" /> Utility-scale
-                        </span>
-                        <span className="ml-auto font-medium">
-                          {((totalSolarMW - embeddedSolarMW) / 1000).toFixed(2)} GW
-                        </span>
+                    <div className="px-3 pb-2 pl-[3.25rem] space-y-1 border-t border-border/30 pt-2 mt-1">
+                      <div className="flex items-center gap-2 text-xs">
+                        <Factory className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                        <span className="text-muted-foreground">Utility-scale</span>
+                        <span className="ml-auto font-medium tabular-nums">{((totalSolarMW - embeddedSolarMW) / 1000).toFixed(2)} GW</span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <div className="w-3 h-3 rounded-full bg-amber-300 dark:bg-amber-400/80" />
-                        <span className="text-muted-foreground flex items-center gap-1">
-                          <Home className="w-3 h-3" /> Rooftop / Embedded
-                        </span>
-                        <span className="ml-auto font-medium">
-                          {(embeddedSolarMW / 1000).toFixed(2)} GW
-                        </span>
+                      <div className="flex items-center gap-2 text-xs">
+                        <Home className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                        <span className="text-muted-foreground">Rooftop / Embedded</span>
+                        <span className="ml-auto font-medium tabular-nums">{(embeddedSolarMW / 1000).toFixed(2)} GW</span>
                       </div>
-                      <p className="text-xs text-muted-foreground/70 pt-1">
-                        Embedded solar includes private rooftop panels, community solar, and other distributed generation feeding into the grid.
-                      </p>
                     </div>
                   )}
+
+                  {/* Mini fill bar — encodes % share of total mix */}
+                  <div className="h-1 w-full mt-1" style={{ backgroundColor: `rgba(${r},${g},${b},0.12)` }}>
+                    <div
+                      className="h-full transition-all duration-700 ease-out"
+                      style={{
+                        width: `${Math.min(item.perc, 100)}%`,
+                        backgroundColor: hex,
+                        opacity: item.perc === 0 ? 0.15 : 0.6,
+                      }}
+                      role="presentation"
+                    />
+                  </div>
                 </div>
               );
             })}
           </div>
-        </ScrollArea>
+        </div>
 
         {/* GW Definition Note */}
         {showMW && (

@@ -237,6 +237,7 @@ const Index = () => {
                           <AnimatedIntensity
                             value={intensity}
                             previousValue={previousIntensity}
+                            isUpdating={isBackgroundFetching}
                           />
                           <div className="flex items-center gap-1">
                             <span className="text-card/90 text-lg font-medium">gCO₂/kWh</span>
@@ -255,11 +256,20 @@ const Index = () => {
                       )}
                     </div>
                     {!isLoading && !isError && (
-                      <div className="inline-block mt-2 px-3 py-1 rounded-full bg-white/40 shadow-sm">
-                        <p className="text-lg font-semibold capitalize text-card">
-                          {index}
-                        </p>
-                      </div>
+                      <AnimatePresence mode="wait">
+                        <motion.div
+                          key={index}
+                          className="inline-block mt-2 px-3 py-1 rounded-full bg-white/40 shadow-sm"
+                          initial={{ opacity: 0, y: 4, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -4, scale: 0.95 }}
+                          transition={{ duration: 0.25, ease: 'easeOut' }}
+                        >
+                          <p className="text-lg font-semibold capitalize text-card">
+                            {index}
+                          </p>
+                        </motion.div>
+                      </AnimatePresence>
                     )}
                     {!isLoading && lastUpdated && (
                       <div className="flex flex-col items-center mt-2 gap-1.5">
@@ -373,7 +383,14 @@ const Index = () => {
                         />
                       )}
                       <span className="relative z-20 flex items-center justify-center h-full">
-                        <Activity className="w-4 h-4 mr-2" />
+                        <motion.span
+                          key={viewMode === 'intensity' ? 'active' : 'inactive'}
+                          initial={viewMode === 'intensity' ? { scale: 1.3 } : false}
+                          animate={{ scale: 1 }}
+                          transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                        >
+                          <Activity className="w-4 h-4 mr-2" />
+                        </motion.span>
                         Intensity
                       </span>
                     </button>
@@ -396,7 +413,14 @@ const Index = () => {
                         />
                       )}
                       <span className="relative z-20 flex items-center justify-center h-full">
-                        <Zap className="w-4 h-4 mr-2" />
+                        <motion.span
+                          key={viewMode === 'demand' ? 'active' : 'inactive'}
+                          initial={viewMode === 'demand' ? { scale: 1.3 } : false}
+                          animate={{ scale: 1 }}
+                          transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                        >
+                          <Zap className="w-4 h-4 mr-2" />
+                        </motion.span>
                         Demand
                       </span>
                     </button>
@@ -420,7 +444,14 @@ const Index = () => {
                         />
                       )}
                       <span className="relative z-20 flex items-center justify-center h-full">
-                        <Leaf className="w-4 h-4 mr-2" />
+                        <motion.span
+                          key={viewMode === 'footprint' ? 'active' : 'inactive'}
+                          initial={viewMode === 'footprint' ? { scale: 1.3 } : false}
+                          animate={{ scale: 1 }}
+                          transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                        >
+                          <Leaf className="w-4 h-4 mr-2" />
+                        </motion.span>
                         Footprint
                       </span>
                     </button>
@@ -442,79 +473,115 @@ const Index = () => {
                       ) : viewMode === 'footprint' ? (
                         <FootprintView />
                       ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <motion.div
+                          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                          variants={{
+                            hidden: {},
+                            show: { transition: { staggerChildren: 0.06, delayChildren: 0.05 } },
+                          }}
+                          initial="hidden"
+                          animate="show"
+                        >
                           {/* Energy Insights */}
-                          <Card className="p-4 shadow-lg bg-accent/30 border-accent/50 md:col-span-2 lg:col-span-1 lg:row-span-2 flex flex-col">
-                            <div className="flex items-start gap-3">
-                              <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
-                                <Zap className="w-4 h-4 text-accent-foreground" />
+                          <motion.div
+                            className="md:col-span-2 lg:col-span-1 lg:row-span-2"
+                            variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } } }}
+                          >
+                            <Card className="p-4 shadow-lg bg-accent/30 border-accent/50 h-full flex flex-col">
+                              <div className="flex items-start gap-3">
+                                <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                                  <Zap className="w-4 h-4 text-accent-foreground" />
+                                </div>
+                                <div>
+                                  <h3 className="font-medium text-foreground">Energy Insights</h3>
+                                  <p className="text-sm text-muted-foreground mt-1">
+                                    {getSmartTip(intensity, forecast)}
+                                  </p>
+                                </div>
                               </div>
-                              <div>
-                                <h3 className="font-medium text-foreground">Energy Insights</h3>
-                                <p className="text-sm text-muted-foreground mt-1">
-                                  {getSmartTip(intensity, forecast)}
-                                </p>
-                              </div>
-                            </div>
 
-                            {prefs.showWeatherInInsights && (
-                              <div className="mt-3 pt-3 border-t border-accent-foreground/10">
-                                <ComponentErrorBoundary name="Weather Widget">
-                                  <WeatherWidget />
+                              {prefs.showWeatherInInsights && (
+                                <div className="mt-3 pt-3 border-t border-accent-foreground/10">
+                                  <ComponentErrorBoundary name="Weather Widget">
+                                    <WeatherWidget />
+                                  </ComponentErrorBoundary>
+                                </div>
+                              )}
+
+                              <div className="mt-3">
+                                <ComponentErrorBoundary name="Greener Nights">
+                                  <GreenerNightsCard />
                                 </ComponentErrorBoundary>
                               </div>
-                            )}
-
-                            <div className="mt-3">
-                              <ComponentErrorBoundary name="Greener Nights">
-                                <GreenerNightsCard />
-                              </ComponentErrorBoundary>
-                            </div>
-                          </Card>
+                            </Card>
+                          </motion.div>
 
                           {/* Generation Mix */}
-                          <Card className="p-4 shadow-lg md:col-span-2 lg:col-span-2 flex flex-col justify-center glass-card" data-tour="generation-mix">
-                            <ComponentErrorBoundary name="Generation Mix">
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="sr-only">Generation Mix</span>
-                                <StaleDataBadge lastUpdated={lastUpdated} />
-                              </div>
-                              <GenerationMixBar mix={generationMix} frequency={gridFrequency} />
-                            </ComponentErrorBoundary>
-                          </Card>
+                          <motion.div
+                            className="md:col-span-2 lg:col-span-2"
+                            variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } } }}
+                          >
+                            <Card className="p-4 shadow-lg flex flex-col justify-center glass-card h-full" data-tour="generation-mix">
+                              <ComponentErrorBoundary name="Generation Mix">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="sr-only">Generation Mix</span>
+                                  <StaleDataBadge lastUpdated={lastUpdated} />
+                                </div>
+                                <GenerationMixBar mix={generationMix} frequency={gridFrequency} />
+                              </ComponentErrorBoundary>
+                            </Card>
+                          </motion.div>
 
                           {/* Best time */}
                           {forecast.length > 0 && (
-                            <ComponentErrorBoundary name="Best Time">
-                              <BestTimeSlot forecast={forecast} />
-                            </ComponentErrorBoundary>
+                            <motion.div
+                              variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } } }}
+                              className="transition-transform active:scale-[0.985]"
+                            >
+                              <ComponentErrorBoundary name="Best Time">
+                                <BestTimeSlot forecast={forecast} />
+                              </ComponentErrorBoundary>
+                            </motion.div>
                           )}
 
                           {/* Worst time */}
                           {forecast.length > 0 && (
-                            <ComponentErrorBoundary name="Worst Time">
-                              <WorstTimeSlot forecast={forecast} />
-                            </ComponentErrorBoundary>
+                            <motion.div
+                              variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } } }}
+                              className="transition-transform active:scale-[0.985]"
+                            >
+                              <ComponentErrorBoundary name="Worst Time">
+                                <WorstTimeSlot forecast={forecast} />
+                              </ComponentErrorBoundary>
+                            </motion.div>
                           )}
 
                           {/* Hourly Forecast */}
                           {forecast.length > 0 && (
-                            <Card className="p-4 shadow-lg md:col-span-2 lg:col-span-3 glass-card" data-tour="forecast-chart">
-                              <ComponentErrorBoundary name="Hourly Forecast">
-                                <ForecastChart forecast={forecast} showNext={24} />
-                              </ComponentErrorBoundary>
-                            </Card>
+                            <motion.div
+                              className="md:col-span-2 lg:col-span-3"
+                              variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } } }}
+                            >
+                              <Card className="p-4 shadow-lg glass-card" data-tour="forecast-chart">
+                                <ComponentErrorBoundary name="Hourly Forecast">
+                                  <ForecastChart forecast={forecast} showNext={24} />
+                                </ComponentErrorBoundary>
+                              </Card>
+                            </motion.div>
                           )}
 
                           {/* Daily Summary */}
                           {forecast.length > 0 && (
-                            <div className="md:col-span-2 lg:col-span-3">
+                            <motion.div
+                              className="md:col-span-2 lg:col-span-3"
+                              variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } } }}
+                            >
                               <ComponentErrorBoundary name="Daily Forecast">
                                 <ForecastSummary forecast={forecast} />
                               </ComponentErrorBoundary>
-                            </div>
+                            </motion.div>
                           )}
-                        </div>
+                        </motion.div>
                       )}
                     </motion.div>
                   </AnimatePresence>

@@ -1,5 +1,6 @@
 import { Clock } from 'lucide-react';
 import { useOffline } from '@/hooks/useOffline';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface StaleDataBadgeProps {
   lastUpdated?: string | null;
@@ -20,8 +21,7 @@ export function StaleDataBadge({ lastUpdated, thresholdMinutes = 35 }: StaleData
   const now = Date.now();
   const ageMinutes = Math.round((now - updatedAt) / 60000);
 
-  // Show nothing if data is fresh
-  if (!isOffline && ageMinutes < thresholdMinutes) return null;
+  const isStale = isOffline || ageMinutes >= thresholdMinutes;
 
   const label = isOffline
     ? 'Cached data'
@@ -32,13 +32,22 @@ export function StaleDataBadge({ lastUpdated, thresholdMinutes = 35 }: StaleData
         : 'Old data';
 
   return (
-    <span
-      className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-1.5 py-0.5 rounded-full"
-      role="status"
-      aria-live="polite"
-    >
-      <Clock className="w-2.5 h-2.5" aria-hidden="true" />
-      <span>{label}</span>
-    </span>
+    <AnimatePresence>
+      {isStale && (
+        <motion.span
+          className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-1.5 py-0.5 rounded-full"
+          role="status"
+          aria-live="polite"
+          initial={{ opacity: 0, scale: 0.8, y: -3 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.8, y: -3 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+        >
+          <Clock className="w-2.5 h-2.5" aria-hidden="true" />
+          <span>{label}</span>
+        </motion.span>
+      )}
+    </AnimatePresence>
   );
 }
+

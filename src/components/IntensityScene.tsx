@@ -317,11 +317,25 @@ export function IntensityScene({
       }
     };
 
+    // Ground colour: mirrors useLandscapePalette frontHillShadow so corners
+    // always blend with the earth rather than showing the sky gradient.
+    const getGroundColor = (): string => {
+      if (synthwaveMode) return '#3c096c';
+      if (weather.isSnowing) return isNight ? '#334155' : '#f1f5f9';
+      if (isNight) return '#1e293b';
+      const isClean = cleanliness > 0.5;
+      if (timeOfDay === 'dawn')   return isClean ? '#204d30' : '#4d3215';
+      if (timeOfDay === 'sunset') return isClean ? '#365a18' : '#5c3209';
+      if (timeOfDay === 'dusk')   return isClean ? '#21334c' : '#3a2818';
+      return isClean ? '#16a34a' : '#713f12';
+    };
+
     return {
       cleanliness,
       skyGradient: synthwaveMode
         ? 'linear-gradient(180deg, #2b1055 0%, #7597de 100%)'
         : getSkyGradient(index, timeOfDay, cleanliness, weather),
+      groundColor: getGroundColor(),
       showRenewables: cleanliness > 0.25,
       showFactories: cleanliness < 0.85,
       showBirds: cleanliness > 0.6 && isDaytime && !weatherReducesBirds,
@@ -344,7 +358,7 @@ export function IntensityScene({
       windSpeed: weather.windSpeed,
       sceneFilter: getTimeFilter(),
     };
-  }, [intensity, index, timeOfDay, weather, synthwaveMode]);
+  }, [intensity, index, timeOfDay, weather, synthwaveMode, isNight]);
 
   return (
     <motion.div
@@ -982,6 +996,15 @@ export function IntensityScene({
           />
         </>
       )}
+
+      {/* Ground colour cover strip — prevents the sky gradient bleeding through
+          at the bottom corners where the SVG landscape shapes don't reach the edges */}
+      <motion.div
+        className="absolute bottom-0 left-0 right-0 h-2 pointer-events-none z-[50]"
+        animate={{ backgroundColor: sceneConfig.groundColor }}
+        transition={{ duration: 2, ease: 'easeInOut' }}
+        aria-hidden="true"
+      />
 
       {/* Wind Turbines - dynamically positioned across the scene */}
       <AnimatePresence>

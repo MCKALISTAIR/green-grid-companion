@@ -10,6 +10,8 @@ interface AnimatedIntensityProps {
   previousValue: number | null;
   animationDuration?: number;
   className?: string;
+  /** Pass true while background data is fetching to show a subtle breath animation */
+  isUpdating?: boolean;
 }
 
 export function AnimatedIntensity({
@@ -17,6 +19,7 @@ export function AnimatedIntensity({
   previousValue,
   animationDuration = 500,
   className,
+  isUpdating = false,
 }: AnimatedIntensityProps) {
   const [showArrow, setShowArrow] = useState(false);
   const [direction, setDirection] = useState<'up' | 'down' | null>(null);
@@ -85,8 +88,17 @@ export function AnimatedIntensity({
         className="text-6xl font-bold text-card drop-shadow-md tabular-nums"
         key={value}
         initial={!shouldReduceMotion && previousValue !== null && previousValue !== value ? { scale: 1.05 } : false}
-        animate={{ scale: 1 }}
-        transition={{ duration: 0.3 }}
+        animate={{
+          scale: 1,
+          // Subtle breath while background-fetching — halts immediately on new data
+          opacity: !shouldReduceMotion && isUpdating ? [1, 0.55, 1] : 1,
+        }}
+        transition={{
+          scale: { duration: 0.3 },
+          opacity: isUpdating
+            ? { repeat: Infinity, duration: 1.6, ease: 'easeInOut' }
+            : { duration: 0.4 },
+        }}
       >
         {displayNumber}
       </motion.span>
