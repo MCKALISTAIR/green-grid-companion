@@ -1,6 +1,7 @@
 import { Zap, RefreshCw, AlertTriangle, Info, Activity, Home } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
-import { GenerationMixBar } from '@/components/GenerationMixBar';
+import { GenerationMixBar, getFuelIcon, getFuelHex } from '@/components/GenerationMixBar';
 import { useGridDemand, MixWithTrend } from '@/hooks/useGridDemand';
 import { useSettings } from '@/hooks/useSettings';
 import { Button } from '@/components/ui/button';
