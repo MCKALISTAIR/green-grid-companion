@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
+import { useHaptics } from '@/hooks/useHaptics';
 
 export interface HotspotDef {
     id: string;
@@ -24,6 +25,7 @@ interface Props {
  */
 export function SceneHotspots({ hotspots }: Props) {
     const [activeId, setActiveId] = useState<string | null>(null);
+    const { selection } = useHaptics();
 
     const close = useCallback(() => setActiveId(null), []);
 
@@ -57,7 +59,10 @@ export function SceneHotspots({ hotspots }: Props) {
                         <motion.button
                             type="button"
                             className="pointer-events-auto relative grid place-items-center w-7 h-7 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
-                            onClick={() => setActiveId(prev => (prev === h.id ? null : h.id))}
+                            onClick={() => {
+                                selection();
+                                setActiveId(prev => (prev === h.id ? null : h.id));
+                            }}
                             aria-label={`Learn about ${h.label}`}
                             aria-expanded={isActive}
                             initial={{ opacity: 0, scale: 0.6 }}
