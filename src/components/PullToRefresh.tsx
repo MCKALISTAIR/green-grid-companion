@@ -2,7 +2,6 @@ import { useState, useRef, ReactNode } from 'react';
 import { useHaptics } from '@/hooks/useHaptics';
 import { TurbineLogo } from '@/components/TurbineLogo';
 
-
 interface PullToRefreshProps {
     onRefresh: () => Promise<void> | void;
     children: ReactNode;
@@ -21,31 +20,20 @@ export function PullToRefresh({ onRefresh, children, disabled = false }: PullToR
 
     const handleTouchStart = (e: React.TouchEvent) => {
         if (disabled || isRefreshing) return;
-
-        // Only enable pull if we are at the top of the scroll container
-        // We check window.scrollY for main page, or the specific container if it was scrollable
-        // Assuming main page scroll here:
         if (window.scrollY > 0) return;
-
         setStartY(e.touches[0].clientY);
     };
 
     const handleTouchMove = (e: React.TouchEvent) => {
         if (disabled || isRefreshing || startY === 0) return;
-
-        // Double check scroll is still at top
         if (window.scrollY > 0) {
             setStartY(0);
             setPullDistance(0);
             return;
         }
-
         const currentY = e.touches[0].clientY;
         const diff = currentY - startY;
-
         if (diff > 0) {
-            // Prevent default pull-to-refresh behavior of browser if needed (though difficult in React passive listeners)
-            // Apply resistance
             const damped = Math.min(diff * 0.5, MAX_PULL);
             setPullDistance(damped);
         }
@@ -53,12 +41,10 @@ export function PullToRefresh({ onRefresh, children, disabled = false }: PullToR
 
     const handleTouchEnd = async () => {
         if (disabled || isRefreshing) return;
-
         if (pullDistance > THRESHOLD) {
             impactMedium();
             setIsRefreshing(true);
-            setPullDistance(THRESHOLD); // Snap to threshold
-
+            setPullDistance(THRESHOLD);
             try {
                 await onRefresh();
             } catch (error) {
@@ -67,14 +53,17 @@ export function PullToRefresh({ onRefresh, children, disabled = false }: PullToR
                 setTimeout(() => {
                     setIsRefreshing(false);
                     setPullDistance(0);
-                }, 500); // Small delay for visual smoothness
+                }, 500);
             }
         } else {
-            setPullDistance(0); // Snap back
+            setPullDistance(0);
         }
-
         setStartY(0);
     };
+
+    // Blade spin: faster as you pull more; constant during refresh
+    const bladeRotationDeg = pullDistance * 3;
+    const refreshAnimDuration = isRefreshing ? 0.6 : null;
 
     return (
         <div

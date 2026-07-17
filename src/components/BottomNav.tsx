@@ -4,6 +4,7 @@ import { Home, ListOrdered, Calendar, Settings, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { useHaptics } from '@/hooks/useHaptics';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 // Playful press feedback: icon dips + tilts on active, springs back on release.
 // Uses group-active so the whole Button press drives the icon, not the icon itself.
@@ -20,8 +21,16 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
     const navigate = useTransitionNavigate();
     const location = useLocation();
     const { selection } = useHaptics();
+    const shouldReduceMotion = useReducedMotion();
 
     const isActive = (path: string) => location.pathname === path;
+
+    // Squish-bounce played once when a tab becomes active
+    const squishBounce = {
+      initial: false as const,
+      animate: shouldReduceMotion ? {} : { scaleY: [1, 0.65, 1.25, 1] },
+      transition: { duration: 0.35, ease: [0.34, 1.56, 0.64, 1] },
+    };
 
     const handleHome = () => {
         selection();
@@ -54,7 +63,9 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
                                 transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                             />
                         )}
-                        <Home className={`w-5 h-5 ${iconTilt}`} />
+                        <motion.span key={isActive('/') ? 'active' : 'idle'} {...squishBounce}>
+                          <Home className={`w-5 h-5 ${iconTilt}`} />
+                        </motion.span>
                         <span className="text-[10px] font-medium">Home</span>
                     </Button>
 
@@ -74,7 +85,9 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
                                 transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                             />
                         )}
-                        <Calendar className={`w-5 h-5 ${iconTilt}`} />
+                        <motion.span key={isActive('/planner') ? 'active' : 'idle'} {...squishBounce}>
+                          <Calendar className={`w-5 h-5 ${iconTilt}`} />
+                        </motion.span>
                         <span className="text-[10px] font-medium">Plan</span>
                     </Button>
 
@@ -94,7 +107,9 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
                                 transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                             />
                         )}
-                        <Clock className={`w-5 h-5 ${iconTilt}`} />
+                        <motion.span key={isActive('/history') ? 'active' : 'idle'} {...squishBounce}>
+                          <Clock className={`w-5 h-5 ${iconTilt}`} />
+                        </motion.span>
                         <span className="text-[10px] font-medium">History</span>
                     </Button>
 
@@ -114,7 +129,9 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
                                 transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                             />
                         )}
-                        <ListOrdered className={`w-5 h-5 ${iconTilt}`} />
+                        <motion.span key={isActive('/map') ? 'active' : 'idle'} {...squishBounce}>
+                          <ListOrdered className={`w-5 h-5 ${iconTilt}`} />
+                        </motion.span>
                         <span className="text-[10px] font-medium">Rank</span>
                     </Button>
 
@@ -133,7 +150,9 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
                                 transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                             />
                         )}
-                        <Settings className={`w-5 h-6 ${iconTilt}`} />
+                        <motion.span key={isActive('/settings') ? 'active' : 'idle'} {...squishBounce}>
+                          <Settings className={`w-5 h-6 ${iconTilt}`} />
+                        </motion.span>
                         <span className="text-[10px] font-medium">Settings</span>
                     </Button>
 

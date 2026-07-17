@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { RefreshCw, Zap, Info, Leaf, Activity, MapPin, ChevronDown, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -34,18 +34,25 @@ import { StaleDataBadge } from '@/components/StaleDataBadge';
 import { LocationMismatchPrompt } from '@/components/LocationMismatchPrompt';
 import { YearWrapped } from '@/components/YearWrapped';
 import { Skeleton } from '@/components/ui/skeleton';
+import { TypewriterText } from '@/components/TypewriterText';
+import { RenewableSparkle } from '@/components/RenewableSparkle';
+import { getRenewablesPercentage } from '@/lib/generationUtils';
 
 import { useAppLocation } from '@/contexts/LocationContext';
 import { useYearWrappedAutoShow } from '@/hooks/useYearWrappedAutoShow';
 import { useEnvironmentalConditions } from '@/hooks/useEnvironmentalConditions';
 import { useIndexPageEffects } from '@/hooks/useIndexPageEffects';
 import { useThrottledRefetch } from '@/hooks/useThrottledRefetch';
+import { useRelativeTime } from '@/hooks/useRelativeTime';
 
 const Index = () => {
   const { postcode, setPostcode } = useAppLocation();
   const [viewMode, setViewMode] = useState<'intensity' | 'footprint' | 'demand'>('intensity');
   const { showYearWrapped, setShowYearWrapped, wrappedYear } = useYearWrappedAutoShow();
   const { selection } = useHaptics();
+
+  // Sparkle burst: fires when renewables cross 50 / 70 / 80%
+  const [sparkleTrigger, setSparkleTrigger] = useState(false);
 
   const { scheduleGreenAlerts, scheduleDailyForecast, scheduleHighIntensityAlerts, prefs } = useNotifications();
   const { isLinked: isOctopusLinked } = useOctopusEnergy();
@@ -69,6 +76,23 @@ const Index = () => {
   } = useCarbonData(postcode);
 
   const { frequency: gridFrequency } = useGridDemand();
+
+  // Compute renewables % for badge + sparkle
+  const renewablesPct = getRenewablesPercentage(generationMix);
+
+  // Detect threshold crossings (50 / 70 / 80) and fire sparkle
+  const prevRenRef = useRef<number | null>(null);
+  useEffect(() => {
+    const thresholds = [50, 70, 80];
+    const prev = prevRenRef.current;
+    if (prev !== null && !isLoading) {
+      const crossed = thresholds.some(t => prev < t && renewablesPct >= t);
+      if (crossed) {
+        setSparkleTrigger(true);
+      }
+    }
+    prevRenRef.current = renewablesPct;
+  }, [renewablesPct, isLoading]);
 
   // Composite hook for all page-level effects (notifications, tour, periodic refresh, routing)
   useIndexPageEffects({
@@ -144,6 +168,16 @@ const Index = () => {
   };
 
   const { skyColor } = useEnvironmentalConditions(postcode, intensity);
+
+  // Relative timestamp + freshness dot for hero overlay
+  const relativeTime = useRelativeTime(lastUpdated);
+  const freshnessColor = (() => {
+    if (!lastUpdated) return 'bg-muted-foreground/40';
+    const ageMins = (Date.now() - new Date(lastUpdated).getTime()) / 60000;
+    if (ageMins < 10) return 'bg-emerald-400';
+    if (ageMins < 35) return 'bg-amber-400';
+    return 'bg-destructive';
+  })();
 
 
 
@@ -256,50 +290,80 @@ const Index = () => {
                       )}
                     </div>
                     {!isLoading && !isError && (
-                      <AnimatePresence mode="wait">
+                      <div className="flex flex-col items-center mt-2 gap-2">
+                        {/* Intensity index label with typewriter reveal */}
                         <motion.div
                           key={index}
-                          className="inline-block mt-2 px-3 py-1 rounded-full bg-white/40 shadow-sm"
-                          initial={{ opacity: 0, y: 4, scale: 0.95 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: -4, scale: 0.95 }}
-                          transition={{ duration: 0.25, ease: 'easeOut' }}
+                          className="inline-block px-3 py-1 rounded-full bg-white/40 shadow-sm"
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ duration: 0.2 }}
                         >
                           <p className="text-lg font-semibold capitalize text-card">
-                            {index}
+                            <TypewriterText text={index} />
                           </p>
                         </motion.div>
-                      </AnimatePresence>
+
+                        {/* Live renewables badge with sparkle */}
+                        <div className="relative">
+                          <motion.div
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold shadow-sm"
+                            style={{
+                              backgroundColor:
+                                renewablesPct >= 70
+                                  ? 'rgba(74, 222, 128, 0.35)'
+                                  : renewablesPct >= 50
+                                  ? 'rgba(163, 230, 53, 0.30)'
+                                  : renewablesPct >= 30
+                                  ? 'rgba(250, 204, 21, 0.30)'
+                                  : 'rgba(251, 146, 60, 0.25)',
+                              color:
+                                renewablesPct >= 70
+                                  ? '#16a34a'
+                                  : renewablesPct >= 50
+                                  ? '#4d7c0f'
+                                  : renewablesPct >= 30
+                                  ? '#854d0e'
+                                  : '#9a3412',
+                              backdropFilter: 'blur(4px)',
+                            }}
+                            key={Math.round(renewablesPct / 10)}
+                            animate={{ scale: [1, 1.07, 1] }}
+                            transition={{ duration: 0.4, ease: 'easeOut' }}
+                          >
+                            <Leaf className="w-3 h-3" aria-hidden="true" />
+                            {renewablesPct.toFixed(0)}% Renewable
+                          </motion.div>
+                          <RenewableSparkle
+                            trigger={sparkleTrigger}
+                            onComplete={() => setSparkleTrigger(false)}
+                          />
+                        </div>
+                      </div>
                     )}
                     {!isLoading && lastUpdated && (
                       <div className="flex flex-col items-center mt-2 gap-1.5">
                         <div className="flex items-center gap-1.5 text-xs text-card/80 font-medium bg-white/20 px-2 py-0.5 rounded-md">
-                          <span>Updated {new Date(lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          {/* Pulsing freshness dot */}
+                          <span className="relative flex h-2 w-2 flex-shrink-0">
+                            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-60 ${freshnessColor}`} />
+                            <span className={`relative inline-flex h-2 w-2 rounded-full ${freshnessColor}`} />
+                          </span>
+                          <span>{relativeTime}</span>
                           <span>•</span>
                           <span>
                             {(() => {
-                              // Prefer the explicit 'valid to' time from the API
-                              // This handles misses/variable intervals (e.g. 1hr vs 30m) gracefully
                               if (nextUpdate) {
                                 const next = new Date(nextUpdate);
-                                // If the API says data is valid until X, and we are past X, 
-                                // it means the next update is late.
                                 const now = new Date();
-                                if (now > next) {
-                                  // If we are past the 'valid to' time, the update is late or pending.
-                                  // Don't project an hour into the future, just say it's due.
-                                  return 'Update Due';
-                                }
+                                if (now > next) return 'Update Due';
                                 return `Next ${next.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} `;
                               }
-
-                              // Fallback (shouldn't really be hit if nextUpdate is present)
                               const next = getNextUpdate(lastUpdated);
                               if (!next) return '';
                               return `Next ${next.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} `;
                             })()}
                           </span>
-
                           <Popover>
                             <PopoverTrigger asChild>
                               <Button variant="ghost" size="icon" className="h-4 w-4 rounded-full p-0 hover:bg-transparent ml-0.5" aria-label="More information about data refresh schedule">

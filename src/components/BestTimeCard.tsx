@@ -3,6 +3,7 @@ import { format, parseISO } from 'date-fns';
 import { BatteryCharging, TrendingDown, TrendingUp } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { getDayLabel } from '@/lib/date-utils';
+import { useCountdown } from '@/hooks/useCountdown';
 
 interface BestTimeCardProps {
   forecast: ForecastData[];
@@ -43,6 +44,7 @@ export function BestTimeSlot({ forecast }: BestTimeCardProps) {
 
   const now = new Date();
   const isNow = now >= data.bestStart && now <= data.bestEnd;
+  const countdown = useCountdown(isNow ? null : data.bestStart);
 
   return (
     <Card className="p-4 bg-intensity-very-low/10 border-intensity-very-low/30">
@@ -51,13 +53,16 @@ export function BestTimeSlot({ forecast }: BestTimeCardProps) {
           <TrendingDown className="w-5 h-5 text-intensity-very-low" />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <BatteryCharging className="w-4 h-4 text-intensity-very-low" />
             <span className="text-sm font-medium text-foreground">
               {isNow ? 'Load-shift now — it\'s the best time!' : 'Best time to load-shift'}
             </span>
             {isNow && (
               <span className="text-[10px] font-semibold uppercase tracking-wider bg-intensity-very-low/20 text-intensity-very-low px-1.5 py-0.5 rounded-full">Now</span>
+            )}
+            {!isNow && countdown && (
+              <span className="text-[10px] font-semibold bg-intensity-very-low/15 text-intensity-very-low px-1.5 py-0.5 rounded-full tabular-nums">{countdown}</span>
             )}
           </div>
           <p className="text-lg font-bold text-intensity-very-low">
@@ -76,6 +81,10 @@ export function WorstTimeSlot({ forecast }: BestTimeCardProps) {
   const data = useBestWorstTimes(forecast);
   if (!data) return null;
 
+  const now = new Date();
+  const isNow = now >= data.worstStart && now <= data.worstEnd;
+  const countdown = useCountdown(isNow ? null : data.worstStart);
+
   return (
     <Card className="p-4 bg-intensity-high/10 border-intensity-high/30">
       <div className="flex items-center gap-3">
@@ -83,8 +92,14 @@ export function WorstTimeSlot({ forecast }: BestTimeCardProps) {
           <TrendingUp className="w-5 h-5 text-intensity-high" />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="text-sm font-medium text-foreground">Avoid high usage</span>
+            {isNow && (
+              <span className="text-[10px] font-semibold uppercase tracking-wider bg-intensity-high/20 text-intensity-high px-1.5 py-0.5 rounded-full">Now</span>
+            )}
+            {!isNow && countdown && (
+              <span className="text-[10px] font-semibold bg-intensity-high/15 text-intensity-high px-1.5 py-0.5 rounded-full tabular-nums">{countdown}</span>
+            )}
           </div>
           <p className="text-lg font-bold text-intensity-high">
             {format(data.worstStart, 'HH:mm')} → {format(data.worstEnd, 'HH:mm')} <span className="text-sm font-medium ml-1 text-muted-foreground">{getDayLabel(new Date(data.worstStart.getTime() - 60000))}</span>

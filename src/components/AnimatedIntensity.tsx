@@ -29,9 +29,10 @@ export function AnimatedIntensity({
   const hasAnimatedRef = useRef(false);
 
   // Spring animation for smooth number counting
+  // Higher stiffness + lower damping = snappier "clunk" into place
   const springValue = useSpring(value, {
-    damping: 30,
-    stiffness: 100,
+    damping: 20,
+    stiffness: 200,
     duration: animationDuration,
   });
 
@@ -113,17 +114,22 @@ export function AnimatedIntensity({
       <motion.span
         className="text-6xl font-bold text-card drop-shadow-md tabular-nums"
         key={value}
-        initial={!shouldReduceMotion && previousValue !== null && previousValue !== value ? { scale: 1.05 } : false}
+        initial={
+          !shouldReduceMotion && previousValue !== null && previousValue !== value
+            ? { scale: 1.15, opacity: 0.7 }
+            : false
+        }
         animate={{
           scale: !shouldReduceMotion && transition ? [1, 1.08, 1] : 1,
-          // Subtle breath while background-fetching — halts immediately on new data
           opacity: !shouldReduceMotion && isUpdating ? [1, 0.55, 1] : 1,
         }}
         transition={{
-          scale: transition ? { duration: 0.5, ease: 'easeOut' } : { duration: 0.3 },
+          scale: transition
+            ? { duration: 0.5, ease: 'easeOut' }
+            : { type: 'spring', stiffness: 380, damping: 18, duration: 0.4 },
           opacity: isUpdating
             ? { repeat: Infinity, duration: 1.6, ease: 'easeInOut' }
-            : { duration: 0.4 },
+            : { duration: 0.25 },
         }}
       >
         {displayNumber}

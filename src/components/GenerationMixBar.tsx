@@ -1,6 +1,7 @@
 import { GenerationMix, getFuelColor } from '@/lib/carbonApi';
 import { Home, Factory, Flame, Wind, Sun, Atom, Droplets, Leaf, Mountain, ArrowLeftRight, Zap, Cable, type LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   Dialog,
   DialogContent,
@@ -61,6 +62,10 @@ export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolar
   const renewables = getRenewablesPercentage(mix);
   const embeddedSolarPerc = getEmbeddedSolarPercentage(mix, embeddedSolarMW);
   const totalSolarMW = getTotalSolarMW(mix);
+  const shouldReduceMotion = useReducedMotion();
+
+  // The leading fuel source breathes very gently (only if > 10% share)
+  const dominantFuel = sortedMix[0]?.fuel ?? null;
 
   return (
     <Dialog>
@@ -95,6 +100,7 @@ export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolar
             {sortedMix.map((item, idx) => {
               const isSolar = item.fuel.toLowerCase() === 'solar';
               const entranceDelay = `${idx * 35}ms`;
+              const isDominant = !shouldReduceMotion && item.fuel === dominantFuel && item.perc > 10;
               // For solar, show a sub-segment with a striped pattern for embedded/rooftop
               if (isSolar && embeddedSolarPerc !== null && embeddedSolarPerc > 0) {
                 const utilitySolarWidth = 100 - embeddedSolarPerc;
@@ -115,6 +121,27 @@ export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolar
                       style={{ width: `${embeddedSolarPerc}%` }}
                     />
                   </div>
+                );
+              }
+              if (isDominant) {
+                return (
+                  <motion.div
+                    key={item.fuel}
+                    className={`${getFuelColor(item.fuel)} transition-colors duration-500`}
+                    style={{ transitionDelay: entranceDelay }}
+                    animate={{
+                      width: [
+                        `${item.perc - 0.4}%`,
+                        `${item.perc + 0.4}%`,
+                        `${item.perc - 0.4}%`,
+                      ],
+                    }}
+                    transition={{
+                      repeat: Infinity,
+                      duration: 3.2,
+                      ease: 'easeInOut',
+                    }}
+                  />
                 );
               }
               return (

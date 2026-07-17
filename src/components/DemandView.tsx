@@ -1,5 +1,5 @@
 import { Zap, RefreshCw, AlertTriangle, Info, Activity, Home } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, useSpring, useTransform } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { GenerationMixBar, getFuelIcon, getFuelHex } from '@/components/GenerationMixBar';
 import { useGridDemand, MixWithTrend } from '@/hooks/useGridDemand';
@@ -13,6 +13,8 @@ import { FuelRecordList } from '@/components/FuelRecordCelebration';
 import { FuelTrendIndicator } from '@/components/FuelTrendIndicator';
 import { DEFINITIONS } from '@/lib/definitions';
 import { StaleDataBadge } from '@/components/StaleDataBadge';
+import { useRelativeTime } from '@/hooks/useRelativeTime';
+import { useEffect, useState } from 'react';
 
 export function DemandView() {
     const { demand, mix, mixWithTrends, frequency: gridFrequency, embeddedSolarMW, isLoading, error, refetch, lastUpdated } = useGridDemand();
@@ -50,6 +52,27 @@ export function DemandView() {
     // Convert demand to GW if available
     const demandGW = demand ? (demand / 1000).toFixed(2) : null;
     const updatedTime = lastUpdated ? new Date(lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
+    const relativeTime = useRelativeTime(lastUpdated);
+
+    // Spring-animated GW number
+    const rawDemandGW = demand ? demand / 1000 : 0;
+    const springDemand = useSpring(rawDemandGW, { stiffness: 160, damping: 22 });
+    const springDemandDisplay = useTransform(springDemand, (v) => v.toFixed(2));
+    const [displayDemandGW, setDisplayDemandGW] = useState(rawDemandGW.toFixed(2));
+    useEffect(() => {
+      springDemand.set(rawDemandGW);
+      const unsub = springDemandDisplay.on('change', setDisplayDemandGW);
+      return unsub;
+    }, [rawDemandGW, springDemand, springDemandDisplay]);
+
+    // Freshness dot: green < 10 min, amber 10-35 min, red > 35 min
+    const freshnessColor = (() => {
+      if (!lastUpdated) return 'bg-muted-foreground/40';
+      const ageMins = (Date.now() - new Date(lastUpdated).getTime()) / 60000;
+      if (ageMins < 10) return 'bg-emerald-500';
+      if (ageMins < 35) return 'bg-amber-400';
+      return 'bg-destructive';
+    })();
 
     // Sort mix by percentage descending (use mixWithTrends for the cards)
     const sortedMix = [...mix].sort((a, b) => b.perc - a.perc);
@@ -117,7 +140,8 @@ export function DemandView() {
                             <h2 className="text-4xl font-bold tracking-tight mt-1 text-primary">
                                 {demandGW ? (
                                     <>
-                                        {demandGW} <span className="text-lg font-medium text-muted-foreground/80">GW</span>
+                                        <motion.span key={demandGW}>{displayDemandGW}</motion.span>{' '}
+                                        <span className="text-lg font-medium text-muted-foreground/80">GW</span>
                                     </>
                                 ) : (
                                     <span className="text-2xl text-muted-foreground/50">Unavailable</span>
@@ -125,9 +149,13 @@ export function DemandView() {
                             </h2>
                             {lastUpdated && (
                                 <div className="flex items-center gap-2 mt-2">
-                                    <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                                        <RefreshCw className="w-3 h-3" />
-                                        Updated {updatedTime}
+                                    {/* Pulsing freshness dot */}
+                                    <span className="relative flex h-2 w-2 flex-shrink-0">
+                                        <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-60 ${freshnessColor}`} />
+                                        <span className={`relative inline-flex h-2 w-2 rounded-full ${freshnessColor}`} />
+                                    </span>
+                                    <p className="text-xs text-muted-foreground">
+                                        {relativeTime}
                                     </p>
                                     <StaleDataBadge lastUpdated={lastUpdated} />
                                 </div>
@@ -186,7 +214,7 @@ export function DemandView() {
                 <GenerationMixBar mix={sortedMix} showMW={true} embeddedSolarMW={embeddedSolarMW} />
             </Card>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3" style={{ perspective: '900px' }}>
                 {sortedMixWithTrends.map((source, idx) => {
                     const fuelKey = source.fuel?.toLowerCase() || source.name?.toLowerCase() || '';
                     const streak = streakByFuel[fuelKey];
@@ -201,11 +229,16 @@ export function DemandView() {
                     const isZero = source.perc === 0;
 
                     return (
-                        <motion.div
+                    <motion.div
                             key={source.id}
-                            initial={{ opacity: 0, y: 8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: idx * 0.04, duration: 0.35, ease: 'easeOut' }}
+                            initial={{ opacity: 0, rotateY: 90 }}
+                            animate={{ opacity: 1, rotateY: 0 }}
+                            transition={{
+                              delay: idx * 0.05,
+                              duration: 0.4,
+                              ease: [0.25, 0.46, 0.45, 0.94],
+                            }}
+                            style={{ transformOrigin: 'left center', transformStyle: 'preserve-3d' }}
                             whileHover={{ y: -2 }}
                         >
                             <Card

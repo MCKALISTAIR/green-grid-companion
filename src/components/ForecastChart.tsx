@@ -1,6 +1,7 @@
 import { ForecastData, getIntensityColor } from '@/lib/carbonApi';
 import { format, parseISO, isBefore, startOfHour } from 'date-fns';
 import { useRef, useLayoutEffect, useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { getForecastMax, getForecastDifferences } from '@/lib/forecastUtils';
 import { createPortal } from 'react-dom';
 import { Target, ArrowUp, ArrowDown } from 'lucide-react';
@@ -306,17 +307,22 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
                         }}
                       >
                         <div className="relative h-24 w-8 flex items-end justify-center mt-2">
-                          {/* Single bar showing actual (if available) or forecast */}
-                          <div
-                            className={`relative w-full rounded-t-md transition-[height,background-color] duration-500 ease-out border-x border-t ${hasActual
-                              ? 'border-white/30' // More prominent border for actual
-                              : 'border-white/10'
-                              } ${getIntensityColor(item.intensity.index)}`}
-                            style={{
+                          {/* Single bar — animates up from 0 like an equalizer */}
+                          <motion.div
+                            className={`relative w-full rounded-t-md border-x border-t ${
+                              hasActual ? 'border-white/30' : 'border-white/10'
+                            } ${getIntensityColor(item.intensity.index)}`}
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{
                               height: `${Math.max(
                                 ((item.intensity.actual ?? item.intensity.forecast) / maxForecast) * 100,
                                 10
                               )}%`,
+                              opacity: 1,
+                            }}
+                            transition={{
+                              height: { duration: 0.5, ease: [0.34, 1.2, 0.64, 1], delay: i * 0.018 },
+                              opacity: { duration: 0.25, delay: i * 0.018 },
                             }}
                           >
                             {/* Subtle pattern overlay for actual values to distinguish from forecast */}
@@ -327,7 +333,7 @@ export function ForecastChart({ forecast }: ForecastChartProps) {
                             {isCurrentHour && (
                               <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-primary rounded-full animate-pulse shadow-[0_0_8px_rgba(var(--primary),0.5)] z-25" />
                             )}
-                          </div>
+                          </motion.div>
                         </div>
                         <span className={`text-xs font-medium ${isCurrentHour ? 'text-primary font-bold' : 'text-foreground'}`}>
                           {isUnknown ? '?' : (item.intensity.actual ?? item.intensity.forecast)}
