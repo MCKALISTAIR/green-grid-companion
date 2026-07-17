@@ -3,6 +3,7 @@ import { motion, useSpring, useTransform, AnimatePresence } from 'framer-motion'
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { useCleanlinessBand } from '@/hooks/useCleanlinessBand';
 import { cn } from '@/lib/utils';
 
 interface AnimatedIntensityProps {
@@ -82,19 +83,44 @@ export function AnimatedIntensity({
     return () => clearTimeout(timer);
   }, [value, previousValue, impactLight]);
 
+  // Halo pulse when the cleanliness band changes (e.g. green → amber)
+  const { transition } = useCleanlinessBand(value);
+  const haloColor =
+    transition?.direction === 'cleaner'
+      ? 'hsl(var(--primary) / 0.55)'
+      : transition?.direction === 'dirtier'
+      ? 'hsl(var(--destructive) / 0.55)'
+      : 'transparent';
+
   return (
-    <div className={cn('flex items-center gap-1', className)} aria-live="polite" aria-atomic="true">
+    <div className={cn('relative flex items-center gap-1', className)} aria-live="polite" aria-atomic="true">
+      {/* Band-change halo — fires once per transition, ignored under reduced motion */}
+      <AnimatePresence>
+        {transition && !shouldReduceMotion && (
+          <motion.span
+            key={`halo-${transition.at}`}
+            aria-hidden
+            className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full"
+            style={{ background: `radial-gradient(circle, ${haloColor} 0%, transparent 65%)` }}
+            initial={{ opacity: 0, scale: 0.6 }}
+            animate={{ opacity: [0, 0.9, 0], scale: [0.6, 1.6, 2] }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.4, ease: 'easeOut' }}
+          />
+        )}
+      </AnimatePresence>
+
       <motion.span
         className="text-6xl font-bold text-card drop-shadow-md tabular-nums"
         key={value}
         initial={!shouldReduceMotion && previousValue !== null && previousValue !== value ? { scale: 1.05 } : false}
         animate={{
-          scale: 1,
+          scale: !shouldReduceMotion && transition ? [1, 1.08, 1] : 1,
           // Subtle breath while background-fetching — halts immediately on new data
           opacity: !shouldReduceMotion && isUpdating ? [1, 0.55, 1] : 1,
         }}
         transition={{
-          scale: { duration: 0.3 },
+          scale: transition ? { duration: 0.5, ease: 'easeOut' } : { duration: 0.3 },
           opacity: isUpdating
             ? { repeat: Infinity, duration: 1.6, ease: 'easeInOut' }
             : { duration: 0.4 },
@@ -102,6 +128,7 @@ export function AnimatedIntensity({
       >
         {displayNumber}
       </motion.span>
+
 
       <AnimatePresence>
         {showArrow && direction && (

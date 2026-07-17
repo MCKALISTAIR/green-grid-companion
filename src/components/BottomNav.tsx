@@ -5,6 +5,13 @@ import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { useHaptics } from '@/hooks/useHaptics';
 
+// Playful press feedback: icon dips + tilts on active, springs back on release.
+// Uses group-active so the whole Button press drives the icon, not the icon itself.
+const iconTilt =
+    'transition-transform duration-150 ease-out group-active:scale-90 group-active:-rotate-6 motion-reduce:transform-none';
+
+
+
 interface BottomNavProps {
     onHomeClick?: () => void;
 }
@@ -34,7 +41,7 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
 
                     <Button
                         variant="ghost"
-                        className={`relative z-10 flex flex-col items-center gap-1 h-auto py-2 px-1 rounded-lg transition-all ${isActive('/')
+                        className={`group relative z-10 flex flex-col items-center gap-1 h-auto py-2 px-1 rounded-lg transition-all ${isActive('/')
                             ? 'text-primary font-semibold'
                             : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
                             }`}
@@ -47,14 +54,14 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
                                 transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                             />
                         )}
-                        <Home className="w-5 h-5" />
+                        <Home className={`w-5 h-5 ${iconTilt}`} />
                         <span className="text-[10px] font-medium">Home</span>
                     </Button>
 
                     <Button
                         variant="ghost"
                         data-tour="nav-plan"
-                        className={`relative z-10 flex flex-col items-center gap-1 h-auto py-2 px-1 rounded-lg transition-all ${isActive('/planner')
+                        className={`group relative z-10 flex flex-col items-center gap-1 h-auto py-2 px-1 rounded-lg transition-all ${isActive('/planner')
                             ? 'text-primary font-semibold'
                             : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
                             }`}
@@ -67,14 +74,14 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
                                 transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                             />
                         )}
-                        <Calendar className="w-5 h-5" />
+                        <Calendar className={`w-5 h-5 ${iconTilt}`} />
                         <span className="text-[10px] font-medium">Plan</span>
                     </Button>
 
                     <Button
                         variant="ghost"
                         data-tour="nav-history"
-                        className={`relative z-10 flex flex-col items-center gap-1 h-auto py-2 px-1 rounded-lg transition-all ${isActive('/history')
+                        className={`group relative z-10 flex flex-col items-center gap-1 h-auto py-2 px-1 rounded-lg transition-all ${isActive('/history')
                             ? 'text-primary font-semibold'
                             : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
                             }`}
@@ -87,14 +94,14 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
                                 transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                             />
                         )}
-                        <Clock className="w-5 h-5" />
+                        <Clock className={`w-5 h-5 ${iconTilt}`} />
                         <span className="text-[10px] font-medium">History</span>
                     </Button>
 
                     <Button
                         variant="ghost"
                         data-tour="nav-rank"
-                        className={`relative z-10 flex flex-col items-center gap-1 h-auto py-2 px-1 rounded-lg transition-all ${isActive('/map')
+                        className={`group relative z-10 flex flex-col items-center gap-1 h-auto py-2 px-1 rounded-lg transition-all ${isActive('/map')
                             ? 'text-primary font-semibold'
                             : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
                             }`}
@@ -107,13 +114,13 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
                                 transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                             />
                         )}
-                        <ListOrdered className="w-5 h-5" />
+                        <ListOrdered className={`w-5 h-5 ${iconTilt}`} />
                         <span className="text-[10px] font-medium">Rank</span>
                     </Button>
 
                     <Button
                         variant="ghost"
-                        className={`relative z-10 flex flex-col items-center gap-1 h-auto py-2 px-1 rounded-lg transition-all ${isActive('/settings')
+                        className={`group relative z-10 flex flex-col items-center gap-1 h-auto py-2 px-1 rounded-lg transition-all ${isActive('/settings')
                             ? 'text-primary font-semibold'
                             : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
                             }`}
@@ -126,7 +133,7 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
                                 transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                             />
                         )}
-                        <Settings className="w-5 h-6" />
+                        <Settings className={`w-5 h-6 ${iconTilt}`} />
                         <span className="text-[10px] font-medium">Settings</span>
                     </Button>
 
