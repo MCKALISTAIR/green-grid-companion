@@ -1,6 +1,7 @@
 import { useState, useRef, ReactNode } from 'react';
 import { useHaptics } from '@/hooks/useHaptics';
-import { RefreshCw } from 'lucide-react';
+import { TurbineLogo } from '@/components/TurbineLogo';
+
 
 interface PullToRefreshProps {
     onRefresh: () => Promise<void> | void;
