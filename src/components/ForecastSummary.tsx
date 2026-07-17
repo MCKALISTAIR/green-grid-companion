@@ -3,6 +3,7 @@ import { ForecastData } from '@/lib/carbonApi';
 import { format, isToday, isTomorrow, parseISO } from 'date-fns';
 import { Card } from '@/components/ui/card';
 import { TrendingDown, TrendingUp, Activity } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface ForecastSummaryProps {
     forecast: ForecastData[];
@@ -19,6 +20,38 @@ interface DailyStats {
     avgActual?: number;
     hasActuals: boolean;
 }
+
+const cardVariants = {
+    hidden: { opacity: 0, y: 10 },
+    show: (idx: number) => ({
+        opacity: 1,
+        y: 0,
+        transition: {
+            duration: 0.35,
+            delay: idx * 0.05,
+            ease: 'easeOut',
+        }
+    })
+};
+
+const iconLowVariants = {
+    initial: { y: 0 },
+    hover: { y: [0, 2.5, 0], transition: { duration: 0.4, ease: "easeInOut" } }
+};
+
+const iconAvgVariants = {
+    initial: { scale: 1, rotate: 0 },
+    hover: {
+        scale: [1, 1.12, 1],
+        rotate: [0, -10, 10, -5, 5, 0],
+        transition: { duration: 0.5, ease: "easeInOut" }
+    }
+};
+
+const iconHighVariants = {
+    initial: { y: 0 },
+    hover: { y: [0, -2.5, 0], transition: { duration: 0.4, ease: "easeInOut" } }
+};
 
 export function ForecastSummary({ forecast }: ForecastSummaryProps) {
     const stats = useMemo(() => {
@@ -44,7 +77,7 @@ export function ForecastSummary({ forecast }: ForecastSummaryProps) {
 
         const result: DailyStats[] = [];
 
-        // Calculate stats for each day
+        // Group actuals/forecast values
         grouped.forEach((values, dateKey) => {
             const date = parseISO(dateKey);
             let label = format(date, 'EEEE'); // e.g., "Monday"
@@ -86,106 +119,136 @@ export function ForecastSummary({ forecast }: ForecastSummaryProps) {
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {stats.map((day) => (
-                    <Card key={day.date} className="p-3 bg-card/50">
-                        <div className="flex items-center justify-between mb-3 pb-2 border-b border-border/50">
-                            <h4 className="font-semibold text-sm text-foreground/90">
-                                {day.label}
-                            </h4>
-                            {day.hasActuals && (
-                                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-secondary/20 text-secondary-foreground font-medium">
-                                    Actuals Available
-                                </span>
-                            )}
-                        </div>
-
-                        {day.hasActuals ? (
-                            <div className="grid grid-cols-3 gap-2">
-                                {/* Lowest Comparison */}
-                                <div className="flex flex-col items-center gap-1">
-                                    <div className="p-1.5 rounded-full bg-intensity-very-low/10 mb-1">
-                                        <TrendingDown className="w-4 h-4 text-intensity-very-low" />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-x-2 text-center w-full px-1">
-                                        <div className="flex flex-col">
-                                            <span className="text-xs font-semibold text-muted-foreground/70">{day.min}</span>
-                                            <span className="text-[9px] text-muted-foreground/50 uppercase scale-90">Pred</span>
-                                        </div>
-                                        <div className="flex flex-col border-l border-border/30">
-                                            <span className="text-xs font-bold text-foreground">{day.minActual}</span>
-                                            <span className="text-[9px] text-primary uppercase scale-90">Act</span>
-                                        </div>
-                                    </div>
-                                    <span className="text-[10px] text-muted-foreground uppercase font-medium mt-1">Low</span>
+                {stats.map((day, idx) => (
+                    <motion.div
+                        key={day.date}
+                        custom={idx}
+                        variants={cardVariants}
+                        initial="hidden"
+                        animate="show"
+                        whileHover="hover"
+                        className="cursor-pointer"
+                    >
+                        <Card className="p-3 bg-card/50 hover:bg-card/75 border-border/40 hover:border-border/80 transition-all duration-350 shadow-sm hover:shadow-md h-full flex flex-col justify-between">
+                            <div>
+                                <div className="flex items-center justify-between mb-3 pb-2 border-b border-border/50">
+                                    <h4 className="font-semibold text-sm text-foreground/90">
+                                        {day.label}
+                                    </h4>
+                                    {day.hasActuals && (
+                                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-secondary/20 text-secondary-foreground font-medium transition-colors hover:bg-secondary/30">
+                                            Actuals Available
+                                        </span>
+                                    )}
                                 </div>
 
-                                {/* Average Comparison */}
-                                <div className="flex flex-col items-center gap-1 border-l border-r border-border/30 px-1">
-                                    <div className="p-1.5 rounded-full bg-intensity-moderate/10 mb-1">
-                                        <Activity className="w-4 h-4 text-intensity-moderate" />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-x-2 text-center w-full px-1">
-                                        <div className="flex flex-col">
-                                            <span className="text-xs font-semibold text-muted-foreground/70">{day.avg}</span>
-                                            <span className="text-[9px] text-muted-foreground/50 uppercase scale-90">Pred</span>
+                                {day.hasActuals ? (
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {/* Lowest Comparison */}
+                                        <div className="flex flex-col items-center gap-1">
+                                            <motion.div
+                                                variants={iconLowVariants}
+                                                className="p-1.5 rounded-full bg-intensity-very-low/10 mb-1"
+                                            >
+                                                <TrendingDown className="w-4 h-4 text-intensity-very-low" />
+                                            </motion.div>
+                                            <div className="grid grid-cols-2 gap-x-2 text-center w-full px-1">
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs font-semibold text-muted-foreground/70">{day.min}</span>
+                                                    <span className="text-[9px] text-muted-foreground/50 uppercase scale-90">Pred</span>
+                                                </div>
+                                                <div className="flex flex-col border-l border-border/30">
+                                                    <span className="text-xs font-bold text-foreground">{day.minActual}</span>
+                                                    <span className="text-[9px] text-primary uppercase scale-90">Act</span>
+                                                </div>
+                                            </div>
+                                            <span className="text-[10px] text-muted-foreground uppercase font-medium mt-1">Low</span>
                                         </div>
-                                        <div className="flex flex-col border-l border-border/30">
-                                            <span className="text-xs font-bold text-foreground">{day.avgActual}</span>
-                                            <span className="text-[9px] text-primary uppercase scale-90">Act</span>
-                                        </div>
-                                    </div>
-                                    <span className="text-[10px] text-muted-foreground uppercase font-medium mt-1">Avg</span>
-                                </div>
 
-                                {/* Highest Comparison */}
-                                <div className="flex flex-col items-center gap-1">
-                                    <div className="p-1.5 rounded-full bg-intensity-very-high/10 mb-1">
-                                        <TrendingUp className="w-4 h-4 text-intensity-very-high" />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-x-2 text-center w-full px-1">
-                                        <div className="flex flex-col">
-                                            <span className="text-xs font-semibold text-muted-foreground/70">{day.max}</span>
-                                            <span className="text-[9px] text-muted-foreground/50 uppercase scale-90">Pred</span>
+                                        {/* Average Comparison */}
+                                        <div className="flex flex-col items-center gap-1 border-l border-r border-border/30 px-1">
+                                            <motion.div
+                                                variants={iconAvgVariants}
+                                                className="p-1.5 rounded-full bg-intensity-moderate/10 mb-1"
+                                            >
+                                                <Activity className="w-4 h-4 text-intensity-moderate" />
+                                            </motion.div>
+                                            <div className="grid grid-cols-2 gap-x-2 text-center w-full px-1">
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs font-semibold text-muted-foreground/70">{day.avg}</span>
+                                                    <span className="text-[9px] text-muted-foreground/50 uppercase scale-90">Pred</span>
+                                                </div>
+                                                <div className="flex flex-col border-l border-border/30">
+                                                    <span className="text-xs font-bold text-foreground">{day.avgActual}</span>
+                                                    <span className="text-[9px] text-primary uppercase scale-90">Act</span>
+                                                </div>
+                                            </div>
+                                            <span className="text-[10px] text-muted-foreground uppercase font-medium mt-1">Avg</span>
                                         </div>
-                                        <div className="flex flex-col border-l border-border/30">
-                                            <span className="text-xs font-bold text-foreground">{day.maxActual}</span>
-                                            <span className="text-[9px] text-primary uppercase scale-90">Act</span>
+
+                                        {/* Highest Comparison */}
+                                        <div className="flex flex-col items-center gap-1">
+                                            <motion.div
+                                                variants={iconHighVariants}
+                                                className="p-1.5 rounded-full bg-intensity-very-high/10 mb-1"
+                                            >
+                                                <TrendingUp className="w-4 h-4 text-intensity-very-high" />
+                                            </motion.div>
+                                            <div className="grid grid-cols-2 gap-x-2 text-center w-full px-1">
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs font-semibold text-muted-foreground/70">{day.max}</span>
+                                                    <span className="text-[9px] text-muted-foreground/50 uppercase scale-90">Pred</span>
+                                                </div>
+                                                <div className="flex flex-col border-l border-border/30">
+                                                    <span className="text-xs font-bold text-foreground">{day.maxActual}</span>
+                                                    <span className="text-[9px] text-primary uppercase scale-90">Act</span>
+                                                </div>
+                                            </div>
+                                            <span className="text-[10px] text-muted-foreground uppercase font-medium mt-1">High</span>
                                         </div>
                                     </div>
-                                    <span className="text-[10px] text-muted-foreground uppercase font-medium mt-1">High</span>
-                                </div>
+                                ) : (
+                                    <div className="grid grid-cols-3 gap-2 text-center">
+                                        {/* Lowest */}
+                                        <div className="flex flex-col items-center gap-1">
+                                            <motion.div
+                                                variants={iconLowVariants}
+                                                className="p-1.5 rounded-full bg-intensity-very-low/10"
+                                            >
+                                                <TrendingDown className="w-4 h-4 text-intensity-very-low" />
+                                            </motion.div>
+                                            <span className="text-sm font-bold text-foreground">{day.min}</span>
+                                            <span className="text-[10px] text-muted-foreground uppercase">Low</span>
+                                        </div>
+
+                                        {/* Average */}
+                                        <div className="flex flex-col items-center gap-1 border-l border-r border-border/30">
+                                            <motion.div
+                                                variants={iconAvgVariants}
+                                                className="p-1.5 rounded-full bg-intensity-moderate/10"
+                                            >
+                                                <Activity className="w-4 h-4 text-intensity-moderate" />
+                                            </motion.div>
+                                            <span className="text-sm font-bold text-foreground">{day.avg}</span>
+                                            <span className="text-[10px] text-muted-foreground uppercase">Avg</span>
+                                        </div>
+
+                                        {/* Highest */}
+                                        <div className="flex flex-col items-center gap-1">
+                                            <motion.div
+                                                variants={iconHighVariants}
+                                                className="p-1.5 rounded-full bg-intensity-very-high/10"
+                                            >
+                                                <TrendingUp className="w-4 h-4 text-intensity-very-high" />
+                                            </motion.div>
+                                            <span className="text-sm font-bold text-foreground">{day.max}</span>
+                                            <span className="text-[10px] text-muted-foreground uppercase">High</span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                        ) : (
-                            <div className="grid grid-cols-3 gap-2 text-center">
-                                {/* Lowest */}
-                                <div className="flex flex-col items-center gap-1">
-                                    <div className="p-1.5 rounded-full bg-intensity-very-low/10">
-                                        <TrendingDown className="w-4 h-4 text-intensity-very-low" />
-                                    </div>
-                                    <span className="text-sm font-bold text-foreground">{day.min}</span>
-                                    <span className="text-[10px] text-muted-foreground uppercase">Low</span>
-                                </div>
-
-                                {/* Average */}
-                                <div className="flex flex-col items-center gap-1 border-l border-r border-border/30">
-                                    <div className="p-1.5 rounded-full bg-intensity-moderate/10">
-                                        <Activity className="w-4 h-4 text-intensity-moderate" />
-                                    </div>
-                                    <span className="text-sm font-bold text-foreground">{day.avg}</span>
-                                    <span className="text-[10px] text-muted-foreground uppercase">Avg</span>
-                                </div>
-
-                                {/* Highest */}
-                                <div className="flex flex-col items-center gap-1">
-                                    <div className="p-1.5 rounded-full bg-intensity-very-high/10">
-                                        <TrendingUp className="w-4 h-4 text-intensity-very-high" />
-                                    </div>
-                                    <span className="text-sm font-bold text-foreground">{day.max}</span>
-                                    <span className="text-[10px] text-muted-foreground uppercase">High</span>
-                                </div>
-                            </div>
-                        )}
-                    </Card>
+                        </Card>
+                    </motion.div>
                 ))}
             </div>
         </div>
