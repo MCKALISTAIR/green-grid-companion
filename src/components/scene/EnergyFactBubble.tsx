@@ -56,8 +56,22 @@ export function EnergyFactBubble({ intensity, generationMix, className, variant 
             {isVisible && (
                 <motion.div
                     initial={!shouldReduceMotion ? { opacity: 0, y: 10, scale: 0.9 } : { opacity: 0 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    animate={!shouldReduceMotion ? {
+                        opacity: 1,
+                        y: [0, -3, 0],
+                        scale: 1,
+                    } : { opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, scale: !shouldReduceMotion ? 0.9 : 1 }}
+                    transition={!shouldReduceMotion ? {
+                        y: {
+                            repeat: Infinity,
+                            duration: 5,
+                            ease: 'easeInOut',
+                        },
+                        opacity: { duration: 0.3 },
+                        scale: { duration: 0.3 }
+                    } : { duration: 0.2 }}
+                    whileHover={!shouldReduceMotion ? { scale: 1.018 } : {}}
                     className={variant === 'bubble'
                         ? `absolute bottom-4 right-4 pr-[env(safe-area-inset-right)] z-40 max-w-[200px] md:max-w-[260px] ${className || ''}`
                         : `w-full ${className || ''}`

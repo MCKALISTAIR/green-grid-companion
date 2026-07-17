@@ -158,12 +158,15 @@ export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolar
           <div className="generation-mix-legend-compact">
             {/* Mobile/Compact layout: Flex Wrap (Top 6) */}
             <div className="flex flex-wrap gap-2">
-              {sortedMix.slice(0, 6).map((item) => {
+              {sortedMix.slice(0, 6).map((item, idx) => {
                 const Icon = getFuelIcon(item.fuel);
                 return (
-                  <div
+                  <motion.div
                     key={item.fuel}
-                    className="flex items-center gap-1.5 text-xs text-muted-foreground"
+                    className="flex items-center gap-1.5 text-xs text-muted-foreground animate-in fade-in-0 duration-300"
+                    initial={shouldReduceMotion ? {} : { opacity: 0, x: -6 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={shouldReduceMotion ? {} : { duration: 0.25, delay: idx * 0.03, ease: 'easeOut' }}
                   >
                     <Icon className={`w-3 h-3`} style={{ color: 'currentColor' }} />
                     <span className="capitalize">{item.fuel}</span>
@@ -172,7 +175,7 @@ export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolar
                         ? `${(item.mw / 1000).toFixed(1)}GW`
                         : `${item.perc.toFixed(0)}%`}
                     </span>
-                  </div>
+                  </motion.div>
                 );
               })}
               {sortedMix.length > 6 && (
@@ -183,12 +186,15 @@ export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolar
 
           <div className="generation-mix-legend-grid pt-2">
             {/* Desktop/Wide layout: Full Grid showing all items */}
-            {sortedMix.map((item) => {
+            {sortedMix.map((item, idx) => {
               const Icon = getFuelIcon(item.fuel);
               return (
-                <div
+                <motion.div
                   key={item.fuel}
                   className="flex items-center justify-between text-sm w-full"
+                  initial={shouldReduceMotion ? {} : { opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={shouldReduceMotion ? {} : { duration: 0.3, delay: idx * 0.02, ease: 'easeOut' }}
                 >
                   <div className="flex items-center gap-2">
                     <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 ${getFuelColor(item.fuel)}`}>
@@ -201,7 +207,7 @@ export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolar
                       ? `${(item.mw / 1000).toFixed(2)} GW`
                       : `${item.perc}%`}
                   </span>
-                </div>
+                </motion.div>
               );
             })}
           </div>

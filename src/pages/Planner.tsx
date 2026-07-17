@@ -3,6 +3,7 @@ import { useCarbonData } from '@/hooks/useCarbonData';
 import { useTeslaEnergy } from '@/hooks/useTeslaEnergy';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ErrorState } from '@/components/ErrorState';
 import { getErrorInfo } from '@/lib/errorUtils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
@@ -317,10 +318,16 @@ export default function Planner() {
                             <Button
                                 key={app.id}
                                 variant={selectedAppliance.id === app.id ? "default" : "outline"}
-                                className="h-auto py-4 flex flex-col gap-2"
+                                className="h-auto py-4 flex flex-col gap-2 relative overflow-hidden transition-all duration-200"
                                 onClick={() => setSelectedAppliance(app)}
                             >
-                                <app.icon className={`w-8 h-8 ${selectedAppliance.id === app.id ? 'text-primary-foreground' : 'text-primary'}`} />
+                                <motion.div
+                                    key={selectedAppliance.id === app.id ? 'active' : 'idle'}
+                                    animate={selectedAppliance.id === app.id ? { scale: [1, 1.15, 1], y: [0, -3, 0] } : {}}
+                                    transition={{ type: 'spring', stiffness: 350, damping: 15 }}
+                                >
+                                    <app.icon className={`w-8 h-8 ${selectedAppliance.id === app.id ? 'text-primary-foreground' : 'text-primary'}`} />
+                                </motion.div>
                                 <div className="text-center">
                                     <div className="font-semibold">{app.name}</div>
                                     <div className="text-[10px] opacity-70 font-normal">{app.label}</div>
@@ -400,70 +407,79 @@ export default function Planner() {
                                     <div className="h-8 bg-muted rounded w-1/2 mx-auto"></div>
                                 </div>
                                 <div className="h-10 bg-muted rounded"></div>
-                                <div className="h-24 bg-muted rounded"></div>
                             </div>
                         </Card>
                     ) : bestSlot ? (
-                        <Card className="p-6 space-y-4 border-primary/20 bg-primary/5">
-                            <div className="text-center space-y-1">
-                                <h3 className="text-lg font-medium text-muted-foreground">
-                                    {selectedAppliance.id.startsWith('tesla-') ? 'Best time to charge' : 'Best time to run'}
-                                </h3>
-                                <p className="text-3xl font-bold text-foreground">
-                                    {format(parseISO(bestSlot.startTime), 'EEEE h:mm a')}
-                                </p>
-                                <p className="text-sm text-green-600 font-medium">
-                                    {bestSlot.avgIntensity} gCO₂/kWh average
-                                </p>
-                            </div>
-
-                            {/* Tesla-specific info */}
-                            {selectedAppliance.id.startsWith('tesla-') && teslaVehicleState && (
-                                <div className="flex items-center justify-center gap-4 text-sm">
-                                    <div className="flex items-center gap-1">
-                                        <Battery className="w-4 h-4" />
-                                        <span>{teslaVehicleState.batteryLevel}%</span>
-                                    </div>
-                                    <span>→</span>
-                                    <div className="flex items-center gap-1">
-                                        <Zap className="w-4 h-4 text-primary" />
-                                        <span>{teslaVehicleState.chargeLimit}%</span>
-                                    </div>
-                                </div>
-                            )}
-
-                            {isFetchingTesla && (
-                                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                                    <TurbineSpinner className="w-4 h-4" />
-                                    <span>Fetching vehicle data...</span>
-                                </div>
-                            )}
-
-                            <Button
-                                className="w-full"
-                                variant="secondary"
-                                onClick={scheduleReminder}
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={selectedAppliance.id}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                transition={{ duration: 0.22, ease: 'easeOut' }}
                             >
-                                <Bell className="w-4 h-4 mr-2" />
-                                Remind me 15m before
-                            </Button>
+                                <Card className="p-6 space-y-4 border-primary/20 bg-primary/5">
+                                    <div className="text-center space-y-1">
+                                        <h3 className="text-lg font-medium text-muted-foreground">
+                                            {selectedAppliance.id.startsWith('tesla-') ? 'Best time to charge' : 'Best time to run'}
+                                        </h3>
+                                        <p className="text-3xl font-bold text-foreground">
+                                            {format(parseISO(bestSlot.startTime), 'EEEE h:mm a')}
+                                        </p>
+                                        <p className="text-sm text-green-600 font-medium">
+                                            {bestSlot.avgIntensity} gCO₂/kWh average
+                                        </p>
+                                    </div>
 
-                            {savings > 0 && (
-                                <div className="bg-background/50 rounded-lg p-4 text-center">
-                                    <p className="text-sm text-muted-foreground">Impact vs Now</p>
-                                    <p className="text-xl font-bold text-green-600 flex items-center justify-center gap-1">
-                                        <Leaf className="w-5 h-5" />
-                                        Save {savings}g CO₂
-                                    </p>
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                        {selectedAppliance.id.startsWith('tesla-')
-                                            ? `That's ${(savings / 120).toFixed(1)} fewer miles of petrol car emissions`
-                                            : `Equivalent to charging a smartphone ${Math.round(savings / 5)} times`
-                                        }
-                                    </p>
-                                </div>
-                            )}
-                        </Card>
+                                    {/* Tesla-specific info */}
+                                    {selectedAppliance.id.startsWith('tesla-') && teslaVehicleState && (
+                                        <div className="flex items-center justify-center gap-4 text-sm">
+                                            <div className="flex items-center gap-1">
+                                                <Battery className="w-4 h-4" />
+                                                <span>{teslaVehicleState.batteryLevel}%</span>
+                                            </div>
+                                            <span>→</span>
+                                            <div className="flex items-center gap-1">
+                                                <Zap className="w-4 h-4 text-primary" />
+                                                <span>{teslaVehicleState.chargeLimit}%</span>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {isFetchingTesla && (
+                                        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                                            <TurbineSpinner className="w-4 h-4" />
+                                            <span>Fetching vehicle data...</span>
+                                        </div>
+                                    )}
+
+                                    <Button
+                                        className="w-full"
+                                        variant="secondary"
+                                        onClick={scheduleReminder}
+                                    >
+                                        <Bell className="w-4 h-4 mr-2" />
+                                        Remind me 15m before
+                                    </Button>
+
+                                    {savings > 0 && (
+                                        <div className="bg-background/50 rounded-lg p-4 text-center">
+                                            <p className="text-sm text-muted-foreground">Impact vs Now</p>
+                                            <p className="text-xl font-bold text-green-600 flex items-center justify-center gap-1">
+                                                <Leaf className="w-5 h-5" />
+                                                Save {savings}g CO₂
+                                            </p>
+                                            <p className="text-xs text-muted-foreground mt-1">
+                                                {selectedAppliance.id.startsWith('tesla-')
+                                                    ? `That's ${(savings / 120).toFixed(1)} fewer miles of petrol car emissions`
+                                                    : `Equivalent to charging a smartphone ${Math.round(savings / 5)} times`
+                                                }
+                                            </p>
+                                        </div>
+                                    )}
+                                </Card>
+                            </motion.div>
+                        </AnimatePresence>
                     ) : (
                         <Card className="p-6">
                             <p>No forecast data available.</p>
