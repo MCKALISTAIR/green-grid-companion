@@ -30,30 +30,29 @@ const REGION_COORDS: Record<string, { lat: number; lon: number }> = {
 
 // Map Bounding Box for the SVG Projection
 // These match the visual bounds of the SVG below.
-const MIN_LAT = 49.8;
-const MAX_LAT = 59.5; // Includes Orkney/Shetland range
-const MIN_LON = -8.5; // Ireland/Western Isles
-const MAX_LON = 2.0;  // East Anglia
+const MIN_LAT = 50.0;
+const MAX_LAT = 59.0;
+const MIN_LON = -8.8;
+const MAX_LON = 2.0;
 
 const getPosition = (lat: number, lon: number) => {
-    // Mercator-ish projection adjustment (simple linear is usually okay for this scale, but aspect ratio matters)
-    // SVG is 600x800 approx.
-    const yPct = 1 - (lat - MIN_LAT) / (MAX_LAT - MIN_LAT);
-    const xPct = (lon - MIN_LON) / (MAX_LON - MIN_LON);
+    // Calibrated offsets and scales for tight 200-825 x-bounded SVG map
+    const yPct = 5 + ((MAX_LAT - lat) / (MAX_LAT - MIN_LAT)) * 85;
+    const xPct = 5 + ((lon - MIN_LON) / (MAX_LON - MIN_LON)) * 90;
 
     return {
-        x: xPct * 100,
-        y: yPct * 100
+        x: xPct,
+        y: yPct
     };
 };
 
 export function UKMap({ regions, onRegionSelect, selectedRegionId }: UKMapProps) {
 
     return (
-        <div className="relative w-full aspect-[0.75] max-w-sm mx-auto my-4 select-none">
+        <div className="relative w-full aspect-[0.61] max-w-sm mx-auto my-4 select-none">
             {/* Detailed UK Map SVG */}
             <div className="absolute inset-0 -z-10 group">
-                <svg viewBox="0 0 1024 1024" className="w-full h-full drop-shadow-xl" aria-hidden="true" style={{ overflow: 'visible' }}>
+                <svg viewBox="200 0 625 1024" className="w-full h-full drop-shadow-xl" aria-hidden="true" style={{ overflow: 'visible' }}>
                     <defs>
                         <filter id="glow">
                             <feGaussianBlur stdDeviation="3.5" result="coloredBlur" />
