@@ -15,6 +15,7 @@ import { DEFINITIONS } from '@/lib/definitions';
 import { StaleDataBadge } from '@/components/StaleDataBadge';
 import { useRelativeTime } from '@/hooks/useRelativeTime';
 import { useEffect, useState } from 'react';
+import { DemandConfetti } from '@/components/DemandConfetti';
 
 export function DemandView() {
     const { demand, mix, mixWithTrends, frequency: gridFrequency, embeddedSolarMW, isLoading, error, refetch, lastUpdated } = useGridDemand();
@@ -89,7 +90,10 @@ export function DemandView() {
     const hasInsights = activeStreaks.length > 0 || milestones.length > 0;
 
     return (
-        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 relative">
+            {/* Celebration Confetti */}
+            {(newRecords.length > 0 || milestones.length > 0) && <DemandConfetti />}
+
             {/* Record celebrations */}
             {newRecords.length > 0 && (
                 <FuelRecordList records={newRecords} onDismiss={dismissRecord} />

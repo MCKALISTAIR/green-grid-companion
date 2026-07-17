@@ -61,6 +61,39 @@ import { CityTraffic, Pigeon, ConstructionCrane, LondonEye, SmogBand, DistantSta
 import { CoastalLandscapeBack, CoastalLandscapeMid, CoastalLandscapeFront } from './scene/CoastalLandscape';
 import { SeagullFlock, SailingBoat, FishingBoat, CoastalOffshoreWind, RockPoolGroup, HarbourSeal } from './scene/CoastalElements';
 
+interface InteractiveCloudProps {
+  className?: string;
+  style?: React.CSSProperties;
+  shouldReduceMotion: boolean;
+}
+
+function InteractiveCloud({ className, style, shouldReduceMotion }: InteractiveCloudProps) {
+  const [isPuffed, setIsPuffed] = useState(false);
+  const { impactLight } = useHaptics();
+
+  const handleTap = () => {
+    if (isPuffed) return;
+    setIsPuffed(true);
+    impactLight();
+    setTimeout(() => setIsPuffed(false), 800);
+  };
+
+  return (
+    <motion.div
+      className={`${className} pointer-events-auto cursor-pointer`}
+      style={style}
+      onClick={handleTap}
+      animate={isPuffed && !shouldReduceMotion ? {
+        scale: [1, 1.25, 0.75, 1.1, 1],
+        rotate: [0, -8, 8, -4, 0]
+      } : {}}
+      transition={{ duration: 0.8, ease: 'easeInOut' }}
+    >
+      <Cloud className="w-full h-full" aria-hidden="true" />
+    </motion.div>
+  );
+}
+
 interface IntensitySceneProps {
   intensity: number;
   index: string;
@@ -497,20 +530,20 @@ export function IntensityScene({
         }
       </AnimatePresence >
 
-      <Cloud
+      <InteractiveCloud
         className={`absolute top-20 w-24 h-14 text-card/80 ${shouldReduceMotion ? '' : 'animate-cloud-drift'}`}
         style={shouldReduceMotion ? { left: '10%' } : { animationDelay: '0s', animationDuration: '35s' }}
-        aria-hidden="true"
+        shouldReduceMotion={shouldReduceMotion}
       />
-      <Cloud
+      <InteractiveCloud
         className={`absolute top-28 w-16 h-10 text-card/60 ${shouldReduceMotion ? '' : 'animate-cloud-drift'}`}
         style={shouldReduceMotion ? { left: '60%' } : { animationDelay: '-12s', animationDuration: '45s' }}
-        aria-hidden="true"
+        shouldReduceMotion={shouldReduceMotion}
       />
-      <Cloud
+      <InteractiveCloud
         className={`absolute top-14 w-20 h-12 text-card/70 ${shouldReduceMotion ? '' : 'animate-cloud-drift'}`}
         style={shouldReduceMotion ? { left: '80%' } : { animationDelay: '-25s', animationDuration: '40s' }}
-        aria-hidden="true"
+        shouldReduceMotion={shouldReduceMotion}
       />
 
       {/* Extra pollution clouds for dirty energy */}
@@ -523,15 +556,15 @@ export function IntensityScene({
               exit={{ opacity: 0 }}
               transition={{ duration: 1 }}
             >
-              <Cloud
+              <InteractiveCloud
                 className={`absolute top-8 w-28 h-16 text-secondary/50 ${shouldReduceMotion ? '' : 'animate-cloud-drift'}`}
                 style={shouldReduceMotion ? { left: '20%' } : { animationDelay: '-5s', animationDuration: '25s' }}
-                aria-hidden="true"
+                shouldReduceMotion={shouldReduceMotion}
               />
-              <Cloud
+              <InteractiveCloud
                 className={`absolute top-14 w-24 h-14 text-secondary/40 ${shouldReduceMotion ? '' : 'animate-cloud-drift'}`}
                 style={shouldReduceMotion ? { left: '50%' } : { animationDelay: '-18s', animationDuration: '28s' }}
-                aria-hidden="true"
+                shouldReduceMotion={shouldReduceMotion}
               />
             </motion.div>
           </>
