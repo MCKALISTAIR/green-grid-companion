@@ -3,6 +3,7 @@ import { motion, useSpring, useTransform, AnimatePresence } from 'framer-motion'
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { useCleanlinessBand } from '@/hooks/useCleanlinessBand';
 import { cn } from '@/lib/utils';
 
 interface AnimatedIntensityProps {
