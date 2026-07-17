@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { RefreshCw, Zap, Info, Leaf, Activity, MapPin, ChevronDown, AlertTriangle } from 'lucide-react';
+import { RefreshCw, Zap, Info, Leaf, Activity, MapPin, ChevronDown, AlertTriangle, Trophy } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -216,6 +217,15 @@ const Index = () => {
                       </button>
                     }
                   />
+                </div>
+
+                {/* Achievements Shortcut - Top Right */}
+                <div className="absolute top-[calc(max(env(safe-area-inset-top),24px)+0.5rem)] right-4 z-30 lg:top-6 lg:right-6">
+                  <Link to="/achievements">
+                    <button className="flex items-center justify-center text-white/90 transition-all cursor-pointer bg-black/20 hover:bg-black/30 active:scale-95 hover:scale-105 backdrop-blur-md p-2.5 rounded-full border border-white/10 hover:border-white/20 shadow-sm" aria-label="Trophy Room">
+                      <Trophy className="w-4 h-4 text-yellow-400 dark:text-yellow-300" />
+                    </button>
+                  </Link>
                 </div>
 
 

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,7 +12,8 @@ import {
   MoreVertical,
   LogOut,
   ArrowRightLeft,
-  Info
+  Info,
+  History
 } from 'lucide-react';
 import { TurbineSpinner } from '@/components/ui/turbine-spinner';
 import {
@@ -54,6 +56,7 @@ export function OctopusIntegration() {
   } = useOctopusEnergy();
 
   const [isEditing, setIsEditing] = useState(false);
+  const navigate = useNavigate();
 
   const handleLinkMeter = async () => {
     try {
@@ -307,25 +310,36 @@ export function OctopusIntegration() {
                 <span>{status.footprint_records} footprint records calculated</span>
               </div>
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSync}
-              disabled={isSyncing}
-              className="w-full mt-2"
-            >
-              {isSyncing ? (
-                <>
-                  <TurbineSpinner size="sm" className="mr-2" />
-                  Syncing...
-                </>
-              ) : (
-                <>
-                  <Wind className="w-4 h-4 mr-2" />
-                  Sync Now
-                </>
-              )}
-            </Button>
+            <div className="flex gap-2 w-full mt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSync}
+                disabled={isSyncing}
+                className="flex-1"
+              >
+                {isSyncing ? (
+                  <>
+                    <TurbineSpinner size="sm" className="mr-2" />
+                    Syncing...
+                  </>
+                ) : (
+                  <>
+                    <Wind className="w-4 h-4 mr-2" />
+                    Sync Now
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/charging-history')}
+                className="flex-1 gap-1.5"
+              >
+                <History className="w-4 h-4 text-purple-500" />
+                Charging History
+              </Button>
+            </div>
           </div>
         )}
       </Card>
