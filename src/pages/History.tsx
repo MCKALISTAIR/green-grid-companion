@@ -20,9 +20,10 @@ import { cn } from '@/lib/utils';
 import { useHistoricalCarbon } from '@/hooks/useHistoricalCarbon';
 import { IntensityScene } from '@/components/IntensityScene';
 import { useAchievements } from '@/hooks/useAchievements';
+import { useAppLocation } from '@/contexts/LocationContext';
 
 export default function HistoryPage() {
-    const postcode = localStorage.getItem('gridgreen-postcode') || '';
+    const { postcode } = useAppLocation();
     const { regionId, region, isLoading: isRegionLoading, isError: isRegionError, error: regionError } = useCarbonData(postcode);
     const { footprint, isLinked } = useOctopusEnergy();
     const navigate = useNavigate();

@@ -542,7 +542,7 @@ const Index = () => {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
                       transition={{ duration: 0.3, ease: "easeOut" }}
-                      className="w-full overflow-auto max-h-[calc(100vh-24rem)] pb-20"
+                      className="w-full pb-10"
                     >
                       {viewMode === 'demand' ? (
                         <DemandView />

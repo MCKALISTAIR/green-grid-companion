@@ -11,6 +11,8 @@ import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { logger } from '@/lib/logger';
 
+import { useAppLocation } from '@/contexts/LocationContext';
+
 export function IntelligentDispatchCard() {
   const navigate = useNavigate();
   const { 
@@ -21,7 +23,7 @@ export function IntelligentDispatchCard() {
     isSyncing 
   } = useOctopusEnergy();
 
-  const postcode = localStorage.getItem('gridgreen-postcode') || '';
+  const { postcode } = useAppLocation();
   const { 
     permissionStatus, 
     requestPermission, 

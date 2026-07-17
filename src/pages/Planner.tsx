@@ -27,6 +27,8 @@ const DEFAULT_APPLIANCES = [
     { id: 'dryer', name: 'Dryer', icon: Zap, power: 2.5, duration: 1, label: 'Cotton (1h)' },
 ];
 
+import { useAppLocation } from '@/contexts/LocationContext';
+
 export default function Planner() {
     const [customEvent, setCustomEvent] = useState(() => {
         const saved = localStorage.getItem('planner-custom-event');
@@ -43,7 +45,7 @@ export default function Planner() {
         return !localStorage.getItem('planner-onboarding-seen');
     });
 
-    const postcode = localStorage.getItem('gridgreen-postcode') || '';
+    const { postcode } = useAppLocation();
     const { forecast, refetch, isLoading, isError, error } = useCarbonData(postcode);
     const { isLinked: isTeslaLinked, vehicles, fetchVehicleState } = useTeslaEnergy();
 
