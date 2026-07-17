@@ -94,12 +94,21 @@ export function PullToRefresh({ onRefresh, children, disabled = false }: PullToR
                 }}
             >
                 <div className="bg-background/90 backdrop-blur shadow-md rounded-full p-2 border border-border">
-                    <RefreshCw
-                        className={`w-6 h-6 text-primary ${isRefreshing ? 'animate-spin' : ''}`}
-                        style={!isRefreshing ? {
-                            transform: `rotate(${pullDistance * 2}deg)`
-                        } : undefined}
-                    />
+                    {/* Turbine blades spin proportionally to pull distance;
+                        once refreshing, blades keep spinning via TurbineLogo's built-in animation. */}
+                    <div
+                        className="w-6 h-6 text-primary"
+                        style={
+                            isRefreshing
+                                ? undefined
+                                : {
+                                      transform: `rotate(${pullDistance * 3}deg)`,
+                                      transition: 'transform 0.05s linear',
+                                  }
+                        }
+                    >
+                        <TurbineLogo className={`w-6 h-6 ${isRefreshing ? '' : '[&_g]:!animate-none'}`} />
+                    </div>
                 </div>
             </div>
 
