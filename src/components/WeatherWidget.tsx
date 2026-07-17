@@ -3,6 +3,7 @@ import { Cloud, Wind, Sun, CloudRain, CloudSnow, CloudLightning, Thermometer, X,
 import { Button } from '@/components/ui/button';
 import { useWeather } from '@/hooks/useWeather';
 import { Skeleton } from '@/components/ui/skeleton';
+import { motion } from 'framer-motion';
 
 const WEATHER_WIDGET_HIDDEN_KEY = 'gridsense-weather-widget-hidden';
 
@@ -52,11 +53,54 @@ export function WeatherWidget() {
     const isSunny = current.cloud_cover < 30;
 
     const getWeatherIcon = (code: number) => {
-        if (code <= 3) return <Sun className="w-5 h-5 text-amber-500" />;
-        if (code <= 48) return <Cloud className="w-5 h-5 text-muted-foreground" />;
-        if (code <= 67) return <CloudRain className="w-5 h-5 text-blue-500" />;
-        if (code <= 77) return <CloudSnow className="w-5 h-5 text-sky-300" />;
-        return <CloudLightning className="w-5 h-5 text-purple-500" />;
+        if (code <= 3) {
+            return (
+                <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ repeat: Infinity, duration: 18, ease: "linear" }}
+                >
+                    <Sun className="w-5 h-5 text-amber-500" />
+                </motion.div>
+            );
+        }
+        if (code <= 48) {
+            return (
+                <motion.div
+                    animate={{ y: [0, -2, 0] }}
+                    transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                >
+                    <Cloud className="w-5 h-5 text-muted-foreground" />
+                </motion.div>
+            );
+        }
+        if (code <= 67) {
+            return (
+                <motion.div
+                    animate={{ y: [0, 1.5, 0], x: [0, -0.5, 0] }}
+                    transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}
+                >
+                    <CloudRain className="w-5 h-5 text-blue-500" />
+                </motion.div>
+            );
+        }
+        if (code <= 77) {
+            return (
+                <motion.div
+                    animate={{ y: [0, 1, 0], x: [0, 1, -1, 0] }}
+                    transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }}
+                >
+                    <CloudSnow className="w-5 h-5 text-sky-300" />
+                </motion.div>
+            );
+        }
+        return (
+            <motion.div
+                animate={{ scale: [1, 1.05, 0.95, 1], opacity: [1, 0.7, 1] }}
+                transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+            >
+                <CloudLightning className="w-5 h-5 text-purple-500" />
+            </motion.div>
+        );
     };
 
     const getWeatherLabel = (code: number) => {
@@ -92,11 +136,21 @@ export function WeatherWidget() {
                 {/* Stats - compact */}
                 <div className="flex items-center gap-2.5 text-sm weather-widget-stats">
                     <span className="flex items-center gap-1">
-                        <Thermometer className="w-3.5 h-3.5 text-muted-foreground/70" />
+                        <motion.div
+                            animate={{ y: [0, -1, 0] }}
+                            transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut" }}
+                        >
+                            <Thermometer className="w-3.5 h-3.5 text-muted-foreground/70" />
+                        </motion.div>
                         <span className="font-medium tabular-nums">{current.temperature_2m}°</span>
                     </span>
                     <span className="flex items-center gap-1">
-                        <Wind className="w-3.5 h-3.5 text-muted-foreground/70" />
+                        <motion.div
+                            animate={{ x: [-1.5, 1.5, -1.5] }}
+                            transition={{ repeat: Infinity, duration: 2.8, ease: "easeInOut" }}
+                        >
+                            <Wind className="w-3.5 h-3.5 text-muted-foreground/70" />
+                        </motion.div>
                         <span className="font-medium tabular-nums">{current.wind_speed_10m}<span className="text-xs text-muted-foreground">{current_units.wind_speed_10m}</span></span>
                     </span>
                 </div>
