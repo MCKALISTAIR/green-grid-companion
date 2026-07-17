@@ -71,14 +71,14 @@ export function UKMap({ regions, onRegionSelect, selectedRegionId }: UKMapProps)
                     {/* GB Mainland */}
                     <path
                         d="M176,736 L139,715 L161,698 L191,698 L199,673 L180,661 L182,637 L216,637 L237,605 L218,590 L232,572 L213,556 L237,532 L221,495 L240,486 L231,464 L251,446 L242,429 L262,408 L251,385 L269,363 L260,337 L290,310 L287,272 L315,249 L348,249 L359,219 L393,219 L409,191 L409,152 L440,122 L467,152 L454,196 L488,230 L470,268 L488,300 L469,343 L490,366 L490,402 L514,417 L539,403 L556,423 L530,446 L550,479 L530,513 L508,513 L497,542 L469,548 L460,572 L429,572 L411,593 L375,593 L359,619 L329,619 L315,639 L332,668 L360,668 L368,690 L409,683 L425,702 L425,716 L377,716 L362,703 L325,703 L312,718 L269,718 L260,703 L245,712 L223,695 L200,709 Z M312,98 L332,82 L356,98 L350,128 L329,140 L305,122 Z"
-                        className="fill-muted/20 stroke-border stroke-2"
+                        className="fill-muted/10 stroke-primary/30 stroke-[2] hover:fill-primary/5 transition-all duration-350"
                         style={{ filter: 'url(#glow)' }}
                     />
 
                     {/* Northern Ireland */}
                     <path
                         d="M110,485 L145,475 L165,510 L135,540 L105,525 Z"
-                        className="fill-muted/20 stroke-border stroke-2"
+                        className="fill-muted/10 stroke-primary/30 stroke-[2] hover:fill-primary/5 transition-all duration-350"
                         style={{ filter: 'url(#glow)' }}
                     />
                 </svg>
@@ -116,14 +116,17 @@ export function UKMap({ regions, onRegionSelect, selectedRegionId }: UKMapProps)
                         style={{ left: `${x}%`, top: `${y}%` }}
                         onClick={() => onRegionSelect?.(region.regionid)}
                     >
-                        <span className="text-[10px] font-bold drop-shadow-md">
+                        {isSelected && (
+                            <span className="absolute inset-0 rounded-full animate-ping bg-current opacity-30 pointer-events-none" />
+                        )}
+                        <span className="text-[10px] font-bold drop-shadow-md z-10">
                             {region.intensity.forecast}
                         </span>
                         {isSelected && (
                             <motion.div
                                 initial={{ y: 5, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
-                                className="absolute -bottom-8 bg-popover/90 backdrop-blur-md px-3 py-1.5 rounded-lg text-xs shadow-lg border border-border/50 font-medium whitespace-nowrap text-popover-foreground z-50 pointer-events-none"
+                                className="absolute -bottom-8 bg-popover/95 backdrop-blur-md px-3 py-1.5 rounded-lg text-xs shadow-lg border border-border/50 font-semibold whitespace-nowrap text-popover-foreground z-50 pointer-events-none"
                             >
                                 {region.shortname}
                             </motion.div>

@@ -4,6 +4,7 @@ import { getAllRegions, getIntensityColor } from '@/lib/carbonApi';
 import { UKMap } from '@/components/UKMap';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { ErrorState } from '@/components/ErrorState';
 import { EmptyState } from '@/components/EmptyState';
 import { getErrorInfo } from '@/lib/errorUtils';
@@ -13,7 +14,8 @@ import { Map as MapIcon, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function MapPage() {
-    const [showMap, setShowMap] = useState(false);
+    const [showMap, setShowMap] = useState(true);
+    const [selectedRegionId, setSelectedRegionId] = useState<number | null>(null);
 
     const { data: regions, isLoading, isError, error, refetch } = useQuery({
         queryKey: ['all-regions'],
@@ -78,36 +80,60 @@ export default function MapPage() {
                                         exit={{ height: 0, opacity: 0 }}
                                         className="overflow-hidden"
                                     >
-                                        <UKMap regions={regions || []} />
+                                        <UKMap
+                                            regions={regions || []}
+                                            selectedRegionId={selectedRegionId || undefined}
+                                            onRegionSelect={(id) => {
+                                                setSelectedRegionId(id);
+                                                const element = document.getElementById(`region-card-${id}`);
+                                                if (element) {
+                                                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                                }
+                                            }}
+                                        />
                                     </motion.div>
                                 )}
                             </AnimatePresence>
 
                             <div className="grid gap-3">
                                 {sortedRegions.map((region, idx) => (
-                                    <Card key={region.regionid} className="p-4 flex items-center justify-between transition-all active:scale-[0.99]">
-                                        <div className="flex items-center gap-3">
-                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${idx === 0 ? 'bg-yellow-100 text-yellow-700' :
-                                                idx === 1 ? 'bg-gray-100 text-gray-700' :
-                                                    idx === 2 ? 'bg-orange-100 text-orange-800' : 'bg-muted text-muted-foreground'
-                                                }`}>
-                                                {idx + 1}
-                                            </div>
-                                            <div>
-                                                <h3 className="font-semibold text-sm">{region.shortname}</h3>
-                                                <div className={`text-[10px] inline-flex items-center px-1.5 py-0.5 rounded-full mt-0.5 ${getIntensityColor(region.intensity.index)} bg-opacity-20`}>
-                                                    <span className="capitalize font-medium text-foreground">
-                                                        {region.intensity.index}
-                                                    </span>
+                                    <div
+                                        key={region.regionid}
+                                        id={`region-card-${region.regionid}`}
+                                        className="scroll-mt-4"
+                                    >
+                                        <Card
+                                            className={cn(
+                                                "p-4 flex items-center justify-between transition-all duration-350 cursor-pointer active:scale-[0.99]",
+                                                selectedRegionId === region.regionid
+                                                    ? "ring-2 ring-primary bg-primary/10 border-primary/30 shadow-md scale-[1.015]"
+                                                    : "hover:bg-card/80 hover:shadow-sm"
+                                            )}
+                                            onClick={() => setSelectedRegionId(region.regionid)}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${idx === 0 ? 'bg-yellow-100 text-yellow-700' :
+                                                    idx === 1 ? 'bg-gray-100 text-gray-700' :
+                                                        idx === 2 ? 'bg-orange-100 text-orange-800' : 'bg-muted text-muted-foreground'
+                                                    }`}>
+                                                    {idx + 1}
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-semibold text-sm">{region.shortname}</h3>
+                                                    <div className={`text-[10px] inline-flex items-center px-1.5 py-0.5 rounded-full mt-0.5 ${getIntensityColor(region.intensity.index)} bg-opacity-20`}>
+                                                        <span className="capitalize font-medium text-foreground">
+                                                            {region.intensity.index}
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
 
-                                        <div className="text-right">
-                                            <div className="text-xl font-bold">{region.intensity.forecast}</div>
-                                            <div className="text-[10px] text-muted-foreground">gCO₂/kWh</div>
-                                        </div>
-                                    </Card>
+                                            <div className="text-right">
+                                                <div className="text-xl font-bold">{region.intensity.forecast}</div>
+                                                <div className="text-[10px] text-muted-foreground">gCO₂/kWh</div>
+                                            </div>
+                                        </Card>
+                                    </div>
                                 ))}
                             </div>
                         </div>
