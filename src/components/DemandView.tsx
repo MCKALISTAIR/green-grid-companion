@@ -225,7 +225,27 @@ export function DemandView() {
                     const r = parseInt(hex.slice(1, 3), 16);
                     const g = parseInt(hex.slice(3, 5), 16);
                     const b = parseInt(hex.slice(5, 7), 16);
-                    const isRenewable = ['wind', 'solar', 'hydro', 'biomass'].includes(fuelKey);
+                    const getCategoryLabel = (key: string): string => {
+                        switch (key) {
+                            case 'wind':
+                            case 'solar':
+                            case 'hydro':
+                                return 'Renewable';
+                            case 'biomass':
+                                return 'Combustion (Renewable)';
+                            case 'nuclear':
+                                return 'Low Carbon';
+                            case 'gas':
+                            case 'coal':
+                                return 'Fossil Fuel';
+                            case 'imports':
+                            case 'interconnectors':
+                                return 'Import';
+                            default:
+                                return '';
+                        }
+                    };
+                    const categoryLabel = getCategoryLabel(fuelKey);
                     const isZero = source.perc === 0;
 
                     return (
@@ -287,9 +307,9 @@ export function DemandView() {
                                                     showDiff={false}
                                                 />
                                             </div>
-                                            {isRenewable && !isZero && (
+                                            {categoryLabel && !isZero && (
                                                 <span className="text-[10px] font-medium uppercase tracking-wide" style={{ color: hex }}>
-                                                    Renewable
+                                                    {categoryLabel}
                                                 </span>
                                             )}
                                         </div>
