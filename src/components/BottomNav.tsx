@@ -4,6 +4,13 @@ import { Home, ListOrdered, Calendar, Settings, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { useHaptics } from '@/hooks/useHaptics';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+
+const tapMotion = {
+    whileTap: { scale: 0.9, rotate: -6 },
+    transition: { type: 'spring' as const, stiffness: 500, damping: 18 },
+};
+
 
 interface BottomNavProps {
     onHomeClick?: () => void;
