@@ -4,12 +4,12 @@ import { Home, ListOrdered, Calendar, Settings, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { useHaptics } from '@/hooks/useHaptics';
-import { useReducedMotion } from '@/hooks/useReducedMotion';
 
-const tapMotion = {
-    whileTap: { scale: 0.9, rotate: -6 },
-    transition: { type: 'spring' as const, stiffness: 500, damping: 18 },
-};
+// Playful press feedback: icon dips + tilts on active, springs back on release.
+// Uses group-active so the whole Button press drives the icon, not the icon itself.
+const iconTilt =
+    'transition-transform duration-150 ease-out group-active:scale-90 group-active:-rotate-6 motion-reduce:transform-none';
+
 
 
 interface BottomNavProps {
