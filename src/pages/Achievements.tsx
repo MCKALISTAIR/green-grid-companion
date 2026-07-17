@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Trophy, Lock } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function AchievementsPage() {
     const { achievements } = useAchievements();
@@ -33,52 +34,69 @@ export default function AchievementsPage() {
                 </Card>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {achievements.map((achievement) => (
-                        <Card
+                    {achievements.map((achievement, idx) => (
+                        <motion.div
                             key={achievement.id}
-                            className={`overflow-hidden transition-all duration-300 ${achievement.unlocked
-                                    ? 'bg-card border-border shadow-sm ring-1 ring-primary/10'
-                                    : 'bg-muted/30 border-dashed opacity-75'
-                                }`}
+                            initial={{ opacity: 0, y: 15 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, delay: idx * 0.04, ease: 'easeOut' }}
+                            whileHover={{ y: -2 }}
                         >
-                            <CardContent className="p-4 flex gap-4 items-start">
-                                <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center text-2xl shadow-inner ${achievement.unlocked
-                                        ? 'bg-primary/10'
-                                        : 'bg-muted text-muted-foreground/50 grayscale'
-                                    }`}>
-                                    {achievement.unlocked ? achievement.icon : <Lock className="w-5 h-5" />}
-                                </div>
-                                <div className="space-y-1.5 flex-1 w-full">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className={`font-semibold ${achievement.unlocked ? 'text-foreground' : 'text-muted-foreground'}`}>
-                                            {achievement.title}
-                                        </h3>
-                                        {achievement.unlocked && (
-                                            <Badge variant="secondary" className="bg-green-500/10 text-green-600 dark:text-green-400 hover:bg-green-500/20">
-                                                Unlocked
-                                            </Badge>
+                            <Card
+                                className={`overflow-hidden h-full transition-all duration-300 ${achievement.unlocked
+                                        ? 'bg-card border-border shadow-sm ring-1 ring-primary/10'
+                                        : 'bg-muted/30 border-dashed opacity-75'
+                                    }`}
+                            >
+                                <CardContent className="p-4 flex gap-4 items-start">
+                                    <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center text-2xl shadow-inner ${achievement.unlocked
+                                            ? 'bg-primary/10'
+                                            : 'bg-muted text-muted-foreground/50 grayscale'
+                                        }`}>
+                                        {achievement.unlocked ? (
+                                            <motion.span
+                                                whileHover={{ rotate: [0, -12, 12, 0], scale: 1.15 }}
+                                                transition={{ duration: 0.35 }}
+                                                className="cursor-default select-none"
+                                            >
+                                                {achievement.icon}
+                                            </motion.span>
+                                        ) : (
+                                            <Lock className="w-5 h-5" />
                                         )}
                                     </div>
-                                    <p className="text-sm text-muted-foreground/80 leading-snug">
-                                        {achievement.description}
-                                    </p>
-
-                                    {/* Progress Bar for multi-step achievements */}
-                                    {!achievement.unlocked && achievement.maxProgress && achievement.maxProgress > 1 && (
-                                        <div className="pt-2">
-                                            <div className="flex justify-between text-[10px] text-muted-foreground mb-1 font-medium">
-                                                <span>Progress</span>
-                                                <span>{achievement.progress || 0} / {achievement.maxProgress}</span>
-                                            </div>
-                                            <Progress
-                                                value={((achievement.progress || 0) / achievement.maxProgress) * 100}
-                                                className="h-1.5"
-                                            />
+                                    <div className="space-y-1.5 flex-1 w-full">
+                                        <div className="flex items-center justify-between">
+                                            <h3 className={`font-semibold ${achievement.unlocked ? 'text-foreground' : 'text-muted-foreground'}`}>
+                                                {achievement.title}
+                                            </h3>
+                                            {achievement.unlocked && (
+                                                <Badge variant="secondary" className="bg-green-500/10 text-green-600 dark:text-green-400 hover:bg-green-500/20">
+                                                    Unlocked
+                                                </Badge>
+                                            )}
                                         </div>
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
+                                        <p className="text-sm text-muted-foreground/80 leading-snug">
+                                            {achievement.description}
+                                        </p>
+
+                                        {/* Progress Bar for multi-step achievements */}
+                                        {!achievement.unlocked && achievement.maxProgress && achievement.maxProgress > 1 && (
+                                            <div className="pt-2">
+                                                <div className="flex justify-between text-[10px] text-muted-foreground mb-1 font-medium">
+                                                    <span>Progress</span>
+                                                    <span>{achievement.progress || 0} / {achievement.maxProgress}</span>
+                                                </div>
+                                                <Progress
+                                                    value={((achievement.progress || 0) / achievement.maxProgress) * 100}
+                                                    className="h-1.5"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </motion.div>
                     ))}
                 </div>
             </div>
