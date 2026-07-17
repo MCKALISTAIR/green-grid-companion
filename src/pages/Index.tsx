@@ -14,6 +14,7 @@ import { FootprintView } from '@/components/FootprintView';
 import { DemandView } from '@/components/DemandView';
 import { useCarbonData } from '@/hooks/useCarbonData';
 import { useHaptics } from '@/hooks/useHaptics';
+import { NotificationType } from '@capacitor/haptics';
 import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
 import { useNotifications } from '@/hooks/useNotifications';
 import { toast } from 'sonner';
@@ -49,7 +50,7 @@ const Index = () => {
   const { postcode, setPostcode } = useAppLocation();
   const [viewMode, setViewMode] = useState<'intensity' | 'footprint' | 'demand'>('intensity');
   const { showYearWrapped, setShowYearWrapped, wrappedYear } = useYearWrappedAutoShow();
-  const { selection } = useHaptics();
+  const { selection, notification } = useHaptics();
 
   // Sparkle burst: fires when renewables cross 50 / 70 / 80%
   const [sparkleTrigger, setSparkleTrigger] = useState(false);
@@ -89,10 +90,11 @@ const Index = () => {
       const crossed = thresholds.some(t => prev < t && renewablesPct >= t);
       if (crossed) {
         setSparkleTrigger(true);
+        notification(NotificationType.Success);
       }
     }
     prevRenRef.current = renewablesPct;
-  }, [renewablesPct, isLoading]);
+  }, [renewablesPct, isLoading, notification]);
 
   // Composite hook for all page-level effects (notifications, tour, periodic refresh, routing)
   useIndexPageEffects({

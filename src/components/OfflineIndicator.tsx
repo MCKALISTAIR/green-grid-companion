@@ -3,21 +3,32 @@ import { WifiOff, Wifi, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useOffline } from '@/hooks/useOffline';
 import { Button } from '@/components/ui/button';
+import { useHaptics } from '@/hooks/useHaptics';
+import { NotificationType } from '@capacitor/haptics';
 
 export function OfflineIndicator() {
   const { isOffline, wasOffline, clearWasOffline } = useOffline();
   const [showReconnected, setShowReconnected] = useState(false);
+  const { notification } = useHaptics();
+
+  // Buzz warning when dropping offline
+  useEffect(() => {
+    if (isOffline) {
+      notification(NotificationType.Warning);
+    }
+  }, [isOffline, notification]);
 
   useEffect(() => {
     if (wasOffline) {
       setShowReconnected(true);
+      notification(NotificationType.Success); // Buzz success when back online
       const timer = setTimeout(() => {
         setShowReconnected(false);
         clearWasOffline();
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [wasOffline, clearWasOffline]);
+  }, [wasOffline, clearWasOffline, notification]);
 
   const handleRefresh = () => {
     window.location.reload();
