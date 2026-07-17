@@ -232,7 +232,7 @@ export function DemandView() {
                             case 'hydro':
                                 return 'Renewable';
                             case 'biomass':
-                                return 'Combustion (Renewable)';
+                                return 'Kind of Renewable';
                             case 'nuclear':
                                 return 'Low Carbon';
                             case 'gas':
@@ -308,9 +308,27 @@ export function DemandView() {
                                                 />
                                             </div>
                                             {categoryLabel && !isZero && (
-                                                <span className="text-[10px] font-medium uppercase tracking-wide" style={{ color: hex }}>
-                                                    {categoryLabel}
-                                                </span>
+                                                <div className="flex items-center gap-1">
+                                                    <span className="text-[10px] font-medium uppercase tracking-wide" style={{ color: hex }}>
+                                                        {categoryLabel}
+                                                    </span>
+                                                    {fuelKey === 'biomass' && (
+                                                        <Popover>
+                                                            <PopoverTrigger asChild>
+                                                                <button
+                                                                    className="h-3.5 w-3.5 rounded-full p-0 flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                                                                    aria-label="More information about Biomass classification"
+                                                                >
+                                                                    <Info className="w-2.5 h-2.5 cursor-help" style={{ color: hex }} />
+                                                                </button>
+                                                            </PopoverTrigger>
+                                                            <PopoverContent className="w-[240px] p-3 text-xs bg-card border-border backdrop-blur-xl z-50">
+                                                                <p className="font-semibold mb-1">Kind of Renewable?</p>
+                                                                <p>Biomass is officially classified as a renewable energy source by grid standards since the organic matter burned can be replenished. However, it still involves burning fuel (combustion), which releases direct carbon emissions at the point of generation.</p>
+                                                            </PopoverContent>
+                                                        </Popover>
+                                                    )}
+                                                </div>
                                             )}
                                         </div>
                                     </div>
