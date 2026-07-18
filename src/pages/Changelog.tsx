@@ -39,8 +39,21 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
-    version: 'v1.5.0',
+    version: 'v1.6.0',
     date: new Date().toISOString().split('T')[0],
+    title: 'Performance & Playful Motion',
+    changes: [
+      { type: 'feature', description: 'Playful motion: Spring animations and morphing layout for fact bubbles' },
+      { type: 'feature', description: 'Dynamic Onboarding: Ambient background scenes morphing in sync with setup steps' },
+      { type: 'improvement', description: 'Smart caching: Native geocoding caching layer to prevent API limits' },
+      { type: 'improvement', description: 'Smart sequencing: Energy facts are filtered to never repeat consecutively' },
+      { type: 'technical', description: 'Optimized build: Rollup code-splitting reduces vendor bundle size by 38%' },
+      { type: 'technical', description: 'Asset compression: Favicon and PWA icons compressed, saving 855KB of load footprint' },
+    ],
+  },
+  {
+    version: 'v1.5.0',
+    date: '2026-07-18',
     title: 'Desktop Companion & Sync',
     changes: [
       { type: 'feature', description: 'macOS Menu Bar App: Live intensity in your menu bar' },
