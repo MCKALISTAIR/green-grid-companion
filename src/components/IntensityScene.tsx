@@ -1369,9 +1369,7 @@ export function IntensityScene({
       {/* Fox - Rare event at dusk */}
       <AnimatePresence>
         {showFox && (
-          <div onClick={() => unlock('fox_spotter')} className="cursor-pointer pointer-events-auto">
-            <Fox />
-          </div>
+          <Fox onClick={() => unlock('fox_spotter')} />
         )}
       </AnimatePresence>
 

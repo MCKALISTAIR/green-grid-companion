@@ -1,12 +1,17 @@
 import { motion } from 'framer-motion';
 
-export function Fox() {
+interface FoxProps {
+    onClick?: () => void;
+}
+
+export function Fox({ onClick }: FoxProps) {
     // Rare event - fox runs across at dusk
     // Grounded at Y=130% (front hill)
 
     return (
         <motion.div
-            className="absolute bottom-[22%] pointer-events-none z-20"
+            className="absolute bottom-[22%] pointer-events-auto cursor-pointer z-20"
+            onClick={onClick}
             initial={{ left: '-15%', opacity: 0 }}
             animate={{
                 left: '115%',

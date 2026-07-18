@@ -815,13 +815,39 @@ export const ENERGY_FACTS: EnergyFact[] = [
 
 export function getRandomFact(context: FactContext, tonePref: 'snarky' | 'friendly' | 'mixed' = 'mixed'): EnergyFact {
     // 1. Filter by tone
-    let eligible = ENERGY_FACTS;
+    let eligible = [...ENERGY_FACTS];
     if (tonePref !== 'mixed') {
         eligible = eligible.filter(f => f.tone === tonePref);
     }
 
     // 2. Filter by condition
     eligible = eligible.filter(f => !f.condition || f.condition(context));
+
+    // Dynamic insertion of active coal-free streak if eligible under friendly tone
+    if (tonePref === 'friendly' || tonePref === 'mixed') {
+        try {
+            const stored = typeof window !== 'undefined' ? localStorage.getItem('coal-free-streak') : null;
+            if (stored) {
+                const streakData = JSON.parse(stored);
+                if (streakData && streakData.streakStarted) {
+                    const start = new Date(streakData.streakStarted);
+                    const current = new Date();
+                    const diffMs = current.getTime() - start.getTime();
+                    const diffHours = diffMs / (1000 * 60 * 60);
+                    if (diffHours >= 24) {
+                        eligible.push({
+                            id: 'coal_free_current',
+                            text: 'The UK is running coal-free!',
+                            category: 'general',
+                            tone: 'friendly'
+                        });
+                    }
+                }
+            }
+        } catch (e) {
+            // fail-silent
+        }
+    }
 
     // 3. Fallback if empty (shouldn't happen with general facts, but safety first)
     if (eligible.length === 0) {
