@@ -14,6 +14,21 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_config: {
+        Row: {
+          key: string
+          value: string
+        }
+        Insert: {
+          key: string
+          value: string
+        }
+        Update: {
+          key?: string
+          value?: string
+        }
+        Relationships: []
+      }
       carbon_footprint: {
         Row: {
           carbon_g: number
@@ -47,6 +62,30 @@ export type Database = {
           interval_end?: string
           interval_start?: string
           mpan?: string
+        }
+        Relationships: []
+      }
+      geocoding_cache: {
+        Row: {
+          created_at: string
+          latitude: number
+          longitude: number
+          query: string
+          response_json: Json
+        }
+        Insert: {
+          created_at?: string
+          latitude: number
+          longitude: number
+          query: string
+          response_json: Json
+        }
+        Update: {
+          created_at?: string
+          latitude?: number
+          longitude?: number
+          query?: string
+          response_json?: Json
         }
         Relationships: []
       }
