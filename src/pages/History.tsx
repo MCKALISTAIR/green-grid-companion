@@ -17,7 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -245,31 +245,46 @@ export default function HistoryPage() {
                     </div>
                 </motion.div>
 
-                {!postcode ? (
-                    <motion.div variants={itemVariants}>
-                        <Card className="p-6 text-center">
-                            <p>Please enter a postcode in Settings to see regional history.</p>
-                        </Card>
-                    </motion.div>
-                ) : isRegionLoading || isLoading ? (
-                    <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                            <Card className="p-4 animate-pulse bg-card">
-                                <div className="h-3 bg-muted rounded w-1/2 mb-2"></div>
-                                <div className="h-8 bg-muted rounded w-3/4"></div>
+                <AnimatePresence mode="wait">
+                    {!postcode ? (
+                        <motion.div key="no-postcode" variants={itemVariants}>
+                            <Card className="p-6 text-center">
+                                <p>Please enter a postcode in Settings to see regional history.</p>
                             </Card>
+                        </motion.div>
+                    ) : isRegionLoading || isLoading ? (
+                        <motion.div
+                            key="loading"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="space-y-4"
+                        >
+                            <div className="grid grid-cols-2 gap-4">
+                                <Card className="p-4 animate-pulse bg-card">
+                                    <div className="h-3 bg-muted rounded w-1/2 mb-2"></div>
+                                    <div className="h-8 bg-muted rounded w-3/4"></div>
+                                </Card>
+                                <Card className="p-4 animate-pulse bg-card">
+                                    <div className="h-3 bg-muted rounded w-1/2 mb-2"></div>
+                                    <div className="h-8 bg-muted rounded w-3/4"></div>
+                                </Card>
+                            </div>
                             <Card className="p-4 animate-pulse bg-card">
-                                <div className="h-3 bg-muted rounded w-1/2 mb-2"></div>
-                                <div className="h-8 bg-muted rounded w-3/4"></div>
+                                <div className="h-4 bg-muted rounded w-1/4 mb-4"></div>
+                                <div className="h-[300px] bg-muted rounded"></div>
                             </Card>
-                        </div>
-                        <Card className="p-4 animate-pulse bg-card">
-                            <div className="h-4 bg-muted rounded w-1/4 mb-4"></div>
-                            <div className="h-[300px] bg-muted rounded"></div>
-                        </Card>
-                    </div>
-                ) : (
-                    <>
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key="content"
+                            initial={{ opacity: 0, y: 12 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -12 }}
+                            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                            className="space-y-4"
+                        >
                         {showChartTip && (
                             <motion.div variants={itemVariants}>
                                 <Card className="mb-4 bg-muted/30 border-dashed relative animate-in fade-in slide-in-from-top-2">
@@ -542,8 +557,9 @@ export default function HistoryPage() {
                             </div>
                         </Card>
                         </motion.div>
-                    </>
+                    </motion.div>
                 )}
+            </AnimatePresence>
             </motion.div>
 
         </div>

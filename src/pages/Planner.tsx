@@ -425,24 +425,32 @@ export default function Planner() {
                         </Dialog>
                     </div>
 
-                    {isLoading ? (
-                        <Card className="p-6 animate-pulse bg-card">
-                            <div className="space-y-4">
-                                <div className="text-center space-y-2">
-                                    <div className="h-4 bg-muted rounded w-1/3 mx-auto"></div>
-                                    <div className="h-8 bg-muted rounded w-1/2 mx-auto"></div>
-                                </div>
-                                <div className="h-10 bg-muted rounded"></div>
-                            </div>
-                        </Card>
-                    ) : bestSlot ? (
-                        <AnimatePresence mode="wait">
+                    <AnimatePresence mode="wait">
+                        {isLoading ? (
                             <motion.div
-                                key={selectedAppliance.id}
-                                initial={{ opacity: 0, y: 10 }}
+                                key="loading"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.2 }}
+                            >
+                                <Card className="p-6 animate-pulse bg-card">
+                                    <div className="space-y-4">
+                                        <div className="text-center space-y-2">
+                                            <div className="h-4 bg-muted rounded w-1/3 mx-auto"></div>
+                                            <div className="h-8 bg-muted rounded w-1/2 mx-auto"></div>
+                                        </div>
+                                        <div className="h-10 bg-muted rounded"></div>
+                                    </div>
+                                </Card>
+                            </motion.div>
+                        ) : bestSlot ? (
+                            <motion.div
+                                key={selectedAppliance.id + '-' + bestSlot.startTime}
+                                initial={{ opacity: 0, y: 12 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                transition={{ duration: 0.22, ease: 'easeOut' as const }}
+                                exit={{ opacity: 0, y: -12 }}
+                                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                             >
                                 <Card className="p-6 space-y-4 border-primary/20 bg-primary/5">
                                     <div className="text-center space-y-1">
@@ -505,12 +513,19 @@ export default function Planner() {
                                     )}
                                 </Card>
                             </motion.div>
-                        </AnimatePresence>
-                    ) : (
-                        <Card className="p-6">
-                            <p>No forecast data available.</p>
-                        </Card>
-                    )}
+                        ) : (
+                            <motion.div
+                                key="no-data"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                            >
+                                <Card className="p-6">
+                                    <p>No forecast data available.</p>
+                                </Card>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </PullToRefresh>
 

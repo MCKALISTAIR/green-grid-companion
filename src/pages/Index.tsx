@@ -423,19 +423,42 @@ const Index = () => {
                 />
               </div>
 
-              {isError ? (
-                <div className="py-8 bg-card rounded-2xl border border-border shadow-lg">
-                  <ErrorState
-                    title={getErrorInfo(error).title}
-                    description={getErrorInfo(error).description}
-                    steps={getErrorInfo(error).steps}
-                    retry={refetch}
-                  />
-                </div>
-              ) : isLoading && forecast.length === 0 ? (
-                <DashboardSkeleton />
-              ) : (
-                <>
+              <AnimatePresence mode="wait">
+                {isError ? (
+                  <motion.div
+                    key="error"
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -12 }}
+                    transition={{ duration: 0.25 }}
+                    className="py-8 bg-card rounded-2xl border border-border shadow-lg"
+                  >
+                    <ErrorState
+                      title={getErrorInfo(error).title}
+                      description={getErrorInfo(error).description}
+                      steps={getErrorInfo(error).steps}
+                      retry={refetch}
+                    />
+                  </motion.div>
+                ) : isLoading && forecast.length === 0 ? (
+                  <motion.div
+                    key="loading"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <DashboardSkeleton />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="content"
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -15 }}
+                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                    className="space-y-4"
+                  >
                   <div 
                     role="tablist" 
                     aria-label="Dashboard Views" 
@@ -662,8 +685,9 @@ const Index = () => {
                       )}
                     </motion.div>
                   </AnimatePresence>
-                </>
+                </motion.div>
               )}
+            </AnimatePresence>
             </div>
           </main>
         </PullToRefresh >

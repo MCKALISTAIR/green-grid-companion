@@ -45,6 +45,7 @@ const changelog: ChangelogEntry[] = [
     changes: [
       { type: 'feature', description: 'Playful motion: Spring animations and morphing layout for fact bubbles' },
       { type: 'feature', description: 'Dynamic Onboarding: Ambient background scenes morphing in sync with setup steps' },
+      { type: 'improvement', description: 'Fluid page loading: Smooth spring exit-and-entry transitions between loading skeletons and page content' },
       { type: 'improvement', description: 'Smart caching: Native geocoding caching layer to prevent API limits' },
       { type: 'improvement', description: 'Smart sequencing: Energy facts are filtered to never repeat consecutively' },
       { type: 'technical', description: 'Optimized build: Rollup code-splitting reduces vendor bundle size by 38%' },
