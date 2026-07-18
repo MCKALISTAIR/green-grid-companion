@@ -3,7 +3,7 @@ import { ForecastData } from '@/lib/carbonApi';
 import { format, isToday, isTomorrow, parseISO } from 'date-fns';
 import { Card } from '@/components/ui/card';
 import { TrendingDown, TrendingUp, Activity } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 
 interface ForecastSummaryProps {
     forecast: ForecastData[];
@@ -21,13 +21,13 @@ interface DailyStats {
     hasActuals: boolean;
 }
 
-const cardVariants = {
+const cardVariants: Variants = {
     hidden: { opacity: 0, y: 10 },
     show: (idx: number) => ({
         opacity: 1,
         y: 0,
         transition: {
-            type: 'spring',
+            type: 'spring' as const,
             stiffness: 220,
             damping: 22,
             delay: idx * 0.05,
@@ -35,23 +35,23 @@ const cardVariants = {
     })
 };
 
-const iconLowVariants = {
+const iconLowVariants: Variants = {
     initial: { y: 0 },
-    hover: { y: [0, 2.5, 0], transition: { duration: 0.4, ease: "easeInOut" } }
+    hover: { y: [0, 2.5, 0], transition: { duration: 0.4, ease: 'easeInOut' as const } }
 };
 
-const iconAvgVariants = {
+const iconAvgVariants: Variants = {
     initial: { scale: 1, rotate: 0 },
     hover: {
         scale: [1, 1.12, 1],
         rotate: [0, -10, 10, -5, 5, 0],
-        transition: { duration: 0.5, ease: "easeInOut" }
+        transition: { duration: 0.5, ease: 'easeInOut' as const }
     }
 };
 
-const iconHighVariants = {
+const iconHighVariants: Variants = {
     initial: { y: 0 },
-    hover: { y: [0, -2.5, 0], transition: { duration: 0.4, ease: "easeInOut" } }
+    hover: { y: [0, -2.5, 0], transition: { duration: 0.4, ease: 'easeInOut' as const } }
 };
 
 export function ForecastSummary({ forecast }: ForecastSummaryProps) {
