@@ -77,7 +77,9 @@ export function EnergyFactBubble({ intensity, generationMix, className, variant 
                         : `w-full ${className || ''}`
                     }
                 >
-                    <div
+                    <motion.div
+                        layout
+                        whileTap={!shouldReduceMotion ? { scale: 0.96 } : {}}
                         role="button"
                         tabIndex={0}
                         aria-label={`${currentFact.text}. Press to cycle facts.`}
@@ -92,16 +94,14 @@ export function EnergyFactBubble({ intensity, generationMix, className, variant 
                                     : 'text-foreground/80 hover:bg-muted/50'
                             }
             `}
-                        onClick={() => {
-                            // Click to cycle
-                            if (variant === 'bubble') setIsVisible(false); // Only hide if bubble
-                            setTimeout(() => handleRefresh(), 300);
+                        transition={{
+                            layout: { type: 'spring', stiffness: 280, damping: 28 }
                         }}
+                        onClick={handleRefresh}
                         onKeyDown={(e) => {
                             if (e.key === 'Enter' || e.key === ' ') {
                                 e.preventDefault();
-                                if (variant === 'bubble') setIsVisible(false);
-                                setTimeout(() => handleRefresh(), 300);
+                                handleRefresh();
                             }
                         }}
                     >
@@ -118,21 +118,30 @@ export function EnergyFactBubble({ intensity, generationMix, className, variant 
                             {variant === 'bubble' && (
                                 <MessageCircle className="w-3.5 h-3.5 mt-0.5 opacity-70 shrink-0" />
                             )}
-                            <div className="flex flex-col gap-0.5 leading-snug">
-                                <p>
-                                    {variant === 'plain' && (
-                                        <span className="text-primary/60 text-lg leading-none select-none align-top mr-1">"</span>
-                                    )}
-                                    {currentFact.id === 'coal_free_current' && coalStreak.isActive && coalStreak.days * 24 + coalStreak.hours >= 24
-                                        ? `The UK has been coal-free for ${formatStreak(coalStreak)}!`
-                                        : currentFact.id === 'coal_free_current'
-                                            ? null // Don't show this fact if streak < 24h
-                                            : currentFact.text
-                                    }
-                                    {variant === 'plain' && (
-                                        <span className="text-primary/60 text-lg leading-none select-none align-top ml-1 rotate-180 inline-block transform translate-y-0.5">"</span>
-                                    )}
-                                </p>
+                            <div className="flex flex-col gap-0.5 leading-snug w-full">
+                                <AnimatePresence mode="wait" initial={false}>
+                                    <motion.p
+                                        key={currentFact.id + '-' + currentFact.text}
+                                        initial={!shouldReduceMotion ? { opacity: 0, y: 10, scale: 0.97 } : { opacity: 0 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={!shouldReduceMotion ? { opacity: 0, y: -10, scale: 0.97 } : { opacity: 0 }}
+                                        transition={{ duration: 0.2, ease: 'easeInOut' }}
+                                        className={`w-full ${variant === 'plain' ? 'text-center' : 'text-left'}`}
+                                    >
+                                        {variant === 'plain' && (
+                                            <span className="text-primary/60 text-lg leading-none select-none align-top mr-1">"</span>
+                                        )}
+                                        {currentFact.id === 'coal_free_current' && coalStreak.isActive && coalStreak.days * 24 + coalStreak.hours >= 24
+                                            ? `The UK has been coal-free for ${formatStreak(coalStreak)}!`
+                                            : currentFact.id === 'coal_free_current'
+                                                ? null // Don't show this fact if streak < 24h
+                                                : currentFact.text
+                                        }
+                                        {variant === 'plain' && (
+                                            <span className="text-primary/60 text-lg leading-none select-none align-top ml-1 rotate-180 inline-block transform translate-y-0.5">"</span>
+                                        )}
+                                    </motion.p>
+                                </AnimatePresence>
                                 {variant === 'bubble' && (
                                     <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal self-end mt-1 block">
                                         ↻ tap to cycle
@@ -140,7 +149,7 @@ export function EnergyFactBubble({ intensity, generationMix, className, variant 
                                 )}
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
                 </motion.div>
             )}
         </AnimatePresence>
