@@ -14,7 +14,8 @@ export function WindTurbine({ scale = 1, speed = 4, onClick }: { scale?: number;
   return (
     <motion.div
       className="relative w-12 h-24 z-10 cursor-pointer active:scale-95 transition-transform"
-      style={{ transform: `scale(${scale})` }}
+      style={{ scale }}
+      whileHover={{ scale: scale * 1.12 }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}

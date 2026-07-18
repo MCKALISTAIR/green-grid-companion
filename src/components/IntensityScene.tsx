@@ -83,13 +83,14 @@ function InteractiveCloud({ className, style, shouldReduceMotion }: InteractiveC
       className={`${className} pointer-events-auto cursor-pointer`}
       style={style}
       onClick={handleTap}
+      whileHover={!shouldReduceMotion ? { scale: 1.08, y: -2 } : {}}
       animate={isPuffed && !shouldReduceMotion ? {
         scale: [1, 1.25, 0.75, 1.1, 1],
         rotate: [0, -8, 8, -4, 0]
       } : {}}
       transition={{ duration: 0.8, ease: 'easeInOut' }}
     >
-      <Cloud className="w-full h-full" aria-hidden="true" />
+      <Cloud className="w-full h-full transition-colors duration-200 hover:text-sky-50/90" aria-hidden="true" />
     </motion.div>
   );
 }
@@ -472,8 +473,8 @@ export function IntensityScene({
                 filter: `brightness(${sceneConfig.solarBrightness + 0.5})`,
               }}
             >
-              <div
-                className="cursor-pointer active:scale-90 transition-transform relative"
+              <motion.div
+                className="cursor-pointer relative select-none"
                 role="button"
                 tabIndex={0}
                 aria-label={`Toggle synthwave mode ${synthwaveMode ? 'off' : 'on'}`}
@@ -487,20 +488,39 @@ export function IntensityScene({
                     setSynthwaveMode(!synthwaveMode);
                   }
                 }}
+                whileHover={{ scale: 1.15 }}
+                whileTap={{ scale: 0.95 }}
+                animate={{
+                  y: [0, -4, 0], // Gentle floating action
+                }}
+                transition={{
+                  y: {
+                    repeat: Infinity,
+                    duration: 4,
+                    ease: "easeInOut",
+                  },
+                  scale: { type: 'spring', stiffness: 400, damping: 15 },
+                }}
               >
                 <motion.div
                   className="absolute inset-0 w-20 h-20 -translate-x-2 -translate-y-2 rounded-full blur-xl pointer-events-none"
                   style={{
                     backgroundColor: timeOfDay === 'sunset' ? 'hsl(30 90% 55% / 0.4)' : 'hsl(var(--accent) / 0.3)',
                   }}
-                  animate={{ scale: [1, 1.2, 1] }}
+                  animate={{ scale: [1, 1.25, 1], opacity: [0.6, 1, 0.6] }}
                   transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
                 />
-                <Sun
-                  className={`w-16 h-16 relative z-10 pointer-events-none ${timeOfDay === 'sunset' ? 'text-orange-400' : 'text-accent'}`}
-                  aria-hidden="true"
-                />
-              </div>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 35, repeat: Infinity, ease: "linear" }}
+                  className="relative z-10 pointer-events-none"
+                >
+                  <Sun
+                    className={`w-16 h-16 ${timeOfDay === 'sunset' ? 'text-orange-400' : 'text-accent'}`}
+                    aria-hidden="true"
+                  />
+                </motion.div>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>

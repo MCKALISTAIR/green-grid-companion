@@ -27,9 +27,10 @@ const cardVariants = {
         opacity: 1,
         y: 0,
         transition: {
-            duration: 0.35,
+            type: 'spring',
+            stiffness: 220,
+            damping: 22,
             delay: idx * 0.05,
-            ease: 'easeOut',
         }
     })
 };

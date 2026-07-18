@@ -33,6 +33,7 @@ export function Sheep({ x, y, scale = 1, isNight, delay = 0 }: SheepProps) {
         >
             <motion.div
                 animate={isJumping ? { y: -20, rotate: -10 } : { y: 0, rotate: 0 }}
+                whileHover={{ scale: 1.12 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 15 }}
             >
                 <svg width="40" height="30" viewBox="0 0 40 30" overflow="visible">

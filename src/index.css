@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700&display=swap");
 @tailwind base;
@@ -81,7 +81,7 @@
     --sidebar-ring: 150 70% 40%;
     --sidebar: 0 0% 98%;
 
-    --font-sans: 'Work Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
     --font-serif: 'Lora', ui-serif, Georgia, serif;
     --font-mono: 'Inconsolata', ui-monospace, monospace;
 
@@ -517,7 +517,7 @@
     0 20px 40px -15px hsl(var(--foreground) / 0.15),
     0 0 0 1px hsl(var(--primary) / 0.1),
     inset 0 1px 0 0 hsl(var(--background) / 0.5);
-  font-family: 'Work Sans', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   padding: 1.5rem;
   animation: tour-popover-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -535,7 +535,7 @@
 }
 
 .gridsense-tour-popover .driver-popover-title {
-  font-family: 'Work Sans', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-weight: 600;
   font-size: 1.125rem;
   color: hsl(var(--foreground));
@@ -544,7 +544,7 @@
 }
 
 .gridsense-tour-popover .driver-popover-description {
-  font-family: 'Work Sans', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 0.9rem;
   color: hsl(var(--muted-foreground));
   line-height: 1.6;
@@ -552,7 +552,7 @@
 }
 
 .gridsense-tour-popover .driver-popover-progress-text {
-  font-family: 'Work Sans', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 0.75rem;
   color: hsl(var(--primary));
   font-weight: 500;
@@ -565,7 +565,7 @@
 }
 
 .gridsense-tour-popover .driver-popover-navigation-btns button {
-  font-family: 'Work Sans', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-weight: 500;
   font-size: 0.875rem;
   border-radius: calc(var(--radius) - 4px);
@@ -763,17 +763,53 @@ p, blockquote {
 
 /* Premium Glassmorphic Card Styling */
 .glass-card {
-  background: hsl(var(--card) / 0.75) !important;
-  backdrop-filter: blur(16px) saturate(160%);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
-  border: 1px solid hsl(var(--border) / 0.5) !important;
+  background: hsl(var(--card) / 0.7) !important;
+  backdrop-filter: blur(20px) saturate(170%);
+  -webkit-backdrop-filter: blur(20px) saturate(170%);
+  border: 1px solid hsl(var(--border) / 0.6) !important;
+  border-radius: 1.5rem !important; /* Juicy, rounded modern shape */
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.04) !important;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .dark .glass-card {
-  background: hsl(var(--card) / 0.55) !important;
-  border-top: 1px solid hsl(0 0% 100% / 0.09) !important;
-  border-left: 1px solid hsl(0 0% 100% / 0.05) !important;
-  border-right: 1px solid hsl(0 0% 100% / 0.05) !important;
-  border-bottom: 1px solid hsl(0 0% 100% / 0.02) !important;
-  box-shadow: 0 12px 40px 0 hsl(220 25% 4% / 0.3) !important;
+  background: hsl(var(--card) / 0.45) !important;
+  border-top: 1px solid hsl(0 0% 100% / 0.12) !important;
+  border-left: 1px solid hsl(0 0% 100% / 0.08) !important;
+  border-right: 1px solid hsl(0 0% 100% / 0.08) !important;
+  border-bottom: 1px solid hsl(0 0% 100% / 0.04) !important;
+  box-shadow: 0 16px 48px 0 rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Ambient glow utility classes based on carbon intensity level */
+.glow-intensity-very-low {
+  box-shadow: 0 12px 40px -10px hsl(var(--intensity-very-low) / 0.15), 0 0 0 1px hsl(var(--intensity-very-low) / 0.1) !important;
+}
+.glow-intensity-low {
+  box-shadow: 0 12px 40px -10px hsl(var(--intensity-low) / 0.15), 0 0 0 1px hsl(var(--intensity-low) / 0.1) !important;
+}
+.glow-intensity-moderate {
+  box-shadow: 0 12px 40px -10px hsl(var(--intensity-moderate) / 0.15), 0 0 0 1px hsl(var(--intensity-moderate) / 0.1) !important;
+}
+.glow-intensity-high {
+  box-shadow: 0 12px 40px -10px hsl(var(--intensity-high) / 0.15), 0 0 0 1px hsl(var(--intensity-high) / 0.1) !important;
+}
+.glow-intensity-very-high {
+  box-shadow: 0 12px 40px -10px hsl(var(--intensity-very-high) / 0.15), 0 0 0 1px hsl(var(--intensity-very-high) / 0.1) !important;
+}
+
+.dark .glow-intensity-very-low {
+  box-shadow: 0 16px 48px -12px hsl(var(--intensity-very-low) / 0.25), 0 0 0 1px hsl(var(--intensity-very-low) / 0.15) !important;
+}
+.dark .glow-intensity-low {
+  box-shadow: 0 16px 48px -12px hsl(var(--intensity-low) / 0.25), 0 0 0 1px hsl(var(--intensity-low) / 0.15) !important;
+}
+.dark .glow-intensity-moderate {
+  box-shadow: 0 16px 48px -12px hsl(var(--intensity-moderate) / 0.25), 0 0 0 1px hsl(var(--intensity-moderate) / 0.15) !important;
+}
+.dark .glow-intensity-high {
+  box-shadow: 0 16px 48px -12px hsl(var(--intensity-high) / 0.25), 0 0 0 1px hsl(var(--intensity-high) / 0.15) !important;
+}
+.dark .glow-intensity-very-high {
+  box-shadow: 0 16px 48px -12px hsl(var(--intensity-very-high) / 0.25), 0 0 0 1px hsl(var(--intensity-very-high) / 0.15) !important;
 }

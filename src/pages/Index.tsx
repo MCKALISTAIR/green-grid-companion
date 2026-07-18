@@ -182,7 +182,8 @@ const Index = () => {
     return 'bg-destructive';
   })();
 
-
+  const glowClassSuffix = index ? index.replace(' ', '-') : 'moderate';
+  const glowClass = `glow-intensity-${glowClassSuffix}`;
 
   return (
     <TooltipProvider>
@@ -561,9 +562,9 @@ const Index = () => {
                           {/* Energy Insights */}
                           <motion.div
                             className="md:col-span-2 lg:col-span-1 lg:row-span-2"
-                            variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } } }}
+                            variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 220, damping: 22 } } }}
                           >
-                            <Card className="p-4 shadow-lg bg-accent/30 border-accent/50 h-full flex flex-col">
+                            <Card className={`p-4 shadow-lg bg-accent/15 border-accent/30 glass-card h-full flex flex-col ${glowClass}`}>
                               <div className="flex items-start gap-3">
                                 <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
                                   <Zap className="w-4 h-4 text-accent-foreground" />
@@ -595,9 +596,9 @@ const Index = () => {
                           {/* Generation Mix */}
                           <motion.div
                             className="md:col-span-2 lg:col-span-2"
-                            variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } } }}
+                            variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 220, damping: 22 } } }}
                           >
-                            <Card className="p-4 shadow-lg flex flex-col justify-center glass-card h-full" data-tour="generation-mix">
+                            <Card className={`p-4 shadow-lg flex flex-col justify-center glass-card h-full ${glowClass}`} data-tour="generation-mix">
                               <ComponentErrorBoundary name="Generation Mix">
                                 <div className="flex items-center justify-between mb-2">
                                   <span className="sr-only">Generation Mix</span>
@@ -611,7 +612,7 @@ const Index = () => {
                           {/* Best time */}
                           {forecast.length > 0 && (
                             <motion.div
-                              variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } } }}
+                              variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 220, damping: 22 } } }}
                               className="transition-transform active:scale-[0.985]"
                             >
                               <ComponentErrorBoundary name="Best Time">
@@ -623,7 +624,7 @@ const Index = () => {
                           {/* Worst time */}
                           {forecast.length > 0 && (
                             <motion.div
-                              variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } } }}
+                              variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 220, damping: 22 } } }}
                               className="transition-transform active:scale-[0.985]"
                             >
                               <ComponentErrorBoundary name="Worst Time">
@@ -636,9 +637,9 @@ const Index = () => {
                           {forecast.length > 0 && (
                             <motion.div
                               className="md:col-span-2 lg:col-span-3"
-                              variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } } }}
+                              variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 220, damping: 22 } } }}
                             >
-                              <Card className="p-4 shadow-lg glass-card" data-tour="forecast-chart">
+                              <Card className={`p-4 shadow-lg glass-card ${glowClass}`} data-tour="forecast-chart">
                                 <ComponentErrorBoundary name="Hourly Forecast">
                                   <ForecastChart forecast={forecast} showNext={24} />
                                 </ComponentErrorBoundary>
@@ -650,7 +651,7 @@ const Index = () => {
                           {forecast.length > 0 && (
                             <motion.div
                               className="md:col-span-2 lg:col-span-3"
-                              variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } } }}
+                              variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 220, damping: 22 } } }}
                             >
                               <ComponentErrorBoundary name="Daily Forecast">
                                 <ForecastSummary forecast={forecast} />
