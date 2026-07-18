@@ -46,9 +46,9 @@ export async function syncTeslaProducts(
       const products = sitesData.response || [];
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const sitesToUpsert = products
-        .filter((product: any) => product.energy_site_id)
-        .map((product: any) => ({
+      const sitesToUpsert = (products as any[])
+        .filter((product) => product.energy_site_id)
+        .map((product) => ({
           user_id: userId,
           site_id: String(product.energy_site_id),
           site_name: product.site_name || 'Energy Site',

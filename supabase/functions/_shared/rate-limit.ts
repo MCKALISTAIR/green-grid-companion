@@ -4,7 +4,7 @@
 // Local in-memory store for fallback
 const localStore = new Map<string, { count: number; resetAt: number; blockedUntil?: number }>();
 
-async function redisPipeline(url: string, token: string, commands: string[][]): Promise<any[]> {
+async function redisPipeline(url: string, token: string, commands: string[][]): Promise<unknown[]> {
   const response = await fetch(`${url}/pipeline`, {
     method: "POST",
     headers: {

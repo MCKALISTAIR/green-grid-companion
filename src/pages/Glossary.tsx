@@ -4,6 +4,26 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getFuelColor } from "@/lib/carbonApi";
+import { motion } from "framer-motion";
+
+const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.05
+        }
+    }
+};
+
+const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    show: { 
+        opacity: 1, 
+        y: 0, 
+        transition: { type: 'spring', stiffness: 350, damping: 25 } 
+    }
+};
 
 export default function Glossary() {
     const navigate = useNavigate();
@@ -84,10 +104,14 @@ export default function Glossary() {
                 <h1 className="text-lg font-semibold ml-2">Energy Literacy</h1>
             </div>
 
-            <div className="md:p-8 max-w-4xl mx-auto space-y-8 p-4 pt-4">
-
+            <motion.div 
+                className="md:p-8 max-w-4xl mx-auto space-y-8 p-4 pt-4"
+                variants={containerVariants}
+                initial="hidden"
+                animate="show"
+            >
                 {/* Intro */}
-                <section className="space-y-4">
+                <motion.section variants={itemVariants} className="space-y-4">
                     <h2 className="text-3xl font-bold tracking-tight hidden md:block mb-6">Energy Literacy</h2>
                     <Card className="bg-primary/5 border-primary/20">
                         <CardHeader>
@@ -109,40 +133,44 @@ export default function Glossary() {
                             </p>
                         </CardContent>
                     </Card>
-                </section>
+                </motion.section>
 
                 {/* Units */}
-                <section className="space-y-4">
+                <motion.section variants={itemVariants} className="space-y-4">
                     <h3 className="text-xl font-semibold px-1">Key Metrics</h3>
                     <div className="grid gap-4 md:grid-cols-2">
-                        <Card>
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-base font-medium">gCO₂/kWh</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-sm text-muted-foreground">
-                                    "Grams of Carbon Dioxide per Kilowatt-hour". This is the standard unit. <br />
-                                    <span className="font-semibold text-foreground">0 g</span> = Pure clean energy.<br />
-                                    <span className="font-semibold text-foreground">300+ g</span> = Heavy fossil fuel usage.
-                                </p>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-base font-medium">National vs Regional</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-sm text-muted-foreground">
-                                    **National**: The average for the entire UK grid.<br />
-                                    **Regional**: Your specific local grid (DNO). Does your area produce more wind? Are you near a nuclear plant?
-                                </p>
-                            </CardContent>
-                        </Card>
+                        <motion.div whileHover={{ y: -2 }} transition={{ type: 'spring', stiffness: 400, damping: 20 }}>
+                            <Card className="h-full">
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-base font-medium">gCO₂/kWh</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-sm text-muted-foreground">
+                                        "Grams of Carbon Dioxide per Kilowatt-hour". This is the standard unit. <br />
+                                        <span className="font-semibold text-foreground">0 g</span> = Pure clean energy.<br />
+                                        <span className="font-semibold text-foreground">300+ g</span> = Heavy fossil fuel usage.
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        </motion.div>
+                        <motion.div whileHover={{ y: -2 }} transition={{ type: 'spring', stiffness: 400, damping: 20 }}>
+                            <Card className="h-full">
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-base font-medium">National vs Regional</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-sm text-muted-foreground">
+                                        **National**: The average for the entire UK grid.<br />
+                                        **Regional**: Your specific local grid (DNO). Does your area produce more wind? Are you near a nuclear plant?
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        </motion.div>
                     </div>
-                </section>
+                </motion.section>
 
                 {/* Data Sources & Embedded Generation */}
-                <section className="space-y-4">
+                <motion.section variants={itemVariants} className="space-y-4">
                     <div className="flex items-center gap-2">
                         <Factory className="w-5 h-5 text-primary" />
                         <h3 className="text-xl font-semibold">Behind the Scenes</h3>
@@ -172,46 +200,53 @@ export default function Glossary() {
                             </div>
                         </CardContent>
                     </Card>
-                </section>
+                </motion.section>
 
                 {/* Fuel Sources */}
-                <section className="space-y-4">
+                <motion.section variants={itemVariants} className="space-y-4">
                     <h3 className="text-xl font-semibold px-1">Fuel Sources</h3>
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                         {fuelTypes.map((fuel) => {
                             const Icon = fuel.icon;
-                            const colorClass = getFuelColor(fuel.id); // e.g. "bg-gen-wind"
-                            // Note: getFuelColor returns a class like 'bg-gen-wind'. 
-                            // We want to use that for the icon background.
+                            const colorClass = getFuelColor(fuel.id);
 
                             return (
-                                <Card key={fuel.id} className="overflow-hidden">
-                                    <div className="flex items-start p-4 gap-4">
-                                        <div className={`p-2.5 rounded-xl shrink-0 ${colorClass} bg-opacity-20 text-foreground`}>
-                                            {/* We need to apply the color more carefully if getFuelColor returns a bg class. 
-                           Ideally we want the bg to be the fuel color. 
-                           Let's trust the Tailwind class works. */}
-                                            <Icon className="w-5 h-5 text-white/90 drop-shadow-sm" />
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center justify-between mb-1">
-                                                <h4 className="font-semibold">{fuel.name}</h4>
-                                                <span className="text-[10px] uppercase font-bold tracking-wider opacity-50 border px-1.5 py-0.5 rounded-full">
-                                                    {fuel.category}
-                                                </span>
+                                <motion.div
+                                    key={fuel.id}
+                                    variants={itemVariants}
+                                    whileHover={{ y: -3, scale: 1.02 }}
+                                    transition={{ type: 'spring', stiffness: 450, damping: 22 }}
+                                >
+                                    <Card className="overflow-hidden h-full shadow-sm hover:shadow-md transition-shadow duration-300">
+                                        <div className="flex items-start p-4 gap-4">
+                                            <motion.div 
+                                                className={`p-2.5 rounded-xl shrink-0 ${colorClass} bg-opacity-20 text-foreground`}
+                                                whileHover={{ scale: 1.15, rotate: [0, -12, 12, 0] }}
+                                                transition={{ duration: 0.3 }}
+                                            >
+                                                <Icon className="w-5 h-5 text-white/90 drop-shadow-sm" />
+                                            </motion.div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center justify-between mb-1 gap-1">
+                                                    <h4 className="font-semibold truncate">{fuel.name}</h4>
+                                                    <span className="text-[10px] uppercase font-bold tracking-wider opacity-50 border px-1.5 py-0.5 rounded-full shrink-0">
+                                                        {fuel.category}
+                                                    </span>
+                                                </div>
+                                                <p className="text-xs text-muted-foreground leading-snug">
+                                                    {fuel.description}
+                                                </p>
                                             </div>
-                                            <p className="text-xs text-muted-foreground leading-snug">
-                                                {fuel.description}
-                                            </p>
                                         </div>
-                                    </div>
-                                </Card>
+                                    </Card>
+                                </motion.div>
                             );
                         })}
                     </div>
-                </section>
+                </motion.section>
 
-            </div>
+            </motion.div>
         </div>
     );
 }
+

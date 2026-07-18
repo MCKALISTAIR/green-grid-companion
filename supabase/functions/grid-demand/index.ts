@@ -81,10 +81,14 @@ Deno.serve(async (req: Request) => {
           return null;
         }
 
+        interface ElexonFreqItem {
+          measurementTime: string;
+          frequency: number;
+        }
         const data = await freqRes.json();
         if (Array.isArray(data) && data.length > 0) {
           // Sort by measurementTime descending to find the latest
-          const sorted = [...data].sort((a: any, b: any) => 
+          const sorted = (data as ElexonFreqItem[]).sort((a, b) => 
             new Date(b.measurementTime).getTime() - new Date(a.measurementTime).getTime()
           );
           const latest = sorted[0];

@@ -15,6 +15,7 @@ import { HouseType, OFGEM_TDCV_2025 } from '@/lib/energy-standards';
 import { useSettings } from '@/hooks/useSettings';
 import { cn } from '@/lib/utils';
 import { useAppLocation } from '@/contexts/LocationContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
 type OnboardingStep = 'welcome' | 'household' | 'location' | 'notifications';
 
@@ -108,6 +109,10 @@ const Onboarding = () => {
     };
 
     const handleManualSubmit = (e: React.FormEvent) => {
+        preventDefaultAndSubmit(e);
+    };
+
+    const preventDefaultAndSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!manualPostcode.trim()) return;
 
@@ -202,15 +207,17 @@ const Onboarding = () => {
                 ))}
             </div>
 
-            <Button className="w-full mt-6" size="lg" onClick={handleWelcomeNext}>
-                {currentSlide === 2 ? 'Get Started' : 'Next'}
-                {currentSlide === 2 ? <Check className="w-4 h-4 ml-2" /> : <ChevronRight className="w-4 h-4 ml-2" />}
-            </Button>
+            <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                <Button className="w-full mt-6 animate-pulse" size="lg" onClick={handleWelcomeNext}>
+                    {currentSlide === 2 ? 'Get Started' : 'Next'}
+                    {currentSlide === 2 ? <Check className="w-4 h-4 ml-2" /> : <ChevronRight className="w-4 h-4 ml-2" />}
+                </Button>
+            </motion.div>
         </div>
     );
 
     const renderHouseholdStep = () => (
-        <div className="space-y-6 animate-in slide-in-from-right duration-300">
+        <div className="space-y-6">
             <div className="text-center space-y-2">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
                     <Home className="w-6 h-6 text-primary" />
@@ -221,14 +228,17 @@ const Onboarding = () => {
 
             <div className="space-y-3">
                 {(['LOW', 'MEDIUM', 'HIGH'] as HouseType[]).map((type) => (
-                    <button
+                    <motion.button
                         key={type}
                         onClick={() => handleHouseTypeSelect(type)}
+                        whileHover={{ scale: 1.02, y: -1 }}
+                        whileTap={{ scale: 0.98 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                         className={cn(
                             "w-full p-4 rounded-xl border text-left transition-all hover:bg-accent/50 relative overflow-hidden group",
                             selectedHouseType === type
-                                ? "border-primary bg-primary/5 ring-1 ring-primary"
-                                : "border-border bg-card"
+                                ? "border-primary bg-primary/5 ring-1 ring-primary text-foreground"
+                                : "border-border bg-card text-foreground"
                         )}
                     >
                         <div className="flex justify-between items-center mb-1">
@@ -240,18 +250,20 @@ const Onboarding = () => {
                             )}
                         </div>
                         <p className="text-xs text-muted-foreground">{OFGEM_TDCV_2025[type].description}</p>
-                    </button>
+                    </motion.button>
                 ))}
             </div>
 
-            <Button className="w-full" size="lg" onClick={confirmHouseType}>
-                Continue <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
+            <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                <Button className="w-full" size="lg" onClick={confirmHouseType}>
+                    Continue <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+            </motion.div>
         </div>
     );
 
     const renderLocationStep = () => (
-        <div className="space-y-4 animate-in slide-in-from-right duration-300">
+        <div className="space-y-4">
             <div className="text-center space-y-2 mb-6">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
                     <MapPin className="w-6 h-6 text-primary" />
@@ -260,24 +272,26 @@ const Onboarding = () => {
                 <p className="text-sm text-muted-foreground">We need your location to find the nearest grid region.</p>
             </div>
 
-            <Button
-                size="lg"
-                className="w-full font-semibold relative overflow-hidden group"
-                onClick={handleEnableLocation}
-                disabled={isLoadingLocation}
-            >
-                {isLoadingLocation ? (
-                    <>
-                        <TurbineSpinner size="sm" className="mr-2" />
-                        Finding you...
-                    </>
-                ) : (
-                    <>
-                        <Navigation className="w-4 h-4 mr-2 group-hover:animate-pulse" />
-                        Use Current Location
-                    </>
-                )}
-            </Button>
+            <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                <Button
+                    size="lg"
+                    className="w-full font-semibold relative overflow-hidden group"
+                    onClick={handleEnableLocation}
+                    disabled={isLoadingLocation}
+                >
+                    {isLoadingLocation ? (
+                        <>
+                            <TurbineSpinner size="sm" className="mr-2" />
+                            Finding you...
+                        </>
+                    ) : (
+                        <>
+                            <Navigation className="w-4 h-4 mr-2 group-hover:rotate-12 transition-transform duration-200" />
+                            Use Current Location
+                        </>
+                    )}
+                </Button>
+            </motion.div>
 
             <div className="relative py-2">
                 <div className="absolute inset-0 flex items-center">
@@ -296,16 +310,18 @@ const Onboarding = () => {
                         onChange={(e) => setManualPostcode(e.target.value)}
                         className="bg-background/50 h-11"
                     />
-                    <Button type="submit" variant="secondary" size="lg" disabled={!manualPostcode.trim()} className="px-4">
-                        <ArrowRight className="w-4 h-4" />
-                    </Button>
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                        <Button type="submit" variant="secondary" size="lg" disabled={!manualPostcode.trim()} className="px-4 h-11">
+                            <ArrowRight className="w-4 h-4" />
+                        </Button>
+                    </motion.div>
                 </div>
             </form>
         </div>
     );
 
     const renderNotificationsStep = () => (
-        <div className="space-y-4 animate-in slide-in-from-right duration-300">
+        <div className="space-y-4">
             <div className="text-center space-y-2 mb-6">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
                     <Bell className="w-6 h-6 text-primary" />
@@ -315,21 +331,25 @@ const Onboarding = () => {
             </div>
 
             <div className="space-y-3">
-                <Button
-                    size="lg"
-                    className="w-full font-semibold"
-                    onClick={handleEnableNotifications}
-                >
-                    <Bell className="w-4 h-4 mr-2" />
-                    Enable Alerts
-                </Button>
-                <Button
-                    variant="ghost"
-                    className="w-full text-muted-foreground"
-                    onClick={handleSkipNotifications}
-                >
-                    Skip for now
-                </Button>
+                <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                    <Button
+                        size="lg"
+                        className="w-full font-semibold"
+                        onClick={handleEnableNotifications}
+                    >
+                        <Bell className="w-4 h-4 mr-2" />
+                        Enable Alerts
+                    </Button>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                    <Button
+                        variant="ghost"
+                        className="w-full text-muted-foreground"
+                        onClick={handleSkipNotifications}
+                    >
+                        Skip for now
+                    </Button>
+                </motion.div>
             </div>
         </div>
     );
@@ -350,11 +370,22 @@ const Onboarding = () => {
             </div>
             {/* Glassmorphic card overlay */}
             <Card className="w-full max-w-md shadow-2xl border-white/10 bg-slate-900/60 dark:bg-slate-950/60 backdrop-blur-xl text-white overflow-hidden">
-                <CardContent className="p-6">
-                    {step === 'welcome' && renderWelcomeStep()}
-                    {step === 'household' && renderHouseholdStep()}
-                    {step === 'location' && renderLocationStep()}
-                    {step === 'notifications' && renderNotificationsStep()}
+                <CardContent className="p-6 min-h-[380px] flex flex-col justify-center">
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={step}
+                            initial={{ opacity: 0, x: 30 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -30 }}
+                            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                            className="w-full"
+                        >
+                            {step === 'welcome' && renderWelcomeStep()}
+                            {step === 'household' && renderHouseholdStep()}
+                            {step === 'location' && renderLocationStep()}
+                            {step === 'notifications' && renderNotificationsStep()}
+                        </motion.div>
+                    </AnimatePresence>
                 </CardContent>
                 <CardFooter className="justify-center py-4 bg-white/5 border-t border-white/5 text-xs text-white/60">
                     <p>
@@ -370,3 +401,4 @@ const Onboarding = () => {
 };
 
 export default Onboarding;
+

@@ -26,6 +26,21 @@ import { useCarbonData } from '@/hooks/useCarbonData';
 import { useAppLocation } from '@/contexts/LocationContext';
 import { useOffline } from '@/hooks/useOffline';
 import { useSceneType } from '@/hooks/useSceneType';
+import { motion } from 'framer-motion';
+
+const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+        opacity: 1,
+        transition: { staggerChildren: 0.04 }
+    }
+};
+
+const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 350, damping: 25 } }
+};
+
 
 
 export default function Settings() {
@@ -76,13 +91,18 @@ export default function Settings() {
 
     return (
         <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
-            <div className="p-4 pt-[calc(max(env(safe-area-inset-top),59px)+2rem)] space-y-8">
-                <div>
+            <motion.div 
+                className="p-4 pt-[calc(max(env(safe-area-inset-top),59px)+2rem)] space-y-8"
+                variants={containerVariants}
+                initial="hidden"
+                animate="show"
+            >
+                <motion.div variants={itemVariants}>
                     <h1 className="text-2xl font-bold">Settings</h1>
                     <p className="text-muted-foreground">Manage notifications and preferences.</p>
-                </div>
+                </motion.div>
 
-                <div className="space-y-4">
+                <motion.div variants={itemVariants} className="space-y-4">
                     <h2 className="text-xl font-semibold">Account</h2>
                     <AccountBackup
                         isSyncing={isSyncing}
@@ -90,19 +110,28 @@ export default function Settings() {
                         onSyncNow={syncNow}
                         formatLastSync={formatLastSync}
                     />
-                </div>
+                </motion.div>
 
-                <OctopusIntegration />
+                <motion.div variants={itemVariants}>
+                    <OctopusIntegration />
+                </motion.div>
                 {/* <TeslaIntegration /> */}
-                <NotificationSettings />
+                <motion.div variants={itemVariants}>
+                    <NotificationSettings />
+                </motion.div>
 
-                <div className="space-y-4">
+                <motion.div variants={itemVariants} className="space-y-4">
                     <h2 className="text-xl font-semibold flex items-center gap-2">
                         <Trophy className="w-5 h-5 text-yellow-500" />
                         Badges
                     </h2>
                     <Link to="/achievements">
-                        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg hover:from-primary/15 hover:to-primary/10 transition-colors">
+                        <motion.div 
+                            whileHover={{ y: -2, scale: 1.01 }} 
+                            whileTap={{ scale: 0.99 }}
+                            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                            className="flex items-center justify-between p-4 bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg hover:from-primary/15 hover:to-primary/10 transition-all"
+                        >
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-primary/20 rounded-full">
                                     <Trophy className="w-5 h-5 text-yellow-600 dark:text-yellow-500" />
@@ -113,11 +142,11 @@ export default function Settings() {
                                 </div>
                             </div>
                             <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                        </div>
+                        </motion.div>
                     </Link>
-                </div>
+                </motion.div>
 
-                <div className="space-y-4">
+                <motion.div variants={itemVariants} className="space-y-4">
                     <h2 className="text-xl font-semibold">Household Profile</h2>
                     <div className="p-4 bg-card border rounded-lg space-y-3">
                         <div className="flex items-center gap-2">
@@ -182,10 +211,10 @@ export default function Settings() {
                             </div>
                         </RadioGroup>
                     </div>
-                </div>
+                </motion.div>
 
                 {isMac && (
-                    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+                    <motion.div variants={itemVariants} className="space-y-4">
                         <h2 className="text-xl font-semibold">Desktop Companion</h2>
                         <div className="p-4 bg-gradient-to-br from-card to-accent/5 border rounded-lg space-y-3 relative overflow-hidden">
                             {/* Decorative background icon */}
@@ -214,12 +243,15 @@ export default function Settings() {
                                 <p className="text-[10px] text-muted-foreground mt-2 text-center sm:text-left">
                                     Requires macOS 11.0 or later.
                                 </p>
+                                <p className="text-[10px] text-muted-foreground/80 mt-1 bg-accent/20 p-2 rounded border border-accent/10 max-w-md text-center sm:text-left">
+                                    💡 <strong>Tip:</strong> To show your local region in the menu bar app, create a file at <code>~/.gridsense</code> containing your postcode prefix (e.g., <code>EH1</code> or <code>SW1</code>).
+                                </p>
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
                 )}
 
-                <div className="space-y-4">
+                <motion.div variants={itemVariants} className="space-y-4">
                     <h2 className="text-xl font-semibold">Preferences</h2>
 
                     <div className="flex flex-col gap-3">
@@ -321,7 +353,12 @@ export default function Settings() {
                         </div>
 
                         <Link to="/locations">
-                            <div className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-colors">
+                            <motion.div 
+                                whileHover={{ scale: 1.01, y: -2 }} 
+                                whileTap={{ scale: 0.99 }}
+                                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                                className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-all"
+                            >
                                 <div className="flex items-center gap-3">
                                     <div className="p-2 bg-primary/10 rounded-full">
                                         <MapPin className="w-5 h-5 text-primary" />
@@ -332,7 +369,7 @@ export default function Settings() {
                                     </div>
                                 </div>
                                 <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                            </div>
+                            </motion.div>
                         </Link>
 
                         {/* Cookie Preferences */}
@@ -386,9 +423,9 @@ export default function Settings() {
                             </Button>
                         </div>
                     </div>
-                </div>
+                </motion.div>
 
-                <div className="space-y-4">
+                <motion.div variants={itemVariants} className="space-y-4">
                     <h2 className="text-xl font-semibold">Resources</h2>
 
                     <div className="flex flex-col gap-3">
@@ -411,7 +448,12 @@ export default function Settings() {
                         )}
 
                         <Link to="/feature-guides">
-                            <div className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-colors">
+                            <motion.div 
+                                whileHover={{ scale: 1.01, y: -2 }} 
+                                whileTap={{ scale: 0.99 }}
+                                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                                className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-all"
+                            >
                                 <div className="flex items-center gap-3">
                                     <div className="p-2 bg-primary/10 rounded-full">
                                         <GraduationCap className="w-5 h-5 text-primary" />
@@ -422,11 +464,16 @@ export default function Settings() {
                                     </div>
                                 </div>
                                 <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                            </div>
+                            </motion.div>
                         </Link>
 
                         <Link to="/help">
-                            <div className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-colors">
+                            <motion.div 
+                                whileHover={{ scale: 1.01, y: -2 }} 
+                                whileTap={{ scale: 0.99 }}
+                                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                                className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-all"
+                            >
                                 <div className="flex items-center gap-3">
                                     <div className="p-2 bg-primary/10 rounded-full">
                                         <MessageSquare className="w-5 h-5 text-primary" />
@@ -437,11 +484,16 @@ export default function Settings() {
                                     </div>
                                 </div>
                                 <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                            </div>
+                            </motion.div>
                         </Link>
 
                         <Link to="/glossary">
-                            <div className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-colors">
+                            <motion.div 
+                                whileHover={{ scale: 1.01, y: -2 }} 
+                                whileTap={{ scale: 0.99 }}
+                                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                                className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-all"
+                            >
                                 <div className="flex items-center gap-3">
                                     <div className="p-2 bg-primary/10 rounded-full">
                                         <GraduationCap className="w-5 h-5 text-primary" />
@@ -452,11 +504,16 @@ export default function Settings() {
                                     </div>
                                 </div>
                                 <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                            </div>
+                            </motion.div>
                         </Link>
 
                         <Link to="/changelog">
-                            <div className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-colors">
+                            <motion.div 
+                                whileHover={{ scale: 1.01, y: -2 }} 
+                                whileTap={{ scale: 0.99 }}
+                                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                                className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-all"
+                            >
                                 <div className="flex items-center gap-3">
                                     <div className="p-2 bg-primary/10 rounded-full relative">
                                         <History className="w-5 h-5 text-primary" />
@@ -477,11 +534,16 @@ export default function Settings() {
                                     </div>
                                 </div>
                                 <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                            </div>
+                            </motion.div>
                         </Link>
 
                         <Link to="/privacy">
-                            <div className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-colors">
+                            <motion.div 
+                                whileHover={{ scale: 1.01, y: -2 }} 
+                                whileTap={{ scale: 0.99 }}
+                                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                                className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-all"
+                            >
                                 <div className="flex items-center gap-3">
                                     <div className="p-2 bg-muted rounded-full">
                                         <Shield className="w-5 h-5 text-muted-foreground" />
@@ -492,17 +554,22 @@ export default function Settings() {
                                     </div>
                                 </div>
                                 <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                            </div>
+                            </motion.div>
                         </Link>
                     </div>
-                </div>
+                </motion.div>
 
-                <div className="space-y-4">
+                <motion.div variants={itemVariants} className="space-y-4">
                     <h2 className="text-xl font-semibold">Support</h2>
 
                     <div className="flex flex-col gap-3">
                         <a href="mailto:allymckay5@gmail.com?subject=GridSense%20Feedback">
-                            <div className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-colors">
+                            <motion.div 
+                                whileHover={{ scale: 1.01, y: -2 }} 
+                                whileTap={{ scale: 0.99 }}
+                                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                                className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-all"
+                            >
                                 <div className="flex items-center gap-3">
                                     <div className="p-2 bg-primary/10 rounded-full">
                                         <MessageSquare className="w-5 h-5 text-primary" />
@@ -513,12 +580,12 @@ export default function Settings() {
                                     </div>
                                 </div>
                                 <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                            </div>
+                            </motion.div>
                         </a>
                     </div>
-                </div>
+                </motion.div>
 
-                <div className="text-xs text-muted-foreground text-center space-y-2 pt-8 pb-4">
+                <motion.div variants={itemVariants} className="text-xs text-muted-foreground text-center space-y-2 pt-8 pb-4">
                     <p>
                         Developed by <a href="https://alistair-mckay.lovable.app" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">Alistair McKay</a>
                     </p>
@@ -553,10 +620,10 @@ export default function Settings() {
                             </Badge>
                         )}
                     </div>
-                </div>
+                </motion.div>
 
                 {/* Data Sync Section */}
-                <div className="space-y-4">
+                <motion.div variants={itemVariants} className="space-y-4">
                     <h2 className="text-xl font-semibold">Data Sync</h2>
                     <div className="p-4 bg-card border rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
@@ -584,10 +651,10 @@ export default function Settings() {
                             Force Refresh
                         </Button>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* Debug Section */}
-                <div className="border-t border-border pt-8 pb-4">
+                <motion.div variants={itemVariants} className="border-t border-border pt-8 pb-4">
                     <h2 className="text-lg font-semibold mb-4 px-1">Debug</h2>
                     <div className="p-4 bg-card border rounded-lg space-y-4">
                         <div className="flex items-center justify-between">
@@ -629,8 +696,8 @@ export default function Settings() {
                             </Button>
                         </div>
                     </div>
-                </div>
-            </div>
+                </motion.div>
+            </motion.div>
 
             <YearWrapped
                 open={showYearWrapped}

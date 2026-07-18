@@ -41,11 +41,11 @@ function useBestWorstTimes(forecast: ForecastData[]) {
 
 export function BestTimeSlot({ forecast }: BestTimeCardProps) {
   const data = useBestWorstTimes(forecast);
-  if (!data) return null;
-
   const now = new Date();
-  const isNow = now >= data.bestStart && now <= data.bestEnd;
-  const countdown = useCountdown(isNow ? null : data.bestStart);
+  const isNow = data ? (now >= data.bestStart && now <= data.bestEnd) : false;
+  const countdown = useCountdown(data ? (isNow ? null : data.bestStart) : null);
+
+  if (!data) return null;
 
   return (
     <motion.div
@@ -91,11 +91,11 @@ export function BestTimeSlot({ forecast }: BestTimeCardProps) {
 
 export function WorstTimeSlot({ forecast }: BestTimeCardProps) {
   const data = useBestWorstTimes(forecast);
-  if (!data) return null;
-
   const now = new Date();
-  const isNow = now >= data.worstStart && now <= data.worstEnd;
-  const countdown = useCountdown(isNow ? null : data.worstStart);
+  const isNow = data ? (now >= data.worstStart && now <= data.worstEnd) : false;
+  const countdown = useCountdown(data ? (isNow ? null : data.worstStart) : null);
+
+  if (!data) return null;
 
   return (
     <motion.div

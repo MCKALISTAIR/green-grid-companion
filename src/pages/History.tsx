@@ -17,6 +17,21 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.04 }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 15 },
+  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 350, damping: 25 } }
+};
+
 import { useHistoricalCarbon } from '@/hooks/useHistoricalCarbon';
 import { IntensityScene } from '@/components/IntensityScene';
 import { useAchievements } from '@/hooks/useAchievements';
@@ -171,8 +186,13 @@ export default function HistoryPage() {
 
     return (
         <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
-            <div className="p-4 space-y-6 pt-[calc(max(env(safe-area-inset-top),59px)+2rem)]">
-                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <motion.div 
+                className="p-4 space-y-6 pt-[calc(max(env(safe-area-inset-top),59px)+2rem)]"
+                variants={containerVariants}
+                initial="hidden"
+                animate="show"
+            >
+                <motion.div variants={itemVariants} className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <div>
                         <h1 className="text-2xl font-bold flex items-center gap-2">
                             {date ? '🕰️ Time Machine' : 'Grid History'}
@@ -223,12 +243,14 @@ export default function HistoryPage() {
                             </Button>
                         )}
                     </div>
-                </div>
+                </motion.div>
 
                 {!postcode ? (
-                    <Card className="p-6 text-center">
-                        <p>Please enter a postcode in Settings to see regional history.</p>
-                    </Card>
+                    <motion.div variants={itemVariants}>
+                        <Card className="p-6 text-center">
+                            <p>Please enter a postcode in Settings to see regional history.</p>
+                        </Card>
+                    </motion.div>
                 ) : isRegionLoading || isLoading ? (
                     <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
@@ -249,103 +271,114 @@ export default function HistoryPage() {
                 ) : (
                     <>
                         {showChartTip && (
-                            <Card className="mb-4 bg-muted/30 border-dashed relative animate-in fade-in slide-in-from-top-2">
-                                <button
-                                    onClick={dismissChartTip}
-                                    className="absolute top-2 right-2 p-1 text-muted-foreground hover:text-foreground transition-colors"
-                                    aria-label="Dismiss tip"
-                                >
-                                    <X className="w-4 h-4" />
-                                </button>
-                                <div className="p-4 flex gap-3 pr-8">
-                                    <div className="p-2 bg-background rounded-full border shadow-sm h-fit">
-                                        <Info className="w-4 h-4 text-primary shrink-0" />
+                            <motion.div variants={itemVariants}>
+                                <Card className="mb-4 bg-muted/30 border-dashed relative animate-in fade-in slide-in-from-top-2">
+                                    <button
+                                        onClick={dismissChartTip}
+                                        className="absolute top-2 right-2 p-1 text-muted-foreground hover:text-foreground transition-colors"
+                                        aria-label="Dismiss tip"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                    <div className="p-4 flex gap-3 pr-8">
+                                        <div className="p-2 bg-background rounded-full border shadow-sm h-fit">
+                                            <Info className="w-4 h-4 text-primary shrink-0" />
+                                        </div>
+                                        <div className="text-sm space-y-1">
+                                            <p className="font-semibold">Understanding the Graph</p>
+                                            <p className="text-muted-foreground leading-relaxed">
+                                                The <span className="font-medium text-foreground">solid line</span> shows actual carbon intensity, while the <span className="font-medium text-foreground">dotted line</span> shows the forecast. Compare them to see how accurate the predictions were!
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div className="text-sm space-y-1">
-                                        <p className="font-semibold">Understanding the Graph</p>
-                                        <p className="text-muted-foreground leading-relaxed">
-                                            The <span className="font-medium text-foreground">solid line</span> shows actual carbon intensity, while the <span className="font-medium text-foreground">dotted line</span> shows the forecast. Compare them to see how accurate the predictions were!
-                                        </p>
-                                    </div>
-                                </div>
-                            </Card>
+                                </Card>
+                            </motion.div>
                         )}
 
                         {/* Time Machine Scene Visualisation */}
                         {date && data.length > 0 && (
-                            <Card className="overflow-hidden border-2 border-primary/20">
-                                <div className="relative h-[200px] w-full">
-                                    <IntensityScene
-                                        intensity={avgIntensity}
-                                        index={data[Math.floor(data.length / 2)]?.intensity.index || 'moderate'}
-                                        generationMix={data[Math.floor(data.length / 2)]?.generationmix}
-                                        isVintage={true}
-                                        className="h-full"
-                                        style={{ height: '100%' }}
-                                    />
-                                    <div className="absolute top-2 left-2 bg-black/50 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-mono">
-                                        SNAPSHOT: {format(date, 'yyyy')}
-                                    </div>
-                                </div>
-                                <CardContent className="p-4 bg-muted/20">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-background rounded-full border">
-                                            {avgIntensity < (historyQuery.data && historyQuery.data.length > 0 ? (historyQuery.data.reduce((acc, curr) => acc + curr.intensity.forecast, 0) / historyQuery.data.length) : 0) ? (
-                                                <TrendingDown className="w-5 h-5 text-green-600" />
-                                            ) : (
-                                                <TrendingUp className="w-5 h-5 text-red-600" />
-                                            )}
+                            <motion.div variants={itemVariants}>
+                                <Card className="overflow-hidden border-2 border-primary/20">
+                                    <div className="relative h-[200px] w-full">
+                                        <IntensityScene
+                                            intensity={avgIntensity}
+                                            index={data[Math.floor(data.length / 2)]?.intensity.index || 'moderate'}
+                                            generationMix={data[Math.floor(data.length / 2)]?.generationmix}
+                                            isVintage={true}
+                                            className="h-full"
+                                            style={{ height: '100%' }}
+                                        />
+                                        <div className="absolute top-2 left-2 bg-black/50 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-mono">
+                                            SNAPSHOT: {format(date, 'yyyy')}
                                         </div>
-                                        <div>
-                                            <div className="font-semibold text-sm">Time Travel Analysis</div>
-                                            <div className="text-xs text-muted-foreground">
-                                                This day was <span className="font-bold text-foreground">{Math.abs(avgIntensity - Math.round(historyQuery.data && historyQuery.data.length > 0 ? (historyQuery.data.reduce((acc, curr) => acc + curr.intensity.forecast, 0) / historyQuery.data.length) : avgIntensity))} gCO2/kWh {avgIntensity < (historyQuery.data && historyQuery.data.length > 0 ? Math.round(historyQuery.data.reduce((acc, curr) => acc + curr.intensity.forecast, 0) / historyQuery.data.length) : avgIntensity) ? 'cleaner' : 'dirtier'}</span> than the current 7-day average.
+                                    </div>
+                                    <CardContent className="p-4 bg-muted/20">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-background rounded-full border">
+                                                {avgIntensity < (historyQuery.data && historyQuery.data.length > 0 ? (historyQuery.data.reduce((acc, curr) => acc + curr.intensity.forecast, 0) / historyQuery.data.length) : 0) ? (
+                                                    <TrendingDown className="w-5 h-5 text-green-600 animate-bounce" />
+                                                ) : (
+                                                    <TrendingUp className="w-5 h-5 text-red-600 animate-bounce" />
+                                                )}
+                                            </div>
+                                            <div>
+                                                <div className="font-semibold text-sm">Time Travel Analysis</div>
+                                                <div className="text-xs text-muted-foreground">
+                                                    This day was <span className="font-bold text-foreground">{Math.abs(avgIntensity - Math.round(historyQuery.data && historyQuery.data.length > 0 ? (historyQuery.data.reduce((acc, curr) => acc + curr.intensity.forecast, 0) / historyQuery.data.length) : avgIntensity))} gCO2/kWh {avgIntensity < (historyQuery.data && historyQuery.data.length > 0 ? Math.round(historyQuery.data.reduce((acc, curr) => acc + curr.intensity.forecast, 0) / historyQuery.data.length) : avgIntensity) ? 'cleaner' : 'dirtier'}</span> than the current 7-day average.
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                                    </CardContent>
+                                </Card>
+                            </motion.div>
                         )}
 
                         {/* Stats Cards */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <Card className="p-4 border-primary/20 bg-primary/5">
-                                <div className="text-muted-foreground text-xs uppercase font-bold tracking-wider">Average</div>
-                                <div className="text-2xl font-bold mt-1">{avgIntensity} <span className="text-sm font-normal text-muted-foreground">gCO2/kWh</span></div>
-                                <div className="text-xs text-muted-foreground mt-1">Last {timeRange === '7d' ? '7 Days' : '24 Hours'}</div>
-                            </Card>
+                        <motion.div variants={itemVariants} className="grid grid-cols-2 gap-4">
+                            <motion.div className="h-full" whileHover={{ y: -3, scale: 1.01 }} transition={{ type: 'spring', stiffness: 450, damping: 22 }}>
+                                <Card className="p-4 border-primary/20 bg-primary/5 h-full">
+                                    <div className="text-muted-foreground text-xs uppercase font-bold tracking-wider">Average</div>
+                                    <div className="text-2xl font-bold mt-1">{avgIntensity} <span className="text-sm font-normal text-muted-foreground">gCO2/kWh</span></div>
+                                    <div className="text-xs text-muted-foreground mt-1">Last {timeRange === '7d' ? '7 Days' : '24 Hours'}</div>
+                                </Card>
+                            </motion.div>
                             {isLinked && totalConsumption > 0 ? (
-                                <Card className="p-4 border-muted">
-                                    <div className="text-muted-foreground text-xs uppercase font-bold tracking-wider">Footprint</div>
-                                    <div className="flex items-center gap-2 mt-1">
-                                        <Zap className="w-6 h-6 text-yellow-500" />
-                                        <div className="flex flex-col">
-                                            <span className="text-xl font-bold">{(totalCarbonMass / 1000).toFixed(2)}kg</span>
-                                            <span className="text-xs text-muted-foreground">{totalConsumption.toFixed(1)} kWh used</span>
+                                <motion.div className="h-full" whileHover={{ y: -3, scale: 1.01 }} transition={{ type: 'spring', stiffness: 450, damping: 22 }}>
+                                    <Card className="p-4 border-muted h-full">
+                                        <div className="text-muted-foreground text-xs uppercase font-bold tracking-wider">Footprint</div>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <Zap className="w-6 h-6 text-yellow-500" />
+                                            <div className="flex flex-col">
+                                                <span className="text-xl font-bold">{(totalCarbonMass / 1000).toFixed(2)}kg</span>
+                                                <span className="text-xs text-muted-foreground">{totalConsumption.toFixed(1)} kWh used</span>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="text-xs text-muted-foreground mt-1">Total carbon footprint</div>
-                                </Card>
+                                        <div className="text-xs text-muted-foreground mt-1">Total carbon footprint</div>
+                                    </Card>
+                                </motion.div>
                             ) : (
-                                <Card className="p-4 border-muted">
-                                    <div className="text-muted-foreground text-xs uppercase font-bold tracking-wider">Trend</div>
-                                    <div className="flex items-center gap-2 mt-1">
-                                        {trend === 'improving' ? (
-                                            <TrendingDown className="w-6 h-6 text-green-500" />
-                                        ) : (
-                                            <TrendingUp className="w-6 h-6 text-red-500" />
-                                        )}
-                                        <span className={`text-sm font-bold ${trend === 'improving' ? 'text-green-600' : 'text-red-600'}`}>
-                                            {Math.abs(endVal - startVal)} gCO2/kWh
-                                        </span>
-                                    </div>
-                                    <div className="text-xs text-muted-foreground mt-1">Currently {trend === 'improving' ? 'lower' : 'higher'} than start</div>
-                                </Card>
+                                <motion.div className="h-full" whileHover={{ y: -3, scale: 1.01 }} transition={{ type: 'spring', stiffness: 450, damping: 22 }}>
+                                    <Card className="p-4 border-muted h-full">
+                                        <div className="text-muted-foreground text-xs uppercase font-bold tracking-wider">Trend</div>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            {trend === 'improving' ? (
+                                                <TrendingDown className="w-6 h-6 text-green-500" />
+                                            ) : (
+                                                <TrendingUp className="w-6 h-6 text-red-500" />
+                                            )}
+                                            <span className={`text-sm font-bold ${trend === 'improving' ? 'text-green-600' : 'text-red-600'}`}>
+                                                {Math.abs(endVal - startVal)} gCO2/kWh
+                                            </span>
+                                        </div>
+                                        <div className="text-xs text-muted-foreground mt-1">Currently {trend === 'improving' ? 'lower' : 'higher'} than start</div>
+                                    </Card>
+                                </motion.div>
                             )}
-                        </div>
+                        </motion.div>
 
                         {/* Chart */}
-                        <Card className="p-4">
+                        <motion.div variants={itemVariants}>
+                            <Card className="p-4">
                             <CardHeader className="p-0 pb-4">
                                 <div className="flex items-center justify-between">
                                     <div>
@@ -508,9 +541,10 @@ export default function HistoryPage() {
                                 </ResponsiveContainer>
                             </div>
                         </Card>
+                        </motion.div>
                     </>
                 )}
-            </div>
+            </motion.div>
 
         </div>
     );

@@ -342,13 +342,8 @@ Deno.serve(async (req: Request) => {
                   }
                 }
 
-                }
-
-                const consumptionData = await response.json();
-                const readings: OctopusConsumption[] = consumptionData.results || [];
-
                 let insertedCount = 0;
-                const records = readings.map(reading => ({
+                const records = consumption.map(reading => ({
                   interval_start: reading.interval_start,
                   interval_end: reading.interval_end,
                   consumption_kwh: reading.consumption,
@@ -1425,7 +1420,7 @@ Deno.serve(async (req: Request) => {
         const UK_AVG_INTENSITY = 230;
 
         // Get existing dispatches that already have carbon data to avoid re-fetching
-        const existingStartTimes = completedDispatches.map((d: any) => d.start || d.startDt);
+        const existingStartTimes = completedDispatches.map((d) => d.start || d.startDt);
         const { data: existingDispatches } = await supabase
           .from('octopus_intelligent_dispatches')
           .select('start_time, carbon_saved_g, avg_intensity_gco2, carbon_used_g')

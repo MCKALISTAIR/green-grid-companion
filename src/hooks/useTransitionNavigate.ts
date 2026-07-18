@@ -11,7 +11,7 @@ export function useTransitionNavigate() {
 
   return useCallback(
     (to: To | number, options?: NavigateOptions) => {
-      const doc = document as any;
+      const doc = document as unknown as { startViewTransition?: (cb: () => void) => void };
       if (doc.startViewTransition && typeof to !== 'number') {
         doc.startViewTransition(() => {
           navigate(to, options);

@@ -1,7 +1,7 @@
 {
   "name": "gridsense",
   "private": true,
-  "version": "1.2.1",
+  "version": "1.5.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -12,7 +12,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "build:mobile": "vite build && npx cap sync",
-    "sync-version": "bun scripts/update-version.ts"
+    "sync-version": "npx tsx scripts/update-version.ts"
   },
   "dependencies": {
     "@capacitor-community/apple-sign-in": "^7.1.0",
@@ -90,6 +90,7 @@
     "@axe-core/playwright": "^4.11.3",
     "@eslint/js": "^9.32.0",
     "@happy-dom/global-registrator": "^20.3.4",
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/typography": "^0.5.16",
     "@testing-library/jest-dom": "^6.6.0",
     "@testing-library/react": "^16.0.0",

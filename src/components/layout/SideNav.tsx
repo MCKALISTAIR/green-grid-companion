@@ -4,6 +4,7 @@ import { Home, ListOrdered, Calendar, Settings, Clock, Zap, type LucideIcon } fr
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { VERSION_STRING } from '@/lib/version';
+import { motion } from 'framer-motion';
 
 export function SideNav() {
     const navigate = useTransitionNavigate();
@@ -13,13 +14,31 @@ export function SideNav() {
 
     const NavItem = ({ path, icon: Icon, label, dataTour }: { path: string; icon: LucideIcon; label: string; dataTour?: string }) => (
         <Button
-            variant={isActive(path) ? 'secondary' : 'ghost'}
-            className={`w-full justify-start gap-3 h-10 ${isActive(path) ? 'font-medium' : 'text-muted-foreground'}`}
+            variant="ghost"
+            className={`w-full justify-start h-10 relative transition-all group ${
+                isActive(path) 
+                    ? 'text-primary font-medium' 
+                    : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
+            }`}
             onClick={() => navigate(path)}
             data-tour={dataTour}
         >
-            <Icon className="w-5 h-5" />
-            {label}
+            {isActive(path) && (
+                <motion.div
+                    layoutId="side-nav-active-pill"
+                    className="absolute inset-0 rounded-lg bg-primary/10 -z-10 border-l-2 border-primary"
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                />
+            )}
+            <motion.div
+                className="flex items-center gap-3 w-full"
+                whileHover={{ x: 4 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+            >
+                <Icon className="w-5 h-5 transition-transform duration-200 group-hover:scale-110" />
+                {label}
+            </motion.div>
         </Button>
     );
 

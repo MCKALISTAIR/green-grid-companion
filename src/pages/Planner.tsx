@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useCarbonData } from '@/hooks/useCarbonData';
 import { useTeslaEnergy } from '@/hooks/useTeslaEnergy';
+import { useSettings } from '@/hooks/useSettings';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -30,10 +31,17 @@ const DEFAULT_APPLIANCES = [
 import { useAppLocation } from '@/contexts/LocationContext';
 
 export default function Planner() {
+    const { settings, updateSetting } = useSettings();
     const [customEvent, setCustomEvent] = useState(() => {
         const saved = localStorage.getItem('planner-custom-event');
         return saved ? JSON.parse(saved) : { name: '', duration: '1', power: '1.0' };
     });
+
+    useEffect(() => {
+        if (settings.customEvent) {
+            setCustomEvent(settings.customEvent);
+        }
+    }, [settings.customEvent]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [teslaVehicleState, setTeslaVehicleState] = useState<{
         batteryLevel?: number;
@@ -54,9 +62,22 @@ export default function Planner() {
         localStorage.setItem('planner-onboarding-seen', 'true');
     };
 
-    // Build dynamic appliance list including Tesla vehicles
+    // Build dynamic appliance list including custom appliances and Tesla vehicles
     const APPLIANCES = useMemo(() => {
         const appliances = [...DEFAULT_APPLIANCES];
+
+        // Add saved custom appliance if exists
+        const savedCustom = settings.customAppliance;
+        if (savedCustom) {
+            appliances.unshift({
+                id: 'custom',
+                name: savedCustom.name,
+                icon: PenLine,
+                power: savedCustom.power,
+                duration: savedCustom.duration,
+                label: savedCustom.label || `Custom (${savedCustom.duration}h)`
+            });
+        }
 
         // Add Tesla vehicles as appliance options
         if (isTeslaLinked && vehicles.length > 0) {
@@ -83,7 +104,7 @@ export default function Planner() {
         }
 
         return appliances;
-    }, [isTeslaLinked, vehicles, teslaVehicleState]);
+    }, [isTeslaLinked, vehicles, teslaVehicleState, settings.customAppliance]);
 
     const [selectedAppliance, setSelectedAppliance] = useState(APPLIANCES[0]);
 
@@ -128,16 +149,19 @@ export default function Planner() {
 
     // Load saved custom appliance if it exists
     useEffect(() => {
-        const saved = localStorage.getItem('planner-custom-appliance');
-        if (saved) {
-            try {
-                JSON.parse(saved);
-                // Don't auto-select, just keep it available
-            } catch (e) {
-                logger.debug('Failed to load custom appliance from storage', { error: e });
-            }
+        if (settings.customAppliance) {
+            const saved = settings.customAppliance;
+            const customAppliance = {
+                id: 'custom',
+                name: saved.name,
+                icon: PenLine,
+                power: saved.power,
+                duration: saved.duration,
+                label: saved.label || `Custom (${saved.duration}h)`
+            };
+            setSelectedAppliance(customAppliance);
         }
-    }, []);
+    }, [settings.customAppliance]);
 
     const handleCustomSubmit = () => {
         const duration = Math.max(0.5, parseFloat(customEvent.duration) || 1);
@@ -153,14 +177,14 @@ export default function Planner() {
             label: `Custom (${duration}h)`
         };
 
-        // Save to localStorage
-        localStorage.setItem('planner-custom-event', JSON.stringify(customEvent));
-        localStorage.setItem('planner-custom-appliance', JSON.stringify({
+        // Save to settings (which syncs to localStorage and Supabase)
+        updateSetting('customEvent', customEvent);
+        updateSetting('customAppliance', {
             name: customAppliance.name,
             power: customAppliance.power,
             duration: customAppliance.duration,
             label: customAppliance.label
-        }));
+        });
 
         setSelectedAppliance(customAppliance);
         setIsDialogOpen(false);

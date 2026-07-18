@@ -6,21 +6,55 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  // Fallback env values (publishable keys only) in case .env isn't provisioned
+  // Fallback env values (publishable keys only) in case .env isn't provisioned (dev only)
   const fallbackEnv: Record<string, string> = {};
-  if (!process.env.VITE_SUPABASE_URL) {
-    fallbackEnv['import.meta.env.VITE_SUPABASE_URL'] = JSON.stringify('https://klwezcjmlrdwvvzisdtd.supabase.co');
-  }
-  if (!process.env.VITE_SUPABASE_PUBLISHABLE_KEY) {
-    fallbackEnv['import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY'] = JSON.stringify('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtsd2V6Y2ptbHJkd3Z2emlzZHRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg1MjU0MzcsImV4cCI6MjA4NDEwMTQzN30.InAQiMMh0AyhjOiK5sg3CHeJzyzKCCXme2yh40G8AMs');
-  }
-  if (!process.env.VITE_SUPABASE_PROJECT_ID) {
-    fallbackEnv['import.meta.env.VITE_SUPABASE_PROJECT_ID'] = JSON.stringify('klwezcjmlrdwvvzisdtd');
+  if (mode === 'development') {
+    if (!process.env.VITE_SUPABASE_URL) {
+      fallbackEnv['import.meta.env.VITE_SUPABASE_URL'] = JSON.stringify('https://klwezcjmlrdwvvzisdtd.supabase.co');
+    }
+    if (!process.env.VITE_SUPABASE_PUBLISHABLE_KEY) {
+      fallbackEnv['import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY'] = JSON.stringify('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtsd2V6Y2ptbHJkd3Z2emlzZHRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg1MjU0MzcsImV4cCI6MjA4NDEwMTQzN30.InAQiMMh0AyhjOiK5sg3CHeJzyzKCCXme2yh40G8AMs');
+    }
+    if (!process.env.VITE_SUPABASE_PROJECT_ID) {
+      fallbackEnv['import.meta.env.VITE_SUPABASE_PROJECT_ID'] = JSON.stringify('klwezcjmlrdwvvzisdtd');
+    }
   }
   fallbackEnv['import.meta.env.PACKAGE_VERSION'] = JSON.stringify(process.env.npm_package_version || '1.4.6');
 
   return ({
   define: fallbackEnv,
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('framer-motion')) {
+              return 'framer-motion';
+            }
+            if (id.includes('recharts')) {
+              return 'recharts';
+            }
+            if (id.includes('@supabase')) {
+              return 'supabase';
+            }
+            if (id.includes('lucide-react')) {
+              return 'lucide-react';
+            }
+            if (id.includes('@sentry')) {
+              return 'sentry';
+            }
+            if (id.includes('@tanstack')) {
+              return 'tanstack';
+            }
+            if (id.includes('date-fns')) {
+              return 'date-fns';
+            }
+            return 'vendor';
+          }
+        }
+      }
+    }
+  },
   server: {
     host: "::",
     port: 8080,

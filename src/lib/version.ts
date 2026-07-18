@@ -11,7 +11,7 @@
 
 export const APP_VERSION = {
   major: 1,
-  minor: 3,
+  minor: 5,
   patch: 0,
   stage: 'stable' as const,
 };

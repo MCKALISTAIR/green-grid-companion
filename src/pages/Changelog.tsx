@@ -12,13 +12,27 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.05 }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 15 },
+  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 350, damping: 25 } }
+};
 
 interface ChangelogEntry {
   version: string;
   date: string;
   title: string;
   changes: {
-    type: 'feature' | 'improvement' | 'fix' | 'technical';
+    type: 'feature' | 'improvement' | 'fix' | 'technical' | 'track' | 'location';
     description: string;
   }[];
 }
@@ -90,7 +104,7 @@ const changelog: ChangelogEntry[] = [
       { type: 'feature', description: 'Complete Tesla integration for Vehicles and Energy Sites' },
       { type: 'feature', description: 'View real-time battery level, charging status, and range' },
       { type: 'feature', description: 'Monitor Solar and Powerwall status' },
-      { type: 'feature', description: 'Track carbon saved vs average grid intensity' },
+      { type: 'track', description: 'Track carbon saved vs average grid intensity' },
       { type: 'improvement', description: 'Secure OAuth linking with official Tesla login' },
     ],
   },
@@ -137,7 +151,7 @@ const changelog: ChangelogEntry[] = [
       { type: 'feature', description: 'Real-time carbon intensity display' },
       { type: 'feature', description: '48-hour forecast chart' },
       { type: 'feature', description: 'Best time to use energy recommendations' },
-      { type: 'feature', description: 'Location-based regional data' },
+      { type: 'location', description: 'Location-based regional data' },
     ],
   },
 ];
@@ -149,6 +163,8 @@ const formatDate = (dateStr: string) => {
 
 const typeConfig = {
   feature: { icon: Sparkles, label: 'New', color: 'bg-primary/10 text-primary border-primary/20' },
+  track: { icon: Sparkles, label: 'New', color: 'bg-primary/10 text-primary border-primary/20' },
+  location: { icon: Sparkles, label: 'New', color: 'bg-primary/10 text-primary border-primary/20' },
   improvement: { icon: Zap, label: 'Improved', color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20' },
   fix: { icon: Bug, label: 'Fixed', color: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20' },
   technical: { icon: Wrench, label: 'Technical', color: 'bg-muted text-muted-foreground border-border' },
@@ -181,45 +197,59 @@ export default function Changelog() {
         </div>
 
         {/* Changelog entries */}
-        <div className="space-y-4">
+        <motion.div 
+          className="space-y-4"
+          variants={containerVariants}
+          initial="hidden"
+          animate="show"
+        >
           {changelog.map((entry, index) => (
-            <Card key={entry.version} className="p-4">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="font-semibold text-foreground">{entry.version}</h2>
-                    {index === 0 && (
-                      <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-[10px]">
-                        Latest
-                      </Badge>
-                    )}
+            <motion.div
+              key={entry.version}
+              variants={itemVariants}
+              whileHover={{ y: -2 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+            >
+              <Card className="p-4 shadow-sm hover:shadow-md transition-shadow duration-300">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h2 className="font-semibold text-foreground">{entry.version}</h2>
+                      {index === 0 && (
+                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-[10px]">
+                          Latest
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm font-medium text-primary mt-0.5">{entry.title}</p>
                   </div>
-                  <p className="text-sm font-medium text-primary mt-0.5">{entry.title}</p>
+                  <span className="text-xs text-muted-foreground">{formatDate(entry.date)}</span>
                 </div>
-                <span className="text-xs text-muted-foreground">{formatDate(entry.date)}</span>
-              </div>
 
-              <ul className="space-y-2">
-                {entry.changes.map((change, changeIndex) => {
-                  const config = typeConfig[change.type];
-                  const Icon = config.icon;
-                  return (
-                    <li key={changeIndex} className="flex items-start gap-2 text-sm">
-                      <Badge
-                        variant="outline"
-                        className={`${config.color} text-[10px] px-1.5 py-0 h-5 shrink-0 mt-0.5`}
-                      >
-                        <Icon className="w-3 h-3 mr-1" />
-                        {config.label}
-                      </Badge>
-                      <span className="text-muted-foreground">{change.description}</span>
-                    </li>
-                  );
-                })}
-              </ul>
-            </Card>
+                <ul className="space-y-2">
+                  {entry.changes.map((change, changeIndex) => {
+                    const config = typeConfig[change.type] || typeConfig.feature;
+                    const Icon = config.icon;
+                    return (
+                      <li key={changeIndex} className="flex items-start gap-2 text-sm">
+                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                          <Badge
+                            variant="outline"
+                            className={`${config.color} text-[10px] px-1.5 py-0 h-5 shrink-0 mt-0.5`}
+                          >
+                            <Icon className="w-3 h-3 mr-1" />
+                            {config.label}
+                          </Badge>
+                        </motion.div>
+                        <span className="text-muted-foreground">{change.description}</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </Card>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         {/* Footer */}
         <div className="text-center text-xs text-muted-foreground pt-4">

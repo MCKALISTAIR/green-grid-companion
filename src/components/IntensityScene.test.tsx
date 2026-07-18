@@ -69,13 +69,29 @@ vi.mock('framer-motion', async () => {
   const motion = new Proxy({}, {
     get: (target, prop) => {
       // Returns a component that renders the tag with the property name
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return React.forwardRef(({ children, ...props }: any, ref) => {
+      return React.forwardRef(({
+        children,
+        animate,
+        transition,
+        variants,
+        initial,
+        exit,
+        whileHover,
+        whileTap,
+        whileDrag,
+        whileFocus,
+        layout,
+        layoutId,
+        onPan,
+        onPanStart,
+        onPanEnd,
+        onTap,
+        viewport,
+        ...props
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      }: any, ref) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const Tag = prop as any;
-        // Filter out framer-motion specific props if necessary,
-        // but React usually ignores unknown props or warns.
-        // For 'svg' elements (g, path, etc), custom props might cause warnings but not crashes.
         return <Tag {...props} ref={ref}>{children}</Tag>;
       });
     }

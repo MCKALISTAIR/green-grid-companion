@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useSavedLocations, SavedLocation } from '@/hooks/useSavedLocations';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -121,67 +122,77 @@ export default function ManageLocations() {
               <p className="text-sm">Save locations from the home screen to see them here</p>
             </div>
           ) : (
-            <div className="space-y-2">
-              {savedLocations.map((location) => (
-                <div
-                  key={location.id}
-                  className="flex items-center gap-3 p-3 bg-card border rounded-lg"
-                >
-                  <Checkbox
-                    checked={selectedIds.has(location.id)}
-                    onCheckedChange={() => toggleSelection(location.id)}
-                  />
+            <motion.div className="space-y-2" layout>
+              <AnimatePresence initial={false} mode="popLayout">
+                {savedLocations.map((location) => (
+                  <motion.div
+                    key={location.id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                    whileHover={{ y: -1, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    className="flex items-center gap-3 p-3 bg-card border rounded-lg"
+                  >
+                    <Checkbox
+                      checked={selectedIds.has(location.id)}
+                      onCheckedChange={() => toggleSelection(location.id)}
+                    />
 
-                  {editingId === location.id ? (
-                    <div className="flex-1 flex items-center gap-2">
-                      <Input
-                        value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                        className="h-8"
-                        autoFocus
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') saveEdit();
-                          if (e.key === 'Escape') cancelEdit();
-                        }}
-                      />
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={saveEdit}>
-                        <Check className="w-4 h-4 text-primary" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={cancelEdit}>
-                        <X className="w-4 h-4 text-destructive" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{location.name}</p>
-                        <p className="text-sm text-muted-foreground">{location.postcode}</p>
+                    {editingId === location.id ? (
+                      <div className="flex-1 flex items-center gap-2">
+                        <Input
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          className="h-8"
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') saveEdit();
+                            if (e.key === 'Escape') cancelEdit();
+                          }}
+                        />
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={saveEdit}>
+                          <Check className="w-4 h-4 text-primary" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={cancelEdit}>
+                          <X className="w-4 h-4 text-destructive" />
+                        </Button>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 shrink-0"
-                        onClick={() => startEditing(location)}
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                    </>
-                  )}
-                </div>
-              ))}
-            </div>
+                    ) : (
+                      <>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{location.name}</p>
+                          <p className="text-sm text-muted-foreground">{location.postcode}</p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 shrink-0"
+                          onClick={() => startEditing(location)}
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                      </>
+                    )}
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </motion.div>
           )}
 
           {/* Bulk Delete Button */}
           {selectedIds.size > 0 && (
-            <Button
-              variant="destructive"
-              className="w-full"
-              onClick={() => setShowDeleteDialog(true)}
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              Delete {selectedIds.size} Location{selectedIds.size > 1 ? 's' : ''}
-            </Button>
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}>
+              <Button
+                variant="destructive"
+                className="w-full"
+                onClick={() => setShowDeleteDialog(true)}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete {selectedIds.size} Location{selectedIds.size > 1 ? 's' : ''}
+              </Button>
+            </motion.div>
           )}
         </div>
 
@@ -206,16 +217,24 @@ export default function ManageLocations() {
               No recent searches
             </p>
           ) : (
-            <div className="flex flex-wrap gap-2">
-              {recentLocations.map((postcode) => (
-                <div
-                  key={postcode}
-                  className="px-3 py-1.5 bg-muted rounded-full text-sm font-medium"
-                >
-                  {postcode}
-                </div>
-              ))}
-            </div>
+            <motion.div className="flex flex-wrap gap-2" layout>
+              <AnimatePresence initial={false}>
+                {recentLocations.map((postcode) => (
+                  <motion.div
+                    key={postcode}
+                    layout
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    whileHover={{ scale: 1.05 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                    className="px-3 py-1.5 bg-muted rounded-full text-sm font-medium cursor-default"
+                  >
+                    {postcode}
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </motion.div>
           )}
         </div>
       </div>

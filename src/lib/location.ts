@@ -1,6 +1,7 @@
 
 import { UK_REGIONS, getRegionalIntensity } from './carbonApi';
 import { logger } from './logger';
+import { supabase } from '@/integrations/supabase/client';
 
 // Interfaces for API responses
 interface NominatimResult {
@@ -26,6 +27,66 @@ export interface LocationSearchResult {
     description: string;
 }
 
+interface SearchCacheData {
+    queries: Record<string, LocationSearchResult | null>;
+    coordinates: Record<string, LocationSearchResult | null>;
+}
+
+const CACHE_KEY = 'gridsense-geocoding-cache-v1';
+
+function loadCache(): SearchCacheData {
+    try {
+        const saved = localStorage.getItem(CACHE_KEY);
+        if (saved) {
+            return JSON.parse(saved);
+        }
+    } catch (e) {
+        logger.warn('Failed to parse geocoding cache', { error: e });
+    }
+    return { queries: {}, coordinates: {} };
+}
+
+function saveCache(cache: SearchCacheData) {
+    try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+    } catch (e) {
+        logger.warn('Failed to write geocoding cache', { error: e });
+    }
+}
+
+function saveToQueryCache(query: string, result: LocationSearchResult | null) {
+    const cache = loadCache();
+    const cleanQuery = query.toLowerCase().trim();
+    const keys = Object.keys(cache.queries);
+    if (keys.length >= 100) {
+        delete cache.queries[keys[0]];
+    }
+    cache.queries[cleanQuery] = result;
+    saveCache(cache);
+}
+
+function getFromQueryCache(query: string): LocationSearchResult | null | undefined {
+    const cache = loadCache();
+    return cache.queries[query.toLowerCase().trim()];
+}
+
+function saveToCoordinateCache(lat: number, lon: number, result: LocationSearchResult | null) {
+    const cache = loadCache();
+    const key = `${lat.toFixed(4)},${lon.toFixed(4)}`;
+    const keys = Object.keys(cache.coordinates);
+    if (keys.length >= 100) {
+        delete cache.coordinates[keys[0]];
+    }
+    cache.coordinates[key] = result;
+    saveCache(cache);
+}
+
+function getFromCoordinateCache(lat: number, lon: number): LocationSearchResult | null | undefined {
+    const cache = loadCache();
+    const key = `${lat.toFixed(4)},${lon.toFixed(4)}`;
+    return cache.coordinates[key];
+}
+
 /**
  * Search for a location (postcode or place name) and return the matching Carbon Intensity Region.
  */
@@ -33,25 +94,46 @@ export async function searchLocation(query: string): Promise<LocationSearchResul
     const cleanQuery = query.trim();
     if (!cleanQuery) return null;
 
+    // Check query cache first
+    const cached = getFromQueryCache(cleanQuery);
+    if (cached !== undefined) {
+        logger.debug('Geocoding query cache hit', { query: cleanQuery, result: cached });
+        return cached;
+    }
+
+    let result: LocationSearchResult | null = null;
+
     // 1. Try as Postcode first
     if (isValidPostcodeFormat(cleanQuery)) {
         try {
             // Direct Carbon API lookup for postcodes (most accurate)
-            const result = await lookupByCarbonApi(cleanQuery);
-            if (result) return result;
+            result = await lookupByCarbonApi(cleanQuery);
         } catch (e) {
             logger.debug('Carbon API postcode lookup failed, trying backup', { error: e });
         }
     }
 
-    // 2. Try as Place Name (Nominatim)
-    return await lookupPlaceName(cleanQuery);
+    // 2. Try as Place Name (Nominatim) if no postcode matched
+    if (!result) {
+        result = await lookupPlaceName(cleanQuery);
+    }
+
+    // Save to cache
+    saveToQueryCache(cleanQuery, result);
+    return result;
 }
 
 /**
  * Get region from coordinates
  */
 export async function getRegionFromCoordinates(lat: number, lon: number): Promise<LocationSearchResult | null> {
+    const cached = getFromCoordinateCache(lat, lon);
+    if (cached !== undefined) {
+        logger.debug('Coordinate geocoding cache hit', { lat, lon, result: cached });
+        return cached;
+    }
+
+    let result: LocationSearchResult | null = null;
     try {
         const res = await fetch(`https://api.postcodes.io/postcodes?lon=${lon}&lat=${lat}`);
         if (!res.ok) return null;
@@ -64,19 +146,20 @@ export async function getRegionFromCoordinates(lat: number, lon: number): Promis
             if (nomRes.ok) {
                 const nomData = await nomRes.json();
                 if (nomData.address?.postcode) {
-                    return await lookupByCarbonApi(nomData.address.postcode);
+                    result = await lookupByCarbonApi(nomData.address.postcode);
                 }
             }
-            return null;
+        } else {
+            // Got a postcode, use Carbon API to resolve it to a Region
+            const postcode = data.result[0].postcode;
+            result = await lookupByCarbonApi(postcode);
         }
-
-        // Got a postcode, use Carbon API to resolve it to a Region
-        const postcode = data.result[0].postcode;
-        return await lookupByCarbonApi(postcode);
     } catch (e) {
         logger.error('Failed to resolve coordinates to region', { error: e });
-        return null;
     }
+
+    saveToCoordinateCache(lat, lon, result);
+    return result;
 }
 
 /**
@@ -185,16 +268,27 @@ async function lookupByCarbonApi(postcode: string): Promise<LocationSearchResult
  * Lookup a place name using OpenStreetMap (Nominatim)
  */
 async function lookupPlaceName(query: string): Promise<LocationSearchResult | null> {
-    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + ', United Kingdom')}&format=json&countrycodes=gb&limit=1&addressdetails=1`;
-
     try {
-        const res = await fetch(url, {
-            headers: { 'User-Agent': 'GridSense/1.0' }
+        // Try calling the Supabase Edge Function geocoding proxy first
+        const { data: edgeData, error: edgeError } = await supabase.functions.invoke('geocoding', {
+            body: { query: query }
         });
 
-        if (!res.ok) return null;
+        let data: NominatimResult[] = [];
+        if (!edgeError && edgeData) {
+            data = edgeData;
+        } else {
+            logger.warn('Geocoding edge function proxy failed, falling back to direct OSM query', { error: edgeError });
+            // Fallback to direct OSM Nominatim query if the edge function fails
+            const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + ', United Kingdom')}&format=json&countrycodes=gb&limit=1&addressdetails=1`;
+            const res = await fetch(url, {
+                headers: { 'User-Agent': 'GridSense/1.0' }
+            });
+            if (res.ok) {
+                data = await res.json();
+            }
+        }
 
-        const data: NominatimResult[] = await res.json();
         if (!data || data.length === 0) return null;
 
         const place = data[0];

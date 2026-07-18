@@ -23,6 +23,20 @@ export function DemandView() {
     const { streaks, newRecords, dismissRecord } = useFuelStreaks(mix);
     const { milestones } = useFuelMilestones(mix);
 
+    const relativeTime = useRelativeTime(lastUpdated);
+
+    // Spring-animated GW number
+    const rawDemandGW = demand ? demand / 1000 : 0;
+    const springDemand = useSpring(rawDemandGW, { stiffness: 160, damping: 22 });
+    const springDemandDisplay = useTransform(springDemand, (v) => v.toFixed(2));
+    const [displayDemandGW, setDisplayDemandGW] = useState(rawDemandGW.toFixed(2));
+    
+    useEffect(() => {
+      springDemand.set(rawDemandGW);
+      const unsub = springDemandDisplay.on('change', setDisplayDemandGW);
+      return unsub;
+    }, [rawDemandGW, springDemand, springDemandDisplay]);
+
     if (isLoading) {
         return (
             <div className="flex flex-col items-center justify-center p-8 space-y-4 animate-in fade-in">
@@ -53,18 +67,6 @@ export function DemandView() {
     // Convert demand to GW if available
     const demandGW = demand ? (demand / 1000).toFixed(2) : null;
     const updatedTime = lastUpdated ? new Date(lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
-    const relativeTime = useRelativeTime(lastUpdated);
-
-    // Spring-animated GW number
-    const rawDemandGW = demand ? demand / 1000 : 0;
-    const springDemand = useSpring(rawDemandGW, { stiffness: 160, damping: 22 });
-    const springDemandDisplay = useTransform(springDemand, (v) => v.toFixed(2));
-    const [displayDemandGW, setDisplayDemandGW] = useState(rawDemandGW.toFixed(2));
-    useEffect(() => {
-      springDemand.set(rawDemandGW);
-      const unsub = springDemandDisplay.on('change', setDisplayDemandGW);
-      return unsub;
-    }, [rawDemandGW, springDemand, springDemandDisplay]);
 
     // Freshness dot: green < 10 min, amber 10-35 min, red > 35 min
     const freshnessColor = (() => {

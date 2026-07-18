@@ -10,12 +10,16 @@ interface Settings {
   houseType: HouseType;
   customAnnualKwh: number;
   showGridFrequency: boolean;
+  customAppliance?: { name: string; power: number; duration: number; label: string } | null;
+  customEvent?: { name: string; duration: string; power: string } | null;
 }
 
 const DEFAULT_SETTINGS: Settings = {
   houseType: DEFAULT_HOUSE_TYPE,
   customAnnualKwh: 2900,
   showGridFrequency: false,
+  customAppliance: null,
+  customEvent: null,
 };
 
 const LAST_SYNC_KEY = 'grid-companion-last-sync';

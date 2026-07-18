@@ -1,11 +1,15 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
+const appId = process.env.CAPACITOR_APP_ID || 'app.lovable.1558020f8a4c43dc9ea079533f5d485c';
+const appUrl = process.env.VITE_APP_URL || 'https://gridsense-app.lovable.app';
+const appHost = appUrl.replace(/^https?:\/\//, '').split('/')[0];
+
 const config: CapacitorConfig = {
-  appId: 'app.lovable.1558020f8a4c43dc9ea079533f5d485c',
+  appId: appId,
   appName: 'GridSense',
   webDir: 'dist',
   server: {
-    allowNavigation: ['gridsense-app.lovable.app']
+    allowNavigation: [appHost]
   },
   /* 
   // Server configuration removed for local bundled mode
@@ -24,8 +28,8 @@ const config: CapacitorConfig = {
     },
     StatusBar: {},
     SignInWithApple: {
-      clientId: 'app.lovable.1558020f8a4c43dc9ea079533f5d485c.web',
-      redirectURI: 'https://gridsense-app.lovable.app/auth/callback',
+      clientId: `${appId}.web`,
+      redirectURI: `${appUrl}/auth/callback`,
       scopes: 'email name'
     }
   }
