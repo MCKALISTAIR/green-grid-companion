@@ -40,6 +40,61 @@ const Onboarding = () => {
         });
     }, [emblaApi]);
 
+    // --- Scene Customization for dynamic background states ---
+    const sceneProps = (() => {
+        if (step === 'welcome') {
+            if (currentSlide === 0) {
+                return {
+                    intensity: 30,
+                    index: 'very low' as const,
+                    sceneTypeOverride: 'countryside' as const,
+                    timeOfDayOverride: 'midday' as const,
+                    weatherOverride: { condition: 'clear' as const, windSpeed: 8 }
+                };
+            } else if (currentSlide === 1) {
+                return {
+                    intensity: 75,
+                    index: 'low' as const,
+                    sceneTypeOverride: 'coastal' as const,
+                    timeOfDayOverride: 'sunset' as const,
+                    weatherOverride: { condition: 'clear' as const, windSpeed: 16 }
+                };
+            } else {
+                return {
+                    intensity: 110,
+                    index: 'low' as const,
+                    sceneTypeOverride: 'countryside' as const,
+                    timeOfDayOverride: 'night' as const,
+                    weatherOverride: { condition: 'clear' as const, windSpeed: 10 }
+                };
+            }
+        } else if (step === 'household') {
+            return {
+                intensity: 140,
+                index: 'low' as const,
+                sceneTypeOverride: 'countryside' as const,
+                timeOfDayOverride: 'dusk' as const,
+                weatherOverride: { condition: 'clear' as const, windSpeed: 6 }
+            };
+        } else if (step === 'location') {
+            return {
+                intensity: 180,
+                index: 'moderate' as const,
+                sceneTypeOverride: 'city' as const,
+                timeOfDayOverride: 'midday' as const,
+                weatherOverride: { condition: 'clear' as const, windSpeed: 4 }
+            };
+        } else {
+            return {
+                intensity: 25,
+                index: 'very low' as const,
+                sceneTypeOverride: 'countryside' as const,
+                timeOfDayOverride: 'night' as const,
+                weatherOverride: { condition: 'clear' as const, windSpeed: 12 }
+            };
+        }
+    })();
+
     // --- Actions ---
 
     const handleWelcomeNext = () => {
@@ -197,12 +252,14 @@ const Onboarding = () => {
             {/* Dots */}
             <div className="flex justify-center gap-2 mt-4">
                 {[0, 1, 2].map((idx) => (
-                    <div
+                    <motion.div
+                        layout
                         key={idx}
                         className={cn(
-                            "w-2 h-2 rounded-full transition-all duration-300",
+                            "w-2 h-2 rounded-full",
                             currentSlide === idx ? "bg-primary w-6" : "bg-primary/20"
                         )}
+                        transition={{ type: 'spring', stiffness: 350, damping: 22 }}
                     />
                 ))}
             </div>
@@ -356,17 +413,28 @@ const Onboarding = () => {
 
     return (
         <div className="dark relative min-h-screen min-h-[100dvh] w-full flex items-center justify-center p-4 overflow-hidden bg-slate-950">
-            {/* Immersive backdrop scene */}
+            {/* Immersive dynamic backdrop scene */}
             <div className="absolute inset-0 w-full h-full -z-10 opacity-70 pointer-events-none select-none">
-                <IntensityScene 
-                    intensity={30} 
-                    index="very low"
-                    sceneTypeOverride="countryside"
-                    timeOfDayOverride="midday"
-                    weatherOverride={{ condition: 'clear', windSpeed: 6 }}
-                    className="w-full h-full scale-105"
-                    style={{ height: '100%' }}
-                />
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={sceneProps.sceneTypeOverride + '-' + sceneProps.timeOfDayOverride}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 1.0, ease: 'easeInOut' }}
+                        className="w-full h-full"
+                    >
+                        <IntensityScene 
+                            intensity={sceneProps.intensity} 
+                            index={sceneProps.index}
+                            sceneTypeOverride={sceneProps.sceneTypeOverride}
+                            timeOfDayOverride={sceneProps.timeOfDayOverride}
+                            weatherOverride={sceneProps.weatherOverride}
+                            className="w-full h-full scale-105"
+                            style={{ height: '100%' }}
+                        />
+                    </motion.div>
+                </AnimatePresence>
             </div>
             {/* Glassmorphic card overlay */}
             <Card className="w-full max-w-md shadow-2xl border-white/10 bg-slate-900/60 dark:bg-slate-950/60 backdrop-blur-xl text-white overflow-hidden">
@@ -374,10 +442,10 @@ const Onboarding = () => {
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={step}
-                            initial={{ opacity: 0, x: 30 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -30 }}
-                            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                            initial={{ opacity: 0, scale: 0.94, y: 15 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.94, y: -15 }}
+                            transition={{ type: 'spring', stiffness: 320, damping: 26 }}
                             className="w-full"
                         >
                             {step === 'welcome' && renderWelcomeStep()}
