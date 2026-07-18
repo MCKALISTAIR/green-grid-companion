@@ -2,7 +2,7 @@ import { useLocation } from 'react-router-dom';
 import { useTransitionNavigate } from '@/hooks/useTransitionNavigate';
 import { Home, ListOrdered, Calendar, Settings, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
+import { motion, type Transition } from 'framer-motion';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 
