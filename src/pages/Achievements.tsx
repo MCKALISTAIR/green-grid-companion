@@ -39,7 +39,7 @@ export default function AchievementsPage() {
                             key={achievement.id}
                             initial={{ opacity: 0, y: 15 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3, delay: idx * 0.04, ease: 'easeOut' }}
+                            transition={{ duration: 0.3, delay: idx * 0.04, ease: 'easeOut' as const }}
                             whileHover={{ y: -2 }}
                         >
                             <Card

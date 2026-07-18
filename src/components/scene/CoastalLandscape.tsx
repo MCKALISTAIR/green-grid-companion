@@ -79,7 +79,7 @@ function OceanWaves({ sea, seaHighlight, foam, skipIntro }: { sea: string; seaHi
           "M0,95 Q50,98 100,93 T200,97 T300,93 T400,95 L400,100 L0,100 Z",
           "M0,95 Q50,90 100,95 T200,95 T300,95 T400,95 L400,100 L0,100 Z",
         ] }}
-        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' as const }}
       />
       <motion.path
         d="M0,100 Q60,96 120,100 T240,100 T360,100 T400,100 L400,106 L0,106 Z"
@@ -90,7 +90,7 @@ function OceanWaves({ sea, seaHighlight, foam, skipIntro }: { sea: string; seaHi
           "M0,100 Q60,103 120,98 T240,102 T360,98 T400,100 L400,106 L0,106 Z",
           "M0,100 Q60,96 120,100 T240,100 T360,100 T400,100 L400,106 L0,106 Z",
         ] }}
-        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' as const, delay: 0.5 }}
       />
       {/* Foam/surf line on shore */}
       <motion.path
@@ -103,7 +103,7 @@ function OceanWaves({ sea, seaHighlight, foam, skipIntro }: { sea: string; seaHi
           "M195,109 Q220,107 245,109 T285,108 T325,109 T365,108 T400,109",
           "M200,108 Q220,106 240,108 T280,108 T320,108 T360,108 T400,108",
         ] }}
-        transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+        transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' as const }}
       />
     </motion.g>
   );
@@ -127,7 +127,7 @@ function Lighthouse({ x, isNight, fill, skipIntro }: { x: number; isNight: boole
     <motion.g
       initial={skipIntro ? { y: 0, opacity: 1 } : { y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={skipIntro ? { duration: 0 } : { duration: 1.2, delay: 0.3, ease: 'easeOut' }}
+      transition={skipIntro ? { duration: 0 } : { duration: 1.2, delay: 0.3, ease: 'easeOut' as const }}
       className="cursor-pointer pointer-events-auto"
       onClick={handleClick}
       role="button"
@@ -158,7 +158,7 @@ function Lighthouse({ x, isNight, fill, skipIntro }: { x: number; isNight: boole
             // Rapid strobe flash when clicked
             <motion.g
               animate={{ opacity: [1, 0.1, 1, 0.1, 1, 0.1, 1] }}
-              transition={{ duration: 2.5, ease: 'easeInOut' }}
+              transition={{ duration: 2.5, ease: 'easeInOut' as const }}
             >
               {/* Massive ambient light glow */}
               <circle cx={x} cy={67} r={18} fill="#fbbf24" opacity={0.35} filter="blur(2px)" />
@@ -170,7 +170,7 @@ function Lighthouse({ x, isNight, fill, skipIntro }: { x: number; isNight: boole
             // Normal rotating/sweeping light beam
             <motion.g
               animate={{ rotate: [-22, 22, -22] }}
-              transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+              transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' as const }}
               style={{ transformOrigin: `${x}px 67px` }}
             >
               {/* Sweeping light cones */}

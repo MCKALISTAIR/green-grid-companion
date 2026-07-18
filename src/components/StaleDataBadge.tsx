@@ -41,7 +41,7 @@ export function StaleDataBadge({ lastUpdated, thresholdMinutes = 35 }: StaleData
           initial={{ opacity: 0, scale: 0.8, y: -3 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.8, y: -3 }}
-          transition={{ duration: 0.2, ease: 'easeOut' }}
+          transition={{ duration: 0.2, ease: 'easeOut' as const }}
         >
           <Clock className="w-2.5 h-2.5" aria-hidden="true" />
           <span>{label}</span>

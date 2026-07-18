@@ -21,7 +21,7 @@ export function Butterfly({ startX, delay = 0 }: ButterflyProps) {
         duration: 8,
         delay,
         repeat: Infinity,
-        ease: 'easeInOut',
+        ease: 'easeInOut' as const,
       }}
     >
       {/* Left wing */}
@@ -35,7 +35,7 @@ export function Butterfly({ startX, delay = 0 }: ButterflyProps) {
         transition={{
           duration: 0.3,
           repeat: Infinity,
-          ease: 'easeInOut',
+          ease: 'easeInOut' as const,
         }}
       />
       {/* Right wing */}
@@ -49,7 +49,7 @@ export function Butterfly({ startX, delay = 0 }: ButterflyProps) {
         transition={{
           duration: 0.3,
           repeat: Infinity,
-          ease: 'easeInOut',
+          ease: 'easeInOut' as const,
         }}
       />
       {/* Body */}

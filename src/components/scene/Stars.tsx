@@ -53,7 +53,7 @@ export function Stars({ count = 30, visibility = 1 }: StarsProps) {
             duration: star.duration,
             delay: star.delay,
             repeat: Infinity,
-            ease: 'easeInOut',
+            ease: 'easeInOut' as const,
           }}
         />
       ))}

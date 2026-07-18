@@ -21,7 +21,7 @@ const itemVariants = {
     show: { 
         opacity: 1, 
         y: 0, 
-        transition: { type: 'spring', stiffness: 350, damping: 25 } 
+        transition: { type: 'spring' as const, stiffness: 350, damping: 25 } 
     }
 };
 
@@ -139,7 +139,7 @@ export default function Glossary() {
                 <motion.section variants={itemVariants} className="space-y-4">
                     <h3 className="text-xl font-semibold px-1">Key Metrics</h3>
                     <div className="grid gap-4 md:grid-cols-2">
-                        <motion.div whileHover={{ y: -2 }} transition={{ type: 'spring', stiffness: 400, damping: 20 }}>
+                        <motion.div whileHover={{ y: -2 }} transition={{ type: 'spring' as const, stiffness: 400, damping: 20 }}>
                             <Card className="h-full">
                                 <CardHeader className="pb-2">
                                     <CardTitle className="text-base font-medium">gCO₂/kWh</CardTitle>
@@ -153,7 +153,7 @@ export default function Glossary() {
                                 </CardContent>
                             </Card>
                         </motion.div>
-                        <motion.div whileHover={{ y: -2 }} transition={{ type: 'spring', stiffness: 400, damping: 20 }}>
+                        <motion.div whileHover={{ y: -2 }} transition={{ type: 'spring' as const, stiffness: 400, damping: 20 }}>
                             <Card className="h-full">
                                 <CardHeader className="pb-2">
                                     <CardTitle className="text-base font-medium">National vs Regional</CardTitle>
@@ -215,7 +215,7 @@ export default function Glossary() {
                                     key={fuel.id}
                                     variants={itemVariants}
                                     whileHover={{ y: -3, scale: 1.02 }}
-                                    transition={{ type: 'spring', stiffness: 450, damping: 22 }}
+                                    transition={{ type: 'spring' as const, stiffness: 450, damping: 22 }}
                                 >
                                     <Card className="overflow-hidden h-full shadow-sm hover:shadow-md transition-shadow duration-300">
                                         <div className="flex items-start p-4 gap-4">

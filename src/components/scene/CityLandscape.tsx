@@ -129,7 +129,7 @@ function Building({ x, width, height, fill, windowLit, windowDark, isNight, clea
     <motion.g
       initial={skipIntro ? { y: 0, opacity: 1 } : { y: 30, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={skipIntro ? { duration: 0 } : { duration: 1.2, delay, ease: 'easeOut' }}
+      transition={skipIntro ? { duration: 0 } : { duration: 1.2, delay, ease: 'easeOut' as const }}
     >
       {/* Building body */}
       <rect x={x} y={150 - height} width={width} height={height} fill={fill} />
@@ -196,7 +196,7 @@ function ChurchSpire({ x, height, fill, isNight, delay = 0, skipIntro }: {
     <motion.g
       initial={skipIntro ? { y: 0, opacity: 1 } : { y: 30, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={skipIntro ? { duration: 0 } : { duration: 1.2, delay, ease: 'easeOut' }}
+      transition={skipIntro ? { duration: 0 } : { duration: 1.2, delay, ease: 'easeOut' as const }}
     >
       {/* Church body */}
       <rect x={x} y={baseY + spireHeight} width={baseWidth} height={bodyHeight} fill={fill} />
@@ -237,7 +237,7 @@ function DomeBuilding({ x, width, height, fill, isNight, delay = 0, skipIntro }:
     <motion.g
       initial={skipIntro ? { y: 0, opacity: 1 } : { y: 30, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={skipIntro ? { duration: 0 } : { duration: 1.2, delay, ease: 'easeOut' }}
+      transition={skipIntro ? { duration: 0 } : { duration: 1.2, delay, ease: 'easeOut' as const }}
     >
       {/* Building base with columns */}
       <rect x={x} y={baseY + domeRadius} width={width} height={bodyHeight} fill={fill} />
@@ -272,7 +272,7 @@ function GlassTower({ x, width, height, fill, windowLit, isNight, cleanliness, d
     <motion.g
       initial={skipIntro ? { y: 0, opacity: 1 } : { y: 30, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={skipIntro ? { duration: 0 } : { duration: 1.2, delay, ease: 'easeOut' }}
+      transition={skipIntro ? { duration: 0 } : { duration: 1.2, delay, ease: 'easeOut' as const }}
     >
       {/* Tapered glass body */}
       <polygon
@@ -341,7 +341,7 @@ function ClockTower({ x, height, fill, isNight, delay = 0, skipIntro }: {
     <motion.g
       initial={skipIntro ? { y: 0, opacity: 1 } : { y: 30, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={skipIntro ? { duration: 0 } : { duration: 1.2, delay, ease: 'easeOut' }}
+      transition={skipIntro ? { duration: 0 } : { duration: 1.2, delay, ease: 'easeOut' as const }}
     >
       {/* Tower body */}
       <rect x={x} y={baseY + 15} width={baseWidth} height={height - 15} fill={fill} />
@@ -376,7 +376,7 @@ function ArtDecoBuilding({ x, width, height, fill, windowLit, windowDark, isNigh
     <motion.g
       initial={skipIntro ? { y: 0, opacity: 1 } : { y: 30, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={skipIntro ? { duration: 0 } : { duration: 1.2, delay, ease: 'easeOut' }}
+      transition={skipIntro ? { duration: 0 } : { duration: 1.2, delay, ease: 'easeOut' as const }}
     >
       {/* Main body */}
       <rect x={x} y={baseY + stepCount * stepHeight} width={width} height={height - stepCount * stepHeight} fill={fill} />

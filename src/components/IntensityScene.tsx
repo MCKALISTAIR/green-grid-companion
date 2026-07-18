@@ -88,7 +88,7 @@ function InteractiveCloud({ className, style, shouldReduceMotion }: InteractiveC
         scale: [1, 1.25, 0.75, 1.1, 1],
         rotate: [0, -8, 8, -4, 0]
       } : {}}
-      transition={{ duration: 0.8, ease: 'easeInOut' }}
+      transition={{ duration: 0.8, ease: 'easeInOut' as const }}
     >
       <Cloud className="w-full h-full transition-colors duration-200 hover:text-sky-50/90" aria-hidden="true" />
     </motion.div>
@@ -410,7 +410,7 @@ export function IntensityScene({
         background: sceneConfig.skyGradient,
         filter: sceneConfig.sceneFilter,
       }}
-      transition={{ duration: 2, ease: 'easeInOut' }}
+      transition={{ duration: 2, ease: 'easeInOut' as const }}
       role="img"
       aria-label={`Animated landscape representing ${index} carbon intensity`}
     >
@@ -468,7 +468,7 @@ export function IntensityScene({
                 right: timeOfDay === 'sunset' ? '15%' : timeOfDay === 'morning' ? '20%' : '8%',
               }}
               exit={{ opacity: 0, scale: 0.8, y: 20 }}
-              transition={{ duration: 1.5, ease: 'easeInOut' }}
+              transition={{ duration: 1.5, ease: 'easeInOut' as const }}
               style={{
                 filter: `brightness(${sceneConfig.solarBrightness + 0.5})`,
               }}
@@ -497,9 +497,9 @@ export function IntensityScene({
                   y: {
                     repeat: Infinity,
                     duration: 4,
-                    ease: "easeInOut",
+                    ease: 'easeInOut' as const,
                   },
-                  scale: { type: 'spring', stiffness: 400, damping: 15 },
+                  scale: { type: 'spring' as const, stiffness: 400, damping: 15 },
                 }}
               >
                 <motion.div
@@ -508,11 +508,11 @@ export function IntensityScene({
                     backgroundColor: timeOfDay === 'sunset' ? 'hsl(30 90% 55% / 0.4)' : 'hsl(var(--accent) / 0.3)',
                   }}
                   animate={{ scale: [1, 1.25, 1], opacity: [0.6, 1, 0.6] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                  transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' as const }}
                 />
                 <motion.div
                   animate={{ rotate: 360 }}
-                  transition={{ duration: 35, repeat: Infinity, ease: "linear" }}
+                  transition={{ duration: 35, repeat: Infinity, ease: 'linear' as const }}
                   className="relative z-10 pointer-events-none"
                 >
                   <Sun
@@ -1056,7 +1056,7 @@ export function IntensityScene({
       <motion.div
         className="absolute bottom-0 left-0 right-0 h-2 pointer-events-none z-[50]"
         animate={{ backgroundColor: sceneConfig.groundColor }}
-        transition={{ duration: 2, ease: 'easeInOut' }}
+        transition={{ duration: 2, ease: 'easeInOut' as const }}
         aria-hidden="true"
       />
 
@@ -1123,7 +1123,7 @@ export function IntensityScene({
                     delay: i * 0.5,
                     repeat: Infinity,
                     repeatDelay: 3,
-                    ease: 'easeInOut',
+                    ease: 'easeInOut' as const,
                   }}
                 />
                 <div className="absolute inset-0 grid grid-cols-2 gap-px opacity-50">
@@ -1245,7 +1245,7 @@ export function IntensityScene({
           >
             <motion.div
               animate={{ scale: [1, 1.1, 1], opacity: [0.6, 1, 0.6] }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' as const }}
             >
               <Droplets className="w-6 h-6 text-gen-hydro/60" aria-hidden="true" />
             </motion.div>

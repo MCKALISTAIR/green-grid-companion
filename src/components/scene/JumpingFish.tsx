@@ -21,7 +21,7 @@ export function JumpingFish({ x, y, delay = 0 }: JumpingFishProps) {
         delay,
         repeat: Infinity,
         repeatDelay: 12 + delay * 1.5,
-        ease: 'easeInOut',
+        ease: 'easeInOut' as const,
       }}
     >
       {/* Breaching dolphin/fish body */}
@@ -50,7 +50,7 @@ export function JumpingFish({ x, y, delay = 0 }: JumpingFishProps) {
           delay: 0.6,
           repeat: Infinity,
           repeatDelay: 12.8 + delay * 1.5,
-          ease: 'easeOut',
+          ease: 'easeOut' as const,
         }}
       />
     </motion.g>

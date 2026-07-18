@@ -41,14 +41,14 @@ export function SceneColorGrade({ cleanliness, isNight }: Props) {
             <motion.div
                 className="absolute inset-0"
                 animate={{ backgroundColor: tint }}
-                transition={{ duration: 2.2, ease: 'easeInOut' }}
+                transition={{ duration: 2.2, ease: 'easeInOut' as const }}
                 style={{ mixBlendMode: 'soft-light' }}
             />
             {/* Top bloom (clean) */}
             <motion.div
                 className="absolute inset-x-0 top-0 h-1/2"
                 animate={{ opacity: bloomOpacity }}
-                transition={{ duration: 2.2, ease: 'easeInOut' }}
+                transition={{ duration: 2.2, ease: 'easeInOut' as const }}
                 style={{
                     background:
                         'radial-gradient(ellipse at 50% 0%, rgba(180,255,230,0.55), rgba(180,255,230,0) 70%)',
@@ -59,7 +59,7 @@ export function SceneColorGrade({ cleanliness, isNight }: Props) {
             <motion.div
                 className="absolute inset-0"
                 animate={{ opacity: vignetteOpacity }}
-                transition={{ duration: 2.2, ease: 'easeInOut' }}
+                transition={{ duration: 2.2, ease: 'easeInOut' as const }}
                 style={{
                     background:
                         'radial-gradient(ellipse at 50% 55%, rgba(0,0,0,0) 50%, rgba(60,30,0,0.85) 100%)',

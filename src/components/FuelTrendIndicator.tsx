@@ -48,7 +48,7 @@ export function FuelTrendIndicator({
                     initial={{ opacity: 0, scale: 0.8, x: -5 }}
                     animate={{ opacity: 1, scale: 1, x: 0 }}
                     exit={{ opacity: 0, scale: 0.8, x: 5 }}
-                    transition={{ duration: 0.2, ease: 'easeOut' }}
+                    transition={{ duration: 0.2, ease: 'easeOut' as const }}
                     className={cn(
                         'inline-flex items-center gap-0.5',
                         trend === 'up' ? 'text-primary' : 'text-destructive',

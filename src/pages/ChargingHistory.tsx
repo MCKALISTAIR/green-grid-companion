@@ -24,7 +24,7 @@ const containerVariants = {
 
 const itemVariants = {
   hidden: { opacity: 0, y: 15 },
-  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 350, damping: 25 } }
+  show: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 350, damping: 25 } }
 };
 
 function ChargingHistory() {
@@ -93,7 +93,7 @@ function ChargingHistory() {
       {/* Summary Cards */}
       {!isLoading && totalSessions > 0 && (
         <motion.div variants={itemVariants} className="grid grid-cols-3 gap-3 mb-4">
-          <motion.div whileHover={{ y: -2, scale: 1.02 }} transition={{ type: 'spring', stiffness: 450, damping: 22 }}>
+          <motion.div whileHover={{ y: -2, scale: 1.02 }} transition={{ type: 'spring' as const, stiffness: 450, damping: 22 }}>
             <Card className="p-3 text-center h-full">
               <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
                 <BatteryCharging className="w-4 h-4" />
@@ -102,7 +102,7 @@ function ChargingHistory() {
               <span className="text-2xl font-bold">{totalSessions}</span>
             </Card>
           </motion.div>
-          <motion.div whileHover={{ y: -2, scale: 1.02 }} transition={{ type: 'spring', stiffness: 450, damping: 22 }}>
+          <motion.div whileHover={{ y: -2, scale: 1.02 }} transition={{ type: 'spring' as const, stiffness: 450, damping: 22 }}>
             <Card className="p-3 text-center h-full">
               <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
                 <TrendingUp className="w-4 h-4" />
@@ -112,7 +112,7 @@ function ChargingHistory() {
               <span className="text-xs text-muted-foreground ml-1">kWh</span>
             </Card>
           </motion.div>
-          <motion.div whileHover={{ y: -2, scale: 1.02 }} transition={{ type: 'spring', stiffness: 450, damping: 22 }}>
+          <motion.div whileHover={{ y: -2, scale: 1.02 }} transition={{ type: 'spring' as const, stiffness: 450, damping: 22 }}>
             <Card className="p-3 text-center h-full">
               <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
                 <Leaf className="w-4 h-4 text-primary" />
@@ -172,7 +172,7 @@ function ChargingHistory() {
                 <motion.div 
                   key={session.id}
                   whileHover={{ y: -1, scale: 1.01 }}
-                  transition={{ type: 'spring', stiffness: 450, damping: 22 }}
+                  transition={{ type: 'spring' as const, stiffness: 450, damping: 22 }}
                 >
                   <Card className="p-3 shadow-sm hover:shadow-md transition-shadow duration-300">
                     <div className="flex items-center justify-between">

@@ -52,7 +52,7 @@ export function AuroraBorealis({ intensity }: AuroraBorealisProps) {
                         transition={{
                             duration: 8 + i * 2,
                             repeat: Infinity,
-                            ease: 'easeInOut',
+                            ease: 'easeInOut' as const,
                             delay: i * 0.5,
                         }}
                     />

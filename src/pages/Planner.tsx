@@ -350,7 +350,7 @@ export default function Planner() {
                                 <motion.div
                                     key={selectedAppliance.id === app.id ? 'active' : 'idle'}
                                     animate={selectedAppliance.id === app.id ? { scale: [1, 1.15, 1], y: [0, -3, 0] } : {}}
-                                    transition={{ type: 'spring', stiffness: 350, damping: 15 }}
+                                    transition={{ type: 'spring' as const, stiffness: 350, damping: 15 }}
                                 >
                                     <app.icon className={`w-8 h-8 ${selectedAppliance.id === app.id ? 'text-primary-foreground' : 'text-primary'}`} />
                                 </motion.div>
@@ -442,7 +442,7 @@ export default function Planner() {
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -10 }}
-                                transition={{ duration: 0.22, ease: 'easeOut' }}
+                                transition={{ duration: 0.22, ease: 'easeOut' as const }}
                             >
                                 <Card className="p-6 space-y-4 border-primary/20 bg-primary/5">
                                     <div className="text-center space-y-1">

@@ -54,7 +54,7 @@ export function TidalWaves({ intensity = 0.5 }: TidalWavesProps) {
                         transition={{
                             duration: 2 + i * 0.5,
                             repeat: Infinity,
-                            ease: 'easeInOut',
+                            ease: 'easeInOut' as const,
                             delay: i * 0.3,
                         }}
                     />
@@ -70,7 +70,7 @@ export function TidalWaves({ intensity = 0.5 }: TidalWavesProps) {
                         fill="white"
                         opacity="0.5"
                         animate={{ opacity: [0.3, 0.6, 0.3], rx: [7, 9, 7] }}
-                        transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' as const }}
                     />
                 )}
             </g>

@@ -39,7 +39,7 @@ export function BiomassSmoke({ x, intensity }: BiomassSmokeProps) {
                         duration: 3 + i * 0.5,
                         delay: i * 0.3,
                         repeat: Infinity,
-                        ease: 'easeOut',
+                        ease: 'easeOut' as const,
                     }}
                 />
             ))}
@@ -59,7 +59,7 @@ export function BiomassSmoke({ x, intensity }: BiomassSmokeProps) {
                 transition={{
                     duration: 2,
                     repeat: Infinity,
-                    ease: 'easeInOut',
+                    ease: 'easeInOut' as const,
                 }}
             />
         </motion.g>

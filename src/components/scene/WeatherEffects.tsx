@@ -35,7 +35,7 @@ function FogLayer({ intensity = 0.5, layer = 1, cleanliness = 0.5 }: { intensity
           )`,
         }}
         animate={{ x: ['-5%', '5%', '-5%'] }}
-        transition={{ duration, repeat: Infinity, ease: 'easeInOut' }}
+        transition={{ duration, repeat: Infinity, ease: 'easeInOut' as const }}
       />
     </motion.div>
   );
@@ -71,7 +71,7 @@ function Snowflake({ delay, x, size = 'md' }: { delay: number; x: number; size?:
         duration: params.duration,
         delay,
         repeat: Infinity,
-        ease: 'linear',
+        ease: 'linear' as const,
       }}
     />
   );
@@ -211,7 +211,7 @@ function HeavyRain({ intensity = 0.5, cleanliness = 0.5 }: { intensity: number; 
             duration: drop.duration,
             delay: drop.delay,
             repeat: Infinity,
-            ease: 'linear',
+            ease: 'linear' as const,
           }}
         />
       ))}

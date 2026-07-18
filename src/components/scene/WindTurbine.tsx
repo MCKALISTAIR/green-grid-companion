@@ -103,7 +103,7 @@ export function WindTurbine({ scale = 1, speed = 4, onClick }: { scale?: number;
           r="1.2"
           className="fill-destructive"
           animate={{ opacity: [0.4, 1, 0.4] }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' as const }}
         />
         {/* Light glow effect */}
         <motion.circle
@@ -112,7 +112,7 @@ export function WindTurbine({ scale = 1, speed = 4, onClick }: { scale?: number;
           r="2.5"
           className="fill-destructive/30"
           animate={{ opacity: [0.1, 0.4, 0.1], scale: [0.9, 1.1, 0.9] }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' as const }}
         />
 
         {/* Rotor (native SVG rotation around hub at 24,20) */}

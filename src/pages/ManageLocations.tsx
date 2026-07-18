@@ -132,7 +132,7 @@ export default function ManageLocations() {
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: -10 }}
                     whileHover={{ y: -1, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
-                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    transition={{ type: 'spring' as const, stiffness: 500, damping: 30 }}
                     className="flex items-center gap-3 p-3 bg-card border rounded-lg"
                   >
                     <Checkbox
@@ -227,7 +227,7 @@ export default function ManageLocations() {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.8 }}
                     whileHover={{ scale: 1.05 }}
-                    transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                    transition={{ type: 'spring' as const, stiffness: 500, damping: 25 }}
                     className="px-3 py-1.5 bg-muted rounded-full text-sm font-medium cursor-default"
                   >
                     {postcode}

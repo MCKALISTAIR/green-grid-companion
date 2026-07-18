@@ -9,7 +9,7 @@ export function Rainbow() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 1.5, ease: 'easeOut' }}
+            transition={{ duration: 1.5, ease: 'easeOut' as const }}
         >
             <svg
                 className="absolute top-0 left-0 w-full h-full"
@@ -46,7 +46,7 @@ export function Rainbow() {
                             initial={{ pathLength: 0, opacity: 0 }}
                             animate={{ pathLength: 1, opacity: 0.6 - i * 0.05 }}
                             transition={{
-                                pathLength: { duration: 2, delay: i * 0.1, ease: 'easeOut' },
+                                pathLength: { duration: 2, delay: i * 0.1, ease: 'easeOut' as const },
                                 opacity: { duration: 0.5, delay: i * 0.1 }
                             }}
                         />
@@ -72,7 +72,7 @@ export function Rainbow() {
                                     duration: 2,
                                     delay: idx * 0.5 + i * 0.3,
                                     repeat: Infinity,
-                                    ease: 'easeInOut',
+                                    ease: 'easeInOut' as const,
                                 }}
                             />
                         ))}

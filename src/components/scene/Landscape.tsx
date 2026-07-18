@@ -61,7 +61,7 @@ function PineTree({ x, y, scale = 1, colorPrimary, colorShadow, isSnowing, isChr
             transition={{
                 duration: swayDuration,
                 repeat: Infinity,
-                ease: "easeInOut",
+                ease: 'easeInOut' as const,
                 delay: randomOffset,
             }}
             style={{ transformOrigin: 'center bottom' }}
@@ -138,7 +138,7 @@ function HillLayer({
         <motion.g
             initial={skipIntro ? { y: 0, opacity: 1 } : { y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={skipIntro ? { duration: 0 } : { duration: 1.5, delay, ease: "easeOut" }}
+            transition={skipIntro ? { duration: 0 } : { duration: 1.5, delay, ease: 'easeOut' as const }}
         >
             <path
                 d={d}

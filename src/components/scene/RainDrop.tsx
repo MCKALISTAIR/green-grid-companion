@@ -11,7 +11,7 @@ export function RainDrop({ delay, x }: { delay: number; x: number }) {
         duration: 0.8,
         delay,
         repeat: Infinity,
-        ease: 'linear',
+        ease: 'linear' as const,
       }}
     />
   );

@@ -89,7 +89,7 @@ export function FrozenPond() {
           fill="white"
           opacity={0.3}
           animate={{ opacity: [0.2, 0.5, 0.2] }}
-          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' as const }}
         />
         {/* Crack lines */}
         <path d="M20,15 L35,10 L50,16" stroke="hsl(200 30% 75%)" strokeWidth="0.5" fill="none" opacity="0.5" />

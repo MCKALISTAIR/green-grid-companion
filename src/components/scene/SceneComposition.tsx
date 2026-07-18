@@ -77,7 +77,7 @@ export function SceneHeroSpotlight({ band, isCity, isCoastal, isNight }: Spotlig
                 background: `radial-gradient(ellipse ${h.size}% ${h.size * 0.9}% at ${h.x}% ${h.y}%, ${h.tint}, rgba(0,0,0,0) 70%)`,
                 opacity: dimmer,
             }}
-            transition={{ duration: 1.8, ease: 'easeInOut' }}
+            transition={{ duration: 1.8, ease: 'easeInOut' as const }}
             style={{ mixBlendMode: 'screen' }}
         />
     );
@@ -119,7 +119,7 @@ export function SceneAtmosphericDepth({ cleanliness, isNight }: DepthProps) {
                     hsla(${hue}, ${sat}%, ${light}%, ${intensity}) 55%,
                     hsla(${hue}, ${sat}%, ${light}%, 0) 100%)`,
             }}
-            transition={{ duration: 2.2, ease: 'easeInOut' }}
+            transition={{ duration: 2.2, ease: 'easeInOut' as const }}
         />
     );
 }

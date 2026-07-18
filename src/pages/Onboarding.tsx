@@ -233,7 +233,7 @@ const Onboarding = () => {
                         onClick={() => handleHouseTypeSelect(type)}
                         whileHover={{ scale: 1.02, y: -1 }}
                         whileTap={{ scale: 0.98 }}
-                        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                        transition={{ type: 'spring' as const, stiffness: 400, damping: 25 }}
                         className={cn(
                             "w-full p-4 rounded-xl border text-left transition-all hover:bg-accent/50 relative overflow-hidden group",
                             selectedHouseType === type

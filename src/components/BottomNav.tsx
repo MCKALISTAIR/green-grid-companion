@@ -2,7 +2,7 @@ import { useLocation } from 'react-router-dom';
 import { useTransitionNavigate } from '@/hooks/useTransitionNavigate';
 import { Home, ListOrdered, Calendar, Settings, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
+import { motion, type Transition } from 'framer-motion';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 
@@ -29,7 +29,7 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
     const squishBounce = {
       initial: false as const,
       animate: shouldReduceMotion ? {} : { scaleY: [1, 0.65, 1.25, 1] },
-      transition: { duration: 0.35, ease: [0.34, 1.56, 0.64, 1] },
+      transition: { duration: 0.35, ease: [0.34, 1.56, 0.64, 1] } as Transition,
     };
 
     const handleHome = () => {
@@ -60,7 +60,7 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
                             <motion.div
                                 layoutId="bottom-nav-active-pill"
                                 className="absolute inset-1 rounded-lg bg-primary/15 -z-10"
-                                transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                                transition={{ type: 'spring' as const, stiffness: 380, damping: 30 }}
                             />
                         )}
                         <motion.span key={isActive('/') ? 'active' : 'idle'} {...squishBounce}>
@@ -82,7 +82,7 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
                             <motion.div
                                 layoutId="bottom-nav-active-pill"
                                 className="absolute inset-1 rounded-lg bg-primary/15 -z-10"
-                                transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                                transition={{ type: 'spring' as const, stiffness: 380, damping: 30 }}
                             />
                         )}
                         <motion.span key={isActive('/planner') ? 'active' : 'idle'} {...squishBounce}>
@@ -104,7 +104,7 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
                             <motion.div
                                 layoutId="bottom-nav-active-pill"
                                 className="absolute inset-1 rounded-lg bg-primary/15 -z-10"
-                                transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                                transition={{ type: 'spring' as const, stiffness: 380, damping: 30 }}
                             />
                         )}
                         <motion.span key={isActive('/history') ? 'active' : 'idle'} {...squishBounce}>
@@ -126,7 +126,7 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
                             <motion.div
                                 layoutId="bottom-nav-active-pill"
                                 className="absolute inset-1 rounded-lg bg-primary/15 -z-10"
-                                transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                                transition={{ type: 'spring' as const, stiffness: 380, damping: 30 }}
                             />
                         )}
                         <motion.span key={isActive('/map') ? 'active' : 'idle'} {...squishBounce}>
@@ -147,7 +147,7 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
                             <motion.div
                                 layoutId="bottom-nav-active-pill"
                                 className="absolute inset-1 rounded-lg bg-primary/15 -z-10"
-                                transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                                transition={{ type: 'spring' as const, stiffness: 380, damping: 30 }}
                             />
                         )}
                         <motion.span key={isActive('/settings') ? 'active' : 'idle'} {...squishBounce}>

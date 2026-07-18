@@ -342,7 +342,7 @@ const Index = () => {
                             }}
                             key={Math.round(renewablesPct / 10)}
                             animate={{ scale: [1, 1.07, 1] }}
-                            transition={{ duration: 0.4, ease: 'easeOut' }}
+                            transition={{ duration: 0.4, ease: 'easeOut' as const }}
                           >
                             <Leaf className="w-3 h-3" aria-hidden="true" />
                             {renewablesPct.toFixed(0)}% Renewable
@@ -456,7 +456,7 @@ const Index = () => {
                         <motion.div
                           layoutId="dashboard-view-pill"
                           className="absolute inset-0 bg-background shadow-sm rounded-md"
-                          transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                          transition={{ type: 'spring' as const, stiffness: 380, damping: 30 }}
                         />
                       )}
                       <span className="relative z-20 flex items-center justify-center h-full">
@@ -464,7 +464,7 @@ const Index = () => {
                           key={viewMode === 'intensity' ? 'active' : 'inactive'}
                           initial={viewMode === 'intensity' ? { scale: 1.3 } : false}
                           animate={{ scale: 1 }}
-                          transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                          transition={{ type: 'spring' as const, stiffness: 400, damping: 20 }}
                         >
                           <Activity className="w-4 h-4 mr-2" />
                         </motion.span>
@@ -486,7 +486,7 @@ const Index = () => {
                         <motion.div
                           layoutId="dashboard-view-pill"
                           className="absolute inset-0 bg-background shadow-sm rounded-md"
-                          transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                          transition={{ type: 'spring' as const, stiffness: 380, damping: 30 }}
                         />
                       )}
                       <span className="relative z-20 flex items-center justify-center h-full">
@@ -494,7 +494,7 @@ const Index = () => {
                           key={viewMode === 'demand' ? 'active' : 'inactive'}
                           initial={viewMode === 'demand' ? { scale: 1.3 } : false}
                           animate={{ scale: 1 }}
-                          transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                          transition={{ type: 'spring' as const, stiffness: 400, damping: 20 }}
                         >
                           <Zap className="w-4 h-4 mr-2" />
                         </motion.span>
@@ -517,7 +517,7 @@ const Index = () => {
                         <motion.div
                           layoutId="dashboard-view-pill"
                           className="absolute inset-0 bg-background shadow-sm rounded-md"
-                          transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                          transition={{ type: 'spring' as const, stiffness: 380, damping: 30 }}
                         />
                       )}
                       <span className="relative z-20 flex items-center justify-center h-full">
@@ -525,7 +525,7 @@ const Index = () => {
                           key={viewMode === 'footprint' ? 'active' : 'inactive'}
                           initial={viewMode === 'footprint' ? { scale: 1.3 } : false}
                           animate={{ scale: 1 }}
-                          transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                          transition={{ type: 'spring' as const, stiffness: 400, damping: 20 }}
                         >
                           <Leaf className="w-4 h-4 mr-2" />
                         </motion.span>
@@ -542,7 +542,7 @@ const Index = () => {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.3, ease: "easeOut" }}
+                      transition={{ duration: 0.3, ease: 'easeOut' as const }}
                       className="w-full pb-10"
                     >
                       {viewMode === 'demand' ? (
@@ -562,7 +562,7 @@ const Index = () => {
                           {/* Energy Insights */}
                           <motion.div
                             className="md:col-span-2 lg:col-span-1 lg:row-span-2"
-                            variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 220, damping: 22 } } }}
+                            variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 220, damping: 22 } } }}
                           >
                             <Card className={`p-4 shadow-lg bg-accent/15 border-accent/30 glass-card h-full flex flex-col ${glowClass}`}>
                               <div className="flex items-start gap-3">
@@ -596,7 +596,7 @@ const Index = () => {
                           {/* Generation Mix */}
                           <motion.div
                             className="md:col-span-2 lg:col-span-2"
-                            variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 220, damping: 22 } } }}
+                            variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 220, damping: 22 } } }}
                           >
                             <Card className={`p-4 shadow-lg flex flex-col justify-center glass-card h-full ${glowClass}`} data-tour="generation-mix">
                               <ComponentErrorBoundary name="Generation Mix">
@@ -612,7 +612,7 @@ const Index = () => {
                           {/* Best time */}
                           {forecast.length > 0 && (
                             <motion.div
-                              variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 220, damping: 22 } } }}
+                              variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 220, damping: 22 } } }}
                               className="transition-transform active:scale-[0.985]"
                             >
                               <ComponentErrorBoundary name="Best Time">
@@ -624,7 +624,7 @@ const Index = () => {
                           {/* Worst time */}
                           {forecast.length > 0 && (
                             <motion.div
-                              variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 220, damping: 22 } } }}
+                              variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 220, damping: 22 } } }}
                               className="transition-transform active:scale-[0.985]"
                             >
                               <ComponentErrorBoundary name="Worst Time">
@@ -637,7 +637,7 @@ const Index = () => {
                           {forecast.length > 0 && (
                             <motion.div
                               className="md:col-span-2 lg:col-span-3"
-                              variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 220, damping: 22 } } }}
+                              variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 220, damping: 22 } } }}
                             >
                               <Card className={`p-4 shadow-lg glass-card ${glowClass}`} data-tour="forecast-chart">
                                 <ComponentErrorBoundary name="Hourly Forecast">
@@ -651,7 +651,7 @@ const Index = () => {
                           {forecast.length > 0 && (
                             <motion.div
                               className="md:col-span-2 lg:col-span-3"
-                              variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 220, damping: 22 } } }}
+                              variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 220, damping: 22 } } }}
                             >
                               <ComponentErrorBoundary name="Daily Forecast">
                                 <ForecastSummary forecast={forecast} />

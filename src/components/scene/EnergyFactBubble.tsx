@@ -66,7 +66,7 @@ export function EnergyFactBubble({ intensity, generationMix, className, variant 
                         y: {
                             repeat: Infinity,
                             duration: 5,
-                            ease: 'easeInOut',
+                            ease: 'easeInOut' as const,
                         },
                         opacity: { duration: 0.3 },
                         scale: { duration: 0.3 }

@@ -74,7 +74,7 @@ export function MeteorShower() {
                             transition={{
                                 duration: meteor.duration,
                                 delay: meteor.delay,
-                                ease: 'easeOut',
+                                ease: 'easeOut' as const,
                             }}
                         />
 
@@ -97,7 +97,7 @@ export function MeteorShower() {
                             transition={{
                                 duration: meteor.duration,
                                 delay: meteor.delay,
-                                ease: 'easeOut',
+                                ease: 'easeOut' as const,
                             }}
                         />
                     </motion.g>

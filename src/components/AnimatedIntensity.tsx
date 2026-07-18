@@ -106,7 +106,7 @@ export function AnimatedIntensity({
             initial={{ opacity: 0, scale: 0.6 }}
             animate={{ opacity: [0, 0.9, 0], scale: [0.6, 1.6, 2] }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 1.4, ease: 'easeOut' }}
+            transition={{ duration: 1.4, ease: 'easeOut' as const }}
           />
         )}
       </AnimatePresence>
@@ -125,10 +125,10 @@ export function AnimatedIntensity({
         }}
         transition={{
           scale: transition
-            ? { duration: 0.5, ease: 'easeOut' }
-            : { type: 'spring', stiffness: 380, damping: 18, duration: 0.4 },
+            ? { duration: 0.5, ease: 'easeOut' as const }
+            : { type: 'spring' as const, stiffness: 380, damping: 18, duration: 0.4 },
           opacity: isUpdating
-            ? { repeat: Infinity, duration: 1.6, ease: 'easeInOut' }
+            ? { repeat: Infinity, duration: 1.6, ease: 'easeInOut' as const }
             : { duration: 0.25 },
         }}
       >

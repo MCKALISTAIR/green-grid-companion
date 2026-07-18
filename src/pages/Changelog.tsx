@@ -24,7 +24,7 @@ const containerVariants = {
 
 const itemVariants = {
   hidden: { opacity: 0, y: 15 },
-  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 350, damping: 25 } }
+  show: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 350, damping: 25 } }
 };
 
 interface ChangelogEntry {
@@ -208,7 +208,7 @@ export default function Changelog() {
               key={entry.version}
               variants={itemVariants}
               whileHover={{ y: -2 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+              transition={{ type: 'spring' as const, stiffness: 400, damping: 20 }}
             >
               <Card className="p-4 shadow-sm hover:shadow-md transition-shadow duration-300">
                 <div className="flex items-start justify-between mb-3">
