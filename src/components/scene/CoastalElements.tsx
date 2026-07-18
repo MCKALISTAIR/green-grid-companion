@@ -13,7 +13,7 @@ export function Seagull({ startX = 50, startY = 25, delay = 0, scale = 1 }: {
         y: [startY, startY - 8, startY + 5, startY - 3],
         opacity: [0, 1, 1, 0],
       }}
-      transition={{ duration: 14, delay, repeat: Infinity, repeatDelay: delay + 6, ease: 'linear' }}
+      transition={{ duration: 14, delay, repeat: Infinity, repeatDelay: delay + 6, ease: 'linear' as const }}
     >
       <g transform={`scale(${scale})`}>
         {/* Wing flap animation */}
@@ -27,7 +27,7 @@ export function Seagull({ startX = 50, startY = 25, delay = 0, scale = 1 }: {
             "M0,0 L-6,-1 L-10,1",
             "M0,0 L-6,-3 L-10,0",
           ] }}
-          transition={{ duration: 0.8, repeat: Infinity, ease: 'easeInOut' }}
+          transition={{ duration: 0.8, repeat: Infinity, ease: 'easeInOut' as const }}
         />
         <motion.path
           d="M0,0 L6,-3 L10,0"
@@ -39,7 +39,7 @@ export function Seagull({ startX = 50, startY = 25, delay = 0, scale = 1 }: {
             "M0,0 L6,-1 L10,1",
             "M0,0 L6,-3 L10,0",
           ] }}
-          transition={{ duration: 0.8, repeat: Infinity, ease: 'easeInOut' }}
+          transition={{ duration: 0.8, repeat: Infinity, ease: 'easeInOut' as const }}
         />
         {/* Body */}
         <ellipse cx={0} cy={0} rx={2} ry={1} fill="#f1f5f9" />
@@ -59,12 +59,12 @@ export function SailingBoat({ x = 150, delay = 0, isNight = false }: {
     <motion.g
       initial={{ x: x - 50, opacity: 0 }}
       animate={{ x: [x - 50, x + 100], opacity: [0, 1, 1, 0] }}
-      transition={{ duration: 25, delay, repeat: Infinity, repeatDelay: delay + 10, ease: 'linear' }}
+      transition={{ duration: 25, delay, repeat: Infinity, repeatDelay: delay + 10, ease: 'linear' as const }}
     >
       {/* Gentle bobbing */}
       <motion.g
         animate={{ y: [0, -1.5, 0, 1, 0] }}
-        transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+        transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' as const }}
       >
         {/* Hull */}
         <path d="M-8,95 L-6,92 L10,92 L8,95 Z" fill={hullColor} />
@@ -90,11 +90,11 @@ export function FishingBoat({ x = 250, delay = 0, isNight = false }: {
     <motion.g
       initial={{ x: x }}
       animate={{ x: [x, x + 40, x] }}
-      transition={{ duration: 30, delay, repeat: Infinity, ease: 'easeInOut' }}
+      transition={{ duration: 30, delay, repeat: Infinity, ease: 'easeInOut' as const }}
     >
       <motion.g
         animate={{ y: [0, -2, 0, 1.5, 0] }}
-        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' as const }}
       >
         {/* Hull */}
         <path d="M-12,97 L-10,93 L14,93 L12,97 Z" fill={hullColor} />
@@ -188,7 +188,7 @@ export function RockPool({ x = 260, y = 116, isNight = false }: {
         cx={x} cy={y - 0.5} rx={8} ry={3}
         fill={poolColor} opacity={0.6}
         animate={{ rx: [8, 8.3, 8], ry: [3, 3.2, 3] }}
-        transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+        transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' as const }}
       />
       {/* Starfish */}
       <g transform={`translate(${x - 3}, ${y - 1}) scale(0.4)`}>
@@ -218,7 +218,7 @@ export function RockPool({ x = 260, y = 116, isNight = false }: {
           `M${x + 9},${y} Q${x + 12},${y - 2} ${x + 11},${y - 5}`,
           `M${x + 9},${y} Q${x + 11},${y - 3} ${x + 10},${y - 5}`,
         ] }}
-        transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+        transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' as const }}
       />
     </g>
   );
@@ -232,11 +232,11 @@ export function Crab({ x = 280, y = 118, delay = 0 }: {
     <motion.g
       initial={{ opacity: 0 }}
       animate={{ opacity: 1, x: [x, x + 8, x + 12, x + 8, x] }}
-      transition={{ duration: 6, delay, repeat: Infinity, repeatDelay: 4, ease: 'easeInOut' }}
+      transition={{ duration: 6, delay, repeat: Infinity, repeatDelay: 4, ease: 'easeInOut' as const }}
     >
       <motion.g
         animate={{ y: [y, y - 0.5, y] }}
-        transition={{ duration: 0.4, repeat: Infinity, ease: 'easeInOut' }}
+        transition={{ duration: 0.4, repeat: Infinity, ease: 'easeInOut' as const }}
       >
         {/* Body */}
         <ellipse cx={0} cy={0} rx={3} ry={2} fill="#dc2626" />
@@ -281,7 +281,7 @@ export function HarbourSeal({ x = 170, y = 96, delay = 0 }: {
         repeat: Infinity,
         repeatDelay: 12 + delay,
         times: [0, 0.15, 0.5, 0.85, 1],
-        ease: 'easeInOut',
+        ease: 'easeInOut' as const,
       }}
     >
       {/* Water splash ring */}
@@ -321,7 +321,7 @@ export function HarbourSeal({ x = 170, y = 96, delay = 0 }: {
       {/* Head turn animation */}
       <motion.g
         animate={{ x: [0, -1, 0, 1, 0] }}
-        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' as const }}
       />
     </motion.g>
   );

@@ -19,7 +19,7 @@ export function Rabbit({ delay = 0 }: RabbitProps) {
             transition={{
                 duration: 20,
                 delay,
-                ease: 'linear',
+                ease: 'linear' as const,
             }}
         >
             <motion.div
@@ -29,7 +29,7 @@ export function Rabbit({ delay = 0 }: RabbitProps) {
                 transition={{
                     duration: 0.6,
                     repeat: Infinity,
-                    ease: 'easeInOut',
+                    ease: 'easeInOut' as const,
                 }}
             >
                 <svg width="24" height="28" viewBox="0 0 24 28">

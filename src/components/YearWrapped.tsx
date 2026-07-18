@@ -168,7 +168,7 @@ function IntroSlide({ data }: { data: YearWrappedData }) {
             <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ type: "spring", delay: 0.2 }}
+                transition={{ type: 'spring' as const, delay: 0.2 }}
             >
                 <Zap className="w-20 h-20 text-primary" />
             </motion.div>
@@ -204,7 +204,7 @@ function CoalSlide({ data }: { data: YearWrappedData }) {
             <motion.div
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: "spring" }}
+                transition={{ type: 'spring' as const }}
                 className="relative"
             >
                 <Flame className="w-20 h-20 text-muted-foreground/30" />
@@ -254,7 +254,7 @@ function RenewablesSlide({ data }: { data: YearWrappedData }) {
             <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ type: "spring" }}
+                transition={{ type: 'spring' as const }}
                 className="flex gap-2"
             >
                 <Wind className="w-12 h-12 text-gen-wind" />
@@ -309,7 +309,7 @@ function IntensitySlide({ data }: { data: YearWrappedData }) {
             <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ type: "spring" }}
+                transition={{ type: 'spring' as const }}
             >
                 <Leaf className="w-16 h-16 text-primary" />
             </motion.div>
@@ -372,7 +372,7 @@ function HighlightsSlide({ data }: { data: YearWrappedData }) {
             <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ type: "spring" }}
+                transition={{ type: 'spring' as const }}
             >
                 <Sparkles className="w-16 h-16 text-chart-4" />
             </motion.div>
@@ -445,7 +445,7 @@ function SummarySlide({ data, onClose }: { data: YearWrappedData; onClose: () =>
             <motion.div
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: "spring" }}
+                transition={{ type: 'spring' as const }}
             >
                 <Trophy className="w-16 h-16 text-chart-4" />
             </motion.div>

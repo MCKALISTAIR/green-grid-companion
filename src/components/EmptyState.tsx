@@ -25,7 +25,7 @@ export function EmptyState({
             <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.4, ease: 'easeOut' }}
+                transition={{ duration: 0.4, ease: 'easeOut' as const }}
                 className="mb-6"
             >
                 <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center">

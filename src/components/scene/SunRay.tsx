@@ -13,7 +13,7 @@ export function SunRay({ angle, delay }: { angle: number; delay: number }) {
         duration: 3,
         delay,
         repeat: Infinity,
-        ease: 'easeInOut',
+        ease: 'easeInOut' as const,
       }}
     />
   );

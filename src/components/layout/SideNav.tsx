@@ -27,14 +27,14 @@ export function SideNav() {
                 <motion.div
                     layoutId="side-nav-active-pill"
                     className="absolute inset-0 rounded-lg bg-primary/10 -z-10 border-l-2 border-primary"
-                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    transition={{ type: 'spring' as const, stiffness: 380, damping: 30 }}
                 />
             )}
             <motion.div
                 className="flex items-center gap-3 w-full"
                 whileHover={{ x: 4 }}
                 whileTap={{ scale: 0.98 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                transition={{ type: 'spring' as const, stiffness: 400, damping: 25 }}
             >
                 <Icon className="w-5 h-5 transition-transform duration-200 group-hover:scale-110" />
                 {label}

@@ -65,7 +65,7 @@ export function ForegroundGrass({ windSpeed }: ForegroundGrassProps) {
                             duration: 2 + (blade.id % 3) * 0.5,
                             delay: blade.delay,
                             repeat: Infinity,
-                            ease: 'easeInOut',
+                            ease: 'easeInOut' as const,
                         }}
                         opacity={blade.opacity}
                     />

@@ -65,7 +65,7 @@ export function SceneWaveDivider({ cleanliness, fillColor }: SceneWaveDividerPro
           fill={fill}
           initial={false}
           animate={{ d: path }}
-          transition={prefersReducedMotion ? { duration: 0 } : { duration: 2.5, ease: 'easeInOut' }}
+          transition={prefersReducedMotion ? { duration: 0 } : { duration: 2.5, ease: 'easeInOut' as const }}
         />
       </svg>
     </div>

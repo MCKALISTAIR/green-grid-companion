@@ -16,7 +16,7 @@ export function CityVehicle({ direction = 'right', isEV = false, delay = 0, spee
     <motion.g
       initial={{ x: startX }}
       animate={{ x: endX }}
-      transition={{ duration: speed, delay, repeat: Infinity, repeatDelay: delay + 3, ease: 'linear' }}
+      transition={{ duration: speed, delay, repeat: Infinity, repeatDelay: delay + 3, ease: 'linear' as const }}
     >
       {/* Car body */}
       <rect x={0} y={y} width={14} height={5} rx={1.5} fill={isEV ? '#22d3ee' : '#6b7280'} />
@@ -58,7 +58,7 @@ export function CityBus({ direction = 'right', isElectric = false, delay = 0 }: 
     <motion.g
       initial={{ x: startX }}
       animate={{ x: endX }}
-      transition={{ duration: 18, delay, repeat: Infinity, repeatDelay: delay + 8, ease: 'linear' }}
+      transition={{ duration: 18, delay, repeat: Infinity, repeatDelay: delay + 8, ease: 'linear' as const }}
     >
       {/* Bus body */}
       <rect x={0} y={y} width={24} height={8} rx={1.5} fill={isElectric ? '#0ea5e9' : '#dc2626'} />
@@ -81,7 +81,7 @@ export function Pigeon({ x: initialX, y: initialY, delay = 0 }: { x: number; y: 
   const [wingFlap, setWingFlap] = useState(false);
   const [peckAngle, setPeckAngle] = useState(0);
   const [headBob, setHeadBob] = useState(0);
-  const [transitionConfig, setTransitionConfig] = useState<{ duration: number; ease?: 'easeOut' | 'easeIn' | 'easeInOut' | 'linear' }>({ duration: 1.0, ease: 'easeOut' });
+  const [transitionConfig, setTransitionConfig] = useState<{ duration: number; ease?: 'easeOut' | 'easeIn' | 'easeInOut' | 'linear' }>({ duration: 1.0, ease: 'easeOut' as const });
 
   // Use a ref to store position so the useEffect loop does not re-trigger on position changes
   const positionRef = useRef({ x: initialX, y: initialY });
@@ -117,7 +117,7 @@ export function Pigeon({ x: initialX, y: initialY, delay = 0 }: { x: number; y: 
           // Fly off screen diagonally upwards
           const targetX = flyLeft ? -50 : 450;
           const targetY = -40;
-          updatePosition({ x: targetX, y: targetY }, { duration: 2.5, ease: 'easeOut' });
+          updatePosition({ x: targetX, y: targetY }, { duration: 2.5, ease: 'easeOut' as const });
 
           // Wait for flight to finish
           await new Promise(r => { timeoutId = setTimeout(r, 2500); });
@@ -144,7 +144,7 @@ export function Pigeon({ x: initialX, y: initialY, delay = 0 }: { x: number; y: 
           if (!active) return;
 
           setScaleX(landX > (startLeft ? -30 : 430) ? 0.35 : -0.35);
-          updatePosition({ x: landX, y: landY }, { duration: 2.2, ease: 'easeInOut' });
+          updatePosition({ x: landX, y: landY }, { duration: 2.2, ease: 'easeInOut' as const });
 
           // Wait for landing swoop to complete
           await new Promise(r => { timeoutId = setTimeout(r, 2200); });
@@ -152,11 +152,11 @@ export function Pigeon({ x: initialX, y: initialY, delay = 0 }: { x: number; y: 
 
           // Tiny landing hop bounce
           setWingFlap(false);
-          updatePosition({ x: landX, y: landY - 2 }, { duration: 0.15, ease: 'easeOut' });
+          updatePosition({ x: landX, y: landY - 2 }, { duration: 0.15, ease: 'easeOut' as const });
           await new Promise(r => { timeoutId = setTimeout(r, 150); });
           if (!active) return;
 
-          updatePosition({ x: landX, y: landY }, { duration: 0.15, ease: 'easeIn' });
+          updatePosition({ x: landX, y: landY }, { duration: 0.15, ease: 'easeIn' as const });
           await new Promise(r => { timeoutId = setTimeout(r, 150); });
           if (!active) return;
 
@@ -174,7 +174,7 @@ export function Pigeon({ x: initialX, y: initialY, delay = 0 }: { x: number; y: 
 
           const distance = Math.abs(targetX - currentPos.x);
           const duration = Math.max(800, distance * 30); // ~33 units/sec
-          updatePosition({ x: targetX, y: targetY }, { duration: duration / 1000, ease: 'easeInOut' });
+          updatePosition({ x: targetX, y: targetY }, { duration: duration / 1000, ease: 'easeInOut' as const });
 
           // Staggered head bobs matching the walk time
           const bobCount = Math.floor(duration / 250);
@@ -249,7 +249,7 @@ export function Pigeon({ x: initialX, y: initialY, delay = 0 }: { x: number; y: 
         opacity: { duration: 0.3 },
         x: transitionConfig,
         y: transitionConfig,
-        rotate: isFlying ? { duration: 0.2, repeat: Infinity, ease: 'easeInOut' } : { duration: 0.2 },
+        rotate: isFlying ? { duration: 0.2, repeat: Infinity, ease: 'easeInOut' as const } : { duration: 0.2 },
       }}
     >
       <g style={{ transformOrigin: '0px 0px' }}>
@@ -275,7 +275,7 @@ export function Pigeon({ x: initialX, y: initialY, delay = 0 }: { x: number; y: 
           transition={{
             duration: 0.12,
             repeat: wingFlap ? Infinity : 0,
-            ease: 'easeInOut',
+            ease: 'easeInOut' as const,
           }}
           style={{ transformOrigin: '-1px -0.5px' }}
         >
@@ -293,7 +293,7 @@ export function Pigeon({ x: initialX, y: initialY, delay = 0 }: { x: number; y: 
             y: headBob,
           }}
           transition={{
-            type: 'spring',
+            type: 'spring' as const,
             stiffness: 250,
             damping: 18,
           }}
@@ -340,7 +340,7 @@ export function ConstructionCrane({ x = 350, isNight }: { x?: number; isNight: b
         strokeWidth={0.5}
         opacity={0.5}
         animate={{ y2: [80, 70, 80] }}
-        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' as const }}
       />
       {/* Warning light at top */}
       {isNight && (
@@ -385,7 +385,7 @@ export function LondonEye({ x = 75, y = 85, radius = 30, isNight, skipIntro }: {
       {/* Rotating wheel group */}
       <motion.g
         animate={{ rotate: 360 }}
-        transition={{ duration: 120, repeat: Infinity, ease: 'linear' }}
+        transition={{ duration: 120, repeat: Infinity, ease: 'linear' as const }}
         style={{ transformOrigin: `${x}px ${y}px` }}
       >
         {/* Outer rim */}
@@ -474,7 +474,7 @@ export function DistantStack({ x = 365, isNight }: { x?: number; isNight: boolea
         rx={3} ry={2}
         fill={isNight ? 'rgba(180,180,180,0.3)' : 'rgba(220,220,220,0.5)'}
         animate={{ cy: [baseY - 28, baseY - 36, baseY - 28], opacity: [0.5, 0.2, 0.5] }}
-        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' as const }}
       />
     </motion.g>
   );
@@ -524,7 +524,7 @@ export function BatteryStorageContainer({ x = 320, cleanliness, isNight }: {
         r={0.7}
         fill={ledColor}
         animate={{ opacity: [1, 0.45, 1] }}
-        transition={{ duration: isClean ? 2.5 : 1.6, repeat: Infinity, ease: 'easeInOut' }}
+        transition={{ duration: isClean ? 2.5 : 1.6, repeat: Infinity, ease: 'easeInOut' as const }}
       />
       {/* "BESS" label — bigger so it reads */}
       <text x={x + w / 2} y={groundY - 3} textAnchor="middle" fontSize="2.4" fontWeight="700" fill="rgba(255,255,255,0.55)" fontFamily="monospace" letterSpacing="0.2">BESS</text>

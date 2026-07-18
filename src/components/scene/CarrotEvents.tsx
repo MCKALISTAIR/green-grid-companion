@@ -13,7 +13,7 @@ export function UFO({ onComplete }: { onComplete: () => void }) {
                 rotate: [10, -5, 5, -10],
                 opacity: [0, 1, 1, 0]
             }}
-            transition={{ duration: 8, ease: "linear" }}
+            transition={{ duration: 8, ease: 'linear' as const }}
             onAnimationComplete={onComplete}
         >
             <div className="relative group">
@@ -54,7 +54,7 @@ export function ElectricDrone({ onComplete }: { onComplete: () => void }) {
                 x: '-10%',
                 y: [0, -15, 5, -10, 0]
             }}
-            transition={{ duration: 6, ease: "easeInOut" }}
+            transition={{ duration: 6, ease: 'easeInOut' as const }}
             onAnimationComplete={onComplete}
         >
             <div className="relative transform scale-75">
@@ -62,12 +62,12 @@ export function ElectricDrone({ onComplete }: { onComplete: () => void }) {
                 <motion.div
                     className="absolute -top-2 -left-2 w-12 h-1 bg-slate-400/50 rounded-full"
                     animate={{ rotate: 360 }}
-                    transition={{ duration: 0.1, repeat: Infinity, ease: 'linear' }}
+                    transition={{ duration: 0.1, repeat: Infinity, ease: 'linear' as const }}
                 />
                 <motion.div
                     className="absolute -top-2 -right-2 w-12 h-1 bg-slate-400/50 rounded-full"
                     animate={{ rotate: -360 }}
-                    transition={{ duration: 0.1, repeat: Infinity, ease: 'linear' }}
+                    transition={{ duration: 0.1, repeat: Infinity, ease: 'linear' as const }}
                 />
 
                 {/* Body */}
@@ -91,7 +91,7 @@ export function SteamTrain({ onComplete }: { onComplete: () => void }) {
             className="absolute bottom-16 z-0 pointer-events-none opacity-60"
             initial={{ x: '-20%' }}
             animate={{ x: '120%' }}
-            transition={{ duration: 25, ease: "linear" }}
+            transition={{ duration: 25, ease: 'linear' as const }}
             onAnimationComplete={onComplete}
         >
             <div className="flex items-end gap-0.5 transform scale-75 filter blur-[0.5px]">

@@ -297,8 +297,8 @@ export function DemandView() {
                                             }
                                             transition={
                                                 fuelKey === 'wind'
-                                                    ? { duration: 8, repeat: Infinity, ease: 'linear' }
-                                                    : { duration: fuelKey === 'gas' ? 1.6 : 4, repeat: Infinity, ease: 'easeInOut' }
+                                                    ? { duration: 8, repeat: Infinity, ease: 'linear' as const }
+                                                    : { duration: fuelKey === 'gas' ? 1.6 : 4, repeat: Infinity, ease: 'easeInOut' as const }
                                             }
                                         >
                                             <Icon className="w-4 h-4 text-white" aria-hidden="true" />
@@ -366,7 +366,7 @@ export function DemandView() {
                                         style={{ backgroundColor: hex, opacity: isZero ? 0.2 : 0.9 }}
                                         initial={{ width: 0 }}
                                         animate={{ width: `${Math.min(source.perc, 100)}%` }}
-                                        transition={{ duration: 0.8, ease: 'easeOut', delay: idx * 0.04 }}
+                                        transition={{ duration: 0.8, ease: 'easeOut' as const, delay: idx * 0.04 }}
                                     />
                                 </div>
 

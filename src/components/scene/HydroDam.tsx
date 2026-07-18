@@ -42,7 +42,7 @@ export function HydroDam({ flowIntensity }: HydroDamProps) {
                 transition={{
                     duration: 2,
                     repeat: Infinity,
-                    ease: 'easeInOut',
+                    ease: 'easeInOut' as const,
                 }}
             />
 
@@ -61,7 +61,7 @@ export function HydroDam({ flowIntensity }: HydroDamProps) {
                     transition={{
                         duration: 0.8 + i * 0.2,
                         repeat: Infinity,
-                        ease: 'linear',
+                        ease: 'linear' as const,
                     }}
                 />
             ))}
@@ -81,7 +81,7 @@ export function HydroDam({ flowIntensity }: HydroDamProps) {
                 transition={{
                     duration: 1,
                     repeat: Infinity,
-                    ease: 'easeInOut',
+                    ease: 'easeInOut' as const,
                 }}
             />
         </motion.g>

@@ -46,7 +46,7 @@ export function Bee({ startX, startY, delay = 0 }: BeeProps) {
                 duration: 8,
                 delay,
                 repeat: Infinity,
-                ease: 'easeInOut',
+                ease: 'easeInOut' as const,
             }}
         >
             <svg width="16" height="16" viewBox="0 0 16 16">
@@ -66,7 +66,7 @@ export function Bee({ startX, startY, delay = 0 }: BeeProps) {
                     transition={{
                         duration: 0.2,
                         repeat: Infinity,
-                        ease: 'easeInOut',
+                        ease: 'easeInOut' as const,
                     }}
                 >
                     <ellipse cx="5" cy="6" rx="3" ry="4" fill="white" opacity="0.6" transform="rotate(-30 5 6)" />

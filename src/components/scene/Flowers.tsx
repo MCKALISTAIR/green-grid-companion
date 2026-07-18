@@ -43,7 +43,7 @@ export function Flowers({ positions }: FlowersProps) {
                                 transition={{
                                     duration: 2 + i * 0.3,
                                     repeat: Infinity,
-                                    ease: 'easeInOut',
+                                    ease: 'easeInOut' as const,
                                     delay: i * 0.2,
                                 }}
                             />

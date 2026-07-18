@@ -35,7 +35,7 @@ export function TrendArrows({ nextIntensity, currentIntensity }: TrendArrowsProp
                     transition={{
                         duration: 1.5,
                         repeat: Infinity,
-                        ease: 'easeInOut',
+                        ease: 'easeInOut' as const,
                     }}
                 >
                     {isImproving ? (

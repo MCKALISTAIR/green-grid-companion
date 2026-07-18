@@ -29,7 +29,7 @@ export function PollutionWarning() {
                 transition={{
                     duration: 3,
                     repeat: Infinity,
-                    ease: 'easeInOut',
+                    ease: 'easeInOut' as const,
                 }}
             />
 
@@ -42,7 +42,7 @@ export function PollutionWarning() {
                 transition={{
                     duration: 2,
                     repeat: Infinity,
-                    ease: 'easeInOut',
+                    ease: 'easeInOut' as const,
                 }}
             />
 
@@ -56,7 +56,7 @@ export function PollutionWarning() {
                 transition={{
                     duration: 1.5,
                     repeat: Infinity,
-                    ease: 'easeInOut',
+                    ease: 'easeInOut' as const,
                 }}
             >
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
@@ -91,7 +91,7 @@ export function PollutionWarning() {
                         duration: particle.duration,
                         delay: particle.delay,
                         repeat: Infinity,
-                        ease: 'easeInOut',
+                        ease: 'easeInOut' as const,
                     }}
                 />
             ))}

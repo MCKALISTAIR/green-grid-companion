@@ -57,7 +57,7 @@ export function WeatherWidget() {
             return (
                 <motion.div
                     animate={{ rotate: 360 }}
-                    transition={{ repeat: Infinity, duration: 18, ease: "linear" }}
+                    transition={{ repeat: Infinity, duration: 18, ease: 'linear' as const }}
                 >
                     <Sun className="w-5 h-5 text-amber-500" />
                 </motion.div>
@@ -67,7 +67,7 @@ export function WeatherWidget() {
             return (
                 <motion.div
                     animate={{ y: [0, -2, 0] }}
-                    transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                    transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' as const }}
                 >
                     <Cloud className="w-5 h-5 text-muted-foreground" />
                 </motion.div>
@@ -77,7 +77,7 @@ export function WeatherWidget() {
             return (
                 <motion.div
                     animate={{ y: [0, 1.5, 0], x: [0, -0.5, 0] }}
-                    transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}
+                    transition={{ repeat: Infinity, duration: 1.8, ease: 'easeInOut' as const }}
                 >
                     <CloudRain className="w-5 h-5 text-blue-500" />
                 </motion.div>
@@ -87,7 +87,7 @@ export function WeatherWidget() {
             return (
                 <motion.div
                     animate={{ y: [0, 1, 0], x: [0, 1, -1, 0] }}
-                    transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }}
+                    transition={{ repeat: Infinity, duration: 2.2, ease: 'easeInOut' as const }}
                 >
                     <CloudSnow className="w-5 h-5 text-sky-300" />
                 </motion.div>
@@ -96,7 +96,7 @@ export function WeatherWidget() {
         return (
             <motion.div
                 animate={{ scale: [1, 1.05, 0.95, 1], opacity: [1, 0.7, 1] }}
-                transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+                transition={{ repeat: Infinity, duration: 2.5, ease: 'easeInOut' as const }}
             >
                 <CloudLightning className="w-5 h-5 text-purple-500" />
             </motion.div>
@@ -138,7 +138,7 @@ export function WeatherWidget() {
                     <span className="flex items-center gap-1">
                         <motion.div
                             animate={{ y: [0, -1, 0] }}
-                            transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut" }}
+                            transition={{ repeat: Infinity, duration: 3.5, ease: 'easeInOut' as const }}
                         >
                             <Thermometer className="w-3.5 h-3.5 text-muted-foreground/70" />
                         </motion.div>
@@ -147,7 +147,7 @@ export function WeatherWidget() {
                     <span className="flex items-center gap-1">
                         <motion.div
                             animate={{ x: [-1.5, 1.5, -1.5] }}
-                            transition={{ repeat: Infinity, duration: 2.8, ease: "easeInOut" }}
+                            transition={{ repeat: Infinity, duration: 2.8, ease: 'easeInOut' as const }}
                         >
                             <Wind className="w-3.5 h-3.5 text-muted-foreground/70" />
                         </motion.div>

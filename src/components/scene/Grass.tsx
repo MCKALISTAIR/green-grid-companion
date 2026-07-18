@@ -55,7 +55,7 @@ export function Grass({ cleanliness, windSpeed = 1 }: GrassProps) {
               duration: 2 / windSpeed,
               delay: blade.delay,
               repeat: Infinity,
-              ease: 'easeInOut',
+              ease: 'easeInOut' as const,
             }}
           />
         ))}

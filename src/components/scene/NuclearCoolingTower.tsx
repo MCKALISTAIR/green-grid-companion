@@ -77,7 +77,7 @@ export function NuclearCoolingTower({ x, steamIntensity = 0.7, isNight }: Nuclea
                         fill="#818cf8"
                         opacity="0.3"
                         animate={{ opacity: [0.2, 0.4, 0.2] }}
-                        transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                        transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' as const }}
                     />
                 )}
 
@@ -99,7 +99,7 @@ export function NuclearCoolingTower({ x, steamIntensity = 0.7, isNight }: Nuclea
                             duration: 3 + i * 0.5,
                             delay: i * 0.7,
                             repeat: Infinity,
-                            ease: 'easeOut',
+                            ease: 'easeOut' as const,
                         }}
                     />
                 ))}

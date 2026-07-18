@@ -20,7 +20,7 @@ export function Fox({ onClick }: FoxProps) {
             exit={{ opacity: 0 }}
             transition={{
                 duration: 12,
-                ease: 'linear',
+                ease: 'linear' as const,
             }}
         >
             <motion.div
@@ -31,7 +31,7 @@ export function Fox({ onClick }: FoxProps) {
                 transition={{
                     duration: 0.8,
                     repeat: Infinity,
-                    ease: 'easeInOut',
+                    ease: 'easeInOut' as const,
                 }}
             >
                 <svg width="32" height="24" viewBox="0 0 32 24">

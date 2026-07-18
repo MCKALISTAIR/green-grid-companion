@@ -354,7 +354,7 @@ c21 14 23 19 14 45 -8 23 -7 35 5 53 9 13 25 50 36 83 15 44 17 61 8 72 -9 11
                         key={region.regionid}
                         initial={{ scale: 0, opacity: 0 }}
                         animate={{ scale: isSelected ? 1.4 : 1, opacity: 1, zIndex: isSelected ? 50 : 10 }}
-                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                        transition={{ type: 'spring' as const, stiffness: 300, damping: 20 }}
                         className={cn(
                             "absolute w-10 h-10 -ml-5 -mt-5 rounded-full flex items-center justify-center shadow-md transition-all duration-300",
                             colorClass,

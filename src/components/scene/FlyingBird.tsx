@@ -13,7 +13,7 @@ export function FlyingBird({ delay, duration, startX, top, scale }: { delay: num
         duration,
         delay,
         repeat: Infinity,
-        ease: 'linear',
+        ease: 'linear' as const,
       }}
       style={{
         top: `${top}%`,
@@ -39,7 +39,7 @@ export function FlyingBird({ delay, duration, startX, top, scale }: { delay: num
         transition={{
           duration: 0.9,
           repeat: Infinity,
-          ease: 'easeInOut',
+          ease: 'easeInOut' as const,
         }}
       />
     </motion.svg>

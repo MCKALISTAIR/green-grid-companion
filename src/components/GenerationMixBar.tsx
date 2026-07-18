@@ -78,7 +78,7 @@ export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolar
                 className="inline-flex"
                 initial={false}
                 whileHover={{ x: 3 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                transition={{ type: 'spring' as const, stiffness: 400, damping: 25 }}
               >
                 <ChevronRight className="w-4 h-4 text-muted-foreground" />
               </motion.span>
@@ -95,7 +95,7 @@ export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolar
             aria-label="Generation Mix"
             whileHover={{ scaleY: 1.18 }}
             style={{ originY: 1 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+            transition={{ type: 'spring' as const, stiffness: 300, damping: 28 }}
           >
             {sortedMix.map((item, idx) => {
               const isSolar = item.fuel.toLowerCase() === 'solar';
@@ -139,7 +139,7 @@ export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolar
                     transition={{
                       repeat: Infinity,
                       duration: 3.2,
-                      ease: 'easeInOut',
+                      ease: 'easeInOut' as const,
                     }}
                   />
                 );
@@ -166,7 +166,7 @@ export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolar
                     className="flex items-center gap-1.5 text-xs text-muted-foreground animate-in fade-in-0 duration-300"
                     initial={shouldReduceMotion ? {} : { opacity: 0, x: -6 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={shouldReduceMotion ? {} : { duration: 0.25, delay: idx * 0.03, ease: 'easeOut' }}
+                    transition={shouldReduceMotion ? {} : { duration: 0.25, delay: idx * 0.03, ease: 'easeOut' as const }}
                   >
                     <Icon className={`w-3 h-3`} style={{ color: 'currentColor' }} />
                     <span className="capitalize">{item.fuel}</span>
@@ -194,7 +194,7 @@ export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolar
                   className="flex items-center justify-between text-sm w-full"
                   initial={shouldReduceMotion ? {} : { opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={shouldReduceMotion ? {} : { duration: 0.3, delay: idx * 0.02, ease: 'easeOut' }}
+                  transition={shouldReduceMotion ? {} : { duration: 0.3, delay: idx * 0.02, ease: 'easeOut' as const }}
                 >
                   <div className="flex items-center gap-2">
                     <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 ${getFuelColor(item.fuel)}`}>

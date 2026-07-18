@@ -38,7 +38,7 @@ const containerVariants = {
 
 const itemVariants = {
     hidden: { opacity: 0, y: 15 },
-    show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 350, damping: 25 } }
+    show: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 350, damping: 25 } }
 };
 
 
@@ -129,7 +129,7 @@ export default function Settings() {
                         <motion.div 
                             whileHover={{ y: -2, scale: 1.01 }} 
                             whileTap={{ scale: 0.99 }}
-                            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                            transition={{ type: 'spring' as const, stiffness: 400, damping: 20 }}
                             className="flex items-center justify-between p-4 bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg hover:from-primary/15 hover:to-primary/10 transition-all"
                         >
                             <div className="flex items-center gap-3">
@@ -356,7 +356,7 @@ export default function Settings() {
                             <motion.div 
                                 whileHover={{ scale: 1.01, y: -2 }} 
                                 whileTap={{ scale: 0.99 }}
-                                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                                transition={{ type: 'spring' as const, stiffness: 400, damping: 20 }}
                                 className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-all"
                             >
                                 <div className="flex items-center gap-3">
@@ -451,7 +451,7 @@ export default function Settings() {
                             <motion.div 
                                 whileHover={{ scale: 1.01, y: -2 }} 
                                 whileTap={{ scale: 0.99 }}
-                                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                                transition={{ type: 'spring' as const, stiffness: 400, damping: 20 }}
                                 className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-all"
                             >
                                 <div className="flex items-center gap-3">
@@ -471,7 +471,7 @@ export default function Settings() {
                             <motion.div 
                                 whileHover={{ scale: 1.01, y: -2 }} 
                                 whileTap={{ scale: 0.99 }}
-                                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                                transition={{ type: 'spring' as const, stiffness: 400, damping: 20 }}
                                 className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-all"
                             >
                                 <div className="flex items-center gap-3">
@@ -491,7 +491,7 @@ export default function Settings() {
                             <motion.div 
                                 whileHover={{ scale: 1.01, y: -2 }} 
                                 whileTap={{ scale: 0.99 }}
-                                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                                transition={{ type: 'spring' as const, stiffness: 400, damping: 20 }}
                                 className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-all"
                             >
                                 <div className="flex items-center gap-3">
@@ -511,7 +511,7 @@ export default function Settings() {
                             <motion.div 
                                 whileHover={{ scale: 1.01, y: -2 }} 
                                 whileTap={{ scale: 0.99 }}
-                                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                                transition={{ type: 'spring' as const, stiffness: 400, damping: 20 }}
                                 className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-all"
                             >
                                 <div className="flex items-center gap-3">
@@ -541,7 +541,7 @@ export default function Settings() {
                             <motion.div 
                                 whileHover={{ scale: 1.01, y: -2 }} 
                                 whileTap={{ scale: 0.99 }}
-                                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                                transition={{ type: 'spring' as const, stiffness: 400, damping: 20 }}
                                 className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-all"
                             >
                                 <div className="flex items-center gap-3">
@@ -567,7 +567,7 @@ export default function Settings() {
                             <motion.div 
                                 whileHover={{ scale: 1.01, y: -2 }} 
                                 whileTap={{ scale: 0.99 }}
-                                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                                transition={{ type: 'spring' as const, stiffness: 400, damping: 20 }}
                                 className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-all"
                             >
                                 <div className="flex items-center gap-3">

@@ -48,7 +48,7 @@ export function ValleyMist({ cleanliness, timeOfDay, isNight }: ValleyMistProps)
           transition={{
             duration: 38,
             repeat: Infinity,
-            ease: 'easeInOut'
+            ease: 'easeInOut' as const
           }}
         >
           {/* Valley mist shapes */}

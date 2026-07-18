@@ -51,7 +51,7 @@ export function StateTransitionFX({ transition }: Props) {
                             className="absolute inset-0"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: [0, 0.55, 0] }}
-                            transition={{ duration: 1.8, ease: 'easeOut' }}
+                            transition={{ duration: 1.8, ease: 'easeOut' as const }}
                             style={{
                                 background:
                                     'radial-gradient(ellipse at 50% 60%, rgba(180,255,220,0.55), rgba(180,255,220,0) 65%)',
@@ -73,7 +73,7 @@ export function StateTransitionFX({ transition }: Props) {
                                 }}
                                 initial={{ y: 0, opacity: 0 }}
                                 animate={{ y: -180 - (i % 5) * 20, opacity: [0, 1, 0] }}
-                                transition={{ duration: 2.4, delay: i * 0.05, ease: 'easeOut' }}
+                                transition={{ duration: 2.4, delay: i * 0.05, ease: 'easeOut' as const }}
                             />
                         ))}
                     </>
@@ -84,7 +84,7 @@ export function StateTransitionFX({ transition }: Props) {
                             className="absolute inset-0"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: [0, 0.45, 0] }}
-                            transition={{ duration: 1.8, ease: 'easeOut' }}
+                            transition={{ duration: 1.8, ease: 'easeOut' as const }}
                             style={{
                                 background:
                                     'radial-gradient(ellipse at 50% 55%, rgba(0,0,0,0) 50%, rgba(120,30,10,0.85) 100%)',
@@ -105,7 +105,7 @@ export function StateTransitionFX({ transition }: Props) {
                                 }}
                                 initial={{ y: 0, opacity: 0, scale: 0.6 }}
                                 animate={{ y: -60 - i * 8, opacity: [0, 0.7, 0], scale: 1.4 }}
-                                transition={{ duration: 2.2, delay: i * 0.08, ease: 'easeOut' }}
+                                transition={{ duration: 2.2, delay: i * 0.08, ease: 'easeOut' as const }}
                             />
                         ))}
                     </>

@@ -75,7 +75,7 @@ export function SceneHotspots({ hotspots }: Props) {
                             <motion.span
                                 className="absolute inset-0 rounded-full border border-white/70"
                                 animate={{ scale: [1, 1.6, 1], opacity: [0.7, 0, 0.7] }}
-                                transition={{ duration: 2.4, repeat: Infinity, ease: 'easeOut' }}
+                                transition={{ duration: 2.4, repeat: Infinity, ease: 'easeOut' as const }}
                             />
                             {/* Inner dot */}
                             <span
@@ -93,7 +93,7 @@ export function SceneHotspots({ hotspots }: Props) {
                                     initial={{ opacity: 0, y: flipY ? 6 : -6, scale: 0.95 }}
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
                                     exit={{ opacity: 0, y: flipY ? 6 : -6, scale: 0.95 }}
-                                    transition={{ duration: 0.18, ease: 'easeOut' }}
+                                    transition={{ duration: 0.18, ease: 'easeOut' as const }}
                                     className="pointer-events-auto absolute w-[min(240px,60vw)] rounded-xl border border-white/15 bg-background/85 backdrop-blur-md shadow-2xl"
                                     style={{
                                         // Position bubble on the side that fits within the scene

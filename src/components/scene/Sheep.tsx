@@ -34,7 +34,7 @@ export function Sheep({ x, y, scale = 1, isNight, delay = 0 }: SheepProps) {
             <motion.div
                 animate={isJumping ? { y: -20, rotate: -10 } : { y: 0, rotate: 0 }}
                 whileHover={{ scale: 1.12 }}
-                transition={{ type: 'spring', stiffness: 300, damping: 15 }}
+                transition={{ type: 'spring' as const, stiffness: 300, damping: 15 }}
             >
                 <svg width="40" height="30" viewBox="0 0 40 30" overflow="visible">
                     {/* Internal Definitions */}
@@ -48,7 +48,7 @@ export function Sheep({ x, y, scale = 1, isNight, delay = 0 }: SheepProps) {
                     {/* Legs */}
                     <motion.g
                         animate={isJumping ? {} : { rotate: [0, 5, 0, -5, 0] }}
-                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: delay }}
+                        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' as const, delay: delay }}
                     >
                         <rect x="10" y="20" width="3" height="10" rx="1.5" fill="#1e293b" />
                         <rect x="25" y="20" width="3" height="10" rx="1.5" fill="#1e293b" />

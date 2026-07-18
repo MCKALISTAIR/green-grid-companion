@@ -19,7 +19,7 @@ export function NetZeroCelebration() {
                 transition={{
                     duration: 4,
                     repeat: Infinity,
-                    ease: 'easeInOut',
+                    ease: 'easeInOut' as const,
                 }}
             />
 
@@ -42,7 +42,7 @@ export function NetZeroCelebration() {
                         duration: 3 + Math.random() * 2,
                         delay: i * 0.2,
                         repeat: Infinity,
-                        ease: 'linear',
+                        ease: 'linear' as const,
                     }}
                 >
                     <svg width="12" height="12" viewBox="0 0 12 12">
@@ -64,7 +64,7 @@ export function NetZeroCelebration() {
                     duration: 2,
                     repeat: Infinity,
                     repeatDelay: 3,
-                    ease: 'easeOut',
+                    ease: 'easeOut' as const,
                 }}
             >
                 <div className="w-64 h-64 rounded-full bg-gradient-radial from-yellow-300/40 to-transparent" />
@@ -75,7 +75,7 @@ export function NetZeroCelebration() {
                 className="absolute top-8 inset-x-0 flex justify-center z-50"
                 initial={{ y: -50, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.8, ease: 'easeOut' }}
+                transition={{ duration: 0.8, ease: 'easeOut' as const }}
             >
                 <div className="bg-green-500 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">

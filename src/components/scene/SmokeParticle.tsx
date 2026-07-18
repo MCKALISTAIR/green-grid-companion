@@ -11,7 +11,7 @@ export function SmokeParticle({ delay, x }: { delay: number; x: number }) {
         duration: 3,
         delay,
         repeat: Infinity,
-        ease: 'easeOut',
+        ease: 'easeOut' as const,
       }}
     >
       <div className="w-6 h-6 rounded-full bg-secondary/40 blur-sm" />
