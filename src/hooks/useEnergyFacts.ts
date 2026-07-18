@@ -23,8 +23,7 @@ export function useEnergyFacts() {
     };
 
     const refreshFact = useCallback((context: FactContext) => {
-        const fact = getRandomFact(context, tone);
-        setCurrentFact(fact);
+        setCurrentFact(prev => getRandomFact(context, tone, prev?.id));
     }, [tone]);
 
     return {

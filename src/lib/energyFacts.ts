@@ -813,7 +813,11 @@ export const ENERGY_FACTS: EnergyFact[] = [
     // Note: coal_free_current fact will be added dynamically by useEnergyFacts hook
 ];
 
-export function getRandomFact(context: FactContext, tonePref: 'snarky' | 'friendly' | 'mixed' = 'mixed'): EnergyFact {
+export function getRandomFact(
+    context: FactContext,
+    tonePref: 'snarky' | 'friendly' | 'mixed' = 'mixed',
+    lastFactId?: string
+): EnergyFact {
     // 1. Filter by tone
     let eligible = [...ENERGY_FACTS];
     if (tonePref !== 'mixed') {
@@ -849,7 +853,15 @@ export function getRandomFact(context: FactContext, tonePref: 'snarky' | 'friend
         }
     }
 
-    // 3. Fallback if empty (shouldn't happen with general facts, but safety first)
+    // 3. Prevent duplicate consecutive selections
+    if (lastFactId && eligible.length > 1) {
+        const uniqueOptions = eligible.filter(f => f.id !== lastFactId);
+        if (uniqueOptions.length > 0) {
+            eligible = uniqueOptions;
+        }
+    }
+
+    // 4. Fallback if empty (shouldn't happen with general facts, but safety first)
     if (eligible.length === 0) {
         return {
             id: 'fallback',
@@ -859,6 +871,6 @@ export function getRandomFact(context: FactContext, tonePref: 'snarky' | 'friend
         };
     }
 
-    // 4. Random pick
+    // 5. Random pick
     return eligible[Math.floor(Math.random() * eligible.length)];
 }
