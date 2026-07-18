@@ -99,56 +99,70 @@ export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolar
           >
             {sortedMix.map((item, idx) => {
               const isSolar = item.fuel.toLowerCase() === 'solar';
-              const entranceDelay = `${idx * 35}ms`;
               const isDominant = !shouldReduceMotion && item.fuel === dominantFuel && item.perc > 10;
+              
               // For solar, show a sub-segment with a striped pattern for embedded/rooftop
               if (isSolar && embeddedSolarPerc !== null && embeddedSolarPerc > 0) {
                 const utilitySolarWidth = 100 - embeddedSolarPerc;
                 return (
-                  <div
+                  <motion.div
                     key={item.fuel}
-                    className="flex h-full transition-all duration-500"
-                    style={{ width: `${item.perc}%`, transitionDelay: entranceDelay }}
+                    layout
+                    initial={shouldReduceMotion ? { width: `${item.perc}%` } : { width: '0%' }}
+                    animate={{ width: `${item.perc}%` }}
+                    transition={shouldReduceMotion ? { duration: 0 } : {
+                      width: { type: 'spring', stiffness: 90, damping: 16, delay: idx * 0.03 },
+                      layout: { type: 'spring', stiffness: 120, damping: 20 }
+                    }}
+                    className="flex h-full"
                   >
                     {/* Utility-scale solar */}
-                    <div
+                    <motion.div
+                      layout
                       className={`${getFuelColor(item.fuel)} h-full`}
                       style={{ width: `${utilitySolarWidth}%` }}
                     />
                     {/* Embedded/rooftop solar - slightly lighter with pattern */}
-                    <div
+                    <motion.div
+                      layout
                       className="h-full bg-amber-300 dark:bg-amber-400/80"
                       style={{ width: `${embeddedSolarPerc}%` }}
                     />
-                  </div>
+                  </motion.div>
                 );
               }
+
               if (isDominant) {
                 return (
                   <motion.div
                     key={item.fuel}
-                    className={`${getFuelColor(item.fuel)} transition-colors duration-500`}
-                    style={{ transitionDelay: entranceDelay }}
-                    animate={{
-                      width: [
-                        `${item.perc - 0.4}%`,
-                        `${item.perc + 0.4}%`,
-                        `${item.perc - 0.4}%`,
-                      ],
+                    layout
+                    initial={shouldReduceMotion ? { width: `${item.perc}%` } : { width: '0%' }}
+                    animate={{ 
+                      width: `${item.perc}%`,
+                      opacity: [0.85, 1, 0.85]
                     }}
-                    transition={{
-                      repeat: Infinity,
-                      duration: 3.2,
-                      ease: 'easeInOut' as const,
+                    transition={shouldReduceMotion ? { duration: 0 } : {
+                      width: { type: 'spring', stiffness: 90, damping: 16, delay: idx * 0.03 },
+                      layout: { type: 'spring', stiffness: 120, damping: 20 },
+                      opacity: { repeat: Infinity, duration: 3, ease: 'easeInOut' }
                     }}
+                    className={`${getFuelColor(item.fuel)} h-full`}
                   />
                 );
               }
+
               return (
-                <div
+                <motion.div
                   key={item.fuel}
-                  className={`${getFuelColor(item.fuel)} transition-all duration-500`}
-                  style={{ width: `${item.perc}%`, transitionDelay: entranceDelay }}
+                  layout
+                  initial={shouldReduceMotion ? { width: `${item.perc}%` } : { width: '0%' }}
+                  animate={{ width: `${item.perc}%` }}
+                  transition={shouldReduceMotion ? { duration: 0 } : {
+                    width: { type: 'spring', stiffness: 90, damping: 16, delay: idx * 0.03 },
+                    layout: { type: 'spring', stiffness: 120, damping: 20 }
+                  }}
+                  className={`${getFuelColor(item.fuel)} h-full`}
                 />
               );
             })}
