@@ -29,7 +29,7 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
     const squishBounce = {
       initial: false as const,
       animate: shouldReduceMotion ? {} : { scaleY: [1, 0.65, 1.25, 1] },
-      transition: { duration: 0.35, ease: [0.34, 1.56, 0.64, 1] },
+      transition: { duration: 0.35, ease: [0.34, 1.56, 0.64, 1] } as Transition,
     };
 
     const handleHome = () => {
