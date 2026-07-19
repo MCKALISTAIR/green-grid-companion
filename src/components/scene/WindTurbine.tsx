@@ -1,19 +1,70 @@
-import { motion } from 'framer-motion';
-import { useId } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useId, useState, useEffect } from 'react';
 import { useHaptics } from '@/hooks/useHaptics';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
-export function WindTurbine({ scale = 1, speed = 4, onClick }: { scale?: number; speed?: number; onClick?: () => void }) {
+interface WindTurbineProps {
+  scale?: number;
+  speed?: number;
+  onClick?: () => void;
+}
+
+const TurbinePhrases = [
+  "Turbine go brrrr!",
+  "Spinning up a storm!",
+  "Generating clean electrons!",
+  "100% green energy!",
+  "Sensing a light breeze!",
+  "Harvesting the sky!"
+];
+
+export function WindTurbine({ scale = 1, speed = 4, onClick }: WindTurbineProps) {
   const id = useId();
   const { impactLight } = useHaptics();
+  const shouldReduceMotion = useReducedMotion();
+  
+  const [bubbleText, setBubbleText] = useState<string | null>(null);
+  const [showSparks, setShowSparks] = useState(false);
 
   const handleClick = () => {
     impactLight();
+    
+    // Pick random phrase
+    const randomPhrase = TurbinePhrases[Math.floor(Math.random() * TurbinePhrases.length)];
+    setBubbleText(randomPhrase);
+    
+    // Trigger sparks
+    if (!shouldReduceMotion) {
+      setShowSparks(true);
+      setTimeout(() => setShowSparks(false), 1500);
+    }
+
+    // Call parent handler (which triggers overdrive speed)
     onClick?.();
   };
 
+  // Auto-hide bubble
+  useEffect(() => {
+    if (!bubbleText) return;
+    const timer = setTimeout(() => {
+      setBubbleText(null);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [bubbleText]);
+
+  // Sparks configuration: 6 particles shooting outwards from the center hub (24, 20)
+  const sparkParticles = [
+    { x: -15, y: -15, delay: 0 },
+    { x: 15, y: -15, delay: 0.1 },
+    { x: -20, y: 5, delay: 0.05 },
+    { x: 20, y: 5, delay: 0.15 },
+    { x: -10, y: 25, delay: 0.2 },
+    { x: 10, y: 25, delay: 0.1 }
+  ];
+
   return (
     <motion.div
-      className="relative w-12 h-24 z-10 cursor-pointer active:scale-95 transition-transform"
+      className="relative w-12 h-24 z-10 cursor-pointer active:scale-95 transition-transform select-none"
       style={{ scale }}
       whileHover={{ scale: scale * 1.12 }}
       initial={{ opacity: 0, y: 20 }}
@@ -25,15 +76,29 @@ export function WindTurbine({ scale = 1, speed = 4, onClick }: { scale?: number;
       tabIndex={0}
       aria-label="Wind Turbine - Click to boost speed"
       onKeyDown={(e) => {
-        if (onClick && (e.key === 'Enter' || e.key === ' ')) {
+        if (e.key === 'Enter' || e.key === ' ') {
           handleClick();
         }
       }}
     >
-      {/*
-        Single-SVG turbine so the rotor pivot is in the SAME coordinate space as the tower.
-        This avoids CSS/SVG transform-origin edge cases that can make the blades appear to orbit.
-      */}
+      {/* Speech Bubble */}
+      <AnimatePresence>
+        {bubbleText && (
+          <motion.div
+            initial={!shouldReduceMotion ? { opacity: 0, scale: 0.8, y: 5 } : { opacity: 0 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={!shouldReduceMotion ? { opacity: 0, scale: 0.8 } : { opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+            className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900/95 dark:bg-slate-100/95 text-white dark:text-slate-900 border border-slate-700/30 text-[9px] font-bold py-1 px-2.5 rounded-full shadow-lg pointer-events-none whitespace-nowrap z-50"
+          >
+            {bubbleText}
+            {/* Small tail pointing down */}
+            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-900/95 dark:bg-slate-100/95 border-r border-b border-slate-700/30 rotate-45" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* SVG Turbine */}
       <svg
         className="absolute inset-0 w-full h-full overflow-visible"
         viewBox="0 0 48 96"
@@ -41,81 +106,60 @@ export function WindTurbine({ scale = 1, speed = 4, onClick }: { scale?: number;
       >
         {/* Gradient definitions for shading */}
         <defs>
-          {/* Tower gradient - darker at edges */}
           <linearGradient id={`${id}-towerGradient`} x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#e5e5e5" stopOpacity="0.8" />
             <stop offset="50%" stopColor="#ffffff" stopOpacity="0.95" />
             <stop offset="100%" stopColor="#e5e5e5" stopOpacity="0.9" />
           </linearGradient>
-
-          {/* Nacelle gradient - subtle 3D effect */}
           <linearGradient id={`${id}-nacelleGradient`} x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
             <stop offset="100%" stopColor="#f0f0f0" stopOpacity="0.9" />
           </linearGradient>
-
-          {/* Blade gradient - lighter towards tip */}
           <linearGradient id={`${id}-bladeGradient`} x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor="#ffffff" stopOpacity="0.95" />
             <stop offset="70%" stopColor="#ffffff" stopOpacity="0.9" />
             <stop offset="100%" stopColor="#f8f8f8" stopOpacity="0.8" />
           </linearGradient>
-
-          {/* Hub radial gradient for 3D sphere effect */}
           <radialGradient id={`${id}-hubGradient`} cx="35%" cy="35%" r="60%">
             <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
             <stop offset="100%" stopColor="#e0e0e0" stopOpacity="0.9" />
           </radialGradient>
-
-          {/* Shadow gradient for ground effect */}
           <radialGradient id={`${id}-towerShadow`} cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="hsl(var(--foreground))" stopOpacity="0.25" />
             <stop offset="100%" stopColor="hsl(var(--foreground))" stopOpacity="0" />
           </radialGradient>
         </defs>
 
-        {/* Ground shadow - ellipse at base of tower */}
-        <ellipse
-          cx="24"
-          cy="94"
-          rx="8"
-          ry="2"
-          fill={`url(#${id}-towerShadow)`}
-        />
+        {/* Ground shadow */}
+        <ellipse cx="24" cy="94" rx="8" ry="2" fill={`url(#${id}-towerShadow)`} />
 
-        {/* Tower - tapered slightly, with shading */}
-        <polygon
-          points="21.5,24 26.5,24 25,92 23,92"
-          fill={`url(#${id}-towerGradient)`}
-        />
-        {/* Tower highlight stripe */}
+        {/* Tower */}
+        <polygon points="21.5,24 26.5,24 25,92 23,92" fill={`url(#${id}-towerGradient)`} />
         <rect x="23.5" y="26" width="1" height="64" rx="0.5" className="fill-card/30" />
 
-        {/* Nacelle - larger, more realistic proportions */}
+        {/* Nacelle */}
         <rect x="18" y="17" width="12" height="6" rx="2" fill={`url(#${id}-nacelleGradient)`} />
-        {/* Nacelle detail line */}
         <rect x="19" y="19" width="10" height="1" rx="0.5" className="fill-card/20" />
 
-        {/* Warning light with glow */}
+        {/* Red warning light */}
         <motion.circle
           cx="24"
           cy="15"
           r="1.2"
           className="fill-destructive"
           animate={{ opacity: [0.4, 1, 0.4] }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' as const }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
         />
-        {/* Light glow effect */}
         <motion.circle
           cx="24"
           cy="15"
           r="2.5"
           className="fill-destructive/30"
           animate={{ opacity: [0.1, 0.4, 0.1], scale: [0.9, 1.1, 0.9] }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' as const }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
         />
 
-        {/* Rotor (native SVG rotation around hub at 24,20) */}
+        {/* Rotor with speed drive */}
         <g>
           <animateTransform
             attributeName="transform"
@@ -127,33 +171,43 @@ export function WindTurbine({ scale = 1, speed = 4, onClick }: { scale?: number;
             repeatCount="indefinite"
           />
 
-          {/* Three blades - more aerodynamic shape */}
+          {/* Three blades */}
           <g>
-            {/* Blade 1 - pointing up */}
-            {/* Blade 1 - pointing up (Elongated) */}
-            <path
-              d="M24,20 L22.5,18 L22,5 Q24,-5 26,5 L25.5,18 Z"
-              fill={`url(#${id}-bladeGradient)`}
-            />
-            {/* Blade 2 - 120° */}
-            <path
-              d="M24,20 L22.5,18 L22,5 Q24,-5 26,5 L25.5,18 Z"
-              fill={`url(#${id}-bladeGradient)`}
-              transform="rotate(120 24 20)"
-            />
-            {/* Blade 3 - 240° */}
-            <path
-              d="M24,20 L22.5,18 L22,5 Q24,-5 26,5 L25.5,18 Z"
-              fill={`url(#${id}-bladeGradient)`}
-              transform="rotate(240 24 20)"
-            />
+            <path d="M24,20 L22.5,18 L22,5 Q24,-5 26,5 L25.5,18 Z" fill={`url(#${id}-bladeGradient)`} />
+            <path d="M24,20 L22.5,18 L22,5 Q24,-5 26,5 L25.5,18 Z" fill={`url(#${id}-bladeGradient)`} transform="rotate(120 24 20)" />
+            <path d="M24,20 L22.5,18 L22,5 Q24,-5 26,5 L25.5,18 Z" fill={`url(#${id}-bladeGradient)`} transform="rotate(240 24 20)" />
           </g>
 
-          {/* Hub - larger with 3D shading */}
+          {/* Hub */}
           <circle cx="24" cy="20" r="4" fill={`url(#${id}-hubGradient)`} />
-          {/* Hub center detail */}
           <circle cx="24" cy="20" r="1.5" className="fill-card/50" />
         </g>
+
+        {/* Overdrive Sparkle Particle Overlay (native SVG rendering) */}
+        {showSparks && (
+          <g>
+            {sparkParticles.map((p, idx) => (
+              <motion.circle
+                key={idx}
+                cx={24}
+                cy={20}
+                r="1.5"
+                fill="#22c55e"
+                animate={{
+                  cx: [24, 24 + p.x],
+                  cy: [20, 20 + p.y],
+                  scale: [1, 1.5, 0],
+                  opacity: [1, 0.8, 0]
+                }}
+                transition={{
+                  duration: 0.8,
+                  delay: p.delay,
+                  ease: 'easeOut'
+                }}
+              />
+            ))}
+          </g>
+        )}
       </svg>
     </motion.div>
   );

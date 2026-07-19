@@ -1,6 +1,7 @@
-import { useState, useId } from 'react';
+import { useState, useId, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useHaptics } from '@/hooks/useHaptics';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface SheepProps {
     x: number;
@@ -10,31 +11,82 @@ interface SheepProps {
     delay?: number;
 }
 
+const SheepPhrases = [
+    "Ewe should wait until 9pm to wash clothes!",
+    "Feeling wool-y green today!",
+    "This pasture is powered by wind!",
+    "No coal in our grass, please!",
+    "Baa-rry clean energy!",
+    "I only eat zero-carbon clover!"
+];
+
 export function Sheep({ x, y, scale = 1, isNight, delay = 0 }: SheepProps) {
     const [isJumping, setIsJumping] = useState(false);
+    const [bubbleText, setBubbleText] = useState<string | null>(null);
+    const [clickCount, setClickCount] = useState(0);
     const id = useId();
     const { impactMedium } = useHaptics();
+    const shouldReduceMotion = useReducedMotion();
 
     const handleClick = () => {
         if (isJumping) return;
         setIsJumping(true);
         impactMedium(); // Haptic feedback!
+
+        // Pick random phrase
+        const randomPhrase = SheepPhrases[Math.floor(Math.random() * SheepPhrases.length)];
+        setBubbleText(randomPhrase);
+        setClickCount(prev => prev + 1);
+
         setTimeout(() => setIsJumping(false), 1000);
     };
 
+    // Auto-hide bubble
+    useEffect(() => {
+        if (!bubbleText) return;
+        const timer = setTimeout(() => {
+            setBubbleText(null);
+        }, 3000);
+        return () => clearTimeout(timer);
+    }, [bubbleText, clickCount]);
+
     return (
         <motion.div
-            className="absolute z-10 cursor-pointer pointer-events-auto"
+            className="absolute z-10 cursor-pointer pointer-events-auto select-none"
             style={{ left: `${x}%`, bottom: `${y}%`, transform: `scale(${scale})` }}
             onClick={handleClick}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay, duration: 1 }}
         >
+            {/* Speech Bubble */}
+            <AnimatePresence>
+                {bubbleText && (
+                    <motion.div
+                        initial={!shouldReduceMotion ? { opacity: 0, scale: 0.8, y: 5 } : { opacity: 0 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={!shouldReduceMotion ? { opacity: 0, scale: 0.8 } : { opacity: 0 }}
+                        transition={{ type: 'spring', stiffness: 350, damping: 15 }}
+                        className="absolute -top-12 left-1/2 -translate-x-1/2 bg-slate-900/90 dark:bg-slate-100/90 text-white dark:text-slate-900 border border-slate-700/30 text-[9px] font-bold py-1 px-2 rounded shadow-lg pointer-events-none whitespace-nowrap z-50"
+                    >
+                        {bubbleText}
+                        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-slate-900/90 dark:bg-slate-100/90 border-r border-b border-slate-700/30 rotate-45" />
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             <motion.div
-                animate={isJumping ? { y: -20, rotate: -10 } : { y: 0, rotate: 0 }}
+                animate={isJumping && !shouldReduceMotion ? { 
+                    y: [-10, -35, -5, 0], 
+                    rotate: [0, 180, 360] 
+                } : isJumping ? {
+                    y: [-10, -25, 0]
+                } : { 
+                    y: 0, 
+                    rotate: 0 
+                }}
                 whileHover={{ scale: 1.12 }}
-                transition={{ type: 'spring' as const, stiffness: 300, damping: 15 }}
+                transition={{ duration: 0.8, ease: "easeInOut" }}
             >
                 <svg width="40" height="30" viewBox="0 0 40 30" overflow="visible">
                     {/* Internal Definitions */}
@@ -103,7 +155,7 @@ export function Sheep({ x, y, scale = 1, isNight, delay = 0 }: SheepProps) {
                                 exit={{ opacity: 0 }}
                                 x="20" y="0"
                                 fontSize="14"
-                                fill="#fbbf24" // Amber
+                                fill="#22c55e" // Green
                                 fontWeight="bold"
                                 textAnchor="middle"
                             >

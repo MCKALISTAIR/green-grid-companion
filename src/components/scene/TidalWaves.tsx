@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useId } from 'react';
 
 interface TidalWavesProps {
     intensity?: number; // 0-1, how active the waves are
@@ -7,6 +8,7 @@ interface TidalWavesProps {
 export function TidalWaves({ intensity = 0.5 }: TidalWavesProps) {
     // Grounded at Y=140-150 (bottom corner, in front of front hill)  
     const baseY = 145;
+    const id = useId();
 
     return (
         <motion.g
@@ -19,7 +21,7 @@ export function TidalWaves({ intensity = 0.5 }: TidalWavesProps) {
             <g transform={`translate(320, ${baseY})`}>
                 {/* Water body */}
                 <defs>
-                    <linearGradient id="waterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <linearGradient id={`${id}-waterGrad`} x1="0%" y1="0%" x2="0%" y2="100%">
                         <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.6" />
                         <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.8" />
                     </linearGradient>
@@ -31,7 +33,7 @@ export function TidalWaves({ intensity = 0.5 }: TidalWavesProps) {
                     y="0"
                     width="80"
                     height="5"
-                    fill="url(#waterGrad)"
+                    fill={`url(#${id}-waterGrad)`}
                     rx="1"
                 />
 

@@ -7,11 +7,11 @@ import { useHaptics } from '@/hooks/useHaptics';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 // Playful press feedback: icon dips + tilts on active, springs back on release.
-// Uses group-active so the whole Button press drives the icon, not the icon itself.
 const iconTilt =
     'transition-transform duration-150 ease-out group-active:scale-90 group-active:-rotate-6 motion-reduce:transform-none';
 
-
+// Bouncy spring dynamics for sliding background pill
+const pillTransition = { type: 'spring' as const, stiffness: 450, damping: 25 };
 
 interface BottomNavProps {
     onHomeClick?: () => void;
@@ -43,7 +43,6 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
 
     return (
         <div id="bottom-nav" className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
-
             {/* Nav Bar */}
             <div className="pointer-events-auto pb-[env(safe-area-inset-bottom)] bg-background/80 backdrop-blur-lg border-t border-border/40">
                 <div className="grid grid-cols-5 h-16 max-w-md mx-auto px-1">
@@ -60,7 +59,7 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
                             <motion.div
                                 layoutId="bottom-nav-active-pill"
                                 className="absolute inset-1 rounded-lg bg-primary/15 -z-10"
-                                transition={{ type: 'spring' as const, stiffness: 380, damping: 30 }}
+                                transition={pillTransition}
                             />
                         )}
                         <motion.span key={isActive('/') ? 'active' : 'idle'} {...squishBounce}>
@@ -82,7 +81,7 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
                             <motion.div
                                 layoutId="bottom-nav-active-pill"
                                 className="absolute inset-1 rounded-lg bg-primary/15 -z-10"
-                                transition={{ type: 'spring' as const, stiffness: 380, damping: 30 }}
+                                transition={pillTransition}
                             />
                         )}
                         <motion.span key={isActive('/planner') ? 'active' : 'idle'} {...squishBounce}>
@@ -104,7 +103,7 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
                             <motion.div
                                 layoutId="bottom-nav-active-pill"
                                 className="absolute inset-1 rounded-lg bg-primary/15 -z-10"
-                                transition={{ type: 'spring' as const, stiffness: 380, damping: 30 }}
+                                transition={pillTransition}
                             />
                         )}
                         <motion.span key={isActive('/history') ? 'active' : 'idle'} {...squishBounce}>
@@ -126,7 +125,7 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
                             <motion.div
                                 layoutId="bottom-nav-active-pill"
                                 className="absolute inset-1 rounded-lg bg-primary/15 -z-10"
-                                transition={{ type: 'spring' as const, stiffness: 380, damping: 30 }}
+                                transition={pillTransition}
                             />
                         )}
                         <motion.span key={isActive('/map') ? 'active' : 'idle'} {...squishBounce}>
@@ -147,7 +146,7 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
                             <motion.div
                                 layoutId="bottom-nav-active-pill"
                                 className="absolute inset-1 rounded-lg bg-primary/15 -z-10"
-                                transition={{ type: 'spring' as const, stiffness: 380, damping: 30 }}
+                                transition={pillTransition}
                             />
                         )}
                         <motion.span key={isActive('/settings') ? 'active' : 'idle'} {...squishBounce}>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useId } from 'react';
 import { motion } from 'framer-motion';
 import { useHaptics } from '@/hooks/useHaptics';
 
@@ -53,62 +53,63 @@ function PineTree({ x, y, scale = 1, colorPrimary, colorShadow, isSnowing, isChr
     const randomOffset = useMemo(() => Math.random() * 0.5, []);
 
     return (
-        <motion.g
-            transform={`translate(${x}, ${y}) scale(${scale})`}
-            animate={{
-                rotate: [0, swayAmount, 0, -swayAmount, 0],
-            }}
-            transition={{
-                duration: swayDuration,
-                repeat: Infinity,
-                ease: 'easeInOut' as const,
-                delay: randomOffset,
-            }}
-            style={{ transformOrigin: 'center bottom' }}
-        >
-            {/* Trunk - slightly rounded base */}
-            <path d="M-2,-8 L2,-8 L2,10 Q0,11 -2,10 Z" fill="rgba(60, 40, 20, 0.85)" />
+        <g transform={`translate(${x}, ${y}) scale(${scale})`}>
+            <motion.g
+                animate={{
+                    rotate: [0, swayAmount, 0, -swayAmount, 0],
+                }}
+                transition={{
+                    duration: swayDuration,
+                    repeat: Infinity,
+                    ease: 'easeInOut' as const,
+                    delay: randomOffset,
+                }}
+                style={{ transformOrigin: 'center bottom' }}
+            >
+                {/* Trunk - slightly rounded base */}
+                <path d="M-2,-8 L2,-8 L2,10 Q0,11 -2,10 Z" fill="rgba(60, 40, 20, 0.85)" />
 
-            {/* Bottom Tier - fluffy */}
-            <path d="M0,-22 Q8,-18 14,-6 Q4,-8 0,-8" fill={seasonalColors.shadow} />
-            <path d="M0,-22 Q-8,-18 -14,-6 Q-4,-8 0,-8" fill={seasonalColors.primary} />
+                {/* Bottom Tier - fluffy */}
+                <path d="M0,-22 Q8,-18 14,-6 Q4,-8 0,-8" fill={seasonalColors.shadow} />
+                <path d="M0,-22 Q-8,-18 -14,-6 Q-4,-8 0,-8" fill={seasonalColors.primary} />
 
-            {/* Middle Tier - fluffy */}
-            <path d="M0,-36 Q6,-32 11,-16 Q4,-18 0,-18" fill={seasonalColors.shadow} />
-            <path d="M0,-36 Q-6,-32 -11,-16 Q-4,-18 0,-18" fill={seasonalColors.primary} />
+                {/* Middle Tier - fluffy */}
+                <path d="M0,-36 Q6,-32 11,-16 Q4,-18 0,-18" fill={seasonalColors.shadow} />
+                <path d="M0,-36 Q-6,-32 -11,-16 Q-4,-18 0,-18" fill={seasonalColors.primary} />
 
-            {/* Top Tier - fluffy */}
-            <path d="M0,-48 Q4,-42 8,-30 Q3,-32 0,-32" fill={seasonalColors.shadow} />
-            <path d="M0,-48 Q-4,-42 -8,-30 Q-3,-32 0,-32" fill={seasonalColors.primary} />
+                {/* Top Tier - fluffy */}
+                <path d="M0,-48 Q4,-42 8,-30 Q3,-32 0,-32" fill={seasonalColors.shadow} />
+                <path d="M0,-48 Q-4,-42 -8,-30 Q-3,-32 0,-32" fill={seasonalColors.primary} />
 
-            {/* Spring Blossoms 🌸 */}
-            {season === 'spring' && !isChristmas && (
-                <g>
-                    <circle cx="-8" cy="-15" r="1.2" fill="#fda4af" opacity="0.9" />
-                    <circle cx="6" cy="-22" r="1.2" fill="#fda4af" opacity="0.9" />
-                    <circle cx="-4" cy="-30" r="1.2" fill="#fda4af" opacity="0.9" />
-                    <circle cx="7" cy="-38" r="1.2" fill="#fda4af" opacity="0.9" />
-                </g>
-            )}
+                {/* Spring Blossoms 🌸 */}
+                {season === 'spring' && !isChristmas && (
+                    <g>
+                        <circle cx="-8" cy="-15" r="1.2" fill="#fda4af" opacity="0.9" />
+                        <circle cx="6" cy="-22" r="1.2" fill="#fda4af" opacity="0.9" />
+                        <circle cx="-4" cy="-30" r="1.2" fill="#fda4af" opacity="0.9" />
+                        <circle cx="7" cy="-38" r="1.2" fill="#fda4af" opacity="0.9" />
+                    </g>
+                )}
 
-            {/* Christmas Decorations 🎄 */}
-            {isChristmas && (
-                <g>
-                    {/* Baubles */}
-                    <circle cx="-6" cy="-12" r="1.5" fill="#ef4444" /> {/* Red */}
-                    <circle cx="5" cy="-18" r="1.5" fill="#fbbf24" /> {/* Gold */}
-                    <circle cx="0" cy="-28" r="1.5" fill="#3b82f6" /> {/* Blue */}
-                    <circle cx="-3" cy="-38" r="1.5" fill="#ef4444" /> {/* Red */}
-                    {/* Star on top */}
-                    <circle cx="0" cy="-50" r="2" fill="#fbbf24" filter="drop-shadow(0 0 2px #fcd34d)" />
-                </g>
-            )}
+                {/* Christmas Decorations 🎄 */}
+                {isChristmas && (
+                    <g>
+                        {/* Baubles */}
+                        <circle cx="-6" cy="-12" r="1.5" fill="#ef4444" /> {/* Red */}
+                        <circle cx="5" cy="-18" r="1.5" fill="#fbbf24" /> {/* Gold */}
+                        <circle cx="0" cy="-28" r="1.5" fill="#3b82f6" /> {/* Blue */}
+                        <circle cx="-3" cy="-38" r="1.5" fill="#ef4444" /> {/* Red */}
+                        {/* Star on top */}
+                        <circle cx="0" cy="-50" r="2" fill="#fbbf24" filter="drop-shadow(0 0 2px #fcd34d)" />
+                    </g>
+                )}
 
-            {/* Snow cap on top (if snowing) */}
-            {isSnowing && (
-                <path d="M0,-50 L4,-42 L-4,-42 Z" fill="#ffffff" opacity="0.9" />
-            )}
-        </motion.g>
+                {/* Snow cap on top (if snowing) */}
+                {isSnowing && (
+                    <path d="M0,-50 L4,-42 L-4,-42 Z" fill="#ffffff" opacity="0.9" />
+                )}
+            </motion.g>
+        </g>
     );
 }
 
@@ -245,6 +246,7 @@ function useLandscapePalette(cleanliness: number, isNight: boolean, synthwaveMod
 
 export function LandscapeBack(props: LandscapeProps) {
     const palette = useLandscapePalette(props.cleanliness, props.isNight, props.synthwaveMode, props.isSnowing, props.timeOfDay);
+    const id = useId();
 
     // Explicit tree placements on the new curve to stay grounded
     // Ridge samples: (40,84) (80,76) (150,81) (220,107) (290,116) (360,100)
@@ -262,14 +264,14 @@ export function LandscapeBack(props: LandscapeProps) {
     return (
         <>
             <defs>
-                <linearGradient id="gradBack" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id={`${id}-gradBack`} x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor={palette.backHillHighlight} />
                     <stop offset="100%" stopColor={palette.backHillShadow} />
                 </linearGradient>
             </defs>
             <HillLayer
                 d="M0,150 L0,100 Q100,50 200,100 Q300,140 400,80 L400,150 Z"
-                fill="url(#gradBack)"
+                fill={`url(#${id}-gradBack)`}
                 trees={backTrees}
                 treeColors={{ primary: palette.treePrimary, shadow: palette.treeShadow }}
                 delay={0}
@@ -284,6 +286,7 @@ export function LandscapeBack(props: LandscapeProps) {
 
 export function LandscapeMid(props: LandscapeProps) {
     const palette = useLandscapePalette(props.cleanliness, props.isNight, props.synthwaveMode, props.isSnowing, props.timeOfDay);
+    const id = useId();
 
     // Trees positioned so trunk base sits just into the mid hill ridge.
     // Ridge curve: M0,120 Q80,140 160,100 Q240,60 320,110 Q360,130 400,100
@@ -298,14 +301,14 @@ export function LandscapeMid(props: LandscapeProps) {
     return (
         <>
             <defs>
-                <linearGradient id="gradMid" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id={`${id}-gradMid`} x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor={palette.midHillHighlight} />
                     <stop offset="100%" stopColor={palette.midHillShadow} />
                 </linearGradient>
             </defs>
             <HillLayer
                 d="M0,150 L0,120 Q80,140 160,100 Q240,60 320,110 Q360,130 400,100 L400,150 Z"
-                fill="url(#gradMid)"
+                fill={`url(#${id}-gradMid)`}
                 trees={midTrees}
                 treeColors={{ primary: palette.treePrimary, shadow: palette.treeShadow }}
                 delay={0.2}
@@ -333,7 +336,7 @@ function Cottage({ x, y, scale = 1, isNight }: { x: number; y: number; scale?: n
   };
 
   return (
-    <motion.g
+    <g
       transform={`translate(${x}, ${y}) scale(${scale})`}
       className="cursor-pointer pointer-events-auto"
       onClick={handleClick}
@@ -417,12 +420,13 @@ function Cottage({ x, y, scale = 1, isNight }: { x: number; y: number; scale?: n
         <circle cx="2" cy="-1" r="3.5" fill="#15803d" />
         <circle cx="0" cy="1" r="3.2" fill="#14532d" />
       </g>
-    </motion.g>
+    </g>
   );
 }
 
 export function LandscapeFront(props: LandscapeProps) {
     const palette = useLandscapePalette(props.cleanliness, props.isNight, props.synthwaveMode, props.isSnowing, props.timeOfDay);
+    const id = useId();
 
     const frontTrees = [
         { x: 40, y: 130, scale: 1.2 },
@@ -433,14 +437,14 @@ export function LandscapeFront(props: LandscapeProps) {
     return (
         <>
             <defs>
-                <linearGradient id="gradFront" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id={`${id}-gradFront`} x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor={palette.frontHillHighlight} />
                     <stop offset="100%" stopColor={palette.frontHillShadow} />
                 </linearGradient>
             </defs>
             <HillLayer
                 d="M0,150 L0,135 Q120,100 200,135 Q280,180 400,120 L400,150 Z"
-                fill="url(#gradFront)"
+                fill={`url(#${id}-gradFront)`}
                 trees={frontTrees}
                 treeColors={{ primary: palette.treePrimary, shadow: palette.treeShadow }}
                 delay={0.4}

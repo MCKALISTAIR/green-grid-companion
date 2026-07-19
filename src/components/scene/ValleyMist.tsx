@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { useId } from 'react';
 
 interface ValleyMistProps {
   cleanliness: number;
@@ -9,6 +10,7 @@ interface ValleyMistProps {
 
 export function ValleyMist({ cleanliness, timeOfDay, isNight }: ValleyMistProps) {
   const reduced = useReducedMotion();
+  const id = useId();
 
   // Show mist in dawn, morning, sunset, or dusk. Keep midday and full night clear.
   const isVisible = timeOfDay === 'dawn' || timeOfDay === 'morning' || timeOfDay === 'sunset' || timeOfDay === 'dusk';
@@ -38,12 +40,12 @@ export function ValleyMist({ cleanliness, timeOfDay, isNight }: ValleyMistProps)
     >
       <svg viewBox="0 20 400 60" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
         <defs>
-          <filter id="mistBlur">
+          <filter id={`${id}-mistBlur`}>
             <feGaussianBlur stdDeviation="3.5" />
           </filter>
         </defs>
         <motion.g
-          filter="url(#mistBlur)"
+          filter={`url(#${id}-mistBlur)`}
           animate={mistAnimate}
           transition={{
             duration: 38,

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useId } from 'react';
 import { motion } from 'framer-motion';
 
 export type TimeOfDayCityLandscape = 'night' | 'dawn' | 'morning' | 'midday' | 'afternoon' | 'sunset' | 'dusk';
@@ -462,6 +462,7 @@ function CityRoad({ fill, skipIntro }: { fill: string; skipIntro?: boolean }) {
 // Far skyline (background buildings)
 export function CityLandscapeBack(props: CityLandscapeProps) {
   const palette = useCityPalette(props.cleanliness, props.isNight, props.synthwaveMode, props.isSnowing, props.timeOfDay);
+  const id = useId();
 
   const buildings = useMemo(() => [
     { x: 0, width: 22, height: 55 },
@@ -485,7 +486,7 @@ export function CityLandscapeBack(props: CityLandscapeProps) {
   return (
     <g opacity={0.5}>
       <defs>
-        <linearGradient id="gradCityFar" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={`${id}-gradCityFar`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={palette.skylineFarHighlight} />
           <stop offset="100%" stopColor={palette.skylineFarShadow} />
         </linearGradient>
@@ -494,7 +495,7 @@ export function CityLandscapeBack(props: CityLandscapeProps) {
         <Building
           key={i}
           {...b}
-          fill="url(#gradCityFar)"
+          fill={`url(#${id}-gradCityFar)`}
           windowLit={palette.windowLit}
           windowDark={palette.windowDark}
           isNight={props.isNight}
@@ -504,9 +505,9 @@ export function CityLandscapeBack(props: CityLandscapeProps) {
         />
       ))}
       {/* Landmark: Church spire in far background */}
-      <ChurchSpire x={155} height={85} fill="url(#gradCityFar)" isNight={props.isNight} delay={0.1} skipIntro={props.skipIntro} />
+      <ChurchSpire x={155} height={85} fill={`url(#${id}-gradCityFar)`} isNight={props.isNight} delay={0.1} skipIntro={props.skipIntro} />
       {/* Landmark: Glass tower silhouette */}
-      <GlassTower x={85} width={14} height={100} fill="url(#gradCityFar)" windowLit={palette.windowLit} isNight={props.isNight} cleanliness={props.cleanliness} delay={0.12} skipIntro={props.skipIntro} />
+      <GlassTower x={85} width={14} height={100} fill={`url(#${id}-gradCityFar)`} windowLit={palette.windowLit} isNight={props.isNight} cleanliness={props.cleanliness} delay={0.12} skipIntro={props.skipIntro} />
       {/* Snow layer */}
       {props.isSnowing && (
         <rect x={0} y={133} width={400} height={17} fill="white" fillOpacity={0.15} />
@@ -518,6 +519,7 @@ export function CityLandscapeBack(props: CityLandscapeProps) {
 // Mid skyline
 export function CityLandscapeMid(props: CityLandscapeProps) {
   const palette = useCityPalette(props.cleanliness, props.isNight, props.synthwaveMode, props.isSnowing, props.timeOfDay);
+  const id = useId();
 
   const buildings = useMemo(() => [
     { x: 10, width: 30, height: 65 },
@@ -537,7 +539,7 @@ export function CityLandscapeMid(props: CityLandscapeProps) {
   return (
     <g opacity={0.75}>
       <defs>
-        <linearGradient id="gradCityMid" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={`${id}-gradCityMid`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={palette.skylineMidHighlight} />
           <stop offset="100%" stopColor={palette.skylineMidShadow} />
         </linearGradient>
@@ -546,7 +548,7 @@ export function CityLandscapeMid(props: CityLandscapeProps) {
         <Building
           key={i}
           {...b}
-          fill="url(#gradCityMid)"
+          fill={`url(#${id}-gradCityMid)`}
           windowLit={palette.windowLit}
           windowDark={palette.windowDark}
           isNight={props.isNight}
@@ -556,9 +558,9 @@ export function CityLandscapeMid(props: CityLandscapeProps) {
         />
       ))}
       {/* Landmark: Dome building (museum) */}
-      <DomeBuilding x={160} width={36} height={70} fill="url(#gradCityMid)" isNight={props.isNight} delay={0.25} skipIntro={props.skipIntro} />
+      <DomeBuilding x={160} width={36} height={70} fill={`url(#${id}-gradCityMid)`} isNight={props.isNight} delay={0.25} skipIntro={props.skipIntro} />
       {/* Landmark: Clock tower */}
-      <ClockTower x={300} height={82} fill="url(#gradCityMid)" isNight={props.isNight} delay={0.28} skipIntro={props.skipIntro} />
+      <ClockTower x={300} height={82} fill={`url(#${id}-gradCityMid)`} isNight={props.isNight} delay={0.28} skipIntro={props.skipIntro} />
     </g>
   );
 }
@@ -566,6 +568,7 @@ export function CityLandscapeMid(props: CityLandscapeProps) {
 // Near skyline (foreground buildings)
 export function CityLandscapeFront(props: CityLandscapeProps) {
   const palette = useCityPalette(props.cleanliness, props.isNight, props.synthwaveMode, props.isSnowing, props.timeOfDay);
+  const id = useId();
 
   const buildings = useMemo(() => [
     { x: 0, width: 40, height: 45 },
@@ -582,24 +585,24 @@ export function CityLandscapeFront(props: CityLandscapeProps) {
     <>
       {/* Clip definition to stop buildings at sidewalk */}
       <defs>
-        <clipPath id="foreground-building-clip">
+        <clipPath id={`${id}-foreground-building-clip`}>
           <rect x={0} y={0} width={400} height={133} />
         </clipPath>
-        <linearGradient id="gradCityNear" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={`${id}-gradCityNear`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={palette.skylineNearHighlight} />
           <stop offset="100%" stopColor={palette.skylineNearShadow} />
         </linearGradient>
       </defs>
 
       {/* Buildings clipped above road */}
-      <g clipPath="url(#foreground-building-clip)">
+      <g clipPath={`url(#${id}-foreground-building-clip)`}>
         {buildings.map((b, i) => (
           <Building
             key={i}
             x={b.x}
             width={b.width}
             height={b.height}
-            fill="url(#gradCityNear)"
+            fill={`url(#${id}-gradCityNear)`}
             windowLit={palette.windowLit}
             windowDark={palette.windowDark}
             isNight={props.isNight}
@@ -609,9 +612,9 @@ export function CityLandscapeFront(props: CityLandscapeProps) {
           />
         ))}
         {/* Landmark: Art Deco building in foreground */}
-        <ArtDecoBuilding x={92} width={32} height={52} fill="url(#gradCityNear)" windowLit={palette.windowLit} windowDark={palette.windowDark} isNight={props.isNight} cleanliness={props.cleanliness} delay={0.45} skipIntro={props.skipIntro} />
+        <ArtDecoBuilding x={92} width={32} height={52} fill={`url(#${id}-gradCityNear)`} windowLit={palette.windowLit} windowDark={palette.windowDark} isNight={props.isNight} cleanliness={props.cleanliness} delay={0.45} skipIntro={props.skipIntro} />
         {/* Landmark: Glass tower (Shard-like) prominent in foreground */}
-        <GlassTower x={195} width={22} height={65} fill="url(#gradCityNear)" windowLit={palette.windowLit} isNight={props.isNight} cleanliness={props.cleanliness} delay={0.48} skipIntro={props.skipIntro} />
+        <GlassTower x={195} width={22} height={65} fill={`url(#${id}-gradCityNear)`} windowLit={palette.windowLit} isNight={props.isNight} cleanliness={props.cleanliness} delay={0.48} skipIntro={props.skipIntro} />
       </g>
 
       {/* Road rendered on top */}

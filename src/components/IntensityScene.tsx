@@ -157,6 +157,7 @@ export function IntensityScene({
   }, [weatherOverride, isDirectorMode, overrides.weather, realWeather]);
 
   const [synthwaveMode, setSynthwaveMode] = useState(false);
+  const [sunGlassesActive, setSunGlassesActive] = useState(false);
 
   // Apply Intensity Override
   const intensity = (isDirectorMode && overrides.intensity !== undefined) ? overrides.intensity : propIntensity;
@@ -311,6 +312,13 @@ export function IntensityScene({
     notification(NotificationType.Success);
     setShowMeteorShower(true);
     setTimeout(() => setShowMeteorShower(false), 8000);
+  };
+
+  const handleSunDoubleClick = () => {
+    if (shouldReduceMotion) return;
+    notification(NotificationType.Success);
+    setSunGlassesActive(true);
+    setTimeout(() => setSunGlassesActive(false), 4000);
   };
 
   const biomassPercentage = getGenerationPercentage('biomass');
@@ -477,11 +485,12 @@ export function IntensityScene({
                 className="cursor-pointer relative select-none"
                 role="button"
                 tabIndex={0}
-                aria-label={`Toggle synthwave mode ${synthwaveMode ? 'off' : 'on'}`}
+                aria-label={`Toggle synthwave mode ${synthwaveMode ? 'off' : 'on'}. Double click for cool sunglasses.`}
                 onClick={() => {
                   impactMedium();
                   setSynthwaveMode(!synthwaveMode);
                 }}
+                onDoubleClick={handleSunDoubleClick}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     impactMedium();
@@ -520,6 +529,30 @@ export function IntensityScene({
                     aria-hidden="true"
                   />
                 </motion.div>
+
+                {/* Sunglasses Overlay */}
+                <AnimatePresence>
+                  {sunGlassesActive && (
+                    <motion.div
+                      className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none"
+                      initial={{ scale: 0, rotate: -45, opacity: 0 }}
+                      animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                      exit={{ scale: 0, rotate: 45, opacity: 0 }}
+                      transition={{ type: 'spring', stiffness: 350, damping: 15 }}
+                    >
+                      <svg width="40" height="15" viewBox="0 0 40 15" fill="none" className="drop-shadow-md">
+                        {/* Left Lens */}
+                        <rect x="3" y="3" width="12" height="9" rx="2" fill="#0f172a" stroke="#ffffff" strokeWidth="1.2" />
+                        <path d="M5 5H11" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" />
+                        {/* Right Lens */}
+                        <rect x="25" y="3" width="12" height="9" rx="2" fill="#0f172a" stroke="#ffffff" strokeWidth="1.2" />
+                        <path d="M27 5H33" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" />
+                        {/* Bridge */}
+                        <rect x="15" y="5" width="10" height="2" fill="#0f172a" stroke="#ffffff" strokeWidth="0.5" />
+                      </svg>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             </motion.div>
           )}

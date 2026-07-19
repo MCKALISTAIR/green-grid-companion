@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useId } from 'react';
 import { motion } from 'framer-motion';
 import { useHaptics } from '@/hooks/useHaptics';
 
@@ -262,16 +262,17 @@ function HarbourWall({ skipIntro }: { skipIntro?: boolean }) {
 // Background layer: distant sea + horizon
 export function CoastalLandscapeBack(props: CoastalLandscapeProps) {
   const palette = useCoastalPalette(props.cleanliness, props.isNight, props.synthwaveMode, props.isSnowing, props.timeOfDay);
+  const id = useId();
 
   return (
     <g>
       <defs>
-        <linearGradient id="gradSea" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={`${id}-gradSea`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={palette.seaHighlight} />
           <stop offset="100%" stopColor={palette.seaShadow} />
         </linearGradient>
       </defs>
-      <OceanWaves sea="url(#gradSea)" seaHighlight={palette.seaHighlight} foam={palette.foam} skipIntro={props.skipIntro} />
+      <OceanWaves sea={`url(#${id}-gradSea)`} seaHighlight={palette.seaHighlight} foam={palette.foam} skipIntro={props.skipIntro} />
     </g>
   );
 }
@@ -279,16 +280,17 @@ export function CoastalLandscapeBack(props: CoastalLandscapeProps) {
 // Mid layer: cliffs + lighthouse
 export function CoastalLandscapeMid(props: CoastalLandscapeProps) {
   const palette = useCoastalPalette(props.cleanliness, props.isNight, props.synthwaveMode, props.isSnowing, props.timeOfDay);
+  const id = useId();
 
   return (
     <g>
       <defs>
-        <linearGradient id="gradCliff" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={`${id}-gradCliff`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={palette.cliffHighlight} />
           <stop offset="100%" stopColor={palette.cliffShadow} />
         </linearGradient>
       </defs>
-      <Cliff side="left" fill="url(#gradCliff)" highlight={palette.cliffHighlight} skipIntro={props.skipIntro} />
+      <Cliff side="left" fill={`url(#${id}-gradCliff)`} highlight={palette.cliffHighlight} skipIntro={props.skipIntro} />
       <Lighthouse x={35} isNight={props.isNight} fill={palette.lighthouse} skipIntro={props.skipIntro} />
     </g>
   );
@@ -297,16 +299,17 @@ export function CoastalLandscapeMid(props: CoastalLandscapeProps) {
 // Front layer: beach + harbour
 export function CoastalLandscapeFront(props: CoastalLandscapeProps) {
   const palette = useCoastalPalette(props.cleanliness, props.isNight, props.synthwaveMode, props.isSnowing, props.timeOfDay);
+  const id = useId();
 
   return (
     <g>
       <defs>
-        <linearGradient id="gradCliff" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={`${id}-gradCliff`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={palette.cliffHighlight} />
           <stop offset="100%" stopColor={palette.cliffShadow} />
         </linearGradient>
       </defs>
-      <Cliff side="right" fill="url(#gradCliff)" highlight={palette.cliffHighlight} skipIntro={props.skipIntro} />
+      <Cliff side="right" fill={`url(#${id}-gradCliff)`} highlight={palette.cliffHighlight} skipIntro={props.skipIntro} />
       <Beach sand={palette.sand} skipIntro={props.skipIntro} />
       <HarbourWall skipIntro={props.skipIntro} />
     </g>

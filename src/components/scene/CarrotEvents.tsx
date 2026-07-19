@@ -1,22 +1,76 @@
-import { motion } from 'framer-motion';
-import { Rocket, Train, Plane } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useHaptics } from '@/hooks/useHaptics';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { useState } from 'react';
 
-// 🛸 UFO Component
+// 🛸 UFO Component with click-to-abduct-sheep easter egg
 export function UFO({ onComplete }: { onComplete: () => void }) {
+    const { impactMedium } = useHaptics();
+    const shouldReduceMotion = useReducedMotion();
+    const [isAbducting, setIsAbducting] = useState(false);
+    const [bubbleText, setBubbleText] = useState<string | null>(null);
+
+    const handleUfoClick = () => {
+        if (isAbducting) return;
+        impactMedium();
+        
+        setIsAbducting(true);
+        setBubbleText("Abducting sheep...");
+
+        setTimeout(() => {
+            setBubbleText("Specimen acquired!");
+        }, 1500);
+
+        setTimeout(() => {
+            setBubbleText(null);
+            setIsAbducting(false);
+        }, 3000);
+    };
+
     return (
         <motion.div
-            className="absolute top-[15%] z-20 pointer-events-none"
+            className="absolute top-[15%] z-20 pointer-events-auto cursor-pointer select-none"
             initial={{ x: '-10%', rotate: 10, opacity: 0 }}
-            animate={{
+            animate={isAbducting ? {
+                // Hover stationary while abducting
+                x: '50%',
+                y: 10,
+                rotate: [0, -5, 5, -5, 0],
+                opacity: 1
+            } : {
                 x: ['-10%', '110%'],
                 y: [0, 20, -10, 30, 0], // Bobbing movement
                 rotate: [10, -5, 5, -10],
                 opacity: [0, 1, 1, 0]
             }}
-            transition={{ duration: 8, ease: 'linear' as const }}
-            onAnimationComplete={onComplete}
+            transition={isAbducting ? {
+                rotate: { duration: 3, repeat: Infinity, ease: 'easeInOut' },
+                opacity: { duration: 0.5 },
+                x: { type: 'spring', stiffness: 80, damping: 15 }
+            } : {
+                duration: 9,
+                ease: 'linear' as const
+            }}
+            onAnimationComplete={() => {
+                if (!isAbducting) onComplete();
+            }}
+            onClick={handleUfoClick}
         >
             <div className="relative group">
+                {/* Speech bubble above UFO */}
+                <AnimatePresence>
+                    {bubbleText && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.8, y: -5 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            className="absolute -top-10 left-1/2 -translate-x-1/2 bg-cyan-900/90 text-cyan-100 border border-cyan-500/30 text-[9px] font-bold py-0.5 px-2 rounded-full shadow-md pointer-events-none whitespace-nowrap z-50"
+                        >
+                            {bubbleText}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
                 {/* Saucer Dome */}
                 <div className="w-8 h-4 bg-cyan-200/80 rounded-t-full mx-auto border-2 border-cyan-400/50 backdrop-blur-sm" />
                 {/* Saucer Body */}
@@ -31,14 +85,56 @@ export function UFO({ onComplete }: { onComplete: () => void }) {
                     ))}
                 </div>
 
-                {/* Tractor Beam (Optional visual) */}
+                {/* Tractor Beam */}
                 <motion.div
-                    className="absolute top-8 left-1/2 -translate-x-1/2 w-8 h-32 bg-gradient-to-b from-cyan-400/30 to-transparent clip-path-beam"
-                    style={{ clipPath: 'polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%)' }}
+                    className="absolute top-4 left-1/2 -translate-x-1/2 w-12 bg-gradient-to-b from-cyan-400/40 to-transparent pointer-events-none"
+                    style={{ clipPath: 'polygon(15% 0%, 85% 0%, 100% 100%, 0% 100%)' }}
                     initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: [0, 0.6, 0], height: [0, 60, 0] }}
-                    transition={{ duration: 2, delay: 3, repeat: 0 }}
+                    animate={isAbducting ? {
+                        opacity: [0, 0.8, 0.7, 0.8],
+                        height: 120
+                    } : {
+                        opacity: [0, 0.4, 0],
+                        height: [0, 45, 0]
+                    }}
+                    transition={isAbducting ? {
+                        opacity: { duration: 0.2, repeat: Infinity, repeatType: 'reverse' },
+                        height: { duration: 0.3 }
+                    } : {
+                        duration: 3,
+                        delay: 3,
+                        repeat: 0
+                    }}
                 />
+
+                {/* Abducted Sheep Floating Up */}
+                <AnimatePresence>
+                    {isAbducting && (
+                        <motion.g
+                            className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
+                            initial={{ y: 110, scale: 0.8, opacity: 0, rotate: 0 }}
+                            animate={{
+                                y: 8,
+                                scale: [0.8, 1, 0.2],
+                                opacity: [0, 1, 1, 0],
+                                rotate: [0, 90, 360]
+                            }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 2.2, ease: 'easeInOut' }}
+                        >
+                            {/* Tiny Vector Sheep Silhouette */}
+                            <svg width="24" height="18" viewBox="0 0 40 30" fill="none" className="absolute left-1/2 -translate-x-1/2">
+                                <circle cx="20" cy="12" r="8" fill="#e2e8f0" />
+                                <circle cx="26" cy="12" r="5" fill="#e2e8f0" />
+                                <circle cx="14" cy="12" r="5" fill="#e2e8f0" />
+                                <circle cx="20" cy="6" r="5" fill="#e2e8f0" />
+                                <ellipse cx="32" cy="8" rx="4" ry="5" fill="#1e293b" />
+                                <rect x="12" y="18" width="2" height="6" fill="#1e293b" />
+                                <rect x="26" y="18" width="2" height="6" fill="#1e293b" />
+                            </svg>
+                        </motion.g>
+                    )}
+                </AnimatePresence>
             </div>
         </motion.div>
     );

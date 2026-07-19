@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion';
+import { useId } from 'react';
 
 export function Rainbow() {
+    const id = useId();
     // Grounded at Y=40 (sky layer) - arcs across scene
 
     return (
@@ -19,7 +21,7 @@ export function Rainbow() {
             >
                 <defs>
                     {/* Rainbow gradient with proper colors */}
-                    <linearGradient id="rainbowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <linearGradient id={`${id}-rainbowGrad`} x1="0%" y1="0%" x2="100%" y2="0%">
                         <stop offset="0%" stopColor="#ef4444" stopOpacity="0.7" /> {/* Red */}
                         <stop offset="16.6%" stopColor="#f97316" stopOpacity="0.7" /> {/* Orange */}
                         <stop offset="33.3%" stopColor="#fbbf24" stopOpacity="0.7" /> {/* Yellow */}
@@ -39,7 +41,7 @@ export function Rainbow() {
                         <motion.path
                             key={i}
                             d={arcPath}
-                            stroke="url(#rainbowGrad)"
+                            stroke={`url(#${id}-rainbowGrad)`}
                             strokeWidth="6"
                             fill="none"
                             opacity={0.6 - i * 0.05}

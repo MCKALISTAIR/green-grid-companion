@@ -1,4 +1,7 @@
 import { motion } from 'framer-motion';
+import { useState, useId } from 'react';
+import { useHaptics } from '@/hooks/useHaptics';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface NuclearCoolingTowerProps {
     x: number; // X position (0-400 in SVG viewBox)
@@ -6,9 +9,36 @@ interface NuclearCoolingTowerProps {
     isNight?: boolean;
 }
 
+interface BurstSteam {
+    id: number;
+    delay: number;
+}
+
 export function NuclearCoolingTower({ x, steamIntensity = 0.7, isNight }: NuclearCoolingTowerProps) {
+    const id = useId();
+    const { impactLight } = useHaptics();
+    const shouldReduceMotion = useReducedMotion();
+    
+    const [bursts, setBursts] = useState<BurstSteam[]>([]);
     // Grounded at Y=110 (midground layer)
     const baseY = 110;
+
+    const handleClick = () => {
+        impactLight();
+
+        if (!shouldReduceMotion) {
+            const newBursts = Array.from({ length: 3 }).map((_, idx) => ({
+                id: Date.now() + idx,
+                delay: idx * 0.15
+            }));
+            setBursts(prev => [...prev, ...newBursts]);
+            
+            // Clean up bursts
+            setTimeout(() => {
+                setBursts(prev => prev.filter(b => !newBursts.find(nb => nb.id === b.id)));
+            }, 3000);
+        }
+    };
 
     return (
         <motion.g
@@ -16,6 +46,16 @@ export function NuclearCoolingTower({ x, steamIntensity = 0.7, isNight }: Nuclea
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.8 }}
+            className="cursor-pointer pointer-events-auto select-none"
+            onClick={handleClick}
+            role="button"
+            tabIndex={0}
+            aria-label="Nuclear Cooling Tower - Click to release steam"
+            onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    handleClick();
+                }
+            }}
         >
             {/* Hyperboloid cooling tower structure */}
             <g transform={`translate(${x}, ${baseY})`}>
@@ -33,6 +73,13 @@ export function NuclearCoolingTower({ x, steamIntensity = 0.7, isNight }: Nuclea
                         <stop offset="50%" stopColor="#a5b4fc" stopOpacity={steamIntensity * 0.4} />
                         <stop offset="100%" stopColor="#e0e7ff" stopOpacity="0" />
                     </linearGradient>
+
+                    {/* Steam Burst gradient (richer purple-pink glow) */}
+                    <linearGradient id={`burstGrad${x}`} x1="0%" y1="100%" x2="0%" y2="0%">
+                        <stop offset="0%" stopColor="#d8b4fe" stopOpacity="0.85" />
+                        <stop offset="60%" stopColor="#c084fc" stopOpacity="0.5" />
+                        <stop offset="100%" stopColor="#f3e8ff" stopOpacity="0" />
+                    </linearGradient>
                 </defs>
 
                 {/* Base shadow */}
@@ -44,7 +91,7 @@ export function NuclearCoolingTower({ x, steamIntensity = 0.7, isNight }: Nuclea
                     fill="rgba(0,0,0,0.2)"
                 />
 
-                {/* Tower structure - hyperboloid (wider at top and bottom, narrower in middle) */}
+                {/* Tower structure */}
                 <path
                     d="M-10,0 Q-6,-15 -8,-30 L8,-30 Q6,-15 10,0 Z"
                     fill={`url(#towerGrad${x})`}
@@ -52,7 +99,7 @@ export function NuclearCoolingTower({ x, steamIntensity = 0.7, isNight }: Nuclea
                     strokeWidth="0.5"
                 />
 
-                {/* Concrete base/foundation to ground the tower */}
+                {/* Concrete base/foundation */}
                 <rect
                     x="-11"
                     y="0"
@@ -63,11 +110,11 @@ export function NuclearCoolingTower({ x, steamIntensity = 0.7, isNight }: Nuclea
                     strokeWidth="0.5"
                 />
 
-                {/* Horizontal bands for detail */}
+                {/* Horizontal bands */}
                 <line x1="-9" y1="-8" x2="9" y2="-8" stroke="#94a3b8" strokeWidth="0.5" opacity="0.3" />
                 <line x1="-7" y1="-18" x2="7" y2="-18" stroke="#94a3b8" strokeWidth="0.5" opacity="0.3" />
 
-                {/* Nuclear glow at base (subtle blue-purple) */}
+                {/* Nuclear glow at base */}
                 {isNight && (
                     <motion.ellipse
                         cx="0"
@@ -77,11 +124,11 @@ export function NuclearCoolingTower({ x, steamIntensity = 0.7, isNight }: Nuclea
                         fill="#818cf8"
                         opacity="0.3"
                         animate={{ opacity: [0.2, 0.4, 0.2] }}
-                        transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' as const }}
+                        transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
                     />
                 )}
 
-                {/* Rising steam particles */}
+                {/* Rising standard steam particles */}
                 {[...Array(4)].map((_, i) => (
                     <motion.circle
                         key={i}
@@ -99,7 +146,29 @@ export function NuclearCoolingTower({ x, steamIntensity = 0.7, isNight }: Nuclea
                             duration: 3 + i * 0.5,
                             delay: i * 0.7,
                             repeat: Infinity,
-                            ease: 'easeOut' as const,
+                            ease: 'easeOut',
+                        }}
+                    />
+                ))}
+
+                {/* Click-triggered steam burst clouds */}
+                {bursts.map((b) => (
+                    <motion.circle
+                        key={b.id}
+                        cx={Math.random() * 8 - 4}
+                        cy={-30}
+                        r={5}
+                        fill={`url(#burstGrad${x})`}
+                        initial={{ y: 0, opacity: 0.9, scale: 0.8 }}
+                        animate={{
+                            y: [-8, -60],
+                            opacity: [0.9, 0],
+                            scale: [0.8, 3.5]
+                        }}
+                        transition={{
+                            duration: 2.2,
+                            delay: b.delay,
+                            ease: 'easeOut'
                         }}
                     />
                 ))}

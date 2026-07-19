@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
-import { useMemo } from 'react';
+import { useMemo, useId } from 'react';
 
 export function MeteorShower() {
+    const id = useId();
     // Grounded at Y=10-80 (sky layer)
     // Diagonal streaks from top to mid-sky
 
@@ -38,7 +39,7 @@ export function MeteorShower() {
             <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 200" preserveAspectRatio="none">
                 <defs>
                     {/* Meteor gradient - white to transparent */}
-                    <linearGradient id="meteorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <linearGradient id={`${id}-meteorGrad`} x1="0%" y1="0%" x2="100%" y2="100%">
                         <stop offset="0%" stopColor="white" stopOpacity="0" />
                         <stop offset="30%" stopColor="white" stopOpacity="0.9" />
                         <stop offset="100%" stopColor="#fbbf24" stopOpacity="0.3" />
@@ -55,7 +56,7 @@ export function MeteorShower() {
                         {/* Meteor trail */}
                         <motion.path
                             d={trailPath}
-                            stroke="url(#meteorGrad)"
+                            stroke={`url(#${id}-meteorGrad)`}
                             strokeWidth={meteor.strokeWidth}
                             strokeLinecap="round"
                             fill="none"
