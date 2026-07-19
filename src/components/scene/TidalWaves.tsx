@@ -69,7 +69,8 @@ export function TidalWaves({ intensity = 0.5 }: TidalWavesProps) {
                         ry="1.5"
                         fill="white"
                         opacity="0.5"
-                        animate={{ opacity: [0.3, 0.6, 0.3], rx: [7, 9, 7] }}
+                        animate={{ opacity: [0.3, 0.6, 0.3], scaleX: [0.9, 1.12, 0.9] }}
+                        style={{ transformOrigin: '40px 1px' }}
                         transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' as const }}
                     />
                 )}

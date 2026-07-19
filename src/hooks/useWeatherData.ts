@@ -126,9 +126,13 @@ export function useWeatherData(postcode?: string) {
           setCoordsError(null);
           return;
         }
-        // If resolution fails, we fall through to other methods? 
-        // Or should we set error? Let's fallback to current location but log warning.
-        logger.warn('Could not resolve postcode, falling back to device location');
+        // If an explicit app location cannot be resolved, do not prompt for device
+        // geolocation or reuse unrelated cached coordinates. Use the UK fallback so
+        // the dashboard and scene keep rendering deterministically.
+        logger.warn('Could not resolve postcode, using default weather location');
+        setCoords(DEFAULT_COORDS);
+        setCoordsError('Location unavailable, using London weather');
+        return;
       }
 
       try {

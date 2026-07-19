@@ -25,33 +25,29 @@ export function Butterfly({ startX, delay = 0 }: ButterflyProps) {
       }}
     >
       {/* Left wing */}
-      <motion.ellipse
-        cx="9"
-        cy="12"
-        rx="6"
-        ry="4"
-        className="fill-primary/70"
-        animate={{ rx: [6, 2, 6] }}
+      <motion.g
+        animate={{ scaleX: [1, 0.35, 1] }}
         transition={{
           duration: 0.3,
           repeat: Infinity,
           ease: 'easeInOut' as const,
         }}
-      />
+        style={{ transformOrigin: '9px 12px' }}
+      >
+        <ellipse cx="9" cy="12" rx="6" ry="4" className="fill-primary/70" />
+      </motion.g>
       {/* Right wing */}
-      <motion.ellipse
-        cx="15"
-        cy="12"
-        rx="6"
-        ry="4"
-        className="fill-primary/60"
-        animate={{ rx: [6, 2, 6] }}
+      <motion.g
+        animate={{ scaleX: [1, 0.35, 1] }}
         transition={{
           duration: 0.3,
           repeat: Infinity,
           ease: 'easeInOut' as const,
         }}
-      />
+        style={{ transformOrigin: '15px 12px' }}
+      >
+        <ellipse cx="15" cy="12" rx="6" ry="4" className="fill-primary/60" />
+      </motion.g>
       {/* Body */}
       <ellipse cx="12" cy="12" rx="1" ry="5" className="fill-foreground/60" />
     </motion.svg>

@@ -1,4 +1,4 @@
-import { motion, useReducedMotion } from 'framer-motion';
+import { useReducedMotion } from 'framer-motion';
 
 interface SceneWaveDividerProps {
   /** 0 = dirty (flat, murky), 1 = clean (tall playful waves) */
@@ -60,12 +60,10 @@ export function SceneWaveDivider({ cleanliness, fillColor }: SceneWaveDividerPro
         preserveAspectRatio="none"
         className="w-full h-full"
       >
-        <motion.path
+        <path
           d={path}
           fill={fill}
-          initial={false}
-          animate={{ d: path }}
-          transition={prefersReducedMotion ? { duration: 0 } : { duration: 2.5, ease: 'easeInOut' as const }}
+          style={{ transition: prefersReducedMotion ? undefined : 'd 2.5s ease-in-out' }}
         />
       </svg>
     </div>
