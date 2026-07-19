@@ -431,8 +431,10 @@ export function IntensityScene({
       )}
 
 
-      {/* Sky/Celestial Parallax Group */}
-      <motion.div
+      {/* Wrapper to shift scenery up and protect it from being cut off by the bottom wave/cards */}
+      <div className="absolute inset-0 bottom-[40px] pointer-events-none">
+        {/* Sky/Celestial Parallax Group */}
+        <motion.div
         style={{ y: shouldReduceMotion ? 0 : skyY }}
         className="absolute inset-0 pointer-events-none z-[1]"
       >
@@ -1500,6 +1502,8 @@ export function IntensityScene({
       <AnimatePresence>
         {weather.isSnowing && sceneConfig.showRenewables && sceneConfig.showSun && <SnowOnPanels />}
       </AnimatePresence>
+
+      </div>
 
       {/* Organic wave divider — blends scene into content below */}
       <SceneWaveDivider cleanliness={sceneConfig.cleanliness} />

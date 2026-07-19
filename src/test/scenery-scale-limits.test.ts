@@ -102,4 +102,14 @@ describe('Scenery Element Scale Safeguards', () => {
             expect(scale).toBeGreaterThanOrEqual(0.4);
         }
     });
+
+    test('IntensityScene should have a bottom-shift wrapper to prevent elements being covered', () => {
+        const intensityScenePath = path.resolve(__dirname, '../components/IntensityScene.tsx');
+        expect(fs.existsSync(intensityScenePath)).toBe(true);
+
+        const content = fs.readFileSync(intensityScenePath, 'utf-8');
+
+        // Verify the presence of the bottom-shift wrapper container
+        expect(content).toContain('bottom-[40px]');
+    });
 });
