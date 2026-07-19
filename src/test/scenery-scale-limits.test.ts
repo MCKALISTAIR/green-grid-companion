@@ -187,4 +187,37 @@ describe('Scenery Element Scale Safeguards', () => {
             expect(baseOfTrunk, `Front tree at x=${tree.x} is floating (trunk base ${baseOfTrunk} is above hill surface ${hillY})`).toBeGreaterThanOrEqual(hillY - 0.5);
         }
     });
+
+    test('Scenery components should wrap elements in nested SVGs with preserveAspectRatio="meet" to prevent aspect ratio distortion', () => {
+        const landscapePath = path.resolve(__dirname, '../components/scene/Landscape.tsx');
+        const cityLandscapePath = path.resolve(__dirname, '../components/scene/CityLandscape.tsx');
+
+        // Check PineTree and Cottage in Landscape.tsx
+        const landscapeContent = fs.readFileSync(landscapePath, 'utf-8');
+        
+        // PineTree should have <svg and preserveAspectRatio
+        const pineTreeBlockStart = landscapeContent.indexOf('export function PineTree');
+        const pineTreeBlockEnd = landscapeContent.indexOf('// ⛰️ Rolling Hill Layer', pineTreeBlockStart);
+        const pineTreeBlock = landscapeContent.substring(pineTreeBlockStart, pineTreeBlockEnd);
+        expect(pineTreeBlock).toContain('<svg');
+        expect(pineTreeBlock).toContain('preserveAspectRatio=');
+        expect(pineTreeBlock).toContain('meet');
+
+        // Cottage should have <svg and preserveAspectRatio
+        const cottageBlockStart = landscapeContent.indexOf('function Cottage');
+        const cottageBlockEnd = landscapeContent.indexOf('export function LandscapeFront', cottageBlockStart);
+        const cottageBlock = landscapeContent.substring(cottageBlockStart, cottageBlockEnd);
+        expect(cottageBlock).toContain('<svg');
+        expect(cottageBlock).toContain('preserveAspectRatio=');
+        expect(cottageBlock).toContain('meet');
+
+        // Check UrbanTree in CityLandscape.tsx
+        const cityLandscapeContent = fs.readFileSync(cityLandscapePath, 'utf-8');
+        const urbanTreeBlockStart = cityLandscapeContent.indexOf('function UrbanTree');
+        const urbanTreeBlockEnd = cityLandscapeContent.indexOf('// Street light', urbanTreeBlockStart);
+        const urbanTreeBlock = cityLandscapeContent.substring(urbanTreeBlockStart, urbanTreeBlockEnd);
+        expect(urbanTreeBlock).toContain('<svg');
+        expect(urbanTreeBlock).toContain('preserveAspectRatio=');
+        expect(urbanTreeBlock).toContain('meet');
+    });
 });
