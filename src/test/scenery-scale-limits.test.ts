@@ -82,4 +82,24 @@ describe('Scenery Element Scale Safeguards', () => {
         const fgTurbineScale = turbineScales[turbineScales.length - 1]; // front left 45 slot
         expect(fgTurbineScale).toBeGreaterThanOrEqual(0.7);
     });
+
+    test('CityLandscape urban trees should have appropriate scales', () => {
+        const cityLandscapePath = path.resolve(__dirname, '../components/scene/CityLandscape.tsx');
+        expect(fs.existsSync(cityLandscapePath)).toBe(true);
+
+        const content = fs.readFileSync(cityLandscapePath, 'utf-8');
+
+        // Extract scale values from UrbanTree instances
+        const urbanTreeScales = [...content.matchAll(/<UrbanTree[^>]*scale=\{\s*([0-9.]+)\s*\}/g)]
+            .map(m => parseFloat(m[1]));
+
+        console.log('Detected urban tree scales:', urbanTreeScales);
+
+        expect(urbanTreeScales.length).toBeGreaterThan(0);
+        for (const scale of urbanTreeScales) {
+            // Enforce that urban trees are kept in a reasonable, small proportion (<= 1.0)
+            expect(scale).toBeLessThanOrEqual(1.0);
+            expect(scale).toBeGreaterThanOrEqual(0.4);
+        }
+    });
 });
