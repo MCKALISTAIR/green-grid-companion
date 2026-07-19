@@ -168,18 +168,44 @@ export async function getRegionFromCoordinates(lat: number, lon: number): Promis
 export async function resolvePostcode(postcode: string): Promise<{ lat: number; lon: number } | null> {
     try {
         const cleanPostcode = postcode.replace(/\s+/g, '').toUpperCase();
-        const response = await fetch(`https://api.postcodes.io/postcodes/${cleanPostcode}`);
-        if (!response.ok) return null;
 
-        const data = await response.json();
-        if (data.status === 200 && data.result) {
-            return {
-                lat: data.result.latitude,
-                lon: data.result.longitude
-            };
-        } else {
-            logger.warn('Postcode resolution returned success but no result or 200', { data });
+        // Region selections in the app are often broad postcode areas (e.g. "EH", "DG")
+        // rather than full postcodes. postcodes.io cannot resolve those via /postcodes/*,
+        // so use a stable representative outward code before falling back.
+        const representativeOutcodes: Record<string, string> = {
+            GB: 'SW1A', Scotland: 'EH1', SCOTLAND: 'EH1', England: 'SW1A', ENGLAND: 'SW1A', Wales: 'CF10', WALES: 'CF10',
+            AB: 'AB10', IV: 'IV1', KW: 'KW1', PH: 'PH1', ZE: 'ZE1', HS: 'HS1',
+            EH: 'EH1', FK: 'FK1', G: 'G1', KA: 'KA1', KY: 'KY1', ML: 'ML1', PA: 'PA1', TD: 'TD1', DG: 'DG1',
+            M: 'M1', NE: 'NE1', LS: 'LS1', LL: 'LL11', CF: 'CF10', B: 'B1', NG: 'NG1', CB: 'CB1', BS: 'BS1', SO: 'SO14',
+            SW: 'SW1A', SE: 'SE1', E: 'E1', EC: 'EC1A', N: 'N1', NW: 'NW1', W: 'W1A', WC: 'WC1A', BN: 'BN1',
+            PL: 'PL1', TR: 'TR1', EX: 'EX1', SA: 'SA1', TQ: 'TQ1', DT: 'DT1', BH: 'BH1', CT: 'CT1', DN: 'DN1',
+            PO: 'PO1', OX: 'OX1', LE: 'LE1', BD: 'BD1', CV: 'CV1', BT: 'BT1', IM: 'IM1', JE: 'JE1', GY: 'GY1',
+        };
+
+        const tryPostcode = async (value: string) => {
+            const response = await fetch(`https://api.postcodes.io/postcodes/${value}`);
+            if (!response.ok) return null;
+
+            const data = await response.json();
+            if (data.status === 200 && data.result) {
+                return {
+                    lat: data.result.latitude,
+                    lon: data.result.longitude
+                };
+            }
+            return null;
+        };
+
+        const exact = await tryPostcode(cleanPostcode);
+        if (exact) return exact;
+
+        const representative = representativeOutcodes[cleanPostcode] ?? representativeOutcodes[postcode];
+        if (representative) {
+            const represented = await tryPostcode(representative);
+            if (represented) return represented;
         }
+
+        return null;
     } catch (error) {
         logger.warn('Failed to resolve postcode', { postcode, error });
     }
