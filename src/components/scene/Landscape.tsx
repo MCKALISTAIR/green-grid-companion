@@ -291,11 +291,11 @@ export function LandscapeMid(props: LandscapeProps) {
     // Trees positioned so trunk base sits just into the mid hill ridge.
     // Ridge curve: M0,120 Q80,140 160,100 Q240,60 320,110 Q360,130 400,100
     const midTrees = [
-        { x: 45, y: 119, scale: 0.45 },   // ridge ≈127
-        { x: 120, y: 110, scale: 0.45 },  // ridge ≈118
-        { x: 190, y: 81, scale: 0.45 },   // ridge ≈88
-        { x: 260, y: 78, scale: 0.45 },   // ridge ≈85
-        { x: 330, y: 107, scale: 0.45 },  // ridge ≈114
+        { x: 45, y: 125, scale: 0.45 },   // ridge ≈127, base at 129.5
+        { x: 120, y: 115, scale: 0.45 },  // ridge ≈118, base at 119.5
+        { x: 190, y: 87, scale: 0.45 },   // ridge ≈88, base at 91.5
+        { x: 260, y: 84, scale: 0.45 },   // ridge ≈85, base at 88.5
+        { x: 330, y: 113, scale: 0.45 },  // ridge ≈114, base at 117.5
     ];
 
     return (
