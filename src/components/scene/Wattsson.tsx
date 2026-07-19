@@ -85,8 +85,11 @@ export function Wattsson({ intensity, className }: WattssonProps) {
         return () => clearTimeout(timer);
     }, [bubbleText, clickCount]);
 
+    const isAbsolute = className?.includes('absolute') || className?.includes('fixed');
+    const positionClass = isAbsolute ? '' : 'relative';
+
     return (
-        <div className={`relative flex items-center gap-3 z-40 ${className || ''}`}>
+        <div className={`${positionClass} flex items-center gap-3 z-40 ${className || ''}`}>
             {/* Speech Bubble */}
             <AnimatePresence>
                 {bubbleText && (
