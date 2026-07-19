@@ -32,7 +32,7 @@ import { WeatherWidget } from '@/components/WeatherWidget';
 import { GreenerNightsCard } from '@/components/GreenerNightsCard';
 import { AnimatedIntensity } from '@/components/AnimatedIntensity';
 import { EnergyFactBubble } from '@/components/scene/EnergyFactBubble';
-import { Wattsson } from '@/components/scene/Wattsson';
+
 import { StaleDataBadge } from '@/components/StaleDataBadge';
 import { LocationMismatchPrompt } from '@/components/LocationMismatchPrompt';
 import { YearWrapped } from '@/components/YearWrapped';
@@ -231,8 +231,7 @@ const Index = () => {
                 </div>
 
 
-                {/* Wattsson Mascot - Bottom Right */}
-                <Wattsson intensity={intensity} className="absolute bottom-6 right-6 z-30" />
+
 
               </ComponentErrorBoundary>
 
