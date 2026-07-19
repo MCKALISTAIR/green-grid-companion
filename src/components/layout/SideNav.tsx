@@ -26,8 +26,8 @@ export function SideNav() {
             {isActive(path) && (
                 <motion.div
                     layoutId="side-nav-active-pill"
-                    className="absolute inset-0 rounded-lg bg-primary/10 -z-10 border-l-2 border-primary"
-                    transition={{ type: 'spring' as const, stiffness: 380, damping: 30 }}
+                    className="absolute inset-0 rounded-lg bg-primary/12 -z-10"
+                    transition={{ type: 'spring' as const, stiffness: 450, damping: 25 }}
                 />
             )}
             <motion.div
