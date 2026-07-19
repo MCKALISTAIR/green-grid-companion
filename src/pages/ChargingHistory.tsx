@@ -147,7 +147,22 @@ function ChargingHistory() {
       {isLoading && (
         <div className="space-y-3">
           {[1, 2, 3].map(i => (
-            <Skeleton key={i} className="h-20 w-full rounded-xl" />
+            <Card key={i} className="p-4 bg-card border border-border shadow-sm flex items-center justify-between">
+              <div className="space-y-2 flex-1">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="w-4 h-4 rounded-full animate-shimmer" />
+                  <Skeleton className="h-4 w-24 animate-shimmer" />
+                </div>
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-3 w-16 animate-shimmer" />
+                  <Skeleton className="h-3 w-12 animate-shimmer" />
+                </div>
+              </div>
+              <div className="text-right space-y-2">
+                <Skeleton className="h-5 w-16 ml-auto animate-shimmer" />
+                <Skeleton className="h-3.5 w-12 ml-auto rounded-full animate-shimmer" />
+              </div>
+            </Card>
           ))}
         </div>
       )}

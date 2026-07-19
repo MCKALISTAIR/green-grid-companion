@@ -813,3 +813,34 @@ p, blockquote {
 .dark .glow-intensity-very-high {
   box-shadow: 0 16px 48px -12px hsl(var(--intensity-very-high) / 0.25), 0 0 0 1px hsl(var(--intensity-very-high) / 0.15) !important;
 }
+
+/* Shimmer Animation for Premium Skeletons */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 25%,
+    hsl(var(--muted) / 0.65) 50%,
+    hsl(var(--muted)) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite linear;
+}
+
+.dark .animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted) / 0.4) 25%,
+    hsl(var(--muted) / 0.8) 50%,
+    hsl(var(--muted) / 0.4) 75%
+  );
+  background-size: 200% 100%;
+}

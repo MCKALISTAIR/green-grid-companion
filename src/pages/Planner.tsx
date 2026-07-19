@@ -16,6 +16,7 @@ import { LocalNotifications } from '@capacitor/local-notifications';
 import { format, parseISO, addHours, subMinutes, isFuture } from 'date-fns';
 import { PullToRefresh } from '@/components/PullToRefresh';
 import { TurbineSpinner } from '@/components/ui/turbine-spinner';
+import { Skeleton } from '@/components/ui/skeleton';
 
 import { toast } from 'sonner';
 import { Bell } from 'lucide-react';
@@ -434,14 +435,25 @@ export default function Planner() {
                                 exit={{ opacity: 0 }}
                                 transition={{ duration: 0.2 }}
                             >
-                                <Card className="p-6 animate-pulse bg-card">
-                                    <div className="space-y-4">
-                                        <div className="text-center space-y-2">
-                                            <div className="h-4 bg-muted rounded w-1/3 mx-auto"></div>
-                                            <div className="h-8 bg-muted rounded w-1/2 mx-auto"></div>
+                                <Card className="p-6 space-y-6 bg-card border border-border shadow-md">
+                                    <div className="flex items-center justify-between pb-2 border-b border-muted">
+                                        <div className="space-y-1.5 flex-1">
+                                            <Skeleton className="h-4 w-1/3" />
+                                            <Skeleton className="h-8 w-2/3" />
                                         </div>
-                                        <div className="h-10 bg-muted rounded"></div>
+                                        <Skeleton className="w-10 h-10 rounded-full" />
                                     </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="p-3 bg-muted/10 rounded-xl space-y-2">
+                                            <Skeleton className="h-3 w-1/2" />
+                                            <Skeleton className="h-5 w-3/4" />
+                                        </div>
+                                        <div className="p-3 bg-muted/10 rounded-xl space-y-2">
+                                            <Skeleton className="h-3 w-1/2" />
+                                            <Skeleton className="h-5 w-3/4" />
+                                        </div>
+                                    </div>
+                                    <Skeleton className="h-10 w-full rounded-xl" />
                                 </Card>
                             </motion.div>
                         ) : bestSlot ? (

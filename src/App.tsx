@@ -46,34 +46,7 @@ const ChargingHistory = lazy(() => import("./pages/ChargingHistory"));
 const AchievementsPage = lazy(() => import('./pages/Achievements'));
 import AuthCallback from "./pages/AuthCallback";
 
-// Loading fallback with wind turbine spinner
-const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-[50vh]">
-    <div className="flex flex-col items-center gap-3">
-      <svg
-        viewBox="0 0 40 40"
-        className="w-10 h-10 text-primary"
-        aria-label="Loading"
-      >
-        {/* Tower */}
-        <path
-          d="M19 20 L18 38 L22 38 L21 20 Z"
-          fill="currentColor"
-          opacity="0.6"
-        />
-        {/* Hub */}
-        <circle cx="20" cy="18" r="2.5" fill="currentColor" />
-        {/* Blades - rotating group */}
-        <g className="origin-center animate-spin" style={{ transformOrigin: "20px 18px" }}>
-          <path d="M20 18 L19 4 Q20 2 21 4 L20 18 Z" fill="currentColor" />
-          <path d="M20 18 L8 26 Q7 24 9 23 L20 18 Z" fill="currentColor" />
-          <path d="M20 18 L32 26 Q33 24 31 23 L20 18 Z" fill="currentColor" />
-        </g>
-      </svg>
-      <span className="text-xs text-muted-foreground">Loading...</span>
-    </div>
-  </div>
-);
+import { PageLoader } from "@/components/ui/PageLoader";
 
 const queryClient = new QueryClient({
   defaultOptions: {

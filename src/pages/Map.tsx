@@ -12,6 +12,7 @@ import { getErrorInfo } from '@/lib/errorUtils';
 import { PullToRefresh } from '@/components/PullToRefresh';
 import { Map as MapIcon, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function MapPage() {
     const [showMap, setShowMap] = useState(true);
@@ -65,8 +66,14 @@ export default function MapPage() {
 
                     {isLoading ? (
                         <div className="space-y-3">
-                            {[1, 2, 3, 4, 5, 6, 7].map(i => (
-                                <div key={i} className="h-16 bg-muted/20 animate-pulse rounded-lg" />
+                            {[1, 2, 3, 4, 5, 6].map(i => (
+                                <Card key={i} className="p-4 bg-card border border-border shadow-sm flex items-center justify-between">
+                                    <div className="space-y-1.5 flex-1">
+                                        <Skeleton className="h-4 w-1/4" />
+                                        <Skeleton className="h-3 w-1/3" />
+                                    </div>
+                                    <Skeleton className="w-12 h-6 rounded-full" />
+                                </Card>
                             ))}
                         </div>
                     ) : (

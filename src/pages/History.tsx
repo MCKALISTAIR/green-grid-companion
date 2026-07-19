@@ -18,6 +18,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -262,18 +263,21 @@ export default function HistoryPage() {
                             className="space-y-4"
                         >
                             <div className="grid grid-cols-2 gap-4">
-                                <Card className="p-4 animate-pulse bg-card">
-                                    <div className="h-3 bg-muted rounded w-1/2 mb-2"></div>
-                                    <div className="h-8 bg-muted rounded w-3/4"></div>
+                                <Card className="p-4 bg-card border border-border shadow-sm">
+                                    <Skeleton className="h-3.5 w-1/3 mb-2" />
+                                    <Skeleton className="h-7 w-2/3" />
                                 </Card>
-                                <Card className="p-4 animate-pulse bg-card">
-                                    <div className="h-3 bg-muted rounded w-1/2 mb-2"></div>
-                                    <div className="h-8 bg-muted rounded w-3/4"></div>
+                                <Card className="p-4 bg-card border border-border shadow-sm">
+                                    <Skeleton className="h-3.5 w-1/3 mb-2" />
+                                    <Skeleton className="h-7 w-2/3" />
                                 </Card>
                             </div>
-                            <Card className="p-4 animate-pulse bg-card">
-                                <div className="h-4 bg-muted rounded w-1/4 mb-4"></div>
-                                <div className="h-[300px] bg-muted rounded"></div>
+                            <Card className="p-4 bg-card border border-border shadow-sm">
+                                <div className="flex items-center justify-between mb-4">
+                                    <Skeleton className="h-4 w-1/4" />
+                                    <Skeleton className="h-4 w-16" />
+                                </div>
+                                <Skeleton className="h-[300px] w-full rounded-lg" />
                             </Card>
                         </motion.div>
                     ) : (
