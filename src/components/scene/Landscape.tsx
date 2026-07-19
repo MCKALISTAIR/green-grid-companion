@@ -253,12 +253,12 @@ export function LandscapeBack(props: LandscapeProps) {
     // Anchor sits +4 below ridge so trunk base (y+6*scale) sinks slightly into the hill
     // and foliage doesn't hover — prevents "floating tree" on tall viewports.
     const backTrees = [
-        { x: 40, y: 88, scale: 0.6 },
-        { x: 80, y: 80, scale: 0.6 },
-        { x: 150, y: 85, scale: 0.6 },
-        { x: 220, y: 111, scale: 0.6 },
-        { x: 290, y: 120, scale: 0.6 },
-        { x: 360, y: 104, scale: 0.6 },
+        { x: 40, y: 88, scale: 0.3 },
+        { x: 80, y: 80, scale: 0.3 },
+        { x: 150, y: 85, scale: 0.3 },
+        { x: 220, y: 111, scale: 0.3 },
+        { x: 290, y: 120, scale: 0.3 },
+        { x: 360, y: 104, scale: 0.3 },
     ];
 
     return (
@@ -291,11 +291,11 @@ export function LandscapeMid(props: LandscapeProps) {
     // Trees positioned so trunk base sits just into the mid hill ridge.
     // Ridge curve: M0,120 Q80,140 160,100 Q240,60 320,110 Q360,130 400,100
     const midTrees = [
-        { x: 45, y: 119, scale: 0.9 },   // ridge ≈127
-        { x: 120, y: 110, scale: 0.9 },  // ridge ≈118
-        { x: 190, y: 81, scale: 0.9 },   // ridge ≈88
-        { x: 260, y: 78, scale: 0.9 },   // ridge ≈85
-        { x: 330, y: 107, scale: 0.9 },  // ridge ≈114
+        { x: 45, y: 119, scale: 0.45 },   // ridge ≈127
+        { x: 120, y: 110, scale: 0.45 },  // ridge ≈118
+        { x: 190, y: 81, scale: 0.45 },   // ridge ≈88
+        { x: 260, y: 78, scale: 0.45 },   // ridge ≈85
+        { x: 330, y: 107, scale: 0.45 },  // ridge ≈114
     ];
 
     return (
@@ -429,9 +429,9 @@ export function LandscapeFront(props: LandscapeProps) {
     const id = useId();
 
     const frontTrees = [
-        { x: 40, y: 130, scale: 1.2 },
-        { x: 90, y: 122, scale: 1.2 },
-        { x: 370, y: 130, scale: 1.2 }
+        { x: 40, y: 130, scale: 0.6 },
+        { x: 90, y: 122, scale: 0.6 },
+        { x: 370, y: 130, scale: 0.6 }
     ];
 
     return (
