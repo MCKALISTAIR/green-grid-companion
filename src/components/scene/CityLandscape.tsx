@@ -642,14 +642,22 @@ export function CityLandscapeFront(props: CityLandscapeProps) {
 // Urban tree (small, trimmed)
 function UrbanTree({ x, y, scale = 1, isNight }: { x: number; y: number; scale?: number; isNight: boolean }) {
   return (
-    <g transform={`translate(${x}, ${y}) scale(${scale})`}>
+    <svg
+      x={x - 8 * scale}
+      y={y - 24 * scale}
+      width={16 * scale}
+      height={26 * scale}
+      viewBox="-8 -24 16 26"
+      preserveAspectRatio="xMidYMax meet"
+      className="overflow-visible"
+    >
       {/* Trunk */}
       <rect x={-1} y={-12} width={2} height={12} fill={isNight ? '#1e293b' : '#78350f'} />
       {/* Canopy */}
       <circle cx={0} cy={-16} r={6} fill={isNight ? '#1e3a2a' : '#22c55e'} opacity={0.8} />
       <circle cx={-3} cy={-14} r={4} fill={isNight ? '#15302a' : '#16a34a'} opacity={0.7} />
       <circle cx={3} cy={-14} r={4} fill={isNight ? '#15302a' : '#16a34a'} opacity={0.7} />
-    </g>
+    </svg>
   );
 }
 

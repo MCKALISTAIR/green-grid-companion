@@ -53,7 +53,15 @@ function PineTree({ x, y, scale = 1, colorPrimary, colorShadow, isSnowing, isChr
     const randomOffset = useMemo(() => Math.random() * 0.5, []);
 
     return (
-        <g transform={`translate(${x}, ${y}) scale(${scale})`}>
+        <svg
+            x={x - 16 * scale}
+            y={y - 52 * scale}
+            width={32 * scale}
+            height={64 * scale}
+            viewBox="-16 -52 32 64"
+            preserveAspectRatio="xMidYMax meet"
+            className="overflow-visible"
+        >
             <motion.g
                 animate={{
                     rotate: [0, swayAmount, 0, -swayAmount, 0],
@@ -64,7 +72,7 @@ function PineTree({ x, y, scale = 1, colorPrimary, colorShadow, isSnowing, isChr
                     ease: 'easeInOut' as const,
                     delay: randomOffset,
                 }}
-                style={{ transformOrigin: 'center bottom' }}
+                style={{ transformOrigin: '0px 10px' }}
             >
                 {/* Trunk - slightly rounded base */}
                 <path d="M-2,-8 L2,-8 L2,10 Q0,11 -2,10 Z" fill="rgba(60, 40, 20, 0.85)" />
@@ -109,7 +117,7 @@ function PineTree({ x, y, scale = 1, colorPrimary, colorShadow, isSnowing, isChr
                     <path d="M0,-50 L4,-42 L-4,-42 Z" fill="#ffffff" opacity="0.9" />
                 )}
             </motion.g>
-        </g>
+        </svg>
     );
 }
 
@@ -336,9 +344,14 @@ function Cottage({ x, y, scale = 1, isNight }: { x: number; y: number; scale?: n
   };
 
   return (
-    <g
-      transform={`translate(${x}, ${y}) scale(${scale})`}
-      className="cursor-pointer pointer-events-auto"
+    <svg
+      x={x - 16 * scale}
+      y={y - 20 * scale}
+      width={32 * scale}
+      height={36 * scale}
+      viewBox="-16 -20 32 36"
+      preserveAspectRatio="xMidYMax meet"
+      className="overflow-visible cursor-pointer pointer-events-auto"
       onClick={handleClick}
       role="button"
       tabIndex={0}
@@ -420,7 +433,7 @@ function Cottage({ x, y, scale = 1, isNight }: { x: number; y: number; scale?: n
         <circle cx="2" cy="-1" r="3.5" fill="#15803d" />
         <circle cx="0" cy="1" r="3.2" fill="#14532d" />
       </g>
-    </g>
+    </svg>
   );
 }
 

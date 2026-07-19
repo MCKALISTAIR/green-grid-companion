@@ -31,8 +31,8 @@ import { useGridDemand } from '@/hooks/useGridDemand';
 import { WeatherWidget } from '@/components/WeatherWidget';
 import { GreenerNightsCard } from '@/components/GreenerNightsCard';
 import { AnimatedIntensity } from '@/components/AnimatedIntensity';
+import { SceneWaveDivider } from '@/components/scene/SceneWaveDivider';
 import { EnergyFactBubble } from '@/components/scene/EnergyFactBubble';
-
 import { StaleDataBadge } from '@/components/StaleDataBadge';
 import { LocationMismatchPrompt } from '@/components/LocationMismatchPrompt';
 import { YearWrapped } from '@/components/YearWrapped';
@@ -82,6 +82,16 @@ const Index = () => {
 
   // Compute renewables % for badge + sparkle
   const renewablesPct = getRenewablesPercentage(generationMix);
+
+  // Derived cleanliness rating for wave shape styling
+  const cleanliness = useMemo(() => {
+    const band = index || 'moderate';
+    if (band === 'very-clean') return 1;
+    if (band === 'clean') return 0.75;
+    if (band === 'moderate') return 0.45;
+    if (band === 'dirty') return 0.2;
+    return 0.05; // very-dirty
+  }, [index]);
 
   // Detect threshold crossings (50 / 70 / 80) and fire sparkle
   const prevRenRef = useRef<number | null>(null);
@@ -402,6 +412,10 @@ const Index = () => {
 
             {/* Content cards */}
             <div className="flex-1 px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-6 space-y-4 -mt-6 relative z-10 bg-card lg:max-w-7xl lg:mx-auto w-full lg:rounded-t-3xl lg:shadow-xl lg:-mt-8 lg:pt-8 lg:space-y-6">
+              {/* Organic wave divider — blends scene into content below */}
+              <div className="absolute -top-[79px] left-0 right-0 h-[80px] pointer-events-none overflow-hidden z-20">
+                <SceneWaveDivider cleanliness={cleanliness} />
+              </div>
 
               {/* Degradation Alert */}
               {isDegraded && (

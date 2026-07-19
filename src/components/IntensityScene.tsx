@@ -50,7 +50,7 @@ import { SceneColorGrade } from './scene/SceneColorGrade';
 import { StateTransitionFX } from './scene/StateTransitionFX';
 import { SceneHeroSpotlight, SceneAtmosphericDepth } from './scene/SceneComposition';
 import { SceneHotspots, type HotspotDef } from './scene/SceneHotspots';
-import { SceneWaveDivider } from './scene/SceneWaveDivider';
+
 
 import { GenerationMix } from '@/lib/carbonApi';
 import { getSkyGradient } from '@/lib/sceneUtils';
@@ -1505,8 +1505,6 @@ export function IntensityScene({
 
       </div>
 
-      {/* Organic wave divider — blends scene into content below */}
-      <SceneWaveDivider cleanliness={sceneConfig.cleanliness} />
     </motion.div >
   );
 }
