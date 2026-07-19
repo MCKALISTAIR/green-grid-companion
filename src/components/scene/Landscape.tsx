@@ -247,13 +247,16 @@ export function LandscapeBack(props: LandscapeProps) {
     const palette = useLandscapePalette(props.cleanliness, props.isNight, props.synthwaveMode, props.isSnowing, props.timeOfDay);
 
     // Explicit tree placements on the new curve to stay grounded
+    // Ridge samples: (40,84) (80,76) (150,81) (220,107) (290,116) (360,100)
+    // Anchor sits +4 below ridge so trunk base (y+6*scale) sinks slightly into the hill
+    // and foliage doesn't hover — prevents "floating tree" on tall viewports.
     const backTrees = [
-        { x: 40, y: 95, scale: 0.6 },
-        { x: 80, y: 76, scale: 0.6 },
-        { x: 150, y: 81, scale: 0.6 },
-        { x: 220, y: 107, scale: 0.6 },
-        { x: 290, y: 116, scale: 0.6 },
-        { x: 360, y: 100, scale: 0.6 }
+        { x: 40, y: 88, scale: 0.6 },
+        { x: 80, y: 80, scale: 0.6 },
+        { x: 150, y: 85, scale: 0.6 },
+        { x: 220, y: 111, scale: 0.6 },
+        { x: 290, y: 120, scale: 0.6 },
+        { x: 360, y: 104, scale: 0.6 },
     ];
 
     return (
