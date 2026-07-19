@@ -53,7 +53,7 @@ export function TypewriterText({ text, charDelay = 48, className }: TypewriterTe
             initial={{ opacity: 1 }}
             animate={{ opacity: [1, 0, 1] }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.7, repeat: Infinity, ease: 'steps(1)' }}
+            transition={{ duration: 0.7, repeat: Infinity, ease: 'linear' as const }}
             aria-hidden="true"
           />
         )}
