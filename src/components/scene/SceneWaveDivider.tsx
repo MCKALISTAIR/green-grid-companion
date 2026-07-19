@@ -47,7 +47,7 @@ export function SceneWaveDivider({ cleanliness, fillColor }: SceneWaveDividerPro
   const humps = Math.round(2 + cleanliness * 2);
 
   const path = buildWavePath(amplitude, humps);
-  const fill = fillColor ?? 'hsl(var(--background))';
+  const fill = fillColor ?? 'hsl(var(--card))';
 
   return (
     <div
