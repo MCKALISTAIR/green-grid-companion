@@ -159,12 +159,14 @@ export function IntensityScene({
   const [synthwaveMode, setSynthwaveMode] = useState(false);
   const [sunGlassesActive, setSunGlassesActive] = useState(false);
 
-  // Apply Intensity Override
-  const intensity = (isDirectorMode && overrides.intensity !== undefined) ? overrides.intensity : propIntensity;
+  // Apply Intensity Override (guarantee a valid number, default to 150 moderate if propIntensity is undefined/null/NaN)
+  const rawIntensity = (isDirectorMode && overrides.intensity !== undefined) ? overrides.intensity : propIntensity;
+  const intensity = typeof rawIntensity === 'number' && !isNaN(rawIntensity) ? rawIntensity : 150;
 
-  const index = (isDirectorMode && overrides.intensity !== undefined)
+  const rawIndex = (isDirectorMode && overrides.intensity !== undefined)
     ? (overrides.intensity < 50 ? 'very low' : overrides.intensity < 150 ? 'low' : overrides.intensity < 250 ? 'moderate' : overrides.intensity < 350 ? 'high' : 'very high')
     : propIndex;
+  const index = rawIndex || 'moderate';
 
   // Cleanliness band + transition flourish trigger
   const { band: cleanlinessBand, transition: bandTransition } = useCleanlinessBand(intensity);
