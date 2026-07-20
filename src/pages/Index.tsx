@@ -86,11 +86,11 @@ const Index = () => {
   // Derived cleanliness rating for wave shape styling
   const cleanliness = useMemo(() => {
     const band = index || 'moderate';
-    if (band === 'very-clean') return 1;
-    if (band === 'clean') return 0.75;
+    if (band === 'very low') return 1;
+    if (band === 'low') return 0.75;
     if (band === 'moderate') return 0.45;
-    if (band === 'dirty') return 0.2;
-    return 0.05; // very-dirty
+    if (band === 'high') return 0.2;
+    return 0.05; // very high
   }, [index]);
 
   // Detect threshold crossings (50 / 70 / 80) and fire sparkle
