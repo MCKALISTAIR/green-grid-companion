@@ -1,10 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Cookie, X } from 'lucide-react';
+import { useTheme } from '@/components/ThemeProvider';
+import { cn } from '@/lib/utils';
 
 export const CookieConsent = () => {
   const [visible, setVisible] = useState(false);
+  const { theme } = useTheme();
+  const location = useLocation();
+
+  const isDark = useMemo(() => {
+    // Onboarding forces a dark immersive background even when the global theme is light,
+    // so the banner must follow the visual context, not just the stored theme preference.
+    if (location.pathname === '/onboarding') return true;
+    if (theme === 'dark') return true;
+    if (theme === 'light') return false;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }, [theme, location.pathname]);
 
   useEffect(() => {
     const consent = localStorage.getItem('cookie-consent');
@@ -29,14 +42,21 @@ export const CookieConsent = () => {
 
   return (
     <div className="fixed bottom-20 sm:bottom-4 left-0 right-0 z-50 px-4 pb-2 animate-in slide-in-from-bottom-8 duration-700 ease-out fill-mode-forwards">
-      <div className="mx-auto max-w-md rounded-xl border border-border bg-card p-4 shadow-lg">
+      <div
+        className={cn(
+          'mx-auto max-w-md rounded-xl border p-4 shadow-lg backdrop-blur-md',
+          isDark
+            ? 'border-white/10 bg-slate-900/90 text-white'
+            : 'border-border bg-card/95 text-foreground'
+        )}
+      >
         <div className="flex items-start gap-3">
-          <Cookie className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+          <Cookie className={cn('h-5 w-5 mt-0.5 shrink-0', isDark ? 'text-green-400' : 'text-primary')} />
           <div className="space-y-3 flex-1">
-            <p className="text-sm text-foreground">
+            <p className={cn('text-sm', isDark ? 'text-white/90' : 'text-foreground')}>
               We use essential cookies and local storage to keep the app working.
               No tracking or advertising cookies are used.{' '}
-              <Link to="/privacy" className="underline text-primary hover:text-primary/80">
+              <Link to="/privacy" className={cn('underline', isDark ? 'text-green-400 hover:text-green-300' : 'text-primary hover:text-primary/80')}>
                 Privacy Policy
               </Link>
             </p>
@@ -44,12 +64,21 @@ export const CookieConsent = () => {
               <Button size="sm" onClick={accept} className="flex-1">
                 Accept
               </Button>
-              <Button size="sm" variant="outline" onClick={decline} className="flex-1">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={decline}
+                className={cn('flex-1', isDark && 'border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white')}
+              >
                 Decline
               </Button>
             </div>
           </div>
-          <button onClick={decline} className="text-muted-foreground hover:text-foreground" aria-label="Close cookie consent banner (Decline)">
+          <button
+            onClick={decline}
+            className={cn('hover:text-foreground', isDark ? 'text-white/60 hover:text-white' : 'text-muted-foreground')}
+            aria-label="Close cookie consent banner (Decline)"
+          >
             <X className="h-4 w-4" />
           </button>
         </div>
