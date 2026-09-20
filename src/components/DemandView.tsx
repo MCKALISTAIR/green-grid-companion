@@ -2,7 +2,7 @@ import { Zap, RefreshCw, AlertTriangle, Info, Activity, Home } from 'lucide-reac
 import { motion, useSpring, useTransform } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { GenerationMixBar, getFuelIcon, getFuelHex } from '@/components/GenerationMixBar';
-import { useGridDemand, MixWithTrend } from '@/hooks/useGridDemand';
+import { useGridDemand } from '@/hooks/useGridDemand';
 import { useSettings } from '@/hooks/useSettings';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -50,7 +50,7 @@ export function DemandView() {
     if (error && !mix.length) {
         return (
             <div className="flex flex-col items-center justify-center p-8 space-y-4 animate-in fade-in text-center">
-                <AlertTriangle className="w-8 h-8 text-yellow-500" />
+                <AlertTriangle className="w-8 h-8 text-muted-foreground" />
                 <div className="space-y-1">
                     <p className="font-medium">Unable to load grid data</p>
                     <p className="text-sm text-muted-foreground">
@@ -66,14 +66,13 @@ export function DemandView() {
 
     // Convert demand to GW if available
     const demandGW = demand ? (demand / 1000).toFixed(2) : null;
-    const updatedTime = lastUpdated ? new Date(lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
 
-    // Freshness dot: green < 10 min, amber 10-35 min, red > 35 min
+    // Freshness dot: primary < 10 min, muted 10-35 min, destructive > 35 min
     const freshnessColor = (() => {
       if (!lastUpdated) return 'bg-muted-foreground/40';
       const ageMins = (Date.now() - new Date(lastUpdated).getTime()) / 60000;
-      if (ageMins < 10) return 'bg-emerald-500';
-      if (ageMins < 35) return 'bg-amber-400';
+      if (ageMins < 10) return 'bg-primary';
+      if (ageMins < 35) return 'bg-muted-foreground';
       return 'bg-destructive';
     })();
 
@@ -103,7 +102,7 @@ export function DemandView() {
 
             {/* Insights Summary - shows active streaks and milestones */}
             {hasInsights && (
-                <Card className="p-4 shadow-lg bg-gradient-to-br from-card to-accent/5 border-primary/10">
+                <Card className="p-4 bg-primary/5 border-primary/20">
                     <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
                         <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                         Grid Insights
@@ -119,9 +118,9 @@ export function DemandView() {
                 </Card>
             )}
 
-            {/* Demand Highlights Card */}
+            {/* Demand Highlights */}
             <div className={`grid gap-4 ${showGridFrequency ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
-                <Card className="p-5 shadow-lg bg-card/50 backdrop-blur-sm border-primary/10">
+                <Card className="p-5 border-primary/10">
                     <div className="flex items-start justify-between">
                         <div>
                             <div className="flex items-center gap-1.5">
@@ -132,7 +131,7 @@ export function DemandView() {
                                             <Info className="w-3.5 h-3.5 text-muted-foreground/70 cursor-help" />
                                         </Button>
                                     </PopoverTrigger>
-                                    <PopoverContent className="w-[280px] p-3 text-xs bg-card border-border backdrop-blur-xl">
+                                    <PopoverContent className="w-[280px] p-3 text-xs bg-card border-border">
                                         <p className="font-semibold mb-1">UK-Wide Data</p>
                                         <p>This shows total demand for the entire UK electricity grid. The grid operates as a single synchronized system.</p>
 
@@ -143,14 +142,14 @@ export function DemandView() {
                                     </PopoverContent>
                                 </Popover>
                             </div>
-                            <h2 className="text-4xl font-bold tracking-tight mt-1 text-primary">
+                            <h2 className="text-4xl font-bold font-mono tabular-nums tracking-tight mt-1 text-primary">
                                 {demandGW ? (
                                     <>
                                         <motion.span key={demandGW}>{displayDemandGW}</motion.span>{' '}
-                                        <span className="text-lg font-medium text-muted-foreground/80">GW</span>
+                                        <span className="text-lg font-medium font-sans text-muted-foreground/80">GW</span>
                                     </>
                                 ) : (
-                                    <span className="text-2xl text-muted-foreground/50">Unavailable</span>
+                                    <span className="text-2xl text-muted-foreground/50 font-sans">Unavailable</span>
                                 )}
                             </h2>
                             {lastUpdated && (
@@ -175,13 +174,13 @@ export function DemandView() {
 
                 {/* Grid Frequency Card - only shown when enabled in settings */}
                 {showGridFrequency && (
-                    <Card className="p-5 shadow-lg bg-card/50 backdrop-blur-sm border-primary/10 flex flex-col justify-center">
+                    <Card className="p-5 border-primary/10 flex flex-col justify-center">
                         <div className="flex items-center justify-between">
                             <div className="flex-1">
                                 <div className="flex items-center gap-2">
                                     <p className="text-sm font-medium text-muted-foreground">Grid Frequency</p>
                                     {typeof gridFrequency === 'number' && !isNaN(gridFrequency) && (
-                                        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
+                                        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-primary/10 text-primary">
                                             LIVE
                                         </span>
                                     )}
@@ -189,7 +188,7 @@ export function DemandView() {
                                 {typeof gridFrequency === 'number' && !isNaN(gridFrequency) ? (
                                     <>
                                         <div className="flex items-baseline gap-2 mt-1">
-                                            <h2 className="text-4xl font-bold tracking-tight text-primary">
+                                            <h2 className="text-4xl font-bold font-mono tabular-nums tracking-tight text-primary">
                                                 {gridFrequency.toFixed(3)}
                                             </h2>
                                             <span className="text-lg font-medium text-muted-foreground/80">Hz</span>
@@ -216,11 +215,11 @@ export function DemandView() {
             </div>
 
             {/* Generation Breakdown */}
-            <Card className="p-4 shadow-lg">
+            <Card className="p-4">
                 <GenerationMixBar mix={sortedMix} showMW={true} embeddedSolarMW={embeddedSolarMW} />
             </Card>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3" style={{ perspective: '900px' }}>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                 {sortedMixWithTrends.map((source, idx) => {
                     const fuelKey = source.fuel?.toLowerCase() || source.name?.toLowerCase() || '';
                     const streak = streakByFuel[fuelKey];
@@ -257,24 +256,23 @@ export function DemandView() {
                     return (
                     <motion.div
                             key={source.id}
-                            initial={{ opacity: 0, rotateY: 90 }}
-                            animate={{ opacity: 1, rotateY: 0 }}
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
                             transition={{
-                              delay: idx * 0.05,
-                              duration: 0.4,
+                              delay: idx * 0.04,
+                              duration: 0.35,
                               ease: [0.25, 0.46, 0.45, 0.94],
                             }}
-                            style={{ transformOrigin: 'left center', transformStyle: 'preserve-3d' }}
                             whileHover={{ y: -2 }}
                         >
                             <Card
-                                className={`relative p-3 pb-4 overflow-hidden shadow-sm hover:shadow-md transition-shadow ${hasInsight ? 'ring-1 ring-primary/30' : ''}`}
+                                className={`relative p-3 pb-4 overflow-hidden ${hasInsight ? 'ring-1 ring-primary/30' : ''}`}
                                 style={{
-                                    background: `linear-gradient(135deg, rgba(${r},${g},${b},0.10) 0%, rgba(${r},${g},${b},0.02) 60%, transparent 100%)`,
-                                    borderColor: `rgba(${r},${g},${b},0.25)`,
+                                    background: `linear-gradient(180deg, rgba(${r},${g},${b},0.08) 0%, transparent 70%)`,
+                                    borderColor: `rgba(${r},${g},${b},0.22)`,
                                 }}
                             >
-                                {/* Accent stripe */}
+                                {/* Accent stripe — fuel colour is data, not chrome */}
                                 <div
                                     className="absolute left-0 top-0 bottom-0 w-1"
                                     style={{ backgroundColor: hex, opacity: isZero ? 0.2 : 0.85 }}
@@ -284,7 +282,7 @@ export function DemandView() {
                                 <div className="flex items-start justify-between gap-2">
                                     <div className="flex items-center gap-2 min-w-0">
                                         <motion.div
-                                            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm"
+                                            className="w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0"
                                             style={{ backgroundColor: hex, opacity: isZero ? 0.35 : 1 }}
                                             animate={
                                                 !isZero && fuelKey === 'solar'
@@ -315,20 +313,20 @@ export function DemandView() {
                                             </div>
                                             {categoryLabel && !isZero && (
                                                 <div className="flex items-center gap-1">
-                                                    <span className="text-[10px] font-medium uppercase tracking-wide" style={{ color: hex }}>
+                                                    <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                                                         {categoryLabel}
                                                     </span>
                                                     {fuelKey === 'biomass' && (
                                                         <Popover>
                                                             <PopoverTrigger asChild>
                                                                 <button
-                                                                    className="h-3.5 w-3.5 rounded-full p-0 flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                                                                    className="h-3.5 w-3.5 rounded-full p-0 flex items-center justify-center hover:bg-muted transition-colors"
                                                                     aria-label="More information about Biomass classification"
                                                                 >
-                                                                    <Info className="w-2.5 h-2.5 cursor-help" style={{ color: hex }} />
+                                                                    <Info className="w-2.5 h-2.5 cursor-help text-muted-foreground" />
                                                                 </button>
                                                             </PopoverTrigger>
-                                                            <PopoverContent className="w-[240px] p-3 text-xs bg-card border-border backdrop-blur-xl z-50">
+                                                            <PopoverContent className="w-[240px] p-3 text-xs bg-card border-border z-50">
                                                                 <p className="font-semibold mb-1">Kind of Renewable?</p>
                                                                 <p>Biomass is officially classified as a renewable energy source by grid standards since the organic matter burned can be replenished. However, it still involves burning fuel (combustion), which releases direct carbon emissions at the point of generation.</p>
                                                             </PopoverContent>
@@ -340,15 +338,15 @@ export function DemandView() {
                                     </div>
                                     <div className="text-right">
                                         {source.mw !== null && (
-                                            <span className="block text-base font-bold tabular-nums leading-tight">
+                                            <span className="block text-base font-bold font-mono tabular-nums leading-tight">
                                                 {(source.mw / 1000).toFixed(2)}
-                                                <span className="text-xs font-medium text-muted-foreground ml-0.5">GW</span>
+                                                <span className="text-xs font-medium font-sans text-muted-foreground ml-0.5">GW</span>
                                             </span>
                                         )}
                                         <div className="flex items-center justify-end gap-1">
                                             <span className="text-xs text-muted-foreground tabular-nums">{source.perc}%</span>
                                             {source.previousPerc !== null && source.trend && source.trend !== 'stable' && (
-                                                <span className={`text-[10px] tabular-nums ${source.trend === 'up' ? 'text-emerald-500' : 'text-destructive'}`}>
+                                                <span className={`text-[10px] tabular-nums ${source.trend === 'up' ? 'text-primary' : 'text-destructive'}`}>
                                                     ({source.trend === 'up' ? '+' : ''}{(source.perc - source.previousPerc).toFixed(1)})
                                                 </span>
                                             )}
@@ -359,7 +357,7 @@ export function DemandView() {
                                 {/* Animated share bar */}
                                 <div
                                     className="mt-3 h-1.5 w-full rounded-full overflow-hidden"
-                                    style={{ backgroundColor: `rgba(${r},${g},${b},0.15)` }}
+                                    style={{ backgroundColor: `rgba(${r},${g},${b},0.12)` }}
                                 >
                                     <motion.div
                                         className="h-full rounded-full"
@@ -375,13 +373,13 @@ export function DemandView() {
                                     <div className="mt-2 pt-2 border-t border-border/40 space-y-1">
                                         <div className="flex items-center justify-between text-xs">
                                             <span className="text-muted-foreground">Utility-scale</span>
-                                            <span className="font-medium tabular-nums">{((source.mw - embeddedSolarMW) / 1000).toFixed(2)} GW</span>
+                                            <span className="font-medium font-mono tabular-nums">{((source.mw - embeddedSolarMW) / 1000).toFixed(2)} GW</span>
                                         </div>
                                         <div className="flex items-center justify-between text-xs">
                                             <span className="text-muted-foreground flex items-center gap-1">
                                                 <Home className="w-3 h-3" /> Rooftop
                                             </span>
-                                            <span className="font-medium tabular-nums">{(embeddedSolarMW / 1000).toFixed(2)} GW</span>
+                                            <span className="font-medium font-mono tabular-nums">{(embeddedSolarMW / 1000).toFixed(2)} GW</span>
                                         </div>
                                     </div>
                                 )}

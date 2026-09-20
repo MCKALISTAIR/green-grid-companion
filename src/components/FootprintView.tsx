@@ -24,14 +24,12 @@ import {
   Smartphone,
   Trees,
   Coffee,
-  Home,
-  ArrowDownUp,
   SunMedium,
   AlertCircle
 } from 'lucide-react';
 import { TurbineSpinner } from '@/components/ui/turbine-spinner';
 import { formatDistanceToNow } from 'date-fns';
-import { getImpactEquivalents, getImpactColor } from '@/lib/impact-conversions';
+import { getImpactEquivalents } from '@/lib/impact-conversions';
 import { useSettings } from '@/hooks/useSettings';
 import { getAverageDailyKwh, getHouseTypeLabel } from '@/lib/energy-standards';
 import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
@@ -347,12 +345,12 @@ export function FootprintView() {
 
   if (!isLinked) {
     return (
-      <div className="space-y-6 pt-8 max-w-2xl mx-auto">
-        <Card className="p-6 space-y-4 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+      <div className="space-y-6 pt-2 max-w-2xl mx-auto">
+        <Card className="p-6 space-y-4 border-primary/20 bg-primary/5">
           <div className="flex items-start justify-between gap-3">
             <div>
               <Badge variant="secondary" className="mb-2">Estimated</Badge>
-              <h2 className="text-2xl font-bold text-foreground">Your household benchmark</h2>
+              <h2 className="font-display text-2xl font-semibold tracking-tight text-foreground">Your household benchmark</h2>
               <p className="text-muted-foreground text-sm mt-1">
                 Based on {getHouseTypeLabel(houseType)} typical usage and today&apos;s grid intensity
                 {intensity ? ` (${intensity}g CO₂/kWh · ${intensityIndex})` : ''}.
@@ -365,50 +363,50 @@ export function FootprintView() {
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-lg border border-border/60 bg-background/60 p-4">
+            <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
               <p className="text-xs text-muted-foreground">Est. daily usage</p>
-              <p className="text-2xl font-semibold tabular-nums">{estimatedDailyKwh.toFixed(1)} kWh</p>
+              <p className="text-2xl font-semibold font-mono tabular-nums">{estimatedDailyKwh.toFixed(1)} kWh</p>
             </div>
-            <div className="rounded-lg border border-border/60 bg-background/60 p-4">
+            <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
               <p className="text-xs text-muted-foreground">Est. daily CO₂</p>
-              <p className="text-2xl font-semibold tabular-nums">
+              <p className="text-2xl font-semibold font-mono tabular-nums">
                 {intensity ? `${formatEstimatedKg(estimatedDailyGrams)} kg` : '—'}
               </p>
             </div>
           </div>
 
           {hasCredentials && (
-            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-100">
+            <div className="rounded-lg border border-border bg-muted/40 p-3 text-sm text-foreground">
               Credentials are saved on this device, but meters aren&apos;t fully linked yet.
               Open Settings to finish linking, then wait up to 24–48 hours for smart-meter history.
             </div>
           )}
         </Card>
 
-        <Card className="p-8 text-center space-y-6 border-border">
+        <Card className="p-8 text-center space-y-6">
           <div className="space-y-3">
-            <h3 className="text-xl font-semibold text-foreground">Unlock your real footprint</h3>
+            <h3 className="font-display text-xl font-semibold text-foreground">Unlock your real footprint</h3>
             <p className="text-muted-foreground text-sm max-w-md mx-auto">
               Connect Octopus Energy to multiply your actual half-hourly usage by grid intensity — and get a Green Score for how well you time demand.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left max-w-xl mx-auto py-2">
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border border-border/50">
-              <div className="p-2 rounded-full bg-green-100 dark:bg-green-900/30">
-                <Leaf className="w-5 h-5 text-green-600 dark:text-green-400" />
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/50">
+              <div className="p-2 rounded-full bg-primary/10">
+                <Leaf className="w-5 h-5 text-primary" />
               </div>
               <span className="text-sm font-medium">Daily Emissions</span>
             </div>
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border border-border/50">
-              <div className="p-2 rounded-full bg-yellow-100 dark:bg-yellow-900/30">
-                <Sun className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/50">
+              <div className="p-2 rounded-full bg-primary/10">
+                <Sun className="w-5 h-5 text-primary" />
               </div>
               <span className="text-sm font-medium">Solar Impact</span>
             </div>
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border border-border/50">
-              <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/30">
-                <Trophy className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/50">
+              <div className="p-2 rounded-full bg-primary/10">
+                <Trophy className="w-5 h-5 text-primary" />
               </div>
               <span className="text-sm font-medium">Green Score</span>
             </div>
@@ -417,7 +415,7 @@ export function FootprintView() {
           <div className="flex flex-col items-center gap-3 pt-2">
             <Button
               size="lg"
-              className="w-full max-w-sm font-semibold text-lg h-12 shadow-lg hover:shadow-xl transition-all"
+              className="w-full max-w-sm font-semibold text-lg h-12"
               onClick={() => navigate('/settings')}
             >
               <Zap className="w-5 h-5 mr-2" />
@@ -488,7 +486,7 @@ export function FootprintView() {
       {/* Time Range Selector & Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-lg font-semibold text-foreground">My Footprint</h2>
+          <h2 className="font-display text-xl font-semibold tracking-tight text-foreground">My Footprint</h2>
           <p className="text-sm text-muted-foreground">Track your carbon impact over time</p>
         </div>
         <Tabs value={timeRange} onValueChange={(v) => setTimeRange(v as TimeRange)} className="w-full sm:w-auto">
@@ -613,16 +611,16 @@ export function FootprintView() {
             </Card>
 
             {insights?.hasExport && (
-              <Card className="p-4 border-amber-500/20 bg-amber-500/10 relative">
+              <Card className="p-4 border-primary/20 bg-primary/5 relative">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <SunMedium className="w-5 h-5 text-amber-600 dark:text-amber-500" />
+                    <SunMedium className="w-5 h-5 text-primary" />
                     <span className="text-xs text-muted-foreground">Solar Export</span>
                   </div>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0 hover:bg-amber-500/10">
-                        <Info className="w-3.5 h-3.5 text-amber-600/70" />
+                      <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0 hover:bg-primary/10">
+                        <Info className="w-3.5 h-3.5 text-muted-foreground" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-[280px] p-3 text-xs" align="end">
@@ -633,17 +631,17 @@ export function FootprintView() {
                     </PopoverContent>
                   </Popover>
                 </div>
-                <p className="text-2xl font-bold text-amber-600 dark:text-amber-500">
-                  -{insights.exportCarbonKg.toFixed(1)} <span className="text-sm font-normal">kg CO₂</span>
+                <p className="text-2xl font-bold font-mono tabular-nums text-primary">
+                  -{insights.exportCarbonKg.toFixed(1)} <span className="text-sm font-normal font-sans">kg CO₂</span>
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">{insights.exportKwh.toFixed(1)} kWh exported</p>
               </Card>
             )}
 
-            <Card className={`p-4 ${insights?.hasExport ? 'border-emerald-500/20 bg-emerald-500/10' : ''} relative`}>
+            <Card className={`p-4 ${insights?.hasExport ? 'border-primary/20 bg-primary/5' : ''} relative`}>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <Leaf className={`w-5 h-5 ${insights?.hasExport ? 'text-emerald-600 dark:text-emerald-500' : 'text-primary'}`} />
+                  <Leaf className="w-5 h-5 text-primary" />
                   <span className="text-xs text-muted-foreground">
                     {insights?.hasExport ? 'Net Carbon' : 'Total Carbon'}
                   </span>
@@ -651,8 +649,8 @@ export function FootprintView() {
                 {insights?.hasExport && (
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0 hover:bg-emerald-500/10">
-                        <Info className="w-3.5 h-3.5 text-emerald-600/70" />
+                      <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0 hover:bg-primary/10">
+                        <Info className="w-3.5 h-3.5 text-muted-foreground" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-[280px] p-3 text-xs" align="end">
@@ -664,8 +662,8 @@ export function FootprintView() {
                   </Popover>
                 )}
               </div>
-              <p className={`text-2xl font-bold ${insights?.hasExport ? 'text-emerald-600 dark:text-emerald-500' : 'text-foreground'}`}>
-                {(insights?.hasExport ? insights.netCarbonKg : insights?.totalCarbon)?.toFixed(1)} <span className="text-sm font-normal">kg CO₂</span>
+              <p className={`text-2xl font-bold font-mono tabular-nums ${insights?.hasExport ? 'text-primary' : 'text-foreground'}`}>
+                {(insights?.hasExport ? insights.netCarbonKg : insights?.totalCarbon)?.toFixed(1)} <span className="text-sm font-normal font-sans">kg CO₂</span>
               </p>
               {insights?.hasExport && (
                 <p className="text-xs text-muted-foreground mt-1">After solar offset</p>
@@ -675,7 +673,7 @@ export function FootprintView() {
 
           {/* Green Score */}
           {insights && (
-            <Card className="p-4 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+            <Card className="p-4 bg-primary/5 border-primary/20">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
@@ -767,8 +765,8 @@ export function FootprintView() {
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center ${insights.comparison.isEfficient
-                    ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600'
-                    : 'bg-amber-100 dark:bg-amber-900/30 text-amber-600'
+                    ? 'bg-primary/10 text-primary'
+                    : 'bg-muted text-muted-foreground'
                     }`}>
                     {insights.comparison.isEfficient ? <TrendingDown className="w-5 h-5" /> : <TrendingUp className="w-5 h-5" />}
                   </div>
@@ -778,7 +776,7 @@ export function FootprintView() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className={`text-xl font-bold ${insights.comparison.isEfficient ? 'text-emerald-600' : 'text-amber-600'}`}>
+                  <p className={`text-xl font-bold font-mono tabular-nums ${insights.comparison.isEfficient ? 'text-primary' : 'text-foreground'}`}>
                     {insights.comparison.isEfficient ? '-' : '+'}{insights.comparison.percent.toFixed(0)}%
                   </p>
                   <p className="text-[10px] text-muted-foreground">
@@ -793,13 +791,13 @@ export function FootprintView() {
             </Card>
           )}
 
-          {/* Impact Visualization Card - NEW */}
+          {/* Impact Visualization Card */}
           {insights && insights.carbonSaved > 0.1 && (
-            <Card className="p-5 bg-gradient-to-br from-emerald-500/10 to-teal-500/5 border-emerald-500/20 mb-6">
+            <Card className="p-5 bg-primary/5 border-primary/20 mb-6">
               <div className="flex flex-col gap-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                       <Leaf className="w-5 h-5" />
                     </div>
                     <div>
@@ -808,8 +806,8 @@ export function FootprintView() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className={`text-2xl font-bold ${getImpactColor(insights.carbonSaved)}`}>
-                      -{insights.carbonSaved.toFixed(1)}<span className="text-sm font-normal text-muted-foreground ml-1">kg CO₂</span>
+                    <p className="text-2xl font-bold font-mono tabular-nums text-primary">
+                      -{insights.carbonSaved.toFixed(1)}<span className="text-sm font-normal font-sans text-muted-foreground ml-1">kg CO₂</span>
                     </p>
                   </div>
                 </div>
@@ -818,10 +816,10 @@ export function FootprintView() {
                   {/* Miles Driven */}
                   <Popover>
                     <PopoverTrigger asChild>
-                      <div className="p-3 bg-card/60 rounded-lg flex flex-col items-center text-center gap-2 shadow-sm border border-border/50 cursor-pointer hover:bg-card/80 transition-colors">
-                        <Car className="w-5 h-5 text-blue-500" />
+                      <div className="p-3 bg-muted/30 rounded-lg flex flex-col items-center text-center gap-2 border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors">
+                        <Car className="w-5 h-5 text-primary" />
                         <div>
-                          <p className="text-lg font-bold text-foreground">{insights.impact.milesDriven}</p>
+                          <p className="text-lg font-bold font-mono tabular-nums text-foreground">{insights.impact.milesDriven}</p>
                           <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Miles Driven</p>
                         </div>
                       </div>
@@ -835,10 +833,10 @@ export function FootprintView() {
                   {/* Trees */}
                   <Popover>
                     <PopoverTrigger asChild>
-                      <div className="p-3 bg-card/60 rounded-lg flex flex-col items-center text-center gap-2 shadow-sm border border-border/50 cursor-pointer hover:bg-card/80 transition-colors">
-                        <Trees className="w-5 h-5 text-green-600" />
+                      <div className="p-3 bg-muted/30 rounded-lg flex flex-col items-center text-center gap-2 border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors">
+                        <Trees className="w-5 h-5 text-primary" />
                         <div>
-                          <p className="text-lg font-bold text-foreground">{insights.impact.treesPlanted}</p>
+                          <p className="text-lg font-bold font-mono tabular-nums text-foreground">{insights.impact.treesPlanted}</p>
                           <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Tree Days</p>
                         </div>
                       </div>
@@ -852,10 +850,10 @@ export function FootprintView() {
                   {/* Smartphones */}
                   <Popover>
                     <PopoverTrigger asChild>
-                      <div className="p-3 bg-card/60 rounded-lg flex flex-col items-center text-center gap-2 shadow-sm border border-border/50 cursor-pointer hover:bg-card/80 transition-colors">
-                        <Smartphone className="w-5 h-5 text-indigo-500" />
+                      <div className="p-3 bg-muted/30 rounded-lg flex flex-col items-center text-center gap-2 border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors">
+                        <Smartphone className="w-5 h-5 text-primary" />
                         <div>
-                          <p className="text-lg font-bold text-foreground">{insights.impact.smartphonesCharged}</p>
+                          <p className="text-lg font-bold font-mono tabular-nums text-foreground">{insights.impact.smartphonesCharged}</p>
                           <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Phone Charges</p>
                         </div>
                       </div>
@@ -868,10 +866,10 @@ export function FootprintView() {
                   {/* Kettles */}
                   <Popover>
                     <PopoverTrigger asChild>
-                      <div className="p-3 bg-card/60 rounded-lg flex flex-col items-center text-center gap-2 shadow-sm border border-border/50 cursor-pointer hover:bg-card/80 transition-colors">
-                        <Coffee className="w-5 h-5 text-amber-600" />
+                      <div className="p-3 bg-muted/30 rounded-lg flex flex-col items-center text-center gap-2 border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors">
+                        <Coffee className="w-5 h-5 text-primary" />
                         <div>
-                          <p className="text-lg font-bold text-foreground">{insights.impact.kettlesBoiled}</p>
+                          <p className="text-lg font-bold font-mono tabular-nums text-foreground">{insights.impact.kettlesBoiled}</p>
                           <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Kettles Boiled</p>
                         </div>
                       </div>
@@ -882,8 +880,8 @@ export function FootprintView() {
                   </Popover>
                 </div>
 
-                <p className="text-xs text-center text-muted-foreground/80 italic mt-1">
-                  You avoided this much carbon by using energy when the grid was greener!
+                <p className="text-xs text-center text-muted-foreground/80 mt-1">
+                  You avoided this much carbon by using energy when the grid was greener.
                 </p>
               </div>
             </Card>
@@ -903,7 +901,7 @@ export function FootprintView() {
                   <div>
                     <p className="text-sm text-foreground">
                       <strong>{insights.greenPercentage.toFixed(0)}%</strong> of your energy came from low-carbon sources!
-                      {insights.greenPercentage >= 70 && " You're in the top tier of eco-conscious users! 🌟"}
+                      {insights.greenPercentage >= 70 && " You're in the top tier of eco-conscious users."}
                       {insights.greenPercentage >= 50 && insights.greenPercentage < 70 && " Keep it up! You're doing better than average."}
                       {insights.greenPercentage < 50 && " Try running appliances during windy or sunny periods."}
                     </p>
@@ -917,8 +915,8 @@ export function FootprintView() {
                     <div>
                       <p className="text-sm text-foreground">
                         <strong>{insights.bestPeriod.date}</strong> was your greenest period with only{' '}
-                        <strong>{insights.bestPeriod.carbon.toFixed(1)}kg CO₂</strong>!
-                        {insights.bestPeriod.carbon < 1 && " That's incredibly low! 🎉"}
+                        <strong>{insights.bestPeriod.carbon.toFixed(1)}kg CO₂</strong>.
+                        {insights.bestPeriod.carbon < 1 && " That's incredibly low."}
                       </p>
                     </div>
                   </div>
@@ -1124,8 +1122,8 @@ export function FootprintView() {
                         If all your usage was during low-intensity periods, you could save{' '}
                         <strong className="text-foreground">{insights.potentialSavings.toFixed(1)} kg CO₂</strong> during this period!
                       </p>
-                      <div className="flex items-center gap-2 p-2 bg-background/50 rounded-md border border-primary/10">
-                        <Car className="w-4 h-4 text-blue-500" />
+                      <div className="flex items-center gap-2 p-2 bg-muted/40 rounded-md border border-primary/10">
+                        <Car className="w-4 h-4 text-primary" />
                         <p className="text-xs">
                           That's equivalent to driving <strong className="text-foreground">{getImpactEquivalents(insights.potentialSavings).milesDriven} miles</strong> in an average car.
                         </p>

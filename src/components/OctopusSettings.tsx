@@ -223,7 +223,7 @@ export const OctopusSettings = forwardRef<HTMLDivElement, OctopusSettingsProps>(
                         You can find your API Key in the <a href="https://octopus.energy/dashboard/developer/" target="_blank" rel="noreferrer" className="underline hover:text-primary">Octopus Developer Dashboard</a>.
                     </p>
                     <p className="pt-2 border-t border-primary/20">
-                        Not with Octopus yet? <a href="https://share.octopus.energy/light-sheep-695" target="_blank" rel="noreferrer" className="underline font-medium text-purple-600 hover:text-primary dark:text-purple-400">Join with £50 free credit</a>
+                        Not with Octopus yet? <a href="https://share.octopus.energy/light-sheep-695" target="_blank" rel="noreferrer" className="underline font-medium text-primary hover:text-primary/80">Join with £50 free credit</a>
                     </p>
                 </div>
             </div>
