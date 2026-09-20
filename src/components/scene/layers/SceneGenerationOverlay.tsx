@@ -40,10 +40,10 @@ export function SceneGenerationOverlay({
 }: SceneGenerationOverlayProps) {
   return (
     <>
-      {/* Ground colour cover — fills the bottom safety gap (bottom-[40px] scenery
-          shift) so sky gradient doesn't peek through as a discordant purple/teal bar. */}
+      {/* Ground colour cover strip — prevents the sky gradient bleeding through
+          at the bottom corners where the SVG landscape shapes don't reach the edges */}
       <motion.div
-        className="absolute bottom-0 left-0 right-0 h-11 pointer-events-none z-[50]"
+        className="absolute bottom-0 left-0 right-0 h-2 pointer-events-none z-[50]"
         animate={{ backgroundColor: sceneConfig.groundColor }}
         transition={{ duration: 2, ease: 'easeInOut' as const }}
         aria-hidden="true"
