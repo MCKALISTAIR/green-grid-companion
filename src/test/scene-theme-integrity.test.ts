@@ -54,4 +54,16 @@ describe('Scene theme integrity (stress-test guards)', () => {
     const backBlock = src.slice(src.indexOf('<CityLandscapeBack'), src.indexOf('<CityLandscapeMid'));
     expect(backBlock).not.toContain('<LondonEye');
   });
+
+  it('gives dirty coastal a pollution silhouette (smog + horizon stack)', () => {
+    const coastal = read('CoastalSceneLayers.tsx');
+    expect(coastal).toContain('CoastalHorizonPollution');
+    expect(coastal).toContain('SmogBand');
+    expect(coastal).toMatch(/cleanliness > 0\.25/);
+    const elements = fs.readFileSync(
+      path.resolve(__dirname, '../components/scene/CoastalElements.tsx'),
+      'utf-8'
+    );
+    expect(elements).toContain('export function CoastalHorizonPollution');
+  });
 });

@@ -60,8 +60,8 @@ const COASTAL_HEROES: HeroConfig = {
     'very-clean': { x: 38, y: 52, size: 26, tint: 'rgba(180,255,220,0.42)' },
     clean:        { x: 42, y: 58, size: 24, tint: 'rgba(160,230,200,0.35)' },
     moderate:     { x: 68, y: 72, size: 20, tint: 'rgba(245,200,120,0.36)' },
-    dirty:        { x: 50, y: 42, size: 28, tint: 'rgba(220,140,90,0.40)'  },
-    'very-dirty': { x: 50, y: 28, size: 48, tint: 'rgba(180,90,50,0.45)'  },
+    dirty:        { x: 55, y: 48, size: 26, tint: 'rgba(220,140,90,0.42)'  },
+    'very-dirty': { x: 50, y: 30, size: 48, tint: 'rgba(180,90,50,0.48)'  },
 };
 
 export function SceneHeroSpotlight({ band, isCity, isCoastal, isNight }: SpotlightProps) {

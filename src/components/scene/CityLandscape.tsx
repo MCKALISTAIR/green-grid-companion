@@ -103,8 +103,8 @@ function Building({ x, width, height, fill, windowLit, windowDark, isNight, clea
   const windowWidth = 4;
   const windowHeight = 5;
 
-  // At night, more windows lit. When clean energy, fewer office lights (energy saving)
-  const litProbability = isNight ? (cleanliness > 0.7 ? 0.3 : 0.7) : 0.15;
+  // Daytime: almost no lit windows (office daylight). Night: more lights when dirty.
+  const litProbability = isNight ? (cleanliness > 0.7 ? 0.3 : 0.7) : 0.04;
 
   // Stable window pattern based on position
   const windows = useMemo(() => {
@@ -124,6 +124,16 @@ function Building({ x, width, height, fill, windowLit, windowDark, isNight, clea
     }
     return result;
   }, [x, height, windowRows, windowCols, litProbability]);
+
+  // Sparse rooftop solar — seeded so only some buildings get 1–2 panels (not a tiled grid)
+  const solarPanels = useMemo(() => {
+    if (cleanliness <= 0.6 || width < 18) return [] as number[];
+    const seed = (x * 13 + height * 7) % 100;
+    if (seed > 55) return []; // ~45% of eligible roofs
+    const maxPanels = Math.min(2, Math.floor(width / 14));
+    const count = seed % 2 === 0 ? maxPanels : 1;
+    return Array.from({ length: count }, (_, i) => x + 3 + i * 11);
+  }, [cleanliness, width, x, height]);
 
   return (
     <motion.g
@@ -145,31 +155,23 @@ function Building({ x, width, height, fill, windowLit, windowDark, isNight, clea
           width={windowWidth}
           height={windowHeight}
           fill={w.lit ? windowLit : windowDark}
-          opacity={w.lit ? (isNight ? 0.9 : 0.6) : 0.3}
+          opacity={w.lit ? (isNight ? 0.9 : 0.55) : 0.3}
           rx={0.5}
         />
       ))}
 
-      {/* Rooftop solar panels when clean */}
-      {cleanliness > 0.6 && width > 20 && (
-        <g>
-          {Array.from({ length: Math.floor(width / 12) }).map((_, i) => {
-            const panelX = x + 4 + i * 12;
-            const roofY = 150 - height;
-            return (
-              <g key={`solar-${i}`}>
-                {/* Mounting bracket / leg */}
-                <rect x={panelX + 1} y={roofY - 2} width={1} height={2.5} fill="rgba(150,150,150,0.6)" />
-                <rect x={panelX + 6} y={roofY - 2} width={1} height={2.5} fill="rgba(150,150,150,0.6)" />
-                {/* Panel (tilted appearance via slight y offset) */}
-                <rect x={panelX} y={roofY - 3.5} width={8} height={2} fill="#1e40af" opacity={0.75} rx={0.3} />
-                {/* Panel highlight strip */}
-                <rect x={panelX + 0.5} y={roofY - 3.2} width={7} height={0.4} fill="rgba(150,200,255,0.3)" />
-              </g>
-            );
-          })}
-        </g>
-      )}
+      {/* Rooftop solar panels when clean — sparse, not every roof */}
+      {solarPanels.map((panelX, i) => {
+        const roofY = 150 - height;
+        return (
+          <g key={`solar-${i}`}>
+            <rect x={panelX + 1} y={roofY - 2} width={1} height={2.5} fill="rgba(150,150,150,0.6)" />
+            <rect x={panelX + 6} y={roofY - 2} width={1} height={2.5} fill="rgba(150,150,150,0.6)" />
+            <rect x={panelX} y={roofY - 3.5} width={8} height={2} fill="#1e40af" opacity={0.75} rx={0.3} />
+            <rect x={panelX + 0.5} y={roofY - 3.2} width={7} height={0.4} fill="rgba(150,200,255,0.3)" />
+          </g>
+        );
+      })}
 
       {/* Rooftop antenna/detail */}
       {height > 60 && (
@@ -408,7 +410,7 @@ function ArtDecoBuilding({ x, width, height, fill, windowLit, windowDark, isNigh
       {Array.from({ length: Math.floor((height - stepCount * stepHeight) / 14) }).map((_, row) =>
         Array.from({ length: Math.floor(width / 10) }).map((_, col) => {
           const seed = (x * 11 + row * 23 + col * 13) % 100;
-          const litProb = isNight ? (cleanliness > 0.7 ? 30 : 65) : 15;
+          const litProb = isNight ? (cleanliness > 0.7 ? 30 : 65) : 4;
           return (
             <rect
               key={`${row}-${col}`}
