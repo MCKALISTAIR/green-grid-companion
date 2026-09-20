@@ -2,11 +2,12 @@ import { Download, Monitor } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { settingsItemVariants } from './settingsMotion';
+import { SettingsSectionHeading } from './SettingsSectionHeading';
 
 export function SettingsDesktopCompanion() {
   return (
     <motion.div variants={settingsItemVariants} className="space-y-4">
-      <h2 className="text-xl font-semibold">Desktop Companion</h2>
+      <SettingsSectionHeading>Desktop Companion</SettingsSectionHeading>
       <div className="p-4 bg-gradient-to-br from-card to-accent/5 border rounded-lg space-y-3 relative overflow-hidden">
         <Monitor className="absolute -right-4 -bottom-4 w-24 h-24 text-accent/10 rotate-[-15deg]" />
 

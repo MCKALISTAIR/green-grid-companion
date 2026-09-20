@@ -47,9 +47,10 @@ One sentence:
 |---|---|
 | Sci-fi gags (UFO, synthwave as default identity) | Not part of brand. UFO only as ultra-rare easter egg (stage 4+ night) or kill. Synthwave stays opt-in double-tap, never marketing. |
 | Rainbow Lucide accent docks | One active accent: **primary green**. No per-tab candy colours. |
-| Glassmorphism card stacks | Prefer **paper sheet** surfaces. Cards only when they hold an interaction. |
+| Glassmorphism card stacks | Prefer **paper sheet** surfaces (`sheet-surface` / Card primitive). Cards only when they hold an interaction. |
+| Purple / indigo eco-SaaS accents | Use **primary** (and accent sparingly). Partner logos may keep brand colour in the mark only. |
 | Random delight unrelated to grid state | Prefer **streak/garden growth** and state-transition juice over roulette gags. |
-| Generic “eco SaaS” purple/indigo or cream+terracotta AI defaults | Stay on sky-paper + grid green; don’t drift. |
+| Generic “eco SaaS” cream+terracotta AI defaults | Stay on sky-paper + grid green; don’t drift. |
 
 ---
 

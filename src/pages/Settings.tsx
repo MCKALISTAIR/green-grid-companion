@@ -28,6 +28,7 @@ import { SettingsDataSyncSection } from '@/components/settings/SettingsDataSyncS
 import { SettingsDebugSection } from '@/components/settings/SettingsDebugSection';
 import { SettingsFooter } from '@/components/settings/SettingsFooter';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { SettingsSectionHeading } from '@/components/settings/SettingsSectionHeading';
 
 export default function Settings() {
   const [showYearWrapped, setShowYearWrapped] = useState(false);
@@ -97,7 +98,7 @@ export default function Settings() {
         </motion.div>
 
         <motion.div variants={settingsItemVariants} className="space-y-4">
-          <h2 className="text-xl font-semibold">Account</h2>
+          <SettingsSectionHeading>Account</SettingsSectionHeading>
           <AccountBackup
             isSyncing={isSyncing}
             lastSyncedAt={lastSyncedAt}

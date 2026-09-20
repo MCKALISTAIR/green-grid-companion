@@ -3,6 +3,7 @@ import { ChevronRight, GraduationCap, History, MessageSquare, Shield, Sparkles }
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { settingsItemVariants } from './settingsMotion';
+import { SettingsSectionHeading } from './SettingsSectionHeading';
 
 interface SettingsResourcesSectionProps {
   hasNewVersion: boolean;
@@ -15,7 +16,7 @@ export function SettingsResourcesSection({
 }: SettingsResourcesSectionProps) {
   return (
     <motion.div variants={settingsItemVariants} className="space-y-4">
-      <h2 className="text-xl font-semibold">Resources</h2>
+      <SettingsSectionHeading>Resources</SettingsSectionHeading>
 
       <div className="flex flex-col gap-3">
         {new Date().getMonth() === 11 && (
@@ -40,7 +41,7 @@ export function SettingsResourcesSection({
             whileHover={{ scale: 1.01, y: -2 }}
             whileTap={{ scale: 0.99 }}
             transition={{ type: 'spring' as const, stiffness: 400, damping: 20 }}
-            className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-all"
+            className="flex items-center justify-between sheet-surface p-4 hover:bg-muted/50 transition-all"
           >
             <div className="flex items-center gap-3">
               <div className="p-2 bg-primary/10 rounded-full">
@@ -60,7 +61,7 @@ export function SettingsResourcesSection({
             whileHover={{ scale: 1.01, y: -2 }}
             whileTap={{ scale: 0.99 }}
             transition={{ type: 'spring' as const, stiffness: 400, damping: 20 }}
-            className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-all"
+            className="flex items-center justify-between sheet-surface p-4 hover:bg-muted/50 transition-all"
           >
             <div className="flex items-center gap-3">
               <div className="p-2 bg-primary/10 rounded-full">
@@ -80,7 +81,7 @@ export function SettingsResourcesSection({
             whileHover={{ scale: 1.01, y: -2 }}
             whileTap={{ scale: 0.99 }}
             transition={{ type: 'spring' as const, stiffness: 400, damping: 20 }}
-            className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-all"
+            className="flex items-center justify-between sheet-surface p-4 hover:bg-muted/50 transition-all"
           >
             <div className="flex items-center gap-3">
               <div className="p-2 bg-primary/10 rounded-full">
@@ -100,7 +101,7 @@ export function SettingsResourcesSection({
             whileHover={{ scale: 1.01, y: -2 }}
             whileTap={{ scale: 0.99 }}
             transition={{ type: 'spring' as const, stiffness: 400, damping: 20 }}
-            className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-all"
+            className="flex items-center justify-between sheet-surface p-4 hover:bg-muted/50 transition-all"
           >
             <div className="flex items-center gap-3">
               <div className="p-2 bg-primary/10 rounded-full relative">
@@ -130,7 +131,7 @@ export function SettingsResourcesSection({
             whileHover={{ scale: 1.01, y: -2 }}
             whileTap={{ scale: 0.99 }}
             transition={{ type: 'spring' as const, stiffness: 400, damping: 20 }}
-            className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-all"
+            className="flex items-center justify-between sheet-surface p-4 hover:bg-muted/50 transition-all"
           >
             <div className="flex items-center gap-3">
               <div className="p-2 bg-muted rounded-full">

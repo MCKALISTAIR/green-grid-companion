@@ -4,6 +4,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { HouseType, OFGEM_TDCV_2025 } from '@/lib/energy-standards';
 import { settingsItemVariants } from './settingsMotion';
+import { SettingsSectionHeading } from './SettingsSectionHeading';
 
 interface SettingsHouseholdSectionProps {
   houseType: HouseType;
@@ -20,8 +21,8 @@ export function SettingsHouseholdSection({
 }: SettingsHouseholdSectionProps) {
   return (
     <motion.div variants={settingsItemVariants} className="space-y-4">
-      <h2 className="text-xl font-semibold">Household Profile</h2>
-      <div className="p-4 bg-card border rounded-lg space-y-3">
+      <SettingsSectionHeading>Household Profile</SettingsSectionHeading>
+      <div className="sheet-surface p-4 space-y-3">
         <div className="flex items-center gap-2">
           <Home className="w-5 h-5 text-primary" />
           <div>

@@ -1,3 +1,4 @@
+import { SettingsSectionHeading } from '@/components/settings/SettingsSectionHeading';
 import { useState, useEffect } from 'react';
 import { Bell, BellOff, Clock, Zap, Smartphone, CalendarDays, FileText, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -55,7 +56,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
   return (
     <div className="space-y-6 p-1">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-foreground">Notifications</h2>
+        <SettingsSectionHeading>Notifications</SettingsSectionHeading>
         {isNative && permissionStatus === 'granted' && (
           <Badge variant="secondary" className="gap-1">
             <Smartphone className="w-3 h-3" />
@@ -288,7 +289,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
       </Card>
 
       {/* Daily Forecast */}
-      < Card className="p-4 space-y-4" >
+      <Card className="p-4 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-accent/50 flex items-center justify-center">

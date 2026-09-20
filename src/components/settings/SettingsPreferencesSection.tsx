@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import type { FactTone } from '@/lib/energyFacts';
 import type { SceneType } from '@/hooks/useSceneType';
 import { settingsItemVariants } from './settingsMotion';
+import { SettingsSectionHeading } from './SettingsSectionHeading';
 
 type TonePreference = FactTone | 'mixed';
 type ScenePreference = 'auto' | SceneType;
@@ -35,10 +36,10 @@ export function SettingsPreferencesSection({
 }: SettingsPreferencesSectionProps) {
   return (
     <motion.div variants={settingsItemVariants} className="space-y-4">
-      <h2 className="text-xl font-semibold">Preferences</h2>
+      <SettingsSectionHeading>Preferences</SettingsSectionHeading>
 
       <div className="flex flex-col gap-3">
-        <div className="p-4 bg-card border rounded-lg space-y-3">
+        <div className="sheet-surface p-4 space-y-3">
           <div className="flex items-center gap-2">
             <MessageSquare className="w-5 h-5 text-primary" />
             <div>
@@ -70,7 +71,7 @@ export function SettingsPreferencesSection({
           </RadioGroup>
         </div>
 
-        <div className="p-4 bg-card border rounded-lg">
+        <div className="sheet-surface p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-primary/10 rounded-full">
@@ -94,7 +95,7 @@ export function SettingsPreferencesSection({
           </div>
         </div>
 
-        <div className="p-4 bg-card border rounded-lg space-y-3">
+        <div className="sheet-surface p-4 space-y-3">
           <div className="flex items-center gap-2">
             <Paintbrush className="w-5 h-5 text-primary" />
             <div>
@@ -140,7 +141,7 @@ export function SettingsPreferencesSection({
             whileHover={{ scale: 1.01, y: -2 }}
             whileTap={{ scale: 0.99 }}
             transition={{ type: 'spring' as const, stiffness: 400, damping: 20 }}
-            className="flex items-center justify-between p-4 bg-card border rounded-lg hover:bg-muted/50 transition-all"
+            className="flex items-center justify-between sheet-surface p-4 hover:bg-muted/50 transition-all"
           >
             <div className="flex items-center gap-3">
               <div className="p-2 bg-primary/10 rounded-full">
@@ -155,7 +156,7 @@ export function SettingsPreferencesSection({
           </motion.div>
         </Link>
 
-        <div className="flex items-center justify-between p-4 bg-card border rounded-lg">
+        <div className="flex items-center justify-between sheet-surface p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary/10 rounded-full">
               <Cookie className="w-5 h-5 text-primary" />
