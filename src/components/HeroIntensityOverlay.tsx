@@ -6,7 +6,6 @@ import { LocationManager } from '@/components/LocationManager';
 import { AnimatedIntensity } from '@/components/AnimatedIntensity';
 import { TypewriterText } from '@/components/TypewriterText';
 import { RenewableSparkle } from '@/components/RenewableSparkle';
-import { StaleDataBadge } from '@/components/StaleDataBadge';
 import { DEFINITIONS } from '@/lib/definitions';
 import { cn } from '@/lib/utils';
 
@@ -168,7 +167,7 @@ export function HeroIntensityOverlay({
             <div className="relative">
               <motion.p
                 className={cn(
-                  'inline-flex items-center gap-1.5 text-sm font-semibold drop-shadow-md',
+                  'inline-flex items-center gap-1.5 text-sm font-semibold drop-shadow-[0_2px_8px_rgba(0,0,0,0.55)]',
                   renewablesTone,
                 )}
                 key={Math.round(renewablesPct / 10)}
@@ -182,21 +181,18 @@ export function HeroIntensityOverlay({
             </div>
 
             {lastUpdated && (
-              <div className="flex flex-col items-center gap-1">
-                <div className="flex items-center gap-1.5 text-[11px] text-white/75 font-medium drop-shadow-sm">
-                  <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
-                    <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-60 ${freshnessColor}`} />
-                    <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${freshnessColor}`} />
-                  </span>
-                  <span>{relativeTime}</span>
-                  {nextUpdateLabel && (
-                    <>
-                      <span className="opacity-50">·</span>
-                      <span>{nextUpdateLabel}</span>
-                    </>
-                  )}
-                </div>
-                <StaleDataBadge lastUpdated={lastUpdated} />
+              <div className="flex items-center gap-1.5 text-[11px] text-white/75 font-medium drop-shadow-sm">
+                <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
+                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-60 ${freshnessColor}`} />
+                  <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${freshnessColor}`} />
+                </span>
+                <span>{relativeTime}</span>
+                {nextUpdateLabel && (
+                  <>
+                    <span className="opacity-50">·</span>
+                    <span>{nextUpdateLabel}</span>
+                  </>
+                )}
               </div>
             )}
           </div>
