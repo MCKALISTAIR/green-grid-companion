@@ -46,10 +46,10 @@ export function NowOrWaitDecision({ intensity, forecast }: NowOrWaitDecisionProp
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', stiffness: 260, damping: 24 }}
       className={cn(
-        'rounded-2xl px-4 py-4 border',
+        'sheet-surface px-4 py-4',
         isBestNow
           ? 'bg-intensity-very-low/[0.1] border-intensity-very-low/25'
-          : 'bg-muted/40 border-border/60',
+          : 'border-border/60',
       )}
       aria-label="Now or wait decision"
     >

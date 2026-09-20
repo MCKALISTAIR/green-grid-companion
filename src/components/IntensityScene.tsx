@@ -154,19 +154,6 @@ export function IntensityScene({
   const [activeEvent, setActiveEvent] = useState<SceneRandomEvent>('none');
   const [turbineOverdrive, setTurbineOverdrive] = useState<number | null>(null);
 
-  // Random Event Trigger
-  useEffect(() => {
-    const triggerRandomEvent = () => {
-      if (activeEvent !== 'none') return;
-      const rand = Math.random();
-      if (isNight && rand > 0.7) setActiveEvent('ufo');
-      else if (timeOfDay !== 'night' && timeOfDay !== 'dusk' && intensity < 100 && rand > 0.6) setActiveEvent('drone');
-      else if (intensity > 200 && rand > 0.6) setActiveEvent('train');
-    };
-    const interval = setInterval(triggerRandomEvent, 20000);
-    return () => clearInterval(interval);
-  }, [activeEvent, isNight, intensity, timeOfDay]);
-
   const handleTurbineClick = (i: number) => {
     setTurbineOverdrive(i);
     setTimeout(() => setTurbineOverdrive(null), 2000);
@@ -183,6 +170,30 @@ export function IntensityScene({
   const marinePercentage = generationMix.find(m =>
     m.fuel.toLowerCase().includes('marine') || m.fuel.toLowerCase().includes('tidal')
   )?.perc || 0;
+
+  // Diegetic ambient events only (art direction) — grid-mood, not sci-fi roulette.
+  // UFO is an ultra-rare night easter egg at garden stage 4+.
+  useEffect(() => {
+    const triggerDiegeticEvent = () => {
+      if (activeEvent !== 'none') return;
+      const rand = Math.random();
+      if (intensity > 220 && rand > 0.82) {
+        setActiveEvent('train'); // dirty grid → freight / peaker vibe
+      } else if (
+        timeOfDay !== 'night' &&
+        timeOfDay !== 'dusk' &&
+        intensity < 120 &&
+        windPercentage > 15 &&
+        rand > 0.78
+      ) {
+        setActiveEvent('drone'); // clean renewables → survey drone
+      } else if (isNight && sceneGrowth.stage >= 4 && rand > 0.97) {
+        setActiveEvent('ufo'); // easter egg only — not brand
+      }
+    };
+    const interval = setInterval(triggerDiegeticEvent, 45_000);
+    return () => clearInterval(interval);
+  }, [activeEvent, isNight, intensity, timeOfDay, windPercentage, sceneGrowth.stage]);
 
   // Dynamic turbine layout: positions vary by depth layer, count driven by wind %
   const turbineLayout = useMemo(() => buildTurbineLayout(windPercentage), [windPercentage]);

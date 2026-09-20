@@ -61,7 +61,7 @@ export function IntensityDashboard({
       )}
 
       <section
-        className={cn('rounded-2xl border border-border/50 bg-card/40 px-3 py-3', glowClass)}
+        className={cn('sheet-surface px-3 py-3', glowClass)}
         data-tour="generation-mix"
       >
         <ComponentErrorBoundary name="Generation Mix">
@@ -77,7 +77,7 @@ export function IntensityDashboard({
 
       {forecast.length > 0 && (
         <section
-          className={cn('rounded-2xl border border-border/50 bg-card/40 p-3', glowClass)}
+          className={cn('sheet-surface p-3', glowClass)}
           data-tour="forecast-chart"
         >
           <ComponentErrorBoundary name="Hourly Forecast">

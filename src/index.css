@@ -764,21 +764,35 @@ p, blockquote {
   animation: page-enter 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Soft sheet surfaces — paper feel, not heavy glass stacks */
+/* Soft sheet surfaces — paper feel, not heavy glass stacks.
+ * Art direction: “Living grid paper” — sheet, dock, and feed share one hand. */
+.sheet-surface {
+  background: hsl(var(--card) / 0.96);
+  border: 1px solid hsl(var(--border) / 0.5);
+  border-radius: 1.25rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.dark .sheet-surface {
+  background: hsl(var(--card) / 0.88);
+  border-color: hsl(0 0% 100% / 0.08);
+  box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.45);
+}
+
 .glass-card {
-  background: hsl(var(--card) / 0.92) !important;
-  backdrop-filter: blur(12px) saturate(140%);
-  -webkit-backdrop-filter: blur(12px) saturate(140%);
-  border: 1px solid hsl(var(--border) / 0.55) !important;
-  border-radius: 1.35rem !important;
-  box-shadow: var(--shadow-md) !important;
+  background: hsl(var(--card) / 0.96) !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 1px solid hsl(var(--border) / 0.5) !important;
+  border-radius: 1.25rem !important;
+  box-shadow: var(--shadow-sm) !important;
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .dark .glass-card {
-  background: hsl(var(--card) / 0.72) !important;
+  background: hsl(var(--card) / 0.88) !important;
   border: 1px solid hsl(0 0% 100% / 0.08) !important;
-  box-shadow: 0 12px 36px 0 rgba(0, 0, 0, 0.28) !important;
+  box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.45) !important;
 }
 
 /* Ambient glow — whisper, not neon */
@@ -814,25 +828,25 @@ p, blockquote {
   box-shadow: 0 14px 36px -14px hsl(var(--intensity-very-high) / 0.26), 0 0 0 1px hsl(var(--intensity-very-high) / 0.12) !important;
 }
 
-/* Floating bottom dock */
+/* Floating bottom dock — same paper as the home sheet (seam test) */
 .nav-dock {
   margin: 0 14px calc(12px + env(safe-area-inset-bottom));
   border-radius: 1.5rem;
-  background: hsl(var(--card) / 0.92);
-  backdrop-filter: blur(20px) saturate(170%);
-  -webkit-backdrop-filter: blur(20px) saturate(170%);
-  border: 1px solid hsl(var(--border) / 0.65);
+  background: hsl(var(--card) / 0.96);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid hsl(var(--border) / 0.55);
   box-shadow:
-    0 1px 0 hsl(0 0% 100% / 0.65) inset,
-    0 14px 36px -10px hsl(210 25% 15% / 0.28);
+    0 1px 0 hsl(0 0% 100% / 0.55) inset,
+    var(--shadow-md);
 }
 
 .dark .nav-dock {
-  background: hsl(var(--card) / 0.82);
-  border-color: hsl(0 0% 100% / 0.12);
+  background: hsl(var(--card) / 0.88);
+  border-color: hsl(0 0% 100% / 0.1);
   box-shadow:
-    0 1px 0 hsl(0 0% 100% / 0.08) inset,
-    0 18px 40px -8px rgba(0, 0, 0, 0.55);
+    0 1px 0 hsl(0 0% 100% / 0.06) inset,
+    0 14px 36px -10px rgba(0, 0, 0, 0.5);
 }
 
 /* Shimmer Animation for Premium Skeletons */

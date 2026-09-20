@@ -105,5 +105,6 @@ Goal: 3-4 props become tappable and educational.
 ## Follow-ons (Carrot comparison 2026-09)
 - **Quiet sheet** — home content sheet leads with now-or-wait; secondary insights collapsed.
 - **Temporal scene life** — `useSceneGrowth` + `SceneTemporalLife` evolve countryside flora with coal-free + clean hours (stages 0–4).
+- **One product feel** — `docs/ART_DIRECTION.md` (“Living grid paper”); seam/register/job tests; paper sheet + dock; diegetic events only.
 
 Each phase ends with a screenshot QA pass across the 5 intensity bands × city/countryside/coastal × day/night.

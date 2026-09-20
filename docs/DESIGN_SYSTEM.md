@@ -2,6 +2,8 @@
 
 A lightweight, single-source-of-truth reference for everyone touching the GridSense UI — designers, UX researchers, engineers, and reviewers.
 
+> **Art direction:** read [`ART_DIRECTION.md`](./ART_DIRECTION.md) first — “Living grid paper,” one-product tests (brand / seam / register / job). This file is the token & component inventory; that file is the *why*.
+
 > **Live page:** open the running app at `/__design-system` for an always-current view of every token, swatch, contrast ratio and component pattern. The page reads CSS custom properties at runtime, so it cannot drift from the codebase.
 
 ## Why this exists
