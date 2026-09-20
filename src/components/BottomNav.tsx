@@ -41,118 +41,109 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
         }
     };
 
+    const tabClass = (active: boolean) =>
+        `group relative z-10 flex flex-col items-center gap-0.5 h-auto py-2 px-1 rounded-xl transition-all ${
+            active
+                ? 'text-primary font-bold'
+                : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
+        }`;
+
     return (
         <div id="bottom-nav" className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
-            {/* Nav Bar */}
-            <div className="pointer-events-auto pb-[env(safe-area-inset-bottom)] bg-background/80 backdrop-blur-lg border-t border-border/40">
-                <div className="grid grid-cols-5 h-16 max-w-md mx-auto px-1">
+            <div className="pointer-events-auto nav-dock max-w-md mx-auto">
+                <div className="grid grid-cols-5 h-[3.85rem] px-1.5">
 
                     <Button
                         variant="ghost"
-                        className={`group relative z-10 flex flex-col items-center gap-1 h-auto py-2 px-1 rounded-lg transition-all ${isActive('/')
-                            ? 'text-primary font-semibold'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
-                            }`}
+                        className={tabClass(isActive('/'))}
                         onClick={handleHome}
                     >
                         {isActive('/') && (
                             <motion.div
                                 layoutId="bottom-nav-active-pill"
-                                className="absolute inset-1 rounded-lg bg-primary/15 -z-10"
+                                className="absolute inset-1 rounded-xl bg-primary/12 -z-10"
                                 transition={pillTransition}
                             />
                         )}
                         <motion.span key={isActive('/') ? 'active' : 'idle'} {...squishBounce}>
                           <Home className={`w-5 h-5 ${iconTilt}`} />
                         </motion.span>
-                        <span className="text-[10px] font-medium">Home</span>
+                        <span className="text-[10px] font-semibold tracking-wide">Home</span>
                     </Button>
 
                     <Button
                         variant="ghost"
                         data-tour="nav-plan"
-                        className={`group relative z-10 flex flex-col items-center gap-1 h-auto py-2 px-1 rounded-lg transition-all ${isActive('/planner')
-                            ? 'text-primary font-semibold'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
-                            }`}
+                        className={tabClass(isActive('/planner'))}
                         onClick={() => { selection(); navigate('/planner'); }}
                     >
                         {isActive('/planner') && (
                             <motion.div
                                 layoutId="bottom-nav-active-pill"
-                                className="absolute inset-1 rounded-lg bg-primary/15 -z-10"
+                                className="absolute inset-1 rounded-xl bg-primary/12 -z-10"
                                 transition={pillTransition}
                             />
                         )}
                         <motion.span key={isActive('/planner') ? 'active' : 'idle'} {...squishBounce}>
                           <Calendar className={`w-5 h-5 ${iconTilt}`} />
                         </motion.span>
-                        <span className="text-[10px] font-medium">Plan</span>
+                        <span className="text-[10px] font-semibold tracking-wide">Plan</span>
                     </Button>
 
                     <Button
                         variant="ghost"
                         data-tour="nav-history"
-                        className={`group relative z-10 flex flex-col items-center gap-1 h-auto py-2 px-1 rounded-lg transition-all ${isActive('/history')
-                            ? 'text-primary font-semibold'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
-                            }`}
+                        className={tabClass(isActive('/history'))}
                         onClick={() => { selection(); navigate('/history'); }}
                     >
                         {isActive('/history') && (
                             <motion.div
                                 layoutId="bottom-nav-active-pill"
-                                className="absolute inset-1 rounded-lg bg-primary/15 -z-10"
+                                className="absolute inset-1 rounded-xl bg-primary/12 -z-10"
                                 transition={pillTransition}
                             />
                         )}
                         <motion.span key={isActive('/history') ? 'active' : 'idle'} {...squishBounce}>
                           <Clock className={`w-5 h-5 ${iconTilt}`} />
                         </motion.span>
-                        <span className="text-[10px] font-medium">History</span>
+                        <span className="text-[10px] font-semibold tracking-wide">History</span>
                     </Button>
 
                     <Button
                         variant="ghost"
                         data-tour="nav-rank"
-                        className={`group relative z-10 flex flex-col items-center gap-1 h-auto py-2 px-1 rounded-lg transition-all ${isActive('/map')
-                            ? 'text-primary font-semibold'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
-                            }`}
+                        className={tabClass(isActive('/map'))}
                         onClick={() => { selection(); navigate('/map'); }}
                     >
                         {isActive('/map') && (
                             <motion.div
                                 layoutId="bottom-nav-active-pill"
-                                className="absolute inset-1 rounded-lg bg-primary/15 -z-10"
+                                className="absolute inset-1 rounded-xl bg-primary/12 -z-10"
                                 transition={pillTransition}
                             />
                         )}
                         <motion.span key={isActive('/map') ? 'active' : 'idle'} {...squishBounce}>
                           <ListOrdered className={`w-5 h-5 ${iconTilt}`} />
                         </motion.span>
-                        <span className="text-[10px] font-medium">Rank</span>
+                        <span className="text-[10px] font-semibold tracking-wide">Rank</span>
                     </Button>
 
                     <Button
                         variant="ghost"
-                        className={`group relative z-10 flex flex-col items-center gap-1 h-auto py-2 px-1 rounded-lg transition-all ${isActive('/settings')
-                            ? 'text-primary font-semibold'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
-                            }`}
+                        className={tabClass(isActive('/settings'))}
                         onClick={() => { selection(); navigate('/settings'); }}
                     >
                         {isActive('/settings') && (
                             <motion.div
                                 layoutId="bottom-nav-active-pill"
-                                className="absolute inset-1 rounded-lg bg-primary/15 -z-10"
+                                className="absolute inset-1 rounded-xl bg-primary/12 -z-10"
                                 transition={pillTransition}
                             />
                         )}
                         <motion.span key={isActive('/settings') ? 'active' : 'idle'} {...squishBounce}>
-                          <Settings className={`w-5 h-6 ${iconTilt}`} />
+                          <Settings className={`w-5 h-5 ${iconTilt}`} />
                         </motion.span>
-                        <span className="text-[10px] font-medium">Settings</span>
+                        <span className="text-[10px] font-semibold tracking-wide">Settings</span>
                     </Button>
 
                 </div>

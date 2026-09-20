@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { RefreshCw, Zap, Info, Leaf, Activity, MapPin, ChevronDown, AlertTriangle, Trophy } from 'lucide-react';
+import { RefreshCw, Zap, Leaf, Activity, MapPin, ChevronDown, AlertTriangle, Trophy } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { IntensityScene } from '@/components/IntensityScene';
 import { getErrorInfo } from "@/lib/errorUtils";
@@ -16,29 +15,23 @@ import { DemandView } from '@/components/DemandView';
 import { useCarbonData } from '@/hooks/useCarbonData';
 import { useHaptics } from '@/hooks/useHaptics';
 import { NotificationType } from '@capacitor/haptics';
-import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
 import { useNotifications } from '@/hooks/useNotifications';
 import { toast } from 'sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { DEFINITIONS } from '@/lib/definitions';
 import { PullToRefresh } from '@/components/PullToRefresh';
-import { useSavedLocations } from '@/hooks/useSavedLocations';
 import type { ForecastData } from '@/lib/carbonApi';
 import { ErrorState } from '@/components/ErrorState';
 import { ComponentErrorBoundary } from '@/components/ComponentErrorBoundary';
 import { useGridDemand } from '@/hooks/useGridDemand';
 import { WeatherWidget } from '@/components/WeatherWidget';
 import { GreenerNightsCard } from '@/components/GreenerNightsCard';
-import { AnimatedIntensity } from '@/components/AnimatedIntensity';
 import { SceneWaveDivider } from '@/components/scene/SceneWaveDivider';
 import { EnergyFactBubble } from '@/components/scene/EnergyFactBubble';
 import { StaleDataBadge } from '@/components/StaleDataBadge';
 import { LocationMismatchPrompt } from '@/components/LocationMismatchPrompt';
 import { YearWrapped } from '@/components/YearWrapped';
 import { Skeleton } from '@/components/ui/skeleton';
-import { TypewriterText } from '@/components/TypewriterText';
-import { RenewableSparkle } from '@/components/RenewableSparkle';
+import { HeroIntensityOverlay } from '@/components/HeroIntensityOverlay';
 import { getRenewablesPercentage } from '@/lib/generationUtils';
 
 import { useAppLocation } from '@/contexts/LocationContext';
@@ -58,7 +51,6 @@ const Index = () => {
   const [sparkleTrigger, setSparkleTrigger] = useState(false);
 
   const { scheduleGreenAlerts, scheduleDailyForecast, scheduleHighIntensityAlerts, prefs } = useNotifications();
-  const { isLinked: isOctopusLinked } = useOctopusEnergy();
 
   const {
     intensity,
@@ -177,10 +169,6 @@ const Index = () => {
     }
   };
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
   const { skyColor } = useEnvironmentalConditions(postcode, intensity);
 
   // Relative timestamp + freshness dot for hero overlay
@@ -196,6 +184,19 @@ const Index = () => {
   const glowClassSuffix = index ? index.replace(' ', '-') : 'moderate';
   const glowClass = `glow-intensity-${glowClassSuffix}`;
 
+  const nextUpdateLabel = (() => {
+    if (!lastUpdated) return '';
+    if (nextUpdate) {
+      const next = new Date(nextUpdate);
+      const now = new Date();
+      if (now > next) return 'Update due';
+      return `Next ${next.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    }
+    const next = getNextUpdate(lastUpdated);
+    if (!next) return '';
+    return `Next ${next.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  })();
+
   return (
     <TooltipProvider>
       <div
@@ -205,10 +206,8 @@ const Index = () => {
         <PullToRefresh onRefresh={handleRefresh} disabled={isLoading}>
           <main className="min-h-[100dvh] flex flex-col animate-in fade-in duration-700 lg:pb-0">
             <h1 className="sr-only">Carbon Intensity Dashboard</h1>
-            {/* Header with scene */}
-            {/* Header with scene */}
-            <div className="relative w-full h-[60vh] min-h-[400px]">
-              {/* Animated scene */}
+            {/* Scene hero — illustration leads; HUD stays light */}
+            <div className="relative w-full h-[62vh] min-h-[420px] max-h-[720px]">
               <ComponentErrorBoundary name="Scene">
                 <IntensityScene intensity={intensity} index={index} generationMix={generationMix} className="h-full" style={{ height: '100%' }} />
 
@@ -218,7 +217,7 @@ const Index = () => {
                     value={postcode}
                     onChange={setPostcode}
                     trigger={
-                      <button className="flex items-center gap-2 text-white/90 text-sm font-medium uppercase tracking-wide transition-all cursor-pointer bg-black/20 hover:bg-black/30 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 hover:border-white/20 shadow-sm group">
+                      <button className="flex items-center gap-2 text-white/90 text-sm font-semibold tracking-wide transition-all cursor-pointer bg-black/25 hover:bg-black/35 backdrop-blur-md px-4 py-2 rounded-full border border-white/15 hover:border-white/25 shadow-sm group">
                         <MapPin className="w-3.5 h-3.5" />
                         <span>{isLoading ? 'Loading...' : region || 'Select location'}</span>
                         {isBackgroundFetching ? (
@@ -234,187 +233,45 @@ const Index = () => {
                 {/* Achievements Shortcut - Top Right */}
                 <div className="absolute top-[calc(max(env(safe-area-inset-top),24px)+0.5rem)] right-4 z-30 lg:top-6 lg:right-6">
                   <Link to="/achievements">
-                    <button className="flex items-center justify-center text-white/90 transition-all cursor-pointer bg-black/20 hover:bg-black/30 active:scale-95 hover:scale-105 backdrop-blur-md p-2.5 rounded-full border border-white/10 hover:border-white/20 shadow-sm" aria-label="Trophy Room">
-                      <Trophy className="w-4 h-4 text-yellow-400 dark:text-yellow-300" />
+                    <button className="flex items-center justify-center text-white/90 transition-all cursor-pointer bg-black/25 hover:bg-black/35 active:scale-95 hover:scale-105 backdrop-blur-md p-2.5 rounded-full border border-white/15 hover:border-white/25 shadow-sm" aria-label="Trophy Room">
+                      <Trophy className="w-4 h-4 text-amber-300" />
                     </button>
                   </Link>
                 </div>
-
-
-
-
               </ComponentErrorBoundary>
 
-              {/* Overlay header - removed, location now in card */}
-
-              {/* Current intensity display - Only show if NOT in demand mode (DemandView has its own header) */}
               {viewMode !== 'demand' && (
-                <div className="absolute top-[calc(max(env(safe-area-inset-top),59px)+1rem)] left-1/2 -translate-x-1/2 text-center w-auto max-w-[90%] z-10"
-                  data-tour="intensity-gauge">
-                  <div className="bg-white/15 backdrop-blur-md rounded-2xl p-3 shadow-sm border border-white/20">
-                    <div className="flex items-center justify-center gap-2 mb-1">
-                      <div className="lg:hidden">
-                        <LocationManager
-                          value={postcode}
-                          onChange={setPostcode}
-                          trigger={
-                            <button className="flex items-center gap-1.5 text-card/90 text-sm font-medium uppercase tracking-wide hover:text-card transition-colors cursor-pointer group">
-                              <MapPin className="w-3.5 h-3.5" />
-                              <span>{isLoading ? 'Loading...' : region || 'Select location'}</span>
-                              {isBackgroundFetching ? (
-                                <RefreshCw className="w-3.5 h-3.5 animate-spin opacity-75" />
-                              ) : (
-                                <ChevronDown className="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity" />
-                              )}
-                            </button>
-                          }
-                        />
-                      </div>
-                      {!isLoading && region && (
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full p-0 hover:bg-transparent" aria-label="More info about Carbon Intensity">
-                              <Info className="w-3.5 h-3.5 text-card/70 cursor-help" aria-hidden="true" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-[240px] p-3 text-xs bg-card border-border backdrop-blur-xl">
-                            <p>{DEFINITIONS['Carbon Intensity']}</p>
-                          </PopoverContent>
-                        </Popover>
-                      )}
-                    </div>
-
-                    <div className="flex items-baseline justify-center gap-2">
-                      {isLoading ? (
-                        <RefreshCw className="w-10 h-10 text-card animate-spin" aria-label="Loading data" />
-                      ) : isError ? (
-                        <div className="flex flex-col items-center py-1">
-                          <AlertTriangle className="w-8 h-8 text-white/95 animate-pulse mb-1" />
-                          <span className="text-sm font-semibold text-white/90 uppercase tracking-wider">Offline</span>
-                        </div>
-                      ) : (
-                        <>
-                          <AnimatedIntensity
-                            value={intensity}
-                            previousValue={previousIntensity}
-                            isUpdating={isBackgroundFetching}
-                          />
-                          <div className="flex items-center gap-1">
-                            <span className="text-card/90 text-lg font-medium">gCO₂/kWh</span>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full p-0 hover:bg-transparent" aria-label="More info about gCO2/kWh">
-                                  <Info className="w-4 h-4 text-card/70 cursor-help" aria-hidden="true" />
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-[240px] p-3 text-xs bg-card border-border backdrop-blur-xl">
-                                <p>{DEFINITIONS['gCO2/kWh']}</p>
-                              </PopoverContent>
-                            </Popover>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                    {!isLoading && !isError && (
-                      <div className="flex flex-col items-center mt-2 gap-2">
-                        {/* Intensity index label with typewriter reveal */}
-                        <motion.div
-                          key={index}
-                          className="inline-block px-3 py-1 rounded-full bg-white/40 shadow-sm"
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <p className="text-lg font-semibold capitalize text-card">
-                            <TypewriterText text={index} />
-                          </p>
-                        </motion.div>
-
-                        {/* Live renewables badge with sparkle */}
-                        <div className="relative">
-                          <motion.div
-                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold shadow-sm"
-                            style={{
-                              backgroundColor:
-                                renewablesPct >= 70
-                                  ? 'rgba(74, 222, 128, 0.35)'
-                                  : renewablesPct >= 50
-                                  ? 'rgba(163, 230, 53, 0.30)'
-                                  : renewablesPct >= 30
-                                  ? 'rgba(250, 204, 21, 0.30)'
-                                  : 'rgba(251, 146, 60, 0.25)',
-                              color:
-                                renewablesPct >= 70
-                                  ? '#16a34a'
-                                  : renewablesPct >= 50
-                                  ? '#4d7c0f'
-                                  : renewablesPct >= 30
-                                  ? '#854d0e'
-                                  : '#9a3412',
-                              backdropFilter: 'blur(4px)',
-                            }}
-                            key={Math.round(renewablesPct / 10)}
-                            animate={{ scale: [1, 1.07, 1] }}
-                            transition={{ duration: 0.4, ease: 'easeOut' as const }}
-                          >
-                            <Leaf className="w-3 h-3" aria-hidden="true" />
-                            {renewablesPct.toFixed(0)}% Renewable
-                          </motion.div>
-                          <RenewableSparkle
-                            trigger={sparkleTrigger}
-                            onComplete={() => setSparkleTrigger(false)}
-                          />
-                        </div>
-                      </div>
-                    )}
-                    {!isLoading && lastUpdated && (
-                      <div className="flex flex-col items-center mt-2 gap-1.5">
-                        <div className="flex items-center gap-1.5 text-xs text-card/80 font-medium bg-white/20 px-2 py-0.5 rounded-md">
-                          {/* Pulsing freshness dot */}
-                          <span className="relative flex h-2 w-2 flex-shrink-0">
-                            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-60 ${freshnessColor}`} />
-                            <span className={`relative inline-flex h-2 w-2 rounded-full ${freshnessColor}`} />
-                          </span>
-                          <span>{relativeTime}</span>
-                          <span>•</span>
-                          <span>
-                            {(() => {
-                              if (nextUpdate) {
-                                const next = new Date(nextUpdate);
-                                const now = new Date();
-                                if (now > next) return 'Update Due';
-                                return `Next ${next.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} `;
-                              }
-                              const next = getNextUpdate(lastUpdated);
-                              if (!next) return '';
-                              return `Next ${next.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} `;
-                            })()}
-                          </span>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-4 w-4 rounded-full p-0 hover:bg-transparent ml-0.5" aria-label="More information about data refresh schedule">
-                                <Info className="w-3 h-3 text-card/70" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-[260px] p-3 text-xs bg-card border-border backdrop-blur-xl">
-                              <p className="font-semibold mb-1">Data Refresh Schedule</p>
-                              <p>Data is sourced directly from the National Grid ESO. They publish new carbon intensity figures every <span className="font-bold">30 minutes</span>.</p>
-                            </PopoverContent>
-                          </Popover>
-                        </div>
-                        <StaleDataBadge lastUpdated={lastUpdated} />
-                      </div>
-                    )}
-                  </div>
-                </div>
+                <HeroIntensityOverlay
+                  postcode={postcode}
+                  onPostcodeChange={setPostcode}
+                  region={region}
+                  intensity={intensity}
+                  previousIntensity={previousIntensity}
+                  index={index}
+                  renewablesPct={renewablesPct}
+                  sparkleTrigger={sparkleTrigger}
+                  onSparkleComplete={() => setSparkleTrigger(false)}
+                  isLoading={isLoading}
+                  isError={isError}
+                  isBackgroundFetching={isBackgroundFetching}
+                  lastUpdated={lastUpdated}
+                  relativeTime={relativeTime}
+                  freshnessColor={freshnessColor}
+                  nextUpdateLabel={nextUpdateLabel}
+                />
               )}
             </div>
 
-            {/* Content cards */}
-            <div className="flex-1 px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-6 space-y-4 -mt-6 relative z-10 bg-card lg:max-w-7xl lg:mx-auto w-full lg:rounded-t-3xl lg:shadow-xl lg:-mt-8 lg:pt-8 lg:space-y-6">
+            {/* Content sheet — paper pull-up under the scene */}
+            <div className="flex-1 px-4 pt-5 pb-[calc(7.5rem+env(safe-area-inset-bottom))] lg:pb-6 space-y-4 -mt-8 relative z-10 bg-card rounded-t-[1.75rem] shadow-[0_-12px_40px_-20px_rgba(15,23,42,0.18)] lg:max-w-7xl lg:mx-auto w-full lg:rounded-t-3xl lg:shadow-xl lg:-mt-10 lg:pt-8 lg:space-y-6">
               {/* Organic wave divider — blends scene into content below */}
               <div className="absolute -top-[79px] left-0 right-0 h-[80px] pointer-events-none overflow-hidden z-20">
                 <SceneWaveDivider cleanliness={cleanliness} />
+              </div>
+
+              {/* Sheet grab affordance */}
+              <div className="flex justify-center pt-0.5 pb-1 lg:hidden" aria-hidden>
+                <div className="h-1 w-10 rounded-full bg-muted-foreground/25" />
               </div>
 
               {/* Degradation Alert */}
@@ -428,10 +285,8 @@ const Index = () => {
                 </div>
               )}
 
-              {/* View Toggle - Always show all views */}
-
-              {/* Energy Commentary Quote — constrained so it can't push into the tabs row */}
-              <div className="px-2 pb-3 pt-1">
+              {/* Energy commentary — Carrot-style personality line */}
+              <div className="px-1 pb-2 pt-0">
                 <EnergyFactBubble
                   intensity={intensity}
                   generationMix={generationMix}
@@ -480,22 +335,22 @@ const Index = () => {
                     role="tablist" 
                     aria-label="Dashboard Views" 
                     onKeyDown={handleKeyDown}
-                    className="relative flex p-1 bg-muted rounded-lg overflow-hidden select-none"
+                    className="relative flex p-1.5 bg-muted/80 rounded-2xl overflow-hidden select-none border border-border/40"
                   >
                     <button
                       role="tab"
                       tabIndex={viewMode === 'intensity' ? 0 : -1}
                       aria-selected={viewMode === 'intensity'}
                       aria-controls="dashboard-tab-content"
-                      className={`relative flex-1 min-w-[100px] h-8 rounded-md text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 z-10 ${
-                        viewMode === 'intensity' ? 'text-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'
+                      className={`relative flex-1 min-w-[100px] h-9 rounded-xl text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 z-10 ${
+                        viewMode === 'intensity' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
                       }`}
                       onClick={() => { selection(); setViewMode('intensity'); }}
                     >
                       {viewMode === 'intensity' && (
                         <motion.div
                           layoutId="dashboard-view-pill"
-                          className="absolute inset-0 bg-background shadow-sm rounded-md"
+                          className="absolute inset-0 bg-background shadow-sm rounded-xl"
                           transition={{ type: 'spring' as const, stiffness: 380, damping: 30 }}
                         />
                       )}
@@ -517,15 +372,15 @@ const Index = () => {
                       tabIndex={viewMode === 'demand' ? 0 : -1}
                       aria-selected={viewMode === 'demand'}
                       aria-controls="dashboard-tab-content"
-                      className={`relative flex-1 min-w-[100px] h-8 rounded-md text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 z-10 ${
-                        viewMode === 'demand' ? 'text-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'
+                      className={`relative flex-1 min-w-[100px] h-9 rounded-xl text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 z-10 ${
+                        viewMode === 'demand' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
                       }`}
                       onClick={() => { selection(); setViewMode('demand'); }}
                     >
                       {viewMode === 'demand' && (
                         <motion.div
                           layoutId="dashboard-view-pill"
-                          className="absolute inset-0 bg-background shadow-sm rounded-md"
+                          className="absolute inset-0 bg-background shadow-sm rounded-xl"
                           transition={{ type: 'spring' as const, stiffness: 380, damping: 30 }}
                         />
                       )}
@@ -547,8 +402,8 @@ const Index = () => {
                       tabIndex={viewMode === 'footprint' ? 0 : -1}
                       aria-selected={viewMode === 'footprint'}
                       aria-controls="dashboard-tab-content"
-                      className={`relative flex-1 min-w-[100px] h-8 rounded-md text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 z-10 ${
-                        viewMode === 'footprint' ? 'text-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'
+                      className={`relative flex-1 min-w-[100px] h-9 rounded-xl text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 z-10 ${
+                        viewMode === 'footprint' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
                       }`}
                       onClick={() => { selection(); setViewMode('footprint'); }}
                       data-tour="view-footprint"
@@ -556,7 +411,7 @@ const Index = () => {
                       {viewMode === 'footprint' && (
                         <motion.div
                           layoutId="dashboard-view-pill"
-                          className="absolute inset-0 bg-background shadow-sm rounded-md"
+                          className="absolute inset-0 bg-background shadow-sm rounded-xl"
                           transition={{ type: 'spring' as const, stiffness: 380, damping: 30 }}
                         />
                       )}

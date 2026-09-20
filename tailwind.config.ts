@@ -97,25 +97,21 @@ export default {
 			},
 			fontFamily: {
 				sans: [
-					'Work Sans',
+					'Nunito',
 					'ui-sans-serif',
 					'system-ui',
-					'-apple-system',
-					'BlinkMacSystemFont',
-					'Segoe UI',
-					'Roboto',
-					'Helvetica Neue',
-					'Arial',
-					'Noto Sans',
 					'sans-serif'
 				],
-				serif: [
-					'Lora',
+				display: [
+					'Fraunces',
 					'ui-serif',
 					'Georgia',
-					'Cambria',
-					'Times New Roman',
-					'Times',
+					'serif'
+				],
+				serif: [
+					'Fraunces',
+					'ui-serif',
+					'Georgia',
 					'serif'
 				],
 				mono: [

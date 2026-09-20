@@ -59,7 +59,7 @@ export function AppLayout() {
 
             {/* Main Content Area */}
             <div className="lg:pl-64 flex flex-col min-h-[100vh] overflow-x-hidden" style={{ minHeight: 'calc(100vh + env(safe-area-inset-top) + env(safe-area-inset-bottom))' }}>
-                <main className="flex-1 w-full max-w-7xl mx-auto pb-24 lg:pb-0 relative">
+                <main className="flex-1 w-full max-w-7xl mx-auto pb-28 lg:pb-0 relative">
                     <AnimatePresence mode="popLayout" custom={direction}>
                         <motion.div
                             key={location.pathname}
