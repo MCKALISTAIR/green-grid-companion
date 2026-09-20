@@ -247,14 +247,16 @@
   }
 }
 
-/* Cloud drift with parallax */
+/* Cloud drift — travel relative to the scene container, NOT the viewport.
+   Using 100vw made clouds jump across the full browser width (and leaked
+   across /__scene-test preview cards under deep scrutiny). */
 @keyframes cloud-drift {
   0% {
-    transform: translateX(-150px);
+    transform: translateX(-40%);
   }
 
   100% {
-    transform: translateX(calc(100vw + 100px));
+    transform: translateX(140%);
   }
 }
 

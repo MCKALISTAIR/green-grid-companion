@@ -52,7 +52,7 @@ export function Seagull({ startX = 50, startY = 25, delay = 0, scale = 1 }: {
 export function SailingBoat({ x = 150, delay = 0, isNight = false }: {
   x?: number; delay?: number; isNight?: boolean;
 }) {
-  const hullColor = isNight ? '#334155' : '#7c3aed';
+  const hullColor = isNight ? '#334155' : '#1e3a5f';
   const sailColor = isNight ? '#94a3b8' : '#f1f5f9';
 
   return (
@@ -347,9 +347,9 @@ export function SeagullFlock({ count = 4, isNight = false }: { count?: number; i
   const gulls = useMemo(() =>
     Array.from({ length: count }).map((_, i) => ({
       id: i,
-      startX: -20 + i * 15,
-      startY: 15 + (i % 3) * 8,
-      delay: i * 3,
+      startX: 20 + i * 70 + Math.random() * 20,
+      startY: 18 + Math.random() * 25,
+      delay: i * 2.5 + Math.random(),
       scale: 0.7 + Math.random() * 0.4,
     })), [count]);
 
@@ -357,9 +357,77 @@ export function SeagullFlock({ count = 4, isNight = false }: { count?: number; i
 
   return (
     <g>
-      {gulls.map(g => (
-        <Seagull key={g.id} {...g} />
+      {gulls.map((g) => (
+        <Seagull key={g.id} startX={g.startX} startY={g.startY} delay={g.delay} scale={g.scale} />
       ))}
+    </g>
+  );
+}
+
+/** Horizon pollution for dirty coastal — distant stack + oil sheen (silhouette test). */
+export function CoastalHorizonPollution({ cleanliness, isNight }: { cleanliness: number; isNight: boolean }) {
+  if (cleanliness >= 0.45) return null;
+  const intensity = Math.min(1, (0.45 - cleanliness) / 0.45);
+  const stackColor = isNight ? 'rgba(210,190,150,0.9)' : 'rgba(55,45,35,0.92)';
+  const sheenA = isNight ? 'rgba(80,60,20,0.45)' : 'rgba(40,90,50,0.35)';
+  const sheenB = isNight ? 'rgba(100,40,20,0.3)' : 'rgba(90,40,20,0.28)';
+
+  return (
+    <g aria-hidden="true">
+      {/* Ochre horizon haze — painted above the sea fill */}
+      <rect
+        x={0} y={68} width={400} height={22}
+        fill={`rgba(${isNight ? '90,55,25' : '160,110,45'},${0.22 + intensity * 0.4})`}
+      />
+      {/* Distant industrial stacks — sit over open water, not under the right beach/cliff */}
+      <g opacity={0.8 + intensity * 0.2}>
+        <rect x={218} y={68} width={4} height={24} fill={stackColor} />
+        <rect x={216} y={66} width={8} height={3} fill={stackColor} />
+        <motion.ellipse
+          cx={221} cy={62}
+          rx={6} ry={3.5}
+          fill={isNight ? 'rgba(180,180,180,0.4)' : 'rgba(120,120,120,0.55)'}
+          animate={{ cy: [62, 54, 62], opacity: [0.55, 0.25, 0.55] }}
+          transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' as const }}
+        />
+        {cleanliness < 0.25 && (
+          <>
+            <rect x={232} y={74} width={3.5} height={18} fill={stackColor} />
+            <rect x={230} y={72} width={7.5} height={2.5} fill={stackColor} />
+            <motion.ellipse
+              cx={234} cy={68}
+              rx={4} ry={2.5}
+              fill={isNight ? 'rgba(160,160,160,0.35)' : 'rgba(130,130,130,0.45)'}
+              animate={{ cy: [68, 61, 68], opacity: [0.45, 0.2, 0.45] }}
+              transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' as const, delay: 0.8 }}
+            />
+          </>
+        )}
+      </g>
+      {/* Iridescent oil sheen on the water surface */}
+      <motion.ellipse
+        cx={160} cy={98}
+        rx={70} ry={5}
+        fill={sheenA}
+        animate={{ rx: [65, 75, 65], opacity: [0.35, 0.55, 0.35] }}
+        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' as const }}
+      />
+      <motion.ellipse
+        cx={185} cy={102}
+        rx={35} ry={2.5}
+        fill={sheenB}
+        animate={{ rx: [30, 40, 30], opacity: [0.3, 0.5, 0.3] }}
+        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' as const, delay: 1 }}
+      />
+      {/* Dark tanker silhouette when very dirty */}
+      {cleanliness < 0.25 && (
+        <g transform="translate(155, 93)" opacity={0.92}>
+          <path d="M-22,5 L-18,0 L26,0 L22,5 Z" fill={isNight ? '#0a0f18' : '#0f172a'} />
+          <rect x={-6} y={-6} width={14} height={6} rx={0.5} fill="#1e293b" />
+          <rect x={0} y={-4} width={4} height={2.5} fill={isNight ? '#fbbf24' : '#475569'} opacity={0.7} />
+          <rect x={12} y={-2} width={2} height={2} fill="#64748b" opacity={0.6} />
+        </g>
+      )}
     </g>
   );
 }

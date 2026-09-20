@@ -2,7 +2,8 @@ import { motion, AnimatePresence, type MotionValue } from 'framer-motion';
 import type { TimeOfDay } from '@/hooks/useTimeOfDay';
 import type { SceneVisualConfig } from '@/lib/sceneConfig';
 import { CoastalLandscapeBack, CoastalLandscapeMid, CoastalLandscapeFront } from '../CoastalLandscape';
-import { SeagullFlock, SailingBoat, FishingBoat, CoastalOffshoreWind, RockPoolGroup, HarbourSeal } from '../CoastalElements';
+import { SeagullFlock, SailingBoat, FishingBoat, CoastalOffshoreWind, RockPoolGroup, HarbourSeal, CoastalHorizonPollution } from '../CoastalElements';
+import { SmogBand } from '../CityElements';
 import { ValleyMist } from '../ValleyMist';
 import { JumpingFish } from '../JumpingFish';
 import { SceneHotspots, type HotspotDef } from '../SceneHotspots';
@@ -46,6 +47,7 @@ export function CoastalSceneLayers({
         className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-0 overflow-hidden"
       >
         <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+          <SmogBand cleanliness={sceneConfig.cleanliness} isNight={isNight} />
           <CoastalLandscapeBack
             cleanliness={sceneConfig.cleanliness}
             isNight={isNight}
@@ -55,18 +57,23 @@ export function CoastalSceneLayers({
             windSpeed={windSpeed}
             timeOfDay={timeOfDay}
           />
+          {/* Pollution sits above the sea fill so stacks / sheen / tanker stay visible */}
+          <CoastalHorizonPollution cleanliness={sceneConfig.cleanliness} isNight={isNight} />
         </svg>
       </motion.div>
 
-      {/* Coastal: Offshore wind turbines */}
+      {/* Coastal: Offshore wind — demote when dirty so pollution reads as the hero */}
       <AnimatePresence>
-        {windPercentage > 5 && (
+        {windPercentage > 5 && sceneConfig.cleanliness > 0.25 && (
           <motion.div
             style={{ y: shouldReduceMotion ? 0 : backY }}
             className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-5 overflow-hidden"
           >
             <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-              <CoastalOffshoreWind count={Math.min(4, Math.floor(windPercentage / 8))} windSpeed={windSpeed} />
+              <CoastalOffshoreWind
+                count={Math.min(4, Math.floor(windPercentage / 8))}
+                windSpeed={windSpeed}
+              />
             </svg>
           </motion.div>
         )}
@@ -90,13 +97,13 @@ export function CoastalSceneLayers({
         </svg>
       </motion.div>
 
-      {/* Coastal: Boats */}
+      {/* Coastal: Boats — sailing craft demote when dirty; fishing boat stays as working harbour */}
       <motion.div
         style={{ y: shouldReduceMotion ? 0 : midY }}
         className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-10 overflow-hidden"
       >
         <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-          <SailingBoat x={120} delay={0} isNight={isNight} />
+          {sceneConfig.cleanliness > 0.4 && <SailingBoat x={120} delay={0} isNight={isNight} />}
           <FishingBoat x={250} delay={5} isNight={isNight} />
           {sceneConfig.cleanliness > 0.6 && <SailingBoat x={200} delay={12} isNight={isNight} />}
         </svg>
@@ -174,8 +181,8 @@ export function CoastalSceneLayers({
           {
             id: 'coastal-wind',
             label: 'Offshore Wind',
-            x: 45, y: 65,
-            visible: windPercentage > 5,
+            x: 38, y: 55,
+            visible: windPercentage > 5 && sceneConfig.cleanliness > 0.25,
             fact: 'Offshore wind turbines benefit from stronger, more consistent sea winds to generate vast amounts of clean energy.',
           },
           {
@@ -191,6 +198,13 @@ export function CoastalSceneLayers({
             x: 50, y: 88,
             visible: hydroPercentage > 5 || marinePercentage > 0,
             fact: 'Tidal and wave energy harnesses the predictable movement of tides and ocean currents to generate reliable, clean power.',
+          },
+          {
+            id: 'coastal-stack',
+            label: 'Coastal Peaker',
+            x: 55, y: 48,
+            visible: sceneConfig.cleanliness < 0.35,
+            fact: 'When the grid is dirty, coastal gas peakers and shipping emissions push local carbon intensity up — the water and sky tell the story.',
           },
         ] satisfies HotspotDef[]}
       />

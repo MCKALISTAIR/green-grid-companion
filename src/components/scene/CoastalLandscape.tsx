@@ -33,28 +33,39 @@ function useCoastalPalette(cleanliness: number, isNight: boolean, synthwaveMode:
     }
     if (isNight) {
       return {
-        seaHighlight: '#1e3a5f', seaShadow: '#0c1929', sand: '#1a1a2e',
-        cliffHighlight: '#334155', cliffShadow: '#1e293b', lighthouse: '#e2e8f0',
+        seaHighlight: cleanliness > 0.4 ? '#1e3a5f' : '#1a1520',
+        seaShadow: cleanliness > 0.4 ? '#0c1929' : '#0a080c',
+        sand: cleanliness > 0.4 ? '#1a1a2e' : '#1c1410',
+        cliffHighlight: cleanliness > 0.4 ? '#334155' : '#3f342c',
+        cliffShadow: cleanliness > 0.4 ? '#1e293b' : '#1a1210',
+        lighthouse: '#e2e8f0',
         foam: 'rgba(255,255,255,0.15)',
       };
     }
     const isClean = cleanliness > 0.5;
+    const isDirty = cleanliness < 0.35;
     const isSunsetish = timeOfDay === 'sunset' || timeOfDay === 'dawn' || timeOfDay === 'dusk';
 
     if (isSunsetish) {
       return {
-        seaHighlight: isClean ? '#f97316' : '#92400e', seaShadow: isClean ? '#1e3a5f' : '#111827',
-        sand: '#d4a574', 
-        cliffHighlight: '#9ca3af', cliffShadow: '#374151',
-        lighthouse: '#f1f5f9', foam: 'rgba(255,255,255,0.4)',
+        // Dirty sunset: sickly ochre sky reflection, oil-dark water — not just brown mud
+        seaHighlight: isDirty ? '#5c3310' : isClean ? '#f97316' : '#92400e',
+        seaShadow: isDirty ? '#1a0e08' : isClean ? '#1e3a5f' : '#111827',
+        sand: isDirty ? '#8a6a4a' : '#d4a574',
+        cliffHighlight: isDirty ? '#6b5a4a' : '#9ca3af',
+        cliffShadow: isDirty ? '#2a2018' : '#374151',
+        lighthouse: isDirty ? '#d6d3d1' : '#f1f5f9',
+        foam: isDirty ? 'rgba(180,140,90,0.35)' : 'rgba(255,255,255,0.4)',
       };
     }
     return {
-      seaHighlight: isClean ? '#38bdf8' : '#6b7280', seaShadow: isClean ? '#0369a1' : '#374151',
-      sand: isClean ? '#f5d0a9' : '#cbd5e1', 
-      cliffHighlight: isClean ? '#a8a29e' : '#78716c', cliffShadow: isClean ? '#57534e' : '#44403c',
-      lighthouse: '#f1f5f9',
-      foam: 'rgba(255,255,255,0.5)',
+      seaHighlight: isDirty ? '#4b5563' : isClean ? '#38bdf8' : '#6b7280',
+      seaShadow: isDirty ? '#1f2937' : isClean ? '#0369a1' : '#374151',
+      sand: isDirty ? '#9ca3af' : isClean ? '#f5d0a9' : '#cbd5e1',
+      cliffHighlight: isDirty ? '#78716c' : isClean ? '#a8a29e' : '#78716c',
+      cliffShadow: isDirty ? '#292524' : isClean ? '#57534e' : '#44403c',
+      lighthouse: isDirty ? '#d6d3d1' : '#f1f5f9',
+      foam: isDirty ? 'rgba(160,150,140,0.35)' : 'rgba(255,255,255,0.5)',
     };
   }, [cleanliness, isNight, synthwaveMode, isSnowing, timeOfDay]);
 }
@@ -224,7 +235,7 @@ function Cliff({ side, fill, highlight, skipIntro }: { side: 'left' | 'right'; f
   );
 }
 
-// Sandy beach
+// Sandy beach — curved shoreline (no hard vertical cut into the sea)
 function Beach({ sand, skipIntro }: { sand: string; skipIntro?: boolean }) {
   return (
     <motion.g
@@ -232,10 +243,20 @@ function Beach({ sand, skipIntro }: { sand: string; skipIntro?: boolean }) {
       animate={{ opacity: 1 }}
       transition={skipIntro ? { duration: 0 } : { duration: 1, delay: 0.2 }}
     >
-      <path d="M180,110 Q230,106 280,108 T360,110 L400,110 L400,150 L180,150 Z" fill={sand} />
+      <path
+        d="M165,118 C195,108 230,104 270,106 C310,108 350,112 400,114 L400,150 L200,150 C185,140 170,130 165,118 Z"
+        fill={sand}
+      />
+      {/* Wet sand band along the waterline */}
+      <path
+        d="M170,116 C200,108 240,106 280,108 C320,110 360,113 400,115"
+        stroke="rgba(255,255,255,0.18)"
+        strokeWidth="1.2"
+        fill="none"
+      />
       {/* Beach texture dots */}
-      {[190, 210, 240, 260, 290, 310, 340, 360].map((bx, i) => (
-        <circle key={i} cx={bx} cy={115 + (i % 3) * 4} r={0.5} fill="rgba(0,0,0,0.08)" />
+      {[200, 230, 255, 280, 310, 340, 365].map((bx, i) => (
+        <circle key={i} cx={bx} cy={122 + (i % 3) * 5} r={0.5} fill="rgba(0,0,0,0.08)" />
       ))}
     </motion.g>
   );

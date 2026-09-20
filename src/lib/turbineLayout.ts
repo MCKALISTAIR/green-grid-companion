@@ -11,14 +11,15 @@ export interface TurbineSlot {
 }
 
 const TURBINE_SLOT_DEFS: Array<Omit<TurbineSlot, 'bottom'>> = [
-  { left: 18, scale: 0.35, z: 1, layer: 'back' },
-  { left: 25, scale: 0.3, z: 1, layer: 'back' },
-  { left: 92, scale: 0.32, z: 1, layer: 'back' },
-  { left: 50, scale: 0.55, z: 15, layer: 'mid' },
-  { left: 60, scale: 0.5, z: 15, layer: 'mid' },
-  { left: 72, scale: 0.52, z: 15, layer: 'mid' },
-  { left: 30, scale: 0.8, z: 25, layer: 'front' },
-  { left: 45, scale: 0.75, z: 25, layer: 'front' },
+  // Turbines must visually dominate trees (front trees ~0.5). Front slots ≥0.95.
+  { left: 18, scale: 0.42, z: 1, layer: 'back' },
+  { left: 25, scale: 0.38, z: 1, layer: 'back' },
+  { left: 92, scale: 0.4, z: 1, layer: 'back' },
+  { left: 50, scale: 0.68, z: 15, layer: 'mid' },
+  { left: 60, scale: 0.64, z: 15, layer: 'mid' },
+  { left: 72, scale: 0.7, z: 15, layer: 'mid' },
+  { left: 30, scale: 1.05, z: 25, layer: 'front' },
+  { left: 45, scale: 0.98, z: 25, layer: 'front' },
 ];
 
 /** Build wind-driven turbine placements that sit on hill ridge lines. */

@@ -36,7 +36,8 @@ function PineTree({ x, y, scale = 1, colorPrimary, colorShadow, isSnowing, isChr
             case 'spring':
                 return { primary: '#86efac', shadow: '#4ade80' };
             case 'autumn':
-                return { primary: '#fb923c', shadow: '#f97316' };
+                // Restrained rust/olive — neon orange needles read as map pins under scrutiny
+                return { primary: '#b45309', shadow: '#78350f' };
             default:
                 return { primary: colorPrimary, shadow: colorShadow };
         }
@@ -54,11 +55,11 @@ function PineTree({ x, y, scale = 1, colorPrimary, colorShadow, isSnowing, isChr
 
     return (
         <svg
-            x={x - 16 * scale}
-            y={y - 52 * scale}
-            width={32 * scale}
-            height={64 * scale}
-            viewBox="-16 -52 32 64"
+            x={x - 18 * scale}
+            y={y - 40 * scale}
+            width={36 * scale}
+            height={48 * scale}
+            viewBox="-18 -40 36 48"
             preserveAspectRatio="xMidYMax meet"
             className="overflow-visible"
         >
@@ -72,49 +73,47 @@ function PineTree({ x, y, scale = 1, colorPrimary, colorShadow, isSnowing, isChr
                     ease: 'easeInOut' as const,
                     delay: randomOffset,
                 }}
-                style={{ transformOrigin: '0px 10px' }}
+                style={{ transformOrigin: '0px 8px' }}
             >
-                {/* Trunk - slightly rounded base */}
-                <path d="M-2,-8 L2,-8 L2,10 Q0,11 -2,10 Z" fill="rgba(60, 40, 20, 0.85)" />
+                {/* Trunk */}
+                <path d="M-2.5,-6 L2.5,-6 L2.5,8 Q0,9.5 -2.5,8 Z" fill="rgba(60, 40, 20, 0.85)" />
 
-                {/* Bottom Tier - fluffy */}
-                <path d="M0,-22 Q8,-18 14,-6 Q4,-8 0,-8" fill={seasonalColors.shadow} />
-                <path d="M0,-22 Q-8,-18 -14,-6 Q-4,-8 0,-8" fill={seasonalColors.primary} />
+                {/* Bottom tier — wide canopy (reads as foliage, not a map pin) */}
+                <path d="M0,-16 Q12,-14 16,-2 Q5,-4 0,-4" fill={seasonalColors.shadow} />
+                <path d="M0,-16 Q-12,-14 -16,-2 Q-5,-4 0,-4" fill={seasonalColors.primary} />
 
-                {/* Middle Tier - fluffy */}
-                <path d="M0,-36 Q6,-32 11,-16 Q4,-18 0,-18" fill={seasonalColors.shadow} />
-                <path d="M0,-36 Q-6,-32 -11,-16 Q-4,-18 0,-18" fill={seasonalColors.primary} />
+                {/* Middle tier */}
+                <path d="M0,-26 Q9,-24 12,-12 Q4,-14 0,-14" fill={seasonalColors.shadow} />
+                <path d="M0,-26 Q-9,-24 -12,-12 Q-4,-14 0,-14" fill={seasonalColors.primary} />
 
-                {/* Top Tier - fluffy */}
-                <path d="M0,-48 Q4,-42 8,-30 Q3,-32 0,-32" fill={seasonalColors.shadow} />
-                <path d="M0,-48 Q-4,-42 -8,-30 Q-3,-32 0,-32" fill={seasonalColors.primary} />
+                {/* Top tier */}
+                <path d="M0,-36 Q6,-33 8,-22 Q3,-24 0,-24" fill={seasonalColors.shadow} />
+                <path d="M0,-36 Q-6,-33 -8,-22 Q-3,-24 0,-24" fill={seasonalColors.primary} />
 
-                {/* Spring Blossoms 🌸 */}
+                {/* Spring Blossoms */}
                 {season === 'spring' && !isChristmas && (
                     <g>
-                        <circle cx="-8" cy="-15" r="1.2" fill="#fda4af" opacity="0.9" />
-                        <circle cx="6" cy="-22" r="1.2" fill="#fda4af" opacity="0.9" />
-                        <circle cx="-4" cy="-30" r="1.2" fill="#fda4af" opacity="0.9" />
-                        <circle cx="7" cy="-38" r="1.2" fill="#fda4af" opacity="0.9" />
+                        <circle cx="-8" cy="-10" r="1.2" fill="#fda4af" opacity="0.9" />
+                        <circle cx="6" cy="-16" r="1.2" fill="#fda4af" opacity="0.9" />
+                        <circle cx="-4" cy="-22" r="1.2" fill="#fda4af" opacity="0.9" />
+                        <circle cx="5" cy="-28" r="1.2" fill="#fda4af" opacity="0.9" />
                     </g>
                 )}
 
-                {/* Christmas Decorations 🎄 */}
+                {/* Christmas Decorations */}
                 {isChristmas && (
                     <g>
-                        {/* Baubles */}
-                        <circle cx="-6" cy="-12" r="1.5" fill="#ef4444" /> {/* Red */}
-                        <circle cx="5" cy="-18" r="1.5" fill="#fbbf24" /> {/* Gold */}
-                        <circle cx="0" cy="-28" r="1.5" fill="#3b82f6" /> {/* Blue */}
-                        <circle cx="-3" cy="-38" r="1.5" fill="#ef4444" /> {/* Red */}
-                        {/* Star on top */}
-                        <circle cx="0" cy="-50" r="2" fill="#fbbf24" filter="drop-shadow(0 0 2px #fcd34d)" />
+                        <circle cx="-6" cy="-8" r="1.5" fill="#ef4444" />
+                        <circle cx="5" cy="-14" r="1.5" fill="#fbbf24" />
+                        <circle cx="0" cy="-22" r="1.5" fill="#3b82f6" />
+                        <circle cx="-3" cy="-28" r="1.5" fill="#ef4444" />
+                        <circle cx="0" cy="-38" r="2" fill="#fbbf24" filter="drop-shadow(0 0 2px #fcd34d)" />
                     </g>
                 )}
 
                 {/* Snow cap on top (if snowing) */}
                 {isSnowing && (
-                    <path d="M0,-50 L4,-42 L-4,-42 Z" fill="#ffffff" opacity="0.9" />
+                    <path d="M0,-38 L5,-30 L-5,-30 Z" fill="#ffffff" opacity="0.9" />
                 )}
             </motion.g>
         </svg>
@@ -260,13 +259,15 @@ export function LandscapeBack(props: LandscapeProps) {
     // Ridge samples: (40,84) (80,76) (150,81) (220,107) (290,116) (360,100)
     // Anchor sits +4 below ridge so trunk base (y+6*scale) sinks slightly into the hill
     // and foliage doesn't hover — prevents "floating tree" on tall viewports.
+    // Scale hierarchy (must stay below turbine visual weight):
+    // back ~0.22–0.28, mid ~0.34–0.40, front ~0.45–0.52. Cottage ~0.75.
     const backTrees = [
-        { x: 40, y: 88, scale: 0.3 },
-        { x: 80, y: 80, scale: 0.3 },
-        { x: 150, y: 85, scale: 0.3 },
-        { x: 220, y: 111, scale: 0.3 },
-        { x: 290, y: 120, scale: 0.3 },
-        { x: 360, y: 104, scale: 0.3 },
+        { x: 40, y: 90, scale: 0.24 },
+        { x: 80, y: 82, scale: 0.26 },
+        { x: 150, y: 87, scale: 0.22 },
+        { x: 220, y: 113, scale: 0.25 },
+        { x: 290, y: 122, scale: 0.23 },
+        { x: 360, y: 106, scale: 0.27 },
     ];
 
     return (
@@ -299,11 +300,11 @@ export function LandscapeMid(props: LandscapeProps) {
     // Trees positioned so trunk base sits just into the mid hill ridge.
     // Ridge curve: M0,120 Q80,140 160,100 Q240,60 320,110 Q360,130 400,100
     const midTrees = [
-        { x: 45, y: 125, scale: 0.45 },   // ridge ≈127, base at 129.5
-        { x: 120, y: 115, scale: 0.45 },  // ridge ≈118, base at 119.5
-        { x: 190, y: 87, scale: 0.45 },   // ridge ≈88, base at 91.5
-        { x: 260, y: 84, scale: 0.45 },   // ridge ≈85, base at 88.5
-        { x: 330, y: 113, scale: 0.45 },  // ridge ≈114, base at 117.5
+        { x: 45, y: 127, scale: 0.36 },
+        { x: 120, y: 117, scale: 0.38 },
+        { x: 190, y: 89, scale: 0.34 },
+        { x: 260, y: 86, scale: 0.37 },
+        { x: 330, y: 115, scale: 0.35 },
     ];
 
     return (
@@ -442,9 +443,9 @@ export function LandscapeFront(props: LandscapeProps) {
     const id = useId();
 
     const frontTrees = [
-        { x: 40, y: 130, scale: 0.6 },
-        { x: 90, y: 122, scale: 0.6 },
-        { x: 370, y: 130, scale: 0.6 }
+        { x: 40, y: 132, scale: 0.48 },
+        { x: 90, y: 124, scale: 0.5 },
+        { x: 370, y: 132, scale: 0.46 }
     ];
 
     return (
@@ -467,7 +468,7 @@ export function LandscapeFront(props: LandscapeProps) {
                 windSpeed={props.windSpeed}
             />
             {/* Countryside Cottage */}
-            <Cottage x={210} y={135} scale={0.9} isNight={props.isNight} />
+            <Cottage x={210} y={135} scale={0.78} isNight={props.isNight} />
 
             {/* Ground strip at the very bottom for visible earth */}
             <rect x={0} y={145} width={400} height={5} fill={palette.frontHillShadow} />

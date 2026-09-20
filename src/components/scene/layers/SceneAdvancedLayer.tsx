@@ -58,21 +58,26 @@ export function SceneAdvancedLayer({
 
 
 
-      {/* EV Charging Station at night when clean */}
+      {/* EV Charging Station at night when clean — city/countryside street furniture */}
       <AnimatePresence>
-        {isNight && sceneConfig.cleanliness > 0.7 && (
-          <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-16">
-            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+        {!isCoastal && isNight && sceneConfig.cleanliness > 0.7 && (
+          <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-16 overflow-hidden">
+            <svg
+              viewBox={isCity ? '0 0 400 150' : '0 30 400 120'}
+              className="w-full h-full"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
               <EVChargingStation isCharging={sceneConfig.cleanliness > 0.8} />
             </svg>
           </div>
         )}
       </AnimatePresence>
 
-      {/* Hydro Dam when rainy + hydro */}
+      {/* Hydro Dam when rainy + hydro — countryside only */}
       <AnimatePresence>
-        {isRaining && hydroPercentage > 10 && (
-          <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-14">
+        {!isCity && !isCoastal && isRaining && hydroPercentage > 10 && (
+          <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-14 overflow-hidden">
             <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <HydroDam flowIntensity={Math.min(hydroPercentage / 50, 1)} />
             </svg>
@@ -85,10 +90,10 @@ export function SceneAdvancedLayer({
         {showMeteorShower && <MeteorShower />}
       </AnimatePresence>
 
-      {/* Biomass Smoke - Green tinted smoke when biomass > 5% */}
+      {/* Biomass Smoke — countryside only */}
       <AnimatePresence>
-        {biomassPercentage > 5 && sceneConfig.showRenewables && (
-          <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-15">
+        {!isCity && !isCoastal && biomassPercentage > 5 && sceneConfig.showRenewables && (
+          <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-15 overflow-hidden">
             <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <BiomassSmoke x={180} intensity={biomassPercentage / 100} />
               {biomassPercentage > 15 && <BiomassSmoke x={220} intensity={0.6} />}

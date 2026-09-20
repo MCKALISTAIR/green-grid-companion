@@ -92,9 +92,9 @@ export function CountrysideSceneLayers({
             style={{ y: shouldReduceMotion ? 0 : midY }}
             className="z-10 absolute inset-0 pointer-events-none"
           >
-            <Sheep x={20} y={15} scale={0.7} isNight={isNight} delay={0.5} />
-            <Sheep x={45} y={18} scale={0.65} isNight={isNight} delay={1.2} />
-            <Sheep x={75} y={14} scale={0.7} isNight={isNight} delay={2.0} />
+            <Sheep x={22} y={28} scale={0.55} isNight={isNight} delay={0.5} />
+            <Sheep x={48} y={32} scale={0.5} isNight={isNight} delay={1.2} />
+            <Sheep x={72} y={26} scale={0.55} isNight={isNight} delay={2.0} />
           </motion.div>
         )}
       </AnimatePresence>

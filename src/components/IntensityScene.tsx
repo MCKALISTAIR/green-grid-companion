@@ -396,6 +396,14 @@ export function IntensityScene({
 
       </div>
 
+      {/* Fill the bottom-[40px] safety gap with ground colour so sky/grade
+          doesn't show as a discordant purple/teal bar under the landscape. */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-10 pointer-events-none z-[45]"
+        style={{ backgroundColor: sceneConfig.groundColor }}
+        aria-hidden="true"
+      />
+
     </motion.div >
   );
 }

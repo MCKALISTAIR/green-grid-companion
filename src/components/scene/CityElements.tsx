@@ -357,8 +357,12 @@ export function ConstructionCrane({ x = 350, isNight }: { x?: number; isNight: b
 }
 
 // 🎡 London Eye / Ferris Wheel — grounded with A-frame legs touching the road
-export function LondonEye({ x = 75, y = 85, radius = 30, isNight, skipIntro }: {
+export function LondonEye({ x = 75, y = 85, radius = 30, isNight, skipIntro, showWheel = true, showStructure = true }: {
   x?: number; y?: number; radius?: number; isNight: boolean; skipIntro?: boolean;
+  /** When false, omit the rotating rim/spokes/pods (used for the grounded front pass). */
+  showWheel?: boolean;
+  /** When false, omit legs/plinth (used for the back-layer silhouette pass). */
+  showStructure?: boolean;
 }) {
   const podCount = 16;
   const podRadius = 1.8;
@@ -374,58 +378,66 @@ export function LondonEye({ x = 75, y = 85, radius = 30, isNight, skipIntro }: {
       animate={{ opacity: 1 }}
       transition={skipIntro ? { duration: 0 } : { duration: 1.5, delay: 0.3 }}
     >
-      {/* A-frame support legs from hub down to ground */}
-      <line x1={x - 15} y1={groundY} x2={x} y2={y} stroke={legColor} strokeWidth="1.8" strokeLinecap="round" />
-      <line x1={x + 15} y1={groundY} x2={x} y2={y} stroke={legColor} strokeWidth="1.8" strokeLinecap="round" />
-      {/* Cross-brace */}
-      <line x1={x - 8} y1={(groundY + y) / 2} x2={x + 8} y2={(groundY + y) / 2} stroke={legColor} strokeWidth="0.6" />
-      {/* Concrete plinth */}
-      <rect x={x - 20} y={groundY - 2} width={40} height={3} rx={0.5} fill={isNight ? '#334155' : '#94a3b8'} opacity={0.8} />
+      {showStructure && (
+        <>
+          {/* A-frame support legs from hub down to ground — slightly heavier so they survive skyline clutter */}
+          <line x1={x - 18} y1={groundY} x2={x} y2={y} stroke={legColor} strokeWidth="2.4" strokeLinecap="round" />
+          <line x1={x + 18} y1={groundY} x2={x} y2={y} stroke={legColor} strokeWidth="2.4" strokeLinecap="round" />
+          {/* Cross-brace */}
+          <line x1={x - 9} y1={(groundY + y) / 2} x2={x + 9} y2={(groundY + y) / 2} stroke={legColor} strokeWidth="0.8" />
+          {/* Concrete plinth */}
+          <rect x={x - 22} y={groundY - 3} width={44} height={4} rx={0.5} fill={isNight ? '#334155' : '#94a3b8'} opacity={0.9} />
+        </>
+      )}
 
-      {/* Rotating wheel group */}
-      <motion.g
-        animate={{ rotate: 360 }}
-        transition={{ duration: 120, repeat: Infinity, ease: 'linear' as const }}
-        style={{ transformOrigin: `${x}px ${y}px` }}
-      >
-        {/* Outer rim */}
-        <circle cx={x} cy={y} r={radius} fill="none" stroke={rimColor} strokeWidth="1.2" />
-        {/* Inner rim */}
-        <circle cx={x} cy={y} r={radius - 2} fill="none" stroke={rimColor} strokeWidth="0.4" />
+      {showWheel && (
+        <>
+          {/* Rotating wheel group */}
+          <motion.g
+            animate={{ rotate: 360 }}
+            transition={{ duration: 120, repeat: Infinity, ease: 'linear' as const }}
+            style={{ transformOrigin: `${x}px ${y}px` }}
+          >
+            {/* Outer rim */}
+            <circle cx={x} cy={y} r={radius} fill="none" stroke={rimColor} strokeWidth="1.2" />
+            {/* Inner rim */}
+            <circle cx={x} cy={y} r={radius - 2} fill="none" stroke={rimColor} strokeWidth="0.4" />
 
-        {/* Spokes */}
-        {Array.from({ length: 8 }).map((_, i) => {
-          const angle = (i / 8) * Math.PI * 2;
-          return (
-            <line
-              key={`spoke-${i}`}
-              x1={x} y1={y}
-              x2={x + Math.cos(angle) * (radius - 1)}
-              y2={y + Math.sin(angle) * (radius - 1)}
-              stroke={spokeColor}
-              strokeWidth="0.4"
-            />
-          );
-        })}
+            {/* Spokes */}
+            {Array.from({ length: 8 }).map((_, i) => {
+              const angle = (i / 8) * Math.PI * 2;
+              return (
+                <line
+                  key={`spoke-${i}`}
+                  x1={x} y1={y}
+                  x2={x + Math.cos(angle) * (radius - 1)}
+                  y2={y + Math.sin(angle) * (radius - 1)}
+                  stroke={spokeColor}
+                  strokeWidth="0.4"
+                />
+              );
+            })}
 
-        {/* Pods */}
-        {Array.from({ length: podCount }).map((_, i) => {
-          const angle = (i / podCount) * Math.PI * 2;
-          const px = x + Math.cos(angle) * radius;
-          const py = y + Math.sin(angle) * radius;
-          return (
-            <g key={`pod-${i}`}>
-              <ellipse cx={px} cy={py} rx={podRadius} ry={podRadius * 0.7} fill={podFill} opacity={isNight ? 0.9 : 0.75} />
-              {isNight && (
-                <ellipse cx={px} cy={py} rx={podRadius + 1.2} ry={podRadius} fill="#fbbf24" opacity={0.1} />
-              )}
-            </g>
-          );
-        })}
-      </motion.g>
+            {/* Pods */}
+            {Array.from({ length: podCount }).map((_, i) => {
+              const angle = (i / podCount) * Math.PI * 2;
+              const px = x + Math.cos(angle) * radius;
+              const py = y + Math.sin(angle) * radius;
+              return (
+                <g key={`pod-${i}`}>
+                  <ellipse cx={px} cy={py} rx={podRadius} ry={podRadius * 0.7} fill={podFill} opacity={isNight ? 0.9 : 0.75} />
+                  {isNight && (
+                    <ellipse cx={px} cy={py} rx={podRadius + 1.2} ry={podRadius} fill="#fbbf24" opacity={0.1} />
+                  )}
+                </g>
+              );
+            })}
+          </motion.g>
 
-      {/* Hub / axle */}
-      <circle cx={x} cy={y} r={1.8} fill={isNight ? '#475569' : '#9ca3af'} />
+          {/* Hub / axle */}
+          <circle cx={x} cy={y} r={1.8} fill={isNight ? '#475569' : '#9ca3af'} />
+        </>
+      )}
     </motion.g>
   );
 }

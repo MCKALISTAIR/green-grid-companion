@@ -30,19 +30,19 @@ describe('Scenery Element Scale Safeguards', () => {
 
         // 1. Check background tree scale limits (should be small and far away)
         for (const scale of backTreeScales) {
-            expect(scale).toBeLessThanOrEqual(0.4);
-            expect(scale).toBeGreaterThanOrEqual(0.1);
+            expect(scale).toBeLessThanOrEqual(0.3);
+            expect(scale).toBeGreaterThanOrEqual(0.15);
         }
 
         // 2. Check midground tree scale limits
         for (const scale of midTreeScales) {
-            expect(scale).toBeLessThanOrEqual(0.6);
-            expect(scale).toBeGreaterThanOrEqual(0.3);
+            expect(scale).toBeLessThanOrEqual(0.45);
+            expect(scale).toBeGreaterThanOrEqual(0.28);
         }
 
-        // 3. Check foreground tree scale limits (must not be giant compared to cottage/wind turbines)
+        // 3. Check foreground tree scale limits (must stay below turbine visual weight)
         for (const scale of frontTreeScales) {
-            expect(scale).toBeLessThanOrEqual(0.8);
+            expect(scale).toBeLessThanOrEqual(0.55);
             expect(scale).toBeGreaterThanOrEqual(0.4);
         }
 
@@ -76,11 +76,12 @@ describe('Scenery Element Scale Safeguards', () => {
 
         // Background turbine scales (first elements in slots definition)
         const bgTurbineScale = turbineScales[0]; // back left 18 slot
-        expect(bgTurbineScale).toBeLessThanOrEqual(0.45);
+        expect(bgTurbineScale).toBeLessThanOrEqual(0.5);
+        expect(bgTurbineScale).toBeGreaterThanOrEqual(0.35);
 
         // Foreground turbine scales (last elements in slots definition)
         const fgTurbineScale = turbineScales[turbineScales.length - 1]; // front left 45 slot
-        expect(fgTurbineScale).toBeGreaterThanOrEqual(0.7);
+        expect(fgTurbineScale).toBeGreaterThanOrEqual(0.9);
     });
 
     test('CityLandscape urban trees should have appropriate scales', () => {
@@ -147,7 +148,7 @@ describe('Scenery Element Scale Safeguards', () => {
                 const t = (tree.x - 200) / 200;
                 hillY = 100 * Math.pow(1 - t, 2) + 2 * t * (1 - t) * 140 + 80 * Math.pow(t, 2);
             }
-            const baseOfTrunk = tree.y + 10 * tree.scale;
+            const baseOfTrunk = tree.y + 8 * tree.scale;
             // The trunk base must sink into or touch the hill (baseOfTrunk >= hillY)
             expect(baseOfTrunk, `Back tree at x=${tree.x} is floating (trunk base ${baseOfTrunk} is above hill surface ${hillY})`).toBeGreaterThanOrEqual(hillY - 0.5);
         }
@@ -166,7 +167,7 @@ describe('Scenery Element Scale Safeguards', () => {
                 const t = (tree.x - 320) / 80;
                 hillY = 110 * Math.pow(1 - t, 2) + 2 * t * (1 - t) * 130 + 100 * Math.pow(t, 2);
             }
-            const baseOfTrunk = tree.y + 10 * tree.scale;
+            const baseOfTrunk = tree.y + 8 * tree.scale;
             expect(baseOfTrunk, `Mid tree at x=${tree.x} is floating (trunk base ${baseOfTrunk} is above hill surface ${hillY})`).toBeGreaterThanOrEqual(hillY - 0.5);
         }
 
@@ -183,7 +184,7 @@ describe('Scenery Element Scale Safeguards', () => {
                 const t = -2 + Math.sqrt(4 + (tree.x - 200) / 40);
                 hillY = 135 * Math.pow(1 - t, 2) + 2 * t * (1 - t) * 180 + 120 * Math.pow(t, 2);
             }
-            const baseOfTrunk = tree.y + 10 * tree.scale;
+            const baseOfTrunk = tree.y + 8 * tree.scale;
             expect(baseOfTrunk, `Front tree at x=${tree.x} is floating (trunk base ${baseOfTrunk} is above hill surface ${hillY})`).toBeGreaterThanOrEqual(hillY - 0.5);
         }
     });
