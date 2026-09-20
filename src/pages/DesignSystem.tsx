@@ -484,10 +484,12 @@ export default function DesignSystemPage() {
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="font-mono text-xs uppercase tracking-wide text-muted-foreground">Internal · /__design-system</p>
-          <h1 className="mt-1 text-3xl font-bold">GridSense Design System</h1>
+          <h1 className="mt-1 text-3xl font-bold font-display">GridSense Design System</h1>
           <p className="mt-2 max-w-2xl text-muted-foreground">
-            A live reference for tokens, components, patterns and accessibility commitments. All values read from
-            <code className="mx-1 font-mono">src/index.css</code> at runtime — this page cannot drift.
+            Art direction: <span className="text-foreground font-medium">Living grid paper</span> — one authored
+            product (scene + sheet). Tokens below; direction &amp; one-product tests live in{" "}
+            <code className="mx-1 font-mono">docs/ART_DIRECTION.md</code>. Values read from
+            <code className="mx-1 font-mono">src/index.css</code> at runtime.
           </p>
         </div>
         <Button

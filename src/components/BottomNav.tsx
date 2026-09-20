@@ -18,55 +18,16 @@ type TabDef = {
   path: string;
   label: string;
   Icon: typeof Home;
-  pill: string;
-  activeText: string;
   tour?: string;
 };
 
+/** One active accent (primary green) — art direction: no rainbow Lucide docks. */
 const TABS: TabDef[] = [
-  {
-    id: 'home',
-    path: '/',
-    label: 'Home',
-    Icon: Home,
-    pill: 'bg-emerald-500/15',
-    activeText: 'text-emerald-600 dark:text-emerald-400',
-  },
-  {
-    id: 'plan',
-    path: '/planner',
-    label: 'Plan',
-    Icon: CalendarDays,
-    pill: 'bg-sky-500/15',
-    activeText: 'text-sky-600 dark:text-sky-400',
-    tour: 'nav-plan',
-  },
-  {
-    id: 'history',
-    path: '/history',
-    label: 'History',
-    Icon: History,
-    pill: 'bg-violet-500/15',
-    activeText: 'text-violet-600 dark:text-violet-400',
-    tour: 'nav-history',
-  },
-  {
-    id: 'rank',
-    path: '/map',
-    label: 'Rank',
-    Icon: Trophy,
-    pill: 'bg-amber-500/15',
-    activeText: 'text-amber-600 dark:text-amber-400',
-    tour: 'nav-rank',
-  },
-  {
-    id: 'settings',
-    path: '/settings',
-    label: 'Settings',
-    Icon: Settings2,
-    pill: 'bg-slate-500/15',
-    activeText: 'text-slate-700 dark:text-slate-300',
-  },
+  { id: 'home', path: '/', label: 'Home', Icon: Home },
+  { id: 'plan', path: '/planner', label: 'Plan', Icon: CalendarDays, tour: 'nav-plan' },
+  { id: 'history', path: '/history', label: 'History', Icon: History, tour: 'nav-history' },
+  { id: 'rank', path: '/map', label: 'Rank', Icon: Trophy, tour: 'nav-rank' },
+  { id: 'settings', path: '/settings', label: 'Settings', Icon: Settings2 },
 ];
 
 export function BottomNav({ onHomeClick }: BottomNavProps) {
@@ -96,7 +57,7 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
     <div id="bottom-nav" className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
       <div className="pointer-events-auto nav-dock max-w-md mx-auto">
         <div className="grid grid-cols-5 h-[3.85rem] px-1.5">
-          {TABS.map(({ id, path, label, Icon, pill, activeText, tour }) => {
+          {TABS.map(({ id, path, label, Icon, tour }) => {
             const active = isActive(path);
             return (
               <Button
@@ -106,7 +67,7 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
                 className={cn(
                   'group relative z-10 flex flex-col items-center gap-0.5 h-auto py-2 px-1 rounded-xl transition-all',
                   active
-                    ? cn('font-bold', activeText)
+                    ? 'font-bold text-primary'
                     : 'text-muted-foreground hover:text-foreground hover:bg-transparent',
                 )}
                 onClick={() => handleClick(path)}
@@ -114,7 +75,7 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
                 {active && (
                   <motion.div
                     layoutId="bottom-nav-active-pill"
-                    className={cn('absolute inset-1 rounded-xl -z-10', pill)}
+                    className="absolute inset-1 rounded-xl -z-10 bg-primary/12"
                     transition={pillTransition}
                   />
                 )}

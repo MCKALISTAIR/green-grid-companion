@@ -3,12 +3,13 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { settingsItemVariants } from './settingsMotion';
+import { SettingsSectionHeading } from './SettingsSectionHeading';
 
 export function SettingsDebugSection() {
   return (
     <motion.div variants={settingsItemVariants} className="border-t border-border pt-8 pb-4">
-      <h2 className="text-lg font-semibold mb-4 px-1">Debug</h2>
-      <div className="p-4 bg-card border rounded-lg space-y-4">
+      <SettingsSectionHeading className="mb-4 px-1">Debug</SettingsSectionHeading>
+      <div className="sheet-surface p-4 space-y-4">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-medium">Test Error Tracking</h3>

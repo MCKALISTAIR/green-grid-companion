@@ -34,7 +34,7 @@ function TabButton({
       aria-selected={isActive}
       aria-controls="dashboard-tab-content"
       className={`relative flex-1 min-w-[100px] h-9 rounded-xl text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 z-10 ${
-        isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+        isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
       }`}
       onClick={onSelect}
       data-tour={dataTour}
@@ -42,7 +42,7 @@ function TabButton({
       {isActive && (
         <motion.div
           layoutId="dashboard-view-pill"
-          className="absolute inset-0 bg-background shadow-sm rounded-xl"
+          className="absolute inset-0 bg-primary/10 border border-primary/15 shadow-sm rounded-xl"
           transition={{ type: 'spring' as const, stiffness: 380, damping: 30 }}
         />
       )}

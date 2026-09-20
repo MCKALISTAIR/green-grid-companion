@@ -27,6 +27,8 @@ import { SettingsSupportSection } from '@/components/settings/SettingsSupportSec
 import { SettingsDataSyncSection } from '@/components/settings/SettingsDataSyncSection';
 import { SettingsDebugSection } from '@/components/settings/SettingsDebugSection';
 import { SettingsFooter } from '@/components/settings/SettingsFooter';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { SettingsSectionHeading } from '@/components/settings/SettingsSectionHeading';
 
 export default function Settings() {
   const [showYearWrapped, setShowYearWrapped] = useState(false);
@@ -81,20 +83,22 @@ export default function Settings() {
   const isMac = typeof navigator !== 'undefined' && navigator.userAgent.includes('Macintosh');
 
   return (
-    <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
+    <div className="page-shell">
       <motion.div
-        className="p-4 pt-[calc(max(env(safe-area-inset-top),59px)+2rem)] space-y-8"
+        className="page-shell-inner space-y-8 pt-[calc(max(env(safe-area-inset-top),59px)+2rem)]"
         variants={settingsContainerVariants}
         initial="hidden"
         animate="show"
       >
         <motion.div variants={settingsItemVariants}>
-          <h1 className="text-2xl font-bold">Settings</h1>
-          <p className="text-muted-foreground">Manage notifications and preferences.</p>
+          <PageHeader
+            title="Settings"
+            description="Notifications, meter link, and preferences."
+          />
         </motion.div>
 
         <motion.div variants={settingsItemVariants} className="space-y-4">
-          <h2 className="text-xl font-semibold">Account</h2>
+          <SettingsSectionHeading>Account</SettingsSectionHeading>
           <AccountBackup
             isSyncing={isSyncing}
             lastSyncedAt={lastSyncedAt}

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { settingsItemVariants } from './settingsMotion';
+import { SettingsSectionHeading } from './SettingsSectionHeading';
 
 interface SettingsDataSyncSectionProps {
   gridLastUpdated: string | Date | null | undefined;
@@ -20,8 +21,8 @@ export function SettingsDataSyncSection({
 }: SettingsDataSyncSectionProps) {
   return (
     <motion.div variants={settingsItemVariants} className="space-y-4">
-      <h2 className="text-xl font-semibold">Data Sync</h2>
-      <div className="p-4 bg-card border rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <SettingsSectionHeading>Data Sync</SettingsSectionHeading>
+      <div className="sheet-surface p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-primary/10 rounded-full">
             <Cloud className="w-5 h-5 text-primary" />

@@ -32,6 +32,7 @@ import {
 } from '@/components/home/DashboardViewTabs';
 import { IntensityDashboard } from '@/components/home/IntensityDashboard';
 import { IntensityHeroOverlay } from '@/components/home/IntensityHeroOverlay';
+import { useSceneGrowth } from '@/hooks/useSceneGrowth';
 
 const Index = () => {
   const { postcode, setPostcode } = useAppLocation();
@@ -65,6 +66,7 @@ const Index = () => {
 
   const { frequency: gridFrequency } = useGridDemand();
   const renewablesPct = getRenewablesPercentage(generationMix);
+  const sceneGrowth = useSceneGrowth(intensity, generationMix);
 
   const cleanliness = useMemo(() => {
     const band = index || 'moderate';
@@ -298,6 +300,8 @@ const Index = () => {
                             lastUpdated={lastUpdated}
                             glowClass={glowClass}
                             showWeatherInInsights={prefs.showWeatherInInsights}
+                            gardenDays={sceneGrowth.gardenDays}
+                            growthStage={sceneGrowth.stage}
                           />
                         )}
                       </motion.div>

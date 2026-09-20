@@ -1,48 +1,20 @@
-import { ForecastData } from '@/lib/carbonApi';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { BatteryCharging, TrendingDown, TrendingUp } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { getDayLabel } from '@/lib/date-utils';
 import { useCountdown } from '@/hooks/useCountdown';
 import { motion } from 'framer-motion';
+import type { ForecastData } from '@/lib/carbonApi';
+import { getBestWorstWindows } from '@/lib/forecastWindows';
 
 interface BestTimeCardProps {
   forecast: ForecastData[];
 }
 
-// Number of 30-minute forecast slots to consider for optimal windows (3 hours)
-const OPTIMAL_WINDOW_HOURS = 6;
-
-function useBestWorstTimes(forecast: ForecastData[]) {
-  if (forecast.length < OPTIMAL_WINDOW_HOURS) return null;
-
-  const now = new Date();
-  const futureForecast = forecast.filter(f => new Date(f.to) > now);
-  if (futureForecast.length < OPTIMAL_WINDOW_HOURS) return null;
-
-  let minSum = Infinity, minStartIndex = 0;
-  let maxSum = 0, maxStartIndex = 0;
-
-  for (let i = 0; i <= futureForecast.length - OPTIMAL_WINDOW_HOURS; i++) {
-    const sum = futureForecast.slice(i, i + OPTIMAL_WINDOW_HOURS).reduce((acc, f) => acc + f.intensity.forecast, 0);
-    if (sum < minSum) { minSum = sum; minStartIndex = i; }
-    if (sum > maxSum) { maxSum = sum; maxStartIndex = i; }
-  }
-
-  return {
-    bestStart: parseISO(futureForecast[minStartIndex].from),
-    bestEnd: parseISO(futureForecast[minStartIndex + OPTIMAL_WINDOW_HOURS - 1].to),
-    worstStart: parseISO(futureForecast[maxStartIndex].from),
-    worstEnd: parseISO(futureForecast[maxStartIndex + OPTIMAL_WINDOW_HOURS - 1].to),
-    minAvg: Math.round(minSum / OPTIMAL_WINDOW_HOURS),
-    maxAvg: Math.round(maxSum / OPTIMAL_WINDOW_HOURS),
-  };
-}
-
 export function BestTimeSlot({ forecast }: BestTimeCardProps) {
-  const data = useBestWorstTimes(forecast);
+  const data = getBestWorstWindows(forecast);
   const now = new Date();
-  const isNow = data ? (now >= data.bestStart && now <= data.bestEnd) : false;
+  const isNow = data ? now >= data.bestStart && now <= data.bestEnd : false;
   const countdown = useCountdown(data ? (isNow ? null : data.bestStart) : null);
 
   if (!data) return null;
@@ -61,7 +33,7 @@ export function BestTimeSlot({ forecast }: BestTimeCardProps) {
             <div className="flex items-center gap-2 flex-wrap">
               <BatteryCharging className="w-4 h-4 text-intensity-very-low" />
               <span className="text-sm font-medium text-foreground">
-                {isNow ? 'Load-shift now — it\'s the best time!' : 'Best time to load-shift'}
+                {isNow ? "Load-shift now — it's the best time!" : 'Best time to load-shift'}
               </span>
               {isNow && (
                 <span className="flex items-center gap-1.5 bg-intensity-very-low/20 text-intensity-very-low px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider">
@@ -73,15 +45,18 @@ export function BestTimeSlot({ forecast }: BestTimeCardProps) {
                 </span>
               )}
               {!isNow && countdown && (
-                <span className="text-[10px] font-semibold bg-intensity-very-low/15 text-intensity-very-low px-1.5 py-0.5 rounded-full tabular-nums">{countdown}</span>
+                <span className="text-[10px] font-semibold bg-intensity-very-low/15 text-intensity-very-low px-1.5 py-0.5 rounded-full tabular-nums">
+                  {countdown}
+                </span>
               )}
             </div>
             <p className="text-lg font-bold text-intensity-very-low">
-              {format(data.bestStart, 'HH:mm')} → {format(data.bestEnd, 'HH:mm')} <span className="text-sm font-medium ml-1 text-muted-foreground">{getDayLabel(new Date(data.bestStart.getTime() - 60000))}</span>
+              {format(data.bestStart, 'HH:mm')} → {format(data.bestEnd, 'HH:mm')}{' '}
+              <span className="text-sm font-medium ml-1 text-muted-foreground">
+                {getDayLabel(new Date(data.bestStart.getTime() - 60000))}
+              </span>
             </p>
-            <p className="text-xs text-muted-foreground">
-              Average: {data.minAvg} gCO₂/kWh
-            </p>
+            <p className="text-xs text-muted-foreground">Average: {data.minAvg} gCO₂/kWh</p>
           </div>
         </div>
       </Card>
@@ -90,9 +65,9 @@ export function BestTimeSlot({ forecast }: BestTimeCardProps) {
 }
 
 export function WorstTimeSlot({ forecast }: BestTimeCardProps) {
-  const data = useBestWorstTimes(forecast);
+  const data = getBestWorstWindows(forecast);
   const now = new Date();
-  const isNow = data ? (now >= data.worstStart && now <= data.worstEnd) : false;
+  const isNow = data ? now >= data.worstStart && now <= data.worstEnd : false;
   const countdown = useCountdown(data ? (isNow ? null : data.worstStart) : null);
 
   if (!data) return null;
@@ -120,15 +95,18 @@ export function WorstTimeSlot({ forecast }: BestTimeCardProps) {
                 </span>
               )}
               {!isNow && countdown && (
-                <span className="text-[10px] font-semibold bg-intensity-high/15 text-intensity-high px-1.5 py-0.5 rounded-full tabular-nums">{countdown}</span>
+                <span className="text-[10px] font-semibold bg-intensity-high/15 text-intensity-high px-1.5 py-0.5 rounded-full tabular-nums">
+                  {countdown}
+                </span>
               )}
             </div>
             <p className="text-lg font-bold text-intensity-high">
-              {format(data.worstStart, 'HH:mm')} → {format(data.worstEnd, 'HH:mm')} <span className="text-sm font-medium ml-1 text-muted-foreground">{getDayLabel(new Date(data.worstStart.getTime() - 60000))}</span>
+              {format(data.worstStart, 'HH:mm')} → {format(data.worstEnd, 'HH:mm')}{' '}
+              <span className="text-sm font-medium ml-1 text-muted-foreground">
+                {getDayLabel(new Date(data.worstStart.getTime() - 60000))}
+              </span>
             </p>
-            <p className="text-xs text-muted-foreground">
-              Average: {data.maxAvg} gCO₂/kWh
-            </p>
+            <p className="text-xs text-muted-foreground">Average: {data.maxAvg} gCO₂/kWh</p>
           </div>
         </div>
       </Card>

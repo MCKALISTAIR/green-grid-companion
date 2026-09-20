@@ -115,7 +115,7 @@ export const OctopusSettings = forwardRef<HTMLDivElement, OctopusSettingsProps>(
     const isValid = !errors.accountNumber && !errors.apiKey && accountNumber && apiKey;
 
     return (
-        <Card ref={ref} className="p-4 border-purple-500/20 bg-purple-500/5">
+        <Card ref={ref} className="p-4 border-primary/15 bg-primary/5">
             <div className="space-y-4">
                 <div>
                     <h3 className="font-medium text-foreground">Connect Octopus Energy</h3>
@@ -199,7 +199,7 @@ export const OctopusSettings = forwardRef<HTMLDivElement, OctopusSettingsProps>(
                         <Button
                             type="submit"
                             size="sm"
-                            className={`bg-purple-600 hover:bg-purple-700 ${onCancel ? 'flex-1' : 'w-full'}`}
+                            className={`bg-primary hover:bg-primary/90 ${onCancel ? 'flex-1' : 'w-full'}`}
                             disabled={isSyncing || !isValid}
                         >
                             {isSyncing ? (
@@ -220,10 +220,10 @@ export const OctopusSettings = forwardRef<HTMLDivElement, OctopusSettingsProps>(
                 <div className="text-[10px] text-muted-foreground mt-2 space-y-2">
                     <p>
                         Your credentials are stored securely and only used to fetch your meter data.
-                        You can find your API Key in the <a href="https://octopus.energy/dashboard/developer/" target="_blank" rel="noreferrer" className="underline hover:text-purple-500">Octopus Developer Dashboard</a>.
+                        You can find your API Key in the <a href="https://octopus.energy/dashboard/developer/" target="_blank" rel="noreferrer" className="underline hover:text-primary">Octopus Developer Dashboard</a>.
                     </p>
-                    <p className="pt-2 border-t border-purple-200 dark:border-purple-800/50">
-                        Not with Octopus yet? <a href="https://share.octopus.energy/light-sheep-695" target="_blank" rel="noreferrer" className="underline font-medium text-purple-600 hover:text-purple-500 dark:text-purple-400">Join with £50 free credit</a>
+                    <p className="pt-2 border-t border-primary/20">
+                        Not with Octopus yet? <a href="https://share.octopus.energy/light-sheep-695" target="_blank" rel="noreferrer" className="underline font-medium text-primary hover:text-primary/80">Join with £50 free credit</a>
                     </p>
                 </div>
             </div>

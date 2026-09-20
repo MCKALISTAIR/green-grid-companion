@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
+import { SettingsSectionHeading } from '@/components/settings/SettingsSectionHeading';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -90,7 +91,7 @@ export function OctopusIntegration() {
   if (isLoading && !status) {
     return (
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-foreground">Energy Integrations</h2>
+        <SettingsSectionHeading>Energy Integrations</SettingsSectionHeading>
         <Card className="p-4 h-32 flex items-center justify-center border-border">
           <div className="flex items-center gap-2 text-muted-foreground">
             <TurbineSpinner size="sm" />
@@ -105,7 +106,7 @@ export function OctopusIntegration() {
   if (!isLinked && cachedCredentials && !isEditing) {
     return (
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-foreground">Energy Integrations</h2>
+        <SettingsSectionHeading>Energy Integrations</SettingsSectionHeading>
         <Card className="p-5 border-primary/20 bg-primary/5">
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-4">
@@ -164,7 +165,7 @@ export function OctopusIntegration() {
   if ((!hasCredentials && !isLinked) || (isEditing && !isLinked)) {
     return (
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-foreground">Energy Integrations</h2>
+        <SettingsSectionHeading>Energy Integrations</SettingsSectionHeading>
         <OctopusSettings
           onSaved={() => setIsEditing(false)}
           onCancel={isEditing ? () => setIsEditing(false) : undefined}
@@ -176,13 +177,13 @@ export function OctopusIntegration() {
   // 3. Has Credentials -> Show Integration Dashboard
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold text-foreground">Energy Integrations</h2>
+      <SettingsSectionHeading>Energy Integrations</SettingsSectionHeading>
 
       {/* Octopus Energy Card */}
-      <Card className="p-4 border-purple-500/20 bg-purple-500/5">
+      <Card className="p-4 border-primary/15 bg-primary/5">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
               <OctopusLogo className="w-6 h-6" />
             </div>
             <div>
@@ -216,7 +217,7 @@ export function OctopusIntegration() {
                 size="sm"
                 onClick={handleLinkMeter}
                 disabled={isLoading || isSyncing}
-                className="bg-purple-600 hover:bg-purple-700"
+                className="bg-primary hover:bg-primary/90"
               >
                 {isSyncing ? (
                   <>
@@ -279,7 +280,7 @@ export function OctopusIntegration() {
             {status.meters?.map((meter) => (
               <div key={meter.mpan} className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-purple-500" />
+                  <Zap className="w-4 h-4 text-primary" />
                   <span className="text-muted-foreground flex items-center gap-1.5">
                     MPAN: {meter.mpan.slice(-6)}
                     <Popover>
@@ -342,7 +343,7 @@ export function OctopusIntegration() {
                 onClick={() => navigate('/charging-history')}
                 className="flex-1 gap-1.5"
               >
-                <History className="w-4 h-4 text-purple-500" />
+                <History className="w-4 h-4 text-primary" />
                 Charging History
               </Button>
             </div>

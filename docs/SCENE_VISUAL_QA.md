@@ -75,6 +75,15 @@ For each device, verify:
 - [ ] Very low (clean: many turbines, butterflies, rainbow)
 - [ ] Very high (dirty: factories, smoke, pollution warning)
 
+### Temporal garden (streak life)
+- [ ] Stage 0: no extra garden overlay on countryside
+- [ ] After sustained clean / coal-free streak: flowers + green wash appear
+- [ ] Stage 2+: extra butterflies; wildlife gates ease slightly
+- [ ] Stage 3+ night: soft emerald sparkles
+- [ ] City theme: temporal garden skipped (no countryside flora)
+- [ ] Home sheet shows quiet "Scene garden · day N" when stage > 0
+- [ ] Dirty periods decay garden hours slowly (no hard wipe)
+
 ## City scene logic
 - [ ] No nuclear cooling towers visible in city theme
 - [ ] No factory chimneys visible in city theme
@@ -122,16 +131,35 @@ heavy haze on dirty days does not mute the halo.
 - [ ] Visible at the 40–68% vertical band only (does not wash out foreground)
 - [ ] Distant skyline reads as further away than mid skyline
 
-### Scale audit (city)
-Locked prop scale ratios (approx, against a 400×150 SVG viewBox):
-| Prop              | Width  | Height | Notes                                   |
-|-------------------|--------|--------|-----------------------------------------|
-| London Eye wheel  | ~32u   | ~32u   | Plinth bottom touches road              |
-| BESS container    | 22u    | 8u     | Sits on ground line at y=138            |
-| Distant stack     | 2u     | 22u    | Far horizon only                        |
-| Cars              | ~10u   | ~5u    | Must be shorter than ground-floor windows |
-| EV charger        | ~4u    | ~10u   | Taller than cars, shorter than ground floor |
-| Pigeon            | ~6u    | ~4u    | Smallest moving element                 |
+### Scale bible (locked)
+
+Source of truth: `src/lib/sceneScaleBible.ts` (art direction register test).
+
+#### City (400×150 viewBox, groundY = 138)
+| Prop | Size | Notes |
+|---|---|---|
+| London Eye wheel | radius **30** (≈60u Ø) | Hub y=85; plinth half-width 22; legs touch road |
+| BESS container | **22×8** | Sits on groundY 138 |
+| Distant stack | **2×22** | Far horizon only |
+| Car | body **14×5**, cabin **8×3** | Shorter than ground-floor windows |
+| Bus | **24×8** | |
+| Pigeon | baseScale **0.35** | Smallest moving element |
+| Urban trees | scale **0.4–1.0** | |
+
+#### Countryside
+| Prop | Scale |
+|---|---|
+| Back / mid / front pines | 0.15–0.3 / 0.28–0.45 / 0.4–0.55 |
+| Sheep | 0.5–0.55 |
+| Cottage | 0.78 |
+| Turbines | back ≤0.5, front ≥0.9 |
+
+#### Coastal
+| Prop | Scale |
+|---|---|
+| Seagulls | 0.7–1.1 |
+| Rock-pool accent | 0.4 |
 
 - [ ] No car taller than a building's ground-floor windows
 - [ ] EV charger reads as street furniture, not signage
+- [ ] New props import sizes from `sceneScaleBible` — do not hardcode rival ratios

@@ -20,10 +20,10 @@ export function Integrations() {
         <div className="space-y-4">
             <h2 className="text-lg font-semibold text-foreground">Integrations</h2>
 
-            <Card className="p-4 flex items-center justify-between border-purple-500/20 bg-purple-500/5">
+            <Card className="p-4 flex items-center justify-between border-primary/15 bg-primary/5">
                 <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                        <OctopusLogo className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                        <OctopusLogo className="w-6 h-6" />
                     </div>
                     <div>
                         <div className="flex items-center gap-2">

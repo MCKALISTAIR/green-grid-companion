@@ -12,6 +12,7 @@ import { getErrorInfo } from '@/lib/errorUtils';
 import { PullToRefresh } from '@/components/PullToRefresh';
 import { Map as MapIcon, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function MapPage() {
@@ -31,9 +32,9 @@ export default function MapPage() {
     if (isError) {
         const errorInfo = getErrorInfo(error);
         return (
-            <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
-                <div className="p-4 pt-[max(env(safe-area-inset-top),59px)]">
-                    <h1 className="text-2xl font-bold mb-4">Leaderboard</h1>
+            <div className="page-shell">
+                <div className="page-shell-inner">
+                    <PageHeader title="Leaderboard" className="mb-4" />
                     <ErrorState
                         title={errorInfo.title}
                         description={errorInfo.description}
@@ -46,28 +47,28 @@ export default function MapPage() {
     }
 
     return (
-        <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
+        <div className="page-shell">
             <PullToRefresh onRefresh={async () => { await refetch(); }}>
-                <div className="p-4 space-y-4 pt-[max(env(safe-area-inset-top),59px)]">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-2xl font-bold">Leaderboard</h1>
-                            <p className="text-muted-foreground">Regional carbon intensity ranking.</p>
-                        </div>
-                        <Button
-                            variant={showMap ? "default" : "outline"}
-                            size="icon"
-                            onClick={() => setShowMap(!showMap)}
-                            className="rounded-full w-10 h-10 shadow-sm"
-                        >
-                            {showMap ? <X className="w-5 h-5" /> : <MapIcon className="w-5 h-5" />}
-                        </Button>
-                    </div>
+                <div className="page-shell-inner space-y-4">
+                    <PageHeader
+                        title="Leaderboard"
+                        description="Regional carbon intensity ranking."
+                        actions={
+                            <Button
+                                variant={showMap ? "default" : "outline"}
+                                size="icon"
+                                onClick={() => setShowMap(!showMap)}
+                                className="rounded-full w-10 h-10 shadow-sm"
+                            >
+                                {showMap ? <X className="w-5 h-5" /> : <MapIcon className="w-5 h-5" />}
+                            </Button>
+                        }
+                    />
 
                     {isLoading ? (
                         <div className="space-y-3">
                             {[1, 2, 3, 4, 5, 6].map(i => (
-                                <Card key={i} className="p-4 bg-card border border-border shadow-sm flex items-center justify-between">
+                                <Card key={i} className="sheet-surface p-4 flex items-center justify-between">
                                     <div className="space-y-1.5 flex-1">
                                         <Skeleton className="h-4 w-1/4" />
                                         <Skeleton className="h-3 w-1/3" />
@@ -111,17 +112,17 @@ export default function MapPage() {
                                     >
                                         <Card
                                             className={cn(
-                                                "p-4 flex items-center justify-between transition-all duration-350 cursor-pointer active:scale-[0.99]",
+                                                "sheet-surface p-4 flex items-center justify-between transition-all duration-350 cursor-pointer active:scale-[0.99]",
                                                 selectedRegionId === region.regionid
-                                                    ? "ring-2 ring-primary bg-primary/10 border-primary/30 shadow-md scale-[1.015]"
-                                                    : "hover:bg-card/80 hover:shadow-sm"
+                                                    ? "ring-2 ring-primary bg-primary/10 border-primary/30 scale-[1.015]"
+                                                    : "hover:bg-card/80"
                                             )}
                                             onClick={() => setSelectedRegionId(region.regionid)}
                                         >
                                             <div className="flex items-center gap-3">
-                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${idx === 0 ? 'bg-yellow-100 text-yellow-700' :
-                                                    idx === 1 ? 'bg-gray-100 text-gray-700' :
-                                                        idx === 2 ? 'bg-orange-100 text-orange-800' : 'bg-muted text-muted-foreground'
+                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${idx === 0 ? 'bg-primary/15 text-primary' :
+                                                    idx === 1 ? 'bg-muted text-foreground' :
+                                                        idx === 2 ? 'bg-accent/20 text-accent-foreground' : 'bg-muted text-muted-foreground'
                                                     }`}>
                                                     {idx + 1}
                                                 </div>
@@ -136,7 +137,7 @@ export default function MapPage() {
                                             </div>
 
                                             <div className="text-right">
-                                                <div className="text-xl font-bold">{region.intensity.forecast}</div>
+                                                <div className="text-xl font-bold font-mono tabular-nums">{region.intensity.forecast}</div>
                                                 <div className="text-[10px] text-muted-foreground">gCO₂/kWh</div>
                                             </div>
                                         </Card>

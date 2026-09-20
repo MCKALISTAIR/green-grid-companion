@@ -21,6 +21,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { Bell } from 'lucide-react';
 import { logger } from '@/lib/logger';
+import { PageHeader } from '@/components/layout/PageHeader';
 
 const DEFAULT_APPLIANCES = [
     { id: 'ev', name: 'EV Charge', icon: Car, power: 7.4, duration: 4, label: 'Full Charge (4h)' },
@@ -235,16 +236,16 @@ export default function Planner() {
     };
 
     return (
-        <div className="h-[100dvh] overflow-hidden bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
+        <div className="page-shell h-[100dvh] overflow-hidden">
             <PullToRefresh onRefresh={async () => { await refetch(); }}>
-                <div className="p-4 space-y-6 pt-[max(env(safe-area-inset-top),59px)]">
-                    <div>
-                        <h1 className="text-2xl font-bold">Power Planner</h1>
-                        <p className="text-muted-foreground">Schedule high-energy tasks to save carbon.</p>
-                    </div>
+                <div className="page-shell-inner space-y-6">
+                    <PageHeader
+                        title="Power Planner"
+                        description="Schedule high-energy tasks for cleaner grid windows."
+                    />
 
                     {showOnboarding && (
-                        <Card className="p-4 bg-primary/10 border-primary/20 relative animate-in fade-in slide-in-from-top-4 duration-500">
+                        <Card className="sheet-surface p-4 bg-primary/10 border-primary/20 relative animate-in fade-in slide-in-from-top-4 duration-500">
                             <button
                                 onClick={dismissOnboarding}
                                 className="absolute top-2 right-2 p-2 text-muted-foreground hover:text-foreground transition-colors"
@@ -365,7 +366,7 @@ export default function Planner() {
                                 exit={{ opacity: 0 }}
                                 transition={{ duration: 0.2 }}
                             >
-                                <Card className="p-6 space-y-6 bg-card border border-border shadow-md">
+                                <Card className="sheet-surface p-6 space-y-6">
                                     <div className="flex items-center justify-between pb-2 border-b border-muted">
                                         <div className="space-y-1.5 flex-1">
                                             <Skeleton className="h-4 w-1/3" />
@@ -394,7 +395,7 @@ export default function Planner() {
                                 exit={{ opacity: 0, y: -12 }}
                                 transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                             >
-                                <Card className="p-6 space-y-4 border-primary/20 bg-primary/5">
+                                <Card className="sheet-surface p-6 space-y-4 border-primary/20 bg-primary/5">
                                     <div className="text-center space-y-1">
                                         <h3 className="text-lg font-medium text-muted-foreground">
                                             Best time to run
@@ -440,7 +441,7 @@ export default function Planner() {
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
                             >
-                                <Card className="p-6 space-y-3">
+                                <Card className="sheet-surface p-6 space-y-3">
                                     <p className="font-medium text-foreground">No forecast data available</p>
                                     <p className="text-sm text-muted-foreground">
                                         We need a carbon intensity forecast to find your best window. Pull to refresh, or check your connection.
