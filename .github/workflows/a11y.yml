@@ -59,6 +59,7 @@ jobs:
 
       - name: Upload report artifact
         if: always() && steps.report.outputs.found == 'true'
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: a11y-report-${{ steps.report.outputs.name }}
@@ -68,6 +69,7 @@ jobs:
 
       - name: Comment summary on PR
         if: always() && github.event_name == 'pull_request' && steps.report.outputs.found == 'true'
+        continue-on-error: true
         uses: actions/github-script@v7
         with:
           script: |
@@ -80,25 +82,29 @@ jobs:
               ? body.slice(0, MAX) + `\n\n…truncated. Download the full report from the workflow artifacts.`
               : body;
             const marker = '<!-- a11y-audit-report -->';
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
-            const existing = comments.find(c => c.body && c.body.includes(marker));
-            const finalBody = `${marker}\n${truncated}`;
-            if (existing) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: existing.id,
-                body: finalBody,
-              });
-            } else {
-              await github.rest.issues.createComment({
+            try {
+              const { data: comments } = await github.rest.issues.listComments({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.issue.number,
-                body: finalBody,
               });
+              const existing = comments.find(c => c.body && c.body.includes(marker));
+              const finalBody = `${marker}\n${truncated}`;
+              if (existing) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: existing.id,
+                  body: finalBody,
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  body: finalBody,
+                });
+              }
+            } catch (err) {
+              core.warning(`Could not comment a11y report on PR: ${err.message}`);
             }
