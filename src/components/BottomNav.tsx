@@ -1,162 +1,140 @@
 import { useLocation } from 'react-router-dom';
 import { useTransitionNavigate } from '@/hooks/useTransitionNavigate';
-import { Home, ListOrdered, Calendar, Settings, Clock } from 'lucide-react';
+import { Home, Trophy, CalendarDays, Settings2, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, type Transition } from 'framer-motion';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { cn } from '@/lib/utils';
 
-// Playful press feedback: icon dips + tilts on active, springs back on release.
-const iconTilt =
-    'transition-transform duration-150 ease-out group-active:scale-90 group-active:-rotate-6 motion-reduce:transform-none';
-
-// Bouncy spring dynamics for sliding background pill
 const pillTransition = { type: 'spring' as const, stiffness: 450, damping: 25 };
 
 interface BottomNavProps {
-    onHomeClick?: () => void;
+  onHomeClick?: () => void;
 }
 
+type TabDef = {
+  id: string;
+  path: string;
+  label: string;
+  Icon: typeof Home;
+  pill: string;
+  activeText: string;
+  tour?: string;
+};
+
+const TABS: TabDef[] = [
+  {
+    id: 'home',
+    path: '/',
+    label: 'Home',
+    Icon: Home,
+    pill: 'bg-emerald-500/15',
+    activeText: 'text-emerald-600 dark:text-emerald-400',
+  },
+  {
+    id: 'plan',
+    path: '/planner',
+    label: 'Plan',
+    Icon: CalendarDays,
+    pill: 'bg-sky-500/15',
+    activeText: 'text-sky-600 dark:text-sky-400',
+    tour: 'nav-plan',
+  },
+  {
+    id: 'history',
+    path: '/history',
+    label: 'History',
+    Icon: History,
+    pill: 'bg-violet-500/15',
+    activeText: 'text-violet-600 dark:text-violet-400',
+    tour: 'nav-history',
+  },
+  {
+    id: 'rank',
+    path: '/map',
+    label: 'Rank',
+    Icon: Trophy,
+    pill: 'bg-amber-500/15',
+    activeText: 'text-amber-600 dark:text-amber-400',
+    tour: 'nav-rank',
+  },
+  {
+    id: 'settings',
+    path: '/settings',
+    label: 'Settings',
+    Icon: Settings2,
+    pill: 'bg-slate-500/15',
+    activeText: 'text-slate-700 dark:text-slate-300',
+  },
+];
+
 export function BottomNav({ onHomeClick }: BottomNavProps) {
-    const navigate = useTransitionNavigate();
-    const location = useLocation();
-    const { selection } = useHaptics();
-    const shouldReduceMotion = useReducedMotion();
+  const navigate = useTransitionNavigate();
+  const location = useLocation();
+  const { selection } = useHaptics();
+  const shouldReduceMotion = useReducedMotion();
 
-    const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => location.pathname === path;
 
-    // Squish-bounce played once when a tab becomes active
-    const squishBounce = {
-      initial: false as const,
-      animate: shouldReduceMotion ? {} : { scaleY: [1, 0.65, 1.25, 1] },
-      transition: { duration: 0.35, ease: [0.34, 1.56, 0.64, 1] } as Transition,
-    };
+  const squishBounce = {
+    initial: false as const,
+    animate: shouldReduceMotion ? {} : { scaleY: [1, 0.65, 1.25, 1] },
+    transition: { duration: 0.35, ease: [0.34, 1.56, 0.64, 1] } as Transition,
+  };
 
-    const handleHome = () => {
-        selection();
-        if (location.pathname === '/' && onHomeClick) {
-            onHomeClick();
-        } else {
-            navigate('/');
-        }
-    };
+  const handleClick = (path: string) => {
+    selection();
+    if (path === '/' && location.pathname === '/' && onHomeClick) {
+      onHomeClick();
+      return;
+    }
+    navigate(path);
+  };
 
-    return (
-        <div id="bottom-nav" className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
-            {/* Nav Bar */}
-            <div className="pointer-events-auto pb-[env(safe-area-inset-bottom)] bg-background/80 backdrop-blur-lg border-t border-border/40">
-                <div className="grid grid-cols-5 h-16 max-w-md mx-auto px-1">
-
-                    <Button
-                        variant="ghost"
-                        className={`group relative z-10 flex flex-col items-center gap-1 h-auto py-2 px-1 rounded-lg transition-all ${isActive('/')
-                            ? 'text-primary font-semibold'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
-                            }`}
-                        onClick={handleHome}
-                    >
-                        {isActive('/') && (
-                            <motion.div
-                                layoutId="bottom-nav-active-pill"
-                                className="absolute inset-1 rounded-lg bg-primary/15 -z-10"
-                                transition={pillTransition}
-                            />
-                        )}
-                        <motion.span key={isActive('/') ? 'active' : 'idle'} {...squishBounce}>
-                          <Home className={`w-5 h-5 ${iconTilt}`} />
-                        </motion.span>
-                        <span className="text-[10px] font-medium">Home</span>
-                    </Button>
-
-                    <Button
-                        variant="ghost"
-                        data-tour="nav-plan"
-                        className={`group relative z-10 flex flex-col items-center gap-1 h-auto py-2 px-1 rounded-lg transition-all ${isActive('/planner')
-                            ? 'text-primary font-semibold'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
-                            }`}
-                        onClick={() => { selection(); navigate('/planner'); }}
-                    >
-                        {isActive('/planner') && (
-                            <motion.div
-                                layoutId="bottom-nav-active-pill"
-                                className="absolute inset-1 rounded-lg bg-primary/15 -z-10"
-                                transition={pillTransition}
-                            />
-                        )}
-                        <motion.span key={isActive('/planner') ? 'active' : 'idle'} {...squishBounce}>
-                          <Calendar className={`w-5 h-5 ${iconTilt}`} />
-                        </motion.span>
-                        <span className="text-[10px] font-medium">Plan</span>
-                    </Button>
-
-                    <Button
-                        variant="ghost"
-                        data-tour="nav-history"
-                        className={`group relative z-10 flex flex-col items-center gap-1 h-auto py-2 px-1 rounded-lg transition-all ${isActive('/history')
-                            ? 'text-primary font-semibold'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
-                            }`}
-                        onClick={() => { selection(); navigate('/history'); }}
-                    >
-                        {isActive('/history') && (
-                            <motion.div
-                                layoutId="bottom-nav-active-pill"
-                                className="absolute inset-1 rounded-lg bg-primary/15 -z-10"
-                                transition={pillTransition}
-                            />
-                        )}
-                        <motion.span key={isActive('/history') ? 'active' : 'idle'} {...squishBounce}>
-                          <Clock className={`w-5 h-5 ${iconTilt}`} />
-                        </motion.span>
-                        <span className="text-[10px] font-medium">History</span>
-                    </Button>
-
-                    <Button
-                        variant="ghost"
-                        data-tour="nav-rank"
-                        className={`group relative z-10 flex flex-col items-center gap-1 h-auto py-2 px-1 rounded-lg transition-all ${isActive('/map')
-                            ? 'text-primary font-semibold'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
-                            }`}
-                        onClick={() => { selection(); navigate('/map'); }}
-                    >
-                        {isActive('/map') && (
-                            <motion.div
-                                layoutId="bottom-nav-active-pill"
-                                className="absolute inset-1 rounded-lg bg-primary/15 -z-10"
-                                transition={pillTransition}
-                            />
-                        )}
-                        <motion.span key={isActive('/map') ? 'active' : 'idle'} {...squishBounce}>
-                          <ListOrdered className={`w-5 h-5 ${iconTilt}`} />
-                        </motion.span>
-                        <span className="text-[10px] font-medium">Rank</span>
-                    </Button>
-
-                    <Button
-                        variant="ghost"
-                        className={`group relative z-10 flex flex-col items-center gap-1 h-auto py-2 px-1 rounded-lg transition-all ${isActive('/settings')
-                            ? 'text-primary font-semibold'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
-                            }`}
-                        onClick={() => { selection(); navigate('/settings'); }}
-                    >
-                        {isActive('/settings') && (
-                            <motion.div
-                                layoutId="bottom-nav-active-pill"
-                                className="absolute inset-1 rounded-lg bg-primary/15 -z-10"
-                                transition={pillTransition}
-                            />
-                        )}
-                        <motion.span key={isActive('/settings') ? 'active' : 'idle'} {...squishBounce}>
-                          <Settings className={`w-5 h-6 ${iconTilt}`} />
-                        </motion.span>
-                        <span className="text-[10px] font-medium">Settings</span>
-                    </Button>
-
-                </div>
-            </div>
+  return (
+    <div id="bottom-nav" className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
+      <div className="pointer-events-auto nav-dock max-w-md mx-auto">
+        <div className="grid grid-cols-5 h-[3.85rem] px-1.5">
+          {TABS.map(({ id, path, label, Icon, pill, activeText, tour }) => {
+            const active = isActive(path);
+            return (
+              <Button
+                key={id}
+                variant="ghost"
+                data-tour={tour}
+                className={cn(
+                  'group relative z-10 flex flex-col items-center gap-0.5 h-auto py-2 px-1 rounded-xl transition-all',
+                  active
+                    ? cn('font-bold', activeText)
+                    : 'text-muted-foreground hover:text-foreground hover:bg-transparent',
+                )}
+                onClick={() => handleClick(path)}
+              >
+                {active && (
+                  <motion.div
+                    layoutId="bottom-nav-active-pill"
+                    className={cn('absolute inset-1 rounded-xl -z-10', pill)}
+                    transition={pillTransition}
+                  />
+                )}
+                <motion.span key={active ? `${id}-on` : `${id}-off`} {...squishBounce}>
+                  <Icon
+                    className={cn(
+                      'w-[1.35rem] h-[1.35rem] transition-transform duration-150 ease-out group-active:scale-90 group-active:-rotate-6 motion-reduce:transform-none',
+                      active && 'drop-shadow-sm',
+                    )}
+                    strokeWidth={active ? 2.4 : 1.85}
+                    fill={active ? 'currentColor' : 'none'}
+                    fillOpacity={active ? 0.18 : 0}
+                  />
+                </motion.span>
+                <span className="text-[10px] font-semibold tracking-wide">{label}</span>
+              </Button>
+            );
+          })}
         </div>
-    );
+      </div>
+    </div>
+  );
 }

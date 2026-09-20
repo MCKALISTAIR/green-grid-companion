@@ -52,9 +52,9 @@ export function BestTimeSlot({ forecast }: BestTimeCardProps) {
       whileHover={{ scale: 1.025, y: -2 }}
       transition={{ duration: 0.2 }}
     >
-      <Card className="p-4 bg-intensity-very-low/10 border-intensity-very-low/30 cursor-pointer shadow-sm hover:shadow-md transition-shadow">
+      <Card className="p-4 bg-intensity-very-low/[0.08] border-intensity-very-low/20 cursor-pointer shadow-none hover:bg-intensity-very-low/[0.12] transition-colors rounded-2xl">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-intensity-very-low/20 flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-2xl bg-intensity-very-low/15 flex items-center justify-center shrink-0">
             <TrendingDown className="w-5 h-5 text-intensity-very-low" />
           </div>
           <div className="flex-1 min-w-0">
@@ -102,9 +102,9 @@ export function WorstTimeSlot({ forecast }: BestTimeCardProps) {
       whileHover={{ scale: 1.025, y: -2 }}
       transition={{ duration: 0.2 }}
     >
-      <Card className="p-4 bg-intensity-high/10 border-intensity-high/30 cursor-pointer shadow-sm hover:shadow-md transition-shadow">
+      <Card className="p-4 bg-intensity-high/[0.08] border-intensity-high/20 cursor-pointer shadow-none hover:bg-intensity-high/[0.12] transition-colors rounded-2xl">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-intensity-high/20 flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-2xl bg-intensity-high/15 flex items-center justify-center shrink-0">
             <TrendingUp className="w-5 h-5 text-intensity-high" />
           </div>
           <div className="flex-1 min-w-0">

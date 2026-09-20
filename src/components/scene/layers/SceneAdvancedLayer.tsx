@@ -1,0 +1,101 @@
+import { AnimatePresence } from 'framer-motion';
+import type { SceneVisualConfig } from '@/lib/sceneConfig';
+import { BackgroundMountains } from '../BackgroundMountains';
+import { ForegroundGrass } from '../ForegroundGrass';
+import { EVChargingStation } from '../EVChargingStation';
+import { HydroDam } from '../HydroDam';
+import { MeteorShower } from '../MeteorShower';
+import { BiomassSmoke } from '../BiomassSmoke';
+
+export interface SceneAdvancedLayerProps {
+  sceneConfig: SceneVisualConfig;
+  isCity: boolean;
+  isCoastal: boolean;
+  isNight: boolean;
+  isRaining: boolean;
+  windSpeed: number;
+  hydroPercentage: number;
+  biomassPercentage: number;
+  showMeteorShower: boolean;
+}
+
+export function SceneAdvancedLayer({
+  sceneConfig,
+  isCity,
+  isCoastal,
+  isNight,
+  isRaining,
+  windSpeed,
+  hydroPercentage,
+  biomassPercentage,
+  showMeteorShower,
+}: SceneAdvancedLayerProps) {
+  return (
+    <>
+      {/* ===== PHASE 3: ADVANCED FEATURES ===== */}
+
+      {/* Background mountains for parallax */}
+      <AnimatePresence>
+        {!isCity && !isCoastal && sceneConfig.cleanliness > 0.5 && (
+          <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-1">
+            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+              <BackgroundMountains isNight={isNight} />
+            </svg>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Foreground grass with wind sway */}
+      <AnimatePresence>
+        {!isCity && !isCoastal && sceneConfig.cleanliness > 0.6 && (
+          <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-30">
+            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+              <ForegroundGrass windSpeed={windSpeed} />
+            </svg>
+          </div>
+        )}
+      </AnimatePresence>
+
+
+
+      {/* EV Charging Station at night when clean */}
+      <AnimatePresence>
+        {isNight && sceneConfig.cleanliness > 0.7 && (
+          <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-16">
+            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+              <EVChargingStation isCharging={sceneConfig.cleanliness > 0.8} />
+            </svg>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Hydro Dam when rainy + hydro */}
+      <AnimatePresence>
+        {isRaining && hydroPercentage > 10 && (
+          <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-14">
+            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+              <HydroDam flowIntensity={Math.min(hydroPercentage / 50, 1)} />
+            </svg>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Meteor Shower - Double-click moon */}
+      <AnimatePresence>
+        {showMeteorShower && <MeteorShower />}
+      </AnimatePresence>
+
+      {/* Biomass Smoke - Green tinted smoke when biomass > 5% */}
+      <AnimatePresence>
+        {biomassPercentage > 5 && sceneConfig.showRenewables && (
+          <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-15">
+            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+              <BiomassSmoke x={180} intensity={biomassPercentage / 100} />
+              {biomassPercentage > 15 && <BiomassSmoke x={220} intensity={0.6} />}
+            </svg>
+          </div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}

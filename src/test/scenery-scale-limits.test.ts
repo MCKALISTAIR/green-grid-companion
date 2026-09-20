@@ -54,17 +54,17 @@ describe('Scenery Element Scale Safeguards', () => {
     });
 
     test('Wind turbines should be appropriately scaled and taller than local trees', () => {
-        const intensityScenePath = path.resolve(__dirname, '../components/IntensityScene.tsx');
-        expect(fs.existsSync(intensityScenePath)).toBe(true);
+        const turbineLayoutPath = path.resolve(__dirname, '../lib/turbineLayout.ts');
+        expect(fs.existsSync(turbineLayoutPath)).toBe(true);
 
-        const content = fs.readFileSync(intensityScenePath, 'utf-8');
+        const content = fs.readFileSync(turbineLayoutPath, 'utf-8');
 
-        // Isolate the allSlots array block to only parse turbine scales
-        const startIndex = content.indexOf('const allSlots =');
-        const endIndex = content.indexOf('// How many turbines to show');
+        // Isolate the slot definitions block to only parse turbine scales
+        const startIndex = content.indexOf('const TURBINE_SLOT_DEFS');
+        const endIndex = content.indexOf('];', startIndex);
         expect(startIndex).toBeGreaterThan(-1);
         expect(endIndex).toBeGreaterThan(-1);
-        
+
         const allSlotsBlock = content.substring(startIndex, endIndex);
         const turbineScales = [...allSlotsBlock.matchAll(/scale:\s*([0-9.]+)/g)]
             .map(m => parseFloat(m[1]));
@@ -73,7 +73,7 @@ describe('Scenery Element Scale Safeguards', () => {
 
         // Expect background turbines to be small, foreground to be large
         expect(turbineScales.length).toBeGreaterThan(0);
-        
+
         // Background turbine scales (first elements in slots definition)
         const bgTurbineScale = turbineScales[0]; // back left 18 slot
         expect(bgTurbineScale).toBeLessThanOrEqual(0.45);

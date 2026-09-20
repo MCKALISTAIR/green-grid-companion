@@ -17,8 +17,8 @@ A lightweight, single-source-of-truth reference for everyone touching the GridSe
 |---|---|---|
 | Color tokens | `src/index.css` (`:root`, `.dark`) | All tokens are HSL triples consumed via `hsl(var(--token))`. |
 | Tailwind aliases | `tailwind.config.ts` | Semantic colour, radius, shadow and font families. |
-| Typography | Work Sans (UI), Lora (editorial), Inconsolata (data). | Loaded via Google Fonts in `index.css`. |
-| Radius | `--radius: 1rem` (lg). md/sm derived. | Soft, friendly shapes throughout. |
+| Typography | Nunito (UI), Fraunces (display / condition), Inconsolata (data). | Loaded via Google Fonts in `index.css`. |
+| Radius | `--radius: 1.25rem` (lg). md/sm derived. | Soft, friendly shapes throughout. |
 | Spacing | Tailwind default `4px` scale. | No custom spacing scale needed. |
 | Shadow | `--shadow-sm/md/lg/xl`. | Used sparingly; surfaces favour borders + elevation through colour. |
 
@@ -68,7 +68,7 @@ Override `BASE_URL` to audit a deployed environment instead of the local preview
 
 `IntensityScene` paints a sky gradient that varies with time-of-day, weather and grid carbon intensity, so a single text colour cannot pass AA in every state. The system rule:
 
-> Any text overlaying the scene **must sit inside a scrim** — `bg-background/70 backdrop-blur-md` — so its contrast is judged against `--background`, not the live sky.
+> Any text overlaying the scene **must remain readable** — prefer a soft gradient wash + text shadow for the hero number (Carrot-style scene-as-HUD), or a scrim (`bg-background/70 backdrop-blur-md`) for denser overlays. Contrast is judged against the wash / `--background`, not the live sky alone.
 
 The `/__design-system → Accessibility → Scene contrast` tab samples the sky-top colour for every (time × intensity) cell and grades it, and flags any cell that needs the scrim.
 

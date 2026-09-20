@@ -72,13 +72,13 @@ Goal: 3-4 props become tappable and educational.
 ---
 
 ## Phase 5 — Information design commitment
-Goal: stop fighting between scene-as-HUD and card-as-HUD.
+**Decision (2026-09): Scene-as-HUD (Option A), Carrot Weather pattern.**
 
-Decision needed (will ask user before building):
-- **Option A — Scene-as-HUD**: huge ambient intensity readout integrated into the sky (Death Stranding style). Card becomes minimal.
-- **Option B — Card-as-HUD**: scene becomes pure emotional support. Card stays prominent; scene loses its competing numeric overlays.
-
-Either way, *one* primary number, *one* place.
+- One giant intensity number floats over the scene with a soft gradient wash — no glass card.
+- Condition label (index band) sits under the number in display type.
+- Secondary metadata (renewables %, freshness) stays quiet under the condition.
+- Content sheet below is the data surface; personality line lives at the sheet top.
+- Do not reintroduce competing numeric overlays on the scene.
 
 ---
 
