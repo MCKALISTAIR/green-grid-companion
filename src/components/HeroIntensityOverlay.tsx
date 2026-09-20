@@ -8,6 +8,10 @@ import { TypewriterText } from '@/components/TypewriterText';
 import { RenewableSparkle } from '@/components/RenewableSparkle';
 import { DEFINITIONS } from '@/lib/definitions';
 import { cn } from '@/lib/utils';
+import { useEnergyFacts } from '@/hooks/useEnergyFacts';
+import { useTimeOfDay } from '@/hooks/useTimeOfDay';
+import { getCleanlinessBand } from '@/hooks/useCleanlinessBand';
+import { getConditionLabel } from '@/lib/conditionLabels';
 
 interface HeroIntensityOverlayProps {
   postcode: string;
@@ -52,8 +56,17 @@ export function HeroIntensityOverlay({
   nextUpdateLabel,
   className,
 }: HeroIntensityOverlayProps) {
-  const renewablesTone =
-    renewablesPct >= 70
+  const { tone } = useEnergyFacts();
+  const { isNight } = useTimeOfDay();
+  const band = getCleanlinessBand(intensity);
+  const isDirty = band === 'dirty' || band === 'very-dirty';
+  const needsHardScrim = isNight || isDirty;
+
+  const conditionLabel = getConditionLabel(index, tone, region ?? postcode);
+
+  const renewablesTone = needsHardScrim
+    ? 'text-white'
+    : renewablesPct >= 70
       ? 'text-emerald-100'
       : renewablesPct >= 50
         ? 'text-lime-100'
@@ -70,11 +83,22 @@ export function HeroIntensityOverlay({
       )}
       data-tour="intensity-gauge"
     >
-      {/* Soft readability wash — not a card */}
+      {/* Soft readability wash — stronger at night / dirty skies */}
       <div
         aria-hidden
-        className="absolute inset-x-0 top-0 h-[55%] bg-gradient-to-b from-black/35 via-black/15 to-transparent pointer-events-none"
+        className={cn(
+          'absolute inset-x-0 top-0 pointer-events-none transition-[height,opacity] duration-700',
+          needsHardScrim
+            ? 'h-[62%] bg-gradient-to-b from-black/55 via-black/28 to-transparent'
+            : 'h-[55%] bg-gradient-to-b from-black/35 via-black/15 to-transparent',
+        )}
       />
+      {needsHardScrim && (
+        <div
+          aria-hidden
+          className="absolute inset-x-0 top-[18%] h-40 pointer-events-none bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.35)_0%,transparent_70%)]"
+        />
+      )}
 
       <div className="relative flex flex-col items-center text-center w-full max-w-[22rem] px-4 pointer-events-auto">
         {/* Location — mobile only; desktop uses the top-left chrome */}
@@ -85,14 +109,14 @@ export function HeroIntensityOverlay({
             trigger={
               <button
                 type="button"
-                className="inline-flex items-center gap-1.5 text-white/90 text-[13px] font-semibold tracking-wide hover:text-white transition-colors"
+                className="inline-flex items-center gap-1.5 text-white text-[13px] font-semibold tracking-wide hover:text-white/95 transition-colors drop-shadow-[0_1px_8px_rgba(0,0,0,0.65)]"
               >
-                <MapPin className="w-3.5 h-3.5 opacity-80" />
+                <MapPin className="w-3.5 h-3.5 opacity-90" />
                 <span>{isLoading ? 'Loading…' : region || 'Select location'}</span>
                 {isBackgroundFetching ? (
                   <RefreshCw className="w-3 h-3 animate-spin opacity-70" />
                 ) : (
-                  <ChevronDown className="w-3 h-3 opacity-60" />
+                  <ChevronDown className="w-3 h-3 opacity-70" />
                 )}
               </button>
             }
@@ -115,35 +139,47 @@ export function HeroIntensityOverlay({
                 previousValue={previousIntensity}
                 isUpdating={isBackgroundFetching}
                 size="hero"
+                highContrast={needsHardScrim}
               />
               <div className="flex flex-col items-start pb-2 gap-0.5">
-                <span className="text-white/85 text-base font-semibold leading-none tracking-tight drop-shadow-md">
+                <span className="text-white text-base font-semibold leading-none tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.7)]">
                   gCO₂
                 </span>
-                <span className="text-white/70 text-xs font-medium leading-none drop-shadow-sm">/kWh</span>
+                <span className="text-white/85 text-xs font-medium leading-none drop-shadow-[0_1px_8px_rgba(0,0,0,0.65)]">
+                  /kWh
+                </span>
               </div>
             </>
           )}
         </div>
 
-        {/* Condition — Carrot-style weather label */}
-        {!isLoading && !isError && index && (
+        {/* Condition — official by default; snarky when enabled in Settings */}
+        {!isLoading && !isError && conditionLabel && (
           <motion.div
-            key={index}
+            key={conditionLabel}
             className="mt-1 flex items-center gap-1.5"
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
           >
-            <p className="font-display text-3xl sm:text-4xl font-semibold capitalize text-white tracking-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)]">
-              <TypewriterText text={index} />
+            <p
+              className={cn(
+                'font-display text-3xl sm:text-4xl font-semibold text-white tracking-tight',
+                needsHardScrim
+                  ? 'drop-shadow-[0_3px_16px_rgba(0,0,0,0.75)]'
+                  : 'drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)]',
+                // Official bands stay capitalized; snarky lines are title-cased already
+                tone === 'friendly' ? 'capitalize' : '',
+              )}
+            >
+              <TypewriterText text={conditionLabel} />
             </p>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 rounded-full p-0 text-white/70 hover:text-white hover:bg-white/10"
+                  className="h-7 w-7 rounded-full p-0 text-white/80 hover:text-white hover:bg-white/10"
                   aria-label="What is carbon intensity?"
                 >
                   <Info className="w-3.5 h-3.5" aria-hidden="true" />
@@ -153,8 +189,14 @@ export function HeroIntensityOverlay({
                 <p className="font-semibold">Carbon intensity</p>
                 <p>{DEFINITIONS['Carbon Intensity']}</p>
                 <p className="text-muted-foreground">{DEFINITIONS['gCO2/kWh']}</p>
+                {index && tone !== 'friendly' && (
+                  <p className="text-muted-foreground">
+                    Official band: <span className="font-semibold capitalize text-foreground">{index}</span>
+                  </p>
+                )}
                 <p className="text-muted-foreground">
-                  National Grid ESO publishes new figures every <span className="font-semibold text-foreground">30 minutes</span>.
+                  National Grid ESO publishes new figures every{' '}
+                  <span className="font-semibold text-foreground">30 minutes</span>.
                 </p>
               </PopoverContent>
             </Popover>
@@ -167,7 +209,7 @@ export function HeroIntensityOverlay({
             <div className="relative">
               <motion.p
                 className={cn(
-                  'inline-flex items-center gap-1.5 text-sm font-semibold drop-shadow-[0_2px_8px_rgba(0,0,0,0.55)]',
+                  'inline-flex items-center gap-1.5 text-sm font-semibold drop-shadow-[0_2px_10px_rgba(0,0,0,0.65)]',
                   renewablesTone,
                 )}
                 key={Math.round(renewablesPct / 10)}
@@ -181,7 +223,7 @@ export function HeroIntensityOverlay({
             </div>
 
             {lastUpdated && (
-              <div className="flex items-center gap-1.5 text-[11px] text-white/75 font-medium drop-shadow-sm">
+              <div className="flex items-center gap-1.5 text-[11px] text-white font-medium drop-shadow-[0_1px_8px_rgba(0,0,0,0.65)]">
                 <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
                   <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-60 ${freshnessColor}`} />
                   <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${freshnessColor}`} />
@@ -189,7 +231,7 @@ export function HeroIntensityOverlay({
                 <span>{relativeTime}</span>
                 {nextUpdateLabel && (
                   <>
-                    <span className="opacity-50">·</span>
+                    <span className="opacity-60">·</span>
                     <span>{nextUpdateLabel}</span>
                   </>
                 )}

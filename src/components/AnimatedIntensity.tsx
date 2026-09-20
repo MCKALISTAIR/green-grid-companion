@@ -15,6 +15,8 @@ interface AnimatedIntensityProps {
   isUpdating?: boolean;
   /** `hero` = Carrot-style giant readout over the scene */
   size?: 'default' | 'hero';
+  /** Stronger outline/shadow for night or dirty skies */
+  highContrast?: boolean;
 }
 
 export function AnimatedIntensity({
@@ -24,6 +26,7 @@ export function AnimatedIntensity({
   className,
   isUpdating = false,
   size = 'default',
+  highContrast = false,
 }: AnimatedIntensityProps) {
   const [showArrow, setShowArrow] = useState(false);
   const [direction, setDirection] = useState<'up' | 'down' | null>(null);
@@ -118,7 +121,9 @@ export function AnimatedIntensity({
         className={cn(
           'font-bold tabular-nums tracking-tighter',
           size === 'hero'
-            ? 'text-[5.5rem] sm:text-8xl leading-none text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.35)]'
+            ? highContrast
+              ? 'text-[5.5rem] sm:text-8xl leading-none text-white drop-shadow-[0_4px_28px_rgba(0,0,0,0.65)] [text-shadow:0_2px_0_rgba(0,0,0,0.35),0_8px_24px_rgba(0,0,0,0.45)]'
+              : 'text-[5.5rem] sm:text-8xl leading-none text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.35)]'
             : 'text-6xl text-card drop-shadow-md',
         )}
         key={value}

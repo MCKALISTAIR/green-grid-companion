@@ -261,14 +261,16 @@ export default function Settings() {
                                 <MessageSquare className="w-5 h-5 text-primary" />
                                 <div>
                                     <h3 className="font-medium">Commentary Style</h3>
-                                    <p className="text-sm text-muted-foreground">Choose the tone of energy facts.</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        Friendly is the default. Snarky adds Carrot-style quips to energy facts and the home condition line.
+                                    </p>
                                 </div>
                             </div>
 
                             <RadioGroup
                                 value={tone}
                                 onValueChange={(val) => setTone(val as typeof tone)}
-                                className="flex gap-4 pt-1"
+                                className="flex flex-wrap gap-4 pt-1"
                             >
                                 <div className="flex items-center space-x-2">
                                     <RadioGroupItem value="friendly" id="tone-friendly" />
