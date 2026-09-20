@@ -1,45 +1,45 @@
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* GridGreen Carbon Intensity Design System */
+/* GridSense — Carrot-inspired living scene + friendly type */
 
 @layer base {
   :root {
-    /* Clean/Green State Colors */
-    --background: 200 60% 94%;
-    --foreground: 200 30% 15%;
+    /* Soft sky-paper surfaces — calm, not clinical */
+    --background: 198 42% 96%;
+    --foreground: 210 28% 14%;
 
     --card: 0 0% 100%;
-    --card-foreground: 200 30% 15%;
+    --card-foreground: 210 28% 14%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 200 30% 15%;
+    --popover-foreground: 210 28% 14%;
 
     /* Primary green for clean energy */
-    --primary: 150 70% 40%;
+    --primary: 158 64% 36%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 200 30% 85%;
-    --secondary-foreground: 200 30% 15%;
+    --secondary: 198 28% 90%;
+    --secondary-foreground: 210 28% 14%;
 
-    --muted: 200 20% 90%;
-    --muted-foreground: 200 15% 38%;
+    --muted: 198 22% 92%;
+    --muted-foreground: 205 12% 40%;
 
-    --accent: 45 100% 60%;
-    --accent-foreground: 45 80% 20%;
+    --accent: 38 92% 58%;
+    --accent-foreground: 32 70% 18%;
 
     --destructive: 0 72% 50%;
     --destructive-foreground: 0 85% 97%;
 
-    --border: 200 20% 85%;
-    --input: 200 20% 85%;
-    --ring: 150 70% 40%;
+    --border: 200 18% 88%;
+    --input: 200 18% 88%;
+    --ring: 158 64% 36%;
 
-    --radius: 1rem;
+    --radius: 1.25rem;
 
     /* Carbon intensity level colors */
     --intensity-very-low: 150 70% 45%;
@@ -72,23 +72,24 @@
     --chart-5: 0 0% 40%;
 
     --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 200 30% 15%;
-    --sidebar-primary: 150 70% 40%;
+    --sidebar-foreground: 210 28% 14%;
+    --sidebar-primary: 158 64% 36%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 200 30% 85%;
-    --sidebar-accent-foreground: 200 30% 15%;
-    --sidebar-border: 200 20% 85%;
-    --sidebar-ring: 150 70% 40%;
+    --sidebar-accent: 198 28% 90%;
+    --sidebar-accent-foreground: 210 28% 14%;
+    --sidebar-border: 200 18% 88%;
+    --sidebar-ring: 158 64% 36%;
     --sidebar: 0 0% 98%;
 
-    --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
-    --font-serif: 'Lora', ui-serif, Georgia, serif;
+    --font-sans: 'Nunito', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Fraunces', ui-serif, Georgia, serif;
+    --font-serif: 'Fraunces', ui-serif, Georgia, serif;
     --font-mono: 'Inconsolata', ui-monospace, monospace;
 
-    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.1);
-    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.1);
-    --shadow-xl: 0 20px 25px -5px hsl(0 0% 0% / 0.1);
+    --shadow-sm: 0 1px 2px 0 hsl(210 20% 20% / 0.04);
+    --shadow-md: 0 8px 20px -8px hsl(210 20% 20% / 0.12);
+    --shadow-lg: 0 16px 40px -12px hsl(210 20% 20% / 0.14);
+    --shadow-xl: 0 24px 56px -16px hsl(210 20% 20% / 0.18);
 
     --spacing: 0.25rem;
   }
@@ -103,38 +104,38 @@
     --popover: 220 25% 14%;
     --popover-foreground: 0 0% 95%;
 
-    --primary: 150 60% 50%;
+    --primary: 158 55% 48%;
     --primary-foreground: 220 25% 10%;
 
-    --secondary: 220 20% 25%;
+    --secondary: 220 18% 22%;
     --secondary-foreground: 0 0% 95%;
 
-    --muted: 220 20% 20%;
-    --muted-foreground: 220 10% 60%;
+    --muted: 220 18% 18%;
+    --muted-foreground: 215 10% 62%;
 
-    --accent: 45 90% 55%;
-    --accent-foreground: 45 90% 10%;
+    --accent: 38 90% 55%;
+    --accent-foreground: 38 90% 10%;
 
     --destructive: 0 70% 55%;
     --destructive-foreground: 0 85% 97%;
 
-    --border: 220 20% 25%;
-    --input: 220 20% 25%;
-    --ring: 150 60% 50%;
+    --border: 220 16% 22%;
+    --input: 220 16% 22%;
+    --ring: 158 55% 48%;
 
     --sidebar-background: 220 25% 12%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 150 60% 50%;
+    --sidebar-primary: 158 55% 48%;
     --sidebar-primary-foreground: 220 25% 10%;
-    --sidebar-accent: 220 20% 25%;
+    --sidebar-accent: 220 18% 22%;
     --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 220 20% 25%;
-    --sidebar-ring: 150 60% 50%;
+    --sidebar-border: 220 16% 22%;
+    --sidebar-ring: 158 55% 48%;
     --sidebar: 220 25% 14%;
 
-    --chart-1: 150 60% 55%;
+    --chart-1: 158 55% 52%;
     --chart-2: 200 70% 60%;
-    --chart-3: 45 90% 60%;
+    --chart-3: 38 90% 58%;
     --chart-4: 25 70% 60%;
     --chart-5: 0 0% 50%;
   }
@@ -761,57 +762,75 @@ p, blockquote {
   animation: page-enter 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Premium Glassmorphic Card Styling */
+/* Soft sheet surfaces — paper feel, not heavy glass stacks */
 .glass-card {
-  background: hsl(var(--card) / 0.7) !important;
-  backdrop-filter: blur(20px) saturate(170%);
-  -webkit-backdrop-filter: blur(20px) saturate(170%);
-  border: 1px solid hsl(var(--border) / 0.6) !important;
-  border-radius: 1.5rem !important; /* Juicy, rounded modern shape */
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.04) !important;
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  background: hsl(var(--card) / 0.92) !important;
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  border: 1px solid hsl(var(--border) / 0.55) !important;
+  border-radius: 1.35rem !important;
+  box-shadow: var(--shadow-md) !important;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .dark .glass-card {
-  background: hsl(var(--card) / 0.45) !important;
-  border-top: 1px solid hsl(0 0% 100% / 0.12) !important;
-  border-left: 1px solid hsl(0 0% 100% / 0.08) !important;
-  border-right: 1px solid hsl(0 0% 100% / 0.08) !important;
-  border-bottom: 1px solid hsl(0 0% 100% / 0.04) !important;
-  box-shadow: 0 16px 48px 0 rgba(0, 0, 0, 0.25) !important;
+  background: hsl(var(--card) / 0.72) !important;
+  border: 1px solid hsl(0 0% 100% / 0.08) !important;
+  box-shadow: 0 12px 36px 0 rgba(0, 0, 0, 0.28) !important;
 }
 
-/* Ambient glow utility classes based on carbon intensity level */
+/* Ambient glow — whisper, not neon */
 .glow-intensity-very-low {
-  box-shadow: 0 12px 40px -10px hsl(var(--intensity-very-low) / 0.15), 0 0 0 1px hsl(var(--intensity-very-low) / 0.1) !important;
+  box-shadow: 0 10px 28px -12px hsl(var(--intensity-very-low) / 0.18), 0 0 0 1px hsl(var(--intensity-very-low) / 0.08) !important;
 }
 .glow-intensity-low {
-  box-shadow: 0 12px 40px -10px hsl(var(--intensity-low) / 0.15), 0 0 0 1px hsl(var(--intensity-low) / 0.1) !important;
+  box-shadow: 0 10px 28px -12px hsl(var(--intensity-low) / 0.16), 0 0 0 1px hsl(var(--intensity-low) / 0.08) !important;
 }
 .glow-intensity-moderate {
-  box-shadow: 0 12px 40px -10px hsl(var(--intensity-moderate) / 0.15), 0 0 0 1px hsl(var(--intensity-moderate) / 0.1) !important;
+  box-shadow: 0 10px 28px -12px hsl(var(--intensity-moderate) / 0.14), 0 0 0 1px hsl(var(--intensity-moderate) / 0.07) !important;
 }
 .glow-intensity-high {
-  box-shadow: 0 12px 40px -10px hsl(var(--intensity-high) / 0.15), 0 0 0 1px hsl(var(--intensity-high) / 0.1) !important;
+  box-shadow: 0 10px 28px -12px hsl(var(--intensity-high) / 0.16), 0 0 0 1px hsl(var(--intensity-high) / 0.08) !important;
 }
 .glow-intensity-very-high {
-  box-shadow: 0 12px 40px -10px hsl(var(--intensity-very-high) / 0.15), 0 0 0 1px hsl(var(--intensity-very-high) / 0.1) !important;
+  box-shadow: 0 10px 28px -12px hsl(var(--intensity-very-high) / 0.16), 0 0 0 1px hsl(var(--intensity-very-high) / 0.08) !important;
 }
 
 .dark .glow-intensity-very-low {
-  box-shadow: 0 16px 48px -12px hsl(var(--intensity-very-low) / 0.25), 0 0 0 1px hsl(var(--intensity-very-low) / 0.15) !important;
+  box-shadow: 0 14px 36px -14px hsl(var(--intensity-very-low) / 0.28), 0 0 0 1px hsl(var(--intensity-very-low) / 0.12) !important;
 }
 .dark .glow-intensity-low {
-  box-shadow: 0 16px 48px -12px hsl(var(--intensity-low) / 0.25), 0 0 0 1px hsl(var(--intensity-low) / 0.15) !important;
+  box-shadow: 0 14px 36px -14px hsl(var(--intensity-low) / 0.26), 0 0 0 1px hsl(var(--intensity-low) / 0.12) !important;
 }
 .dark .glow-intensity-moderate {
-  box-shadow: 0 16px 48px -12px hsl(var(--intensity-moderate) / 0.25), 0 0 0 1px hsl(var(--intensity-moderate) / 0.15) !important;
+  box-shadow: 0 14px 36px -14px hsl(var(--intensity-moderate) / 0.24), 0 0 0 1px hsl(var(--intensity-moderate) / 0.1) !important;
 }
 .dark .glow-intensity-high {
-  box-shadow: 0 16px 48px -12px hsl(var(--intensity-high) / 0.25), 0 0 0 1px hsl(var(--intensity-high) / 0.15) !important;
+  box-shadow: 0 14px 36px -14px hsl(var(--intensity-high) / 0.26), 0 0 0 1px hsl(var(--intensity-high) / 0.12) !important;
 }
 .dark .glow-intensity-very-high {
-  box-shadow: 0 16px 48px -12px hsl(var(--intensity-very-high) / 0.25), 0 0 0 1px hsl(var(--intensity-very-high) / 0.15) !important;
+  box-shadow: 0 14px 36px -14px hsl(var(--intensity-very-high) / 0.26), 0 0 0 1px hsl(var(--intensity-very-high) / 0.12) !important;
+}
+
+/* Floating bottom dock */
+.nav-dock {
+  margin: 0 14px calc(12px + env(safe-area-inset-bottom));
+  border-radius: 1.5rem;
+  background: hsl(var(--card) / 0.92);
+  backdrop-filter: blur(20px) saturate(170%);
+  -webkit-backdrop-filter: blur(20px) saturate(170%);
+  border: 1px solid hsl(var(--border) / 0.65);
+  box-shadow:
+    0 1px 0 hsl(0 0% 100% / 0.65) inset,
+    0 14px 36px -10px hsl(210 25% 15% / 0.28);
+}
+
+.dark .nav-dock {
+  background: hsl(var(--card) / 0.82);
+  border-color: hsl(0 0% 100% / 0.12);
+  box-shadow:
+    0 1px 0 hsl(0 0% 100% / 0.08) inset,
+    0 18px 40px -8px rgba(0, 0, 0, 0.55);
 }
 
 /* Shimmer Animation for Premium Skeletons */

@@ -202,9 +202,13 @@ const Index = () => {
               hideGauge={viewMode === 'demand'}
             />
 
-            <div className="flex-1 px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-6 space-y-4 -mt-6 relative z-10 bg-card lg:max-w-7xl lg:mx-auto w-full lg:rounded-t-3xl lg:shadow-xl lg:-mt-8 lg:pt-8 lg:space-y-6">
+            <div className="flex-1 px-4 pt-5 pb-[calc(7.5rem+env(safe-area-inset-bottom))] lg:pb-6 space-y-4 -mt-8 relative z-10 bg-card rounded-t-[1.75rem] shadow-[0_-12px_40px_-20px_rgba(15,23,42,0.18)] lg:max-w-7xl lg:mx-auto w-full lg:rounded-t-3xl lg:shadow-xl lg:-mt-10 lg:pt-8 lg:space-y-6">
               <div className="absolute -top-[79px] left-0 right-0 h-[80px] pointer-events-none overflow-hidden z-20">
                 <SceneWaveDivider cleanliness={cleanliness} />
+              </div>
+
+              <div className="flex justify-center pt-0.5 pb-1 lg:hidden" aria-hidden>
+                <div className="h-1 w-10 rounded-full bg-muted-foreground/25" />
               </div>
 
               {isDegraded && (
@@ -220,7 +224,7 @@ const Index = () => {
                 </div>
               )}
 
-              <div className="px-2 pb-3 pt-1">
+              <div className="px-1 pb-2 pt-0">
                 <EnergyFactBubble
                   intensity={intensity}
                   generationMix={generationMix}

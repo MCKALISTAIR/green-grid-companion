@@ -33,8 +33,8 @@ function TabButton({
       tabIndex={isActive ? 0 : -1}
       aria-selected={isActive}
       aria-controls="dashboard-tab-content"
-      className={`relative flex-1 min-w-[100px] h-8 rounded-md text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 z-10 ${
-        isActive ? 'text-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'
+      className={`relative flex-1 min-w-[100px] h-9 rounded-xl text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 z-10 ${
+        isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
       }`}
       onClick={onSelect}
       data-tour={dataTour}
@@ -42,7 +42,7 @@ function TabButton({
       {isActive && (
         <motion.div
           layoutId="dashboard-view-pill"
-          className="absolute inset-0 bg-background shadow-sm rounded-md"
+          className="absolute inset-0 bg-background shadow-sm rounded-xl"
           transition={{ type: 'spring' as const, stiffness: 380, damping: 30 }}
         />
       )}
@@ -77,7 +77,7 @@ export function DashboardViewTabs({
       role="tablist"
       aria-label="Dashboard Views"
       onKeyDown={onKeyDown}
-      className="relative flex p-1 bg-muted rounded-lg overflow-hidden select-none"
+      className="relative flex p-1.5 bg-muted/80 rounded-2xl overflow-hidden select-none border border-border/40"
     >
       <TabButton
         mode="intensity"

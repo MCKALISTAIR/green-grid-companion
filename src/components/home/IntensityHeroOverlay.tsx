@@ -7,10 +7,14 @@ import { LocationManager } from '@/components/LocationManager';
 import { AnimatedIntensity } from '@/components/AnimatedIntensity';
 import { TypewriterText } from '@/components/TypewriterText';
 import { RenewableSparkle } from '@/components/RenewableSparkle';
-import { StaleDataBadge } from '@/components/StaleDataBadge';
 import { ComponentErrorBoundary } from '@/components/ComponentErrorBoundary';
 import { IntensityScene } from '@/components/IntensityScene';
 import { DEFINITIONS } from '@/lib/definitions';
+import { cn } from '@/lib/utils';
+import { getConditionLabel } from '@/lib/conditionLabels';
+import { useEnergyFacts } from '@/hooks/useEnergyFacts';
+import { useTimeOfDay } from '@/hooks/useTimeOfDay';
+import { getCleanlinessBand } from '@/hooks/useCleanlinessBand';
 import type { GenerationMix } from '@/lib/carbonApi';
 
 interface IntensityHeroOverlayProps {
@@ -35,6 +39,10 @@ interface IntensityHeroOverlayProps {
   hideGauge: boolean;
 }
 
+/**
+ * Carrot Weather–inspired scene HUD: one giant number, one condition line,
+ * no glass card competing with the illustration.
+ */
 export function IntensityHeroOverlay({
   postcode,
   setPostcode,
@@ -56,8 +64,37 @@ export function IntensityHeroOverlay({
   onSparkleComplete,
   hideGauge,
 }: IntensityHeroOverlayProps) {
+  const { tone } = useEnergyFacts();
+  const { isNight } = useTimeOfDay();
+  const band = getCleanlinessBand(intensity);
+  const isDirty = band === 'dirty' || band === 'very-dirty';
+  const needsHardScrim = isNight || isDirty;
+  const conditionLabel = getConditionLabel(index, tone, region ?? postcode);
+
+  const nextUpdateLabel = (() => {
+    if (!lastUpdated) return '';
+    if (nextUpdate) {
+      const next = new Date(nextUpdate);
+      if (new Date() > next) return 'Update due';
+      return `Next ${next.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    }
+    const next = getNextUpdate(lastUpdated);
+    if (!next) return '';
+    return `Next ${next.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  })();
+
+  const renewablesTone = needsHardScrim
+    ? 'text-white'
+    : renewablesPct >= 70
+      ? 'text-emerald-100'
+      : renewablesPct >= 50
+        ? 'text-lime-100'
+        : renewablesPct >= 30
+          ? 'text-amber-100'
+          : 'text-orange-100';
+
   return (
-    <div className="relative w-full h-[60vh] min-h-[400px]">
+    <div className="relative w-full h-[62vh] min-h-[420px] max-h-[720px]">
       <ComponentErrorBoundary name="Scene">
         <IntensityScene
           intensity={intensity}
@@ -72,7 +109,7 @@ export function IntensityHeroOverlay({
             value={postcode}
             onChange={setPostcode}
             trigger={
-              <button className="flex items-center gap-2 text-white/90 text-sm font-medium uppercase tracking-wide transition-all cursor-pointer bg-black/20 hover:bg-black/30 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 hover:border-white/20 shadow-sm group">
+              <button className="flex items-center gap-2 text-white/90 text-sm font-semibold tracking-wide transition-all cursor-pointer bg-black/25 hover:bg-black/35 backdrop-blur-md px-4 py-2 rounded-full border border-white/15 hover:border-white/25 shadow-sm group">
                 <MapPin className="w-3.5 h-3.5" />
                 <span>{isLoading ? 'Loading...' : region || 'Select location'}</span>
                 {isBackgroundFetching ? (
@@ -88,10 +125,10 @@ export function IntensityHeroOverlay({
         <div className="absolute top-[calc(max(env(safe-area-inset-top),24px)+0.5rem)] right-4 z-30 lg:top-6 lg:right-6">
           <Link to="/achievements">
             <button
-              className="flex items-center justify-center text-white/90 transition-all cursor-pointer bg-black/20 hover:bg-black/30 active:scale-95 hover:scale-105 backdrop-blur-md p-2.5 rounded-full border border-white/10 hover:border-white/20 shadow-sm"
+              className="flex items-center justify-center text-white/90 transition-all cursor-pointer bg-black/25 hover:bg-black/35 active:scale-95 hover:scale-105 backdrop-blur-md p-2.5 rounded-full border border-white/15 hover:border-white/25 shadow-sm"
               aria-label="Trophy Room"
             >
-              <Trophy className="w-4 h-4 text-yellow-400 dark:text-yellow-300" />
+              <Trophy className="w-4 h-4 text-amber-300" />
             </button>
           </Link>
         </div>
@@ -99,175 +136,163 @@ export function IntensityHeroOverlay({
 
       {!hideGauge && (
         <div
-          className="absolute top-[calc(max(env(safe-area-inset-top),59px)+1rem)] left-1/2 -translate-x-1/2 text-center w-auto max-w-[90%] z-10"
+          className={cn(
+            'absolute inset-x-0 top-0 z-10 flex flex-col items-center pointer-events-none',
+            'pt-[calc(max(env(safe-area-inset-top),12px)+3.25rem)]',
+          )}
           data-tour="intensity-gauge"
         >
-          <div className="bg-white/15 backdrop-blur-md rounded-2xl p-3 shadow-sm border border-white/20">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <div className="lg:hidden">
-                <LocationManager
-                  value={postcode}
-                  onChange={setPostcode}
-                  trigger={
-                    <button className="flex items-center gap-1.5 text-card/90 text-sm font-medium uppercase tracking-wide hover:text-card transition-colors cursor-pointer group">
-                      <MapPin className="w-3.5 h-3.5" />
-                      <span>{isLoading ? 'Loading...' : region || 'Select location'}</span>
-                      {isBackgroundFetching ? (
-                        <RefreshCw className="w-3.5 h-3.5 animate-spin opacity-75" />
-                      ) : (
-                        <ChevronDown className="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity" />
-                      )}
-                    </button>
-                  }
-                />
-              </div>
-              {!isLoading && region && (
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 rounded-full p-0 hover:bg-transparent"
-                      aria-label="More info about Carbon Intensity"
-                    >
-                      <Info className="w-3.5 h-3.5 text-card/70 cursor-help" aria-hidden="true" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[240px] p-3 text-xs bg-card border-border backdrop-blur-xl">
-                    <p>{DEFINITIONS['Carbon Intensity']}</p>
-                  </PopoverContent>
-                </Popover>
-              )}
+          <div
+            aria-hidden
+            className={cn(
+              'absolute inset-x-0 top-0 pointer-events-none transition-[height,opacity] duration-700',
+              needsHardScrim
+                ? 'h-[62%] bg-gradient-to-b from-black/55 via-black/28 to-transparent'
+                : 'h-[55%] bg-gradient-to-b from-black/35 via-black/15 to-transparent',
+            )}
+          />
+          {needsHardScrim && (
+            <div
+              aria-hidden
+              className="absolute inset-x-0 top-[18%] h-40 pointer-events-none bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.35)_0%,transparent_70%)]"
+            />
+          )}
+
+          <div className="relative flex flex-col items-center text-center w-full max-w-[22rem] px-4 pointer-events-auto">
+            <div className="lg:hidden mb-3">
+              <LocationManager
+                value={postcode}
+                onChange={setPostcode}
+                trigger={
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-1.5 text-white text-[13px] font-semibold tracking-wide hover:text-white/95 transition-colors drop-shadow-[0_1px_8px_rgba(0,0,0,0.65)]"
+                  >
+                    <MapPin className="w-3.5 h-3.5 opacity-90" />
+                    <span>{isLoading ? 'Loading…' : region || 'Select location'}</span>
+                    {isBackgroundFetching ? (
+                      <RefreshCw className="w-3 h-3 animate-spin opacity-70" />
+                    ) : (
+                      <ChevronDown className="w-3 h-3 opacity-70" />
+                    )}
+                  </button>
+                }
+              />
             </div>
 
-            <div className="flex items-baseline justify-center gap-2">
+            <div className="flex items-end justify-center gap-2 min-h-[5.5rem]">
               {isLoading ? (
-                <RefreshCw className="w-10 h-10 text-card animate-spin" aria-label="Loading data" />
+                <RefreshCw className="w-12 h-12 text-white animate-spin drop-shadow-lg" aria-label="Loading data" />
               ) : isError ? (
                 <div className="flex flex-col items-center py-1">
-                  <AlertTriangle className="w-8 h-8 text-white/95 animate-pulse mb-1" />
-                  <span className="text-sm font-semibold text-white/90 uppercase tracking-wider">Offline</span>
+                  <AlertTriangle className="w-10 h-10 text-white animate-pulse mb-1 drop-shadow-md" />
+                  <span className="text-sm font-bold text-white/95 uppercase tracking-[0.18em]">Offline</span>
                 </div>
               ) : (
                 <>
                   <AnimatedIntensity
                     value={intensity}
-                    previousValue={previousIntensity}
+                    previousValue={previousIntensity ?? null}
                     isUpdating={isBackgroundFetching}
+                    size="hero"
+                    highContrast={needsHardScrim}
                   />
-                  <div className="flex items-center gap-1">
-                    <span className="text-card/90 text-lg font-medium">gCO₂/kWh</span>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6 rounded-full p-0 hover:bg-transparent"
-                          aria-label="More info about gCO2/kWh"
-                        >
-                          <Info className="w-4 h-4 text-card/70 cursor-help" aria-hidden="true" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[240px] p-3 text-xs bg-card border-border backdrop-blur-xl">
-                        <p>{DEFINITIONS['gCO2/kWh']}</p>
-                      </PopoverContent>
-                    </Popover>
+                  <div className="flex flex-col items-start pb-2 gap-0.5">
+                    <span className="text-white text-base font-semibold leading-none tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.7)]">
+                      gCO₂
+                    </span>
+                    <span className="text-white/85 text-xs font-medium leading-none drop-shadow-[0_1px_8px_rgba(0,0,0,0.65)]">
+                      /kWh
+                    </span>
                   </div>
                 </>
               )}
             </div>
 
-            {!isLoading && !isError && (
-              <div className="flex flex-col items-center mt-2 gap-2">
-                <motion.div
-                  key={index}
-                  className="inline-block px-3 py-1 rounded-full bg-white/40 shadow-sm"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.2 }}
+            {!isLoading && !isError && conditionLabel && (
+              <motion.div
+                key={conditionLabel}
+                className="mt-1 flex items-center gap-1.5"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <p
+                  className={cn(
+                    'font-display text-3xl sm:text-4xl font-semibold text-white tracking-tight',
+                    needsHardScrim
+                      ? 'drop-shadow-[0_3px_16px_rgba(0,0,0,0.75)]'
+                      : 'drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)]',
+                    tone === 'friendly' ? 'capitalize' : '',
+                  )}
                 >
-                  <p className="text-lg font-semibold capitalize text-card">
-                    <TypewriterText text={index} />
-                  </p>
-                </motion.div>
-
-                <div className="relative">
-                  <motion.div
-                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold shadow-sm"
-                    style={{
-                      backgroundColor:
-                        renewablesPct >= 70
-                          ? 'rgba(74, 222, 128, 0.35)'
-                          : renewablesPct >= 50
-                            ? 'rgba(163, 230, 53, 0.30)'
-                            : renewablesPct >= 30
-                              ? 'rgba(250, 204, 21, 0.30)'
-                              : 'rgba(251, 146, 60, 0.25)',
-                      color:
-                        renewablesPct >= 70
-                          ? '#16a34a'
-                          : renewablesPct >= 50
-                            ? '#4d7c0f'
-                            : renewablesPct >= 30
-                              ? '#854d0e'
-                              : '#9a3412',
-                      backdropFilter: 'blur(4px)',
-                    }}
-                    key={Math.round(renewablesPct / 10)}
-                    animate={{ scale: [1, 1.07, 1] }}
-                    transition={{ duration: 0.4, ease: 'easeOut' as const }}
-                  >
-                    <Leaf className="w-3 h-3" aria-hidden="true" />
-                    {renewablesPct.toFixed(0)}% Renewable
-                  </motion.div>
-                  <RenewableSparkle trigger={sparkleTrigger} onComplete={onSparkleComplete} />
-                </div>
-              </div>
+                  <TypewriterText text={conditionLabel} />
+                </p>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 rounded-full p-0 text-white/80 hover:text-white hover:bg-white/10"
+                      aria-label="What is carbon intensity?"
+                    >
+                      <Info className="w-3.5 h-3.5" aria-hidden="true" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[260px] p-3 text-xs bg-card border-border backdrop-blur-xl space-y-2">
+                    <p className="font-semibold">Carbon intensity</p>
+                    <p>{DEFINITIONS['Carbon Intensity']}</p>
+                    <p className="text-muted-foreground">{DEFINITIONS['gCO2/kWh']}</p>
+                    {index && tone !== 'friendly' && (
+                      <p className="text-muted-foreground">
+                        Official band:{' '}
+                        <span className="font-semibold capitalize text-foreground">{index}</span>
+                      </p>
+                    )}
+                    <p className="text-muted-foreground">
+                      National Grid ESO publishes new figures every{' '}
+                      <span className="font-semibold text-foreground">30 minutes</span>.
+                    </p>
+                  </PopoverContent>
+                </Popover>
+              </motion.div>
             )}
 
-            {!isLoading && lastUpdated && (
-              <div className="flex flex-col items-center mt-2 gap-1.5">
-                <div className="flex items-center gap-1.5 text-xs text-card/80 font-medium bg-white/20 px-2 py-0.5 rounded-md">
-                  <span className="relative flex h-2 w-2 flex-shrink-0">
-                    <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-60 ${freshnessColor}`} />
-                    <span className={`relative inline-flex h-2 w-2 rounded-full ${freshnessColor}`} />
-                  </span>
-                  <span>{relativeTime}</span>
-                  <span>•</span>
-                  <span>
-                    {(() => {
-                      if (nextUpdate) {
-                        const next = new Date(nextUpdate);
-                        const now = new Date();
-                        if (now > next) return 'Update Due';
-                        return `Next ${next.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} `;
-                      }
-                      const next = getNextUpdate(lastUpdated);
-                      if (!next) return '';
-                      return `Next ${next.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} `;
-                    })()}
-                  </span>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-4 w-4 rounded-full p-0 hover:bg-transparent ml-0.5"
-                        aria-label="More information about data refresh schedule"
-                      >
-                        <Info className="w-3 h-3 text-card/70" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[260px] p-3 text-xs bg-card border-border backdrop-blur-xl">
-                      <p className="font-semibold mb-1">Data Refresh Schedule</p>
-                      <p>
-                        Data is sourced directly from the National Grid ESO. They publish new carbon intensity figures
-                        every <span className="font-bold">30 minutes</span>.
-                      </p>
-                    </PopoverContent>
-                  </Popover>
+            {!isLoading && !isError && (
+              <div className="mt-3 flex flex-col items-center gap-2">
+                <div className="relative">
+                  <motion.p
+                    className={cn(
+                      'inline-flex items-center gap-1.5 text-sm font-semibold drop-shadow-[0_2px_10px_rgba(0,0,0,0.65)]',
+                      renewablesTone,
+                    )}
+                    key={Math.round(renewablesPct / 10)}
+                    animate={{ scale: [1, 1.04, 1] }}
+                    transition={{ duration: 0.35, ease: 'easeOut' as const }}
+                  >
+                    <Leaf className="w-3.5 h-3.5" aria-hidden="true" />
+                    {renewablesPct.toFixed(0)}% renewable
+                  </motion.p>
+                  <RenewableSparkle trigger={sparkleTrigger} onComplete={onSparkleComplete} />
                 </div>
-                <StaleDataBadge lastUpdated={lastUpdated} />
+
+                {lastUpdated && (
+                  <div className="flex items-center gap-1.5 text-[11px] text-white font-medium drop-shadow-[0_1px_8px_rgba(0,0,0,0.65)]">
+                    <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
+                      <span
+                        className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-60 ${freshnessColor}`}
+                      />
+                      <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${freshnessColor}`} />
+                    </span>
+                    <span>{relativeTime}</span>
+                    {nextUpdateLabel && (
+                      <>
+                        <span className="opacity-60">·</span>
+                        <span>{nextUpdateLabel}</span>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>

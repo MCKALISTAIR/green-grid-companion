@@ -84,14 +84,15 @@ export function EnergyFactBubble({ intensity, generationMix, className, variant 
                         tabIndex={0}
                         aria-label={`${currentFact.text}. Press to cycle facts.`}
                         className={`
-              relative rounded-2xl text-xs md:text-sm font-medium
-              cursor-pointer select-none transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary/50
-              ${variant === 'bubble' ? 'p-3 shadow-lg backdrop-blur-md border border-white/20' : 'py-2 px-4 bg-muted/30 border border-border/40 rounded-full mx-auto w-fit max-w-[90%]'}
+              relative cursor-pointer select-none transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary/50
+              ${variant === 'bubble'
+                ? 'rounded-2xl text-xs md:text-sm font-medium p-3 shadow-lg backdrop-blur-md border border-white/20'
+                : 'rounded-none py-2.5 px-1 bg-transparent border-0 mx-auto w-fit max-w-[92%] font-display text-[15px] sm:text-base font-medium leading-snug'}
               ${variant === 'bubble' && tone === 'snarky'
                                 ? 'bg-purple-900/40 text-purple-50 hover:bg-purple-900/50'
                                 : variant === 'bubble'
                                     ? 'bg-white/30 text-slate-800 dark:text-slate-100 hover:bg-white/40'
-                                    : 'text-foreground/80 hover:bg-muted/50'
+                                    : 'text-foreground/75 hover:text-foreground'
                             }
             `}
                         transition={{
