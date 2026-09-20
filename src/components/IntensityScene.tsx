@@ -1,99 +1,34 @@
-
-import { Sun, Cloud, Leaf, Flame, Droplets } from 'lucide-react';
-import { SimpleFactory } from './scene/SimpleFactory';
 import { useHaptics } from '@/hooks/useHaptics';
 import { NotificationType } from '@capacitor/haptics';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { useMemo, useId, useState, useEffect } from 'react';
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
+import { useMemo, useState, useEffect } from 'react';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { useTimeOfDay, TimeOfDay } from '@/hooks/useTimeOfDay';
 import { useWeatherData, WeatherData } from '@/hooks/useWeatherData';
-import { Stars } from './scene/Stars';
-import { Moon } from './scene/Moon';
-import { Landscape, LandscapeBack, LandscapeMid, LandscapeFront } from './scene/Landscape';
-import { ValleyMist } from './scene/ValleyMist';
-import { JumpingFish } from './scene/JumpingFish';
-import { Butterfly } from './scene/Butterfly';
-import { Sheep } from './scene/Sheep';
-import { WeatherEffects } from './scene/WeatherEffects';
-import { UFO, ElectricDrone, SteamTrain } from './scene/CarrotEvents';
-import { NuclearCoolingTower } from './scene/NuclearCoolingTower';
-import { OffshoreWind } from './scene/OffshoreWind';
-import { TidalWaves } from './scene/TidalWaves';
-import { Rainbow } from './scene/Rainbow';
-import { PollutionWarning } from './scene/PollutionWarning';
-import { NetZeroCelebration } from './scene/NetZeroCelebration';
-import { Bee } from './scene/Bee';
-import { Rabbit } from './scene/Rabbit';
-import { Owl } from './scene/Owl';
-import { Fox } from './scene/Fox';
-import { Flowers } from './scene/Flowers';
-import { ForegroundGrass } from './scene/ForegroundGrass';
-import { BackgroundMountains } from './scene/BackgroundMountains';
-import { AuroraBorealis } from './scene/AuroraBorealis';
-import { EVChargingStation } from './scene/EVChargingStation';
-import { HydroDam } from './scene/HydroDam';
-import { TrendArrows } from './scene/TrendArrows';
-import { MeteorShower } from './scene/MeteorShower';
-import { BiomassSmoke } from './scene/BiomassSmoke';
-import { FlyingBird } from './scene/FlyingBird';
-import { WindTurbine } from './scene/WindTurbine';
-import { SmokeParticle } from './scene/SmokeParticle';
-import { RainDrop } from './scene/RainDrop';
-import { SunRay } from './scene/SunRay';
-import { Firefly } from './scene/Firefly';
-import { SnowGround, FrozenPond, BreathMist, SnowOnPanels } from './scene/WinterElements';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useSceneDirector } from '@/hooks/useSceneDirector';
 import { useCleanlinessBand } from '@/hooks/useCleanlinessBand';
 import { SceneColorGrade } from './scene/SceneColorGrade';
 import { StateTransitionFX } from './scene/StateTransitionFX';
 import { SceneHeroSpotlight, SceneAtmosphericDepth } from './scene/SceneComposition';
-import { SceneHotspots, type HotspotDef } from './scene/SceneHotspots';
-
-
 import { GenerationMix } from '@/lib/carbonApi';
-import { getSkyGradient } from '@/lib/sceneUtils';
-import { getTurbineBottomPct } from '@/lib/sceneUtils';
+import { buildSceneConfig } from '@/lib/sceneConfig';
+import { buildTurbineLayout } from '@/lib/turbineLayout';
 import { useSceneType, SceneType } from '@/hooks/useSceneType';
-import { CityLandscapeBack, CityLandscapeMid, CityLandscapeFront } from './scene/CityLandscape';
-import { CityTraffic, Pigeon, ConstructionCrane, LondonEye, SmogBand, DistantStack, BatteryStorageContainer } from './scene/CityElements';
-import { CoastalLandscapeBack, CoastalLandscapeMid, CoastalLandscapeFront } from './scene/CoastalLandscape';
-import { SeagullFlock, SailingBoat, FishingBoat, CoastalOffshoreWind, RockPoolGroup, HarbourSeal } from './scene/CoastalElements';
-
-interface InteractiveCloudProps {
-  className?: string;
-  style?: React.CSSProperties;
-  shouldReduceMotion: boolean;
-}
-
-function InteractiveCloud({ className, style, shouldReduceMotion }: InteractiveCloudProps) {
-  const [isPuffed, setIsPuffed] = useState(false);
-  const { impactLight } = useHaptics();
-
-  const handleTap = () => {
-    if (isPuffed) return;
-    setIsPuffed(true);
-    impactLight();
-    setTimeout(() => setIsPuffed(false), 800);
-  };
-
-  return (
-    <motion.div
-      className={`${className} pointer-events-auto cursor-pointer`}
-      style={style}
-      onClick={handleTap}
-      whileHover={!shouldReduceMotion ? { scale: 1.08, y: -2 } : {}}
-      animate={isPuffed && !shouldReduceMotion ? {
-        scale: [1, 1.25, 0.75, 1.1, 1],
-        rotate: [0, -8, 8, -4, 0]
-      } : {}}
-      transition={{ duration: 0.8, ease: 'easeInOut' as const }}
-    >
-      <Cloud className="w-full h-full transition-colors duration-200 hover:text-sky-50/90" aria-hidden="true" />
-    </motion.div>
-  );
-}
+import {
+  SceneSkyLayer,
+  SceneAmbientLife,
+  CoastalSceneLayers,
+  CitySceneLayers,
+  CountrysideSceneLayers,
+  SceneGenerationOverlay,
+  SceneMilestoneFX,
+  SceneEcosystemLayer,
+  SceneAdvancedLayer,
+  SceneWinterLayer,
+  SceneRandomEvents,
+  type SceneRandomEvent,
+} from './scene/layers';
 
 interface IntensitySceneProps {
   intensity: number;
@@ -106,7 +41,6 @@ interface IntensitySceneProps {
   weatherOverride?: Partial<WeatherData>;
   style?: React.CSSProperties;
 }
-
 
 export function IntensityScene({
   intensity: propIntensity,
@@ -214,7 +148,7 @@ export function IntensityScene({
 
   const { isRaining } = weather;
 
-  const [activeEvent, setActiveEvent] = useState<'none' | 'ufo' | 'drone' | 'train'>('none');
+  const [activeEvent, setActiveEvent] = useState<SceneRandomEvent>('none');
   const [turbineOverdrive, setTurbineOverdrive] = useState<number | null>(null);
 
   // Random Event Trigger
@@ -248,51 +182,7 @@ export function IntensityScene({
   )?.perc || 0;
 
   // Dynamic turbine layout: positions vary by depth layer, count driven by wind %
-  const turbineLayout = useMemo(() => {
-    // Turbine slots defined by layer + left%.
-    // Bottom% is computed dynamically from the actual hill Bézier curves
-    // via getTurbineBottomPct(), so they always sit on the ridge line
-    // even if the hill paths or container height change.
-    const CONTAINER_PCT = 100; // must match h-[100%] on landscape container
-    const allSlots = [
-      // Background turbines – on back hill ridge
-      { left: 18, scale: 0.35, z: 1, layer: 'back' as const },
-      { left: 25, scale: 0.30, z: 1, layer: 'back' as const },
-      { left: 92, scale: 0.32, z: 1, layer: 'back' as const },
-      // Mid-ground turbines – on mid hill ridge
-      { left: 50, scale: 0.55, z: 15, layer: 'mid' as const },
-      { left: 60, scale: 0.50, z: 15, layer: 'mid' as const },
-      { left: 72, scale: 0.52, z: 15, layer: 'mid' as const },
-      // Foreground turbines – on front hill ridge
-      { left: 30, scale: 0.80, z: 25, layer: 'front' as const },
-      { left: 45, scale: 0.75, z: 25, layer: 'front' as const },
-    ].map(slot => ({
-      ...slot,
-      bottom: getTurbineBottomPct(slot.layer, slot.left, CONTAINER_PCT, -1),
-    }));
-
-    // How many turbines to show based on wind percentage
-    let count: number;
-    if (windPercentage <= 0) count = 2;
-    else if (windPercentage < 5) count = 2;
-    else if (windPercentage < 15) count = Math.min(4, 2 + Math.floor(windPercentage / 5));
-    else if (windPercentage < 25) count = Math.min(6, 4 + Math.floor((windPercentage - 15) / 5));
-    else count = allSlots.length;
-
-    // Pick slots: always include one from each visible layer, then fill
-    const picked: typeof allSlots = [];
-    const byLayer = { front: allSlots.filter(s => s.layer === 'front'), mid: allSlots.filter(s => s.layer === 'mid'), back: allSlots.filter(s => s.layer === 'back') };
-
-    if (count >= 1) picked.push(byLayer.front[0]);
-    if (count >= 2) picked.push(byLayer.mid[0]);
-
-    const remaining = allSlots.filter(s => !picked.includes(s));
-    for (let i = 0; i < Math.min(count - picked.length, remaining.length); i++) {
-      picked.push(remaining[i]);
-    }
-
-    return picked;
-  }, [windPercentage]);
+  const turbineLayout = useMemo(() => buildTurbineLayout(windPercentage), [windPercentage]);
 
   const [showFox, setShowFox] = useState(false);
   const isDawnOrDusk = timeOfDay === 'dawn' || timeOfDay === 'dusk';
@@ -325,85 +215,18 @@ export function IntensityScene({
 
   const biomassPercentage = getGenerationPercentage('biomass');
 
-  const sceneConfig = useMemo(() => {
-    const cleanliness = Math.max(0, Math.min(1, 1 - (intensity - 50) / 300));
-    const weatherReducesBirds = weather.isRaining || weather.isSnowing || weather.isThunderstorm;
-    const weatherReducesButterflies = weather.isRaining || weather.isSnowing || weather.isFoggy || weather.isThunderstorm;
-
-    // Time-of-day aware visibility flags
-    const isDaytime = timeOfDay === 'morning' || timeOfDay === 'midday' || timeOfDay === 'afternoon';
-    const isGoldenHour = timeOfDay === 'sunset' || timeOfDay === 'dawn';
-    const isDarkPeriod = timeOfDay === 'night' || timeOfDay === 'dusk';
-    const showSun = isDaytime || timeOfDay === 'sunset'; // Sun visible during day + sunset, hidden at dusk/night/dawn(pre-sunrise)
-
-    // Time-based scene filter for atmospheric lighting
-    const getTimeFilter = () => {
-      if (synthwaveMode) return 'contrast(1.2) saturate(1.5) hue-rotate(-10deg)';
-      const baseContrast = 0.8 + cleanliness * 0.4;
-      const baseSaturation = 0.7 + cleanliness * 0.5;
-      const baseSepia = Math.max(0, (0.5 - cleanliness) * 0.5);
-      switch (timeOfDay) {
-        case 'dawn':
-          return `contrast(${baseContrast * 0.95}) saturate(${baseSaturation * 1.1}) sepia(${baseSepia + 0.08}) hue-rotate(-5deg) brightness(0.9)`;
-        case 'morning':
-          return `contrast(${baseContrast}) saturate(${baseSaturation * 1.05}) sepia(${baseSepia}) brightness(1.0)`;
-        case 'midday':
-          return `contrast(${baseContrast * 1.05}) saturate(${baseSaturation}) sepia(${baseSepia}) brightness(1.05)`;
-        case 'afternoon':
-          return `contrast(${baseContrast}) saturate(${baseSaturation * 1.08}) sepia(${baseSepia + 0.03}) hue-rotate(-2deg)`;
-        case 'sunset':
-          return `contrast(${baseContrast * 0.95}) saturate(${baseSaturation * 1.2}) sepia(${baseSepia + 0.12}) hue-rotate(-8deg) brightness(0.92)`;
-        case 'dusk':
-          return `contrast(${baseContrast * 0.9}) saturate(${baseSaturation * 0.85}) sepia(${baseSepia + 0.05}) hue-rotate(5deg) brightness(0.8)`;
-        case 'night':
-          return `contrast(${baseContrast * 0.85}) saturate(${baseSaturation * 0.7}) brightness(0.75) hue-rotate(10deg)`;
-        default:
-          return `contrast(${baseContrast}) saturate(${baseSaturation}) sepia(${baseSepia})`;
-      }
-    };
-
-    // Ground colour: mirrors useLandscapePalette frontHillShadow so corners
-    // always blend with the earth rather than showing the sky gradient.
-    const getGroundColor = (): string => {
-      if (synthwaveMode) return '#3c096c';
-      if (weather.isSnowing) return isNight ? '#334155' : '#f1f5f9';
-      if (isNight) return '#1e293b';
-      const isClean = cleanliness > 0.5;
-      if (timeOfDay === 'dawn')   return isClean ? '#204d30' : '#4d3215';
-      if (timeOfDay === 'sunset') return isClean ? '#365a18' : '#5c3209';
-      if (timeOfDay === 'dusk')   return isClean ? '#21334c' : '#3a2818';
-      return isClean ? '#16a34a' : '#713f12';
-    };
-
-    return {
-      cleanliness,
-      skyGradient: synthwaveMode
-        ? 'linear-gradient(180deg, #2b1055 0%, #7597de 100%)'
-        : getSkyGradient(index, timeOfDay, cleanliness, weather),
-      groundColor: getGroundColor(),
-      showRenewables: cleanliness > 0.25,
-      showFactories: cleanliness < 0.85,
-      showBirds: cleanliness > 0.6 && isDaytime && !weatherReducesBirds,
-      showSmoke: cleanliness < 0.5,
-      showRain: cleanliness < 0.35 && !weather.isRaining,
-      showSunRays: cleanliness > 0.7 && (timeOfDay === 'morning' || timeOfDay === 'midday' || timeOfDay === 'afternoon') && weather.cloudCover < 60 && !weather.isRaining,
-      showStars: (isDarkPeriod || timeOfDay === 'dawn') && cleanliness > 0.3 && weather.cloudCover < 70,
-      showMoon: isDarkPeriod && weather.cloudCover < 80,
-      showSun,
-      showButterflies: cleanliness > 0.9 && isDaytime && !weatherReducesButterflies,
-      showFireflies: (isDarkPeriod || timeOfDay === 'sunset') && cleanliness > 0.8 && !weather.isRaining,
-      isGoldenHour,
-      isDaytime,
-      isDarkPeriod,
-      turbineCount: Math.max(1, Math.floor(cleanliness * 4)), // legacy, kept for compat
-      factoryOpacity: Math.max(0, 1 - cleanliness),
-      solarBrightness: cleanliness * (weather.cloudCover < 50 ? 1 : 0.6) * (isDaytime ? 1 : isGoldenHour ? 0.6 : 0.2),
-      birdCount: Math.floor(cleanliness * 4) + 1,
-      starVisibility: cleanliness * (1 - weather.cloudCover / 100) * (timeOfDay === 'night' ? 1 : timeOfDay === 'dusk' ? 0.6 : 0.3),
-      windSpeed: weather.windSpeed,
-      sceneFilter: getTimeFilter(),
-    };
-  }, [intensity, index, timeOfDay, weather, synthwaveMode, isNight]);
+  const sceneConfig = useMemo(
+    () =>
+      buildSceneConfig({
+        intensity,
+        index,
+        timeOfDay,
+        weather,
+        synthwaveMode,
+        isNight,
+      }),
+    [intensity, index, timeOfDay, weather, synthwaveMode, isNight],
+  );
 
   return (
     <motion.div
@@ -434,1079 +257,145 @@ export function IntensityScene({
       {/* Wrapper to shift scenery up and protect it from being cut off by the bottom wave/cards */}
       <div className="absolute inset-0 bottom-[40px] pointer-events-none">
         {/* Sky/Celestial Parallax Group */}
-        <motion.div
-        style={{ y: shouldReduceMotion ? 0 : skyY }}
-        className="absolute inset-0 pointer-events-none z-[1]"
-      >
-        <WeatherEffects weather={weather} isNight={isNight} cleanliness={sceneConfig.cleanliness} />
-        
-        {/* Aurora Borealis for ultra-clean winter nights (moved here to parallax with sky) */}
-        <AnimatePresence>
-          {isNight && propIntensity < 30 && (new Date().getMonth() >= 11 || new Date().getMonth() <= 2) && (
-            <AuroraBorealis intensity={(30 - propIntensity) / 30} />
-          )}
-        </AnimatePresence>
+        <SceneSkyLayer
+          skyY={skyY}
+          shouldReduceMotion={shouldReduceMotion}
+          weather={weather}
+          isNight={isNight}
+          propIntensity={propIntensity}
+          sceneConfig={sceneConfig}
+          sunPosition={sunPosition}
+          timeOfDay={timeOfDay}
+          synthwaveMode={synthwaveMode}
+          setSynthwaveMode={setSynthwaveMode}
+          sunGlassesActive={sunGlassesActive}
+          handleMoonDoubleClick={handleMoonDoubleClick}
+          handleSunDoubleClick={handleSunDoubleClick}
+          impactMedium={impactMedium}
+        />
 
-        <AnimatePresence>
-          {sceneConfig.showStars && (
-            <Stars count={40} visibility={sceneConfig.starVisibility} />
-          )}
-        </AnimatePresence>
+        <SceneAtmosphericDepth cleanliness={sceneConfig.cleanliness} isNight={isNight} />
+        <SceneHeroSpotlight band={cleanlinessBand} isCity={isCity} isCoastal={isCoastal} isNight={isNight} />
+        <SceneColorGrade cleanliness={sceneConfig.cleanliness} isNight={isNight} />
+        <StateTransitionFX transition={bandTransition} />
 
-        <AnimatePresence>
-          {sceneConfig.showMoon && <Moon position={sunPosition} onDoubleClick={handleMoonDoubleClick} />}
-        </AnimatePresence>
+        <SceneAmbientLife
+          sceneConfig={sceneConfig}
+          shouldReduceMotion={shouldReduceMotion}
+          rainConfig={rainConfig}
+          birdConfig={birdConfig}
+          fireflyConfig={fireflyConfig}
+        />
 
-        <AnimatePresence>
-          {sceneConfig.showSunRays && (
-            <div className="absolute top-0 right-0 overflow-hidden w-48 h-48">
-              {[...Array(5)].map((_, i) => (
-                <SunRay key={i} angle={20 + i * 15} delay={i * 0.3} />
-              ))}
-            </div>
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {sceneConfig.showSun && (
-            <motion.div
-              className="absolute z-20 pointer-events-auto"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{
-                opacity: sceneConfig.cleanliness * 0.3 + 0.7,
-                scale: 1,
-                // Position sun based on time: low at sunrise/sunset, high at midday
-                top: timeOfDay === 'sunset' ? '35%' : timeOfDay === 'morning' ? '15%' : timeOfDay === 'afternoon' ? '12%' : '8%',
-                right: timeOfDay === 'sunset' ? '15%' : timeOfDay === 'morning' ? '20%' : '8%',
-              }}
-              exit={{ opacity: 0, scale: 0.8, y: 20 }}
-              transition={{ duration: 1.5, ease: 'easeInOut' as const }}
-              style={{
-                filter: `brightness(${sceneConfig.solarBrightness + 0.5})`,
-              }}
-            >
-              <motion.div
-                className="cursor-pointer relative select-none"
-                role="button"
-                tabIndex={0}
-                aria-label={`Toggle synthwave mode ${synthwaveMode ? 'off' : 'on'}. Double click for cool sunglasses.`}
-                onClick={() => {
-                  impactMedium();
-                  setSynthwaveMode(!synthwaveMode);
-                }}
-                onDoubleClick={handleSunDoubleClick}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    impactMedium();
-                    setSynthwaveMode(!synthwaveMode);
-                  }
-                }}
-                whileHover={{ scale: 1.15 }}
-                whileTap={{ scale: 0.95 }}
-                animate={{
-                  y: [0, -4, 0], // Gentle floating action
-                }}
-                transition={{
-                  y: {
-                    repeat: Infinity,
-                    duration: 4,
-                    ease: 'easeInOut' as const,
-                  },
-                  scale: { type: 'spring' as const, stiffness: 400, damping: 15 },
-                }}
-              >
-                <motion.div
-                  className="absolute inset-0 w-20 h-20 -translate-x-2 -translate-y-2 rounded-full blur-xl pointer-events-none"
-                  style={{
-                    backgroundColor: timeOfDay === 'sunset' ? 'hsl(30 90% 55% / 0.4)' : 'hsl(var(--accent) / 0.3)',
-                  }}
-                  animate={{ scale: [1, 1.25, 1], opacity: [0.6, 1, 0.6] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' as const }}
-                />
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 35, repeat: Infinity, ease: 'linear' as const }}
-                  className="relative z-10 pointer-events-none"
-                >
-                  <Sun
-                    className={`w-16 h-16 ${timeOfDay === 'sunset' ? 'text-orange-400' : 'text-accent'}`}
-                    aria-hidden="true"
-                  />
-                </motion.div>
-
-                {/* Sunglasses Overlay */}
-                <AnimatePresence>
-                  {sunGlassesActive && (
-                    <motion.div
-                      className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none"
-                      initial={{ scale: 0, rotate: -45, opacity: 0 }}
-                      animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                      exit={{ scale: 0, rotate: 45, opacity: 0 }}
-                      transition={{ type: 'spring', stiffness: 350, damping: 15 }}
-                    >
-                      <svg width="40" height="15" viewBox="0 0 40 15" fill="none" className="drop-shadow-md">
-                        {/* Left Lens */}
-                        <rect x="3" y="3" width="12" height="9" rx="2" fill="#0f172a" stroke="#ffffff" strokeWidth="1.2" />
-                        <path d="M5 5H11" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" />
-                        {/* Right Lens */}
-                        <rect x="25" y="3" width="12" height="9" rx="2" fill="#0f172a" stroke="#ffffff" strokeWidth="1.2" />
-                        <path d="M27 5H33" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" />
-                        {/* Bridge */}
-                        <rect x="15" y="5" width="10" height="2" fill="#0f172a" stroke="#ffffff" strokeWidth="0.5" />
-                      </svg>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-
-      <SceneAtmosphericDepth cleanliness={sceneConfig.cleanliness} isNight={isNight} />
-      <SceneHeroSpotlight band={cleanlinessBand} isCity={isCity} isCoastal={isCoastal} isNight={isNight} />
-      <SceneColorGrade cleanliness={sceneConfig.cleanliness} isNight={isNight} />
-      <StateTransitionFX transition={bandTransition} />
-
-      {/* Rain effect for dirty energy */}
-      <AnimatePresence>
-        {
-          sceneConfig.showRain && (
-            <motion.div
-              className="absolute inset-0 overflow-hidden"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              {rainConfig.map((drop) => (
-                <RainDrop key={drop.id} delay={drop.delay} x={drop.x} />
-              ))}
-            </motion.div>
-          )
-        }
-      </AnimatePresence >
-
-      <InteractiveCloud
-        className={`absolute top-20 w-24 h-14 text-card/80 ${shouldReduceMotion ? '' : 'animate-cloud-drift'}`}
-        style={shouldReduceMotion ? { left: '10%' } : { animationDelay: '0s', animationDuration: '35s' }}
-        shouldReduceMotion={shouldReduceMotion}
-      />
-      <InteractiveCloud
-        className={`absolute top-28 w-16 h-10 text-card/60 ${shouldReduceMotion ? '' : 'animate-cloud-drift'}`}
-        style={shouldReduceMotion ? { left: '60%' } : { animationDelay: '-12s', animationDuration: '45s' }}
-        shouldReduceMotion={shouldReduceMotion}
-      />
-      <InteractiveCloud
-        className={`absolute top-14 w-20 h-12 text-card/70 ${shouldReduceMotion ? '' : 'animate-cloud-drift'}`}
-        style={shouldReduceMotion ? { left: '80%' } : { animationDelay: '-25s', animationDuration: '40s' }}
-        shouldReduceMotion={shouldReduceMotion}
-      />
-
-      {/* Extra pollution clouds for dirty energy */}
-      <AnimatePresence>
-        {sceneConfig.showSmoke && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 1 }}
-            >
-              <InteractiveCloud
-                className={`absolute top-8 w-28 h-16 text-secondary/50 ${shouldReduceMotion ? '' : 'animate-cloud-drift'}`}
-                style={shouldReduceMotion ? { left: '20%' } : { animationDelay: '-5s', animationDuration: '25s' }}
-                shouldReduceMotion={shouldReduceMotion}
-              />
-              <InteractiveCloud
-                className={`absolute top-14 w-24 h-14 text-secondary/40 ${shouldReduceMotion ? '' : 'animate-cloud-drift'}`}
-                style={shouldReduceMotion ? { left: '50%' } : { animationDelay: '-18s', animationDuration: '28s' }}
-                shouldReduceMotion={shouldReduceMotion}
-              />
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* Flying birds for clean energy */}
-      <AnimatePresence>
-        {sceneConfig.showBirds && (
-          <motion.div
-            className="absolute inset-0 overflow-hidden pointer-events-none"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            {birdConfig.slice(0, sceneConfig.birdCount).map((bird) => (
-              <FlyingBird
-                key={bird.id}
-                delay={bird.delay}
-                duration={bird.duration}
-                startX={-10}
-                top={bird.top}
-                scale={bird.scale}
-              />
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Butterflies for very clean energy */}
-      <AnimatePresence>
-        {sceneConfig.showButterflies && (
-          <>
-            <Butterfly startX={10} delay={0} />
-            <Butterfly startX={50} delay={3} />
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* Fireflies for clean nights */}
-      <AnimatePresence>
-        {sceneConfig.showFireflies && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            {fireflyConfig.map((firefly) => (
-              <Firefly
-                key={firefly.id}
-                delay={firefly.delay}
-                x={firefly.x}
-                y={firefly.y}
-              />
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ===== LANDSCAPE LAYERS ===== */}
-      {isCoastal ? (
-        <>
-          {/* Coastal: Ocean + horizon */}
-          <motion.div
-            style={{ y: shouldReduceMotion ? 0 : backY }}
-            className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-0 overflow-hidden"
-          >
-            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-              <CoastalLandscapeBack
-                cleanliness={sceneConfig.cleanliness}
-                isNight={isNight}
-                synthwaveMode={synthwaveMode}
-                isSnowing={weather.isSnowing}
-                skipIntro={hasSeenScene}
-                windSpeed={weather.windSpeed}
-                timeOfDay={timeOfDay}
-              />
-            </svg>
-          </motion.div>
-
-          {/* Coastal: Offshore wind turbines */}
-          <AnimatePresence>
-            {windPercentage > 5 && (
-              <motion.div
-                style={{ y: shouldReduceMotion ? 0 : backY }}
-                className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-5 overflow-hidden"
-              >
-                <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-                  <CoastalOffshoreWind count={Math.min(4, Math.floor(windPercentage / 8))} windSpeed={weather.windSpeed} />
-                </svg>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Coastal: Midground cliffs & lighthouse */}
-          <motion.div
-            style={{ y: shouldReduceMotion ? 0 : midY }}
-            className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-6 overflow-hidden"
-          >
-            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-              <CoastalLandscapeMid
-                cleanliness={sceneConfig.cleanliness}
-                isNight={isNight}
-                synthwaveMode={synthwaveMode}
-                isSnowing={weather.isSnowing}
-                skipIntro={hasSeenScene}
-                windSpeed={weather.windSpeed}
-                timeOfDay={timeOfDay}
-              />
-            </svg>
-          </motion.div>
-
-          {/* Coastal: Boats */}
-          <motion.div
-            style={{ y: shouldReduceMotion ? 0 : midY }}
-            className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-10 overflow-hidden"
-          >
-            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-              <SailingBoat x={120} delay={0} isNight={isNight} />
-              <FishingBoat x={250} delay={5} isNight={isNight} />
-              {sceneConfig.cleanliness > 0.6 && <SailingBoat x={200} delay={12} isNight={isNight} />}
-            </svg>
-          </motion.div>
-
-          {/* Coastal: Valley Mist */}
-          <ValleyMist cleanliness={sceneConfig.cleanliness} timeOfDay={timeOfDay} isNight={isNight} />
-
-          {/* Coastal: Harbour seal */}
-          <motion.div
-            style={{ y: shouldReduceMotion ? 0 : midY }}
-            className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-[15] overflow-hidden"
-          >
-            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-              <HarbourSeal x={165} y={96} delay={3} />
-              {sceneConfig.cleanliness > 0.7 && <HarbourSeal x={220} y={98} delay={15} />}
-            </svg>
-          </motion.div>
-
-          {/* Coastal: Splashing Jumping Fish on clean days */}
-          <AnimatePresence>
-            {sceneConfig.cleanliness > 0.6 && (
-              <motion.div
-                style={{ y: shouldReduceMotion ? 0 : midY }}
-                className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-[14] overflow-hidden"
-              >
-                <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-                  <JumpingFish x={110} y={95} delay={4} />
-                  <JumpingFish x={280} y={97} delay={10} />
-                </svg>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Coastal: Foreground (beach + cliffs - static for ground flush) */}
-          <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-20 overflow-hidden">
-            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-              <CoastalLandscapeFront
-                cleanliness={sceneConfig.cleanliness}
-                isNight={isNight}
-                synthwaveMode={synthwaveMode}
-                isSnowing={weather.isSnowing}
-                skipIntro={hasSeenScene}
-                windSpeed={weather.windSpeed}
-                timeOfDay={timeOfDay}
-              />
-            </svg>
-          </div>
-
-          {/* Coastal: Rock pools & crabs (clean energy = low tide) */}
-          <AnimatePresence>
-            {sceneConfig.cleanliness > 0.5 && (
-              <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-[22] overflow-hidden">
-                <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-                  <RockPoolGroup cleanliness={sceneConfig.cleanliness} isNight={isNight} />
-                </svg>
-              </div>
-            )}
-          </AnimatePresence>
-
-          {/* Coastal: Seagulls */}
-          <AnimatePresence>
-            {sceneConfig.isDaytime && sceneConfig.cleanliness > 0.3 && (
-              <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-[23] overflow-hidden">
-                <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-                  <SeagullFlock count={sceneConfig.cleanliness > 0.6 ? 5 : 3} isNight={isNight} />
-                </svg>
-              </div>
-            )}
-          </AnimatePresence>
-
-          {/* Coastal: Diegetic info hotspots */}
-          <SceneHotspots
-            hotspots={[
-              {
-                id: 'coastal-wind',
-                label: 'Offshore Wind',
-                x: 45, y: 65,
-                visible: windPercentage > 5,
-                fact: 'Offshore wind turbines benefit from stronger, more consistent sea winds to generate vast amounts of clean energy.',
-              },
-              {
-                id: 'coastal-rockpools',
-                label: 'Rock Pools',
-                x: 68, y: 80,
-                visible: sceneConfig.cleanliness > 0.5,
-                fact: 'At low tide, rock pools reveal a rich ecosystem. Keeping the grid clean helps prevent ocean acidification and protects marine life.',
-              },
-              {
-                id: 'coastal-tidal',
-                label: 'Tidal Energy',
-                x: 50, y: 88,
-                visible: hydroPercentage > 5 || marinePercentage > 0,
-                fact: 'Tidal and wave energy harnesses the predictable movement of tides and ocean currents to generate reliable, clean power.',
-              },
-            ] satisfies HotspotDef[]}
+        {/* ===== LANDSCAPE LAYERS ===== */}
+        {isCoastal ? (
+          <CoastalSceneLayers
+            shouldReduceMotion={shouldReduceMotion}
+            backY={backY}
+            midY={midY}
+            sceneConfig={sceneConfig}
+            isNight={isNight}
+            synthwaveMode={synthwaveMode}
+            isSnowing={weather.isSnowing}
+            skipIntro={hasSeenScene}
+            windSpeed={weather.windSpeed}
+            timeOfDay={timeOfDay}
+            windPercentage={windPercentage}
+            hydroPercentage={hydroPercentage}
+            marinePercentage={marinePercentage}
           />
-        </>
-      ) : isCity ? (
-        <>
-          {/* City: Background skyline (backY) */}
-          <motion.div
-            style={{ y: shouldReduceMotion ? 0 : backY }}
-            className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-0 overflow-hidden"
-          >
-            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-              {/* Smog band behind skyline when grid is dirty */}
-              <SmogBand cleanliness={sceneConfig.cleanliness} isNight={isNight} />
-              {/* Distant stack on horizon when very dirty */}
-              {sceneConfig.cleanliness < 0.2 && <DistantStack isNight={isNight} />}
-              <CityLandscapeBack
-                cleanliness={sceneConfig.cleanliness}
-                isNight={isNight}
-                synthwaveMode={synthwaveMode}
-                isSnowing={weather.isSnowing}
-                isChristmas={new Date().getMonth() === 11}
-                skipIntro={hasSeenScene}
-                windSpeed={weather.windSpeed}
-                timeOfDay={timeOfDay}
-              />
-              {/* London Eye – grounded with legs touching the road */}
-              <LondonEye isNight={isNight} skipIntro={hasSeenScene} />
-            </svg>
-          </motion.div>
-
-          {/* City: Mid skyline (midY) */}
-          <motion.div
-            style={{ y: shouldReduceMotion ? 0 : midY }}
-            className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-10 overflow-hidden"
-          >
-            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-              <CityLandscapeMid
-                cleanliness={sceneConfig.cleanliness}
-                isNight={isNight}
-                synthwaveMode={synthwaveMode}
-                isSnowing={weather.isSnowing}
-                isChristmas={new Date().getMonth() === 11}
-                skipIntro={hasSeenScene}
-                windSpeed={weather.windSpeed}
-                timeOfDay={timeOfDay}
-              />
-            </svg>
-          </motion.div>
-
-          {/* City: Valley Mist */}
-          <ValleyMist cleanliness={sceneConfig.cleanliness} timeOfDay={timeOfDay} isNight={isNight} />
-
-          {/* City: Foreground buildings + road */}
-          <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-20 overflow-hidden">
-            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-              <CityLandscapeFront
-                cleanliness={sceneConfig.cleanliness}
-                isNight={isNight}
-                synthwaveMode={synthwaveMode}
-                isSnowing={weather.isSnowing}
-                isChristmas={new Date().getMonth() === 11}
-                skipIntro={hasSeenScene}
-                windSpeed={weather.windSpeed}
-                timeOfDay={timeOfDay}
-              />
-              {/* Grid-scale battery storage with status LED */}
-              <BatteryStorageContainer cleanliness={sceneConfig.cleanliness} isNight={isNight} />
-            </svg>
-          </div>
-
-          {/* City: Traffic on the road */}
-          <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-[22] overflow-hidden">
-            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-              <CityTraffic cleanliness={sceneConfig.cleanliness} isNight={isNight} />
-            </svg>
-          </div>
-
-          {/* City: Pigeons during daytime when clean */}
-          <AnimatePresence>
-            {sceneConfig.isDaytime && sceneConfig.cleanliness > 0.4 && (
-              <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-[23] overflow-hidden">
-                <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-                  <Pigeon x={60} y={135} delay={0} />
-                  <Pigeon x={180} y={136} delay={1.5} />
-                  <Pigeon x={300} y={134} delay={3} />
-                </svg>
-              </div>
-            )}
-          </AnimatePresence>
-
-          {/* City: Construction crane when dirty */}
-          <AnimatePresence>
-            {sceneConfig.cleanliness < 0.4 && (
-              <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-5 overflow-hidden">
-                <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-                  <ConstructionCrane x={350} isNight={isNight} />
-                </svg>
-              </div>
-            )}
-          </AnimatePresence>
-
-          {/* City: Diegetic info hotspots — tappable props with fact bubbles */}
-          <SceneHotspots
-            hotspots={[
-              {
-                id: 'london-eye',
-                label: 'London Eye',
-                x: 18.75, y: 56.7,
-                visible: true,
-                fact: cleanlinessBand === 'very-clean'
-                  ? "London's landmarks are riding 100% renewable right now — the grid is squeaky clean."
-                  : 'The London Eye has run on 100% certified renewable electricity since 2018.',
-              },
-              {
-                id: 'bess',
-                label: 'Battery Storage',
-                x: 82, y: 78,
-                visible: true,
-                fact: sceneConfig.cleanliness > 0.6
-                  ? 'Grid batteries are discharging cheap, clean overnight wind back into the system.'
-                  : 'Battery storage smooths spikes — charging when wind is plentiful, dispatching when demand peaks.',
-              },
-              {
-                id: 'ev-charger',
-                label: 'EV Charging',
-                x: 50, y: 80,
-                visible: isNight && sceneConfig.cleanliness > 0.7,
-                fact: `Charging now adds roughly ${Math.round(intensity)} g CO₂ per kWh — among the cleanest windows of the day.`,
-              },
-              {
-                id: 'distant-stack',
-                label: 'Gas Peaker',
-                x: 91, y: 50,
-                visible: sceneConfig.cleanliness < 0.2,
-                fact: 'Gas peaker plants kick in when demand spikes faster than renewables can ramp — the biggest driver of dirty grid hours.',
-              },
-            ] satisfies HotspotDef[]}
+        ) : isCity ? (
+          <CitySceneLayers
+            shouldReduceMotion={shouldReduceMotion}
+            backY={backY}
+            midY={midY}
+            sceneConfig={sceneConfig}
+            isNight={isNight}
+            synthwaveMode={synthwaveMode}
+            isSnowing={weather.isSnowing}
+            skipIntro={hasSeenScene}
+            windSpeed={weather.windSpeed}
+            timeOfDay={timeOfDay}
+            cleanlinessBand={cleanlinessBand}
+            intensity={intensity}
           />
-        </>
-      ) : (
-        <>
-          {/* Countryside: Background Landscape Layer (Back Hills - backY) */}
-          <motion.div
-            style={{ y: shouldReduceMotion ? 0 : backY }}
-            className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-0 overflow-hidden"
-          >
-            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-              <LandscapeBack
-                cleanliness={sceneConfig.cleanliness}
-                isNight={isNight}
-                synthwaveMode={synthwaveMode}
-                isSnowing={weather.isSnowing}
-                isChristmas={new Date().getMonth() === 11}
-                skipIntro={hasSeenScene}
-                windSpeed={weather.windSpeed}
-                timeOfDay={timeOfDay}
-              />
-            </svg>
-          </motion.div>
-
-          {/* Countryside: Background Landscape Layer (Mid Hills - midY) */}
-          <motion.div
-            style={{ y: shouldReduceMotion ? 0 : midY }}
-            className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-10 overflow-hidden"
-          >
-            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-              <LandscapeMid
-                cleanliness={sceneConfig.cleanliness}
-                isNight={isNight}
-                synthwaveMode={synthwaveMode}
-                isSnowing={weather.isSnowing}
-                isChristmas={new Date().getMonth() === 11}
-                skipIntro={hasSeenScene}
-                windSpeed={weather.windSpeed}
-                timeOfDay={timeOfDay}
-              />
-            </svg>
-          </motion.div>
-
-          {/* Countryside: Valley Mist */}
-          <ValleyMist cleanliness={sceneConfig.cleanliness} timeOfDay={timeOfDay} isNight={isNight} />
-
-          {/* Countryside: Flock of Sheep */}
-          <AnimatePresence>
-            {sceneConfig.cleanliness > 0.4 && !synthwaveMode && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                style={{ y: shouldReduceMotion ? 0 : midY }}
-                className="z-10 absolute inset-0 pointer-events-none"
-              >
-                <Sheep x={20} y={15} scale={0.7} isNight={isNight} delay={0.5} />
-                <Sheep x={45} y={18} scale={0.65} isNight={isNight} delay={1.2} />
-                <Sheep x={75} y={14} scale={0.7} isNight={isNight} delay={2.0} />
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Countryside: Foreground Landscape Layer (Front Hill) */}
-          <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-20 overflow-hidden">
-            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-              <LandscapeFront
-                cleanliness={sceneConfig.cleanliness}
-                isNight={isNight}
-                synthwaveMode={synthwaveMode}
-                isSnowing={weather.isSnowing}
-                isChristmas={new Date().getMonth() === 11}
-                skipIntro={hasSeenScene}
-                windSpeed={weather.windSpeed}
-                timeOfDay={timeOfDay}
-              />
-            </svg>
-          </div>
-
-          {/* Countryside: Diegetic info hotspots */}
-          <SceneHotspots
-            hotspots={[
-              {
-                id: 'countryside-wind',
-                label: 'Wind Farm',
-                x: 48, y: 58,
-                visible: sceneConfig.showRenewables && windPercentage > 0,
-                fact: 'Onshore wind is one of the cheapest forms of electricity generation in the UK, saving carbon and lowering energy bills.',
-              },
-              {
-                id: 'countryside-solar',
-                label: 'Solar Array',
-                x: 88, y: 88,
-                visible: sceneConfig.showRenewables && sceneConfig.showSun,
-                fact: 'UK solar capacity has grown rapidly, providing clean power to millions of homes during sunny peak demand hours.',
-              },
-              {
-                id: 'countryside-hydro',
-                label: 'Hydro Dam',
-                x: 10, y: 82,
-                visible: weather.isRaining && hydroPercentage > 10,
-                fact: 'Hydroelectric power uses flowing water to drive turbines, providing reliable renewable energy that can ramp up instantly.',
-              },
-              {
-                id: 'countryside-nuclear',
-                label: 'Nuclear Power',
-                x: 70, y: 80,
-                visible: sceneConfig.showRenewables && nuclearPercentage > 5,
-                fact: 'Nuclear energy provides a steady foundation of low-carbon electricity, running continuously regardless of weather conditions.',
-              },
-            ] satisfies HotspotDef[]}
+        ) : (
+          <CountrysideSceneLayers
+            shouldReduceMotion={shouldReduceMotion}
+            backY={backY}
+            midY={midY}
+            sceneConfig={sceneConfig}
+            isNight={isNight}
+            synthwaveMode={synthwaveMode}
+            isSnowing={weather.isSnowing}
+            skipIntro={hasSeenScene}
+            windSpeed={weather.windSpeed}
+            timeOfDay={timeOfDay}
+            windPercentage={windPercentage}
+            nuclearPercentage={nuclearPercentage}
+            hydroPercentage={hydroPercentage}
+            isRaining={isRaining}
           />
-        </>
-      )}
-
-      {/* Ground colour cover strip — prevents the sky gradient bleeding through
-          at the bottom corners where the SVG landscape shapes don't reach the edges */}
-      <motion.div
-        className="absolute bottom-0 left-0 right-0 h-2 pointer-events-none z-[50]"
-        animate={{ backgroundColor: sceneConfig.groundColor }}
-        transition={{ duration: 2, ease: 'easeInOut' as const }}
-        aria-hidden="true"
-      />
-
-      {/* Wind Turbines - dynamically positioned across the scene */}
-      <AnimatePresence>
-        {!isCity && !isCoastal && sceneConfig.showRenewables && turbineLayout.map((slot, i) => {
-          // Wind speed drives rotation: near-zero wind → very slow / stopped
-          const effectiveWindSpeed = sceneConfig.windSpeed ?? 0;
-          const baseSpeed = effectiveWindSpeed < 2
-            ? 30 // Almost still
-            : Math.max(1.5, 6 - (effectiveWindSpeed / 8));
-          const isOverdrive = turbineOverdrive === i;
-          // Background turbines slightly slower for parallax feel
-          const layerSpeedMod = slot.layer === 'back' ? 1.3 : slot.layer === 'mid' ? 1.1 : 1;
-          // Opacity based on depth layer
-          const layerOpacity = slot.layer === 'back' ? 0.5 : slot.layer === 'mid' ? 0.75 : 1;
-
-          return (
-            <motion.div
-              key={`turbine-${slot.left}-${slot.bottom}`}
-              className="absolute"
-              style={{
-                left: `${slot.left}%`,
-                bottom: `${slot.bottom}%`,
-                zIndex: slot.z,
-                opacity: layerOpacity,
-              }}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: layerOpacity, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              transition={{ duration: 0.6, delay: i * 0.1 }}
-            >
-              <WindTurbine
-                scale={slot.scale}
-                speed={isOverdrive ? 0.2 : (baseSpeed * layerSpeedMod + i * 0.2)}
-                onClick={() => handleTurbineClick(i)}
-              />
-            </motion.div>
-          );
-        })}
-      </AnimatePresence>
-
-      {/* Solar panels with reflection animation */}
-      <AnimatePresence>
-        {sceneConfig.showRenewables && sceneConfig.showSun && (
-          <motion.div
-            className="absolute bottom-6 right-6 flex gap-1.5"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.5 }}
-          >
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div
-                key={i}
-                className="relative w-7 h-5 bg-gen-solar/80 rounded-sm transform -skew-x-12 shadow-md overflow-hidden"
-                style={{ opacity: 0.7 + (sceneConfig.cleanliness * 0.3) }}
-              >
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"
-                  animate={{ x: ['-100%', '200%'] }}
-                  transition={{
-                    duration: 2,
-                    delay: i * 0.5,
-                    repeat: Infinity,
-                    repeatDelay: 3,
-                    ease: 'easeInOut' as const,
-                  }}
-                />
-                <div className="absolute inset-0 grid grid-cols-2 gap-px opacity-50">
-                  <div className="border-r border-gen-solar/50" />
-                </div>
-              </div>
-            ))}
-          </motion.div>
         )}
-      </AnimatePresence>
 
-      {/* Factories for dirty energy */}
-      <AnimatePresence>
-        {sceneConfig.showFactories && !isCity && !isCoastal && (
-          <motion.div
-            className="absolute bottom-14 left-6 flex gap-6"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.6 }}
-          >
-            <div className="relative">
-              <SimpleFactory className="w-18 h-18 text-secondary" style={{ width: '4.5rem', height: '4.5rem' }} isNight={isNight} />
-              {sceneConfig.showSmoke && (
-                <>
-                  <SmokeParticle delay={0} x={35} />
-                  <SmokeParticle delay={0.8} x={40} />
-                  <SmokeParticle delay={1.6} x={45} />
-                  <SmokeParticle delay={0.4} x={60} />
-                  <SmokeParticle delay={1.2} x={65} />
-                </>
-              )}
-            </div>
-            {sceneConfig.cleanliness < 0.3 && (
-              <motion.div
-                className="relative"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-              >
-                <SimpleFactory className="w-14 h-14 text-secondary/90" isNight={isNight} />
-                {sceneConfig.showSmoke && (
-                  <>
-                    <SmokeParticle delay={0.3} x={35} />
-                    <SmokeParticle delay={1.1} x={45} />
-                    <SmokeParticle delay={0.7} x={55} />
-                  </>
-                )}
-              </motion.div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+        <SceneGenerationOverlay
+          sceneConfig={sceneConfig}
+          isCity={isCity}
+          isCoastal={isCoastal}
+          isNight={isNight}
+          turbineLayout={turbineLayout}
+          turbineOverdrive={turbineOverdrive}
+          handleTurbineClick={handleTurbineClick}
+          nuclearPercentage={nuclearPercentage}
+          windPercentage={windPercentage}
+          hydroPercentage={hydroPercentage}
+          marinePercentage={marinePercentage}
+          windSpeed={weather.windSpeed}
+        />
 
-      {/* Floating leaves for very clean */}
-      <AnimatePresence>
-        {sceneConfig.cleanliness > 0.75 && sceneConfig.isDaytime && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Leaf
-              className="absolute bottom-24 left-[25%] w-5 h-5 text-primary animate-leaf-float"
-              style={{ animationDelay: '0s' }}
-              aria-hidden="true"
-            />
-            <Leaf
-              className="absolute bottom-28 right-[35%] w-4 h-4 text-primary/80 animate-leaf-float"
-              style={{ animationDelay: '1.5s' }}
-              aria-hidden="true"
-            />
-            <Leaf
-              className="absolute bottom-20 left-[50%] w-3 h-3 text-primary/70 animate-leaf-float"
-              style={{ animationDelay: '3s' }}
-              aria-hidden="true"
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+        <SceneMilestoneFX
+          intensity={intensity}
+          weather={weather}
+          sceneConfig={sceneConfig}
+        />
 
-      {/* Fire/flames for very dirty with flicker */}
-      <AnimatePresence>
-        {sceneConfig.cleanliness < 0.2 && (
-          <motion.div
-            className="absolute bottom-10 left-24 flex gap-2"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.3 }}
-          >
-            <motion.div
-              animate={{ scale: [1, 1.1, 0.95, 1], rotate: [-2, 2, -2] }}
-              transition={{ duration: 0.5, repeat: Infinity }}
-            >
-              <Flame className="w-7 h-7 text-destructive" aria-hidden="true" />
-            </motion.div>
-            <motion.div
-              animate={{ scale: [1, 0.95, 1.1, 1], rotate: [2, -2, 2] }}
-              transition={{ duration: 0.6, repeat: Infinity, delay: 0.15 }}
-            >
-              <Flame className="w-5 h-5 text-destructive/80" aria-hidden="true" />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        <SceneEcosystemLayer
+          sceneConfig={sceneConfig}
+          isCity={isCity}
+          isCoastal={isCoastal}
+          isNight={isNight}
+          isDawnOrDusk={isDawnOrDusk}
+          shouldReduceMotion={shouldReduceMotion}
+          backY={backY}
+          midY={midY}
+          showFox={showFox}
+          onFoxClick={() => unlock('fox_spotter')}
+        />
 
+        <SceneAdvancedLayer
+          sceneConfig={sceneConfig}
+          isCity={isCity}
+          isCoastal={isCoastal}
+          isNight={isNight}
+          isRaining={isRaining}
+          windSpeed={weather.windSpeed}
+          hydroPercentage={hydroPercentage}
+          biomassPercentage={biomassPercentage}
+          showMeteorShower={showMeteorShower}
+        />
 
-      {/* Water/hydro indicator for clean energy */}
-      <AnimatePresence>
-        {sceneConfig.cleanliness > 0.6 && (
-          <motion.div
-            className="absolute bottom-3 right-20"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            transition={{ duration: 0.5 }}
-          >
-            <motion.div
-              animate={{ scale: [1, 1.1, 1], opacity: [0.6, 1, 0.6] }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' as const }}
-            >
-              <Droplets className="w-6 h-6 text-gen-hydro/60" aria-hidden="true" />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        <SceneWinterLayer
+          weather={weather}
+          sceneConfig={sceneConfig}
+        />
 
-      {/* Nuclear Cooling Towers - Show when nuclear % > 5 */}
-      <AnimatePresence>
-        {sceneConfig.showRenewables && nuclearPercentage > 5 && !isCity && !isCoastal && (
-          <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-15">
-            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-              <NuclearCoolingTower x={280} steamIntensity={nuclearPercentage / 100} isNight={isNight} />
-              {nuclearPercentage > 15 && <NuclearCoolingTower x={240} steamIntensity={0.5} isNight={isNight} />}
-            </svg>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Offshore Wind Turbines - Show when wind % > 10 */}
-      <AnimatePresence>
-        {windPercentage > 10 && !isCity && (
-          <div className="absolute bottom-0 left-0 right-0 h-[65%] pointer-events-none z-5">
-            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-              <OffshoreWind count={Math.min(3, Math.floor(windPercentage / 10))} windSpeed={weather.windSpeed} />
-            </svg>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Tidal Waves - Show when hydro/marine % > 5 */}
-      <AnimatePresence>
-        {(hydroPercentage > 5 || marinePercentage > 0) && (
-          <div className="absolute bottom-0 left-0 right-0 h-[65%] pointer-events-none z-25">
-            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-              <TidalWaves intensity={(hydroPercentage + marinePercentage) / 100} />
-            </svg>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* ===== PHASE 2: CARBON MILESTONES ===== */}
-
-      {/* Rainbow - appears during/after rain when sun is visible (daytime + rain) */}
-      <AnimatePresence>
-        {intensity < 50 && weather.isRaining && sceneConfig.isDaytime && <Rainbow />}
-      </AnimatePresence>
-
-      {/* Pollution Warning - High carbon (>300g) */}
-      <AnimatePresence>
-        {intensity > 300 && <PollutionWarning />}
-      </AnimatePresence>
-
-      {/* Net Zero Celebration - Zero or negative carbon */}
-      <AnimatePresence>
-        {intensity <= 0 && <NetZeroCelebration />}
-      </AnimatePresence>
-
-      {/* ===== PHASE 2: LIVING ECOSYSTEM ===== */}
-
-      {/* Flowers for bees */}
-      <AnimatePresence>
-        {!isCity && !isCoastal && sceneConfig.cleanliness > 0.8 && sceneConfig.isDaytime && (
-          <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-12">
-            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-              <Flowers positions={[
-                { x: 50, y: 120 },
-                { x: 120, y: 115 },
-                { x: 200, y: 118 },
-                { x: 280, y: 120 },
-                { x: 350, y: 117 },
-              ]} />
-            </svg>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Bees visiting flowers */}
-      <AnimatePresence>
-        {!isCity && !isCoastal && sceneConfig.cleanliness > 0.8 && sceneConfig.isDaytime && (
-          <>
-            <Bee startX={15} startY={18} delay={0} />
-            <Bee startX={50} startY={22} delay={2} />
-            <Bee startX={75} startY={20} delay={4} />
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* Rabbit hopping at dawn/dusk */}
-      <AnimatePresence>
-        {!isCity && !isCoastal && isDawnOrDusk && sceneConfig.cleanliness > 0.6 && <Rabbit delay={0} />}
-      </AnimatePresence>
-
-      {/* Owls perched on trees at night */}
-      <AnimatePresence>
-        {isNight && sceneConfig.cleanliness > 0.7 && (
-          <>
-            {/* Left Owl (Back hill - backY) */}
-            <motion.div
-              style={{ y: shouldReduceMotion ? 0 : backY }}
-              className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-12"
-            >
-              <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
-                <Owl treeX={80} treeY={85} scale={0.25} />
-              </svg>
-            </motion.div>
-
-            {/* Right Owl (Mid hill - midY) */}
-            <motion.div
-              style={{ y: shouldReduceMotion ? 0 : midY }}
-              className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-12"
-            >
-              <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
-                <Owl treeX={320} treeY={95} scale={0.4} />
-              </svg>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* Fox - Rare event at dusk */}
-      <AnimatePresence>
-        {showFox && (
-          <Fox onClick={() => unlock('fox_spotter')} />
-        )}
-      </AnimatePresence>
-
-      {/* ===== PHASE 3: ADVANCED FEATURES ===== */}
-
-      {/* Background mountains for parallax */}
-      <AnimatePresence>
-        {!isCity && !isCoastal && sceneConfig.cleanliness > 0.5 && (
-          <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-1">
-            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-              <BackgroundMountains isNight={isNight} />
-            </svg>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Foreground grass with wind sway */}
-      <AnimatePresence>
-        {!isCity && !isCoastal && sceneConfig.cleanliness > 0.6 && (
-          <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-30">
-            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-              <ForegroundGrass windSpeed={weather.windSpeed} />
-            </svg>
-          </div>
-        )}
-      </AnimatePresence>
-
-
-
-      {/* EV Charging Station at night when clean */}
-      <AnimatePresence>
-        {isNight && sceneConfig.cleanliness > 0.7 && (
-          <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-16">
-            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-              <EVChargingStation isCharging={sceneConfig.cleanliness > 0.8} />
-            </svg>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Hydro Dam when rainy + hydro */}
-      <AnimatePresence>
-        {isRaining && hydroPercentage > 10 && (
-          <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-14">
-            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-              <HydroDam flowIntensity={Math.min(hydroPercentage / 50, 1)} />
-            </svg>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Meteor Shower - Double-click moon */}
-      <AnimatePresence>
-        {showMeteorShower && <MeteorShower />}
-      </AnimatePresence>
-
-      {/* Biomass Smoke - Green tinted smoke when biomass > 5% */}
-      <AnimatePresence>
-        {biomassPercentage > 5 && sceneConfig.showRenewables && (
-          <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-15">
-            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-              <BiomassSmoke x={180} intensity={biomassPercentage / 100} />
-              {biomassPercentage > 15 && <BiomassSmoke x={220} intensity={0.6} />}
-            </svg>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* ===== WINTER ELEMENTS ===== */}
-
-      {/* Snow ground cover */}
-      <AnimatePresence>
-        {weather.isSnowing && <SnowGround intensity={weather.precipitationIntensity} />}
-      </AnimatePresence>
-
-      {/* Frozen pond */}
-      <AnimatePresence>
-        {weather.isSnowing && sceneConfig.cleanliness > 0.4 && <FrozenPond />}
-      </AnimatePresence>
-
-      {/* Breath mist from sheep in cold weather */}
-      <AnimatePresence>
-        {weather.isSnowing && sceneConfig.cleanliness > 0.4 && (
-          <>
-            <BreathMist x={22} y={18} />
-            <BreathMist x={47} y={20} />
-            <BreathMist x={76} y={17} />
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* Snow accumulation on solar panels */}
-      <AnimatePresence>
-        {weather.isSnowing && sceneConfig.showRenewables && sceneConfig.showSun && <SnowOnPanels />}
-      </AnimatePresence>
+        <SceneRandomEvents
+          activeEvent={activeEvent}
+          onComplete={() => setActiveEvent('none')}
+        />
 
       </div>
 
     </motion.div >
   );
 }
-
-
