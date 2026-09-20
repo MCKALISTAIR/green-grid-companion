@@ -7,6 +7,9 @@ landscape SVG paths, or layout-affecting CSS changes.
 - [ ] iPhone SE (small, 16:9)
 - [ ] iPhone 14 / 15 (modern, 19.5:9)
 - [ ] iPhone 17 Pro Max (very tall, 19.5:9, dynamic island)
+- [ ] **iPhone Duo cover** (466×678, ~1.42:1) — see `docs/IPHONE_DUO.md`
+- [ ] **iPhone Duo inner** (890×626 landscape / 626×890 portrait)
+- [ ] **iPhone Duo Split View** (~445×626)
 - [ ] iPad Mini (4:3 portrait + landscape)
 - [ ] iPad Pro 12.9" (4:3 portrait + landscape)
 - [ ] Desktop 1440px wide
@@ -22,6 +25,8 @@ For each device, verify:
 - [ ] No horizontal scrollbar
 - [ ] No clipping of cooling towers, hydro dam, or city skyline
 - [ ] Scene container respects iOS safe-area inset (no overlap with dynamic island)
+- [ ] On Duo cover/inner, scene does not consume the full short viewport (cards still peek)
+- [ ] On Duo inner landscape (~890×626), home uses side-by-side scene + feed
 
 ### Animation
 - [ ] Birds, butterflies, fireflies don't float in oversized empty sky

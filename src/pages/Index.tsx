@@ -203,11 +203,10 @@ const Index = () => {
         style={{ background: skyColor }}
       >
         <PullToRefresh onRefresh={handleRefresh} disabled={isLoading}>
-          <main className="min-h-[100dvh] flex flex-col animate-in fade-in duration-700 lg:pb-0">
+          <main className="home-shell min-h-[100dvh] flex flex-col animate-in fade-in duration-700 lg:pb-0">
             <h1 className="sr-only">Carbon Intensity Dashboard</h1>
-            {/* Header with scene */}
-            {/* Header with scene */}
-            <div className="relative w-full h-[60vh] min-h-[400px]">
+            {/* Header with scene — .home-scene adapts for iPhone Duo short/wide viewports */}
+            <div className="home-scene">
               {/* Animated scene */}
               <ComponentErrorBoundary name="Scene">
                 <IntensityScene intensity={intensity} index={index} generationMix={generationMix} className="h-full" style={{ height: '100%' }} />
@@ -249,9 +248,9 @@ const Index = () => {
 
               {/* Current intensity display - Only show if NOT in demand mode (DemandView has its own header) */}
               {viewMode !== 'demand' && (
-                <div className="absolute top-[calc(max(env(safe-area-inset-top),59px)+1rem)] left-1/2 -translate-x-1/2 text-center w-auto max-w-[90%] z-10"
+                <div className="home-scene-gauge absolute top-[calc(max(env(safe-area-inset-top),59px)+1rem)] left-1/2 -translate-x-1/2 text-center w-auto max-w-[90%] z-10"
                   data-tour="intensity-gauge">
-                  <div className="bg-white/15 backdrop-blur-md rounded-2xl p-3 shadow-sm border border-white/20">
+                  <div className="intensity-gauge-panel bg-white/15 backdrop-blur-md rounded-2xl p-3 shadow-sm border border-white/20">
                     <div className="flex items-center justify-center gap-2 mb-1">
                       <div className="lg:hidden">
                         <LocationManager
@@ -410,10 +409,10 @@ const Index = () => {
               )}
             </div>
 
-            {/* Content cards */}
-            <div className="flex-1 px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-6 space-y-4 -mt-6 relative z-10 bg-card lg:max-w-7xl lg:mx-auto w-full lg:rounded-t-3xl lg:shadow-xl lg:-mt-8 lg:pt-8 lg:space-y-6">
+            {/* Content cards — .home-feed goes side-by-side with the scene on short/wide Duo layouts */}
+            <div className="home-feed flex-1 px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-6 space-y-4 -mt-6 relative z-10 bg-card lg:max-w-7xl lg:mx-auto w-full lg:rounded-t-3xl lg:shadow-xl lg:-mt-8 lg:pt-8 lg:space-y-6">
               {/* Organic wave divider — blends scene into content below */}
-              <div className="absolute -top-[79px] left-0 right-0 h-[80px] pointer-events-none overflow-hidden z-20">
+              <div className="scene-wave-divider absolute -top-[79px] left-0 right-0 h-[80px] pointer-events-none overflow-hidden z-20">
                 <SceneWaveDivider cleanliness={cleanliness} />
               </div>
 

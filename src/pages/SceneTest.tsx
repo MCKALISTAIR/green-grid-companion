@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import { IntensityScene } from '@/components/IntensityScene';
 import type { TimeOfDay } from '@/hooks/useTimeOfDay';
 import type { WeatherData } from '@/hooks/useWeatherData';
+import { getSceneIntrinsicHeight, IPHONE_DUO_VIEWPORTS, SCENE_HEIGHT_CSS } from '@/lib/sceneHeight';
 
 /**
  * Dev-only visual regression test page for IntensityScene.
  * Renders the scene at multiple viewport sizes side-by-side so visual issues
- * (especially on tall phones like iPhone 17 Pro Max) are easy to spot.
+ * (tall phones, iPhone Duo cover/inner, tablets) are easy to spot.
  *
  * Visit at /__scene-test
  */
@@ -22,6 +23,10 @@ const VIEWPORTS: ViewportPreset[] = [
   { label: 'iPhone SE', width: 375, height: 667, aspect: '16:9' },
   { label: 'iPhone 14', width: 390, height: 844, aspect: '19.5:9' },
   { label: 'iPhone 17 Pro Max', width: 440, height: 956, aspect: '19.5:9' },
+  IPHONE_DUO_VIEWPORTS.cover,
+  IPHONE_DUO_VIEWPORTS.inner,
+  IPHONE_DUO_VIEWPORTS.innerPortrait,
+  IPHONE_DUO_VIEWPORTS.splitView,
   { label: 'iPad Mini', width: 768, height: 1024, aspect: '4:3' },
   { label: 'iPad Pro 12.9"', width: 1024, height: 1366, aspect: '4:3' },
   { label: 'Desktop', width: 1280, height: 800, aspect: '16:10' },
@@ -206,10 +211,8 @@ export default function SceneTest() {
 
       <div className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
         {VIEWPORTS.map((vp) => {
-          // Match the scene's actual height cap from IntensityScene
-          // (clamp(400px, min(60vh, 75vw), 620px)) so previews reflect real usage
-          // instead of stretching to fill the entire device viewport.
-          const sceneIntrinsicH = Math.min(620, Math.max(400, Math.min(vp.height * 0.6, vp.width * 0.75)));
+          // Match IntensityScene height math (see src/lib/sceneHeight.ts)
+          const sceneIntrinsicH = getSceneIntrinsicHeight(vp.width, vp.height);
           const maxPreviewWidth = 380;
           const scale = scaleToFit ? Math.min(1, maxPreviewWidth / vp.width) : 1;
           const displayW = vp.width * scale;
@@ -263,10 +266,9 @@ export default function SceneTest() {
 
       <footer className="mt-8 text-xs text-muted-foreground max-w-2xl">
         <p>
-          See <code>docs/SCENE_VISUAL_QA.md</code> for the full manual on-device
-          checklist. The aspect-ratio cap on the scene container is defined in{' '}
-          <code>IntensityScene.tsx</code> as{' '}
-          <code>clamp(400px, min(60vh, 75vw), 620px)</code>.
+          See <code>docs/SCENE_VISUAL_QA.md</code> and <code>docs/IPHONE_DUO.md</code> for
+          the full checklist. Scene height CSS:{' '}
+          <code>{SCENE_HEIGHT_CSS}</code>.
         </p>
       </footer>
     </div>
