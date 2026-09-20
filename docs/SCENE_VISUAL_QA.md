@@ -75,6 +75,15 @@ For each device, verify:
 - [ ] Very low (clean: many turbines, butterflies, rainbow)
 - [ ] Very high (dirty: factories, smoke, pollution warning)
 
+### Temporal garden (streak life)
+- [ ] Stage 0: no extra garden overlay on countryside
+- [ ] After sustained clean / coal-free streak: flowers + green wash appear
+- [ ] Stage 2+: extra butterflies; wildlife gates ease slightly
+- [ ] Stage 3+ night: soft emerald sparkles
+- [ ] City theme: temporal garden skipped (no countryside flora)
+- [ ] Home sheet shows quiet "Scene garden · day N" when stage > 0
+- [ ] Dirty periods decay garden hours slowly (no hard wipe)
+
 ## City scene logic
 - [ ] No nuclear cooling towers visible in city theme
 - [ ] No factory chimneys visible in city theme

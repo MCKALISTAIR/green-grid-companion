@@ -5,6 +5,7 @@ import { Bee } from '../Bee';
 import { Rabbit } from '../Rabbit';
 import { Owl } from '../Owl';
 import { Fox } from '../Fox';
+import type { SceneGrowthStage } from '@/hooks/useSceneGrowth';
 
 export interface SceneEcosystemLayerProps {
   sceneConfig: SceneVisualConfig;
@@ -17,6 +18,8 @@ export interface SceneEcosystemLayerProps {
   midY: MotionValue<number>;
   showFox: boolean;
   onFoxClick: () => void;
+  /** Streak-tied growth unlocks wildlife at slightly dirtier grids. */
+  growthStage?: SceneGrowthStage;
 }
 
 export function SceneEcosystemLayer({
@@ -30,14 +33,22 @@ export function SceneEcosystemLayer({
   midY,
   showFox,
   onFoxClick,
+  growthStage = 0,
 }: SceneEcosystemLayerProps) {
+  // Higher garden stages ease cleanliness gates — reward sustained clean streaks
+  const flowerGate = growthStage >= 2 ? 0.55 : 0.8;
+  const beeGate = growthStage >= 2 ? 0.55 : 0.8;
+  const rabbitGate = growthStage >= 1 ? 0.45 : 0.6;
+  const owlGate = growthStage >= 2 ? 0.5 : 0.7;
+  const showExtraBee = growthStage >= 3;
+
   return (
     <>
       {/* ===== PHASE 2: LIVING ECOSYSTEM ===== */}
 
       {/* Flowers for bees */}
       <AnimatePresence>
-        {!isCity && !isCoastal && sceneConfig.cleanliness > 0.8 && sceneConfig.isDaytime && (
+        {!isCity && !isCoastal && sceneConfig.cleanliness > flowerGate && sceneConfig.isDaytime && (
           <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-12">
             <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <Flowers positions={[
@@ -54,23 +65,24 @@ export function SceneEcosystemLayer({
 
       {/* Bees visiting flowers */}
       <AnimatePresence>
-        {!isCity && !isCoastal && sceneConfig.cleanliness > 0.8 && sceneConfig.isDaytime && (
+        {!isCity && !isCoastal && sceneConfig.cleanliness > beeGate && sceneConfig.isDaytime && (
           <>
             <Bee startX={15} startY={18} delay={0} />
             <Bee startX={50} startY={22} delay={2} />
             <Bee startX={75} startY={20} delay={4} />
+            {showExtraBee && <Bee startX={35} startY={16} delay={1.2} />}
           </>
         )}
       </AnimatePresence>
 
       {/* Rabbit hopping at dawn/dusk */}
       <AnimatePresence>
-        {!isCity && !isCoastal && isDawnOrDusk && sceneConfig.cleanliness > 0.6 && <Rabbit delay={0} />}
+        {!isCity && !isCoastal && isDawnOrDusk && sceneConfig.cleanliness > rabbitGate && <Rabbit delay={0} />}
       </AnimatePresence>
 
       {/* Owls perched on trees at night */}
       <AnimatePresence>
-        {isNight && sceneConfig.cleanliness > 0.7 && (
+        {isNight && sceneConfig.cleanliness > owlGate && (
           <>
             {/* Left Owl (Back hill - backY) */}
             <motion.div

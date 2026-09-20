@@ -8,9 +8,11 @@ import { useWeatherData, WeatherData } from '@/hooks/useWeatherData';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useSceneDirector } from '@/hooks/useSceneDirector';
 import { useCleanlinessBand } from '@/hooks/useCleanlinessBand';
+import { useSceneGrowth } from '@/hooks/useSceneGrowth';
 import { SceneColorGrade } from './scene/SceneColorGrade';
 import { StateTransitionFX } from './scene/StateTransitionFX';
 import { SceneHeroSpotlight, SceneAtmosphericDepth } from './scene/SceneComposition';
+import { SceneTemporalLife } from './scene/SceneTemporalLife';
 import { GenerationMix } from '@/lib/carbonApi';
 import { buildSceneConfig } from '@/lib/sceneConfig';
 import { buildTurbineLayout } from '@/lib/turbineLayout';
@@ -104,6 +106,7 @@ export function IntensityScene({
 
   // Cleanliness band + transition flourish trigger
   const { band: cleanlinessBand, transition: bandTransition } = useCleanlinessBand(intensity);
+  const sceneGrowth = useSceneGrowth(intensity, generationMix);
 
   const sunPosition = realSunPosition;
 
@@ -370,6 +373,15 @@ export function IntensityScene({
           midY={midY}
           showFox={showFox}
           onFoxClick={() => unlock('fox_spotter')}
+          growthStage={sceneGrowth.stage}
+        />
+
+        <SceneTemporalLife
+          stage={sceneGrowth.stage}
+          isCity={isCity}
+          isCoastal={isCoastal}
+          isDaytime={sceneConfig.isDaytime}
+          isNight={isNight}
         />
 
         <SceneAdvancedLayer
