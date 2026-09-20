@@ -73,13 +73,16 @@ export function IntensityHeroOverlay({
 
   const nextUpdateLabel = (() => {
     if (!lastUpdated) return '';
+    // Soften first-load / background refresh so FTUE never opens on "Update due".
+    if (isBackgroundFetching) return 'Updating…';
     if (nextUpdate) {
       const next = new Date(nextUpdate);
-      if (new Date() > next) return 'Update due';
+      if (new Date() > next) return 'Refreshing soon';
       return `Next ${next.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
     }
     const next = getNextUpdate(lastUpdated);
     if (!next) return '';
+    if (new Date() > next) return 'Refreshing soon';
     return `Next ${next.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
   })();
 
@@ -284,11 +287,17 @@ export function IntensityHeroOverlay({
                       />
                       <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${freshnessColor}`} />
                     </span>
-                    <span>{relativeTime}</span>
-                    {nextUpdateLabel && (
+                    {isBackgroundFetching ? (
+                      <span>Updating…</span>
+                    ) : (
                       <>
-                        <span className="opacity-60">·</span>
-                        <span>{nextUpdateLabel}</span>
+                        <span>{relativeTime}</span>
+                        {nextUpdateLabel && (
+                          <>
+                            <span className="opacity-60">·</span>
+                            <span>{nextUpdateLabel}</span>
+                          </>
+                        )}
                       </>
                     )}
                   </div>

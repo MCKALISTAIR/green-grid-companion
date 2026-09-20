@@ -354,7 +354,14 @@ export function FootprintView() {
               <p className="text-muted-foreground text-sm mt-1">
                 Based on {getHouseTypeLabel(houseType)} typical usage and today&apos;s grid intensity
                 {intensity ? ` (${intensity}g CO₂/kWh · ${intensityIndex})` : ''}.
-                Not your smart-meter truth yet — link Octopus for a real Green Score.
+                Not your smart-meter truth yet — link Octopus for a real Green Score.{' '}
+                <button
+                  type="button"
+                  className="underline text-primary hover:text-primary/80 font-medium"
+                  onClick={() => navigate('/settings')}
+                >
+                  Change home size in Settings
+                </button>
               </p>
             </div>
             <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
