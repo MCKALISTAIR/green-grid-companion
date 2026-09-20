@@ -53,9 +53,6 @@ GridSense is a mobile-first companion app designed to help UK (and future) energ
     *   **Secure Backup**: Never lose your history when switching phones.
 *   **Weather Widget**: Show/hide local weather conditions with persistent preferences.
 *   **Custom Appliances**: Create and save custom appliances in Power Planner (persists between sessions).
-*   **Tesla Integration** *(backend scaffolding — not in Settings UI yet)*:
-    *   Vehicle / energy-site APIs exist in code; Settings currently ships **Octopus only**.
-    *   Do not expect Tesla linking in the current release builds.
 
 ## 🆕 Recent Updates (v1.4.7 - 2026-07-13)
 
@@ -186,7 +183,6 @@ GridSense is a mobile-first companion app designed to help UK (and future) energ
 *   **Better User Experience**: Professional skeleton loaders replace spinners.
 
 ### New Features
-*   **Tesla Integration**: Full support for vehicles and energy sites with carbon impact tracking.
 *   **Forecast Comparison**: New "Pred vs Act" comparative view in Home screen intensity cards.
 *   **Weather Widget Controls**: Hide/show local weather conditions.
 *   **Green Energy Score Info**: Detailed popover explaining score calculation
@@ -390,7 +386,7 @@ npx playwright test e2e/scene-vrt.spec.ts
     *   `energyFacts.ts`: 60+ contextual energy insights with smart filtering.
     *   `energy-standards.ts`: UK house types and consumption data.
     *   `impact-conversions.ts`: Real-world CO₂ equivalency conversions.
-*   `src/hooks`: Custom React hooks (useCarbonData, useTeslaEnergy, useOctopusEnergy, useCoalFreeStreak, useSettings, useEnergyFacts, useNotifications).
+*   `src/hooks`: Custom React hooks (useCarbonData, useOctopusEnergy, useCoalFreeStreak, useSettings, useEnergyFacts, useNotifications).
 *   `ios/App/GridSenseWidget`: Native Swift code for the iOS Widget.
 
 ## 📄 License

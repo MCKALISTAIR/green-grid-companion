@@ -175,11 +175,6 @@ export const FEATURE_GUIDES = [
                 <p>
                     Connect your Octopus account to sync smart-meter consumption and calculate your <strong>real carbon footprint</strong> and Green Score from timing — not just how much you use.
                 </p>
-
-                <h3 className="text-lg font-semibold pt-2">Tesla</h3>
-                <p>
-                    Tesla vehicle and Powerwall linking is <strong>in development</strong> and not available in Settings yet. Planner EV options appear only once Tesla is linked.
-                </p>
             </div>
         )
     },

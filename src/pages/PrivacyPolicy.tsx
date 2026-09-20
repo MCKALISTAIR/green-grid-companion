@@ -41,7 +41,6 @@ export default function PrivacyPolicy() {
                         <ul className="list-disc pl-4 space-y-1">
                             <li><strong>Account data:</strong> Your email address and authentication provider (Google or Apple).</li>
                             <li><strong>Octopus Energy data:</strong> Your account number, API key, meter details, consumption history, and calculated carbon footprint — only if you voluntarily link your account.</li>
-                            <li><strong>Tesla data:</strong> Vehicle details, charging sessions, and energy site data — only if you voluntarily link your Tesla account.</li>
                             <li><strong>Preferences:</strong> Saved locations, household profile, and notification settings.</li>
                         </ul>
                         <p>
@@ -101,9 +100,6 @@ export default function PrivacyPolicy() {
                                 <strong>Octopus Energy API</strong> — To securely fetch your smart meter consumption data (only if you voluntarily link your account).
                             </li>
                             <li>
-                                <strong>Tesla API</strong> — To fetch vehicle and energy site data (only if you voluntarily link your account).
-                            </li>
-                            <li>
                                 <strong>Postcodes.io</strong> — To convert GPS coordinates into a postcode district (if you use "Current Location").
                             </li>
                             <li>
@@ -146,7 +142,7 @@ export default function PrivacyPolicy() {
                             You have the right to receive your personal data in a structured, commonly used, and machine-readable format.
                         </p>
                         <p>
-                            Use the <strong>"Download My Data"</strong> button in <strong>Settings → Account</strong> to export all your data as a JSON file. This includes your account details, energy consumption history, carbon footprint records, Tesla data, and preferences.
+                            Use the <strong>"Download My Data"</strong> button in <strong>Settings → Account</strong> to export all your data as a JSON file. This includes your account details, energy consumption history, carbon footprint records, and preferences.
                         </p>
                     </CardContent>
                 </Card>
@@ -164,7 +160,6 @@ export default function PrivacyPolicy() {
                             <li>Your authentication account and email</li>
                             <li>Octopus Energy credentials, meter data, and consumption history</li>
                             <li>Carbon footprint calculations</li>
-                            <li>Tesla credentials, vehicles, charging sessions, and energy data</li>
                             <li>All saved preferences and locations</li>
                         </ul>
                         <p className="font-medium text-foreground">

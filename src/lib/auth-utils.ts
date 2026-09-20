@@ -4,7 +4,7 @@ import { logger } from './logger';
 /**
  * Ensures the user has a valid Supabase session (authenticated or anonymous).
  * 
- * This enables users to use integrations like Octopus Energy and Tesla
+ * This enables users to use integrations like Octopus Energy
  * without requiring Google/Apple sign-in. When they later authenticate,
  * the AccountBackup component automatically migrates their data.
  * 

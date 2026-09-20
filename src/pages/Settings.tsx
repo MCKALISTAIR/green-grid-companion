@@ -5,7 +5,6 @@ import { OctopusIntegration } from '@/components/OctopusIntegration';
 import { AccountBackup } from '@/components/AccountBackup';
 import { YearWrapped } from '@/components/YearWrapped';
 import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
-import { useTeslaEnergy } from '@/hooks/useTeslaEnergy';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
 import { useEnergyFacts } from '@/hooks/useEnergyFacts';
 import { useSceneDirector } from '@/hooks/useSceneDirector';
@@ -32,7 +31,6 @@ import { SettingsFooter } from '@/components/settings/SettingsFooter';
 export default function Settings() {
   const [showYearWrapped, setShowYearWrapped] = useState(false);
   const { isLinked } = useOctopusEnergy();
-  const { isLinked: isTeslaLinked } = useTeslaEnergy();
   const { hasNewVersion } = useVersionCheck();
   const { tone, setTone } = useEnergyFacts();
   const { unlocked, handleVersionTap } = useSceneDirector();
@@ -144,7 +142,6 @@ export default function Settings() {
 
         <SettingsFooter
           isLinked={isLinked}
-          isTeslaLinked={isTeslaLinked}
           unlocked={unlocked}
           onVersionClick={handleVersionTap}
         />

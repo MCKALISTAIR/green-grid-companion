@@ -163,7 +163,7 @@ export default function Help() {
                                     <p>Try restarting the app. The animated scene requires good performance and may be simplified on older devices.</p>
 
                                     <p className="pt-2"><strong>Integration issues:</strong></p>
-                                    <p>For Octopus connections, check that your API key is valid and meters are linked in Settings. Tesla linking is not available in the app yet.</p>
+                                    <p>For Octopus connections, check that your API key is valid and meters are linked in Settings.</p>
                                 </div>
                             </AccordionContent>
                         </AccordionItem>
@@ -178,7 +178,7 @@ export default function Help() {
                                     <p>We only store your preferences locally on your device. Location data is used solely to fetch regional carbon intensity and is never shared.</p>
 
                                     <p className="pt-2"><strong>Account data:</strong></p>
-                                    <p>Octopus: you paste your account number and API key. Keys are stored on your device and can sync encrypted when you sign in — we use them only to fetch your meter data. Tesla linking is not available in the app yet.</p>
+                                    <p>Octopus: you paste your account number and API key. Keys are stored on your device and can sync encrypted when you sign in — we use them only to fetch your meter data.</p>
 
                                     <p className="pt-2">For full details, see our Privacy Policy in Settings → Resources.</p>
                                 </div>
