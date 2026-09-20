@@ -84,13 +84,15 @@ export function SceneSkyLayer({
             animate={{
               opacity: sceneConfig.cleanliness * 0.3 + 0.7,
               scale: 1,
-              // Position sun based on time: low at sunrise/sunset, high at midday
-              top: timeOfDay === 'sunset' ? '35%' : timeOfDay === 'morning' ? '15%' : timeOfDay === 'afternoon' ? '12%' : '8%',
-              right: timeOfDay === 'sunset' ? '15%' : timeOfDay === 'morning' ? '20%' : '8%',
             }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
             transition={{ duration: 1.5, ease: 'easeInOut' as const }}
             style={{
+              // Position via style — Framer `animate` top/right % was resolving to 0px
+              // and parking the sun mid-frame (and duplicating under grid capture).
+              top: timeOfDay === 'sunset' ? '35%' : timeOfDay === 'morning' ? '15%' : timeOfDay === 'afternoon' ? '12%' : '8%',
+              right: timeOfDay === 'sunset' ? '15%' : timeOfDay === 'morning' ? '20%' : '8%',
+              left: 'auto',
               filter: `brightness(${sceneConfig.solarBrightness + 0.5})`,
             }}
           >

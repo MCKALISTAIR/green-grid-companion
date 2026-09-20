@@ -174,7 +174,7 @@ export function CoastalSceneLayers({
           {
             id: 'coastal-wind',
             label: 'Offshore Wind',
-            x: 45, y: 65,
+            x: 38, y: 55,
             visible: windPercentage > 5,
             fact: 'Offshore wind turbines benefit from stronger, more consistent sea winds to generate vast amounts of clean energy.',
           },

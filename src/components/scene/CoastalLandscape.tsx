@@ -224,7 +224,7 @@ function Cliff({ side, fill, highlight, skipIntro }: { side: 'left' | 'right'; f
   );
 }
 
-// Sandy beach
+// Sandy beach — curved shoreline (no hard vertical cut into the sea)
 function Beach({ sand, skipIntro }: { sand: string; skipIntro?: boolean }) {
   return (
     <motion.g
@@ -232,10 +232,20 @@ function Beach({ sand, skipIntro }: { sand: string; skipIntro?: boolean }) {
       animate={{ opacity: 1 }}
       transition={skipIntro ? { duration: 0 } : { duration: 1, delay: 0.2 }}
     >
-      <path d="M180,110 Q230,106 280,108 T360,110 L400,110 L400,150 L180,150 Z" fill={sand} />
+      <path
+        d="M165,118 C195,108 230,104 270,106 C310,108 350,112 400,114 L400,150 L200,150 C185,140 170,130 165,118 Z"
+        fill={sand}
+      />
+      {/* Wet sand band along the waterline */}
+      <path
+        d="M170,116 C200,108 240,106 280,108 C320,110 360,113 400,115"
+        stroke="rgba(255,255,255,0.18)"
+        strokeWidth="1.2"
+        fill="none"
+      />
       {/* Beach texture dots */}
-      {[190, 210, 240, 260, 290, 310, 340, 360].map((bx, i) => (
-        <circle key={i} cx={bx} cy={115 + (i % 3) * 4} r={0.5} fill="rgba(0,0,0,0.08)" />
+      {[200, 230, 255, 280, 310, 340, 365].map((bx, i) => (
+        <circle key={i} cx={bx} cy={122 + (i % 3) * 5} r={0.5} fill="rgba(0,0,0,0.08)" />
       ))}
     </motion.g>
   );

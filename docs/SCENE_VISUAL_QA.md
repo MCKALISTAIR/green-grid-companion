@@ -3,6 +3,22 @@
 Manual on-device checks for the `IntensityScene`. Run this whenever scene height,
 landscape SVG paths, or layout-affecting CSS changes.
 
+## Stress-test findings (2026-09)
+
+Deep scrutiny across theme × intensity × time found recurring failures:
+
+1. **Sun parking mid-frame** — Framer `animate` of `top`/`right` % resolved to `0px`; sun is now positioned via `style`.
+2. **Theme bleed** — Lucide leaves/flames/droplets, hydro dam, biomass, and dual offshore wind stacks painted on city/coastal. Gated in `SceneGenerationOverlay` / `SceneAdvancedLayer`.
+3. **London Eye ungrounded** — rendered in the back skyline so mid/front towers buried the legs/plinth; moved to the front/road layer.
+4. **Coastal beach hard edge** — vertical sand/water cut replaced with a curved shoreline.
+5. **Hero halo miss** — coastal very-clean halo aimed at empty sky (~70% x); retargeted to offshore wind cluster (~38% x).
+6. **Cloud drift `100vw`** — clouds traveled the browser viewport and leaked across `/__scene-test` cards; now container-relative.
+7. **Bottom sky bleed** — the `bottom-[40px]` scenery shift left a strip of sky gradient (often purple under night grade) under the landscape; ground cover now fills that gap.
+
+Note: a right-edge “tiling” strip sometimes appears when screenshotting the bordered `/__scene-test` preview chrome in Playwright. Capturing `[role="img"]` (the scene root) does not show a wrap — treat bordered-card captures as a tooling artifact.
+
+Automated guards: `src/test/scene-theme-integrity.test.ts`.
+
 ## Devices to test
 - [ ] iPhone SE (small, 16:9)
 - [ ] iPhone 14 / 15 (modern, 19.5:9)

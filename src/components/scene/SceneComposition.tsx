@@ -31,37 +31,37 @@ interface SpotlightProps {
  *   very-dirty → smog band            (~50% x, 28% y, wide)
  *
  * Coastal:
- *   very-clean → offshore wind        (~70% x, 45% y)
- *   clean      → sailing boat         (~55% x, 55% y)
- *   moderate   → rock pool area       (~60% x, 70% y)
- *   dirty      → horizon smog         (~50% x, 40% y)
+ *   very-clean → offshore wind        (~38% x, 52% y)
+ *   clean      → sailing boat         (~42% x, 58% y)
+ *   moderate   → rock pool area       (~68% x, 72% y)
+ *   dirty      → horizon smog         (~50% x, 42% y)
  *   very-dirty → smog band            (~50% x, 28% y, wide)
  */
 
 type HeroConfig = Record<CleanlinessBand, { x: number; y: number; size: number; tint: string }>;
 
 const CITY_HEROES: HeroConfig = {
-    'very-clean': { x: 22, y: 55, size: 28, tint: 'rgba(180,255,220,0.55)' },
-    clean:        { x: 50, y: 45, size: 32, tint: 'rgba(160,230,200,0.45)' },
-    moderate:     { x: 82, y: 72, size: 22, tint: 'rgba(245,200,120,0.45)' },
-    dirty:        { x: 91, y: 50, size: 24, tint: 'rgba(220,140,90,0.5)'  },
-    'very-dirty': { x: 50, y: 30, size: 50, tint: 'rgba(180,90,50,0.55)'  },
+    'very-clean': { x: 22, y: 55, size: 24, tint: 'rgba(180,255,220,0.40)' },
+    clean:        { x: 50, y: 45, size: 26, tint: 'rgba(160,230,200,0.32)' },
+    moderate:     { x: 82, y: 72, size: 18, tint: 'rgba(245,200,120,0.36)' },
+    dirty:        { x: 91, y: 50, size: 20, tint: 'rgba(220,140,90,0.40)'  },
+    'very-dirty': { x: 50, y: 30, size: 42, tint: 'rgba(180,90,50,0.45)'  },
 };
 
 const COUNTRYSIDE_HEROES: HeroConfig = {
-    'very-clean': { x: 30, y: 65, size: 26, tint: 'rgba(180,255,220,0.50)' },
-    clean:        { x: 50, y: 55, size: 30, tint: 'rgba(160,230,200,0.40)' },
-    moderate:     { x: 75, y: 60, size: 24, tint: 'rgba(245,200,120,0.42)' },
-    dirty:        { x: 35, y: 45, size: 28, tint: 'rgba(220,140,90,0.48)'  },
-    'very-dirty': { x: 50, y: 28, size: 52, tint: 'rgba(180,90,50,0.52)'  },
+    'very-clean': { x: 30, y: 58, size: 22, tint: 'rgba(180,255,220,0.38)' },
+    clean:        { x: 50, y: 55, size: 24, tint: 'rgba(160,230,200,0.30)' },
+    moderate:     { x: 75, y: 60, size: 20, tint: 'rgba(245,200,120,0.34)' },
+    dirty:        { x: 35, y: 45, size: 24, tint: 'rgba(220,140,90,0.38)'  },
+    'very-dirty': { x: 50, y: 28, size: 44, tint: 'rgba(180,90,50,0.42)'  },
 };
 
 const COASTAL_HEROES: HeroConfig = {
-    'very-clean': { x: 70, y: 45, size: 28, tint: 'rgba(180,255,220,0.50)' },
-    clean:        { x: 55, y: 55, size: 30, tint: 'rgba(160,230,200,0.42)' },
-    moderate:     { x: 60, y: 70, size: 22, tint: 'rgba(245,200,120,0.42)' },
-    dirty:        { x: 50, y: 40, size: 30, tint: 'rgba(220,140,90,0.48)'  },
-    'very-dirty': { x: 50, y: 28, size: 52, tint: 'rgba(180,90,50,0.52)'  },
+    'very-clean': { x: 38, y: 52, size: 26, tint: 'rgba(180,255,220,0.42)' },
+    clean:        { x: 42, y: 58, size: 24, tint: 'rgba(160,230,200,0.35)' },
+    moderate:     { x: 68, y: 72, size: 20, tint: 'rgba(245,200,120,0.36)' },
+    dirty:        { x: 50, y: 42, size: 28, tint: 'rgba(220,140,90,0.40)'  },
+    'very-dirty': { x: 50, y: 28, size: 48, tint: 'rgba(180,90,50,0.45)'  },
 };
 
 export function SceneHeroSpotlight({ band, isCity, isCoastal, isNight }: SpotlightProps) {

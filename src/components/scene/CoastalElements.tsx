@@ -52,7 +52,7 @@ export function Seagull({ startX = 50, startY = 25, delay = 0, scale = 1 }: {
 export function SailingBoat({ x = 150, delay = 0, isNight = false }: {
   x?: number; delay?: number; isNight?: boolean;
 }) {
-  const hullColor = isNight ? '#334155' : '#7c3aed';
+  const hullColor = isNight ? '#334155' : '#1e3a5f';
   const sailColor = isNight ? '#94a3b8' : '#f1f5f9';
 
   return (

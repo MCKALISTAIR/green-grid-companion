@@ -36,7 +36,8 @@ function PineTree({ x, y, scale = 1, colorPrimary, colorShadow, isSnowing, isChr
             case 'spring':
                 return { primary: '#86efac', shadow: '#4ade80' };
             case 'autumn':
-                return { primary: '#fb923c', shadow: '#f97316' };
+                // Restrained rust/olive — neon orange needles read as map pins under scrutiny
+                return { primary: '#b45309', shadow: '#78350f' };
             default:
                 return { primary: colorPrimary, shadow: colorShadow };
         }

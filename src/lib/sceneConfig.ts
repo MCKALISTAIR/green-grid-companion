@@ -84,11 +84,11 @@ export function buildSceneConfig({
   const getGroundColor = (): string => {
     if (synthwaveMode) return '#3c096c';
     if (weather.isSnowing) return isNight ? '#334155' : '#f1f5f9';
-    if (isNight) return '#1e293b';
+    if (isNight) return '#0f172a';
     const isClean = cleanliness > 0.5;
     if (timeOfDay === 'dawn') return isClean ? '#204d30' : '#4d3215';
     if (timeOfDay === 'sunset') return isClean ? '#365a18' : '#5c3209';
-    if (timeOfDay === 'dusk') return isClean ? '#21334c' : '#3a2818';
+    if (timeOfDay === 'dusk') return isClean ? '#1e293b' : '#3a2818';
     return isClean ? '#16a34a' : '#713f12';
   };
 

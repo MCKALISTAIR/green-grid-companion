@@ -58,8 +58,6 @@ export function CitySceneLayers({
             windSpeed={windSpeed}
             timeOfDay={timeOfDay}
           />
-          {/* London Eye – grounded with legs touching the road */}
-          <LondonEye isNight={isNight} skipIntro={skipIntro} />
         </svg>
       </motion.div>
 
@@ -85,7 +83,7 @@ export function CitySceneLayers({
       {/* City: Valley Mist */}
       <ValleyMist cleanliness={sceneConfig.cleanliness} timeOfDay={timeOfDay} isNight={isNight} />
 
-      {/* City: Foreground buildings + road */}
+      {/* City: Foreground buildings + road + London Eye (grounded) + BESS */}
       <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-20 overflow-hidden">
         <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
           <CityLandscapeFront
@@ -98,6 +96,8 @@ export function CitySceneLayers({
             windSpeed={windSpeed}
             timeOfDay={timeOfDay}
           />
+          {/* Landmark sits on the road layer so legs/plinth aren't buried behind mid/front towers */}
+          <LondonEye isNight={isNight} skipIntro={skipIntro} />
           {/* Grid-scale battery storage with status LED */}
           <BatteryStorageContainer cleanliness={sceneConfig.cleanliness} isNight={isNight} />
         </svg>

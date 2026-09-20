@@ -40,10 +40,10 @@ export function SceneGenerationOverlay({
 }: SceneGenerationOverlayProps) {
   return (
     <>
-      {/* Ground colour cover strip — prevents the sky gradient bleeding through
-          at the bottom corners where the SVG landscape shapes don't reach the edges */}
+      {/* Ground colour cover — fills the bottom safety gap (bottom-[40px] scenery
+          shift) so sky gradient doesn't peek through as a discordant purple/teal bar. */}
       <motion.div
-        className="absolute bottom-0 left-0 right-0 h-2 pointer-events-none z-[50]"
+        className="absolute bottom-0 left-0 right-0 h-11 pointer-events-none z-[50]"
         animate={{ backgroundColor: sceneConfig.groundColor }}
         transition={{ duration: 2, ease: 'easeInOut' as const }}
         aria-hidden="true"
@@ -88,9 +88,9 @@ export function SceneGenerationOverlay({
         })}
       </AnimatePresence>
 
-      {/* Solar panels with reflection animation */}
+      {/* Solar panels — countryside only; city has rooftop panels in CityLandscape */}
       <AnimatePresence>
-        {sceneConfig.showRenewables && sceneConfig.showSun && (
+        {!isCity && !isCoastal && sceneConfig.showRenewables && sceneConfig.showSun && (
           <motion.div
             className="absolute bottom-6 right-6 flex gap-1.5"
             initial={{ opacity: 0, scale: 0.9 }}
@@ -167,9 +167,9 @@ export function SceneGenerationOverlay({
         )}
       </AnimatePresence>
 
-      {/* Floating leaves for very clean */}
+      {/* Floating leaves for very clean — countryside diegetic only (reads as UI chrome elsewhere) */}
       <AnimatePresence>
-        {sceneConfig.cleanliness > 0.75 && sceneConfig.isDaytime && (
+        {!isCity && !isCoastal && sceneConfig.cleanliness > 0.75 && sceneConfig.isDaytime && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -195,9 +195,9 @@ export function SceneGenerationOverlay({
         )}
       </AnimatePresence>
 
-      {/* Fire/flames for very dirty with flicker */}
+      {/* Fire/flames for very dirty — countryside only; city/coastal use smog + grade */}
       <AnimatePresence>
-        {sceneConfig.cleanliness < 0.2 && (
+        {!isCity && !isCoastal && sceneConfig.cleanliness < 0.2 && (
           <motion.div
             className="absolute bottom-10 left-24 flex gap-2"
             initial={{ opacity: 0, scale: 0.8 }}
@@ -222,9 +222,9 @@ export function SceneGenerationOverlay({
       </AnimatePresence>
 
 
-      {/* Water/hydro indicator for clean energy */}
+      {/* Water/hydro indicator — countryside / coastal only */}
       <AnimatePresence>
-        {sceneConfig.cleanliness > 0.6 && (
+        {!isCity && sceneConfig.cleanliness > 0.6 && (
           <motion.div
             className="absolute bottom-3 right-20"
             initial={{ opacity: 0, y: 10 }}
@@ -254,9 +254,9 @@ export function SceneGenerationOverlay({
         )}
       </AnimatePresence>
 
-      {/* Offshore Wind Turbines - Show when wind % > 10 */}
+      {/* Offshore Wind Turbines — countryside horizon only (coastal has CoastalOffshoreWind) */}
       <AnimatePresence>
-        {windPercentage > 10 && !isCity && (
+        {windPercentage > 10 && !isCity && !isCoastal && (
           <div className="absolute bottom-0 left-0 right-0 h-[65%] pointer-events-none z-5">
             <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <OffshoreWind count={Math.min(3, Math.floor(windPercentage / 10))} windSpeed={windSpeed} />
@@ -265,11 +265,11 @@ export function SceneGenerationOverlay({
         )}
       </AnimatePresence>
 
-      {/* Tidal Waves - Show when hydro/marine % > 5 */}
+      {/* Tidal Waves — coastal only */}
       <AnimatePresence>
-        {(hydroPercentage > 5 || marinePercentage > 0) && (
+        {isCoastal && (hydroPercentage > 5 || marinePercentage > 0) && (
           <div className="absolute bottom-0 left-0 right-0 h-[65%] pointer-events-none z-25">
-            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
               <TidalWaves intensity={(hydroPercentage + marinePercentage) / 100} />
             </svg>
           </div>
