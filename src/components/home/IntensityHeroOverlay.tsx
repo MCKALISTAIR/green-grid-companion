@@ -94,7 +94,7 @@ export function IntensityHeroOverlay({
           : 'text-orange-100';
 
   return (
-    <div className="relative w-full h-[62vh] min-h-[420px] max-h-[720px]">
+    <div className="home-scene relative w-full">
       <ComponentErrorBoundary name="Scene">
         <IntensityScene
           intensity={intensity}
@@ -137,7 +137,7 @@ export function IntensityHeroOverlay({
       {!hideGauge && (
         <div
           className={cn(
-            'absolute inset-x-0 top-0 z-10 flex flex-col items-center pointer-events-none',
+            'home-scene-gauge absolute inset-x-0 top-0 z-10 flex flex-col items-center pointer-events-none',
             'pt-[calc(max(env(safe-area-inset-top),12px)+3.25rem)]',
           )}
           data-tour="intensity-gauge"

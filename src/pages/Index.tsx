@@ -177,7 +177,7 @@ const Index = () => {
         style={{ background: skyColor }}
       >
         <PullToRefresh onRefresh={handleRefresh} disabled={isLoading}>
-          <main className="min-h-[100dvh] flex flex-col animate-in fade-in duration-700 lg:pb-0">
+          <main className="home-shell min-h-[100dvh] flex flex-col animate-in fade-in duration-700 lg:pb-0">
             <h1 className="sr-only">Carbon Intensity Dashboard</h1>
 
             <IntensityHeroOverlay
@@ -202,8 +202,8 @@ const Index = () => {
               hideGauge={viewMode === 'demand'}
             />
 
-            <div className="flex-1 px-4 pt-5 pb-[calc(7.5rem+env(safe-area-inset-bottom))] lg:pb-6 space-y-4 -mt-8 relative z-10 bg-card rounded-t-[1.75rem] shadow-[0_-12px_40px_-20px_rgba(15,23,42,0.18)] lg:max-w-7xl lg:mx-auto w-full lg:rounded-t-3xl lg:shadow-xl lg:-mt-10 lg:pt-8 lg:space-y-6">
-              <div className="absolute -top-[79px] left-0 right-0 h-[80px] pointer-events-none overflow-hidden z-20">
+            <div className="home-feed flex-1 px-4 pt-5 pb-[calc(7.5rem+env(safe-area-inset-bottom))] lg:pb-6 space-y-4 -mt-8 relative z-10 bg-card rounded-t-[1.75rem] shadow-[0_-12px_40px_-20px_rgba(15,23,42,0.18)] lg:max-w-7xl lg:mx-auto w-full lg:rounded-t-3xl lg:shadow-xl lg:-mt-10 lg:pt-8 lg:space-y-6">
+              <div className="scene-wave-divider absolute -top-[79px] left-0 right-0 h-[80px] pointer-events-none overflow-hidden z-20">
                 <SceneWaveDivider cleanliness={cleanliness} />
               </div>
 

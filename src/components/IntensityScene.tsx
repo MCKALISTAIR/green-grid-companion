@@ -230,13 +230,13 @@ export function IntensityScene({
 
   return (
     <motion.div
-      // Aspect-ratio aware height: cap scene height proportional to width on tall narrow
-      // viewports (e.g. iPhone 17 Pro Max ~440x956) so the sky doesn't dominate. The
-      // min() takes the smaller of the viewport-relative height and a width-based cap
-      // (75% of the viewport width). Bounded by min/max to avoid extremes.
+      // Aspect-ratio aware height: cap scene height on tall narrow phones so the sky
+      // doesn't dominate, and lower the floor on short/wide viewports (iPhone Duo cover
+      // ~466×678 and inner landscape ~890×626) so chrome + cards still fit. See
+      // src/lib/sceneHeight.ts for the shared JS mirror used by visual QA.
       className={`relative w-full overflow-hidden pb-4 lg:pb-8 transition-colors duration-1000 ${isVintage ? 'sepia-[.6] contrast-125 grayscale-[.3]' : ''} ${className || ''}`}
       style={{
-        height: 'clamp(400px, min(60vh, 75vw), 620px)',
+        height: 'clamp(min(280px, 45dvh), min(55dvh, 75vw), min(620px, 70dvh))',
         ...style
       }}
       animate={{
