@@ -280,7 +280,7 @@ const Onboarding = () => {
                     <Home className="w-6 h-6 text-primary" />
                 </div>
                 <h3 className="text-lg font-semibold">What's your home type?</h3>
-                <p className="text-sm text-muted-foreground">We use this to estimate your carbon footprint accurately.</p>
+                <p className="text-sm text-muted-foreground">We use this to estimate a typical usage benchmark for your home.</p>
             </div>
 
             <div className="space-y-3">

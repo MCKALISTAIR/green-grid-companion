@@ -1,8 +1,11 @@
+/**
+ * @deprecated Legacy stub — Settings uses OctopusIntegration instead.
+ * Kept only so old imports do not break; Tesla product surface is parked
+ * behind FEATURES.tesla in src/config.ts.
+ */
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle } from 'lucide-react';
-// import { TeslaIntegration } from '@/components/TeslaIntegration';
-
 
 const OctopusLogo = ({ className }: { className?: string }) => (
     <img
@@ -17,7 +20,6 @@ export function Integrations() {
         <div className="space-y-4">
             <h2 className="text-lg font-semibold text-foreground">Integrations</h2>
 
-            {/* Octopus Energy */}
             <Card className="p-4 flex items-center justify-between border-purple-500/20 bg-purple-500/5">
                 <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
@@ -28,7 +30,7 @@ export function Integrations() {
                             <h3 className="font-medium text-foreground">Octopus Energy</h3>
                         </div>
                         <p className="text-xs text-muted-foreground max-w-[200px]">
-                            Track the impact of charging using energy at the greenest times.
+                            Track the impact of using energy at the greenest times.
                         </p>
                     </div>
                 </div>
@@ -37,17 +39,14 @@ export function Integrations() {
                     size="sm"
                     disabled={true}
                 >
-                    Coming Soon
+                    Use Settings
                 </Button>
             </Card>
-
-            {/* Tesla Integration */}
-            {/* <TeslaIntegration /> */}
 
             <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800 text-xs text-muted-foreground flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
                 <p>
-                    Your data is processed locally where possible. Linking accounts allows for automated smart charging and personalized cost estimates.
+                    Prefer Settings → Energy Integrations to link Octopus. Other vehicle integrations are not offered in this release.
                 </p>
             </div>
         </div>

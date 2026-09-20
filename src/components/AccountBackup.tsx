@@ -441,7 +441,7 @@ export function AccountBackup({ isSyncing, lastSyncedAt, onSyncNow, formatLastSy
             <AlertDialogHeader>
               <AlertDialogTitle>Switch to {alternateProviderName}?</AlertDialogTitle>
               <AlertDialogDescription>
-                Your energy data (Octopus meters, consumption history, carbon footprint, and Tesla data) will be transferred to your new {alternateProviderName} account. You'll be signed out and redirected to sign in with {alternateProviderName}.
+                Your energy data (Octopus meters, consumption history, and carbon footprint) will be transferred to your new {alternateProviderName} account. You'll be signed out and redirected to sign in with {alternateProviderName}.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -467,7 +467,6 @@ export function AccountBackup({ isSyncing, lastSyncedAt, onSyncNow, formatLastSy
                   <ul className="list-disc pl-5 space-y-1 text-sm">
                     <li>Octopus Energy credentials and meter data</li>
                     <li>Energy consumption and carbon footprint history</li>
-                    <li>Tesla integration and charging sessions</li>
                     <li>Saved locations and preferences</li>
                     <li>Your authentication account</li>
                   </ul>

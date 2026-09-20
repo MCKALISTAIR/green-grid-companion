@@ -36,6 +36,9 @@ import { useSettings } from '@/hooks/useSettings';
 import { getAverageDailyKwh, getHouseTypeLabel } from '@/lib/energy-standards';
 import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
 import { useAchievements } from '@/hooks/useAchievements';
+import { useCarbonData } from '@/hooks/useCarbonData';
+import { useAppLocation } from '@/contexts/LocationContext';
+import { estimateDailyCarbonGrams, formatEstimatedKg } from '@/lib/estimatedFootprint';
 import {
   AreaChart,
   Area,
@@ -79,8 +82,16 @@ export function FootprintView() {
   // The UI will filter to show the appropriate range based on selectedDate and timeRange
   const daysToFetch = 60;
 
-  const { footprint, isLoading, isLinked, status, isSyncing, fullSync, isError, refetchFootprint, availableDates } = useOctopusEnergy(daysToFetch);
+  const { footprint, isLoading, isLinked, status, isSyncing, fullSync, isError, refetchFootprint, availableDates, hasCredentials } = useOctopusEnergy(daysToFetch);
   const { achievements: globalAchievements, unlock } = useAchievements();
+  const { postcode } = useAppLocation();
+  const { intensity, index: intensityIndex } = useCarbonData(postcode);
+
+  const estimatedDailyGrams = useMemo(
+    () => estimateDailyCarbonGrams(intensity || 0, houseType, customAnnualKwh),
+    [intensity, houseType, customAnnualKwh],
+  );
+  const estimatedDailyKwh = getAverageDailyKwh(houseType, customAnnualKwh);
 
   // Determine the date range to show based on selectedDate
   const effectiveDate = useMemo(() => {
@@ -337,19 +348,52 @@ export function FootprintView() {
   if (!isLinked) {
     return (
       <div className="space-y-6 pt-8 max-w-2xl mx-auto">
-        <Card className="p-8 text-center space-y-6 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-          <div className="w-24 h-24 mx-auto rounded-full bg-primary/10 flex items-center justify-center animate-pulse">
-            <Leaf className="w-12 h-12 text-primary" />
+        <Card className="p-6 space-y-4 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <Badge variant="secondary" className="mb-2">Estimated</Badge>
+              <h2 className="text-2xl font-bold text-foreground">Your household benchmark</h2>
+              <p className="text-muted-foreground text-sm mt-1">
+                Based on {getHouseTypeLabel(houseType)} typical usage and today&apos;s grid intensity
+                {intensity ? ` (${intensity}g CO₂/kWh · ${intensityIndex})` : ''}.
+                Not your smart-meter truth yet — link Octopus for a real Green Score.
+              </p>
+            </div>
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <Leaf className="w-6 h-6 text-primary" />
+            </div>
           </div>
 
-          <div className="space-y-4">
-            <h2 className="text-3xl font-bold text-foreground">Track Your Carbon Footprint</h2>
-            <p className="text-muted-foreground text-lg max-w-md mx-auto">
-              Connect your Octopus Energy account to unlock real insights based on your actual usage.
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-lg border border-border/60 bg-background/60 p-4">
+              <p className="text-xs text-muted-foreground">Est. daily usage</p>
+              <p className="text-2xl font-semibold tabular-nums">{estimatedDailyKwh.toFixed(1)} kWh</p>
+            </div>
+            <div className="rounded-lg border border-border/60 bg-background/60 p-4">
+              <p className="text-xs text-muted-foreground">Est. daily CO₂</p>
+              <p className="text-2xl font-semibold tabular-nums">
+                {intensity ? `${formatEstimatedKg(estimatedDailyGrams)} kg` : '—'}
+              </p>
+            </div>
+          </div>
+
+          {hasCredentials && (
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-100">
+              Credentials are saved on this device, but meters aren&apos;t fully linked yet.
+              Open Settings to finish linking, then wait up to 24–48 hours for smart-meter history.
+            </div>
+          )}
+        </Card>
+
+        <Card className="p-8 text-center space-y-6 border-border">
+          <div className="space-y-3">
+            <h3 className="text-xl font-semibold text-foreground">Unlock your real footprint</h3>
+            <p className="text-muted-foreground text-sm max-w-md mx-auto">
+              Connect Octopus Energy to multiply your actual half-hourly usage by grid intensity — and get a Green Score for how well you time demand.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left max-w-xl mx-auto py-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left max-w-xl mx-auto py-2">
             <div className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border border-border/50">
               <div className="p-2 rounded-full bg-green-100 dark:bg-green-900/30">
                 <Leaf className="w-5 h-5 text-green-600 dark:text-green-400" />
@@ -366,18 +410,18 @@ export function FootprintView() {
               <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/30">
                 <Trophy className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               </div>
-              <span className="text-sm font-medium">Achievements</span>
+              <span className="text-sm font-medium">Green Score</span>
             </div>
           </div>
 
-          <div className="flex flex-col items-center gap-3 pt-4">
+          <div className="flex flex-col items-center gap-3 pt-2">
             <Button
               size="lg"
               className="w-full max-w-sm font-semibold text-lg h-12 shadow-lg hover:shadow-xl transition-all"
               onClick={() => navigate('/settings')}
             >
               <Zap className="w-5 h-5 mr-2" />
-              Link Octopus Account
+              {hasCredentials ? 'Finish linking in Settings' : 'Link Octopus Account'}
             </Button>
 
             <a
@@ -389,8 +433,8 @@ export function FootprintView() {
               Not with Octopus? Get £50 credit when you switch
             </a>
 
-            <p className="text-xs text-muted-foreground pt-2">
-              Your API keys are stored securely on your device, and synced via end-to-end encryption if signed in.
+            <p className="text-xs text-muted-foreground pt-2 max-w-sm">
+              Octopus API keys are stored on your device (and synced encrypted if you sign in). We use them only to fetch your meter data.
             </p>
           </div>
         </Card>

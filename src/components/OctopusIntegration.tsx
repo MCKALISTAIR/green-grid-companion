@@ -188,17 +188,23 @@ export function OctopusIntegration() {
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-medium text-foreground">Octopus Energy</h3>
-                {isLinked && (
+                {isLinked ? (
                   <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20 px-1.5 py-0 h-5 text-[10px]">
                     <Check className="w-3 h-3 mr-1" />
-                    Linked
+                    Meters linked
                   </Badge>
-                )}
+                ) : hasCredentials ? (
+                  <Badge variant="outline" className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20 px-1.5 py-0 h-5 text-[10px]">
+                    Credentials saved
+                  </Badge>
+                ) : null}
               </div>
-              <p className="text-xs text-muted-foreground max-w-[200px] mt-1">
+              <p className="text-xs text-muted-foreground max-w-[220px] mt-1">
                 {isLinked
                   ? 'Tracking carbon footprint from smart meter data'
-                  : 'Unlock your personal Carbon Footprint & Green Score'}
+                  : hasCredentials
+                    ? 'Next step: link your electricity meter(s) to sync usage'
+                    : 'Unlock your personal Carbon Footprint & Green Score'}
               </p>
             </div>
           </div>

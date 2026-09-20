@@ -6,14 +6,12 @@ import { settingsItemVariants } from './settingsMotion';
 
 interface SettingsFooterProps {
   isLinked: boolean;
-  isTeslaLinked: boolean;
   unlocked: boolean;
   onVersionClick: () => void;
 }
 
 export function SettingsFooter({
   isLinked,
-  isTeslaLinked,
   unlocked,
   onVersionClick,
 }: SettingsFooterProps) {
@@ -51,19 +49,6 @@ export function SettingsFooter({
             className="underline hover:text-foreground transition-colors"
           >
             Octopus Energy API
-          </a>
-        </p>
-      )}
-      {isTeslaLinked && (
-        <p>
-          Vehicle & Energy data powered by{' '}
-          <a
-            href="https://developer.tesla.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline hover:text-foreground transition-colors"
-          >
-            Tesla Fleet API
           </a>
         </p>
       )}

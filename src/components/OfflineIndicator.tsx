@@ -50,7 +50,7 @@ export function OfflineIndicator() {
           <div className="flex items-center justify-center gap-3 max-w-md mx-auto">
             <WifiOff className="w-5 h-5 shrink-0" aria-hidden="true" />
             <span className="text-sm font-medium">
-              You're offline. Showing cached data.
+              You&apos;re offline. Showing the last cached grid data if available.
             </span>
           </div>
         </motion.div>
