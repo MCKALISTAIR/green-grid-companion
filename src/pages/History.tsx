@@ -37,6 +37,7 @@ import { useHistoricalCarbon } from '@/hooks/useHistoricalCarbon';
 import { IntensityScene } from '@/components/IntensityScene';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useAppLocation } from '@/contexts/LocationContext';
+import { PageHeader } from '@/components/layout/PageHeader';
 
 export default function HistoryPage() {
     const { postcode } = useAppLocation();
@@ -186,70 +187,68 @@ export default function HistoryPage() {
     }
 
     return (
-        <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
+        <div className="page-shell">
             <motion.div 
-                className="p-4 space-y-6 pt-[calc(max(env(safe-area-inset-top),59px)+2rem)]"
+                className="page-shell-inner space-y-6 pt-[calc(max(env(safe-area-inset-top),59px)+2rem)]"
                 variants={containerVariants}
                 initial="hidden"
                 animate="show"
             >
-                <motion.div variants={itemVariants} className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold flex items-center gap-2">
-                            {date ? '🕰️ Time Machine' : 'Grid History'}
-                        </h1>
-                        <p className="text-muted-foreground">
-                            {date
-                                ? `Viewing archives for ${format(date, 'MMMM do, yyyy')}`
+                <motion.div variants={itemVariants}>
+                    <PageHeader
+                        title={date ? 'Time Machine' : 'Grid History'}
+                        description={
+                            date
+                                ? `Archives for ${format(date, 'MMMM do, yyyy')}`
                                 : `${region || 'National'} carbon intensity over time.`
-                            }
-                        </p>
-                    </div>
+                        }
+                        actions={
+                            <div className="flex items-center gap-2">
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant={"outline"}
+                                            className={cn(
+                                                "justify-start text-left font-normal w-[240px]",
+                                                !date && "text-muted-foreground"
+                                            )}
+                                        >
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {date ? format(date, "PPP") : <span>Pick a past date</span>}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="end">
+                                        <Calendar
+                                            mode="single"
+                                            selected={date}
+                                            onSelect={setDate}
+                                            disabled={(d) =>
+                                                d > new Date() || d < new Date("1900-01-01")
+                                            }
+                                            initialFocus
+                                        />
+                                    </PopoverContent>
+                                </Popover>
 
-                    <div className="flex items-center gap-2 mt-4 md:mt-0">
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <Button
-                                    variant={"outline"}
-                                    className={cn(
-                                        "justify-start text-left font-normal w-[240px]",
-                                        !date && "text-muted-foreground"
-                                    )}
-                                >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {date ? format(date, "PPP") : <span>Pick a past date</span>}
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="end">
-                                <Calendar
-                                    mode="single"
-                                    selected={date}
-                                    onSelect={setDate}
-                                    disabled={(date) =>
-                                        date > new Date() || date < new Date("1900-01-01")
-                                    }
-                                    initialFocus
-                                />
-                            </PopoverContent>
-                        </Popover>
-
-                        {date && (
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setDate(undefined)}
-                                title="Return to Present"
-                            >
-                                <RotateCcw className="h-4 w-4" />
-                            </Button>
-                        )}
-                    </div>
+                                {date && (
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => setDate(undefined)}
+                                        title="Return to Present"
+                                    >
+                                        <RotateCcw className="h-4 w-4" />
+                                    </Button>
+                                )}
+                            </div>
+                        }
+                    />
                 </motion.div>
 
                 <AnimatePresence mode="wait">
                     {!postcode ? (
                         <motion.div key="no-postcode" variants={itemVariants}>
-                            <Card className="p-6 text-center">
+                            <Card className="sheet-surface p-6 text-center">
                                 <p>Please enter a postcode in Settings to see regional history.</p>
                             </Card>
                         </motion.div>
@@ -263,16 +262,16 @@ export default function HistoryPage() {
                             className="space-y-4"
                         >
                             <div className="grid grid-cols-2 gap-4">
-                                <Card className="p-4 bg-card border border-border shadow-sm">
+                                <Card className="sheet-surface p-4">
                                     <Skeleton className="h-3.5 w-1/3 mb-2" />
                                     <Skeleton className="h-7 w-2/3" />
                                 </Card>
-                                <Card className="p-4 bg-card border border-border shadow-sm">
+                                <Card className="sheet-surface p-4">
                                     <Skeleton className="h-3.5 w-1/3 mb-2" />
                                     <Skeleton className="h-7 w-2/3" />
                                 </Card>
                             </div>
-                            <Card className="p-4 bg-card border border-border shadow-sm">
+                            <Card className="sheet-surface p-4">
                                 <div className="flex items-center justify-between mb-4">
                                     <Skeleton className="h-4 w-1/4" />
                                     <Skeleton className="h-4 w-16" />
@@ -291,7 +290,7 @@ export default function HistoryPage() {
                         >
                         {showChartTip && (
                             <motion.div variants={itemVariants}>
-                                <Card className="mb-4 bg-muted/30 border-dashed relative animate-in fade-in slide-in-from-top-2">
+                                <Card className="sheet-surface mb-4 bg-muted/30 border-dashed relative animate-in fade-in slide-in-from-top-2">
                                     <button
                                         onClick={dismissChartTip}
                                         className="absolute top-2 right-2 p-1 text-muted-foreground hover:text-foreground transition-colors"
@@ -317,7 +316,7 @@ export default function HistoryPage() {
                         {/* Time Machine Scene Visualisation */}
                         {date && data.length > 0 && (
                             <motion.div variants={itemVariants}>
-                                <Card className="overflow-hidden border-2 border-primary/20">
+                                <Card className="sheet-surface overflow-hidden border-2 border-primary/20">
                                     <div className="relative h-[200px] w-full">
                                         <IntensityScene
                                             intensity={avgIntensity}
@@ -355,7 +354,7 @@ export default function HistoryPage() {
                         {/* Stats Cards */}
                         <motion.div variants={itemVariants} className="grid grid-cols-2 gap-4">
                             <motion.div className="h-full" whileHover={{ y: -3, scale: 1.01 }} transition={{ type: 'spring' as const, stiffness: 450, damping: 22 }}>
-                                <Card className="p-4 border-primary/20 bg-primary/5 h-full">
+                                <Card className="sheet-surface p-4 border-primary/20 bg-primary/5 h-full">
                                     <div className="text-muted-foreground text-xs uppercase font-bold tracking-wider">Average</div>
                                     <div className="text-2xl font-bold mt-1">{avgIntensity} <span className="text-sm font-normal text-muted-foreground">gCO2/kWh</span></div>
                                     <div className="text-xs text-muted-foreground mt-1">Last {timeRange === '7d' ? '7 Days' : '24 Hours'}</div>
@@ -363,7 +362,7 @@ export default function HistoryPage() {
                             </motion.div>
                             {isLinked && totalConsumption > 0 ? (
                                 <motion.div className="h-full" whileHover={{ y: -3, scale: 1.01 }} transition={{ type: 'spring' as const, stiffness: 450, damping: 22 }}>
-                                    <Card className="p-4 border-muted h-full">
+                                    <Card className="sheet-surface p-4 border-muted h-full">
                                         <div className="text-muted-foreground text-xs uppercase font-bold tracking-wider">Footprint</div>
                                         <div className="flex items-center gap-2 mt-1">
                                             <Zap className="w-6 h-6 text-yellow-500" />
@@ -377,7 +376,7 @@ export default function HistoryPage() {
                                 </motion.div>
                             ) : (
                                 <motion.div className="h-full" whileHover={{ y: -3, scale: 1.01 }} transition={{ type: 'spring' as const, stiffness: 450, damping: 22 }}>
-                                    <Card className="p-4 border-muted h-full">
+                                    <Card className="sheet-surface p-4 border-muted h-full">
                                         <div className="text-muted-foreground text-xs uppercase font-bold tracking-wider">Trend</div>
                                         <div className="flex items-center gap-2 mt-1">
                                             {trend === 'improving' ? (
@@ -397,7 +396,7 @@ export default function HistoryPage() {
 
                         {/* Chart */}
                         <motion.div variants={itemVariants}>
-                            <Card className="p-4">
+                            <Card className="sheet-surface p-4">
                             <CardHeader className="p-0 pb-4">
                                 <div className="flex items-center justify-between">
                                     <div>

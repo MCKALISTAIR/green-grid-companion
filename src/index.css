@@ -764,6 +764,19 @@ p, blockquote {
   animation: page-enter 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* Shared secondary-page chrome (art direction: one product feel) */
+.page-shell {
+  min-height: 100dvh;
+  background: hsl(var(--background));
+  padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+}
+
+.page-shell-inner {
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-top: max(env(safe-area-inset-top), 59px);
+}
+
 /* Soft sheet surfaces — paper feel, not heavy glass stacks.
  * Art direction: “Living grid paper” — sheet, dock, and feed share one hand. */
 .sheet-surface {

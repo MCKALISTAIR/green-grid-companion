@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { CITY_GROUND_Y, CITY_SCALE } from '@/lib/sceneScaleBible';
 
 // 🚗 Car/Vehicle on the road
 export function CityVehicle({ direction = 'right', isEV = false, delay = 0, speed = 12 }: {
@@ -11,6 +12,7 @@ export function CityVehicle({ direction = 'right', isEV = false, delay = 0, spee
   const y = direction === 'right' ? 139.5 : 143.5;
   const startX = direction === 'right' ? -20 : 420;
   const endX = direction === 'right' ? 420 : -20;
+  const { bodyWidth, bodyHeight, cabinWidth, cabinHeight } = CITY_SCALE.car;
 
   return (
     <motion.g
@@ -19,12 +21,12 @@ export function CityVehicle({ direction = 'right', isEV = false, delay = 0, spee
       transition={{ duration: speed, delay, repeat: Infinity, repeatDelay: delay + 3, ease: 'linear' as const }}
     >
       {/* Car body */}
-      <rect x={0} y={y} width={14} height={5} rx={1.5} fill={isEV ? '#22d3ee' : '#6b7280'} />
+      <rect x={0} y={y} width={bodyWidth} height={bodyHeight} rx={1.5} fill={isEV ? '#22d3ee' : '#6b7280'} />
       {/* Roof */}
-      <rect x={3} y={y - 3} width={8} height={3} rx={1} fill={isEV ? '#06b6d4' : '#4b5563'} />
+      <rect x={3} y={y - cabinHeight} width={cabinWidth} height={cabinHeight} rx={1} fill={isEV ? '#06b6d4' : '#4b5563'} />
       {/* Wheels */}
-      <circle cx={3} cy={y + 5} r={1.5} fill="#1f2937" />
-      <circle cx={11} cy={y + 5} r={1.5} fill="#1f2937" />
+      <circle cx={3} cy={y + bodyHeight} r={1.5} fill="#1f2937" />
+      <circle cx={11} cy={y + bodyHeight} r={1.5} fill="#1f2937" />
       {/* EV indicator - small green glow */}
       {isEV && (
         <circle cx={7} cy={y + 2} r={0.8} fill="#22c55e" opacity={0.8} />
@@ -53,6 +55,7 @@ export function CityBus({ direction = 'right', isElectric = false, delay = 0 }: 
   const y = direction === 'right' ? 137.5 : 140;
   const startX = direction === 'right' ? -30 : 430;
   const endX = direction === 'right' ? 430 : -30;
+  const { width, height } = CITY_SCALE.bus;
 
   return (
     <motion.g
@@ -61,14 +64,14 @@ export function CityBus({ direction = 'right', isElectric = false, delay = 0 }: 
       transition={{ duration: 18, delay, repeat: Infinity, repeatDelay: delay + 8, ease: 'linear' as const }}
     >
       {/* Bus body */}
-      <rect x={0} y={y} width={24} height={8} rx={1.5} fill={isElectric ? '#0ea5e9' : '#dc2626'} />
+      <rect x={0} y={y} width={width} height={height} rx={1.5} fill={isElectric ? '#0ea5e9' : '#dc2626'} />
       {/* Windows */}
       {Array.from({ length: 4 }).map((_, i) => (
         <rect key={i} x={2 + i * 5.5} y={y + 1} width={4} height={4} rx={0.5} fill="rgba(200,230,255,0.6)" />
       ))}
       {/* Wheels */}
-      <circle cx={5} cy={y + 8} r={2} fill="#1f2937" />
-      <circle cx={19} cy={y + 8} r={2} fill="#1f2937" />
+      <circle cx={5} cy={y + height} r={2} fill="#1f2937" />
+      <circle cx={width - 5} cy={y + height} r={2} fill="#1f2937" />
     </motion.g>
   );
 }
@@ -76,7 +79,7 @@ export function CityBus({ direction = 'right', isElectric = false, delay = 0 }: 
 // 🐦 Pigeon
 export function Pigeon({ x: initialX, y: initialY, delay = 0 }: { x: number; y: number; delay?: number }) {
   const [pos, setPos] = useState({ x: initialX, y: initialY });
-  const [scaleX, setScaleX] = useState(0.35); // Horizontal scale/flip
+  const [scaleX, setScaleX] = useState<number>(CITY_SCALE.pigeon.baseScale); // Horizontal scale/flip
   const [state, setState] = useState<'idle' | 'walking' | 'pecking' | 'flying' | 'landing'>('idle');
   const [wingFlap, setWingFlap] = useState(false);
   const [peckAngle, setPeckAngle] = useState(0);
@@ -357,7 +360,7 @@ export function ConstructionCrane({ x = 350, isNight }: { x?: number; isNight: b
 }
 
 // 🎡 London Eye / Ferris Wheel — grounded with A-frame legs touching the road
-export function LondonEye({ x = 75, y = 85, radius = 30, isNight, skipIntro, showWheel = true, showStructure = true }: {
+export function LondonEye({ x = 75, y = CITY_SCALE.londonEye.hubY, radius = CITY_SCALE.londonEye.radius, isNight, skipIntro, showWheel = true, showStructure = true }: {
   x?: number; y?: number; radius?: number; isNight: boolean; skipIntro?: boolean;
   /** When false, omit the rotating rim/spokes/pods (used for the grounded front pass). */
   showWheel?: boolean;
@@ -366,7 +369,9 @@ export function LondonEye({ x = 75, y = 85, radius = 30, isNight, skipIntro, sho
 }) {
   const podCount = 16;
   const podRadius = 1.8;
-  const groundY = 138; // road surface
+  const groundY = CITY_GROUND_Y;
+  const plinthW = CITY_SCALE.londonEye.plinthHalfWidth;
+  const plinthH = CITY_SCALE.londonEye.plinthHeight;
   const spokeColor = isNight ? 'rgba(180,200,220,0.65)' : 'rgba(100,120,140,0.7)';
   const rimColor = isNight ? 'rgba(180,200,220,0.55)' : 'rgba(100,120,140,0.6)';
   const podFill = isNight ? '#fbbf24' : 'rgba(180,190,200,0.85)';
@@ -386,7 +391,7 @@ export function LondonEye({ x = 75, y = 85, radius = 30, isNight, skipIntro, sho
           {/* Cross-brace */}
           <line x1={x - 9} y1={(groundY + y) / 2} x2={x + 9} y2={(groundY + y) / 2} stroke={legColor} strokeWidth="0.8" />
           {/* Concrete plinth */}
-          <rect x={x - 22} y={groundY - 3} width={44} height={4} rx={0.5} fill={isNight ? '#334155' : '#94a3b8'} opacity={0.9} />
+          <rect x={x - plinthW} y={groundY - plinthH + 1} width={plinthW * 2} height={plinthH} rx={0.5} fill={isNight ? '#334155' : '#94a3b8'} opacity={0.9} />
         </>
       )}
 
@@ -470,6 +475,7 @@ export function DistantStack({ x = 365, isNight }: { x?: number; isNight: boolea
   // Lift stack contrast at night so it reads against dark sky.
   const stackColor = isNight ? 'rgba(190,170,140,0.85)' : 'rgba(120,130,140,0.6)';
   const baseY = 95;
+  const { width, height } = CITY_SCALE.distantStack;
   return (
     <motion.g
       aria-hidden="true"
@@ -478,14 +484,14 @@ export function DistantStack({ x = 365, isNight }: { x?: number; isNight: boolea
       transition={{ duration: 1.2 }}
     >
       {/* Thin chimney */}
-      <rect x={x} y={baseY - 22} width={2} height={22} fill={stackColor} />
-      <rect x={x - 1} y={baseY - 24} width={4} height={2} fill={stackColor} />
+      <rect x={x} y={baseY - height} width={width} height={height} fill={stackColor} />
+      <rect x={x - 1} y={baseY - height - 2} width={width + 2} height={2} fill={stackColor} />
       {/* Wispy steam plume */}
       <motion.ellipse
-        cx={x + 1} cy={baseY - 28}
+        cx={x + 1} cy={baseY - height - 6}
         rx={3} ry={2}
         fill={isNight ? 'rgba(180,180,180,0.3)' : 'rgba(220,220,220,0.5)'}
-        animate={{ cy: [baseY - 28, baseY - 36, baseY - 28], opacity: [0.5, 0.2, 0.5] }}
+        animate={{ cy: [baseY - height - 6, baseY - height - 14, baseY - height - 6], opacity: [0.5, 0.2, 0.5] }}
         transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' as const }}
       />
     </motion.g>
@@ -502,9 +508,9 @@ export function BatteryStorageContainer({ x = 320, cleanliness, isNight }: {
   const ledColor = isClean ? '#22c55e' : '#f59e0b';
   const bodyColor = isNight ? '#0f172a' : '#1e293b'; // navy/charcoal, never red
   const accentColor = isClean ? '#16a34a' : '#475569';
-  const groundY = 138;
-  const w = 22;
-  const h = 8;
+  const groundY = CITY_SCALE.bess.groundY;
+  const w = CITY_SCALE.bess.width;
+  const h = CITY_SCALE.bess.height;
 
   return (
     <motion.g

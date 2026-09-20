@@ -100,5 +100,7 @@ Before merging UI:
 - [ ] Job test: now-or-wait obvious
 - [ ] No new gag without a diegetic grid reason
 - [ ] No new card if a paper section would do
+- [ ] Prop sizes from `src/lib/sceneScaleBible.ts` (no rival hardcodes)
+- [ ] Secondary screens use `PageHeader` + `page-shell` / `sheet-surface`
 
 Roadmap theme: **Delight & literacy** work must cite this doc.
