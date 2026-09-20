@@ -47,6 +47,19 @@ Checks:
 
 Dev helpers: `/__scene-test`, `docs/SCENE_VISUAL_QA.md`.
 
+### Automated web viewport simulation
+
+With Vite running on `:8080`:
+
+```bash
+npm run sim:duo
+```
+
+This Playwright pass checks cover / inner / split-view sizes, mid-session
+fold→unfold→fold (Demand tab must survive), and a continuous 400→900 width drag
+(Footprint tab + no horizontal overflow). It is **not** a substitute for the
+Xcode iPhone Duo Simulator.
+
 ## Native packaging notes
 
 - Sync web assets: `npm run build:mobile`  

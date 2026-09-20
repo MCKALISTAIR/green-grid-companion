@@ -12,7 +12,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "build:mobile": "vite build && npx cap sync",
-    "sync-version": "npx tsx scripts/update-version.ts"
+    "sync-version": "npx tsx scripts/update-version.ts",
+    "sim:duo": "npx tsx scripts/simulate-iphone-duo.ts"
   },
   "dependencies": {
     "@capacitor-community/apple-sign-in": "^7.1.0",
