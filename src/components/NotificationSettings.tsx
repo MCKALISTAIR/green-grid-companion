@@ -5,9 +5,7 @@ import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useNotifications } from '@/hooks/useNotifications';
-import { WeeklyDigestPreview } from './WeeklyDigestPreview';
+import { useNotifications, DIGEST_DELIVERY_AVAILABLE } from '@/hooks/useNotifications';
 import { MonthlyReportPreview } from './MonthlyReportPreview';
 import { logger } from '@/lib/logger';
 
@@ -23,6 +21,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
     prefs,
     requestPermission,
     updatePreference,
+    highIntensityBounds,
   } = useNotifications();
 
   // Reusable toggle handler with permission check - type-safe for boolean preferences
@@ -40,8 +39,6 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
   const handleLowIntensityToggle = createToggleHandler('lowIntensityEnabled');
   const handleHighIntensityToggle = createToggleHandler('highIntensityEnabled');
   const handleDailyForecastToggle = createToggleHandler('dailyForecastEnabled');
-  const handleWeeklyDigestToggle = createToggleHandler('weeklyDigestEnabled');
-  const handleMonthlyReportToggle = createToggleHandler('monthlyReportEnabled');
 
   // Local state for sliders to ensure smooth dragging without constant storage writes
   const [localThreshold, setLocalThreshold] = useState(prefs.lowIntensityThreshold);
@@ -54,27 +51,6 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
   useEffect(() => {
     setLocalHighThreshold(prefs.highIntensityThreshold);
   }, [prefs.highIntensityThreshold]);
-
-  const dayOptions = [
-    { value: 0, label: 'Sunday' },
-    { value: 1, label: 'Monday' },
-    { value: 2, label: 'Tuesday' },
-    { value: 3, label: 'Wednesday' },
-    { value: 4, label: 'Thursday' },
-    { value: 5, label: 'Friday' },
-    { value: 6, label: 'Saturday' },
-  ];
-
-  const monthDayOptions = Array.from({ length: 28 }, (_, i) => ({
-    value: i + 1,
-    label: `${i + 1}${getOrdinalSuffix(i + 1)}`,
-  }));
-
-  function getOrdinalSuffix(n: number): string {
-    const s = ['th', 'st', 'nd', 'rd'];
-    const v = n % 100;
-    return s[(v - 20) % 10] || s[v] || s[0];
-  }
 
   return (
     <div className="space-y-6 p-1">
@@ -240,7 +216,9 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
                 <div className="space-y-0.5 pr-4">
                   <div className="text-sm font-medium">Live Accuracy Mode</div>
                   <p className="text-[10px] text-muted-foreground">
-                    Periodically checks live data. {isNative ? '(Background Fetch)' : '(Tab must remain open)'}
+                    Uses live checks instead of pre-scheduling green windows.
+                    {isNative ? ' (Background Fetch — may use slightly more battery.)' : ' (Tab must remain open.)'}
+                    {' '}Planner reminders still work.
                   </p>
                 </div>
                 <Switch
@@ -297,9 +275,9 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
               value={[localHighThreshold]}
               onValueChange={([value]) => setLocalHighThreshold(value)}
               onValueCommit={([value]) => updatePreference('highIntensityThreshold', value)}
-              min={0}
-              max={100}
-              step={1}
+              min={highIntensityBounds?.min ?? 50}
+              max={highIntensityBounds?.max ?? 400}
+              step={5}
               className="w-full"
             />
             <p className="text-[11px] text-muted-foreground leading-relaxed">
@@ -350,110 +328,67 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
         }
       </Card >
 
-      {/* Weekly Digest */}
-      <Card className="p-4 space-y-4">
+      {/* Weekly Digest — server push not wired from Settings yet */}
+      <Card className="p-4 space-y-4 opacity-90">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
               <CalendarDays className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h3 className="font-medium text-foreground">Weekly Digest</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="font-medium text-foreground">Weekly Digest</h3>
+                <Badge variant="secondary" className="text-[10px]">Coming soon</Badge>
+              </div>
               <p className="text-sm text-muted-foreground">
-                Summary of your carbon footprint & best times
+                Summary of your carbon footprint &amp; best times
               </p>
             </div>
           </div>
           <Switch
-            checked={prefs.weeklyDigestEnabled}
-            onCheckedChange={handleWeeklyDigestToggle}
-            disabled={!isSupported}
-            aria-label="Toggle weekly digest"
+            checked={false}
+            disabled
+            aria-label="Weekly digest coming soon"
           />
         </div>
-
-        {prefs.weeklyDigestEnabled && (
-          <div className="space-y-3 pt-2 border-t border-border">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
-                Send every:
-              </span>
-              <Select
-                value={prefs.weeklyDigestDay.toString()}
-                onValueChange={(value) => updatePreference('weeklyDigestDay', parseInt(value))}
-              >
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {dayOptions.map((day) => (
-                    <SelectItem key={day.value} value={day.value.toString()}>
-                      {day.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Includes: total emissions, energy usage, green energy %, and best times to use electricity.
-            </p>
-
-            <WeeklyDigestPreview />
-          </div>
+        {!DIGEST_DELIVERY_AVAILABLE && (
+          <p className="text-xs text-muted-foreground border-t border-border pt-3">
+            Digests need reliable server push registration. We&apos;ve disabled this toggle so it can&apos;t look enabled without delivering.
+          </p>
         )}
       </Card>
 
-      {/* Monthly Report */}
-      <Card className="p-4 space-y-4">
+      {/* Monthly Report — server push not wired from Settings yet */}
+      <Card className="p-4 space-y-4 opacity-90">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-accent/50 flex items-center justify-center">
               <FileText className="w-5 h-5 text-accent-foreground" />
             </div>
             <div>
-              <h3 className="font-medium text-foreground">Monthly Report</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="font-medium text-foreground">Monthly Report</h3>
+                <Badge variant="secondary" className="text-[10px]">Coming soon</Badge>
+              </div>
               <p className="text-sm text-muted-foreground">
                 Detailed carbon analysis with trends
               </p>
             </div>
           </div>
           <Switch
-            checked={prefs.monthlyReportEnabled}
-            onCheckedChange={handleMonthlyReportToggle}
-            disabled={!isSupported}
-            aria-label="Toggle monthly report"
+            checked={false}
+            disabled
+            aria-label="Monthly report coming soon"
           />
         </div>
-
-        {prefs.monthlyReportEnabled && (
-          <div className="space-y-3 pt-2 border-t border-border">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
-                Send on the:
-              </span>
-              <Select
-                value={prefs.monthlyReportDay.toString()}
-                onValueChange={(value) => updatePreference('monthlyReportDay', parseInt(value))}
-              >
-                <SelectTrigger className="w-[100px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {monthDayOptions.map((day) => (
-                    <SelectItem key={day.value} value={day.value.toString()}>
-                      {day.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Includes: weekly trends, intensity breakdown, best/worst periods, and personalized insights.
-            </p>
-
-            <MonthlyReportPreview />
-          </div>
+        {!DIGEST_DELIVERY_AVAILABLE && (
+          <p className="text-xs text-muted-foreground border-t border-border pt-3">
+            Same as weekly digests — preview below is illustrative only until push delivery ships.
+          </p>
         )}
+        <div className="pt-1">
+          <MonthlyReportPreview />
+        </div>
       </Card>
 
       {

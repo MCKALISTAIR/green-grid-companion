@@ -53,11 +53,9 @@ GridSense is a mobile-first companion app designed to help UK (and future) energ
     *   **Secure Backup**: Never lose your history when switching phones.
 *   **Weather Widget**: Show/hide local weather conditions with persistent preferences.
 *   **Custom Appliances**: Create and save custom appliances in Power Planner (persists between sessions).
-*   **Tesla Integration**:
-    *   **Vehicle Status**: View real-time battery level, range, and charging status for all your Tesla vehicles.
-    *   **Energy Sites**: Monitor solar generation and Powerwall status.
-    *   **Smart Charging Impact**: Track how much Carbon (CO₂) you've saved by charging during greener times compared to grid average.
-    *   **Seamless Linking**: Secure OAuth connection to your Tesla account.
+*   **Tesla Integration** *(backend scaffolding — not in Settings UI yet)*:
+    *   Vehicle / energy-site APIs exist in code; Settings currently ships **Octopus only**.
+    *   Do not expect Tesla linking in the current release builds.
 
 ## 🆕 Recent Updates (v1.4.7 - 2026-07-13)
 
@@ -204,7 +202,7 @@ GridSense is a mobile-first companion app designed to help UK (and future) energ
 
 *   **Framework**: [React](https://react.dev/) + [Vite](https://vitejs.dev/)
 *   **Language**: [TypeScript](https://www.typescriptlang.org/)
-*   **Mobile Engine**: [Capacitor](https://capacitorjs.com/) (iOS & Android)
+*   **Mobile Engine**: [Capacitor](https://capacitorjs.com/) (**iOS shipping**; Android project not included yet)
 *   **Backend**: [Supabase](https://supabase.com/) (PostgreSQL, Edge Functions, RLS)
 *   **UI Components**: [shadcn/ui](https://ui.shadcn.com/) (Radix Primitives)
 *   **Styling**: [Tailwind CSS](https://tailwindcss.com/)

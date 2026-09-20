@@ -164,21 +164,21 @@ export const FEATURE_GUIDES = [
         id: 'integrations',
         title: 'Integrations',
         icon: Plug,
-        description: 'Connect Octopus Energy and Tesla accounts',
+        description: 'Connect Octopus Energy for real meter-based footprint',
         content: (
             <div className="space-y-4">
                 <p>
-                    Supercharge GridSense by connecting your energy accounts.
+                    Supercharge GridSense by connecting your energy account.
                 </p>
 
                 <h3 className="text-lg font-semibold pt-2">Octopus Energy</h3>
                 <p>
-                    If you're an Octopus Agile customer, connect your account to see <strong>pricing data</strong> alongside carbon intensity.
+                    Connect your Octopus account to sync smart-meter consumption and calculate your <strong>real carbon footprint</strong> and Green Score from timing — not just how much you use.
                 </p>
 
                 <h3 className="text-lg font-semibold pt-2">Tesla</h3>
                 <p>
-                    Connect your Tesla to enable <strong>smart charging</strong> recommendations directly based on your car's current battery level.
+                    Tesla vehicle and Powerwall linking is <strong>in development</strong> and not available in Settings yet. Planner EV options appear only once Tesla is linked.
                 </p>
             </div>
         )

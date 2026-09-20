@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { WashingMachine, Car, Utensils, Zap, Plus, PenLine, Battery, Leaf, X } from 'lucide-react';
 import { getIntensityColor, getIntensityTextColor } from '@/lib/carbonApi';
 import { LocalNotifications } from '@capacitor/local-notifications';
+import { plannerReminderId } from '@/lib/notificationIds';
 import { format, parseISO, addHours, subMinutes, isFuture } from 'date-fns';
 import { PullToRefresh } from '@/components/PullToRefresh';
 import { TurbineSpinner } from '@/components/ui/turbine-spinner';
@@ -286,7 +287,7 @@ export default function Planner() {
                     {
                         title: `Power Planner: Run ${selectedAppliance.name}`,
                         body: `Ideally start your ${selectedAppliance.name} in 15 minutes for lowest carbon intensity!`,
-                        id: new Date().getTime(),
+                        id: plannerReminderId(notificationTime.getTime()),
                         schedule: { at: notificationTime },
                         sound: undefined,
                         attachments: undefined,
@@ -532,8 +533,11 @@ export default function Planner() {
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
                             >
-                                <Card className="p-6">
-                                    <p>No forecast data available.</p>
+                                <Card className="p-6 space-y-3">
+                                    <p className="font-medium text-foreground">No forecast data available</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        We need a carbon intensity forecast to find your best window. Pull to refresh, or check your connection.
+                                    </p>
                                 </Card>
                             </motion.div>
                         )}

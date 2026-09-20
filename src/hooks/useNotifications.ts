@@ -5,6 +5,14 @@ import { useEffect, useState, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
+import {
+    NOTIFICATION_IDS,
+    filterNotificationIds,
+    greenAlertId,
+    highAlertId,
+    isForecastGreenScheduleId,
+    isHighAlertId,
+} from '@/lib/notificationIds';
 
 export interface NotificationPrefs {
     lowIntensityEnabled: boolean;
@@ -20,6 +28,9 @@ export interface NotificationPrefs {
     monthlyReportDay: number; // 1-28 (day of month)
     showWeatherInInsights: boolean;
 }
+
+/** Server digests need push registration; keep prefs off until that path is wired from Settings. */
+export const DIGEST_DELIVERY_AVAILABLE = false;
 
 const DEFAULT_PREFS: NotificationPrefs = {
     lowIntensityEnabled: false,
@@ -37,22 +48,57 @@ const DEFAULT_PREFS: NotificationPrefs = {
 };
 
 const PREFS_KEY = 'gridgreen-notification-prefs';
+const HIGH_INTENSITY_MIN = 50;
+const HIGH_INTENSITY_MAX = 400;
+
+function normalizePrefs(raw: Partial<NotificationPrefs>): NotificationPrefs {
+    const merged = { ...DEFAULT_PREFS, ...raw };
+    // Digests are not delivered from Settings yet — don't leave a false "enabled" promise.
+    if (!DIGEST_DELIVERY_AVAILABLE) {
+        merged.weeklyDigestEnabled = false;
+        merged.monthlyReportEnabled = false;
+    }
+    merged.highIntensityThreshold = Math.min(
+        HIGH_INTENSITY_MAX,
+        Math.max(HIGH_INTENSITY_MIN, merged.highIntensityThreshold),
+    );
+    return merged;
+}
+
+async function cancelMatchingPending(predicate: (id: number) => boolean) {
+    const pending = await LocalNotifications.getPending();
+    const toCancel = filterNotificationIds(pending.notifications, predicate);
+    if (toCancel.length > 0) {
+        await LocalNotifications.cancel({ notifications: toCancel });
+    }
+    return toCancel.length;
+}
 
 export function useNotifications() {
     const [permissionStatus, setPermissionStatus] = useState<'prompt' | 'granted' | 'denied'>('prompt');
     const [prefs, setPrefs] = useState<NotificationPrefs>(() => {
         const saved = localStorage.getItem(PREFS_KEY);
-        return saved ? { ...DEFAULT_PREFS, ...JSON.parse(saved) } : DEFAULT_PREFS;
+        return saved ? normalizePrefs(JSON.parse(saved)) : { ...DEFAULT_PREFS };
     });
 
     const isNative = Capacitor.isNativePlatform();
     // Allow notifications on web if supported
-    const isSupported = isNative || ('Notification' in window);
+    const isSupported = isNative || (typeof window !== 'undefined' && 'Notification' in window);
 
     const checkPermission = useCallback(async () => {
-        if (!isNative) return;
-        const status = await LocalNotifications.checkPermissions();
-        setPermissionStatus(status.display as 'prompt' | 'granted' | 'denied');
+        if (isNative) {
+            const status = await LocalNotifications.checkPermissions();
+            setPermissionStatus(status.display as 'prompt' | 'granted' | 'denied');
+            return;
+        }
+
+        // Web: sync browser permission so schedulers work after reload
+        if (typeof window !== 'undefined' && 'Notification' in window) {
+            const browserPerm = Notification.permission;
+            if (browserPerm === 'granted') setPermissionStatus('granted');
+            else if (browserPerm === 'denied') setPermissionStatus('denied');
+            else setPermissionStatus('prompt');
+        }
     }, [isNative]);
 
     useEffect(() => {
@@ -71,7 +117,7 @@ export function useNotifications() {
             if (nowSlot && nowSlot.intensity.forecast < prefs.lowIntensityThreshold) {
                 await LocalNotifications.schedule({
                     notifications: [{
-                        id: 1001,
+                        id: NOTIFICATION_IDS.LIVE_GREEN,
                         title: "🟢 Live Energy Alert",
                         body: `Grid is GREEN right now! Intensity is ${nowSlot.intensity.forecast}g.`,
                         schedule: { at: new Date(Date.now() + 1000) }, // Immediate
@@ -215,8 +261,10 @@ export function useNotifications() {
             // Parse configured time (e.g., "09:00")
             const [hours, minutes] = prefs.dailyForecastTime.split(':').map(Number);
 
-            // Cancel existing daily forecast notification (id: 9000)
-            await LocalNotifications.cancel({ notifications: [{ id: 9000 }] });
+            // Cancel existing daily forecast notification
+            await LocalNotifications.cancel({
+                notifications: [{ id: NOTIFICATION_IDS.DAILY_FORECAST }],
+            });
             logger.info('Cancelled previous daily forecast notification');
 
             // Generate forecast summary
@@ -225,7 +273,7 @@ export function useNotifications() {
             // Schedule repeating daily notification
             await LocalNotifications.schedule({
                 notifications: [{
-                    id: 9000,
+                    id: NOTIFICATION_IDS.DAILY_FORECAST,
                     title: '🌅 Daily Energy Outlook',
                     body: summary,
                     schedule: {
@@ -260,13 +308,12 @@ export function useNotifications() {
             useBackgroundFetch: prefs.useBackgroundFetch
         });
 
-        // If Background Fetch is enabled, we DO NOT use forecast scheduling.
+        // Live Accuracy Mode uses background checks instead of forecast schedules.
+        // Only clear forecast green IDs — never wipe planner reminders / daily / high alerts.
         if (prefs.useBackgroundFetch) {
-            logger.info('Background fetch enabled, cancelling forecast-based notifications');
-            const pending = await LocalNotifications.getPending();
-            if (pending.notifications.length > 0) {
-                await LocalNotifications.cancel(pending);
-            }
+            logger.info('Background fetch enabled, cancelling forecast-based green alerts only');
+            const cancelled = await cancelMatchingPending(isForecastGreenScheduleId);
+            logger.info('Cancelled forecast green alerts for background fetch', { cancelled });
             return;
         }
 
@@ -285,12 +332,9 @@ export function useNotifications() {
         const pendingNotifications: ScheduleOptions['notifications'] = [];
         let isGreenWindow = false;
 
-        // Clean up pending notifications
-        const pending = await LocalNotifications.getPending();
-        logger.info('Pending notifications before cleanup', { count: pending.notifications.length });
-        if (pending.notifications.length > 0) {
-            await LocalNotifications.cancel(pending);
-        }
+        // Clean up only previous green forecast alerts (preserve planner reminders)
+        const cancelled = await cancelMatchingPending(isForecastGreenScheduleId);
+        logger.info('Pending green alerts cancelled before reschedule', { cancelled });
 
         for (const slot of forecast) {
             const startTime = new Date(slot.from);
@@ -307,9 +351,8 @@ export function useNotifications() {
                     intensity: slot.intensity.forecast
                 });
 
-                // Add Notification
                 pendingNotifications.push({
-                    id: Math.floor(startTime.getTime() / 100000), // Unique-ish ID
+                    id: greenAlertId(startTime.getTime()),
                     title: "💚 Perfect Time to Use Energy",
                     body: `Grid is running clean! Great time to charge devices, run the dishwasher, or do laundry (${slot.intensity.forecast}g CO₂).`,
                     schedule: { at: startTime },
@@ -364,6 +407,9 @@ export function useNotifications() {
         const pendingNotifications: ScheduleOptions['notifications'] = [];
         let isDirtyWindow = false;
 
+        // Replace prior high-intensity alerts only
+        await cancelMatchingPending(isHighAlertId);
+
         for (const slot of forecast) {
             const startTime = new Date(slot.from);
             if (startTime <= now) continue;
@@ -379,9 +425,8 @@ export function useNotifications() {
                     intensity: slot.intensity.forecast
                 });
 
-                // Add Notification (use IDs 8000-8999)
                 pendingNotifications.push({
-                    id: 8000 + Math.floor(startTime.getTime() / 100000) % 1000,
+                    id: highAlertId(startTime.getTime()),
                     title: "⚠️ High Carbon Period Starting",
                     body: `The grid is getting dirtier (${slot.intensity.forecast}g CO₂). Consider delaying heavy appliance use if possible.`,
                     schedule: { at: startTime },
@@ -422,6 +467,8 @@ export function useNotifications() {
         updatePreference,
         scheduleGreenAlerts,
         scheduleDailyForecast,
-        scheduleHighIntensityAlerts
+        scheduleHighIntensityAlerts,
+        digestDeliveryAvailable: DIGEST_DELIVERY_AVAILABLE,
+        highIntensityBounds: { min: HIGH_INTENSITY_MIN, max: HIGH_INTENSITY_MAX },
     };
 }

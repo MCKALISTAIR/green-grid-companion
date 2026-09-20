@@ -111,7 +111,7 @@ export default function Help() {
                                     <p>Get a summary of the day's carbon intensity forecast delivered at your chosen time each morning.</p>
 
                                     <p className="pt-2"><strong>Why aren't I receiving notifications?</strong></p>
-                                    <p>Check that you've granted notification permissions in iOS Settings → GridSense → Notifications. Also ensure the alerts are enabled within the app.</p>
+                                    <p>On iOS: Settings → GridSense → Notifications. On web: allow notifications in the browser for this site, then refresh. Also ensure the alerts are enabled within the app.</p>
                                 </div>
                             </AccordionContent>
                         </AccordionItem>
@@ -163,7 +163,7 @@ export default function Help() {
                                     <p>Try restarting the app. The animated scene requires good performance and may be simplified on older devices.</p>
 
                                     <p className="pt-2"><strong>Integration issues:</strong></p>
-                                    <p>For Octopus or Tesla connections, check that you're logged in and have granted necessary permissions.</p>
+                                    <p>For Octopus connections, check that your API key is valid and meters are linked in Settings. Tesla linking is not available in the app yet.</p>
                                 </div>
                             </AccordionContent>
                         </AccordionItem>
@@ -178,7 +178,7 @@ export default function Help() {
                                     <p>We only store your preferences locally on your device. Location data is used solely to fetch regional carbon intensity and is never shared.</p>
 
                                     <p className="pt-2"><strong>Account data:</strong></p>
-                                    <p>If you connect Octopus or Tesla, we use secure OAuth authentication. Your credentials are never stored in our app.</p>
+                                    <p>Octopus: you paste your account number and API key. Keys are stored on your device and can sync encrypted when you sign in — we use them only to fetch your meter data. Tesla linking is not available in the app yet.</p>
 
                                     <p className="pt-2">For full details, see our Privacy Policy in Settings → Resources.</p>
                                 </div>
