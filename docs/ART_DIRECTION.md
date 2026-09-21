@@ -77,7 +77,7 @@ Do not reintroduce competing numeric overlays on the scene. Do not put marketing
 ## Sheet art rules
 
 1. Same **paper** as the dock (`--card`, soft border, soft shadow) — scene bleeds into UI via wave divider only.
-2. Decision headline uses **Fraunces**; body/UI uses **Nunito**; gCO₂ figures use **Inconsolata** / tabular nums.
+2. Decision headline (now-or-wait) may use **Fraunces**; **intensity band labels** (High / Moderate / …) and body/UI use **Nunito** — serif felt wrong on carbon status; gCO₂ figures use **Inconsolata** / tabular nums.
 3. Primary CTA colour is grid green; avoid multi-hue icon festivals.
 4. Icons are supporting, not the personality. Personality lives in scene + condition copy.
 

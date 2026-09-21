@@ -19,7 +19,7 @@ A lightweight, single-source-of-truth reference for everyone touching the GridSe
 |---|---|---|
 | Color tokens | `src/index.css` (`:root`, `.dark`) | All tokens are HSL triples consumed via `hsl(var(--token))`. |
 | Tailwind aliases | `tailwind.config.ts` | Semantic colour, radius, shadow and font families. |
-| Typography | Nunito (UI), Fraunces (display / condition), Inconsolata (data). | Loaded via Google Fonts in `index.css`. |
+| Typography | Nunito (UI + intensity band labels), Fraunces (decision / page titles), Inconsolata (data). | Loaded via Google Fonts in `index.css`. |
 | Radius | `--radius: 1.25rem` (lg). md/sm derived. | Soft, friendly shapes throughout. |
 | Spacing | Tailwind default `4px` scale. | No custom spacing scale needed. |
 | Shadow | `--shadow-sm/md/lg/xl`. | Used sparingly; surfaces favour borders + elevation through colour. |
