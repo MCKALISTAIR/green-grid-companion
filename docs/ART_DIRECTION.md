@@ -92,6 +92,17 @@ Do not reintroduce competing numeric overlays on the scene. Do not put marketing
 
 ---
 
+## Carrot baseline (enjoyment)
+
+Carrot Weather is the interaction-craft bar — not a mascot to copy. GridSense should feel as authored to *touch*:
+
+1. **Scene-as-HUD** — one number, one condition line (shipped).
+2. **World over time** — garden stages from clean streaks (shipped).
+3. **Cross-linked data** — tapping a forecast hour updates chart emphasis **and** insight copy together (`ForecastChart` + `getForecastHourInsight`).
+4. **Prove the shift** — meter truth beats dialogue volume.
+
+Do not close the “feel” gap with more gag density. Close it with craft: every tap authored, world alive when idle.
+
 ## How we ship against this
 
 Before merging UI:

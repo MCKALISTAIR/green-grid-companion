@@ -300,7 +300,7 @@ function ComponentInventory() {
       rows: [
         { name: "IntensityGauge", purpose: "The hero number on Home — current carbon intensity.", path: "src/components/IntensityGauge.tsx" },
         { name: "GenerationMixBar", purpose: "Stacked horizontal bar of fuel mix.", path: "src/components/GenerationMixBar.tsx" },
-        { name: "ForecastChart", purpose: "24h forecast with BEST ribbon.", path: "src/components/ForecastChart.tsx" },
+        { name: "ForecastChart", purpose: "24h forecast with cross-linked hour picker + BEST ribbon.", path: "src/components/ForecastChart.tsx" },
         { name: "StaleDataBadge", purpose: "Marks data older than 35m.", path: "src/components/StaleDataBadge.tsx" },
         { name: "OfflineIndicator", purpose: "Top banner on connectivity loss.", path: "src/components/OfflineIndicator.tsx" },
         { name: "TurbineSpinner", purpose: "Brand loading state. Replaces generic spinners.", path: "src/components/ui/turbine-spinner.tsx" },

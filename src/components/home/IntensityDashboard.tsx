@@ -81,7 +81,11 @@ export function IntensityDashboard({
           data-tour="forecast-chart"
         >
           <ComponentErrorBoundary name="Hourly Forecast">
-            <ForecastChart forecast={forecast} showNext={24} />
+            <ForecastChart
+              forecast={forecast}
+              showNext={24}
+              currentIntensity={intensity}
+            />
           </ComponentErrorBoundary>
         </section>
       )}
