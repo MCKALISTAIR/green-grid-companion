@@ -97,19 +97,19 @@ export default {
 			},
 			fontFamily: {
 				sans: [
-					'Nunito',
+					'Work Sans',
 					'ui-sans-serif',
 					'system-ui',
 					'sans-serif'
 				],
 				display: [
-					'Fraunces',
-					'ui-serif',
-					'Georgia',
-					'serif'
+					'Work Sans',
+					'ui-sans-serif',
+					'system-ui',
+					'sans-serif'
 				],
 				serif: [
-					'Fraunces',
+					'Lora',
 					'ui-serif',
 					'Georgia',
 					'serif'

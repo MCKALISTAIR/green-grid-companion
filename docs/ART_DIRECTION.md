@@ -39,7 +39,19 @@ One sentence:
 |---|---|---|
 | **Landscape props** | Scene | Turbines, Eye, BESS, stacks, boats, hills — consistent “chibi-realistic” scale |
 | **Diegetic wildlife** | Scene (countryside/coast) | Sheep, birds, bees, fox — grid-mood only, low frequency |
-| **Paper UI** | Sheet, dock, dialogs | Soft surfaces, quiet borders, Fraunces for condition/decision headlines, Nunito for UI, Inconsolata for numbers |
+| **Paper UI** | Sheet, dock, dialogs | Soft surfaces, quiet borders, Work Sans UI/HUD, Lora for personality only, Inconsolata for dense data |
+
+### Paper UI / typography
+
+| Role | Face | Where |
+|---|---|---|
+| **UI + HUD** | Work Sans | Nav, sheet, band labels (High / Moderate), page titles, now-or-wait |
+| **Personality** | Lora italic | Energy fact line / editorial asides only |
+| **Data** | Inconsolata | Dense figures in charts, tables, codes — not the hero intensity number |
+
+Hero intensity uses **Work Sans + tabular-nums** (Carrot-like craft: one sans for the readout). Do not put a display serif on carbon status copy.
+
+Fraunces / Nunito are retired — they fought the modern HUD and read soft/dated next to the living scene.
 
 ### Disallowed / gated registers
 
@@ -77,7 +89,7 @@ Do not reintroduce competing numeric overlays on the scene. Do not put marketing
 ## Sheet art rules
 
 1. Same **paper** as the dock (`--card`, soft border, soft shadow) — scene bleeds into UI via wave divider only.
-2. Decision headline (now-or-wait) may use **Fraunces**; **intensity band labels** (High / Moderate / …) and body/UI use **Nunito** — serif felt wrong on carbon status; gCO₂ figures use **Inconsolata** / tabular nums.
+2. Decision / page titles use **Work Sans** (weight hierarchy); intensity band labels also **Work Sans**; personality asides may use **Lora italic**; gCO₂ figures in dense UI use **Inconsolata** / tabular nums. Hero intensity stays Work Sans + tabular-nums.
 3. Primary CTA colour is grid green; avoid multi-hue icon festivals.
 4. Icons are supporting, not the personality. Personality lives in scene + condition copy.
 

@@ -219,7 +219,7 @@ export function IntensityHeroOverlay({
               >
                 <p
                   className={cn(
-                    // Band labels (High / Moderate) stay on Nunito — Fraunces felt wrong on carbon status.
+                    // Intensity band labels — Work Sans, not a display serif.
                     'font-sans text-3xl sm:text-4xl font-extrabold text-white tracking-tight',
                     needsHardScrim
                       ? 'drop-shadow-[0_3px_16px_rgba(0,0,0,0.75)]'

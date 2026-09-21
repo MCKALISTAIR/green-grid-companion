@@ -484,7 +484,7 @@ export default function DesignSystemPage() {
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="font-mono text-xs uppercase tracking-wide text-muted-foreground">Internal · /__design-system</p>
-          <h1 className="mt-1 text-3xl font-bold font-display">GridSense Design System</h1>
+          <h1 className="mt-1 text-3xl font-bold font-display tracking-tight">GridSense Design System</h1>
           <p className="mt-2 max-w-2xl text-muted-foreground">
             Art direction: <span className="text-foreground font-medium">Living grid paper</span> — one authored
             product (scene + sheet). Tokens below; direction &amp; one-product tests live in{" "}
