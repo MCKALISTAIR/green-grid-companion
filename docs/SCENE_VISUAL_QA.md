@@ -149,13 +149,15 @@ Source of truth: `src/lib/sceneScaleBible.ts` (art direction register test).
 
 ### City one-hero demotion
 
+UX bar: name the focal prop in &lt;1s. Non-heroes nearly ghost; traffic often off.
+
 | Band | Hero | Demoted |
 |---|---|---|
-| very-clean | London Eye | BESS dim, less traffic, no crane |
-| clean | Skyline | Eye + BESS quieter |
-| moderate | BESS | Eye quieter, no pigeons |
-| dirty | Distant stack | Eye/BESS dim, crane on, no pigeons |
-| very-dirty | Smog | Eye/BESS/skyline quietest |
+| very-clean | London Eye | BESS ~ghost, quiet skyline/front, **no traffic**, light pigeons |
+| clean | Skyline | Eye + BESS ghost, no pigeons/bus |
+| moderate | BESS | Eye ghost, quiet skyline/front, **empty road** |
+| dirty | Distant stack | Eye/BESS ghost, light traffic + bus, no crane |
+| very-dirty | Smog | Eye/BESS/skyline quietest, crane on |
 
 #### City (400×150 viewBox, groundY = 138)
 | Prop | Size | Notes |

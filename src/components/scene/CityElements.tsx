@@ -555,18 +555,22 @@ export function CityTraffic({
   cleanliness,
   isNight,
   maxVehicles,
+  showBus = true,
 }: {
   cleanliness: number;
   isNight: boolean;
   /** Cap road clutter for one-hero composition (defaults: night 3 / day 5). */
   maxVehicles?: number;
+  /** Bus is loud visual noise — off unless the band allows it. */
+  showBus?: boolean;
 }) {
   // More EVs when cleaner
   const evRatio = cleanliness;
   
   const vehicles = useMemo(() => {
     const defaultCount = isNight ? 3 : 5;
-    const count = Math.max(1, Math.min(maxVehicles ?? defaultCount, defaultCount));
+    const requested = maxVehicles ?? defaultCount;
+    const count = Math.max(0, Math.min(requested, defaultCount));
     return Array.from({ length: count }).map((_, i) => ({
       id: i,
       direction: (i % 2 === 0 ? 'right' : 'left') as 'left' | 'right',
@@ -581,8 +585,8 @@ export function CityTraffic({
       {vehicles.map(v => (
         <CityVehicle key={v.id} {...v} />
       ))}
-      {/* One bus — skip when traffic is heavily demoted */}
-      {(maxVehicles ?? 5) >= 3 && (
+      {/* One bus — only when the hero band allows road clutter */}
+      {showBus && (maxVehicles ?? 5) >= 2 && (
         <CityBus direction="right" isElectric={cleanliness > 0.6} delay={5} />
       )}
     </g>
