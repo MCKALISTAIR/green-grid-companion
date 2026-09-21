@@ -5,7 +5,16 @@ import type { SceneVisualConfig } from '@/lib/sceneConfig';
 import { getCityHeroEmphasis, isCityHotspotActive } from '@/lib/cityHeroDemotion';
 import { SCENE_SILHOUETTE_ASPECT } from '@/lib/sceneScaleBible';
 import { CityLandscapeBack, CityLandscapeMid, CityLandscapeFront } from '../CityLandscape';
-import { CityTraffic, Pigeon, ConstructionCrane, LondonEye, SmogBand, DistantStack, BatteryStorageContainer } from '../CityElements';
+import {
+  CityTraffic,
+  Pigeon,
+  ConstructionCrane,
+  LondonEye,
+  SmogBand,
+  DistantStack,
+  BatteryStorageContainer,
+  TubeFlash,
+} from '../CityElements';
 import { ValleyMist } from '../ValleyMist';
 import { SceneHotspots, type HotspotDef } from '../SceneHotspots';
 
@@ -40,8 +49,6 @@ export function CitySceneLayers({
 }: CitySceneLayersProps) {
   const hero = getCityHeroEmphasis(cleanlinessBand);
   const showStack = sceneConfig.cleanliness < 0.2 || hero.hero === 'distant-stack' || hero.hero === 'smog';
-  const showEye = hero.eyeOpacity > 0.05;
-  const showBess = hero.bessOpacity > 0.05;
 
   return (
     <>
@@ -106,39 +113,50 @@ export function CitySceneLayers({
               timeOfDay={timeOfDay}
             />
           </g>
-          {showEye && (
-            <g opacity={hero.eyeOpacity} style={{ transition: 'opacity 1.2s ease' }}>
-              <LondonEye isNight={isNight} skipIntro={skipIntro} />
-            </g>
-          )}
-          {showBess && (
-            <g opacity={hero.bessOpacity} style={{ transition: 'opacity 1.2s ease' }}>
-              <BatteryStorageContainer cleanliness={sceneConfig.cleanliness} isNight={isNight} />
-            </g>
-          )}
+          <g
+            opacity={hero.eyeOpacity}
+            style={{
+              transition: 'opacity 1.2s ease',
+              transformOrigin: '75px 138px',
+              transform: `scale(${hero.eyeScale})`,
+            }}
+          >
+            <LondonEye isNight={isNight} skipIntro={skipIntro} />
+          </g>
+          <g
+            opacity={hero.bessOpacity}
+            style={{
+              transition: 'opacity 1.2s ease',
+              transformOrigin: '331px 138px',
+              transform: `scale(${hero.bessScale})`,
+            }}
+          >
+            <BatteryStorageContainer cleanliness={sceneConfig.cleanliness} isNight={isNight} />
+          </g>
         </svg>
       </div>
 
-      {/* City: Traffic — omitted entirely when the band wants an empty road */}
-      {hero.trafficCount > 0 && (
-        <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-[22] overflow-hidden">
-          <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio={SCENE_SILHOUETTE_ASPECT} aria-hidden="true">
+      {/* City: sparse traffic + Tube flash — alive at low density */}
+      <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-[22] overflow-hidden">
+        <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio={SCENE_SILHOUETTE_ASPECT} aria-hidden="true">
+          {hero.trafficCount > 0 && (
             <CityTraffic
               cleanliness={sceneConfig.cleanliness}
               isNight={isNight}
               maxVehicles={hero.trafficCount}
               showBus={hero.showBus}
             />
-          </svg>
-        </div>
-      )}
+          )}
+          {!shouldReduceMotion && <TubeFlash enabled={hero.showTubeFlash} />}
+        </svg>
+      </div>
 
       <AnimatePresence>
-        {hero.showPigeons && sceneConfig.isDaytime && sceneConfig.cleanliness > 0.4 && (
+        {hero.pigeonCount > 0 && sceneConfig.isDaytime && sceneConfig.cleanliness > 0.4 && (
           <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-[23] overflow-hidden">
             <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio={SCENE_SILHOUETTE_ASPECT} aria-hidden="true">
-              <Pigeon x={60} y={135} delay={0} />
-              <Pigeon x={180} y={136} delay={1.5} />
+              <Pigeon x={180} y={136} delay={0} />
+              {hero.pigeonCount > 1 && <Pigeon x={60} y={135} delay={1.5} />}
             </svg>
           </div>
         )}

@@ -81,21 +81,22 @@ function useCityPalette(cleanliness: number, isNight: boolean, synthwaveMode: bo
     }
 
     return {
-      skylineFarHighlight: isClean ? '#9ca3af' : '#a8a29e', skylineFarShadow: isClean ? '#4b5563' : '#57534e',
-      skylineMidHighlight: isClean ? '#d1d5db' : '#d6d3d1', skylineMidShadow: isClean ? '#6b7280' : '#78716c',
-      skylineNearHighlight: isClean ? '#f3f4f6' : '#f5f5f4', skylineNearShadow: isClean ? '#9ca3af' : '#a8a29e',
-      road: '#4b5563',
+      // Daytime mass: solid mid greys so the city reads as buildings, not glass fog
+      skylineFarHighlight: isClean ? '#78818f' : '#7c756e', skylineFarShadow: isClean ? '#3f4654' : '#4a453f',
+      skylineMidHighlight: isClean ? '#b8bec8' : '#c4bfb8', skylineMidShadow: isClean ? '#5b6472' : '#6b655e',
+      skylineNearHighlight: isClean ? '#eceff3' : '#f0eeeb', skylineNearShadow: isClean ? '#8b93a0' : '#9a948c',
+      road: '#374151',
       windowLit: '#fbbf24',
-      windowDark: isClean ? '#9ca3af' : '#a8a29e',
+      windowDark: isClean ? '#7c8491' : '#8a847c',
     };
   }, [cleanliness, isNight, synthwaveMode, isSnowing, timeOfDay]);
 }
 
 // Individual building component
-function Building({ x, width, height, fill, windowLit, windowDark, isNight, cleanliness, delay = 0, skipIntro }: {
+function Building({ x, width, height, fill, windowLit, windowDark, isNight, cleanliness, delay = 0, skipIntro, windowsFlicker = false }: {
   x: number; width: number; height: number; fill: string;
   windowLit: string; windowDark: string; isNight: boolean; cleanliness: number;
-  delay?: number; skipIntro?: boolean;
+  delay?: number; skipIntro?: boolean; windowsFlicker?: boolean;
 }) {
   // Window grid
   const windowRows = Math.floor(height / 12);
@@ -103,12 +104,16 @@ function Building({ x, width, height, fill, windowLit, windowDark, isNight, clea
   const windowWidth = 4;
   const windowHeight = 5;
 
-  // Daytime: almost no lit windows (office daylight). Night: more lights when dirty.
-  const litProbability = isNight ? (cleanliness > 0.7 ? 0.3 : 0.7) : 0.04;
+  // Daytime: almost no lit windows. Dusk/night: more lights; dirty → busier glow.
+  const litProbability = isNight
+    ? (cleanliness > 0.7 ? 0.35 : 0.72)
+    : windowsFlicker
+      ? (cleanliness > 0.7 ? 0.22 : 0.45)
+      : 0.04;
 
   // Stable window pattern based on position
   const windows = useMemo(() => {
-    const result: { wx: number; wy: number; lit: boolean }[] = [];
+    const result: { wx: number; wy: number; lit: boolean; flickerDelay: number }[] = [];
     for (let row = 0; row < windowRows; row++) {
       for (let col = 0; col < windowCols; col++) {
         const seed = (x * 17 + row * 31 + col * 7) % 100;
@@ -118,6 +123,7 @@ function Building({ x, width, height, fill, windowLit, windowDark, isNight, clea
             wx: x + 3 + col * 10,
             wy,
             lit: seed < litProbability * 100,
+            flickerDelay: (seed % 17) * 0.35,
           });
         }
       }
@@ -125,55 +131,59 @@ function Building({ x, width, height, fill, windowLit, windowDark, isNight, clea
     return result;
   }, [x, height, windowRows, windowCols, litProbability]);
 
-  // Sparse rooftop solar — seeded so only some buildings get 1–2 panels (not a tiled grid)
-  const solarPanels = useMemo(() => {
-    if (cleanliness <= 0.6 || width < 18) return [] as number[];
-    const seed = (x * 13 + height * 7) % 100;
-    if (seed > 55) return []; // ~45% of eligible roofs
-    const maxPanels = Math.min(2, Math.floor(width / 14));
-    const count = seed % 2 === 0 ? maxPanels : 1;
-    return Array.from({ length: count }, (_, i) => x + 3 + i * 11);
-  }, [cleanliness, width, x, height]);
-
   return (
     <motion.g
       initial={skipIntro ? { y: 0, opacity: 1 } : { y: 30, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={skipIntro ? { duration: 0 } : { duration: 1.2, delay, ease: 'easeOut' as const }}
     >
-      {/* Building body */}
       <rect x={x} y={150 - height} width={width} height={height} fill={fill} />
-      {/* Roof line */}
       <rect x={x} y={150 - height} width={width} height={2} fill="rgba(255,255,255,0.1)" />
 
-      {/* Windows */}
       {windows.map((w, i) => (
-        <rect
-          key={i}
-          x={w.wx}
-          y={w.wy}
-          width={windowWidth}
-          height={windowHeight}
-          fill={w.lit ? windowLit : windowDark}
-          opacity={w.lit ? (isNight ? 0.9 : 0.55) : 0.3}
-          rx={0.5}
-        />
+        windowsFlicker && w.lit ? (
+          <motion.rect
+            key={i}
+            x={w.wx}
+            y={w.wy}
+            width={windowWidth}
+            height={windowHeight}
+            fill={windowLit}
+            animate={{ opacity: [0.45, 0.95, 0.55, 0.9] }}
+            transition={{
+              duration: 3.2 + (w.flickerDelay % 1.5),
+              delay: w.flickerDelay,
+              repeat: Infinity,
+              ease: 'easeInOut' as const,
+            }}
+          />
+        ) : (
+          <rect
+            key={i}
+            x={w.wx}
+            y={w.wy}
+            width={windowWidth}
+            height={windowHeight}
+            fill={w.lit ? windowLit : windowDark}
+            opacity={w.lit ? (isNight ? 0.9 : 0.55) : 0.35}
+          />
+        )
       ))}
 
-      {/* Rooftop solar panels when clean — sparse, not every roof */}
-      {solarPanels.map((panelX, i) => {
+      {/* Sparse rooftop solar when clean + daytime */}
+      {!isNight && cleanliness > 0.55 && width >= 18 && (x * 13) % 100 < 18 && (() => {
         const roofY = 150 - height;
+        const panelX = x + width * 0.2;
         return (
-          <g key={`solar-${i}`}>
+          <>
             <rect x={panelX + 1} y={roofY - 2} width={1} height={2.5} fill="rgba(150,150,150,0.6)" />
             <rect x={panelX + 6} y={roofY - 2} width={1} height={2.5} fill="rgba(150,150,150,0.6)" />
             <rect x={panelX} y={roofY - 3.5} width={8} height={2} fill="#1e40af" opacity={0.75} rx={0.3} />
             <rect x={panelX + 0.5} y={roofY - 3.2} width={7} height={0.4} fill="rgba(150,200,255,0.3)" />
-          </g>
+          </>
         );
-      })}
+      })()}
 
-      {/* Rooftop antenna/detail */}
       {height > 60 && (
         <line
           x1={x + width / 2} y1={150 - height}
@@ -486,7 +496,7 @@ export function CityLandscapeBack(props: CityLandscapeProps) {
   ], []);
 
   return (
-    <g opacity={0.5}>
+    <g opacity={0.72}>
       <defs>
         <linearGradient id={`${id}-gradCityFar`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={palette.skylineFarHighlight} />
@@ -504,6 +514,7 @@ export function CityLandscapeBack(props: CityLandscapeProps) {
           cleanliness={props.cleanliness}
           delay={i * 0.03}
           skipIntro={props.skipIntro}
+          windowsFlicker={props.timeOfDay === 'dusk' || props.timeOfDay === 'night'}
         />
       ))}
       {/* Landmark: Church spire in far background */}
@@ -539,7 +550,7 @@ export function CityLandscapeMid(props: CityLandscapeProps) {
   ], []);
 
   return (
-    <g opacity={0.75}>
+    <g opacity={0.9}>
       <defs>
         <linearGradient id={`${id}-gradCityMid`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={palette.skylineMidHighlight} />
@@ -557,6 +568,7 @@ export function CityLandscapeMid(props: CityLandscapeProps) {
           cleanliness={props.cleanliness}
           delay={0.2 + i * 0.03}
           skipIntro={props.skipIntro}
+          windowsFlicker={props.timeOfDay === 'dusk' || props.timeOfDay === 'night'}
         />
       ))}
       {/* Landmark: Dome building (museum) */}
@@ -611,6 +623,7 @@ export function CityLandscapeFront(props: CityLandscapeProps) {
             cleanliness={props.cleanliness}
             delay={0.4 + i * 0.03}
             skipIntro={props.skipIntro}
+            windowsFlicker={props.timeOfDay === 'dusk' || props.timeOfDay === 'night'}
           />
         ))}
         {/* Landmark: Art Deco building in foreground */}

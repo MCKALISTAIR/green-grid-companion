@@ -1,83 +1,102 @@
 import type { CleanlinessBand } from '@/hooks/useCleanlinessBand';
 
 /**
- * City one-hero emphasis — demote supporting props so the spotlighted
- * landmark reads first (art direction: one hero per intensity band).
+ * City one-hero emphasis — presence first, then hierarchy.
  *
- * UX bar: name the focal prop in under one second. Non-heroes should
- * nearly ghost; traffic/wildlife should often be off entirely.
+ * Quiet ≠ barren: keep skyline mass, floor non-hero opacity so props
+ * still read, and leave one micro-life cue on the road.
  */
 export interface CityHeroEmphasis {
   /** Focal prop for this band (matches SceneHeroSpotlight). */
   hero: 'london-eye' | 'skyline' | 'bess' | 'distant-stack' | 'smog';
   eyeOpacity: number;
   bessOpacity: number;
+  /** Scale bump when this prop is the hero (>1) or slight shrink when demoted. */
+  eyeScale: number;
+  bessScale: number;
   /** Mid/back skyline relative opacity (clean band lifts the skyline). */
   skylineOpacity: number;
-  /** Foreground building row — drop when Eye/BESS need to pop. */
+  /** Foreground building row — stay solid enough to read as a city. */
   frontOpacity: number;
-  /** Road vehicles; 0 = empty road (preferred when a landmark is hero). */
+  /** Road vehicles; at least 1 when we want "alive" (never a jam). */
   trafficCount: number;
-  showPigeons: boolean;
+  pigeonCount: number;
   showCrane: boolean;
   showBus: boolean;
+  /** Periodic Tube flash across the road (diegetic playful beat). */
+  showTubeFlash: boolean;
 }
 
 const CITY_HERO_EMPHASIS: Record<CleanlinessBand, CityHeroEmphasis> = {
   'very-clean': {
     hero: 'london-eye',
     eyeOpacity: 1,
-    bessOpacity: 0.1,
-    skylineOpacity: 0.42,
-    frontOpacity: 0.55,
-    trafficCount: 0,
-    showPigeons: true,
+    bessOpacity: 0.38,
+    eyeScale: 1.08,
+    bessScale: 0.92,
+    skylineOpacity: 0.78,
+    frontOpacity: 0.88,
+    trafficCount: 1,
+    pigeonCount: 1,
     showCrane: false,
     showBus: false,
+    showTubeFlash: true,
   },
   clean: {
     hero: 'skyline',
-    eyeOpacity: 0.16,
-    bessOpacity: 0.12,
+    eyeOpacity: 0.42,
+    bessOpacity: 0.38,
+    eyeScale: 0.94,
+    bessScale: 0.94,
     skylineOpacity: 1,
-    frontOpacity: 0.92,
+    frontOpacity: 1,
     trafficCount: 2,
-    showPigeons: false,
+    pigeonCount: 0,
     showCrane: false,
     showBus: false,
+    showTubeFlash: true,
   },
   moderate: {
     hero: 'bess',
-    eyeOpacity: 0.12,
+    eyeOpacity: 0.4,
     bessOpacity: 1,
-    skylineOpacity: 0.48,
-    frontOpacity: 0.5,
-    trafficCount: 0,
-    showPigeons: false,
+    eyeScale: 0.94,
+    bessScale: 1.12,
+    skylineOpacity: 0.8,
+    frontOpacity: 0.86,
+    trafficCount: 1,
+    pigeonCount: 0,
     showCrane: false,
     showBus: false,
+    showTubeFlash: true,
   },
   dirty: {
     hero: 'distant-stack',
-    eyeOpacity: 0.1,
-    bessOpacity: 0.1,
-    skylineOpacity: 0.58,
-    frontOpacity: 0.62,
+    eyeOpacity: 0.36,
+    bessOpacity: 0.36,
+    eyeScale: 0.92,
+    bessScale: 0.92,
+    skylineOpacity: 0.88,
+    frontOpacity: 0.92,
     trafficCount: 2,
-    showPigeons: false,
+    pigeonCount: 0,
     showCrane: false,
     showBus: true,
+    showTubeFlash: true,
   },
   'very-dirty': {
     hero: 'smog',
-    eyeOpacity: 0.08,
-    bessOpacity: 0.08,
-    skylineOpacity: 0.4,
-    frontOpacity: 0.45,
-    trafficCount: 3,
-    showPigeons: false,
+    eyeOpacity: 0.35,
+    bessOpacity: 0.32,
+    eyeScale: 0.9,
+    bessScale: 0.9,
+    skylineOpacity: 0.72,
+    frontOpacity: 0.8,
+    trafficCount: 2,
+    pigeonCount: 0,
     showCrane: true,
     showBus: true,
+    showTubeFlash: false,
   },
 };
 
@@ -85,7 +104,7 @@ export function getCityHeroEmphasis(band: CleanlinessBand): CityHeroEmphasis {
   return CITY_HERO_EMPHASIS[band];
 }
 
-/** Hotspot affordance: only the focal prop (or near-hero) should invite taps. */
+/** Hotspot affordance: hero prop always; other props if still readable. */
 export function isCityHotspotActive(
   hero: CityHeroEmphasis['hero'],
   hotspot: 'london-eye' | 'bess' | 'distant-stack' | 'ev-charger',
@@ -93,9 +112,9 @@ export function isCityHotspotActive(
 ): boolean {
   switch (hotspot) {
     case 'london-eye':
-      return hero === 'london-eye' || emphasis.eyeOpacity >= 0.5;
+      return hero === 'london-eye' || emphasis.eyeOpacity >= 0.4;
     case 'bess':
-      return hero === 'bess' || emphasis.bessOpacity >= 0.5;
+      return hero === 'bess' || emphasis.bessOpacity >= 0.4;
     case 'distant-stack':
       return hero === 'distant-stack' || hero === 'smog';
     case 'ev-charger':

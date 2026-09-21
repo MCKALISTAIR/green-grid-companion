@@ -147,17 +147,26 @@ Source of truth: `src/lib/sceneScaleBible.ts` (art direction register test).
 - [ ] Ultrawide: may letterbox horizontally; silhouettes stay unstretched
 - [ ] City one-hero demotion (`getCityHeroEmphasis`) — only the band hero is full opacity
 
+### City presence (alive + obvious)
+
+- [ ] Daytime skyline reads as solid building mass (not glass fog)
+- [ ] Bottom safety strip is pavement grey on city — never countryside green
+- [ ] Hero Eye/BESS stay readable (≥ ~0.35 opacity when still in shot); hero gets a slight scale bump
+- [ ] At least one micro-life cue on clean/moderate (EV or pigeon) — empty road only when dirty? no — always ≥1 on landmark heroes
+- [ ] Tube flash crosses the road ~once/minute (respects reduced motion)
+- [ ] Dusk/night windows flicker staggered
+
 ### City one-hero demotion
 
-UX bar: name the focal prop in &lt;1s. Non-heroes nearly ghost; traffic often off.
+UX bar: name the focal prop in &lt;1s **and** still feel like a living city.
 
-| Band | Hero | Demoted |
+| Band | Hero | Presence |
 |---|---|---|
-| very-clean | London Eye | BESS ~ghost, quiet skyline/front, **no traffic**, light pigeons |
-| clean | Skyline | Eye + BESS ghost, no pigeons/bus |
-| moderate | BESS | Eye ghost, quiet skyline/front, **empty road** |
-| dirty | Distant stack | Eye/BESS ghost, light traffic + bus, no crane |
-| very-dirty | Smog | Eye/BESS/skyline quietest, crane on |
+| very-clean | London Eye (scale↑) | Solid skyline, 1 EV + 1 pigeon, Tube flash |
+| clean | Skyline | Eye/BESS readable ghosts, light traffic |
+| moderate | BESS (scale↑) | Eye readable, 1 EV, Tube flash |
+| dirty | Distant stack | Bus OK, Tube flash |
+| very-dirty | Smog | Crane on, no Tube |
 
 #### City (400×150 viewBox, groundY = 138)
 | Prop | Size | Notes |
