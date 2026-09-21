@@ -81,7 +81,7 @@ For each device, verify:
 - [ ] Stage 2+: extra butterflies; wildlife gates ease slightly
 - [ ] Stage 3+ night: soft emerald sparkles
 - [ ] City theme: temporal garden skipped (no countryside flora)
-- [ ] Home sheet shows quiet "Scene garden · day N" when stage > 0 (never raw clean hours)
+- [ ] Home sheet shows a quiet stage-up line only when garden stage rises (never persistent “day N” chrome; never raw clean hours)
 - [ ] Dirty periods decay garden hours slowly (no hard wipe)
 
 ## City scene logic
