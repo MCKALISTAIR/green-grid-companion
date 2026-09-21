@@ -54,7 +54,8 @@ function buildTimeLabel(fromIso: string, now: Date, isCurrent: boolean, isPast: 
   return format(time, 'EEE HH:mm');
 }
 
-function buildVsNow(selected: number, current: number): string {
+function buildVsNow(selected: number, current: number, isCurrent: boolean): string {
+  if (isCurrent) return 'Live grid reading';
   const delta = selected - current;
   if (Math.abs(delta) < 8) return 'About the same as now';
   if (delta < 0) return `${Math.abs(delta)}g cleaner than now`;
@@ -128,7 +129,7 @@ export function getForecastHourInsight(
     value,
     band,
     condition: getConditionLabel(band, tone, item.from),
-    vsNow: buildVsNow(value, currentIntensity),
+    vsNow: buildVsNow(value, currentIntensity, isCurrent),
     action: buildAction(
       band,
       isPast,

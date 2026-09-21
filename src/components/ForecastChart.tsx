@@ -118,7 +118,7 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
   }, [forecast]);
 
   const maxForecast = getForecastMax(forecast);
-  const now = startOfHour(new Date());
+  const now = new Date();
 
   const hasSeparatorArray = forecast.map((item, i) => {
     const prevItem = forecast[i - 1];

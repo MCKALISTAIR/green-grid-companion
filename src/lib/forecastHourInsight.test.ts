@@ -71,6 +71,14 @@ describe('getForecastHourInsight', () => {
     expect(insight!.vsNow).toMatch(/dirtier than now/i);
     expect(insight!.action.toLowerCase()).toMatch(/avoid|heavy|shift/);
   });
+
+  it('uses live-grid wording for the current slot instead of vs-now', () => {
+    const now = new Date('2026-09-21T15:10:00.000Z');
+    const forecast = [slotAt(new Date('2026-09-21T15:00:00.000Z'), 214, 'high')];
+    const insight = getForecastHourInsight(forecast, 0, 166, 'friendly', now);
+    expect(insight!.isCurrent).toBe(true);
+    expect(insight!.vsNow).toMatch(/live grid reading/i);
+  });
 });
 
 describe('findDefaultForecastIndex', () => {
