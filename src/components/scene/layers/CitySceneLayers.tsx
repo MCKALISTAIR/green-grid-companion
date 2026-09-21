@@ -2,6 +2,8 @@ import { motion, AnimatePresence, type MotionValue } from 'framer-motion';
 import type { TimeOfDay } from '@/hooks/useTimeOfDay';
 import type { CleanlinessBand } from '@/hooks/useCleanlinessBand';
 import type { SceneVisualConfig } from '@/lib/sceneConfig';
+import { getCityHeroEmphasis } from '@/lib/cityHeroDemotion';
+import { SCENE_SILHOUETTE_ASPECT } from '@/lib/sceneScaleBible';
 import { CityLandscapeBack, CityLandscapeMid, CityLandscapeFront } from '../CityLandscape';
 import { CityTraffic, Pigeon, ConstructionCrane, LondonEye, SmogBand, DistantStack, BatteryStorageContainer } from '../CityElements';
 import { ValleyMist } from '../ValleyMist';
@@ -36,18 +38,23 @@ export function CitySceneLayers({
   cleanlinessBand,
   intensity,
 }: CitySceneLayersProps) {
+  const hero = getCityHeroEmphasis(cleanlinessBand);
+  const showStack = sceneConfig.cleanliness < 0.2 || hero.hero === 'distant-stack' || hero.hero === 'smog';
+
   return (
     <>
       {/* City: Background skyline (backY) */}
       <motion.div
         style={{ y: shouldReduceMotion ? 0 : backY }}
+        animate={{ opacity: hero.skylineOpacity }}
+        transition={{ duration: 1.2, ease: 'easeInOut' as const }}
         className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-0 overflow-hidden"
       >
-        <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+        <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio={SCENE_SILHOUETTE_ASPECT} aria-hidden="true">
           {/* Smog band behind skyline when grid is dirty */}
           <SmogBand cleanliness={sceneConfig.cleanliness} isNight={isNight} />
-          {/* Distant stack on horizon when very dirty */}
-          {sceneConfig.cleanliness < 0.2 && <DistantStack isNight={isNight} />}
+          {/* Distant stack on horizon — dirty / very-dirty hero */}
+          {showStack && <DistantStack isNight={isNight} />}
           <CityLandscapeBack
             cleanliness={sceneConfig.cleanliness}
             isNight={isNight}
@@ -64,9 +71,11 @@ export function CitySceneLayers({
       {/* City: Mid skyline (midY) */}
       <motion.div
         style={{ y: shouldReduceMotion ? 0 : midY }}
+        animate={{ opacity: hero.skylineOpacity }}
+        transition={{ duration: 1.2, ease: 'easeInOut' as const }}
         className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-10 overflow-hidden"
       >
-        <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+        <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio={SCENE_SILHOUETTE_ASPECT} aria-hidden="true">
           <CityLandscapeMid
             cleanliness={sceneConfig.cleanliness}
             isNight={isNight}
@@ -85,7 +94,7 @@ export function CitySceneLayers({
 
       {/* City: Foreground buildings + road + London Eye (grounded) + BESS */}
       <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-20 overflow-hidden">
-        <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+        <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio={SCENE_SILHOUETTE_ASPECT} aria-hidden="true">
           <CityLandscapeFront
             cleanliness={sceneConfig.cleanliness}
             isNight={isNight}
@@ -97,24 +106,32 @@ export function CitySceneLayers({
             timeOfDay={timeOfDay}
           />
           {/* Landmark sits on the road layer so legs/plinth aren't buried behind mid/front towers */}
-          <LondonEye isNight={isNight} skipIntro={skipIntro} />
-          {/* Grid-scale battery storage with status LED */}
-          <BatteryStorageContainer cleanliness={sceneConfig.cleanliness} isNight={isNight} />
+          <g opacity={hero.eyeOpacity} style={{ transition: 'opacity 1.2s ease' }}>
+            <LondonEye isNight={isNight} skipIntro={skipIntro} />
+          </g>
+          {/* Grid-scale battery storage with status LED — hero at moderate */}
+          <g opacity={hero.bessOpacity} style={{ transition: 'opacity 1.2s ease' }}>
+            <BatteryStorageContainer cleanliness={sceneConfig.cleanliness} isNight={isNight} />
+          </g>
         </svg>
       </div>
 
-      {/* City: Traffic on the road */}
+      {/* City: Traffic on the road — capped when another prop is the hero */}
       <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-[22] overflow-hidden">
-        <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-          <CityTraffic cleanliness={sceneConfig.cleanliness} isNight={isNight} />
+        <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio={SCENE_SILHOUETTE_ASPECT} aria-hidden="true">
+          <CityTraffic
+            cleanliness={sceneConfig.cleanliness}
+            isNight={isNight}
+            maxVehicles={hero.trafficCount}
+          />
         </svg>
       </div>
 
-      {/* City: Pigeons during daytime when clean */}
+      {/* City: Pigeons — only when the band allows wildlife */}
       <AnimatePresence>
-        {sceneConfig.isDaytime && sceneConfig.cleanliness > 0.4 && (
+        {hero.showPigeons && sceneConfig.isDaytime && sceneConfig.cleanliness > 0.4 && (
           <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-[23] overflow-hidden">
-            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio={SCENE_SILHOUETTE_ASPECT} aria-hidden="true">
               <Pigeon x={60} y={135} delay={0} />
               <Pigeon x={180} y={136} delay={1.5} />
               <Pigeon x={300} y={134} delay={3} />
@@ -123,11 +140,11 @@ export function CitySceneLayers({
         )}
       </AnimatePresence>
 
-      {/* City: Construction crane when dirty */}
+      {/* City: Construction crane when dirty hero bands */}
       <AnimatePresence>
-        {sceneConfig.cleanliness < 0.4 && (
+        {hero.showCrane && sceneConfig.cleanliness < 0.4 && (
           <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-5 overflow-hidden">
-            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio={SCENE_SILHOUETTE_ASPECT} aria-hidden="true">
               <ConstructionCrane x={350} isNight={isNight} />
             </svg>
           </div>
@@ -141,7 +158,7 @@ export function CitySceneLayers({
             id: 'london-eye',
             label: 'London Eye',
             x: 18.75, y: 56.7,
-            visible: true,
+            visible: hero.eyeOpacity >= 0.35,
             fact: cleanlinessBand === 'very-clean'
               ? "London's landmarks are riding 100% renewable right now — the grid is squeaky clean."
               : 'The London Eye has run on 100% certified renewable electricity since 2018.',
@@ -150,7 +167,7 @@ export function CitySceneLayers({
             id: 'bess',
             label: 'Battery Storage',
             x: 82, y: 78,
-            visible: true,
+            visible: hero.bessOpacity >= 0.35,
             fact: sceneConfig.cleanliness > 0.6
               ? 'Grid batteries are discharging cheap, clean overnight wind back into the system.'
               : 'Battery storage smooths spikes — charging when wind is plentiful, dispatching when demand peaks.',
@@ -166,7 +183,7 @@ export function CitySceneLayers({
             id: 'distant-stack',
             label: 'Gas Peaker',
             x: 91, y: 50,
-            visible: sceneConfig.cleanliness < 0.2,
+            visible: showStack,
             fact: 'Gas peaker plants kick in when demand spikes faster than renewables can ramp — the biggest driver of dirty grid hours.',
           },
         ] satisfies HotspotDef[]}

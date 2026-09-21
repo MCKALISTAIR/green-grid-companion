@@ -81,7 +81,7 @@ For each device, verify:
 - [ ] Stage 2+: extra butterflies; wildlife gates ease slightly
 - [ ] Stage 3+ night: soft emerald sparkles
 - [ ] City theme: temporal garden skipped (no countryside flora)
-- [ ] Home sheet shows quiet "Scene garden · day N" when stage > 0
+- [ ] Home sheet shows quiet "Scene garden · day N" when stage > 0 (never raw clean hours)
 - [ ] Dirty periods decay garden hours slowly (no hard wipe)
 
 ## City scene logic
@@ -134,6 +134,27 @@ heavy haze on dirty days does not mute the halo.
 ### Scale bible (locked)
 
 Source of truth: `src/lib/sceneScaleBible.ts` (art direction register test).
+
+### Aspect integrity (locked)
+
+| Layer kind | `preserveAspectRatio` | Constant |
+|---|---|---|
+| Landscape / skyline / props (Eye, turbines, boats, BESS…) | `xMidYMax slice` | `SCENE_SILHOUETTE_ASPECT` |
+| Washes (mist, aurora, grass strip, tidal wash, wave divider) | `none` | `SCENE_WASH_ASPECT` |
+
+- [ ] Phone SE / 15 / Duo cover / desktop 1440: props look like the same objects (no vertical squash)
+- [ ] Ultrawide: sides may crop; silhouettes stay unstretched
+- [ ] City one-hero demotion (`getCityHeroEmphasis`) — only the band hero is full opacity
+
+### City one-hero demotion
+
+| Band | Hero | Demoted |
+|---|---|---|
+| very-clean | London Eye | BESS dim, less traffic, no crane |
+| clean | Skyline | Eye + BESS quieter |
+| moderate | BESS | Eye quieter, no pigeons |
+| dirty | Distant stack | Eye/BESS dim, crane on, no pigeons |
+| very-dirty | Smog | Eye/BESS/skyline quietest |
 
 #### City (400×150 viewBox, groundY = 138)
 | Prop | Size | Notes |

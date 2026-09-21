@@ -61,6 +61,9 @@ export function gardenDaysToStage(gardenDays: number): SceneGrowthStage {
 /**
  * Temporal scene life: garden stage grows with coal-free streak + clean intensity hours.
  * Dirty periods pause growth and gently decay clean hours (no hard reset).
+ *
+ * Hours are the growth engine only — UI surfaces garden day / stage, never raw hours
+ * (Carrot pattern: calendar story, half-hour grid truth under the hood).
  */
 export function useSceneGrowth(
   intensity: number,

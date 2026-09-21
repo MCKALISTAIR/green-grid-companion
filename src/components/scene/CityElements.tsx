@@ -551,12 +551,22 @@ export function BatteryStorageContainer({ x = 320, cleanliness, isNight }: {
 }
 
 // City traffic - collection of vehicles responding to intensity
-export function CityTraffic({ cleanliness, isNight }: { cleanliness: number; isNight: boolean }) {
+export function CityTraffic({
+  cleanliness,
+  isNight,
+  maxVehicles,
+}: {
+  cleanliness: number;
+  isNight: boolean;
+  /** Cap road clutter for one-hero composition (defaults: night 3 / day 5). */
+  maxVehicles?: number;
+}) {
   // More EVs when cleaner
   const evRatio = cleanliness;
   
   const vehicles = useMemo(() => {
-    const count = isNight ? 3 : 5;
+    const defaultCount = isNight ? 3 : 5;
+    const count = Math.max(1, Math.min(maxVehicles ?? defaultCount, defaultCount));
     return Array.from({ length: count }).map((_, i) => ({
       id: i,
       direction: (i % 2 === 0 ? 'right' : 'left') as 'left' | 'right',
@@ -564,15 +574,17 @@ export function CityTraffic({ cleanliness, isNight }: { cleanliness: number; isN
       delay: i * 4,
       speed: 10 + Math.random() * 8,
     }));
-  }, [isNight, evRatio > 0.5]); // Only recalculate when crossing threshold
+  }, [isNight, maxVehicles, evRatio > 0.5]); // Only recalculate when crossing threshold
 
   return (
     <g>
       {vehicles.map(v => (
         <CityVehicle key={v.id} {...v} />
       ))}
-      {/* One bus */}
-      <CityBus direction="right" isElectric={cleanliness > 0.6} delay={5} />
+      {/* One bus — skip when traffic is heavily demoted */}
+      {(maxVehicles ?? 5) >= 3 && (
+        <CityBus direction="right" isElectric={cleanliness > 0.6} delay={5} />
+      )}
     </g>
   );
 }

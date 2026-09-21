@@ -54,7 +54,10 @@ export function IntensityDashboard({
       <NowOrWaitDecision intensity={intensity} forecast={forecast} />
 
       {growthStage > 0 && gardenDays > 0 && (
-        <p className="text-center text-xs text-muted-foreground -mt-2">
+        <p
+          className="text-center text-xs text-muted-foreground -mt-2"
+          data-testid="scene-garden-day"
+        >
           Scene garden · day {gardenDays}
           {growthStage >= 3 ? ' · lush' : growthStage >= 2 ? ' · blooming' : ' · sprouting'}
         </p>

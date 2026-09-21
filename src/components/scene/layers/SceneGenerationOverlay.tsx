@@ -8,6 +8,7 @@ import { SmokeParticle } from '../SmokeParticle';
 import { NuclearCoolingTower } from '../NuclearCoolingTower';
 import { OffshoreWind } from '../OffshoreWind';
 import { TidalWaves } from '../TidalWaves';
+import { SCENE_SILHOUETTE_ASPECT, SCENE_WASH_ASPECT } from '@/lib/sceneScaleBible';
 
 export interface SceneGenerationOverlayProps {
   sceneConfig: SceneVisualConfig;
@@ -246,7 +247,7 @@ export function SceneGenerationOverlay({
       <AnimatePresence>
         {sceneConfig.showRenewables && nuclearPercentage > 5 && !isCity && !isCoastal && (
           <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-15">
-            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio={SCENE_SILHOUETTE_ASPECT} aria-hidden="true">
               <NuclearCoolingTower x={280} steamIntensity={nuclearPercentage / 100} isNight={isNight} />
               {nuclearPercentage > 15 && <NuclearCoolingTower x={240} steamIntensity={0.5} isNight={isNight} />}
             </svg>
@@ -258,7 +259,7 @@ export function SceneGenerationOverlay({
       <AnimatePresence>
         {windPercentage > 10 && !isCity && !isCoastal && (
           <div className="absolute bottom-0 left-0 right-0 h-[65%] pointer-events-none z-5">
-            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio={SCENE_SILHOUETTE_ASPECT} aria-hidden="true">
               <OffshoreWind count={Math.min(3, Math.floor(windPercentage / 10))} windSpeed={windSpeed} />
             </svg>
           </div>
@@ -269,7 +270,7 @@ export function SceneGenerationOverlay({
       <AnimatePresence>
         {isCoastal && (hydroPercentage > 5 || marinePercentage > 0) && (
           <div className="absolute bottom-0 left-0 right-0 h-[65%] pointer-events-none z-25">
-            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio={SCENE_WASH_ASPECT} aria-hidden="true">
               <TidalWaves intensity={(hydroPercentage + marinePercentage) / 100} />
             </svg>
           </div>
