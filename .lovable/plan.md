@@ -106,6 +106,6 @@ Goal: 3-4 props become tappable and educational.
 - **Quiet sheet** — home content sheet leads with now-or-wait; secondary insights collapsed.
 - **Temporal scene life** — `useSceneGrowth` + `SceneTemporalLife` evolve countryside flora with coal-free + clean hours (stages 0–4). UI shows day N only.
 - **One product feel** — `docs/ART_DIRECTION.md` (“Living grid paper”); seam/register/job tests; paper sheet + dock; diegetic events only.
-- **Aspect + city hero (2026-09)** — `SCENE_SILHOUETTE_ASPECT` (`xMidYMax slice`) on landscape/prop layers; `getCityHeroEmphasis` demotes non-hero city props.
+- **Aspect + city hero (2026-09)** — `SCENE_SILHOUETTE_ASPECT` (`xMidYMax meet`) on landscape/prop layers; `getCityHeroEmphasis` demotes non-hero city props.
 
 Each phase ends with a screenshot QA pass across the 5 intensity bands × city/countryside/coastal × day/night.

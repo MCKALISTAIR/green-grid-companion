@@ -139,11 +139,12 @@ Source of truth: `src/lib/sceneScaleBible.ts` (art direction register test).
 
 | Layer kind | `preserveAspectRatio` | Constant |
 |---|---|---|
-| Landscape / skyline / props (Eye, turbines, boats, BESS…) | `xMidYMax slice` | `SCENE_SILHOUETTE_ASPECT` |
+| Landscape / skyline / props (Eye, turbines, boats, BESS…) | `xMidYMax meet` | `SCENE_SILHOUETTE_ASPECT` |
 | Washes (mist, aurora, grass strip, tidal wash, wave divider) | `none` | `SCENE_WASH_ASPECT` |
 
 - [ ] Phone SE / 15 / Duo cover / desktop 1440: props look like the same objects (no vertical squash)
-- [ ] Ultrawide: sides may crop; silhouettes stay unstretched
+- [ ] Tall phones: Eye + BESS stay in frame (meet letterboxes; sky CSS fills gaps — do not switch back to `slice`, which crops side landmarks)
+- [ ] Ultrawide: may letterbox horizontally; silhouettes stay unstretched
 - [ ] City one-hero demotion (`getCityHeroEmphasis`) — only the band hero is full opacity
 
 ### City one-hero demotion

@@ -24,7 +24,7 @@ describe('sceneScaleBible', () => {
   });
 
   it('locks silhouette vs wash aspect policy', () => {
-    expect(SCENE_SILHOUETTE_ASPECT).toBe('xMidYMax slice');
+    expect(SCENE_SILHOUETTE_ASPECT).toBe('xMidYMax meet');
     expect(SCENE_WASH_ASPECT).toBe('none');
   });
 
