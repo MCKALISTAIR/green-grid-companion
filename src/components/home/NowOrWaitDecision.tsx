@@ -85,7 +85,7 @@ export function NowOrWaitDecision({ intensity, forecast }: NowOrWaitDecisionProp
             )}
             {!isBestNow && countdown && (
               <span className="text-[10px] font-semibold tabular-nums px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
-                in {countdown}
+                {countdown}
               </span>
             )}
           </div>
