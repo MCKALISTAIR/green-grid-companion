@@ -1,5 +1,5 @@
 import { ForecastData, getIntensityColor, getIntensityTextColor } from '@/lib/carbonApi';
-import { format, parseISO, startOfHour } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { useRef, useLayoutEffect, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getForecastMax, getForecastDifferences } from '@/lib/forecastUtils';
