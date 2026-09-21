@@ -39,19 +39,19 @@ One sentence:
 |---|---|---|
 | **Landscape props** | Scene | Turbines, Eye, BESS, stacks, boats, hills — consistent “chibi-realistic” scale |
 | **Diegetic wildlife** | Scene (countryside/coast) | Sheep, birds, bees, fox — grid-mood only, low frequency |
-| **Paper UI** | Sheet, dock, dialogs | Soft surfaces, quiet borders, Work Sans UI/HUD, Lora for personality only, Inconsolata for dense data |
+| **Paper UI** | Sheet, dock, dialogs | Soft surfaces, quiet borders, Plus Jakarta Sans throughout, Inconsolata for dense data |
 
 ### Paper UI / typography
 
 | Role | Face | Where |
 |---|---|---|
-| **UI + HUD** | Work Sans | Nav, sheet, band labels (High / Moderate), page titles, now-or-wait |
-| **Personality** | Lora italic | Energy fact line / editorial asides only |
+| **UI + HUD** | Plus Jakarta Sans | Nav, sheet, band labels (High / Moderate), page titles, now-or-wait |
+| **Personality** | Same family, italic | Energy fact line — distinct voice without a second face |
 | **Data** | Inconsolata | Dense figures in charts, tables, codes — not the hero intensity number |
 
-Hero intensity uses **Work Sans + tabular-nums** (Carrot-like craft: one sans for the readout). Do not put a display serif on carbon status copy.
+Hero intensity uses **Plus Jakarta Sans + tabular-nums** (Carrot craft: one sans for the readout). Full review: [`TYPOGRAPHY.md`](./TYPOGRAPHY.md).
 
-Fraunces / Nunito are retired — they fought the modern HUD and read soft/dated next to the living scene.
+Retired: Nunito, Fraunces, Work Sans (interim), Lora-as-second-dialect.
 
 ### Disallowed / gated registers
 
@@ -89,7 +89,7 @@ Do not reintroduce competing numeric overlays on the scene. Do not put marketing
 ## Sheet art rules
 
 1. Same **paper** as the dock (`--card`, soft border, soft shadow) — scene bleeds into UI via wave divider only.
-2. Decision / page titles use **Work Sans** (weight hierarchy); intensity band labels also **Work Sans**; personality asides may use **Lora italic**; gCO₂ figures in dense UI use **Inconsolata** / tabular nums. Hero intensity stays Work Sans + tabular-nums.
+2. Decision / page titles and intensity band labels use **Plus Jakarta Sans** (weight hierarchy); personality asides use the **same face italic**; dense gCO₂ figures use **Inconsolata** / tabular nums. Hero intensity stays Plus Jakarta + tabular-nums. See [`TYPOGRAPHY.md`](./TYPOGRAPHY.md).
 3. Primary CTA colour is grid green; avoid multi-hue icon festivals.
 4. Icons are supporting, not the personality. Personality lives in scene + condition copy.
 

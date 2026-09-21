@@ -8,7 +8,7 @@ interface PageHeaderProps {
 }
 
 /**
- * Shared secondary-screen header — Work Sans title, quiet subtitle.
+ * Shared secondary-screen header — Plus Jakarta Sans title, quiet subtitle.
  * Art direction: same hand as home decision headlines.
  */
 export function PageHeader({ title, description, className, actions }: PageHeaderProps) {

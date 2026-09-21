@@ -1,11 +1,10 @@
-@import url("https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,500;1,600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500;1,600&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;600;700&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* GridSense — modern craft type: Work Sans UI, Lora voice, Inconsolata data */
+/* GridSense — Plus Jakarta Sans craft type (see docs/TYPOGRAPHY.md) */
 
 @layer base {
   :root {
@@ -81,11 +80,11 @@
     --sidebar-ring: 158 64% 36%;
     --sidebar: 0 0% 98%;
 
-    --font-sans: 'Work Sans', ui-sans-serif, system-ui, sans-serif;
-    /* Display = same family, heavier hierarchy — Carrot-like craft, not a second face fighting the HUD */
-    --font-display: 'Work Sans', ui-sans-serif, system-ui, sans-serif;
-    /* Serif reserved for personality / editorial voice only */
-    --font-serif: 'Lora', ui-serif, Georgia, serif;
+    --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+    /* Display shares the UI face — hierarchy via weight, not a second family */
+    --font-display: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+    /* Serif token kept for rare editorial; defaults to the UI face for one-product craft */
+    --font-serif: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
     --font-mono: 'Inconsolata', ui-monospace, monospace;
 
     --shadow-sm: 0 1px 2px 0 hsl(210 20% 20% / 0.04);
@@ -522,7 +521,7 @@
     0 20px 40px -15px hsl(var(--foreground) / 0.15),
     0 0 0 1px hsl(var(--primary) / 0.1),
     inset 0 1px 0 0 hsl(var(--background) / 0.5);
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: var(--font-sans);
   padding: 1.5rem;
   animation: tour-popover-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -540,7 +539,7 @@
 }
 
 .gridsense-tour-popover .driver-popover-title {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: var(--font-sans);
   font-weight: 600;
   font-size: 1.125rem;
   color: hsl(var(--foreground));
@@ -549,7 +548,7 @@
 }
 
 .gridsense-tour-popover .driver-popover-description {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: var(--font-sans);
   font-size: 0.9rem;
   color: hsl(var(--muted-foreground));
   line-height: 1.6;
@@ -557,7 +556,7 @@
 }
 
 .gridsense-tour-popover .driver-popover-progress-text {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: var(--font-sans);
   font-size: 0.75rem;
   color: hsl(var(--primary));
   font-weight: 500;
@@ -570,7 +569,7 @@
 }
 
 .gridsense-tour-popover .driver-popover-navigation-btns button {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: var(--font-sans);
   font-weight: 500;
   font-size: 0.875rem;
   border-radius: calc(var(--radius) - 4px);

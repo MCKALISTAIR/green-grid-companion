@@ -87,7 +87,7 @@ export function EnergyFactBubble({ intensity, generationMix, className, variant 
               relative cursor-pointer select-none transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary/50
               ${variant === 'bubble'
                 ? 'rounded-2xl text-xs md:text-sm font-medium p-3 shadow-lg backdrop-blur-md border border-white/20'
-                : 'rounded-none py-2.5 px-1 bg-transparent border-0 mx-auto w-fit max-w-[92%] font-serif italic text-[15px] sm:text-base font-medium leading-snug'}
+                : 'rounded-none py-2.5 px-1 bg-transparent border-0 mx-auto w-fit max-w-[92%] font-sans italic text-[15px] sm:text-base font-medium leading-snug'}
               ${variant === 'bubble' && tone === 'snarky'
                                 ? 'bg-primary/25 text-primary-foreground hover:bg-primary/35'
                                 : variant === 'bubble'

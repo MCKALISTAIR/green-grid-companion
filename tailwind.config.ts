@@ -97,22 +97,22 @@ export default {
 			},
 			fontFamily: {
 				sans: [
-					'Work Sans',
+					'Plus Jakarta Sans',
 					'ui-sans-serif',
 					'system-ui',
 					'sans-serif'
 				],
 				display: [
-					'Work Sans',
+					'Plus Jakarta Sans',
 					'ui-sans-serif',
 					'system-ui',
 					'sans-serif'
 				],
 				serif: [
-					'Lora',
-					'ui-serif',
-					'Georgia',
-					'serif'
+					'Plus Jakarta Sans',
+					'ui-sans-serif',
+					'system-ui',
+					'sans-serif'
 				],
 				mono: [
 					'Inconsolata',
