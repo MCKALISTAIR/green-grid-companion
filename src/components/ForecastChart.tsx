@@ -218,7 +218,7 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
                 </span>
                 <p
                   className={cn(
-                    'font-sans text-xl font-extrabold tracking-tight truncate',
+                    'font-sans text-xl font-bold tracking-tight truncate',
                     getIntensityTextColor(insight.band),
                   )}
                 >

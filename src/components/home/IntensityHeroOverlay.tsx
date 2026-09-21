@@ -219,8 +219,8 @@ export function IntensityHeroOverlay({
               >
                 <p
                   className={cn(
-                    // Intensity band labels — Work Sans, not a display serif.
-                    'font-sans text-3xl sm:text-4xl font-extrabold text-white tracking-tight',
+                    // Intensity band labels — Work Sans bold (not extrabold; less “bubbly”).
+                    'font-sans text-3xl sm:text-4xl font-bold text-white tracking-tight',
                     needsHardScrim
                       ? 'drop-shadow-[0_3px_16px_rgba(0,0,0,0.75)]'
                       : 'drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)]',
