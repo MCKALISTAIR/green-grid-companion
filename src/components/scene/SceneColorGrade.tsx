@@ -29,8 +29,8 @@ export function SceneColorGrade({ cleanliness, isNight }: Props) {
     // Bloom (top): only when clean. Adds a sense of fresh light.
     const bloomOpacity = Math.max(0, cleanScore) * (isNight ? 0.35 : 0.5);
 
-    // Vignette (edges): only when dirty. Adds oppressive feeling.
-    const vignetteOpacity = Math.max(0, -cleanScore) * (isNight ? 0.55 : 0.4);
+    // Vignette (edges): only when dirty. Soft enough that landmarks survive.
+    const vignetteOpacity = Math.max(0, -cleanScore) * (isNight ? 0.42 : 0.28);
 
     return (
         <div

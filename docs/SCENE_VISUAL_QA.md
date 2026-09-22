@@ -3,6 +3,18 @@
 Manual on-device checks for the `IntensityScene`. Run this whenever scene height,
 landscape SVG paths, or layout-affecting CSS changes.
 
+## Matrix QA (2026-09 presence + integrity)
+
+Captured via `scripts/scene-matrix-qa.mjs` + `scripts/scene-home-qa.mjs`:
+
+| Coverage | Status |
+|---|---|
+| Theme × band × midday/night (iPhone SE) | 3 × 5 × 2 = 30 scene-test cards |
+| Home app context (city EC1 / countryside BA1 / coastal PL1) | HUD + paper sheet over live intensity |
+| Desktop + ultrawide city aspect | meet letterbox, Eye stays in frame |
+
+Guards: `scene-theme-integrity`, `sceneConfig` ground dialects, `cityHeroDemotion` presence floors.
+
 ## Stress-test findings (2026-09)
 
 Deep scrutiny across theme × intensity × time found recurring failures:
@@ -128,7 +140,8 @@ heavy haze on dirty days does not mute the halo.
 ### Atmospheric depth band
 `SceneAtmosphericDepth` adds a horizontal haze across the horizon (z-[2], below spotlight).
 - [ ] Cool blue tint on clean days, warm sepia on dirty days
-- [ ] Visible at the 40–68% vertical band only (does not wash out foreground)
+- [ ] Visible near the horizon only (~42–64% vertical) — must **not** form an opaque muddy bar
+- [ ] Peak haze opacity capped (~0.24) so live UK dirty/high intensities still show landmarks
 - [ ] Distant skyline reads as further away than mid skyline
 
 ### Scale bible (locked)

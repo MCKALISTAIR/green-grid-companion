@@ -98,20 +98,21 @@ interface DepthProps {
  * Sits at z-[2], below SceneHeroSpotlight (z-[3]) so haze does not mute the halo.
  */
 export function SceneAtmosphericDepth({ cleanliness, isNight }: DepthProps) {
-    // Haze intensity rises as cleanliness drops.
-    const intensity = 0.18 + (1 - cleanliness) * 0.28;
+    // Haze for depth — keep it airy. Cap so dirty days don't paint an opaque
+    // muddy bar across mid-scene (common UK live intensities are dirty/high).
+    const intensity = Math.min(0.24, 0.1 + (1 - cleanliness) * 0.16);
     // Hue: cool blue when clean, warm sepia when dirty.
-    const hue = cleanliness > 0.5 ? 210 : 30;
-    const sat = cleanliness > 0.5 ? 35 : 25;
-    const light = isNight ? 22 : 70;
+    const hue = cleanliness > 0.5 ? 210 : 28;
+    const sat = cleanliness > 0.5 ? 32 : 22;
+    const light = isNight ? 28 : cleanliness > 0.5 ? 72 : 58;
 
     return (
         <motion.div
             className="absolute inset-x-0 z-[2] pointer-events-none"
             aria-hidden="true"
             style={{
-                top: '40%',
-                height: '28%',
+                top: '42%',
+                height: '22%',
             }}
             animate={{
                 background: `linear-gradient(to bottom,
