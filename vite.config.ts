@@ -8,18 +8,16 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig(({ mode }) => {
   // Fallback env values (publishable keys only) in case .env isn't provisioned (dev only)
   const fallbackEnv: Record<string, string> = {};
-  if (mode === 'development') {
-    if (!process.env.VITE_SUPABASE_URL) {
-      fallbackEnv['import.meta.env.VITE_SUPABASE_URL'] = JSON.stringify('https://klwezcjmlrdwvvzisdtd.supabase.co');
-    }
-    if (!process.env.VITE_SUPABASE_PUBLISHABLE_KEY) {
-      fallbackEnv['import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY'] = JSON.stringify('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtsd2V6Y2ptbHJkd3Z2emlzZHRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg1MjU0MzcsImV4cCI6MjA4NDEwMTQzN30.InAQiMMh0AyhjOiK5sg3CHeJzyzKCCXme2yh40G8AMs');
-    }
-    if (!process.env.VITE_SUPABASE_PROJECT_ID) {
-      fallbackEnv['import.meta.env.VITE_SUPABASE_PROJECT_ID'] = JSON.stringify('klwezcjmlrdwvvzisdtd');
-    }
+  if (!process.env.VITE_SUPABASE_URL) {
+    fallbackEnv['import.meta.env.VITE_SUPABASE_URL'] = JSON.stringify('https://klwezcjmlrdwvvzisdtd.supabase.co');
   }
-  fallbackEnv['import.meta.env.PACKAGE_VERSION'] = JSON.stringify(process.env.npm_package_version || '1.4.6');
+  if (!process.env.VITE_SUPABASE_PUBLISHABLE_KEY) {
+    fallbackEnv['import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY'] = JSON.stringify('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtsd2V6Y2ptbHJkd3Z2emlzZHRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg1MjU0MzcsImV4cCI6MjA4NDEwMTQzN30.InAQiMMh0AyhjOiK5sg3CHeJzyzKCCXme2yh40G8AMs');
+  }
+  if (!process.env.VITE_SUPABASE_PROJECT_ID) {
+    fallbackEnv['import.meta.env.VITE_SUPABASE_PROJECT_ID'] = JSON.stringify('klwezcjmlrdwvvzisdtd');
+  }
+  fallbackEnv['import.meta.env.PACKAGE_VERSION'] = JSON.stringify(process.env.npm_package_version || '1.6.0');
 
   return ({
   define: fallbackEnv,

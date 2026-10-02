@@ -236,7 +236,7 @@ export default function Planner() {
     };
 
     return (
-        <div className="page-shell h-[100dvh] overflow-hidden">
+        <div className="page-shell">
             <PullToRefresh onRefresh={async () => { await refetch(); }}>
                 <div className="page-shell-inner space-y-6">
                     <PageHeader

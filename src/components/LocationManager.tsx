@@ -32,6 +32,8 @@ import { useSavedLocations } from '@/hooks/useSavedLocations';
 import { searchLocation, getRegionFromCoordinates, LocationSearchResult } from '@/lib/location';
 import { setGenericSharedRegion } from '@/lib/sharedPrefs';
 import { logger } from '@/lib/logger';
+import { Capacitor } from '@capacitor/core';
+import { Geolocation } from '@capacitor/geolocation';
 
 interface LocationManagerProps {
   value: string;
@@ -107,50 +109,47 @@ export function LocationManager({ value, onChange, showPostcode = true, trigger 
     }
   };
 
-  const handleMyLocation = () => {
-    if (!navigator.geolocation) {
-      toast.error('Geolocation not supported', {
-        description: 'Your browser does not support geolocation.',
-      });
-      return;
-    }
-
+  const handleMyLocation = async () => {
     setLoadingLocation(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const { latitude, longitude } = position.coords;
+    try {
+      let latitude: number;
+      let longitude: number;
 
-          // Use our robust location utility
-          const result = await getRegionFromCoordinates(latitude, longitude);
+      if (Capacitor.isNativePlatform()) {
+        const position = await Geolocation.getCurrentPosition({ timeout: 8000 });
+        latitude = position.coords.latitude;
+        longitude = position.coords.longitude;
+      } else if ('geolocation' in navigator) {
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000 });
+        });
+        latitude = position.coords.latitude;
+        longitude = position.coords.longitude;
+      } else {
+        throw new Error('Geolocation not supported');
+      }
 
-          if (result) {
-            handleSelectLocation(result.regionPostcode);
-            toast.success('Location Updated', {
-              description: `Set region to ${result.regionName}`,
-            });
-          } else {
-            toast.error('Region not found', {
-              description: 'Could not match your location to a supported region.',
-            });
-          }
-        } catch (error) {
-          logger.error('Geolocation error', { error });
-          toast.error('Location Error', {
-            description: 'Failed to detect your region. Please select manually.',
-          });
-        } finally {
-          setLoadingLocation(false);
-        }
-      },
-      (error) => {
-        logger.error('Geolocation error callback', { error });
-        setLoadingLocation(false);
-        toast.error('Location Access Denied', {
-          description: 'Please enable location access to use this feature.',
+      // Use our robust location utility
+      const result = await getRegionFromCoordinates(latitude, longitude);
+
+      if (result) {
+        handleSelectLocation(result.regionPostcode);
+        toast.success('Location Updated', {
+          description: `Set region to ${result.regionName}`,
+        });
+      } else {
+        toast.error('Region not found', {
+          description: 'Could not match your location to a supported region.',
         });
       }
-    );
+    } catch (error) {
+      logger.error('Geolocation error', { error });
+      toast.error('Location Error', {
+        description: 'Failed to detect your region. Please select manually.',
+      });
+    } finally {
+      setLoadingLocation(false);
+    }
   };
 
   const handleSaveLocation = () => {

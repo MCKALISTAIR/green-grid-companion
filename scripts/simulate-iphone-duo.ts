@@ -11,7 +11,7 @@ import { mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
 const BASE = process.env.DUO_SIM_BASE_URL || 'http://127.0.0.1:8080';
-const OUT = process.env.DUO_SIM_OUT || '/opt/cursor/artifacts/screenshots';
+const OUT = process.env.DUO_SIM_OUT || join(process.cwd(), '.artifacts', 'screenshots');
 
 const VIEWPORTS = [
   { id: 'cover', w: 466, h: 678 },

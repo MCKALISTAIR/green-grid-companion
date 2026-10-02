@@ -1,15 +1,19 @@
 
 import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Capacitor } from '@capacitor/core';
 import { useCarbonData } from '@/hooks/useCarbonData';
 import { useTimeOfDay } from '@/hooks/useTimeOfDay';
 import { useSceneDirector } from '@/hooks/useSceneDirector';
 import { useWeatherData } from '@/hooks/useWeatherData';
+import { useTheme } from '@/components/ThemeProvider';
 import { getSkyTopColor, getCarbonIndex } from '@/lib/sceneUtils';
 import { logger } from '@/lib/logger';
 
 export function StatusBarManager() {
+    const location = useLocation();
+    const { theme } = useTheme();
     const { intensity: realIntensity } = useCarbonData('');
     const { timeOfDay: realTimeOfDay, isNight: realIsNight } = useTimeOfDay();
     const { weather: realWeather } = useWeatherData();
@@ -42,15 +46,24 @@ export function StatusBarManager() {
 
         const applyStatusBar = async () => {
             try {
-                await StatusBar.setBackgroundColor({ color: skyColor });
-                await StatusBar.setStyle({ style: isNight ? Style.Dark : Style.Light });
+                if (location.pathname === '/') {
+                    await StatusBar.setBackgroundColor({ color: skyColor });
+                    await StatusBar.setStyle({ style: isNight ? Style.Dark : Style.Light });
+                } else {
+                    const isDark =
+                        theme === 'dark' ||
+                        (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                    const bgColor = isDark ? '#131820' : '#f1f7f9';
+                    await StatusBar.setBackgroundColor({ color: bgColor });
+                    await StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light });
+                }
             } catch (e) {
                 logger.error('Failed to set status bar:', e);
             }
         };
 
         applyStatusBar();
-    }, [skyColor, isNight]);
+    }, [location.pathname, skyColor, isNight, theme]);
 
     return null;
 }

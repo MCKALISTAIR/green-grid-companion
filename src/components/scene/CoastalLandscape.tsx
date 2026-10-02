@@ -82,6 +82,7 @@ function OceanWaves({ sea, seaHighlight, foam, skipIntro }: { sea: string; seaHi
       <rect x={0} y={85} width={400} height={65} fill={sea} />
       {/* Wave layers */}
       <motion.path
+        initial={false}
         d="M0,95 Q50,90 100,95 T200,95 T300,95 T400,95 L400,100 L0,100 Z"
         fill={seaHighlight}
         opacity={0.3}
@@ -93,6 +94,7 @@ function OceanWaves({ sea, seaHighlight, foam, skipIntro }: { sea: string; seaHi
         transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' as const }}
       />
       <motion.path
+        initial={false}
         d="M0,100 Q60,96 120,100 T240,100 T360,100 T400,100 L400,106 L0,106 Z"
         fill={seaHighlight}
         opacity={0.2}
@@ -105,6 +107,7 @@ function OceanWaves({ sea, seaHighlight, foam, skipIntro }: { sea: string; seaHi
       />
       {/* Foam/surf line on shore */}
       <motion.path
+        initial={false}
         d="M200,108 Q220,106 240,108 T280,108 T320,108 T360,108 T400,108"
         stroke={foam}
         strokeWidth="1.5"

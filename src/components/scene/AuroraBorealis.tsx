@@ -41,6 +41,7 @@ export function AuroraBorealis({ intensity }: AuroraBorealisProps) {
                 {[0, 1, 2].map((i) => (
                     <motion.path
                         key={i}
+                        initial={false}
                         d={`M0,${30 + i * 10} Q100,${20 + i * 8} 200,${30 + i * 10} T400,${30 + i * 10} L400,${50 + i * 10} Q200,${40 + i * 10} 100,${50 + i * 10} T0,${50 + i * 10} Z`}
                         fill={i % 2 === 0 ? `url(#${id}-auroraGrad1)` : `url(#${id}-auroraGrad2)`}
                         opacity={0.7 - i * 0.1}

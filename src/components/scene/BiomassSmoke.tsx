@@ -25,6 +25,7 @@ export function BiomassSmoke({ x, intensity }: BiomassSmokeProps) {
                 {Array.from({ length: 5 }).map((_, i) => (
                     <motion.circle
                         key={i}
+                        initial={false}
                         cx="0"
                         cy={-30 - i * 8}
                         r={3 + i * 1.5}
@@ -49,6 +50,7 @@ export function BiomassSmoke({ x, intensity }: BiomassSmokeProps) {
 
                 {/* Green biomass indicator light */}
                 <motion.circle
+                    initial={false}
                     cx="0"
                     cy="-5"
                     r="1.5"

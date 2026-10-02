@@ -41,6 +41,7 @@ export function TidalWaves({ intensity = 0.5 }: TidalWavesProps) {
                 {[0, 1, 2].map((i) => (
                     <motion.path
                         key={i}
+                        initial={false}
                         d={`M${i * 25},2 Q${i * 25 + 10},${1 + Math.sin(i) * 0.5} ${i * 25 + 20},2`}
                         stroke="#67e8f9"
                         strokeWidth="1"
@@ -65,6 +66,7 @@ export function TidalWaves({ intensity = 0.5 }: TidalWavesProps) {
                 {/* Foam/whitecaps (higher intensity = more foam) */}
                 {intensity > 0.6 && (
                     <motion.ellipse
+                        initial={false}
                         cx="40"
                         cy="1"
                         rx="8"

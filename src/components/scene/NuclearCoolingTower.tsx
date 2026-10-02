@@ -117,6 +117,7 @@ export function NuclearCoolingTower({ x, steamIntensity = 0.7, isNight }: Nuclea
                 {/* Nuclear glow at base */}
                 {isNight && (
                     <motion.ellipse
+                        initial={false}
                         cx="0"
                         cy="-5"
                         rx="6"

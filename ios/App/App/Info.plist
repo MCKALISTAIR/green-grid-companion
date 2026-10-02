@@ -57,6 +57,8 @@
     <string>We need your location to show you the local energy grid intensity.</string>
     <key>NSLocationAlwaysUsageDescription</key>
     <string>We need your location to show you the local energy grid intensity.</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>We need your location to show you the local energy grid intensity.</string>
     <key>CFBundleURLTypes</key>
     <array>
         <dict>
@@ -65,6 +67,7 @@
             <key>CFBundleURLSchemes</key>
             <array>
                 <string>GridSense</string>
+                <string>gridsense</string>
             </array>
         </dict>
         <dict>

@@ -20,6 +20,8 @@ import { UK_REGIONS } from '@/lib/carbonApi';
 import { useToast } from '@/hooks/use-toast';
 import { searchLocation, getRegionFromCoordinates } from '@/lib/location';
 import { logger } from '@/lib/logger';
+import { Capacitor } from '@capacitor/core';
+import { Geolocation } from '@capacitor/geolocation';
 
 interface RegionSelectorProps {
   value: string;
@@ -68,58 +70,52 @@ export function RegionSelector({ value, onChange }: RegionSelectorProps) {
     }
   };
 
-  const handleMyLocation = () => {
-    if (!navigator.geolocation) {
-      toast({
-        title: 'Geolocation not supported',
-        description: 'Your browser does not support geolocation.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
+  const handleMyLocation = async () => {
     setLoadingLocation(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const { latitude, longitude } = position.coords;
+    try {
+      let latitude: number;
+      let longitude: number;
 
-          const result = await getRegionFromCoordinates(latitude, longitude);
+      if (Capacitor.isNativePlatform()) {
+        const position = await Geolocation.getCurrentPosition({ timeout: 8000 });
+        latitude = position.coords.latitude;
+        longitude = position.coords.longitude;
+      } else if ('geolocation' in navigator) {
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000 });
+        });
+        latitude = position.coords.latitude;
+        longitude = position.coords.longitude;
+      } else {
+        throw new Error('Geolocation not supported');
+      }
 
-          if (result) {
-            onChange(result.regionPostcode);
-            setOpen(false);
-            toast({
-              title: 'Location Updated',
-              description: `Set region to ${result.regionName}`,
-            });
-          } else {
-            toast({
-              title: 'Region not found',
-              description: 'Could not match your location to a supported region.',
-              variant: 'destructive',
-            });
-          }
-        } catch (error) {
-          logger.error('Geolocation error', { error });
-          toast({
-            title: 'Location Error',
-            description: 'Failed to detect your region. Please select manually.',
-            variant: 'destructive',
-          });
-        } finally {
-          setLoadingLocation(false);
-        }
-      },
-      (error) => {
-        setLoadingLocation(false);
+      const result = await getRegionFromCoordinates(latitude, longitude);
+
+      if (result) {
+        onChange(result.regionPostcode);
+        setOpen(false);
         toast({
-          title: 'Location Access Denied',
-          description: 'Please enable location access to use this feature.',
+          title: 'Location Updated',
+          description: `Set region to ${result.regionName}`,
+        });
+      } else {
+        toast({
+          title: 'Region not found',
+          description: 'Could not match your location to a supported region.',
           variant: 'destructive',
         });
       }
-    );
+    } catch (error) {
+      logger.error('Geolocation error', { error });
+      toast({
+        title: 'Location Error',
+        description: 'Failed to detect your region. Please select manually.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingLocation(false);
+    }
   };
 
   const filteredRegions = UK_REGIONS.filter(region =>

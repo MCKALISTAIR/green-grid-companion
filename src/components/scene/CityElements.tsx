@@ -337,6 +337,7 @@ export function ConstructionCrane({ x = 350, isNight }: { x?: number; isNight: b
       <line x1={x + 1.5} y1={30} x2={x - 20} y2={32} stroke={color} strokeWidth={0.5} opacity={0.5} />
       {/* Hook cable */}
       <motion.line
+        initial={false}
         x1={x - 15} y1={32}
         x2={x - 15} y2={80}
         stroke={color}
@@ -488,6 +489,7 @@ export function DistantStack({ x = 365, isNight }: { x?: number; isNight: boolea
       <rect x={x - 1} y={baseY - height - 2} width={width + 2} height={2} fill={stackColor} />
       {/* Wispy steam plume */}
       <motion.ellipse
+        initial={false}
         cx={x + 1} cy={baseY - height - 6}
         rx={3} ry={2}
         fill={isNight ? 'rgba(180,180,180,0.3)' : 'rgba(220,220,220,0.5)'}

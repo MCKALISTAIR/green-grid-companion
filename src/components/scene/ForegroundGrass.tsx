@@ -9,7 +9,8 @@ export function ForegroundGrass({ windSpeed }: ForegroundGrassProps) {
     // Grounded at Y=145-150 (very bottom, foreground)
     // Sways based on wind speed
 
-    const swayIntensity = Math.min(windSpeed / 30, 1); // Normalize to 0-1
+    const safeWindSpeed = typeof windSpeed === 'number' && !isNaN(windSpeed) ? windSpeed : 10;
+    const swayIntensity = Math.min(safeWindSpeed / 30, 1); // Normalize to 0-1
 
     const blades = useMemo(() => {
         return Array.from({ length: 35 }).map((_, i) => {
@@ -49,6 +50,7 @@ export function ForegroundGrass({ windSpeed }: ForegroundGrassProps) {
                 return (
                     <motion.path
                         key={blade.id}
+                        initial={false}
                         d={"M" + blade.x + ",150 Q" + (blade.x + 2) + "," + (150 - blade.height / 2) + " " + (blade.x + 1) + "," + (150 - blade.height)}
                         stroke={blade.baseColor}
                         strokeWidth={blade.strokeWidth}

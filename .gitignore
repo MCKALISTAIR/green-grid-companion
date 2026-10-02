@@ -29,3 +29,4 @@ dist-ssr
 .swiftpm/
 .env
 test-results/
+.artifacts/

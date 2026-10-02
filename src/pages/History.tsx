@@ -189,7 +189,7 @@ export default function HistoryPage() {
     return (
         <div className="page-shell">
             <motion.div 
-                className="page-shell-inner space-y-6 pt-[calc(max(env(safe-area-inset-top),59px)+2rem)]"
+                className="page-shell-inner space-y-6"
                 variants={containerVariants}
                 initial="hidden"
                 animate="show"

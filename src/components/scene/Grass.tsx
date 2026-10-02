@@ -28,6 +28,8 @@ export function Grass({ cleanliness, windSpeed = 1 }: GrassProps) {
     ? 'hsl(142 50% 40%)' // Healthy green
     : 'hsl(45 40% 45%)'; // Yellow/brown
 
+  const safeWindSpeed = typeof windSpeed === 'number' && windSpeed > 0 ? windSpeed : 1;
+
   return (
     <div className="absolute bottom-0 left-0 right-0 h-6 overflow-hidden pointer-events-none">
       <svg
@@ -39,6 +41,7 @@ export function Grass({ cleanliness, windSpeed = 1 }: GrassProps) {
         {blades.map((blade) => (
           <motion.path
             key={blade.id}
+            initial={false}
             d={`M${blade.x},12 Q${blade.x + 0.3},${12 - blade.height * 0.7} ${blade.x + 0.5},${12 - blade.height}`}
             stroke={grassColor}
             strokeWidth="0.4"
@@ -52,7 +55,7 @@ export function Grass({ cleanliness, windSpeed = 1 }: GrassProps) {
               ],
             }}
             transition={{
-              duration: 2 / windSpeed,
+              duration: 2 / safeWindSpeed,
               delay: blade.delay,
               repeat: Infinity,
               ease: 'easeInOut' as const,

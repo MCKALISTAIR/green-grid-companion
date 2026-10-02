@@ -115,8 +115,7 @@ export function usePushNotifications(postcode: string) {
     });
 
     const errorListener = PushNotifications.addListener('registrationError', (error) => {
-      logger.error('Push notification registration failed', { error });
-      toast.error('Failed to register for notifications');
+      logger.warn('Push notification background registration failed', { error });
     });
 
     const notificationListener = PushNotifications.addListener('pushNotificationReceived', (notification: PushNotificationSchema) => {

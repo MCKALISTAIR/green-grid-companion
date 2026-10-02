@@ -24,6 +24,7 @@ export function FlyingBird({ delay, duration, startX, top, scale }: { delay: num
       aria-hidden="true"
     >
       <motion.path
+        initial={false}
         d="M2 12 C6 8, 10 10, 12 12 C14 10, 18 8, 22 12"
         stroke="currentColor"
         strokeWidth="2"

@@ -85,7 +85,7 @@ export default function Settings() {
   return (
     <div className="page-shell">
       <motion.div
-        className="page-shell-inner space-y-8 pt-[calc(max(env(safe-area-inset-top),59px)+2rem)]"
+        className="page-shell-inner space-y-8"
         variants={settingsContainerVariants}
         initial="hidden"
         animate="show"

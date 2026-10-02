@@ -46,7 +46,13 @@ function readStore(): CleanStreakStore {
 
 function writeStore(store: CleanStreakStore) {
   if (typeof window === 'undefined') return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+    }
+  } catch {
+    // Ignore storage quota or disabled storage errors
+  }
 }
 
 /** Map combined garden days into a discrete Carrot-style growth stage. */

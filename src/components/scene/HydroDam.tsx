@@ -50,6 +50,7 @@ export function HydroDam({ flowIntensity }: HydroDamProps) {
                 {Array.from({ length: 3 }).map((_, i) => (
                     <motion.path
                         key={i}
+                        initial={false}
                         d={`M${22 + i * 2},15 L${23 + i * 2},30`}
                         stroke="#60a5fa"
                         strokeWidth={1.5 + flowIntensity}
@@ -68,6 +69,7 @@ export function HydroDam({ flowIntensity }: HydroDamProps) {
 
                 {/* Splash at bottom */}
                 <motion.ellipse
+                    initial={false}
                     cx="24"
                     cy="30"
                     rx={4 + flowIntensity * 2}

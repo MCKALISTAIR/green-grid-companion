@@ -15,7 +15,7 @@ export default function AchievementsPage() {
 
     return (
         <div className="page-shell">
-            <div className="page-shell-inner space-y-6 pt-[calc(max(env(safe-area-inset-top),59px)+2rem)]">
+            <div className="page-shell-inner space-y-6">
                 <PageHeader
                     title="Trophy Room"
                     description="Unlock achievements by exploring and shifting to greener windows."

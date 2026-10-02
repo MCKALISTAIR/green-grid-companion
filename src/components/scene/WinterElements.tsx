@@ -82,6 +82,7 @@ export function FrozenPond() {
         <ellipse cx="40" cy="15" rx="38" ry="13" fill="hsl(200 40% 85%)" opacity="0.7" />
         {/* Ice reflection highlight */}
         <motion.ellipse
+          initial={false}
           cx="40"
           cy="12"
           rx="25"

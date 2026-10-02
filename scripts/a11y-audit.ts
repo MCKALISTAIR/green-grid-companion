@@ -45,7 +45,8 @@ async function waitForServer(url: string, timeoutMs = 30_000) {
 }
 
 function startPreview(): ChildProcess {
-  const proc = spawn("bunx", ["vite", "preview", "--port", String(PREVIEW_PORT), "--strictPort"], {
+  const runner = process.versions.bun ? "bunx" : "npx";
+  const proc = spawn(runner, ["vite", "preview", "--port", String(PREVIEW_PORT), "--strictPort"], {
     stdio: ["ignore", "pipe", "pipe"],
     env: process.env,
   });

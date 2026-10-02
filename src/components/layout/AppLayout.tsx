@@ -53,16 +53,10 @@ export function AppLayout() {
   };
 
   return (
-    <div
-      className="min-h-[100vh] bg-background font-sans"
-      style={{ minHeight: 'calc(100vh + env(safe-area-inset-top) + env(safe-area-inset-bottom))' }}
-    >
+    <div className="min-h-[100dvh] bg-background font-sans">
       <SideNav />
 
-      <div
-        className="lg:pl-64 flex flex-col min-h-[100vh] overflow-x-hidden"
-        style={{ minHeight: 'calc(100vh + env(safe-area-inset-top) + env(safe-area-inset-bottom))' }}
-      >
+      <div className="lg:pl-64 flex flex-col min-h-[100dvh] overflow-x-hidden">
         <main className="flex-1 w-full max-w-7xl mx-auto pb-28 lg:pb-0 relative">
           <AnimatePresence mode="popLayout" custom={direction}>
             <motion.div

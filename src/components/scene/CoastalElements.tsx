@@ -18,6 +18,7 @@ export function Seagull({ startX = 50, startY = 25, delay = 0, scale = 1 }: {
       <g transform={`scale(${scale})`}>
         {/* Wing flap animation */}
         <motion.path
+          initial={false}
           d="M0,0 L-6,-3 L-10,0"
           stroke="#e2e8f0"
           strokeWidth="1.2"
@@ -30,6 +31,7 @@ export function Seagull({ startX = 50, startY = 25, delay = 0, scale = 1 }: {
           transition={{ duration: 0.8, repeat: Infinity, ease: 'easeInOut' as const }}
         />
         <motion.path
+          initial={false}
           d="M0,0 L6,-3 L10,0"
           stroke="#e2e8f0"
           strokeWidth="1.2"
@@ -185,6 +187,7 @@ export function RockPool({ x = 260, y = 116, isNight = false }: {
       <ellipse cx={x + 7} cy={y - 1} rx={3} ry={2.5} fill={accentColor} opacity={0.5} />
       {/* Pool water */}
       <motion.ellipse
+        initial={false}
         cx={x} cy={y - 0.5} rx={8} ry={3}
         fill={poolColor} opacity={0.6}
         animate={{ rx: [8, 8.3, 8], ry: [3, 3.2, 3] }}
@@ -203,6 +206,7 @@ export function RockPool({ x = 260, y = 116, isNight = false }: {
       <g transform={`translate(${x + 4}, ${y - 1})`}>
         {[-2, -1, 0, 1, 2].map(i => (
           <motion.line key={i} x1={i * 0.8} y1={0} x2={i * 1.2} y2={-2.5}
+            initial={false}
             stroke="#c084fc" strokeWidth="0.6" strokeLinecap="round"
             animate={{ x2: [i * 1.2, i * 1.5, i * 1.2] }}
             transition={{ duration: 2, repeat: Infinity, delay: i * 0.15 }}
@@ -211,6 +215,7 @@ export function RockPool({ x = 260, y = 116, isNight = false }: {
       </g>
       {/* Seaweed strand */}
       <motion.path
+        initial={false}
         d={`M${x + 9},${y} Q${x + 11},${y - 3} ${x + 10},${y - 5}`}
         stroke="#22c55e" strokeWidth="0.8" fill="none" opacity={0.5}
         animate={{ d: [
@@ -286,6 +291,7 @@ export function HarbourSeal({ x = 170, y = 96, delay = 0 }: {
     >
       {/* Water splash ring */}
       <motion.ellipse
+        initial={false}
         cx={x} cy={y + 4} rx={6} ry={1.5}
         fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.5"
         animate={{ rx: [4, 8, 4], opacity: [0.4, 0.1, 0.4] }}
@@ -384,6 +390,7 @@ export function CoastalHorizonPollution({ cleanliness, isNight }: { cleanliness:
         <rect x={218} y={68} width={4} height={24} fill={stackColor} />
         <rect x={216} y={66} width={8} height={3} fill={stackColor} />
         <motion.ellipse
+          initial={false}
           cx={221} cy={62}
           rx={6} ry={3.5}
           fill={isNight ? 'rgba(180,180,180,0.4)' : 'rgba(120,120,120,0.55)'}
@@ -395,6 +402,7 @@ export function CoastalHorizonPollution({ cleanliness, isNight }: { cleanliness:
             <rect x={232} y={74} width={3.5} height={18} fill={stackColor} />
             <rect x={230} y={72} width={7.5} height={2.5} fill={stackColor} />
             <motion.ellipse
+              initial={false}
               cx={234} cy={68}
               rx={4} ry={2.5}
               fill={isNight ? 'rgba(160,160,160,0.35)' : 'rgba(130,130,130,0.45)'}
@@ -406,6 +414,7 @@ export function CoastalHorizonPollution({ cleanliness, isNight }: { cleanliness:
       </g>
       {/* Iridescent oil sheen on the water surface */}
       <motion.ellipse
+        initial={false}
         cx={160} cy={98}
         rx={70} ry={5}
         fill={sheenA}
@@ -413,6 +422,7 @@ export function CoastalHorizonPollution({ cleanliness, isNight }: { cleanliness:
         transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' as const }}
       />
       <motion.ellipse
+        initial={false}
         cx={185} cy={102}
         rx={35} ry={2.5}
         fill={sheenB}

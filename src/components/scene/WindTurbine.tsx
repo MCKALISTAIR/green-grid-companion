@@ -143,6 +143,7 @@ export function WindTurbine({ scale = 1, speed = 4, onClick }: WindTurbineProps)
 
         {/* Red warning light */}
         <motion.circle
+          initial={false}
           cx="24"
           cy="15"
           r="1.2"
@@ -151,6 +152,7 @@ export function WindTurbine({ scale = 1, speed = 4, onClick }: WindTurbineProps)
           transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
         />
         <motion.circle
+          initial={false}
           cx="24"
           cy="15"
           r="2.5"

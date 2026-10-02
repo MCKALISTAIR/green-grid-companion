@@ -127,6 +127,9 @@ function AppContent() {
       <OfflineIndicator />
       <Sonner position="top-center" />
       <BrowserRouter>
+        <ComponentErrorBoundary name="Status Bar Manager">
+          <StatusBarManager />
+        </ComponentErrorBoundary>
         <DeepLinkHandler />
         <ScrollToTop />
         <Routes>
@@ -167,9 +170,6 @@ const App = () => (
           <LocationProvider>
             <AchievementManager />
             <DirectorPanel />
-            <ComponentErrorBoundary name="Status Bar Manager">
-              <StatusBarManager />
-            </ComponentErrorBoundary>
             <AppContent />
           </LocationProvider>
         </ErrorBoundary>
