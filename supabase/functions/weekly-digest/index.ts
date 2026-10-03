@@ -1,7 +1,13 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
 import { sendPushNotifications } from '../_shared/push.ts';
-import { verifyCronRequest, cronAuthErrorResponse } from '../_shared/cron-auth.ts';
+import {
+  verifySchedulerRequest,
+  cronAuthErrorResponse,
+  createSchedulerSecretProvider,
+  fetchSchedulerSecret,
+  type SchedulerSecretRpcClient,
+} from '../_shared/cron-auth.ts';
 import { claimSubscriptionsForPeriod, isoWeekPeriodKey, type NotificationLogClient } from '../_shared/notification-periods.ts';
 
 interface FootprintRecord {
@@ -47,13 +53,20 @@ function getIntensityEmoji(avgIntensity: number): string {
   return '💨';
 }
 
+// Scheduler secret lives in the database (see 20261003120000 migration);
+// read with the service role and cached per instance.
+const getSchedulerSecret = createSchedulerSecretProvider(() =>
+  fetchSchedulerSecret(
+    createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!) as unknown as SchedulerSecretRpcClient,
+  ));
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   // Scheduler-only endpoint: require the shared cron secret.
-  const cronAuth = await verifyCronRequest(req, Deno.env.get('CRON_SECRET'));
+  const cronAuth = await verifySchedulerRequest(req, getSchedulerSecret);
   if (!cronAuth.ok) {
     return cronAuthErrorResponse(cronAuth, corsHeaders);
   }

@@ -46,11 +46,23 @@ describe('credential encryption', () => {
     await expect(decryptCredential('plaintext', key, USER_A)).rejects.toThrow(/format/);
   });
 
-  it('requires a configured 32-byte base64 key', async () => {
+  it('requires a configured key: base64 32 bytes, or a passphrase of 32+ characters', async () => {
     await expect(importCredentialKey(undefined)).rejects.toThrow(/not configured/);
     await expect(importCredentialKey('')).rejects.toThrow(/not configured/);
-    await expect(importCredentialKey(btoa('too short'))).rejects.toThrow(/32 bytes/);
-    await expect(importCredentialKey('%%%not-base64%%%')).rejects.toThrow(/base64/);
+    await expect(importCredentialKey('   ')).rejects.toThrow(/not configured/);
+    await expect(importCredentialKey(btoa('too short'))).rejects.toThrow(/at least 32/);
+    await expect(importCredentialKey('short-password-from-phone')).rejects.toThrow(/at least 32/);
+  });
+
+  it('accepts a password-manager style secret and derives the same key every time', async () => {
+    const secret = 'Zq8v1LmN4pR7sT0wX3yA6bC9dE2fG5hJ8kM1nP4qS7uV0-x_';
+    const ct = await encryptCredential(API_KEY, await importCredentialKey(secret), USER_A);
+    // a fresh import (e.g. another function instance) decrypts it
+    expect(await decryptCredential(ct, await importCredentialKey(` ${secret} `), USER_A)).toBe(API_KEY);
+    // a different passphrase does not
+    await expect(decryptCredential(ct, await importCredentialKey(secret + 'x'), USER_A)).rejects.toThrow();
+    // and it is not confused with the raw base64 key path
+    await expect(decryptCredential(ct, await importCredentialKey(keyB64), USER_A)).rejects.toThrow();
   });
 
   it('only exposes the last 4 characters as a hint', () => {

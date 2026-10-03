@@ -21,9 +21,10 @@ CREATE FUNCTION cron.schedule(n text, s text, c text) RETURNS bigint LANGUAGE sq
 CREATE FUNCTION cron.unschedule(n text) RETURNS boolean LANGUAGE sql AS $$ DELETE FROM cron.job WHERE jobname = n RETURNING true $$;
 CREATE SCHEMA net; CREATE TABLE net.calls (id serial, url text, headers jsonb, body jsonb);
 CREATE FUNCTION net.http_post(url text, headers jsonb DEFAULT '{}', body jsonb DEFAULT '{}') RETURNS bigint LANGUAGE sql AS $$ INSERT INTO net.calls(url, headers, body) VALUES (url, headers, body) RETURNING id $$;
-CREATE SCHEMA vault; CREATE TABLE vault.secrets (name text PRIMARY KEY, secret text);
-CREATE VIEW vault.decrypted_secrets AS SELECT name, secret AS decrypted_secret FROM vault.secrets;
-CREATE FUNCTION vault.create_secret(s text, n text) RETURNS text LANGUAGE sql AS $$ INSERT INTO vault.secrets VALUES (n, s) RETURNING n $$;
+CREATE SCHEMA vault; CREATE TABLE vault.secrets (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text UNIQUE, description text, secret text);
+CREATE VIEW vault.decrypted_secrets AS SELECT id, name, description, secret AS decrypted_secret FROM vault.secrets;
+CREATE FUNCTION vault.create_secret(new_secret text, new_name text DEFAULT NULL, new_description text DEFAULT '') RETURNS uuid LANGUAGE sql AS $$ INSERT INTO vault.secrets (name, description, secret) VALUES (new_name, new_description, new_secret) RETURNING id $$;
+REVOKE ALL ON SCHEMA vault FROM PUBLIC;
 CREATE SCHEMA realtime; CREATE TABLE realtime.messages (id serial, topic text); ALTER TABLE realtime.messages ENABLE ROW LEVEL SECURITY;
 CREATE FUNCTION realtime.topic() RETURNS text LANGUAGE sql AS $$ SELECT current_setting('realtime.topic', true) $$;
 CREATE SCHEMA extensions;

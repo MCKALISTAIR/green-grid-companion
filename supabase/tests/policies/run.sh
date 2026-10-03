@@ -22,15 +22,25 @@ trap 'rm -f "$TMP"' EXIT
 $DROPDB --if-exists "$DB" >/dev/null 2>&1 || true
 $CREATEDB "$DB"
 $PSQL -q -v ON_ERROR_STOP=1 -d "$DB" -f - < "$HERE/shim.sql" >/dev/null 2>&1
+if [[ "${NO_VAULT:-}" == "1" ]]; then
+  # Simulate a project without Vault to exercise the private-table fallback
+  echo "DROP SCHEMA vault CASCADE;" | $PSQL -q -v ON_ERROR_STOP=1 -d "$DB" -f - >/dev/null 2>&1
+  echo "(variant: no Vault)"
+fi
 for f in $(ls "$REPO"/supabase/migrations/*.sql | sort); do
   # pg_cron / pg_net are stubbed by shim.sql
+  # Optional hook run just before a migration, e.g. to simulate pre-existing tampering
+  hook="$HERE/pre_$(basename "$f")"
+  if [[ -f "$hook" ]]; then $PSQL -q -v ON_ERROR_STOP=1 -d "$DB" -f - < "$hook" >/dev/null; fi
   sed -E 's/^\s*CREATE EXTENSION IF NOT EXISTS (pg_cron|pg_net)[^;]*;//I' "$f" > "$TMP"
   if ! out=$($PSQL -q -v ON_ERROR_STOP=1 -d "$DB" -f - < "$TMP" 2>&1); then
     echo "FAILED applying $(basename "$f")"; echo "$out"; exit 1
   fi
 done
 echo "Applied $(ls "$REPO"/supabase/migrations/*.sql | wc -l) migrations"
-out=$($PSQL -q -v ON_ERROR_STOP=1 -d "$DB" -At -F ' | ' -f - < "$HERE/policy_tests.sql" 2>&1)
+if ! out=$($PSQL -q -v ON_ERROR_STOP=1 -d "$DB" -At -F ' | ' -f - < "$HERE/policy_tests.sql" 2>&1); then
+  echo "policy_tests.sql errored:"; echo "$out"; exit 1
+fi
 echo "$out" | grep -E '^(PASS|FAIL) ' || true
 summary=$(echo "$out" | tail -n 1)
 echo "passed | failed: $summary"

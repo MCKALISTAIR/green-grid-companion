@@ -18,8 +18,24 @@
 --     run; see the post-merge steps in the PR description for dropping it.
 --  4. scheduled_notification_log: idempotency guard for daily-forecast,
 --     weekly-digest and monthly-report.
---  5. Cron jobs now send the shared secret (from Supabase Vault, name
---     'cron_secret') in the x-cron-secret header.
+--  5. Scheduler secret: generated here, inside the database (Supabase Vault
+--     entry 'cron_secret'; falls back to private.scheduler_secret if Vault is
+--     unavailable). Nobody needs to create or copy it. pg_cron reads it via
+--     public.get_scheduler_secret() and sends it as x-cron-secret; edge
+--     functions read it via the same RPC with the service role (the function
+--     is executable by service_role only).
+--  0. Runs first: app_config.supabase_url is reset to the real project URL,
+--     in case it was tampered with while it was world-writable, so the secret
+--     is never sent anywhere else.
+--
+-- Written to be safe to re-run.
+
+-- ---------------------------------------------------------------------------
+-- 0. Reset the cron target URL BEFORE anything sends the secret
+-- ---------------------------------------------------------------------------
+INSERT INTO public.app_config (key, value)
+VALUES ('supabase_url', 'https://klwezcjmlrdwvvzisdtd.supabase.co')
+ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
 
 -- ---------------------------------------------------------------------------
 -- 1. app_config / geocoding_cache
@@ -115,11 +131,70 @@ REVOKE ALL ON public.scheduled_notification_log FROM PUBLIC, anon, authenticated
 GRANT ALL ON public.scheduled_notification_log TO service_role;
 
 -- ---------------------------------------------------------------------------
--- 5. Cron jobs: send the shared scheduler secret
+-- 5. Scheduler secret (generated in-database) + cron jobs that send it
 -- ---------------------------------------------------------------------------
--- The secret itself is NOT in this migration. Create it once per project:
---   SELECT vault.create_secret('<same value as CRON_SECRET>', 'cron_secret');
--- Until it exists the header is empty and the functions reject the calls (401).
+CREATE SCHEMA IF NOT EXISTS private;
+REVOKE ALL ON SCHEMA private FROM PUBLIC, anon, authenticated;
+
+-- Fallback store, only used if Vault is unavailable. Not exposed via the API
+-- (private schema) and no client privileges.
+CREATE TABLE IF NOT EXISTS private.scheduler_secret (
+  id boolean PRIMARY KEY DEFAULT true CHECK (id),
+  secret text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+REVOKE ALL ON private.scheduler_secret FROM PUBLIC, anon, authenticated;
+
+-- Single accessor used by both pg_cron and the edge functions.
+CREATE OR REPLACE FUNCTION public.get_scheduler_secret()
+RETURNS text
+LANGUAGE plpgsql
+VOLATILE
+SECURITY DEFINER
+SET search_path = ''
+AS $fn$
+DECLARE
+  s text;
+BEGIN
+  BEGIN
+    SELECT ds.decrypted_secret INTO s FROM vault.decrypted_secrets ds WHERE ds.name = 'cron_secret' LIMIT 1;
+  EXCEPTION WHEN undefined_table OR invalid_schema_name OR insufficient_privilege THEN
+    s := NULL;
+  END;
+  IF s IS NULL THEN
+    SELECT ss.secret INTO s FROM private.scheduler_secret ss LIMIT 1;
+  END IF;
+  RETURN s;
+END
+$fn$;
+
+REVOKE ALL ON FUNCTION public.get_scheduler_secret() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.get_scheduler_secret() TO service_role;
+
+-- 256 bits from the core CSPRNG (gen_random_uuid is v4, built in since PG13;
+-- avoids depending on where pgcrypto is installed). 64 hex characters.
+DO $$
+DECLARE
+  new_secret text := replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '');
+BEGIN
+  BEGIN
+    IF NOT EXISTS (SELECT 1 FROM vault.secrets WHERE name = 'cron_secret') THEN
+      PERFORM vault.create_secret(new_secret, 'cron_secret', 'GridSense: shared secret for pg_cron -> edge function calls');
+    END IF;
+  EXCEPTION WHEN undefined_table OR undefined_function OR invalid_schema_name OR insufficient_privilege THEN
+    RAISE NOTICE 'Vault unavailable (%); using private.scheduler_secret', SQLERRM;
+  END;
+  -- Fallback if Vault is missing, or the secret can't be read back from it
+  -- (so pg_cron and the edge functions always agree on a non-empty value).
+  IF public.get_scheduler_secret() IS NULL THEN
+    INSERT INTO private.scheduler_secret (secret) VALUES (new_secret) ON CONFLICT (id) DO NOTHING;
+  END IF;
+  IF public.get_scheduler_secret() IS NULL THEN
+    RAISE EXCEPTION 'Could not provision the scheduler secret';
+  END IF;
+END $$;
+
+
 DO $$
 DECLARE job_name TEXT;
 BEGIN
@@ -141,7 +216,7 @@ SELECT cron.schedule('check-carbon-intensity-every-30-min', '*/30 * * * *', $cro
     url := (SELECT value FROM public.app_config WHERE key = 'supabase_url') || '/functions/v1/check-carbon-intensity',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
-      'x-cron-secret', coalesce((SELECT decrypted_secret FROM vault.decrypted_secrets WHERE name = 'cron_secret'), '')
+      'x-cron-secret', coalesce(public.get_scheduler_secret(), '')
     ),
     body := '{}'::jsonb
   );
@@ -152,7 +227,7 @@ SELECT cron.schedule('daily-forecast-hourly', '0 * * * *', $cron$
     url := (SELECT value FROM public.app_config WHERE key = 'supabase_url') || '/functions/v1/daily-forecast',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
-      'x-cron-secret', coalesce((SELECT decrypted_secret FROM vault.decrypted_secrets WHERE name = 'cron_secret'), '')
+      'x-cron-secret', coalesce(public.get_scheduler_secret(), '')
     ),
     body := '{}'::jsonb
   );
@@ -163,7 +238,7 @@ SELECT cron.schedule('weekly-digest-sunday-9am', '0 9 * * 0', $cron$
     url := (SELECT value FROM public.app_config WHERE key = 'supabase_url') || '/functions/v1/weekly-digest',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
-      'x-cron-secret', coalesce((SELECT decrypted_secret FROM vault.decrypted_secrets WHERE name = 'cron_secret'), '')
+      'x-cron-secret', coalesce(public.get_scheduler_secret(), '')
     ),
     body := '{}'::jsonb
   );
@@ -174,7 +249,7 @@ SELECT cron.schedule('monthly-report-1st-9am', '0 9 1 * *', $cron$
     url := (SELECT value FROM public.app_config WHERE key = 'supabase_url') || '/functions/v1/monthly-report',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
-      'x-cron-secret', coalesce((SELECT decrypted_secret FROM vault.decrypted_secrets WHERE name = 'cron_secret'), '')
+      'x-cron-secret', coalesce(public.get_scheduler_secret(), '')
     ),
     body := '{}'::jsonb
   );

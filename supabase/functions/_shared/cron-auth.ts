@@ -1,16 +1,20 @@
 // Shared-secret authentication for scheduler-only (pg_cron) endpoints.
 //
-// The cron jobs defined in supabase/migrations send the secret in the
-// `x-cron-secret` header. The value is stored in Supabase Vault (name:
-// `cron_secret`) on the database side and in the `CRON_SECRET` edge function
-// secret on the function side. Both must hold the same value.
+// The secret is generated inside the database by the security-hardening
+// migration (stored in Supabase Vault as `cron_secret`, or in
+// private.scheduler_secret if Vault is unavailable). Nobody has to copy it
+// anywhere:
+//  - the pg_cron jobs read it via public.get_scheduler_secret() and send it in
+//    the `x-cron-secret` header;
+//  - edge functions read it via the same RPC using the service role (the RPC is
+//    executable by service_role only) and compare in constant time.
 //
 // This module is runtime-agnostic (Web Crypto only) so it can be unit tested
 // from Vitest as well as used from Deno edge functions.
 
 export const CRON_SECRET_HEADER = 'x-cron-secret';
 
-/** Minimum accepted length for CRON_SECRET (e.g. `openssl rand -hex 32` = 64 chars). */
+/** Minimum accepted length for the scheduler secret (the migration generates 64 hex chars). */
 export const MIN_CRON_SECRET_LENGTH = 32;
 
 /**
@@ -35,18 +39,18 @@ export async function timingSafeEqual(a: string, b: string): Promise<boolean> {
 
 export type CronAuthResult =
   | { ok: true }
-  | { ok: false; status: 401 | 500; error: string };
+  | { ok: false; status: 401 | 500 | 503; error: string };
 
 /**
  * Verify that a request came from the scheduler. Fails closed: if the server
- * has no (or a too-short) CRON_SECRET configured, every request is rejected.
+ * has no (or a too-short) secret, every request is rejected.
  */
 export async function verifyCronRequest(
   req: Request,
   expectedSecret: string | undefined | null,
 ): Promise<CronAuthResult> {
   if (!expectedSecret || expectedSecret.length < MIN_CRON_SECRET_LENGTH) {
-    console.error('[CRON AUTH] CRON_SECRET is not configured (or too short); rejecting scheduler request');
+    console.error('[CRON AUTH] Scheduler secret is missing or too short; rejecting scheduler request');
     return { ok: false, status: 500, error: 'Scheduler authentication is not configured' };
   }
 
@@ -71,4 +75,75 @@ export function cronAuthErrorResponse(
     status: result.status,
     headers: { ...headers, 'Content-Type': 'application/json' },
   });
+}
+
+// ---------------------------------------------------------------------------
+// Secret loading (from the database, via a service_role-only RPC)
+// ---------------------------------------------------------------------------
+
+export interface SchedulerSecretRpcClient {
+  rpc(fn: string): PromiseLike<{ data: unknown; error: unknown }>;
+}
+
+/** Fetch the scheduler secret with the service-role client. Throws if the RPC is missing (migration not applied). */
+export async function fetchSchedulerSecret(client: SchedulerSecretRpcClient): Promise<string | null> {
+  const { data, error } = await client.rpc('get_scheduler_secret');
+  if (error) throw error;
+  return typeof data === 'string' && data.length > 0 ? data : null;
+}
+
+/**
+ * Cache the secret per function instance (default 5 minutes) so unauthenticated
+ * probes don't each cost a database round trip. Failures are not cached.
+ */
+export function createSchedulerSecretProvider(
+  fetcher: () => Promise<string | null>,
+  options: { ttlMs?: number; now?: () => number } = {},
+): () => Promise<string | null> {
+  const ttlMs = options.ttlMs ?? 5 * 60 * 1000;
+  const now = options.now ?? Date.now;
+  let cached: { value: string; at: number } | null = null;
+  let inflight: Promise<string | null> | null = null;
+
+  return () => {
+    if (cached && now() - cached.at < ttlMs) return Promise.resolve(cached.value);
+    if (!inflight) {
+      inflight = fetcher()
+        .then((value) => {
+          if (value) cached = { value, at: now() };
+          return value;
+        })
+        .finally(() => {
+          inflight = null;
+        });
+    }
+    return inflight;
+  };
+}
+
+/**
+ * Authenticate a scheduler request against the database-held secret.
+ * - no header            -> 401 (without touching the database)
+ * - secret unavailable   -> 503 (e.g. deployed before the migration was applied); fails closed, never throws
+ * - wrong / right secret -> 401 / ok
+ */
+export async function verifySchedulerRequest(
+  req: Request,
+  getSecret: () => Promise<string | null>,
+): Promise<CronAuthResult> {
+  if (!req.headers.get(CRON_SECRET_HEADER)) {
+    return { ok: false, status: 401, error: 'Unauthorized' };
+  }
+
+  let secret: string | null = null;
+  try {
+    secret = await getSecret();
+  } catch (err) {
+    console.error('[CRON AUTH] Could not load scheduler secret (has the security migration been applied?)', err);
+  }
+  if (!secret) {
+    return { ok: false, status: 503, error: 'Scheduler authentication not ready' };
+  }
+
+  return verifyCronRequest(req, secret);
 }

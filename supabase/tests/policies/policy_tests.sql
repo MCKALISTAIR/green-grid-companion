@@ -70,10 +70,27 @@ SELECT pg_temp.check('authenticated cannot write notification log', 'authenticat
 SELECT pg_temp.check('first claim succeeds', 'service_role', NULL, $q$INSERT INTO public.scheduled_notification_log (job_name, period_key, subscription_id) VALUES ('weekly-digest','2026-W40','33333333-3333-3333-3333-333333333333') ON CONFLICT DO NOTHING RETURNING subscription_id::text$q$, 'OK:33333333-3333-3333-3333-333333333333');
 SELECT pg_temp.check('duplicate claim returns nothing', 'service_role', NULL, $q$INSERT INTO public.scheduled_notification_log (job_name, period_key, subscription_id) VALUES ('weekly-digest','2026-W40','33333333-3333-3333-3333-333333333333') ON CONFLICT DO NOTHING RETURNING subscription_id::text$q$, 'OK:<null>');
 
--- 5. cron jobs send the vault secret
-SELECT vault.create_secret('test-secret-0123456789abcdef0123456789abcdef', 'cron_secret');
+-- 5. scheduler secret + cron jobs
+INSERT INTO results SELECT 'supabase_url reset to the real project URL', value = 'https://klwezcjmlrdwvvzisdtd.supabase.co', value FROM public.app_config WHERE key = 'supabase_url';
+SELECT pg_temp.check('anon cannot call get_scheduler_secret', 'anon', NULL, $q$SELECT public.get_scheduler_secret()$q$, 'ERR:permission denied%');
+SELECT pg_temp.check('authenticated cannot call get_scheduler_secret', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$SELECT public.get_scheduler_secret()$q$, 'ERR:permission denied%');
+SELECT pg_temp.check('anon cannot read private.scheduler_secret', 'anon', NULL, $q$SELECT secret FROM private.scheduler_secret$q$, 'ERR:permission denied%');
+SELECT pg_temp.check('authenticated cannot read vault secrets', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$SELECT count(*)::text FROM vault.decrypted_secrets$q$, 'ERR:%');
+SELECT pg_temp.check('service_role gets a 64-hex scheduler secret', 'service_role', NULL, $q$SELECT (public.get_scheduler_secret() ~ '^[0-9a-f]{64}$')::text$q$, 'OK:true');
+DO $$
+DECLARE in_vault boolean := false; in_private boolean;
+BEGIN
+  IF to_regclass('vault.secrets') IS NOT NULL THEN
+    EXECUTE $v$SELECT EXISTS (SELECT 1 FROM vault.secrets WHERE name = 'cron_secret')$v$ INTO in_vault;
+  END IF;
+  SELECT EXISTS (SELECT 1 FROM private.scheduler_secret) INTO in_private;
+  INSERT INTO results VALUES ('secret stored in Vault when available (else private table)',
+    CASE WHEN to_regclass('vault.secrets') IS NOT NULL THEN in_vault AND NOT in_private ELSE in_private END,
+    CASE WHEN to_regclass('vault.secrets') IS NOT NULL THEN 'vault' ELSE 'private table' END);
+END $$;
 DO $$ DECLARE c text; BEGIN FOR c IN SELECT command FROM cron.job LOOP EXECUTE c; END LOOP; END $$;
-INSERT INTO results SELECT 'all 4 cron jobs send x-cron-secret from vault', count(*) = 4 AND bool_and(headers->>'x-cron-secret' = 'test-secret-0123456789abcdef0123456789abcdef'), count(*)::text || ' calls' FROM net.calls;
+INSERT INTO results SELECT 'all 4 cron jobs send the scheduler secret', count(*) = 4 AND bool_and(headers->>'x-cron-secret' = public.get_scheduler_secret()), count(*)::text || ' calls' FROM net.calls;
+INSERT INTO results SELECT 'cron jobs target the real project URL', bool_and(url LIKE 'https://klwezcjmlrdwvvzisdtd.supabase.co/functions/v1/%'), string_agg(DISTINCT split_part(url, '/functions', 1), ',') FROM net.calls;
 INSERT INTO results SELECT 'cron job set unchanged (4 jobs)', count(*) = 4, string_agg(jobname, ',') FROM cron.job;
 
 SELECT CASE WHEN ok THEN 'PASS' ELSE 'FAIL' END AS result, name, CASE WHEN ok THEN '' ELSE detail END AS detail FROM results;

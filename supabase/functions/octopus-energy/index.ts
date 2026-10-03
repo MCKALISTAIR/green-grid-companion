@@ -6,80 +6,40 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 declare const Deno: any;
 
 import { corsHeaders } from '../_shared/cors.ts';
-import { verifyCronRequest, cronAuthErrorResponse } from '../_shared/cron-auth.ts';
 import {
-  importCredentialKey,
-  encryptCredential,
-  decryptCredential,
-  apiKeyHint,
-} from '../_shared/credential-crypto.ts';
+  verifySchedulerRequest,
+  cronAuthErrorResponse,
+  createSchedulerSecretProvider,
+  fetchSchedulerSecret,
+  type SchedulerSecretRpcClient,
+} from '../_shared/cron-auth.ts';
+import { apiKeyHint } from '../_shared/credential-crypto.ts';
+import {
+  createKeyLoader,
+  selectCredentialRows,
+  resolveApiKey as resolveStoredApiKey,
+  storeCredentials,
+  backfillLegacyCredentials,
+  type StoredCredentialRow,
+} from '../_shared/octopus-credentials.ts';
 
 // --- CREDENTIAL ENCRYPTION AT REST ---
 // Octopus API keys are stored AES-256-GCM encrypted (api_key_encrypted). The
-// key comes from the OCTOPUS_CREDENTIALS_KEY edge function secret and never
-// touches the database or the client.
-let credentialKeyPromise: Promise<CryptoKey> | null = null;
-function getCredentialKey(): Promise<CryptoKey> {
-  if (!credentialKeyPromise) {
-    credentialKeyPromise = importCredentialKey(Deno.env.get('OCTOPUS_CREDENTIALS_KEY'));
-    // Don't cache a failure (e.g. secret set after cold start)
-    credentialKeyPromise.catch(() => { credentialKeyPromise = null; });
-  }
-  return credentialKeyPromise;
-}
-
-interface StoredCredentialRow {
-  user_id: string;
-  account_number?: string;
-  api_key?: string | null; // legacy plaintext column; cleared once encrypted
-  api_key_encrypted?: string | null;
-}
-
+// key is derived from the OCTOPUS_CREDENTIALS_KEY edge function secret and
+// never touches the database or the client. See _shared/octopus-credentials.ts.
+const getCredentialKey = createKeyLoader(() => Deno.env.get('OCTOPUS_CREDENTIALS_KEY'));
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function encryptLegacyRow(supabase: any, row: StoredCredentialRow): Promise<boolean> {
-  if (!row.api_key || row.api_key_encrypted) return false;
-  const key = await getCredentialKey();
-  const encrypted = await encryptCredential(row.api_key, key, row.user_id);
-  const { error } = await supabase
-    .from('octopus_credentials')
-    .update({ api_key_encrypted: encrypted, api_key_hint: apiKeyHint(row.api_key), api_key: null })
-    .eq('user_id', row.user_id)
-    .eq('api_key', row.api_key); // only if unchanged since we read it
-  if (error) {
-    console.error(`Failed to encrypt legacy credentials for ${row.user_id.substring(0, 8)}...`, error);
-    return false;
-  }
-  return true;
-}
+const resolveApiKey = (supabase: any, row: StoredCredentialRow | null | undefined) =>
+  resolveStoredApiKey(supabase, getCredentialKey, row);
 
-/**
- * Return the plaintext API key for a stored row (server-side only). Legacy
- * plaintext rows are transparently encrypted in place on first use.
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function resolveApiKey(supabase: any, row: StoredCredentialRow | null | undefined): Promise<string | null> {
-  if (!row) return null;
-  if (row.api_key_encrypted) {
-    try {
-      return await decryptCredential(row.api_key_encrypted, await getCredentialKey(), row.user_id);
-    } catch (err) {
-      console.error(`Failed to decrypt credentials for ${row.user_id.substring(0, 8)}...`, err);
-      return null;
-    }
-  }
-  if (row.api_key) {
-    try {
-      await encryptLegacyRow(supabase, row);
-    } catch (err) {
-      console.error('Lazy encryption of legacy credentials failed (is OCTOPUS_CREDENTIALS_KEY set?)', err);
-    }
-    return row.api_key;
-  }
-  return null;
-}
+// Scheduler secret lives in the database (see 20261003120000 migration).
+const getSchedulerSecret = createSchedulerSecretProvider(() =>
+  fetchSchedulerSecret(
+    createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!) as unknown as SchedulerSecretRpcClient,
+  ));
 
 // Actions that may only be triggered by the scheduler (pg_cron) and must carry
-// the shared CRON_SECRET in the x-cron-secret header.
+// the database-held scheduler secret in the x-cron-secret header.
 const SCHEDULER_ACTIONS = new Set(['sync-all-users', 'calculate-all-footprints', 'encrypt-legacy-credentials']);
 
 // --- RATE LIMITING ---
@@ -268,54 +228,21 @@ Deno.serve(async (req: Request) => {
     const cronAction = url.searchParams.get('action');
 
     if (cronAction && SCHEDULER_ACTIONS.has(cronAction)) {
-      const cronAuth = await verifyCronRequest(req, Deno.env.get('CRON_SECRET'));
+      const cronAuth = await verifySchedulerRequest(req, getSchedulerSecret);
       if (!cronAuth.ok) {
         trackAuthFailure(clientIP, `cron_auth_failed:${cronAction}`, userAgent);
         return cronAuthErrorResponse(cronAuth, corsHeaders);
       }
     }
 
-    // --- ADMIN/CRON: one-off backfill that encrypts legacy plaintext API keys ---
+    // --- ADMIN/CRON: encrypt legacy plaintext API keys (also runs automatically
+    // from check-carbon-intensity every 30 min; kept for manual use) ---
     if (cronAction === 'encrypt-legacy-credentials') {
       const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-      try {
-        await getCredentialKey();
-      } catch (err) {
-        console.error('Cannot backfill: credential key unavailable', err);
-        return new Response(
-          JSON.stringify({ error: 'OCTOPUS_CREDENTIALS_KEY is not configured' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      const { data: legacyRows, error: legacyErr } = await supabase
-        .from('octopus_credentials')
-        .select('user_id, api_key, api_key_encrypted')
-        .not('api_key', 'is', null)
-        .is('api_key_encrypted', null);
-      if (legacyErr) {
-        console.error('Failed to list legacy credentials', legacyErr);
-        return new Response(
-          JSON.stringify({ error: 'Failed to list legacy credentials' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      let encrypted = 0;
-      let failed = 0;
-      for (const row of (legacyRows || []) as StoredCredentialRow[]) {
-        try {
-          if (await encryptLegacyRow(supabase, row)) encrypted++; else failed++;
-        } catch (err) {
-          console.error('Legacy encryption failed', err);
-          failed++;
-        }
-      }
-      const { count: remaining } = await supabase
-        .from('octopus_credentials')
-        .select('user_id', { count: 'exact', head: true })
-        .not('api_key', 'is', null);
+      const result = await backfillLegacyCredentials(supabase, getCredentialKey);
       return new Response(
-        JSON.stringify({ success: failed === 0, encrypted, failed, remaining_plaintext: remaining ?? null }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify(result),
+        { status: result.status === 'done' ? 200 : 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -345,10 +272,7 @@ Deno.serve(async (req: Request) => {
       // Optimize: Fetch all credentials at once if needed to avoid N+1 queries
       const credsMap = new Map();
       if (cronAction === 'sync-all-users') {
-        const { data: allCreds } = await supabase
-          .from('octopus_credentials')
-          .select('user_id, api_key, api_key_encrypted')
-          .in('user_id', userIds);
+        const { rows: allCreds } = await selectCredentialRows(supabase, { userIds });
 
         if (allCreds) {
           for (const cred of allCreds) {
@@ -770,34 +694,16 @@ Deno.serve(async (req: Request) => {
       const sanitizedAccountNumber = accountNumber.trim().toUpperCase();
 
       // Encrypt the API key before it ever reaches the database
-      let encryptedApiKey: string;
-      try {
-        encryptedApiKey = await encryptCredential(sanitizedApiKey, await getCredentialKey(), userId);
-      } catch (err) {
-        console.error('Credential encryption unavailable', err);
-        return new Response(
-          JSON.stringify({ error: 'Credential storage is temporarily unavailable' }),
-          { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
+      const stored = await storeCredentials(supabase, getCredentialKey, {
+        userId,
+        apiKey: sanitizedApiKey,
+        accountNumber: sanitizedAccountNumber,
+      });
 
-      // Upsert credentials (encrypted key + non-secret hint; legacy plaintext column cleared)
-      const { error } = await supabase
-        .from('octopus_credentials')
-        .upsert({
-          user_id: userId,
-          api_key: null,
-          api_key_encrypted: encryptedApiKey,
-          api_key_hint: apiKeyHint(sanitizedApiKey),
-          account_number: sanitizedAccountNumber,
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'user_id' });
-
-      if (error) {
-        console.error('Error saving credentials:', error);
+      if (!stored.ok) {
         return new Response(
-          JSON.stringify({ error: 'Failed to save credentials' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify({ error: stored.error }),
+          { status: stored.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
@@ -862,35 +768,20 @@ Deno.serve(async (req: Request) => {
 
       if (!existingCreds) {
         // Migrate credentials from previous user
-        const { data: oldCreds, error: oldCredsError } = await supabase
-          .from('octopus_credentials')
-          .select('*')
-          .eq('user_id', previousUserId)
-          .single();
+        const { rows: oldRows, error: oldCredsError } = await selectCredentialRows(supabase, { userId: previousUserId });
+        const oldCreds = oldRows[0];
 
         // Ciphertext is bound to the owning user id, so re-encrypt for the new owner
         const oldApiKey = oldCreds && !oldCredsError ? await resolveApiKey(supabase, oldCreds) : null;
-        let reEncrypted: string | null = null;
-        if (oldApiKey) {
-          try {
-            reEncrypted = await encryptCredential(oldApiKey, await getCredentialKey(), userId);
-          } catch (err) {
-            console.error('Credential encryption unavailable during migration', err);
-          }
-        }
 
-        if (oldCreds && !oldCredsError && oldApiKey && reEncrypted) {
-          const { error: insertError } = await supabase
-            .from('octopus_credentials')
-            .insert({
-              user_id: userId,
-              api_key: null,
-              api_key_encrypted: reEncrypted,
-              api_key_hint: apiKeyHint(oldApiKey),
-              account_number: oldCreds.account_number,
-              created_at: oldCreds.created_at,
-              updated_at: new Date().toISOString()
-            });
+        if (oldCreds && oldApiKey) {
+          const stored = await storeCredentials(supabase, getCredentialKey, {
+            userId,
+            apiKey: oldApiKey,
+            accountNumber: oldCreds.account_number ?? '',
+            createdAt: oldCreds.created_at,
+          }, { insertOnly: true });
+          const insertError = stored.ok ? null : stored.error;
 
           if (!insertError) {
             migratedCredentials = true;
@@ -986,18 +877,14 @@ Deno.serve(async (req: Request) => {
 
     // Helper to get credentials (decrypted server-side only; never returned to the client)
     async function getUserCredentials(): Promise<{ api_key: string; account_number: string; api_key_hint: string | null } | null> {
-      const { data, error } = await supabase
-        .from('octopus_credentials')
-        .select('user_id, api_key, api_key_encrypted, api_key_hint, account_number')
-        .eq('user_id', userId)
-        .single();
-
+      const { rows, error } = await selectCredentialRows(supabase, { userId });
+      const data = rows[0];
       if (error || !data) {
         return null;
       }
-      const apiKey = await resolveApiKey(supabase, data as StoredCredentialRow);
+      const apiKey = await resolveApiKey(supabase, data);
       if (!apiKey) return null;
-      return { api_key: apiKey, account_number: data.account_number, api_key_hint: data.api_key_hint ?? apiKeyHint(apiKey) };
+      return { api_key: apiKey, account_number: data.account_number ?? '', api_key_hint: data.api_key_hint ?? apiKeyHint(apiKey) };
     }
 
     if (action === 'check-credentials') {
