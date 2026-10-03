@@ -1,6 +1,8 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
 import { sendPushNotifications } from '../_shared/push.ts';
+import { verifyCronRequest, cronAuthErrorResponse } from '../_shared/cron-auth.ts';
+import { claimSubscriptionsForPeriod, ukDatePeriodKey, type NotificationLogClient } from '../_shared/notification-periods.ts';
 
 interface ForecastData {
   from: string;
@@ -53,6 +55,12 @@ function getUKOffset(date: Date): number {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Scheduler-only endpoint: require the shared cron secret.
+  const cronAuth = await verifyCronRequest(req, Deno.env.get('CRON_SECRET'));
+  if (!cronAuth.ok) {
+    return cronAuthErrorResponse(cronAuth, corsHeaders);
   }
 
   try {
@@ -160,8 +168,20 @@ Deno.serve(async (req) => {
         || ukDate.getUTCMonth() !== nowUK.getUTCMonth();
     }
 
+    // Idempotency: claim each subscription for today's UK date before sending
+    // so a duplicate/replayed run never sends the same outlook twice.
+    const periodKey = ukDatePeriodKey(now, ukOffset);
+    const claimed = await claimSubscriptionsForPeriod(
+      supabase as unknown as NotificationLogClient,
+      'daily-forecast',
+      periodKey,
+      (subscriptions as PushSubscription[]).map((s) => s.id),
+    );
+    const dueSubscriptions = (subscriptions as PushSubscription[]).filter((s) => claimed.has(s.id));
+    console.log(`Daily forecast ${periodKey}: ${dueSubscriptions.length} due, ${subscriptions.length - dueSubscriptions.length} already sent`);
+
     // Generate notification for each subscription
-    for (const sub of subscriptions as PushSubscription[]) {
+    for (const sub of dueSubscriptions) {
       const emoji = avgIntensity < 100 ? '🌿' : avgIntensity < 200 ? '☁️' : '🏭';
 
       // Find the best consecutive green window (contiguous slots at or below best intensity + 20g tolerance)
@@ -221,9 +241,10 @@ Deno.serve(async (req) => {
         isDST: ukOffset === 1,
         checked: allSubscriptions?.length || 0,
         filtered: subscriptions.length,
+        period: periodKey,
+        already_sent: subscriptions.length - dueSubscriptions.length,
         notifications: notifications.length,
         avgIntensity,
-        debug: notifications,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

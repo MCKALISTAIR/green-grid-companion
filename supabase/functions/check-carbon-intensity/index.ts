@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
 import { sendPushNotifications } from '../_shared/push.ts';
+import { verifyCronRequest, cronAuthErrorResponse } from '../_shared/cron-auth.ts';
 
 interface CarbonIntensityResponse {
   data: Array<{
@@ -34,6 +35,12 @@ Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Scheduler-only endpoint: require the shared cron secret.
+  const cronAuth = await verifyCronRequest(req, Deno.env.get('CRON_SECRET'));
+  if (!cronAuth.ok) {
+    return cronAuthErrorResponse(cronAuth, corsHeaders);
   }
 
   try {
@@ -213,7 +220,6 @@ Deno.serve(async (req) => {
         checked: subscriptions?.length || 0,
         stateChanges: stateUpdates.length,
         notifications: notifications.length,
-        debug: notifications,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

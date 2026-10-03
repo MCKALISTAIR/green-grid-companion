@@ -1,6 +1,8 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
 import { sendPushNotifications } from '../_shared/push.ts';
+import { verifyCronRequest, cronAuthErrorResponse } from '../_shared/cron-auth.ts';
+import { claimSubscriptionsForPeriod, monthPeriodKey, type NotificationLogClient } from '../_shared/notification-periods.ts';
 
 interface FootprintRecord {
   interval_start: string;
@@ -53,6 +55,12 @@ function getWeekOfMonth(date: Date): number {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Scheduler-only endpoint: require the shared cron secret.
+  const cronAuth = await verifyCronRequest(req, Deno.env.get('CRON_SECRET'));
+  if (!cronAuth.ok) {
+    return cronAuthErrorResponse(cronAuth, corsHeaders);
   }
 
   try {
@@ -192,8 +200,21 @@ Deno.serve(async (req) => {
 
     const notifications: Array<{ token: string; title: string; body: string; platform: string; isSandbox?: boolean }> = [];
 
+    // Idempotency: claim each subscription for the reported month before
+    // sending so a duplicate/replayed run never sends the same report twice.
+    const periodKey = monthPeriodKey(lastMonthYear, lastMonth);
+    const allSubs = (subscriptions || []) as PushSubscription[];
+    const claimed = await claimSubscriptionsForPeriod(
+      supabase as unknown as NotificationLogClient,
+      'monthly-report',
+      periodKey,
+      allSubs.map((s) => s.id),
+    );
+    const dueSubscriptions = allSubs.filter((s) => claimed.has(s.id));
+    console.log(`Monthly report ${periodKey}: ${dueSubscriptions.length} due, ${allSubs.length - dueSubscriptions.length} already sent`);
+
     // Generate notification for each subscription
-    for (const sub of (subscriptions || []) as PushSubscription[]) {
+    for (const sub of dueSubscriptions) {
       const emoji = getIntensityEmoji(avgIntensity);
 
       let body: string;
@@ -231,7 +252,9 @@ Deno.serve(async (req) => {
         month: lastMonth,
         monthName: getMonthName(lastMonth),
         year: lastMonthYear,
+        period: periodKey,
         subscriptions_checked: subscriptions?.length || 0,
+        already_sent: allSubs.length - dueSubscriptions.length,
         notifications_generated: notifications.length,
         monthly_stats: {
           total_carbon_kg: totalCarbonKg,
@@ -250,7 +273,6 @@ Deno.serve(async (req) => {
             percentage: Math.round((data.count / totalCount) * 100),
           })),
         },
-        debug: notifications,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
