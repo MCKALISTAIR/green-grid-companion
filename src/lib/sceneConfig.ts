@@ -1,5 +1,6 @@
 import type { TimeOfDay } from '@/hooks/useTimeOfDay';
 import type { WeatherData } from '@/hooks/useWeatherData';
+import type { SceneType } from '@/hooks/useSceneType';
 import { getSkyGradient } from '@/lib/sceneUtils';
 
 export interface SceneVisualConfig {
@@ -36,6 +37,8 @@ interface BuildSceneConfigInput {
   weather: WeatherData;
   synthwaveMode: boolean;
   isNight: boolean;
+  /** Drives ground plane dialect (city pavement vs countryside grass). */
+  sceneType?: SceneType;
 }
 
 export function buildSceneConfig({
@@ -45,6 +48,7 @@ export function buildSceneConfig({
   weather,
   synthwaveMode,
   isNight,
+  sceneType = 'countryside',
 }: BuildSceneConfigInput): SceneVisualConfig {
   const cleanliness = Math.max(0, Math.min(1, 1 - (intensity - 50) / 300));
   const weatherReducesBirds = weather.isRaining || weather.isSnowing || weather.isThunderstorm;
@@ -84,6 +88,22 @@ export function buildSceneConfig({
   const getGroundColor = (): string => {
     if (synthwaveMode) return '#3c096c';
     if (weather.isSnowing) return isNight ? '#334155' : '#f1f5f9';
+
+    // City: pavement / asphalt — never countryside green
+    if (sceneType === 'city') {
+      if (isNight || timeOfDay === 'dusk') return '#0f172a';
+      if (timeOfDay === 'dawn') return '#1e293b';
+      if (timeOfDay === 'sunset') return '#334155';
+      return cleanliness > 0.5 ? '#4b5563' : '#44403c';
+    }
+
+    // Coastal: wet sand / shore
+    if (sceneType === 'coastal') {
+      if (isNight || timeOfDay === 'dusk') return '#1c1917';
+      if (timeOfDay === 'dawn' || timeOfDay === 'sunset') return '#57534e';
+      return cleanliness > 0.5 ? '#a8a29e' : '#78716c';
+    }
+
     if (isNight) return '#0f172a';
     const isClean = cleanliness > 0.5;
     if (timeOfDay === 'dawn') return isClean ? '#204d30' : '#4d3215';

@@ -79,10 +79,11 @@ Do not reintroduce competing numeric overlays on the scene. Do not put marketing
 ## Scene art rules
 
 1. **Silhouette test** — clean vs dirty readable in &lt;1s (see scene plan).
-2. **One hero per intensity band** — demote everything else.
+2. **One hero per intensity band** — demote everything else (`cityHeroDemotion` for city; coastal already gates boats/wind).
 3. **One scale bible** — cars, Eye, BESS, people share one ratio (`SCENE_VISUAL_QA.md`).
-4. **Diegetic first** — trains when dirty, drones when clean renewables; wildlife from garden stage — not UFO roulette.
-5. **Temporal life** — garden stages 0–4 from coal-free + clean hours. World changes when you’re away. That’s our Carrot answer without copying their robots.
+4. **Aspect integrity** — silhouette SVGs use `SCENE_SILHOUETTE_ASPECT` (`xMidYMax meet`); washes may use `SCENE_WASH_ASPECT` (`none`). Never stretch landmark geometry to fill the frame.
+5. **Diegetic first** — trains when dirty, drones when clean renewables; wildlife from garden stage — not UFO roulette.
+6. **Temporal life** — garden stages 0–4 from coal-free + clean hours. Hours stay under the hood. UI shows a **stage-up line only** (“Garden woke up · day N”), never persistent garden chrome.
 
 ---
 

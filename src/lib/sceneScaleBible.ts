@@ -9,6 +9,16 @@
 
 export const SCENE_VIEWBOX = { width: 400, height: 150 } as const;
 
+/**
+ * Aspect policy for full-bleed scene SVGs.
+ * - Silhouette layers (hills, skyline, props): uniform scale, bottom-anchored,
+ *   letterbox rather than stretch. On tall phone heroes this keeps left/right
+ *   landmarks (Eye, BESS, turbines) in frame; CSS sky fills any letterbox.
+ * - Wash layers (sky fills, mist, smog gradients, grass strips): stretch OK.
+ */
+export const SCENE_SILHOUETTE_ASPECT = 'xMidYMax meet' as const;
+export const SCENE_WASH_ASPECT = 'none' as const;
+
 /** Shared road / ground line for city props. */
 export const CITY_GROUND_Y = 138;
 
