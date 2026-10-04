@@ -384,7 +384,7 @@ export function FootprintView() {
 
           {hasCredentials && (
             <div className="rounded-lg border border-border bg-muted/40 p-3 text-sm text-foreground">
-              Credentials are saved on this device, but meters aren&apos;t fully linked yet.
+              Your Octopus key is saved securely, but meters aren&apos;t fully linked yet.
               Open Settings to finish linking, then wait up to 24–48 hours for smart-meter history.
             </div>
           )}
