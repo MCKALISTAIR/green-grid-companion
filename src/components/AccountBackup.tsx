@@ -516,7 +516,7 @@ export function AccountBackup({ isSyncing, lastSyncedAt, onSyncNow, formatLastSy
       </div>
 
       <p className="text-sm text-muted-foreground">
-        Your Octopus Energy data is currently stored locally. Sign in to back it up and restore it on any device.
+        Your Octopus Energy data is stored encrypted for this session. Sign in to keep it linked if you switch devices.
       </p>
 
       <div className="space-y-2">
