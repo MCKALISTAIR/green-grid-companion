@@ -41,8 +41,8 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
   const [selectedBestBlock, setSelectedBestBlock] = useState<number | null>(null);
   const [bestBlockPopupPos, setBestBlockPopupPos] = useState<{ x: number; y: number } | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const currentHourRef = useRef<HTMLDivElement>(null);
-  const selectedItemRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  const currentHourRef = useRef<HTMLButtonElement>(null);
+  const selectedItemRefs = useRef<Map<number, HTMLButtonElement>>(new Map());
   const bestBlockRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
   // Keep selection valid when forecast refreshes; prefer current hour on first load.

@@ -20,7 +20,7 @@ describe('useGardenStageUpNotice', () => {
   it('surfaces copy once when stage rises, then stays quiet after dismiss', () => {
     const { result, rerender } = renderHook(
       ({ stage, days }) => useGardenStageUpNotice(stage, days),
-      { initialProps: { stage: 1 as const, days: 1 } },
+      { initialProps: { stage: 1 as 0 | 1 | 2 | 3, days: 1 } },
     );
 
     expect(result.current.visible).toBe(true);
