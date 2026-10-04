@@ -122,21 +122,27 @@ export type Database = {
       octopus_credentials: {
         Row: {
           account_number: string
-          api_key: string
+          api_key: string | null
+          api_key_encrypted: string | null
+          api_key_hint: string | null
           created_at: string
           updated_at: string
           user_id: string
         }
         Insert: {
           account_number: string
-          api_key: string
+          api_key?: string | null
+          api_key_encrypted?: string | null
+          api_key_hint?: string | null
           created_at?: string
           updated_at?: string
           user_id?: string
         }
         Update: {
           account_number?: string
-          api_key?: string
+          api_key?: string | null
+          api_key_encrypted?: string | null
+          api_key_hint?: string | null
           created_at?: string
           updated_at?: string
           user_id?: string
@@ -301,6 +307,62 @@ export type Database = {
           weekly_digest_enabled?: boolean
         }
         Relationships: []
+      }
+      rate_limits: {
+        Row: {
+          blocked_until: number
+          count: number
+          created_at: string
+          first_attempt: number
+          key: string
+          updated_at: string
+        }
+        Insert: {
+          blocked_until?: number
+          count?: number
+          created_at?: string
+          first_attempt: number
+          key: string
+          updated_at?: string
+        }
+        Update: {
+          blocked_until?: number
+          count?: number
+          created_at?: string
+          first_attempt?: number
+          key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      scheduled_notification_log: {
+        Row: {
+          job_name: string
+          period_key: string
+          sent_at: string
+          subscription_id: string
+        }
+        Insert: {
+          job_name: string
+          period_key: string
+          sent_at?: string
+          subscription_id: string
+        }
+        Update: {
+          job_name?: string
+          period_key?: string
+          sent_at?: string
+          subscription_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_notification_log_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "push_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tesla_charging_sessions: {
         Row: {
@@ -520,6 +582,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      fn_check_rate_limit: {
+        Args: {
+          p_block_duration_ms: number
+          p_key: string
+          p_max_attempts: number
+          p_window_ms: number
+        }
+        Returns: Json
+      }
       get_my_credentials_status: {
         Args: never
         Returns: {
@@ -530,6 +601,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_scheduler_secret: { Args: never; Returns: string }
       has_tesla_linked: { Args: never; Returns: boolean }
       user_owns_mpan: { Args: { check_mpan: string }; Returns: boolean }
     }
