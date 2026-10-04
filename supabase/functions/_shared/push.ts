@@ -2,14 +2,14 @@
 // Supports APNs (Apple Push Notification service) and FCM v1 (Firebase Cloud Messaging)
 
 // Helper to convert PEM string to binary Der ArrayBuffer
-function pemToDer(pem: string): Uint8Array {
+function pemToDer(pem: string): Uint8Array<ArrayBuffer> {
   const cleanPem = pem
     .replace(/-----BEGIN [A-Z ]+-----/, "")
     .replace(/-----END [A-Z ]+-----/, "")
     .replace(/\s/g, "");
   
   const binaryString = atob(cleanPem);
-  const der = new Uint8Array(binaryString.length);
+  const der = new Uint8Array(new ArrayBuffer(binaryString.length));
   for (let i = 0; i < binaryString.length; i++) {
     der[i] = binaryString.charCodeAt(i);
   }
