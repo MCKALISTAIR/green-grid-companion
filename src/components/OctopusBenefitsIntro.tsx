@@ -66,7 +66,7 @@ export function OctopusBenefitsIntro({ onContinue }: OctopusBenefitsIntroProps) 
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
           <p className="text-[11px] text-center text-muted-foreground leading-relaxed">
-            You’ll enter your Octopus account number and API key next. Keys stay on this device (and sync encrypted if you sign in).
+            You’ll enter your Octopus account number and API key next. Your key is sent once over HTTPS and stored encrypted on our servers — never kept on this device.
           </p>
           <p className="text-[11px] text-center text-muted-foreground">
             Not with Octopus yet?{' '}
