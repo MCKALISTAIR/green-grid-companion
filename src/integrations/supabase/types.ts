@@ -302,6 +302,33 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          blocked_until: number
+          count: number
+          created_at: string
+          first_attempt: number
+          key: string
+          updated_at: string
+        }
+        Insert: {
+          blocked_until?: number
+          count?: number
+          created_at?: string
+          first_attempt: number
+          key: string
+          updated_at?: string
+        }
+        Update: {
+          blocked_until?: number
+          count?: number
+          created_at?: string
+          first_attempt?: number
+          key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tesla_charging_sessions: {
         Row: {
           avg_intensity_gco2: number | null
@@ -520,6 +547,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      fn_check_rate_limit: {
+        Args: {
+          p_block_duration_ms: number
+          p_key: string
+          p_max_attempts: number
+          p_window_ms: number
+        }
+        Returns: Json
+      }
       get_my_credentials_status: {
         Args: never
         Returns: {
