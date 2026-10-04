@@ -97,22 +97,22 @@ export default {
 			},
 			fontFamily: {
 				sans: [
-					'Nunito',
+					'Plus Jakarta Sans',
 					'ui-sans-serif',
 					'system-ui',
 					'sans-serif'
 				],
 				display: [
-					'Fraunces',
-					'ui-serif',
-					'Georgia',
-					'serif'
+					'Plus Jakarta Sans',
+					'ui-sans-serif',
+					'system-ui',
+					'sans-serif'
 				],
 				serif: [
-					'Fraunces',
-					'ui-serif',
-					'Georgia',
-					'serif'
+					'Plus Jakarta Sans',
+					'ui-sans-serif',
+					'system-ui',
+					'sans-serif'
 				],
 				mono: [
 					'Inconsolata',

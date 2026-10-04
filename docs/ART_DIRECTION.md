@@ -39,7 +39,19 @@ One sentence:
 |---|---|---|
 | **Landscape props** | Scene | Turbines, Eye, BESS, stacks, boats, hills — consistent “chibi-realistic” scale |
 | **Diegetic wildlife** | Scene (countryside/coast) | Sheep, birds, bees, fox — grid-mood only, low frequency |
-| **Paper UI** | Sheet, dock, dialogs | Soft surfaces, quiet borders, Fraunces for condition/decision headlines, Nunito for UI, Inconsolata for numbers |
+| **Paper UI** | Sheet, dock, dialogs | Soft surfaces, quiet borders, Plus Jakarta Sans throughout, Inconsolata for dense data |
+
+### Paper UI / typography
+
+| Role | Face | Where |
+|---|---|---|
+| **UI + HUD** | Plus Jakarta Sans | Nav, sheet, band labels (High / Moderate), page titles, now-or-wait |
+| **Personality** | Same family, italic | Energy fact line — distinct voice without a second face |
+| **Data** | Inconsolata | Dense figures in charts, tables, codes — not the hero intensity number |
+
+Hero intensity uses **Plus Jakarta Sans + tabular-nums** (Carrot craft: one sans for the readout). Full review: [`TYPOGRAPHY.md`](./TYPOGRAPHY.md).
+
+Retired: Nunito, Fraunces, Work Sans (interim), Lora-as-second-dialect.
 
 ### Disallowed / gated registers
 
@@ -77,7 +89,7 @@ Do not reintroduce competing numeric overlays on the scene. Do not put marketing
 ## Sheet art rules
 
 1. Same **paper** as the dock (`--card`, soft border, soft shadow) — scene bleeds into UI via wave divider only.
-2. Decision headline uses **Fraunces**; body/UI uses **Nunito**; gCO₂ figures use **Inconsolata** / tabular nums.
+2. Decision / page titles and intensity band labels use **Plus Jakarta Sans** (weight hierarchy); personality asides use the **same face italic**; dense gCO₂ figures use **Inconsolata** / tabular nums. Hero intensity stays Plus Jakarta + tabular-nums. See [`TYPOGRAPHY.md`](./TYPOGRAPHY.md).
 3. Primary CTA colour is grid green; avoid multi-hue icon festivals.
 4. Icons are supporting, not the personality. Personality lives in scene + condition copy.
 
@@ -91,6 +103,17 @@ Do not reintroduce competing numeric overlays on the scene. Do not put marketing
 - Dock pill slide + decision spring are allowed; bounce on every tab is enough — don’t add more novelty motion.
 
 ---
+
+## Carrot baseline (enjoyment)
+
+Carrot Weather is the interaction-craft bar — not a mascot to copy. GridSense should feel as authored to *touch*:
+
+1. **Scene-as-HUD** — one number, one condition line (shipped).
+2. **World over time** — garden stages from clean streaks (shipped).
+3. **Cross-linked data** — tapping a forecast hour updates chart emphasis **and** insight copy together (`ForecastChart` + `getForecastHourInsight`).
+4. **Prove the shift** — meter truth beats dialogue volume.
+
+Do not close the “feel” gap with more gag density. Close it with craft: every tap authored, world alive when idle.
 
 ## How we ship against this
 
