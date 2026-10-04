@@ -32,6 +32,7 @@ import {
 import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
 import { formatDistanceToNow } from 'date-fns';
 import { OctopusSettings } from './OctopusSettings';
+import { OctopusBenefitsIntro } from './OctopusBenefitsIntro';
 
 const OctopusLogo = ({ className }: { className?: string }) => (
   <img
@@ -57,6 +58,7 @@ export function OctopusIntegration() {
   } = useOctopusEnergy();
 
   const [isEditing, setIsEditing] = useState(false);
+  const [showCredentialsForm, setShowCredentialsForm] = useState(false);
   const navigate = useNavigate();
 
   const handleLinkMeter = async () => {
@@ -161,14 +163,28 @@ export function OctopusIntegration() {
     );
   }
 
-  // 2. No Credentials OR (Editing AND not linked) -> Show Settings Form
+  // 2. No Credentials OR (Editing AND not linked) -> Benefits intro, then settings form
   if ((!hasCredentials && !isLinked) || (isEditing && !isLinked)) {
+    if (!isEditing && !showCredentialsForm) {
+      return <OctopusBenefitsIntro onContinue={() => setShowCredentialsForm(true)} />;
+    }
+
     return (
       <div className="space-y-4">
         <SettingsSectionHeading>Energy Integrations</SettingsSectionHeading>
         <OctopusSettings
-          onSaved={() => setIsEditing(false)}
-          onCancel={isEditing ? () => setIsEditing(false) : undefined}
+          onSaved={() => {
+            setIsEditing(false);
+            setShowCredentialsForm(false);
+          }}
+          onCancel={
+            isEditing || showCredentialsForm
+              ? () => {
+                  setIsEditing(false);
+                  setShowCredentialsForm(false);
+                }
+              : undefined
+          }
         />
       </div>
     )

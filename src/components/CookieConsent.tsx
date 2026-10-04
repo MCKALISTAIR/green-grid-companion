@@ -19,14 +19,22 @@ export const CookieConsent = () => {
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
   }, [theme, location.pathname]);
 
+  // Keep cookie chrome off immersive onboarding so the first CTA stays clear.
+  const onOnboarding = location.pathname === '/onboarding';
+
   useEffect(() => {
+    if (onOnboarding) {
+      setVisible(false);
+      return;
+    }
     const consent = localStorage.getItem('cookie-consent');
     if (!consent) {
       // Small delay so it doesn't flash on load
       const timer = setTimeout(() => setVisible(true), 1000);
       return () => clearTimeout(timer);
     }
-  }, []);
+    setVisible(false);
+  }, [onOnboarding]);
 
   const accept = () => {
     localStorage.setItem('cookie-consent', 'accepted');
@@ -38,7 +46,7 @@ export const CookieConsent = () => {
     setVisible(false);
   };
 
-  if (!visible) return null;
+  if (!visible || onOnboarding) return null;
 
   return (
     <div className="fixed bottom-20 sm:bottom-4 left-0 right-0 z-50 px-4 pb-2 animate-in slide-in-from-bottom-8 duration-700 ease-out fill-mode-forwards">

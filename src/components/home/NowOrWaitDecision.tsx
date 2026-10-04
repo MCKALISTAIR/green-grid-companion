@@ -1,11 +1,8 @@
 import { Link } from 'react-router-dom';
-import { format } from 'date-fns';
 import { ArrowRight, BatteryCharging, Clock3, Leaf } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { ForecastData } from '@/lib/carbonApi';
-import { getBestWorstWindows } from '@/lib/forecastWindows';
-import { getDayLabel } from '@/lib/date-utils';
-import { getSmartTip } from '@/lib/getSmartTip';
+import { getNowOrWaitDecision } from '@/lib/nowOrWait';
 import { useCountdown } from '@/hooks/useCountdown';
 import { cn } from '@/lib/utils';
 
@@ -19,25 +16,9 @@ interface NowOrWaitDecisionProps {
  * before any secondary insight chrome.
  */
 export function NowOrWaitDecision({ intensity, forecast }: NowOrWaitDecisionProps) {
-  const windows = getBestWorstWindows(forecast);
-  const now = new Date();
-  const isBestNow = windows ? now >= windows.bestStart && now <= windows.bestEnd : intensity <= 100;
-  const countdown = useCountdown(windows && !isBestNow ? windows.bestStart : null);
-  const tip = getSmartTip(intensity, forecast);
-
-  const headline = isBestNow
-    ? 'Use energy now'
-    : windows
-      ? `Wait until ${format(windows.bestStart, 'HH:mm')}`
-      : 'Check the forecast';
-
-  const detail = isBestNow
-    ? windows
-      ? `Cleanest window open until ${format(windows.bestEnd, 'HH:mm')} · ~${windows.minAvg} gCO₂/kWh`
-      : 'Grid is relatively clean right now'
-    : windows
-      ? `${format(windows.bestStart, 'HH:mm')} → ${format(windows.bestEnd, 'HH:mm')} ${getDayLabel(new Date(windows.bestStart.getTime() - 60_000))} · ~${windows.minAvg} gCO₂/kWh`
-      : tip;
+  const decision = getNowOrWaitDecision(intensity, forecast);
+  const isUseNow = decision.action === 'use_now';
+  const countdown = useCountdown(decision.countdownTarget);
 
   return (
     <motion.section
@@ -47,20 +28,21 @@ export function NowOrWaitDecision({ intensity, forecast }: NowOrWaitDecisionProp
       transition={{ type: 'spring', stiffness: 260, damping: 24 }}
       className={cn(
         'sheet-surface px-4 py-4',
-        isBestNow
+        isUseNow
           ? 'bg-intensity-very-low/[0.1] border-intensity-very-low/25'
           : 'border-border/60',
       )}
       aria-label="Now or wait decision"
+      data-tour="now-or-wait"
     >
       <div className="flex items-start gap-3">
         <div
           className={cn(
             'w-11 h-11 rounded-2xl flex items-center justify-center shrink-0',
-            isBestNow ? 'bg-intensity-very-low/20' : 'bg-muted',
+            isUseNow ? 'bg-intensity-very-low/20' : 'bg-muted',
           )}
         >
-          {isBestNow ? (
+          {isUseNow ? (
             <BatteryCharging className="w-5 h-5 text-intensity-very-low" />
           ) : (
             <Clock3 className="w-5 h-5 text-muted-foreground" />
@@ -72,34 +54,32 @@ export function NowOrWaitDecision({ intensity, forecast }: NowOrWaitDecisionProp
             <h2
               className={cn(
                 'text-lg font-semibold tracking-tight font-display',
-                isBestNow ? 'text-intensity-very-low' : 'text-foreground',
+                isUseNow ? 'text-intensity-very-low' : 'text-foreground',
               )}
             >
-              {headline}
+              {decision.headline}
             </h2>
-            {isBestNow && (
+            {isUseNow && (
               <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-intensity-very-low/20 text-intensity-very-low">
                 <Leaf className="w-3 h-3" />
                 Now
               </span>
             )}
-            {!isBestNow && countdown && (
+            {!isUseNow && countdown && (
               <span className="text-[10px] font-semibold tabular-nums px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
                 in {countdown}
               </span>
             )}
           </div>
 
-          <p className="text-sm text-muted-foreground leading-snug">{detail}</p>
-          {windows && (
-            <p className="text-xs text-muted-foreground/90 leading-snug line-clamp-2">{tip}</p>
-          )}
+          <p className="text-sm text-muted-foreground leading-snug">{decision.detail}</p>
+          <p className="text-xs text-muted-foreground/90 leading-snug line-clamp-2">{decision.tip}</p>
 
           <Link
             to="/planner"
             className={cn(
               'inline-flex items-center gap-1.5 mt-2 text-sm font-semibold transition-colors',
-              isBestNow
+              isUseNow
                 ? 'text-intensity-very-low hover:text-intensity-very-low/80'
                 : 'text-primary hover:text-primary/80',
             )}
