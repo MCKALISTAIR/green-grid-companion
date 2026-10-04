@@ -17,7 +17,7 @@ function pemToDer(pem: string): Uint8Array {
 }
 
 // Helper to encode ArrayBuffer as base64url string
-function base64UrlEncode(buffer: ArrayBuffer): string {
+function base64UrlEncode(buffer: ArrayBuffer | Uint8Array): string {
   const binary = String.fromCharCode(...new Uint8Array(buffer));
   return btoa(binary)
     .replace(/=/g, "")
