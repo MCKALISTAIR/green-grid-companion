@@ -73,13 +73,16 @@ export function IntensityHeroOverlay({
 
   const nextUpdateLabel = (() => {
     if (!lastUpdated) return '';
+    // Soften first-load / background refresh so FTUE never opens on "Update due".
+    if (isBackgroundFetching) return 'Updating…';
     if (nextUpdate) {
       const next = new Date(nextUpdate);
-      if (new Date() > next) return 'Update due';
+      if (new Date() > next) return 'Refreshing soon';
       return `Next ${next.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
     }
     const next = getNextUpdate(lastUpdated);
     if (!next) return '';
+    if (new Date() > next) return 'Refreshing soon';
     return `Next ${next.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
   })();
 
@@ -219,7 +222,8 @@ export function IntensityHeroOverlay({
               >
                 <p
                   className={cn(
-                    'font-display text-3xl sm:text-4xl font-semibold text-white tracking-tight',
+                    // Intensity band labels — Plus Jakarta Sans bold (same face as HUD).
+                    'font-sans text-3xl sm:text-4xl font-bold text-white tracking-tight',
                     needsHardScrim
                       ? 'drop-shadow-[0_3px_16px_rgba(0,0,0,0.75)]'
                       : 'drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)]',
@@ -284,11 +288,17 @@ export function IntensityHeroOverlay({
                       />
                       <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${freshnessColor}`} />
                     </span>
-                    <span>{relativeTime}</span>
-                    {nextUpdateLabel && (
+                    {isBackgroundFetching ? (
+                      <span>Updating…</span>
+                    ) : (
                       <>
-                        <span className="opacity-60">·</span>
-                        <span>{nextUpdateLabel}</span>
+                        <span>{relativeTime}</span>
+                        {nextUpdateLabel && (
+                          <>
+                            <span className="opacity-60">·</span>
+                            <span>{nextUpdateLabel}</span>
+                          </>
+                        )}
                       </>
                     )}
                   </div>

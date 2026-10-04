@@ -52,26 +52,60 @@ export function CityBus({ direction = 'right', isElectric = false, delay = 0 }: 
   isElectric?: boolean;
   delay?: number;
 }) {
-  const y = direction === 'right' ? 137.5 : 140;
-  const startX = direction === 'right' ? -30 : 430;
-  const endX = direction === 'right' ? 430 : -30;
+  const y = direction === 'right' ? 138.5 : 142.5;
+  const startX = direction === 'right' ? -40 : 440;
+  const endX = direction === 'right' ? 440 : -40;
   const { width, height } = CITY_SCALE.bus;
 
   return (
     <motion.g
       initial={{ x: startX }}
       animate={{ x: endX }}
-      transition={{ duration: 18, delay, repeat: Infinity, repeatDelay: delay + 8, ease: 'linear' as const }}
+      transition={{ duration: 18, delay, repeat: Infinity, repeatDelay: 8, ease: 'linear' as const }}
     >
-      {/* Bus body */}
-      <rect x={0} y={y} width={width} height={height} rx={1.5} fill={isElectric ? '#0ea5e9' : '#dc2626'} />
-      {/* Windows */}
-      {Array.from({ length: 4 }).map((_, i) => (
-        <rect key={i} x={2 + i * 5.5} y={y + 1} width={4} height={4} rx={0.5} fill="rgba(200,230,255,0.6)" />
+      <rect x={0} y={y} width={width} height={height} rx={1.5} fill={isElectric ? '#0d9488' : '#b45309'} />
+      <rect x={2} y={y + 1.5} width={width - 4} height={3} fill="rgba(255,255,255,0.15)" />
+      {[4, 10, 16].map((wx) => (
+        <rect key={wx} x={wx} y={y + 2} width={3} height={2.5} fill="#fef3c7" opacity={0.7} />
       ))}
-      {/* Wheels */}
-      <circle cx={5} cy={y + height} r={2} fill="#1f2937" />
-      <circle cx={width - 5} cy={y + height} r={2} fill="#1f2937" />
+      <circle cx={5} cy={y + height} r={1.8} fill="#1f2937" />
+      <circle cx={width - 5} cy={y + height} r={1.8} fill="#1f2937" />
+    </motion.g>
+  );
+}
+
+/**
+ * Diegetic playful beat — a Tube carriage flashes across the road
+ * once a minute (low frequency, never a traffic jam).
+ */
+export function TubeFlash({ enabled = true }: { enabled?: boolean }) {
+  if (!enabled) return null;
+  const y = CITY_GROUND_Y - 4;
+  return (
+    <motion.g
+      aria-hidden="true"
+      initial={{ x: -50, opacity: 0 }}
+      animate={{
+        x: [ -50, 450 ],
+        opacity: [0, 1, 1, 0],
+      }}
+      transition={{
+        duration: 4.5,
+        times: [0, 0.08, 0.85, 1],
+        repeat: Infinity,
+        repeatDelay: 55,
+        ease: 'linear' as const,
+      }}
+    >
+      {/* Carriage body — Underground red */}
+      <rect x={0} y={y} width={28} height={7} rx={1.2} fill="#dc2626" />
+      <rect x={1} y={y + 1} width={26} height={2.2} fill="rgba(255,255,255,0.2)" />
+      {[3, 9, 15, 21].map((wx) => (
+        <rect key={wx} x={wx} y={y + 1.2} width={3.5} height={2} fill="#fef08a" opacity={0.85} />
+      ))}
+      {/* Roundel hint */}
+      <circle cx={14} cy={y + 5} r={1.6} fill="#fff" opacity={0.9} />
+      <circle cx={14} cy={y + 5} r={0.9} fill="#dc2626" />
     </motion.g>
   );
 }
@@ -553,12 +587,26 @@ export function BatteryStorageContainer({ x = 320, cleanliness, isNight }: {
 }
 
 // City traffic - collection of vehicles responding to intensity
-export function CityTraffic({ cleanliness, isNight }: { cleanliness: number; isNight: boolean }) {
+export function CityTraffic({
+  cleanliness,
+  isNight,
+  maxVehicles,
+  showBus = true,
+}: {
+  cleanliness: number;
+  isNight: boolean;
+  /** Cap road clutter for one-hero composition (defaults: night 3 / day 5). */
+  maxVehicles?: number;
+  /** Bus is loud visual noise — off unless the band allows it. */
+  showBus?: boolean;
+}) {
   // More EVs when cleaner
   const evRatio = cleanliness;
   
   const vehicles = useMemo(() => {
-    const count = isNight ? 3 : 5;
+    const defaultCount = isNight ? 3 : 5;
+    const requested = maxVehicles ?? defaultCount;
+    const count = Math.max(0, Math.min(requested, defaultCount));
     return Array.from({ length: count }).map((_, i) => ({
       id: i,
       direction: (i % 2 === 0 ? 'right' : 'left') as 'left' | 'right',
@@ -566,15 +614,17 @@ export function CityTraffic({ cleanliness, isNight }: { cleanliness: number; isN
       delay: i * 4,
       speed: 10 + Math.random() * 8,
     }));
-  }, [isNight, evRatio > 0.5]); // Only recalculate when crossing threshold
+  }, [isNight, maxVehicles, evRatio > 0.5]); // Only recalculate when crossing threshold
 
   return (
     <g>
       {vehicles.map(v => (
         <CityVehicle key={v.id} {...v} />
       ))}
-      {/* One bus */}
-      <CityBus direction="right" isElectric={cleanliness > 0.6} delay={5} />
+      {/* One bus — only when the hero band allows road clutter */}
+      {showBus && (maxVehicles ?? 5) >= 2 && (
+        <CityBus direction="right" isElectric={cleanliness > 0.6} delay={5} />
+      )}
     </g>
   );
 }

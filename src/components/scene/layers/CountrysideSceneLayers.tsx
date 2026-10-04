@@ -5,6 +5,7 @@ import { LandscapeBack, LandscapeMid, LandscapeFront } from '../Landscape';
 import { ValleyMist } from '../ValleyMist';
 import { Sheep } from '../Sheep';
 import { SceneHotspots, type HotspotDef } from '../SceneHotspots';
+import { SCENE_SILHOUETTE_ASPECT } from '@/lib/sceneScaleBible';
 
 export interface CountrysideSceneLayersProps {
   shouldReduceMotion: boolean;
@@ -46,7 +47,7 @@ export function CountrysideSceneLayers({
         style={{ y: shouldReduceMotion ? 0 : backY }}
         className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-0 overflow-hidden"
       >
-        <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+        <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio={SCENE_SILHOUETTE_ASPECT} aria-hidden="true">
           <LandscapeBack
             cleanliness={sceneConfig.cleanliness}
             isNight={isNight}
@@ -65,7 +66,7 @@ export function CountrysideSceneLayers({
         style={{ y: shouldReduceMotion ? 0 : midY }}
         className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-10 overflow-hidden"
       >
-        <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+        <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio={SCENE_SILHOUETTE_ASPECT} aria-hidden="true">
           <LandscapeMid
             cleanliness={sceneConfig.cleanliness}
             isNight={isNight}
@@ -101,7 +102,7 @@ export function CountrysideSceneLayers({
 
       {/* Countryside: Foreground Landscape Layer (Front Hill) */}
       <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-20 overflow-hidden">
-        <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+        <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio={SCENE_SILHOUETTE_ASPECT} aria-hidden="true">
           <LandscapeFront
             cleanliness={sceneConfig.cleanliness}
             isNight={isNight}

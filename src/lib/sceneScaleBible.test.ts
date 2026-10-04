@@ -7,6 +7,8 @@ import {
   CITY_SCALE,
   COUNTRYSIDE_SCALE,
   SCENE_VIEWBOX,
+  SCENE_SILHOUETTE_ASPECT,
+  SCENE_WASH_ASPECT,
 } from './sceneScaleBible';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -19,6 +21,27 @@ describe('sceneScaleBible', () => {
     expect(CITY_SCALE.bess.height).toBe(8);
     expect(CITY_SCALE.distantStack.height).toBe(22);
     expect(CITY_SCALE.car.bodyHeight).toBeLessThan(CITY_SCALE.bess.height);
+  });
+
+  it('locks silhouette vs wash aspect policy', () => {
+    expect(SCENE_SILHOUETTE_ASPECT).toBe('xMidYMax meet');
+    expect(SCENE_WASH_ASPECT).toBe('none');
+  });
+
+  it('city / countryside / coastal silhouette layers use SCENE_SILHOUETTE_ASPECT (no stretch)', () => {
+    const files = [
+      'components/scene/layers/CitySceneLayers.tsx',
+      'components/scene/layers/CountrysideSceneLayers.tsx',
+      'components/scene/layers/CoastalSceneLayers.tsx',
+      'components/scene/layers/SceneAdvancedLayer.tsx',
+      'components/scene/layers/SceneGenerationOverlay.tsx',
+    ];
+    for (const rel of files) {
+      const src = fs.readFileSync(path.join(root, rel), 'utf-8');
+      expect(src, rel).toContain('SCENE_SILHOUETTE_ASPECT');
+      // No hardcoded stretch on silhouette scene roots
+      expect(src, rel).not.toMatch(/preserveAspectRatio="none"/);
+    }
   });
 
   it('BatteryStorageContainer reads BESS size from the bible', () => {

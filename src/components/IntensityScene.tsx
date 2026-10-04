@@ -238,8 +238,9 @@ export function IntensityScene({
         weather,
         synthwaveMode,
         isNight,
+        sceneType,
       }),
-    [intensity, index, timeOfDay, weather, synthwaveMode, isNight],
+    [intensity, index, timeOfDay, weather, synthwaveMode, isNight, sceneType],
   );
 
   return (

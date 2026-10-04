@@ -122,21 +122,27 @@ export type Database = {
       octopus_credentials: {
         Row: {
           account_number: string
-          api_key: string
+          api_key: string | null
+          api_key_encrypted: string | null
+          api_key_hint: string | null
           created_at: string
           updated_at: string
           user_id: string
         }
         Insert: {
           account_number: string
-          api_key: string
+          api_key?: string | null
+          api_key_encrypted?: string | null
+          api_key_hint?: string | null
           created_at?: string
           updated_at?: string
           user_id?: string
         }
         Update: {
           account_number?: string
-          api_key?: string
+          api_key?: string | null
+          api_key_encrypted?: string | null
+          api_key_hint?: string | null
           created_at?: string
           updated_at?: string
           user_id?: string
@@ -301,6 +307,35 @@ export type Database = {
           weekly_digest_enabled?: boolean
         }
         Relationships: []
+      }
+      scheduled_notification_log: {
+        Row: {
+          job_name: string
+          period_key: string
+          sent_at: string
+          subscription_id: string
+        }
+        Insert: {
+          job_name: string
+          period_key: string
+          sent_at?: string
+          subscription_id: string
+        }
+        Update: {
+          job_name?: string
+          period_key?: string
+          sent_at?: string
+          subscription_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_notification_log_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "push_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tesla_charging_sessions: {
         Row: {

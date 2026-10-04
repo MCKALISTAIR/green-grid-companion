@@ -189,27 +189,27 @@ function TypographySamples() {
   return (
     <div className="space-y-4">
       <div>
-        <p className="mb-1 font-mono text-xs uppercase text-muted-foreground">Display · Work Sans 700 · 36/40</p>
-        <p className="font-sans text-4xl font-bold leading-tight">Cleaner energy, on your schedule</p>
+        <p className="mb-1 font-mono text-xs uppercase text-muted-foreground">Display · Plus Jakarta Sans 700 · 36/40</p>
+        <p className="font-sans text-4xl font-bold leading-tight tracking-tight">Cleaner energy, on your schedule</p>
       </div>
       <div>
-        <p className="mb-1 font-mono text-xs uppercase text-muted-foreground">Heading · Work Sans 600 · 24/32</p>
+        <p className="mb-1 font-mono text-xs uppercase text-muted-foreground">Heading · Plus Jakarta Sans 600 · 24/32</p>
         <p className="font-sans text-2xl font-semibold">Today's grid is 62% renewable</p>
       </div>
       <div>
-        <p className="mb-1 font-mono text-xs uppercase text-muted-foreground">Body · Work Sans 400 · 16/24</p>
+        <p className="mb-1 font-mono text-xs uppercase text-muted-foreground">Body · Plus Jakarta Sans 400 · 16/24</p>
         <p className="max-w-prose font-sans">
           GridSense tracks UK carbon intensity in real time and tells you the cleanest moments to use power.
         </p>
       </div>
       <div>
-        <p className="mb-1 font-mono text-xs uppercase text-muted-foreground">Editorial · Lora 500 · 18/28</p>
-        <p className="max-w-prose font-serif text-lg italic">
+        <p className="mb-1 font-mono text-xs uppercase text-muted-foreground">Personality · Plus Jakarta Sans italic 500 · 18/28</p>
+        <p className="max-w-prose font-sans text-lg italic font-medium">
           "A small shift in when you charge can mean a meaningful drop in your footprint."
         </p>
       </div>
       <div>
-        <p className="mb-1 font-mono text-xs uppercase text-muted-foreground">Mono · Inconsolata · data values</p>
+        <p className="mb-1 font-mono text-xs uppercase text-muted-foreground">Mono · Inconsolata · dense data only</p>
         <p className="font-mono text-base">142 gCO₂/kWh · ↓ 18% vs yesterday</p>
       </div>
     </div>
@@ -300,7 +300,7 @@ function ComponentInventory() {
       rows: [
         { name: "IntensityGauge", purpose: "The hero number on Home — current carbon intensity.", path: "src/components/IntensityGauge.tsx" },
         { name: "GenerationMixBar", purpose: "Stacked horizontal bar of fuel mix.", path: "src/components/GenerationMixBar.tsx" },
-        { name: "ForecastChart", purpose: "24h forecast with BEST ribbon.", path: "src/components/ForecastChart.tsx" },
+        { name: "ForecastChart", purpose: "24h forecast with cross-linked hour picker + BEST ribbon.", path: "src/components/ForecastChart.tsx" },
         { name: "StaleDataBadge", purpose: "Marks data older than 35m.", path: "src/components/StaleDataBadge.tsx" },
         { name: "OfflineIndicator", purpose: "Top banner on connectivity loss.", path: "src/components/OfflineIndicator.tsx" },
         { name: "TurbineSpinner", purpose: "Brand loading state. Replaces generic spinners.", path: "src/components/ui/turbine-spinner.tsx" },
@@ -484,7 +484,7 @@ export default function DesignSystemPage() {
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="font-mono text-xs uppercase tracking-wide text-muted-foreground">Internal · /__design-system</p>
-          <h1 className="mt-1 text-3xl font-bold font-display">GridSense Design System</h1>
+          <h1 className="mt-1 text-3xl font-bold font-display tracking-tight">GridSense Design System</h1>
           <p className="mt-2 max-w-2xl text-muted-foreground">
             Art direction: <span className="text-foreground font-medium">Living grid paper</span> — one authored
             product (scene + sheet). Tokens below; direction &amp; one-product tests live in{" "}

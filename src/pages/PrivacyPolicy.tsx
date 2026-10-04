@@ -21,7 +21,7 @@ export default function PrivacyPolicy() {
             <div className="p-4 max-w-2xl mx-auto space-y-6">
                 <div className="space-y-2">
                     <p className="text-muted-foreground">
-                        Last updated: 7 February 2026
+                        Last updated: 3 October 2026
                     </p>
                     <p>
                         Hello! I'm Alistair McKay. Apps should be honest and respectful of your data.
@@ -44,7 +44,7 @@ export default function PrivacyPolicy() {
                             <li><strong>Preferences:</strong> Saved locations, household profile, and notification settings.</li>
                         </ul>
                         <p>
-                            If you use GridSense without signing in, your data is stored locally on your device only.
+                            If you use GridSense without signing in, your preferences are stored locally on your device. If you connect Octopus Energy without signing in, an anonymous account is created so your (encrypted) API key and meter data can be stored on our servers; signing in later attaches that data to your account.
                         </p>
                     </CardContent>
                 </Card>
@@ -59,8 +59,9 @@ export default function PrivacyPolicy() {
                             Your data is protected by industry-standard security measures:
                         </p>
                         <ul className="list-disc pl-4 space-y-1">
-                            <li>All data is encrypted in transit (HTTPS/TLS) and at rest.</li>
-                            <li>API keys and credentials are stored securely and are only accessible by server-side functions — never exposed to other users or the frontend.</li>
+                            <li>All data is encrypted in transit (HTTPS/TLS), and our database provider encrypts stored data at rest.</li>
+                            <li>Your Octopus Energy API key is sent once over HTTPS and is not stored on your device. On our servers it is additionally encrypted (AES-256-GCM) with a key that only our server-side functions hold, and it is decrypted only to call the Octopus API on your behalf. The app can only see whether a key is saved and its last four characters.</li>
+                            <li>This is not end-to-end encryption: our server-side functions can decrypt your API key in order to fetch your meter data.</li>
                             <li>Row-level security ensures you can only access your own data.</li>
                             <li>Authentication is handled via Google and Apple OAuth — we never see or store your passwords.</li>
                         </ul>
@@ -178,7 +179,7 @@ export default function PrivacyPolicy() {
                             We retain your data only for as long as your account is active. When you delete your account, all associated data is permanently removed from our servers immediately.
                         </p>
                         <p>
-                            If you use GridSense without signing in, data is stored locally on your device and can be cleared by uninstalling the app or clearing browser data.
+                            If you use GridSense without signing in, locally stored data can be cleared by uninstalling the app or clearing browser data. Octopus data held for an anonymous account can be removed at any time by disconnecting Octopus Energy in Settings.
                         </p>
                     </CardContent>
                 </Card>

@@ -3,6 +3,18 @@
 Manual on-device checks for the `IntensityScene`. Run this whenever scene height,
 landscape SVG paths, or layout-affecting CSS changes.
 
+## Matrix QA (2026-09 presence + integrity)
+
+Captured via `scripts/scene-matrix-qa.mjs` + `scripts/scene-home-qa.mjs`:
+
+| Coverage | Status |
+|---|---|
+| Theme × band × midday/night (iPhone SE) | 3 × 5 × 2 = 30 scene-test cards |
+| Home app context (city EC1 / countryside BA1 / coastal PL1) | HUD + paper sheet over live intensity |
+| Desktop + ultrawide city aspect | meet letterbox, Eye stays in frame |
+
+Guards: `scene-theme-integrity`, `sceneConfig` ground dialects, `cityHeroDemotion` presence floors.
+
 ## Stress-test findings (2026-09)
 
 Deep scrutiny across theme × intensity × time found recurring failures:
@@ -81,7 +93,7 @@ For each device, verify:
 - [ ] Stage 2+: extra butterflies; wildlife gates ease slightly
 - [ ] Stage 3+ night: soft emerald sparkles
 - [ ] City theme: temporal garden skipped (no countryside flora)
-- [ ] Home sheet shows quiet "Scene garden · day N" when stage > 0
+- [ ] Home sheet shows a quiet stage-up line only when garden stage rises (never persistent “day N” chrome; never raw clean hours)
 - [ ] Dirty periods decay garden hours slowly (no hard wipe)
 
 ## City scene logic
@@ -128,12 +140,46 @@ heavy haze on dirty days does not mute the halo.
 ### Atmospheric depth band
 `SceneAtmosphericDepth` adds a horizontal haze across the horizon (z-[2], below spotlight).
 - [ ] Cool blue tint on clean days, warm sepia on dirty days
-- [ ] Visible at the 40–68% vertical band only (does not wash out foreground)
+- [ ] Visible near the horizon only (~42–64% vertical) — must **not** form an opaque muddy bar
+- [ ] Peak haze opacity capped (~0.24) so live UK dirty/high intensities still show landmarks
 - [ ] Distant skyline reads as further away than mid skyline
 
 ### Scale bible (locked)
 
 Source of truth: `src/lib/sceneScaleBible.ts` (art direction register test).
+
+### Aspect integrity (locked)
+
+| Layer kind | `preserveAspectRatio` | Constant |
+|---|---|---|
+| Landscape / skyline / props (Eye, turbines, boats, BESS…) | `xMidYMax meet` | `SCENE_SILHOUETTE_ASPECT` |
+| Washes (mist, aurora, grass strip, tidal wash, wave divider) | `none` | `SCENE_WASH_ASPECT` |
+
+- [ ] Phone SE / 15 / Duo cover / desktop 1440: props look like the same objects (no vertical squash)
+- [ ] Tall phones: Eye + BESS stay in frame (meet letterboxes; sky CSS fills gaps — do not switch back to `slice`, which crops side landmarks)
+- [ ] Ultrawide: may letterbox horizontally; silhouettes stay unstretched
+- [ ] City one-hero demotion (`getCityHeroEmphasis`) — only the band hero is full opacity
+
+### City presence (alive + obvious)
+
+- [ ] Daytime skyline reads as solid building mass (not glass fog)
+- [ ] Bottom safety strip is pavement grey on city — never countryside green
+- [ ] Hero Eye/BESS stay readable (≥ ~0.35 opacity when still in shot); hero gets a slight scale bump
+- [ ] At least one micro-life cue on clean/moderate (EV or pigeon) — empty road only when dirty? no — always ≥1 on landmark heroes
+- [ ] Tube flash crosses the road ~once/minute (respects reduced motion)
+- [ ] Dusk/night windows flicker staggered
+
+### City one-hero demotion
+
+UX bar: name the focal prop in &lt;1s **and** still feel like a living city.
+
+| Band | Hero | Presence |
+|---|---|---|
+| very-clean | London Eye (scale↑) | Solid skyline, 1 EV + 1 pigeon, Tube flash |
+| clean | Skyline | Eye/BESS readable ghosts, light traffic |
+| moderate | BESS (scale↑) | Eye readable, 1 EV, Tube flash |
+| dirty | Distant stack | Bus OK, Tube flash |
+| very-dirty | Smog | Crane on, no Tube |
 
 #### City (400×150 viewBox, groundY = 138)
 | Prop | Size | Notes |

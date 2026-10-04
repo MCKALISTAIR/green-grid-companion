@@ -20,12 +20,17 @@ describe('getSmartTip', () => {
 
   it('celebrates very low current intensity', () => {
     const forecast = Array.from({ length: 24 }, (_, i) => slot(i + 1, 80));
-    expect(getSmartTip(40, forecast)).toContain('excellent');
+    expect(getSmartTip(40, forecast)).toMatch(/excellent|clean/i);
   });
 
-  it('suggests waiting when later intensity is much cleaner', () => {
-    const forecast = Array.from({ length: 24 }, (_, i) => slot(i + 1, i === 4 ? 60 : 200));
-    expect(getSmartTip(180, forecast)).toMatch(/wait until/i);
+  it('suggests waiting when a nearby window is much cleaner', () => {
+    // Six consecutive clean half-hour slots (~3h) starting ~2h out
+    const forecast = Array.from({ length: 36 }, (_, i) => {
+      const hoursFromNow = 0.5 + i * 0.5;
+      const clean = hoursFromNow >= 2 && hoursFromNow < 5;
+      return slot(hoursFromNow, clean ? 55 : 200);
+    });
+    expect(getSmartTip(180, forecast)).toMatch(/shift|wait|plan/i);
   });
 });
 

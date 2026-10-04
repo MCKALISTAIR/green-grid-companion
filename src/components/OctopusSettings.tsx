@@ -219,7 +219,7 @@ export const OctopusSettings = forwardRef<HTMLDivElement, OctopusSettingsProps>(
 
                 <div className="text-[10px] text-muted-foreground mt-2 space-y-2">
                     <p>
-                        Your credentials are stored securely and only used to fetch your meter data.
+                        Your API key is sent once over HTTPS and stored encrypted on our servers (never on this device). It is only used to fetch your meter data.
                         You can find your API Key in the <a href="https://octopus.energy/dashboard/developer/" target="_blank" rel="noreferrer" className="underline hover:text-primary">Octopus Developer Dashboard</a>.
                     </p>
                     <p className="pt-2 border-t border-primary/20">

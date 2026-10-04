@@ -1,6 +1,14 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
 import { sendPushNotifications } from '../_shared/push.ts';
+import {
+  verifySchedulerRequest,
+  cronAuthErrorResponse,
+  createSchedulerSecretProvider,
+  fetchSchedulerSecret,
+  type SchedulerSecretRpcClient,
+} from '../_shared/cron-auth.ts';
+import { createKeyLoader, backfillLegacyCredentials } from '../_shared/octopus-credentials.ts';
 
 interface CarbonIntensityResponse {
   data: Array<{
@@ -30,10 +38,26 @@ interface PushSubscription {
   is_sandbox: boolean;
 }
 
+// Scheduler secret lives in the database (see 20261003120000 migration);
+// read with the service role and cached per instance.
+const getSchedulerSecret = createSchedulerSecretProvider(() =>
+  fetchSchedulerSecret(
+    createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!) as unknown as SchedulerSecretRpcClient,
+  ));
+
+// Used to encrypt any remaining legacy plaintext Octopus API keys (see below).
+const getCredentialKey = createKeyLoader(() => Deno.env.get('OCTOPUS_CREDENTIALS_KEY'));
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Scheduler-only endpoint: require the shared cron secret.
+  const cronAuth = await verifySchedulerRequest(req, getSchedulerSecret);
+  if (!cronAuth.ok) {
+    return cronAuthErrorResponse(cronAuth, corsHeaders);
   }
 
   try {
@@ -207,13 +231,23 @@ Deno.serve(async (req) => {
       console.error("[PUSH] Error sending push notifications:", e);
     }
 
+    // Piggyback: encrypt any legacy plaintext Octopus API keys left from before
+    // the security migration. Idempotent, a single cheap query once done, and
+    // never fails this run (skips quietly if the key/migration isn't there yet).
+    let legacyCredentials: unknown = null;
+    try {
+      legacyCredentials = await backfillLegacyCredentials(supabase, getCredentialKey);
+    } catch (e) {
+      console.error('[CREDENTIALS] Legacy key backfill failed:', e);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         checked: subscriptions?.length || 0,
         stateChanges: stateUpdates.length,
         notifications: notifications.length,
-        debug: notifications,
+        legacy_credentials: legacyCredentials,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
