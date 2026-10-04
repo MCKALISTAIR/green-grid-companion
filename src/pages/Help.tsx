@@ -175,10 +175,10 @@ export default function Help() {
                             <AccordionContent>
                                 <div className="space-y-3 text-sm">
                                     <p><strong>What data do you collect?</strong></p>
-                                    <p>We only store your preferences locally on your device. Location data is used solely to fetch regional carbon intensity and is never shared.</p>
+                                    <p>Your preferences are stored locally on your device. Location data is used solely to fetch regional carbon intensity and is never shared.</p>
 
                                     <p className="pt-2"><strong>Account data:</strong></p>
-                                    <p>Octopus: you paste your account number and API key. Keys are stored on your device and can sync encrypted when you sign in — we use them only to fetch your meter data.</p>
+                                    <p>Octopus: you paste your account number and API key. The key is sent once over HTTPS and stored encrypted on our servers (never on your device). Only our server-side functions can decrypt it, and we use it only to fetch your meter data. You can remove it at any time by disconnecting.</p>
 
                                     <p className="pt-2">For full details, see our Privacy Policy in Settings → Resources.</p>
                                 </div>

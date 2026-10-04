@@ -439,7 +439,7 @@ export function FootprintView() {
             </a>
 
             <p className="text-xs text-muted-foreground pt-2 max-w-sm">
-              Octopus API keys are stored on your device (and synced encrypted if you sign in). We use them only to fetch your meter data.
+              Your Octopus API key is stored encrypted on our servers, never on your device. We use it only to fetch your meter data.
             </p>
           </div>
         </Card>

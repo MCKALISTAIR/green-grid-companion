@@ -2,6 +2,14 @@
 
 All notable changes to GridSense will be documented in this file.
 
+## [Unreleased]
+
+### Security 🔒
+- **Octopus API keys are server-side only**: keys are no longer cached in `localStorage` (web, iOS or Android). Existing cached keys are removed on first launch (uploaded once if they had never reached the server). Keys are stored AES-256-GCM encrypted at rest with a key held only by edge functions; clients can only see a "linked" flag and the last 4 characters.
+- **Corrected storage copy**: earlier copy (v1.4.6) said keys were "stored securely on your device, and synced via end-to-end encryption" / Keychain. That was never accurate: keys were stored in plain `localStorage` and in the database. Privacy policy and in-app copy now describe the real behaviour (not end-to-end encrypted; server-side functions can decrypt the key to call Octopus).
+- **Scheduler endpoints** (`daily-forecast`, `weekly-digest`, `monthly-report`, `check-carbon-intensity`, `octopus-energy?action=sync-all-users|calculate-all-footprints`) now require a scheduler secret that the migration generates inside the database (pg_cron and the functions both read it; no manual setup), and scheduled notifications are sent at most once per period.
+- **Database privileges**: `app_config`, `geocoding_cache`, `rate_limits`, and `fn_check_rate_limit` are service-role only; clients can no longer write Octopus credentials directly or read API key columns.
+
 ## [v1.4.6] - 2026-02-27
 
 ### Fixed 🐛

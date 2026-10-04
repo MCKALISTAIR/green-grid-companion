@@ -52,9 +52,7 @@ export function OctopusIntegration() {
     linkMeter,
     fullSync,
     disconnect,
-    cachedCredentials,
-    saveCredentials,
-    clearCachedCredentials
+    apiKeyHint,
   } = useOctopusEnergy();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -83,12 +81,6 @@ export function OctopusIntegration() {
     }
   };
 
-  const handleRelink = async () => {
-    if (cachedCredentials) {
-      await saveCredentials(cachedCredentials.apiKey, cachedCredentials.accountNumber);
-    }
-  };
-
   // 1. Loading State
   if (isLoading && !status) {
     return (
@@ -104,66 +96,8 @@ export function OctopusIntegration() {
     )
   }
 
-  // 1.5 Re-link Card (Has cached credentials but NOT linked)
-  if (!isLinked && cachedCredentials && !isEditing) {
-    return (
-      <div className="space-y-4">
-        <SettingsSectionHeading>Energy Integrations</SettingsSectionHeading>
-        <Card className="p-5 border-primary/20 bg-primary/5">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <OctopusLogo className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="font-medium text-foreground">Welcome back!</h3>
-                <p className="text-sm text-muted-foreground">
-                  Continue with account <span className="font-mono bg-muted px-1.5 py-0.5 rounded text-xs">{cachedCredentials.accountNumber.slice(0, 4)}***</span>
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-2 w-full">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => {
-                  if (confirm("Remove saved credentials from this device?")) {
-                    clearCachedCredentials();
-                  }
-                }}
-              >
-                Forget
-              </Button>
-              <Button
-                className="flex-[2]"
-                onClick={handleRelink}
-                disabled={isSyncing}
-              >
-                {isSyncing ? (
-                  <>
-                    <TurbineSpinner size="sm" className="mr-2" />
-                    Connecting...
-                  </>
-                ) : (
-                  <>
-                    <Zap className="w-4 h-4 mr-2" />
-                    Re-link Account
-                  </>
-                )}
-              </Button>
-            </div>
-
-            <p className="text-xs text-center text-muted-foreground/60 cursor-pointer hover:text-primary underline" onClick={() => setIsEditing(true)}>
-              Use a different account
-            </p>
-          </div>
-        </Card>
-      </div>
-    );
-  }
-
   // 2. No Credentials OR (Editing AND not linked) -> Benefits intro, then settings form
+  // Local credential re-link UI removed: keys are server-side only after security hardening.
   if ((!hasCredentials && !isLinked) || (isEditing && !isLinked)) {
     if (!isEditing && !showCredentialsForm) {
       return <OctopusBenefitsIntro onContinue={() => setShowCredentialsForm(true)} />;
@@ -223,6 +157,11 @@ export function OctopusIntegration() {
                     ? 'Next step: link your electricity meter(s) to sync usage'
                     : 'Unlock your personal Carbon Footprint & Green Score'}
               </p>
+              {hasCredentials && apiKeyHint && (
+                <p className="text-[11px] text-muted-foreground/80 mt-1">
+                  API key ending <span className="font-mono">••••{apiKeyHint}</span>
+                </p>
+              )}
             </div>
           </div>
 
@@ -376,7 +315,7 @@ export function OctopusIntegration() {
             <ul className="list-disc pl-4 space-y-1 mt-1">
               <li>See your <strong>Real Carbon Footprint</strong> based on actual usage.</li>
               <li>Get your <strong>Green Energy Score</strong> and personalized insights.</li>
-              <li>Track your progress securely—your keys stay on your device.</li>
+              <li>Your API key is sent once over HTTPS and stored encrypted on our servers. It's never kept on your device.</li>
             </ul>
           </div>
         </div>
