@@ -7,19 +7,19 @@ export function getWindowLitColor(cleanliness: number, timeOfDay?: string): stri
 
   if (timeOfDay === 'dawn') {
     // Soft gold → olive
-    return dirty > 0.4 ? '#c4c45a' : '#fcd34d';
+    return dirty > 0.4 ? '#a8b84a' : '#fcd34d';
   }
   if (timeOfDay === 'sunset') {
-    return dirty > 0.4 ? '#c4783c' : '#fb923c';
+    return dirty > 0.4 ? '#b8783c' : '#fb923c';
   }
   if (timeOfDay === 'dusk' || timeOfDay === 'night') {
-    // Warm amber (#fbbf24) → sickly green (#a3b84a)
-    if (dirty <= 0) return '#fbbf24';
-    if (dirty >= 1) return '#9cb84a';
-    // interpolate roughly via mid stop
-    return dirty > 0.55 ? '#a8b84a' : dirty > 0.25 ? '#d4b84a' : '#fbbf24';
+    // Warm amber (#fbbf24) → clearly sickly green (#7a9e3a)
+    if (dirty <= 0.15) return '#fbbf24';
+    if (dirty <= 0.4) return '#d4b84a';
+    if (dirty <= 0.7) return '#a8b84a';
+    return '#7a9e3a';
   }
 
   // Daytime: rare lit windows stay amber (already sparse)
-  return dirty > 0.5 ? '#d4b84a' : '#fbbf24';
+  return dirty > 0.5 ? '#c4b84a' : '#fbbf24';
 }
