@@ -31,7 +31,7 @@ export function SceneSkyLayer({
   shouldReduceMotion,
   weather,
   isNight,
-  propIntensity,
+  propIntensity: _propIntensity,
   sceneConfig,
   sunPosition,
   timeOfDay,
@@ -49,10 +49,10 @@ export function SceneSkyLayer({
     >
       <WeatherEffects weather={weather} isNight={isNight} cleanliness={sceneConfig.cleanliness} />
 
-      {/* Aurora Borealis for ultra-clean winter nights (moved here to parallax with sky) */}
+      {/* Aurora for magically clean nights (Phase 1: cleanliness > 0.85) */}
       <AnimatePresence>
-        {isNight && propIntensity < 30 && (new Date().getMonth() >= 11 || new Date().getMonth() <= 2) && (
-          <AuroraBorealis intensity={(30 - propIntensity) / 30} />
+        {isNight && sceneConfig.cleanliness > 0.85 && weather.cloudCover < 60 && (
+          <AuroraBorealis intensity={Math.min(1, (sceneConfig.cleanliness - 0.85) / 0.15)} />
         )}
       </AnimatePresence>
 

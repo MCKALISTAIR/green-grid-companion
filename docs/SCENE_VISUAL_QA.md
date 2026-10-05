@@ -160,7 +160,10 @@ Source of truth: `src/lib/sceneScaleBible.ts` (art direction register test).
 - [ ] Ultrawide: may letterbox horizontally; silhouettes stay unstretched
 - [ ] City one-hero demotion (`getCityHeroEmphasis`) — only the band hero is full opacity
 
-### City presence (alive + obvious)
+### Window-light hue (Phase 1)
+- [ ] Clean night windows read warm amber
+- [ ] Dirty night windows read sickly green / olive (city skyline + countryside cottage)
+- [ ] Aurora appears on clean nights (`cleanliness > 0.85`), not winter-gated only
 
 - [ ] Daytime skyline reads as solid building mass (not glass fog)
 - [ ] Bottom safety strip is pavement grey on city — never countryside green

@@ -1,6 +1,7 @@
 import { useMemo, useState, useId } from 'react';
 import { motion } from 'framer-motion';
 import { useHaptics } from '@/hooks/useHaptics';
+import { getWindowLitColor } from '@/lib/windowLitColor';
 
 export type TimeOfDayLandscape = 'night' | 'dawn' | 'morning' | 'midday' | 'afternoon' | 'sunset' | 'dusk';
 
@@ -330,9 +331,24 @@ export function LandscapeMid(props: LandscapeProps) {
     );
 }
 
-function Cottage({ x, y, scale = 1, isNight }: { x: number; y: number; scale?: number; isNight: boolean }) {
+function Cottage({
+  x,
+  y,
+  scale = 1,
+  isNight,
+  cleanliness = 0.7,
+  timeOfDay,
+}: {
+  x: number;
+  y: number;
+  scale?: number;
+  isNight: boolean;
+  cleanliness?: number;
+  timeOfDay?: TimeOfDayLandscape;
+}) {
   const [windowLit, setWindowLit] = useState(isNight);
   const { impactLight } = useHaptics();
+  const litColor = getWindowLitColor(cleanliness, isNight ? 'night' : timeOfDay);
 
   // Keep window in sync with isNight unless clicked
   useMemo(() => {
@@ -395,7 +411,7 @@ function Cottage({ x, y, scale = 1, isNight }: { x: number; y: number; scale?: n
 
       {/* Door */}
       <rect x="-2" y="-4" width="4" height="5" fill="#78350f" rx="0.2" />
-      <circle cx="-1" cy="-1.5" r="0.2" fill="#fbbf24" />
+      <circle cx="-1" cy="-1.5" r="0.2" fill={litColor} />
 
       {/* Roof */}
       <polygon points="-12,-8 0,-16 12,-8" fill="#450a0a" stroke="#7f1d1d" strokeWidth="0.5" />
@@ -408,16 +424,16 @@ function Cottage({ x, y, scale = 1, isNight }: { x: number; y: number; scale?: n
       <rect x="6" y="-14" width="3" height="6" fill="#3f3f46" rx="0.2" />
       
       {/* Windows with night glow */}
-      <rect x="-7" y="-5" width="3" height="3" fill={windowLit ? "#fbbf24" : "#93c5fd"} rx="0.5" stroke="#4b5563" strokeWidth="0.3" />
-      <rect x="4" y="-5" width="3" height="3" fill={windowLit ? "#fbbf24" : "#93c5fd"} rx="0.5" stroke="#4b5563" strokeWidth="0.3" />
+      <rect x="-7" y="-5" width="3" height="3" fill={windowLit ? litColor : "#93c5fd"} rx="0.5" stroke="#4b5563" strokeWidth="0.3" />
+      <rect x="4" y="-5" width="3" height="3" fill={windowLit ? litColor : "#93c5fd"} rx="0.5" stroke="#4b5563" strokeWidth="0.3" />
       
       {/* Ambient window glow cast onto walls/ground */}
       {windowLit && (
         <>
-          <circle cx="-5.5" cy="-3.5" r="2.5" fill="#fbbf24" opacity="0.3" filter="blur(1px)" />
-          <circle cx="5.5" cy="-3.5" r="2.5" fill="#fbbf24" opacity="0.3" filter="blur(1px)" />
-          <polygon points="-7,-2 -10,3 -4,3" fill="#fbbf24" opacity="0.15" filter="blur(1px)" />
-          <polygon points="4,-2 1,3 7,3" fill="#fbbf24" opacity="0.15" filter="blur(1px)" />
+          <circle cx="-5.5" cy="-3.5" r="2.5" fill={litColor} opacity="0.3" filter="blur(1px)" />
+          <circle cx="5.5" cy="-3.5" r="2.5" fill={litColor} opacity="0.3" filter="blur(1px)" />
+          <polygon points="-7,-2 -10,3 -4,3" fill={litColor} opacity="0.15" filter="blur(1px)" />
+          <polygon points="4,-2 1,3 7,3" fill={litColor} opacity="0.15" filter="blur(1px)" />
         </>
       )}
 
@@ -468,7 +484,14 @@ export function LandscapeFront(props: LandscapeProps) {
                 windSpeed={props.windSpeed}
             />
             {/* Countryside Cottage */}
-            <Cottage x={210} y={135} scale={0.78} isNight={props.isNight} />
+            <Cottage
+              x={210}
+              y={135}
+              scale={0.78}
+              isNight={props.isNight}
+              cleanliness={props.cleanliness}
+              timeOfDay={props.timeOfDay}
+            />
 
             {/* Ground strip at the very bottom for visible earth */}
             <rect x={0} y={145} width={400} height={5} fill={palette.frontHillShadow} />

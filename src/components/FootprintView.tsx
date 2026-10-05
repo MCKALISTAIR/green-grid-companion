@@ -25,7 +25,8 @@ import {
   Trees,
   Coffee,
   SunMedium,
-  AlertCircle
+  AlertCircle,
+  X
 } from 'lucide-react';
 import { TurbineSpinner } from '@/components/ui/turbine-spinner';
 import { formatDistanceToNow } from 'date-fns';
@@ -50,6 +51,10 @@ import {
 } from 'recharts';
 import { format, parseISO, startOfDay, getHours } from 'date-fns';
 import { ComponentErrorBoundary } from '@/components/ComponentErrorBoundary';
+import {
+  GreenScoreExplainerContent,
+  getGreenScoreRating,
+} from '@/components/GreenScoreExplainer';
 
 const INTENSITY_COLORS: Record<string, string> = {
   'very low': 'hsl(var(--intensity-very-low))',
@@ -75,6 +80,14 @@ export function FootprintView() {
   const [timeRange, setTimeRange] = useState<TimeRange>('month');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const { houseType, customAnnualKwh } = useSettings();
+  const [showScoreTip, setShowScoreTip] = useState(
+    () => !localStorage.getItem('green-score-tip-seen')
+  );
+
+  const dismissScoreTip = () => {
+    setShowScoreTip(false);
+    localStorage.setItem('green-score-tip-seen', 'true');
+  };
 
   // Fetch more data (60 days) to ensure we have historical data available
   // The UI will filter to show the appropriate range based on selectedDate and timeRange
@@ -515,6 +528,33 @@ export function FootprintView() {
         </div>
       )}
 
+      {showScoreTip && insights && (
+        <Card className="p-4 bg-primary/5 border-primary/20 border-dashed relative">
+          <button
+            type="button"
+            onClick={dismissScoreTip}
+            className="absolute top-2 right-2 p-1 text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="Dismiss Green Score tip"
+          >
+            <X className="w-4 h-4" />
+          </button>
+          <div className="flex gap-3 pr-6">
+            <div className="p-2 rounded-full bg-primary/10 h-fit shrink-0">
+              <Award className="w-4 h-4 text-primary" />
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm font-semibold text-foreground">Your Green Score is live</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                It&apos;s currently <strong className="text-foreground">{insights.greenPercentage.toFixed(0)}%</strong>
+                {' '}({getGreenScoreRating(insights.greenPercentage)}). This measures <em>when</em> you used power —
+                not just how much. Open History to see yellow usage bars against dirty intensity spikes.
+              </p>
+              <GreenScoreExplainerContent />
+            </div>
+          </div>
+        </Card>
+      )}
+
       {!dailyData.length ? (
         <Card className="p-6">
           <div className="text-center mb-4">
@@ -696,45 +736,7 @@ export function FootprintView() {
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-[300px] p-4 bg-card border-border" align="start">
-                          <div className="space-y-3">
-                            <div>
-                              <h4 className="font-semibold text-sm mb-2">How it's calculated</h4>
-                              <p className="text-xs text-muted-foreground">
-                                Your Green Energy Score shows what percentage of your electricity was used during low-carbon intensity periods
-                                (when renewable energy like wind and solar dominated the grid).
-                              </p>
-                            </div>
-                            <div>
-                              <h4 className="font-semibold text-sm mb-2">Score ratings</h4>
-                              <div className="space-y-1.5 text-xs">
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">70%+</span>
-                                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-[10px] h-5">Excellent</Badge>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">50-69%</span>
-                                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-[10px] h-5">Good</Badge>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">30-49%</span>
-                                  <Badge variant="outline" className="text-[10px] h-5">Fair</Badge>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-muted-foreground">Below 30%</span>
-                                  <Badge variant="outline" className="text-[10px] h-5">Growing</Badge>
-                                </div>
-                              </div>
-                            </div>
-                            <div>
-                              <h4 className="font-semibold text-sm mb-2">Improve your score</h4>
-                              <ul className="text-xs text-muted-foreground space-y-1 list-disc pl-4">
-                                <li>Charge devices overnight when wind is typically high</li>
-                                <li>Run appliances during sunny, windy days</li>
-                                <li>Check the Best Time card for optimal hours</li>
-                                <li>Enable notifications for green energy alerts</li>
-                              </ul>
-                            </div>
-                          </div>
+                          <GreenScoreExplainerContent />
                         </PopoverContent>
                       </Popover>
                     </div>
@@ -755,9 +757,7 @@ export function FootprintView() {
                       ? 'bg-primary/10 text-primary border-primary/20'
                       : 'bg-muted text-muted-foreground border-border'} text-center justify-center h-auto py-1`}
                   >
-                    {insights.greenPercentage >= 70 ? 'Excellent' :
-                      insights.greenPercentage >= 50 ? 'Great' :
-                        insights.greenPercentage >= 30 ? 'Good' : 'Growing'}
+                    {getGreenScoreRating(insights.greenPercentage)}
                   </Badge>
                 </div>
               </div>
