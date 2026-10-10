@@ -1,4 +1,5 @@
 -- Policy/privilege assertions for 20261003120000_security_hardening.sql
+-- and 20261010170000_anon_access_tidy.sql
 \set ON_ERROR_STOP 1
 \pset footer off
 SET client_min_messages = warning;
@@ -92,6 +93,69 @@ DO $$ DECLARE c text; BEGIN FOR c IN SELECT command FROM cron.job LOOP EXECUTE c
 INSERT INTO results SELECT 'all 4 cron jobs send the scheduler secret', count(*) = 4 AND bool_and(headers->>'x-cron-secret' = public.get_scheduler_secret()), count(*)::text || ' calls' FROM net.calls;
 INSERT INTO results SELECT 'cron jobs target the real project URL', bool_and(url LIKE 'https://klwezcjmlrdwvvzisdtd.supabase.co/functions/v1/%'), string_agg(DISTINCT split_part(url, '/functions', 1), ',') FROM net.calls;
 INSERT INTO results SELECT 'cron job set unchanged (4 jobs)', count(*) = 4, string_agg(jobname, ',') FROM cron.job;
+
+-- 6. Anonymous-access tidy-up (20261010170000_anon_access_tidy.sql)
+-- Fixture: user 1 owns meter M-1; M-2 has orphaned history (its owner disconnected).
+INSERT INTO public.octopus_meters (user_id, mpan, serial_number) VALUES ('11111111-1111-1111-1111-111111111111', 'M-1', 'S1');
+INSERT INTO public.octopus_consumption (interval_start, interval_end, consumption_kwh, mpan, serial_number) VALUES
+  ('2026-10-01 00:00Z', '2026-10-01 00:30Z', 0.4, 'M-1', 'S1'),
+  ('2026-10-01 00:00Z', '2026-10-01 00:30Z', 0.7, 'M-2', 'S2');
+INSERT INTO public.carbon_footprint (interval_start, interval_end, consumption_kwh, intensity_gco2_kwh, carbon_g, intensity_index, mpan) VALUES
+  ('2026-10-01 00:00Z', '2026-10-01 00:30Z', 0.4, 100, 40, 'low', 'M-1'),
+  ('2026-10-01 00:00Z', '2026-10-01 00:30Z', 0.7, 100, 70, 'low', 'M-2');
+INSERT INTO public.octopus_intelligent_dispatches (user_id, mpan, dispatch_type, start_time, end_time) VALUES
+  ('11111111-1111-1111-1111-111111111111', 'M-1', 'completed', '2026-10-01 01:00Z', '2026-10-01 02:00Z');
+INSERT INTO public.tesla_vehicles (user_id, vehicle_id) VALUES ('11111111-1111-1111-1111-111111111111', 'V1'), ('22222222-2222-2222-2222-222222222222', 'V2');
+INSERT INTO public.user_preferences (user_id) VALUES ('22222222-2222-2222-2222-222222222222');
+
+-- 6a. The real hole: claiming someone else's MPAN to read their history
+SELECT pg_temp.check('user cannot insert a meter (MPAN claim)', 'authenticated', '22222222-2222-2222-2222-222222222222', $q$INSERT INTO public.octopus_meters (user_id, mpan, serial_number) VALUES ('22222222-2222-2222-2222-222222222222','M-2','S2') RETURNING mpan$q$, 'ERR:permission denied%');
+SELECT pg_temp.check('user cannot repoint own meter to another MPAN', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$UPDATE public.octopus_meters SET mpan='M-2' RETURNING mpan$q$, 'ERR:permission denied%');
+SELECT pg_temp.check('user cannot delete meters directly', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$DELETE FROM public.octopus_meters RETURNING mpan$q$, 'ERR:permission denied%');
+SELECT pg_temp.check('orphaned consumption stays hidden', 'authenticated', '22222222-2222-2222-2222-222222222222', $q$SELECT count(*)::text FROM public.octopus_consumption$q$, 'OK:0');
+SELECT pg_temp.check('owner still sees own meter', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$SELECT string_agg(mpan, ',') FROM public.octopus_meters$q$, 'OK:M-1');
+SELECT pg_temp.check('owner still sees own consumption only', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$SELECT string_agg(mpan, ',') FROM public.octopus_consumption$q$, 'OK:M-1');
+SELECT pg_temp.check('owner still sees own footprint only', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$SELECT string_agg(mpan, ',') FROM public.carbon_footprint$q$, 'OK:M-1');
+SELECT pg_temp.check('service_role can still upsert meters (edge function)', 'service_role', NULL, $q$INSERT INTO public.octopus_meters (user_id, mpan, serial_number) VALUES ('22222222-2222-2222-2222-222222222222','M-3','S3') ON CONFLICT (mpan) DO UPDATE SET user_id = excluded.user_id RETURNING mpan$q$, 'OK:M-3');
+
+-- 6b. Signed-out (anon) callers get nothing
+SELECT pg_temp.check('anon cannot read user_preferences', 'anon', NULL, $q$SELECT count(*)::text FROM public.user_preferences$q$, 'ERR:permission denied%');
+SELECT pg_temp.check('anon cannot write user_preferences', 'anon', NULL, $q$INSERT INTO public.user_preferences (user_id) VALUES ('11111111-1111-1111-1111-111111111111') RETURNING user_id::text$q$, 'ERR:permission denied%');
+SELECT pg_temp.check('anon cannot read meters', 'anon', NULL, $q$SELECT count(*)::text FROM public.octopus_meters$q$, 'ERR:permission denied%');
+SELECT pg_temp.check('anon cannot read consumption', 'anon', NULL, $q$SELECT count(*)::text FROM public.octopus_consumption$q$, 'ERR:permission denied%');
+SELECT pg_temp.check('anon cannot read dispatches', 'anon', NULL, $q$SELECT count(*)::text FROM public.octopus_intelligent_dispatches$q$, 'ERR:permission denied%');
+SELECT pg_temp.check('anon cannot read push_subscriptions', 'anon', NULL, $q$SELECT count(*)::text FROM public.push_subscriptions$q$, 'ERR:permission denied%');
+SELECT pg_temp.check('anon cannot read tesla_vehicles', 'anon', NULL, $q$SELECT count(*)::text FROM public.tesla_vehicles$q$, 'ERR:permission denied%');
+SELECT pg_temp.check('anon cannot call user_owns_mpan', 'anon', NULL, $q$SELECT public.user_owns_mpan('M-1')::text$q$, 'ERR:permission denied%');
+SELECT pg_temp.check('anon cannot call has_tesla_linked', 'anon', NULL, $q$SELECT public.has_tesla_linked()::text$q$, 'ERR:permission denied%');
+INSERT INTO results SELECT 'no public-role policies left on tidied tables', count(*) = 0, string_agg(tablename || '.' || policyname, ', ')
+  FROM pg_policies WHERE schemaname = 'public' AND 'public' = ANY(roles)
+   AND tablename IN ('octopus_meters','octopus_consumption','carbon_footprint','octopus_intelligent_dispatches','tesla_charging_sessions','tesla_energy_data','tesla_energy_sites','tesla_vehicles','user_preferences');
+INSERT INTO results SELECT 'duplicate meter policies removed', count(*) = 1, string_agg(policyname, ', ') FROM pg_policies WHERE schemaname = 'public' AND tablename = 'octopus_meters';
+
+-- 6c. Every query the app makes as a signed-in (incl. anonymous) user still works
+-- useSettings / useSavedLocations: upsert + select own row; the updated_at trigger still fires
+SELECT pg_temp.check('app: upsert own preferences', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$INSERT INTO public.user_preferences (user_id, settings, updated_at) VALUES ('11111111-1111-1111-1111-111111111111', '{"a":1}', now()) ON CONFLICT (user_id) DO UPDATE SET settings = excluded.settings, updated_at = excluded.updated_at RETURNING user_id::text$q$, 'OK:11111111-1111-1111-1111-111111111111');
+SELECT pg_temp.check('app: upsert own preferences again (update path)', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$INSERT INTO public.user_preferences (user_id, saved_locations) VALUES ('11111111-1111-1111-1111-111111111111', '[1]') ON CONFLICT (user_id) DO UPDATE SET saved_locations = excluded.saved_locations RETURNING saved_locations::text$q$, 'OK:[1]');
+SELECT pg_temp.check('app: select own settings', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$SELECT settings::text FROM public.user_preferences WHERE user_id = '11111111-1111-1111-1111-111111111111'$q$, 'OK:{"a": 1}');
+SELECT pg_temp.check('app: cannot see other users preferences', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$SELECT count(*)::text FROM public.user_preferences$q$, 'OK:1');
+SELECT pg_temp.check('app: cannot move own preferences to another user', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$UPDATE public.user_preferences SET user_id = '22222222-2222-2222-2222-222222222222' RETURNING user_id::text$q$, 'ERR:%row-level security%');
+SELECT pg_temp.check('app: cannot write another users preferences', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$UPDATE public.user_preferences SET settings = '{}' WHERE user_id = '22222222-2222-2222-2222-222222222222' RETURNING user_id::text$q$, 'OK:<null>');
+-- ChargingHistory: select completed dispatches
+SELECT pg_temp.check('app: select own completed dispatches', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$SELECT count(*)::text FROM (SELECT id, dispatch_type, start_time, end_time, charge_kwh, source, location, created_at, avg_intensity_gco2, carbon_used_g, carbon_saved_g FROM public.octopus_intelligent_dispatches WHERE dispatch_type = 'completed' ORDER BY start_time DESC LIMIT 100) d$q$, 'OK:1');
+SELECT pg_temp.check('app: other users see no dispatches', 'authenticated', '22222222-2222-2222-2222-222222222222', $q$SELECT count(*)::text FROM public.octopus_intelligent_dispatches$q$, 'OK:0');
+-- tesla-energy disconnect (user-scoped client): delete own vehicles / sites / credentials
+SELECT pg_temp.check('tesla disconnect: delete own vehicles', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$WITH d AS (DELETE FROM public.tesla_vehicles WHERE user_id = '11111111-1111-1111-1111-111111111111' RETURNING 1) SELECT count(*)::text FROM d$q$, 'OK:1');
+SELECT pg_temp.check('tesla disconnect: cannot delete others vehicles', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$WITH d AS (DELETE FROM public.tesla_vehicles RETURNING 1) SELECT count(*)::text FROM d$q$, 'OK:0');
+SELECT pg_temp.check('tesla disconnect: delete own energy sites', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$WITH d AS (DELETE FROM public.tesla_energy_sites WHERE user_id = '11111111-1111-1111-1111-111111111111' RETURNING 1) SELECT count(*)::text FROM d$q$, 'OK:0');
+SELECT pg_temp.check('tesla disconnect: delete own tesla credentials', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$WITH d AS (DELETE FROM public.tesla_credentials WHERE user_id = '11111111-1111-1111-1111-111111111111' RETURNING 1) SELECT count(*)::text FROM d$q$, 'OK:0');
+SELECT pg_temp.check('app: has_tesla_linked works when signed in', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$SELECT public.has_tesla_linked()::text$q$, 'OK:false');
+SELECT pg_temp.check('app: push subscriptions own-row select', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$SELECT count(*)::text FROM public.push_subscriptions$q$, 'OK:0');
+
+-- 6d. No plaintext Octopus keys
+INSERT INTO results SELECT 'no-plaintext constraint added (0 plaintext keys at migration time)', count(*) = 1, count(*)::text FROM pg_constraint WHERE conrelid = 'public.octopus_credentials'::regclass AND conname = 'octopus_credentials_no_plaintext';
+SELECT pg_temp.check('service_role cannot store a plaintext key', 'service_role', NULL, $q$UPDATE public.octopus_credentials SET api_key = 'sk_live_x' WHERE user_id = '11111111-1111-1111-1111-111111111111' RETURNING user_id::text$q$, 'ERR:%octopus_credentials_no_plaintext%');
+SELECT pg_temp.check('service_role can still store an encrypted key', 'service_role', NULL, $q$INSERT INTO public.octopus_credentials (user_id, account_number, api_key, api_key_encrypted, api_key_hint) VALUES ('11111111-1111-1111-1111-111111111111','A-11111111',NULL,'v1.eee.fff','EEEE') ON CONFLICT (user_id) DO UPDATE SET api_key = excluded.api_key, api_key_encrypted = excluded.api_key_encrypted RETURNING api_key_hint$q$, 'OK:AAAA');
 
 SELECT CASE WHEN ok THEN 'PASS' ELSE 'FAIL' END AS result, name, CASE WHEN ok THEN '' ELSE detail END AS detail FROM results;
 SELECT count(*) FILTER (WHERE ok) AS passed, count(*) FILTER (WHERE NOT ok) AS failed FROM results;
