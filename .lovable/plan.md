@@ -19,8 +19,8 @@ Goal: make state instantly readable.
   - Moderate → neutral.
   - Very dirty → sepia/sickly yellow wash, -saturation, slight vignette.
 - **Boost dirty-state signals at night**: smog band + distant stack opacity ramped so they survive dark skies.
-- **Add starfield + aurora trigger** at `cleanliness > 0.85` (night only) — clean nights should feel *magical*.
-- **Window-light hue shift**: warm amber when clean, sickly green-tinged when dirty.
+- **Add starfield + aurora trigger** at `cleanliness > 0.85` (night only) — clean nights should feel *magical*. ✅ (`SceneSkyLayer`, 2026-10)
+- **Window-light hue shift**: warm amber when clean, sickly green-tinged when dirty. ✅ (`getWindowLitColor`, city + cottage)
 
 Deliverable: side-by-side screenshots of all 5 intensity bands × 4 times-of-day passing the squint test.
 

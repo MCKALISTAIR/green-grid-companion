@@ -41,7 +41,7 @@ export function OctopusBenefitsIntro({ onContinue }: OctopusBenefitsIntroProps) 
         <ul className="space-y-2.5">
           {[
             { icon: Leaf, label: 'True daily emissions from your meter', detail: 'Not a household estimate' },
-            { icon: Trophy, label: 'Green Score for timing demand', detail: 'How well you ride clean windows' },
+            { icon: Trophy, label: 'Green Score for timing demand', detail: '% of your kWh used in low-carbon windows — timing beats thrift alone' },
             { icon: Sun, label: 'Solar & renewables impact', detail: 'See when your usage matched clean generation' },
           ].map(({ icon: Icon, label, detail }) => (
             <li

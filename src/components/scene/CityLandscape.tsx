@@ -1,5 +1,6 @@
 import { useMemo, useId } from 'react';
 import { motion } from 'framer-motion';
+import { getWindowLitColor } from '@/lib/windowLitColor';
 
 export type TimeOfDayCityLandscape = 'night' | 'dawn' | 'morning' | 'midday' | 'afternoon' | 'sunset' | 'dusk';
 
@@ -32,7 +33,7 @@ function useCityPalette(cleanliness: number, isNight: boolean, synthwaveMode: bo
         skylineMidHighlight: isNight ? '#334155' : '#e2e8f0', skylineMidShadow: isNight ? '#151d30' : '#cbd5e1',
         skylineNearHighlight: isNight ? '#475569' : '#ffffff', skylineNearShadow: isNight ? '#1e293b' : '#e2e8f0',
         road: isNight ? '#0f172a' : '#64748b',
-        windowLit: '#fbbf24',
+        windowLit: getWindowLitColor(cleanliness, isNight ? 'night' : timeOfDay),
         windowDark: isNight ? '#0f172a' : '#94a3b8',
       };
     }
@@ -42,7 +43,7 @@ function useCityPalette(cleanliness: number, isNight: boolean, synthwaveMode: bo
         skylineMidHighlight: '#1e293b', skylineMidShadow: '#151d30',
         skylineNearHighlight: '#334155', skylineNearShadow: '#1e293b',
         road: '#0f172a',
-        windowLit: '#fbbf24',
+        windowLit: getWindowLitColor(cleanliness, 'night'),
         windowDark: '#0f172a',
       };
     }
@@ -55,7 +56,7 @@ function useCityPalette(cleanliness: number, isNight: boolean, synthwaveMode: bo
         skylineMidHighlight: isClean ? '#6b7280' : '#78716c', skylineMidShadow: isClean ? '#374151' : '#44403c',
         skylineNearHighlight: isClean ? '#9ca3af' : '#a8a29e', skylineNearShadow: isClean ? '#4b5563' : '#57534e',
         road: '#374151',
-        windowLit: '#fcd34d',
+        windowLit: getWindowLitColor(cleanliness, 'dawn'),
         windowDark: '#374151',
       };
     }
@@ -65,7 +66,7 @@ function useCityPalette(cleanliness: number, isNight: boolean, synthwaveMode: bo
         skylineMidHighlight: isClean ? '#fdba74' : '#f97316', skylineMidShadow: isClean ? '#4b5563' : '#57534e',
         skylineNearHighlight: isClean ? '#ffedd5' : '#fdb574', skylineNearShadow: isClean ? '#6b7280' : '#78716c',
         road: '#374151',
-        windowLit: '#fb923c',
+        windowLit: getWindowLitColor(cleanliness, 'sunset'),
         windowDark: '#374151',
       };
     }
@@ -75,7 +76,7 @@ function useCityPalette(cleanliness: number, isNight: boolean, synthwaveMode: bo
         skylineMidHighlight: '#475569', skylineMidShadow: '#334155',
         skylineNearHighlight: '#64748b', skylineNearShadow: '#475569',
         road: '#1e293b',
-        windowLit: '#fbbf24',
+        windowLit: getWindowLitColor(cleanliness, 'dusk'),
         windowDark: '#1e293b',
       };
     }
@@ -86,7 +87,7 @@ function useCityPalette(cleanliness: number, isNight: boolean, synthwaveMode: bo
       skylineMidHighlight: isClean ? '#b8bec8' : '#c4bfb8', skylineMidShadow: isClean ? '#5b6472' : '#6b655e',
       skylineNearHighlight: isClean ? '#eceff3' : '#f0eeeb', skylineNearShadow: isClean ? '#8b93a0' : '#9a948c',
       road: '#374151',
-      windowLit: '#fbbf24',
+      windowLit: getWindowLitColor(cleanliness, timeOfDay),
       windowDark: isClean ? '#7c8491' : '#8a847c',
     };
   }, [cleanliness, isNight, synthwaveMode, isSnowing, timeOfDay]);

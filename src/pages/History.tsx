@@ -307,6 +307,13 @@ export default function HistoryPage() {
                                             <p className="text-muted-foreground leading-relaxed">
                                                 The <span className="font-medium text-foreground">solid line</span> shows actual carbon intensity, while the <span className="font-medium text-foreground">dotted line</span> shows the forecast. Compare them to see how accurate the predictions were!
                                             </p>
+                                            {isLinked && (
+                                                <p className="text-muted-foreground leading-relaxed pt-1">
+                                                    Yellow <span className="font-medium text-foreground">usage bars</span> are your metered kWh.
+                                                    When bars stack under a dirty intensity spike, that usage hurts your Green Score —
+                                                    shift those loads into cleaner hours to improve it.
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
                                 </Card>
