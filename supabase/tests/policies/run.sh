@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Apply every migration to a throwaway local Postgres (with a minimal shim of
 # Supabase roles/schemas: anon, authenticated, service_role, auth.uid(), cron,
-# net, vault) and run the privilege/RLS assertions in policy_tests.sql.
+# net, vault) and run the privilege/RLS assertions in policy_tests.sql, then
+# re-apply 20261010170000_anon_access_tidy.sql to check it is idempotent and
+# that it skips the no-plaintext constraint while plaintext keys remain.
 #
 # This does NOT touch any Supabase project. Requires a local Postgres you can
 # reach as superuser via `psql` (e.g. `sudo -u postgres`), e.g.:
@@ -44,4 +46,29 @@ fi
 echo "$out" | grep -E '^(PASS|FAIL) ' || true
 summary=$(echo "$out" | tail -n 1)
 echo "passed | failed: $summary"
-[[ "$summary" =~ \|\ 0$ ]]
+[[ "$summary" =~ \|\ 0$ ]] || exit 1
+
+# Re-run checks for migrations that must be safe to apply twice.
+ANON_TIDY="$REPO/supabase/migrations/20261010170000_anon_access_tidy.sql"
+if [[ -f "$ANON_TIDY" ]]; then
+  if ! out=$($PSQL -q -v ON_ERROR_STOP=1 -d "$DB" -f - < "$ANON_TIDY" 2>&1); then
+    echo "FAIL re-applying $(basename "$ANON_TIDY")"; echo "$out"; exit 1
+  fi
+  echo "PASS | anon_access_tidy is safe to re-apply"
+  # If a plaintext key were still waiting for the backfill, the migration
+  # must still apply and simply skip the no-plaintext constraint.
+  if ! out=$($PSQL -q -v ON_ERROR_STOP=1 -d "$DB" -f - 2>&1 <<'SQL'
+ALTER TABLE public.octopus_credentials DROP CONSTRAINT octopus_credentials_no_plaintext;
+UPDATE public.octopus_credentials SET api_key = 'sk_legacy' WHERE user_id = '22222222-2222-2222-2222-222222222222';
+SQL
+  ); then echo "FAIL preparing plaintext variant"; echo "$out"; exit 1; fi
+  if ! out=$($PSQL -v ON_ERROR_STOP=1 -d "$DB" -f - < "$ANON_TIDY" 2>&1); then
+    echo "FAIL anon_access_tidy with a plaintext key left"; echo "$out"; exit 1
+  fi
+  has=$($PSQL -At -d "$DB" -c "SELECT count(*) FROM pg_constraint WHERE conname = 'octopus_credentials_no_plaintext'")
+  if [[ "$has" == "0" ]] && grep -q "Skipping octopus_credentials_no_plaintext" <<<"$out"; then
+    echo "PASS | anon_access_tidy skips the no-plaintext constraint while plaintext keys remain"
+  else
+    echo "FAIL | expected the no-plaintext constraint to be skipped (found $has)"; exit 1
+  fi
+fi
