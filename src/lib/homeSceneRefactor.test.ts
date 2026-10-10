@@ -15,12 +15,12 @@ function slot(hoursFromNow: number, forecast: number): ForecastData {
 
 describe('getSmartTip', () => {
   it('returns a fallback when forecast is too short', () => {
-    expect(getSmartTip(120, [])).toContain('Check back later');
+    expect(getSmartTip(120, [])).toContain('Forecast not in yet');
   });
 
   it('celebrates very low current intensity', () => {
     const forecast = Array.from({ length: 24 }, (_, i) => slot(i + 1, 80));
-    expect(getSmartTip(40, forecast)).toMatch(/excellent|clean/i);
+    expect(getSmartTip(40, forecast)).toMatch(/^Now's good\. It won't get any cleaner/);
   });
 
   it('suggests waiting when a nearby window is much cleaner', () => {
@@ -30,7 +30,7 @@ describe('getSmartTip', () => {
       const clean = hoursFromNow >= 2 && hoursFromNow < 5;
       return slot(hoursFromNow, clean ? 55 : 200);
     });
-    expect(getSmartTip(180, forecast)).toMatch(/shift|wait|plan/i);
+    expect(getSmartTip(180, forecast)).toMatch(/^Wait about 2 hours\. It'll be around 70% cleaner \(180 to 55/);
   });
 });
 

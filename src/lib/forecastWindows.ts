@@ -4,6 +4,12 @@ import type { ForecastData } from '@/lib/carbonApi';
 /** Number of 30-minute forecast slots in an optimal window (3 hours). */
 export const OPTIMAL_WINDOW_SLOTS = 6;
 
+/** Waiting must be at least this much cleaner (percent) to be worth it. */
+export const MIN_PERCENT_CLEANER = 12;
+
+/** ...and at least this many gCO₂/kWh cleaner, so tiny grids don't trigger "wait". */
+export const MIN_GRAMS_CLEANER = 15;
+
 export interface ForecastWindow {
   bestStart: Date;
   bestEnd: Date;
@@ -48,4 +54,18 @@ export function getBestWorstWindows(forecast: ForecastData[]): ForecastWindow | 
     minAvg: Math.round(minSum / OPTIMAL_WINDOW_SLOTS),
     maxAvg: Math.round(maxSum / OPTIMAL_WINDOW_SLOTS),
   };
+}
+
+/**
+ * Only warn about a "worst" window when it is meaningfully dirtier than the
+ * best one (same thresholds as the now-or-wait card).
+ */
+export function isWorstWindowWorthFlagging(
+  w: Pick<ForecastWindow, 'minAvg' | 'maxAvg'>,
+  minPercent = MIN_PERCENT_CLEANER,
+  minGrams = MIN_GRAMS_CLEANER,
+): boolean {
+  const spread = w.maxAvg - w.minAvg;
+  if (w.maxAvg <= 0 || spread < minGrams) return false;
+  return (spread / w.maxAvg) * 100 >= minPercent;
 }

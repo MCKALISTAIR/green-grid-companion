@@ -330,6 +330,7 @@ export default function HistoryPage() {
                                             index={data[Math.floor(data.length / 2)]?.intensity.index || 'moderate'}
                                             generationMix={data[Math.floor(data.length / 2)]?.generationmix}
                                             isVintage={true}
+                                            hasLiveReading={data.length > 0}
                                             className="h-full"
                                             style={{ height: '100%' }}
                                         />

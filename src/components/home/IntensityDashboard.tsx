@@ -100,7 +100,7 @@ export function IntensityDashboard({
           </CollapsibleTrigger>
           <CollapsibleContent className="space-y-3 pt-2 data-[state=open]:animate-in data-[state=closed]:animate-out">
             <ComponentErrorBoundary name="Worst Time">
-              <WorstTimeSlot forecast={forecast} />
+              <WorstTimeSlot forecast={forecast} intensity={intensity} />
             </ComponentErrorBoundary>
 
             <ComponentErrorBoundary name="Daily Forecast">

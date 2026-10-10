@@ -103,6 +103,7 @@ export function IntensityHeroOverlay({
           intensity={intensity}
           index={index}
           generationMix={generationMix}
+          hasLiveReading={!isLoading && !isError && !!lastUpdated}
           className="h-full"
           style={{ height: '100%' }}
         />

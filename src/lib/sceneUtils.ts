@@ -192,3 +192,12 @@ export function getTurbineBottomPct(layer: HillLayer, leftPct: number, container
     const svgY = getHillRidgeY(layer, svgX);
     return hillYToBottomPct(svgY, containerPct) + nudge;
 }
+
+/**
+ * The zero-carbon celebration only fires on a real reading of 0 gCO₂/kWh.
+ * useCarbonData reports 0 while loading or after an error, which used to
+ * trigger a false "Net Zero!" badge.
+ */
+export function shouldCelebrateZeroCarbon(intensity: number, hasLiveReading: boolean): boolean {
+    return hasLiveReading && Number.isFinite(intensity) && intensity <= 0;
+}

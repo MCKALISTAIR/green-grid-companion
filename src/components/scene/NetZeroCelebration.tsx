@@ -85,7 +85,7 @@ export function NetZeroCelebration() {
                             clipRule="evenodd"
                         />
                     </svg>
-                    <span className="font-semibold">Net Zero!</span>
+                    <span className="font-semibold">Zero-carbon power right now</span>
                 </div>
             </motion.div>
         </motion.div>
