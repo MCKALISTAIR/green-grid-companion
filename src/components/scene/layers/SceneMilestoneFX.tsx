@@ -4,17 +4,21 @@ import type { SceneVisualConfig } from '@/lib/sceneConfig';
 import { Rainbow } from '../Rainbow';
 import { PollutionWarning } from '../PollutionWarning';
 import { NetZeroCelebration } from '../NetZeroCelebration';
+import { shouldCelebrateZeroCarbon } from '@/lib/sceneUtils';
 
 export interface SceneMilestoneFXProps {
   intensity: number;
   weather: WeatherData;
   sceneConfig: SceneVisualConfig;
+  /** False while loading or after an error, when intensity is a placeholder 0. */
+  hasLiveReading?: boolean;
 }
 
 export function SceneMilestoneFX({
   intensity,
   weather,
   sceneConfig,
+  hasLiveReading = true,
 }: SceneMilestoneFXProps) {
   return (
     <>
@@ -30,9 +34,9 @@ export function SceneMilestoneFX({
         {intensity > 300 && <PollutionWarning />}
       </AnimatePresence>
 
-      {/* Net Zero Celebration - Zero or negative carbon */}
+      {/* Zero-carbon celebration: only on a real 0 gCO2/kWh reading */}
       <AnimatePresence>
-        {intensity <= 0 && <NetZeroCelebration />}
+        {shouldCelebrateZeroCarbon(intensity, hasLiveReading) && <NetZeroCelebration />}
       </AnimatePresence>
     </>
   );

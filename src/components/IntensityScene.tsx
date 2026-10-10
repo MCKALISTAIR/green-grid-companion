@@ -42,6 +42,11 @@ interface IntensitySceneProps {
   timeOfDayOverride?: TimeOfDay;
   weatherOverride?: Partial<WeatherData>;
   style?: React.CSSProperties;
+  /**
+   * False while data is loading or failed, when `intensity` is a placeholder.
+   * Gates milestone effects such as the zero-carbon celebration.
+   */
+  hasLiveReading?: boolean;
 }
 
 export function IntensityScene({
@@ -54,6 +59,7 @@ export function IntensityScene({
   timeOfDayOverride,
   weatherOverride,
   style,
+  hasLiveReading = true,
 }: IntensitySceneProps) {
   const { timeOfDay: realTimeOfDay, isNight: realIsNight, sunPosition: realSunPosition } = useTimeOfDay();
   const { weather: realWeather } = useWeatherData();
@@ -370,6 +376,7 @@ export function IntensityScene({
 
         <SceneMilestoneFX
           intensity={intensity}
+          hasLiveReading={hasLiveReading || (isDirectorMode && overrides.intensity !== undefined)}
           weather={weather}
           sceneConfig={sceneConfig}
         />

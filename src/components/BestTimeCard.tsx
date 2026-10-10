@@ -1,14 +1,16 @@
-import { format } from 'date-fns';
 import { BatteryCharging, TrendingDown, TrendingUp } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { getDayLabel } from '@/lib/date-utils';
+import { formatLondonTime, londonDayLabel } from '@/lib/londonTime';
 import { useCountdown } from '@/hooks/useCountdown';
 import { motion } from 'framer-motion';
 import type { ForecastData } from '@/lib/carbonApi';
-import { getBestWorstWindows } from '@/lib/forecastWindows';
+import { getBestWorstWindows, isWorstWindowWorthFlagging } from '@/lib/forecastWindows';
+import { getNowOrWaitDecision } from '@/lib/nowOrWait';
 
 interface BestTimeCardProps {
   forecast: ForecastData[];
+  /** Live intensity, so the worst-window card agrees with the now-or-wait card. */
+  intensity?: number;
 }
 
 export function BestTimeSlot({ forecast }: BestTimeCardProps) {
@@ -33,7 +35,7 @@ export function BestTimeSlot({ forecast }: BestTimeCardProps) {
             <div className="flex items-center gap-2 flex-wrap">
               <BatteryCharging className="w-4 h-4 text-intensity-very-low" />
               <span className="text-sm font-medium text-foreground">
-                {isNow ? "Load-shift now — it's the best time!" : 'Best time to load-shift'}
+                {isNow ? "Load-shift now. It's the best time." : 'Best time to load-shift'}
               </span>
               {isNow && (
                 <span className="flex items-center gap-1.5 bg-intensity-very-low/20 text-intensity-very-low px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider">
@@ -51,9 +53,9 @@ export function BestTimeSlot({ forecast }: BestTimeCardProps) {
               )}
             </div>
             <p className="text-lg font-bold text-intensity-very-low">
-              {format(data.bestStart, 'HH:mm')} → {format(data.bestEnd, 'HH:mm')}{' '}
+              {formatLondonTime(data.bestStart)} → {formatLondonTime(data.bestEnd)}{' '}
               <span className="text-sm font-medium ml-1 text-muted-foreground">
-                {getDayLabel(new Date(data.bestStart.getTime() - 60000))}
+                {londonDayLabel(data.bestStart)}
               </span>
             </p>
             <p className="text-xs text-muted-foreground">Average: {data.minAvg} gCO₂/kWh</p>
@@ -64,13 +66,22 @@ export function BestTimeSlot({ forecast }: BestTimeCardProps) {
   );
 }
 
-export function WorstTimeSlot({ forecast }: BestTimeCardProps) {
+export function WorstTimeSlot({ forecast, intensity }: BestTimeCardProps) {
   const data = getBestWorstWindows(forecast);
   const now = new Date();
   const isNow = data ? now >= data.worstStart && now <= data.worstEnd : false;
   const countdown = useCountdown(data ? (isNow ? null : data.worstStart) : null);
 
-  if (!data) return null;
+  // A flat forecast has no real "worst" stretch worth warning about.
+  if (!data || !isWorstWindowWorthFlagging(data)) return null;
+
+  // If the worst stretch is now but the home card says "Now's good" (nothing
+  // much cleaner soon), don't tell people to avoid it.
+  const nowAction =
+    isNow && intensity && intensity > 0
+      ? getNowOrWaitDecision(intensity, forecast, now).action
+      : null;
+  const title = isNow && nowAction === 'use_now' ? 'Dirtiest stretch of the forecast' : 'Avoid high usage';
 
   return (
     <motion.div
@@ -84,7 +95,7 @@ export function WorstTimeSlot({ forecast }: BestTimeCardProps) {
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm font-medium text-foreground">Avoid high usage</span>
+              <span className="text-sm font-medium text-foreground">{title}</span>
               {isNow && (
                 <span className="flex items-center gap-1.5 bg-intensity-high/20 text-intensity-high px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider">
                   <span className="relative flex h-1.5 w-1.5">
@@ -101,9 +112,9 @@ export function WorstTimeSlot({ forecast }: BestTimeCardProps) {
               )}
             </div>
             <p className="text-lg font-bold text-intensity-high">
-              {format(data.worstStart, 'HH:mm')} → {format(data.worstEnd, 'HH:mm')}{' '}
+              {formatLondonTime(data.worstStart)} → {formatLondonTime(data.worstEnd)}{' '}
               <span className="text-sm font-medium ml-1 text-muted-foreground">
-                {getDayLabel(new Date(data.worstStart.getTime() - 60000))}
+                {londonDayLabel(data.worstStart)}
               </span>
             </p>
             <p className="text-xs text-muted-foreground">Average: {data.maxAvg} gCO₂/kWh</p>

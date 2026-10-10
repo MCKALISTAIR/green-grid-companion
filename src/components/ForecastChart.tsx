@@ -16,6 +16,7 @@ import {
   findDefaultForecastIndex,
   getForecastHourInsight,
 } from '@/lib/forecastHourInsight';
+import { getNowOrWaitDecision } from '@/lib/nowOrWait';
 import { useEnergyFacts } from '@/hooks/useEnergyFacts';
 import { cn } from '@/lib/utils';
 import { useHaptics } from '@/hooks/useHaptics';
@@ -148,6 +149,11 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
     for (let i = b.start; i <= b.end; i++) bestBlockIndexes.add(i);
   });
 
+  // Same engine as the now-or-wait card, so the current-hour line agrees with it.
+  const nowAction = currentIntensity > 0
+    ? getNowOrWaitDecision(currentIntensity, forecast, now).action
+    : undefined;
+
   const insight = getForecastHourInsight(
     forecast,
     selectedIndex,
@@ -155,6 +161,7 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
     tone,
     new Date(),
     bestBlockIndexes,
+    nowAction,
   );
 
   const isToday = visibleDate.getDate() === now.getDate();

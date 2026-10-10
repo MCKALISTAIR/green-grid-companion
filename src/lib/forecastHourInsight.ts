@@ -1,6 +1,7 @@
 import { format, parseISO, isBefore, differenceInMinutes } from 'date-fns';
 import type { ForecastData } from '@/lib/carbonApi';
 import { getConditionLabel, type ConditionTone } from '@/lib/conditionLabels';
+import type { NowOrWaitAction } from '@/lib/nowOrWait';
 
 export type ForecastHourInsight = {
   /** Forecast slot index into the array. */
@@ -69,32 +70,43 @@ function buildAction(
   vsNowCleaner: boolean,
   inBestWindow: boolean,
   minutesUntil: number,
+  nowAction?: NowOrWaitAction,
 ): string {
   if (isPast) {
-    return 'Past hour — useful for comparing forecast vs actual.';
+    return 'Past hour. Useful for comparing forecast with actual.';
+  }
+  // The current hour must agree with the now-or-wait card above the chart.
+  if (isCurrent && nowAction === 'wait') {
+    return 'Cleaner hours are coming. Wait if you can.';
+  }
+  if (isCurrent && nowAction === 'use_now' && (band === 'high' || band === 'very high')) {
+    return "Dirty hour, but it won't get much cleaner soon.";
+  }
+  if (isCurrent && nowAction === 'use_now' && band === 'moderate') {
+    return "Middling hour, but it won't get much cleaner soon.";
   }
   if (inBestWindow) {
     return isCurrent
-      ? 'Best window is open — good time to run a load.'
-      : 'Inside a best window — plan a load for this slot.';
+      ? 'Best window is open. Good time to run a load.'
+      : 'Inside a best window. Plan a load for this slot.';
   }
   if (band === 'very low' || band === 'low') {
     return isCurrent
-      ? 'Grid is clean — use energy freely.'
+      ? 'Grid is clean. Use energy freely.'
       : vsNowCleaner
-        ? 'Cleaner than now — a solid shift target.'
+        ? 'Cleaner than now. A solid shift target.'
         : 'Still a clean hour on the grid.';
   }
   if (band === 'high' || band === 'very high') {
-    if (isCurrent) return 'Dirty hour — wait if you can.';
+    if (isCurrent) return 'Dirty hour. Wait if you can.';
     if (minutesUntil > 0 && minutesUntil < 18 * 60) {
       return 'Avoid starting big loads in this slot.';
     }
-    return 'Heavy carbon hour — shift if you can.';
+    return 'Heavy carbon hour. Shift if you can.';
   }
   return isCurrent
-    ? 'Mid-pack hour — check the chart for a greener window.'
-    : 'Moderate hour — look for a greener neighbour.';
+    ? 'Mid-pack hour. Check the chart for a greener window.'
+    : 'Moderate hour. Look for a greener neighbour.';
 }
 
 /**
@@ -108,6 +120,8 @@ export function getForecastHourInsight(
   tone: ConditionTone = 'friendly',
   now: Date = new Date(),
   bestBlockIndexes: Set<number> = new Set(),
+  /** The home card's answer, so the current-hour line never contradicts it. */
+  nowAction?: NowOrWaitAction,
 ): ForecastHourInsight | null {
   if (!forecast.length || selectedIndex < 0 || selectedIndex >= forecast.length) {
     return null;
@@ -137,6 +151,7 @@ export function getForecastHourInsight(
       value < currentIntensity - 7,
       inBestWindow,
       minutesUntil,
+      nowAction,
     ),
     inBestWindow,
     washClass: WASH[band] ?? WASH.moderate,

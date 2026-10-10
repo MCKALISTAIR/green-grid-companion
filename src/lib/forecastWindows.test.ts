@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getBestWorstWindows } from './forecastWindows';
+import { getBestWorstWindows, isWorstWindowWorthFlagging } from './forecastWindows';
 import type { ForecastData } from '@/lib/carbonApi';
 
 function slot(hoursFromNow: number, intensity: number): ForecastData {
@@ -28,5 +28,17 @@ describe('getBestWorstWindows', () => {
     expect(windows).not.toBeNull();
     expect(windows!.minAvg).toBe(40);
     expect(windows!.maxAvg).toBeGreaterThanOrEqual(280);
+  });
+});
+
+describe('isWorstWindowWorthFlagging', () => {
+  it('skips flat forecasts', () => {
+    expect(isWorstWindowWorthFlagging({ minAvg: 180, maxAvg: 190 })).toBe(false);
+  });
+  it('skips big percentages of tiny numbers', () => {
+    expect(isWorstWindowWorthFlagging({ minAvg: 20, maxAvg: 30 })).toBe(false);
+  });
+  it('flags a real spread', () => {
+    expect(isWorstWindowWorthFlagging({ minAvg: 90, maxAvg: 240 })).toBe(true);
   });
 });

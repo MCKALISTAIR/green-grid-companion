@@ -101,3 +101,28 @@ describe('findDefaultForecastIndex', () => {
     expect(findDefaultForecastIndex(forecast, now)).toBe(1);
   });
 });
+
+describe('current-hour line agrees with the now-or-wait card', () => {
+  const now = new Date('2026-09-21T15:10:00.000Z');
+  const current = [slotAt(new Date('2026-09-21T15:00:00.000Z'), 260, 'high')];
+
+  it('does not say "wait" when the card says now', () => {
+    const insight = getForecastHourInsight(current, 0, 260, 'friendly', now, new Set(), 'use_now');
+    expect(insight!.action.toLowerCase()).not.toMatch(/wait/);
+  });
+
+  it('says wait when the card says wait, even in a clean hour', () => {
+    const clean = [slotAt(new Date('2026-09-21T15:00:00.000Z'), 45, 'very low')];
+    const insight = getForecastHourInsight(clean, 0, 45, 'friendly', now, new Set([0]), 'wait');
+    expect(insight!.action).toMatch(/wait if you can/i);
+    expect(insight!.action).not.toMatch(/best window is open/i);
+  });
+
+  it('uses no em dashes in action copy', () => {
+    const bands = ['very low', 'low', 'moderate', 'high', 'very high'] as const;
+    for (const band of bands) {
+      const f = [slotAt(new Date('2026-09-21T15:00:00.000Z'), 100, band)];
+      expect(getForecastHourInsight(f, 0, 100, 'friendly', now)!.action).not.toMatch(/—/);
+    }
+  });
+});

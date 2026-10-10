@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getSkyGradient, getSkyTopColor, getCarbonIndex, TIME_SKY_COLORS } from './sceneUtils';
+import { getSkyGradient, getSkyTopColor, getCarbonIndex, TIME_SKY_COLORS, shouldCelebrateZeroCarbon } from './sceneUtils';
 import { TimeOfDay } from '../hooks/useTimeOfDay';
 import { WeatherData } from '../hooks/useWeatherData';
 
@@ -84,5 +84,14 @@ describe('sceneUtils', () => {
       expect(color).not.toBe(TIME_SKY_COLORS['midday'].start);
       expect(color).toContain('hsl(220');
     });
+  });
+});
+
+describe('shouldCelebrateZeroCarbon', () => {
+  it('fires only on a real zero reading', () => {
+    expect(shouldCelebrateZeroCarbon(0, true)).toBe(true);
+    expect(shouldCelebrateZeroCarbon(0, false)).toBe(false);
+    expect(shouldCelebrateZeroCarbon(12, true)).toBe(false);
+    expect(shouldCelebrateZeroCarbon(Number.NaN, true)).toBe(false);
   });
 });

@@ -13,7 +13,9 @@ import { WashingMachine, Car, Utensils, Zap, Plus, PenLine, Leaf, X } from 'luci
 import { getIntensityColor, getIntensityTextColor } from '@/lib/carbonApi';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { plannerReminderId } from '@/lib/notificationIds';
-import { format, parseISO, addHours, subMinutes, isFuture } from 'date-fns';
+import { parseISO, subMinutes, isFuture } from 'date-fns';
+import { planLoad, describeSpan, roundPercent } from '@/lib/nowOrWait';
+import { formatLondonTime, formatLondonTimeWithDay } from '@/lib/londonTime';
 import { PullToRefresh } from '@/components/PullToRefresh';
 import { TurbineSpinner } from '@/components/ui/turbine-spinner';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -50,7 +52,9 @@ export default function Planner() {
     });
 
     const { postcode } = useAppLocation();
-    const { forecast, refetch, isLoading, isError, error } = useCarbonData(postcode);
+    const { forecast, intensity, refetch, isLoading, isError, error } = useCarbonData(postcode);
+    // useCarbonData reports 0 until a live reading arrives; don't treat that as a reading.
+    const liveLoaded = !isLoading && !isError && intensity > 0;
 
     const dismissOnboarding = () => {
         setShowOnboarding(false);
@@ -122,55 +126,22 @@ export default function Planner() {
         setIsDialogOpen(false);
     };
 
-    const findBestTime = () => {
-        if (!forecast || forecast.length === 0) return null;
-
-        // Simple algorithm: find sliding window of lowest average intensity
-        // Adjust for floating point duration if needed, but forecast is 30min slots.
-        // Assuming duration is in Hours. slots needed = duration * 2.
-        const slotsNeeded = Math.ceil(selectedAppliance.duration * 2);
-
-        let bestStart = -1;
-        let minAvgIntensity = Infinity;
-
-        const now = new Date();
-
-        // Ensure we only look at future slots if we want to be realistic, 
-        // but forecast usually returns future 24-48h. 
-        // We'll iterate through all available forecast data.
-        for (let i = 0; i <= forecast.length - slotsNeeded; i++) {
-            // Skip past slots
-            if (new Date(forecast[i].from) < now) continue;
-            let sum = 0;
-            let valid = true;
-            for (let j = 0; j < slotsNeeded; j++) {
-                if (!forecast[i + j] || forecast[i + j].intensity.forecast === null) {
-                    valid = false;
-                    break;
-                }
-                sum += forecast[i + j].intensity.forecast;
-            }
-
-            if (valid) {
-                const avg = sum / slotsNeeded;
-                if (avg < minAvgIntensity) {
-                    minAvgIntensity = avg;
-                    bestStart = i;
-                }
-            }
-        }
-
-        if (bestStart === -1 || minAvgIntensity === Infinity) return null;
-
-        return {
-            startTime: forecast[bestStart].from,
-            avgIntensity: Math.round(minAvgIntensity)
-        };
-    };
-
-    const bestSlot = findBestTime();
-    const currentIntensity = forecast[0]?.intensity.forecast || 0;
-    const savings = bestSlot ? Math.round((currentIntensity - bestSlot.avgIntensity) * selectedAppliance.power * selectedAppliance.duration) : 0;
+    // One shared engine with the home card, so both give the same kind of answer.
+    const plan = planLoad({
+        forecast,
+        liveIntensity: liveLoaded ? intensity : null,
+        slots: Math.ceil(selectedAppliance.duration * 2),
+        horizonHours: null,
+    });
+    const bestSlot = plan.action === 'check_forecast'
+        ? null
+        : plan.action === 'wait' && plan.best
+            ? { startTime: plan.best.start.toISOString(), avgIntensity: plan.best.avg }
+            : null;
+    const startNow = plan.action === 'use_now';
+    const savings = plan.action === 'wait'
+        ? Math.round(plan.gramsCleaner * selectedAppliance.power * selectedAppliance.duration)
+        : 0;
 
     // Handle error state
     if (isError) {
@@ -227,7 +198,7 @@ export default function Planner() {
                 ]
             });
 
-            toast.success(`Reminder set for ${format(notificationTime, 'h:mm a')}`);
+            toast.success(`Reminder set for ${formatLondonTime(notificationTime)}`);
 
         } catch (error) {
             logger.error('Failed to schedule power planner notification', { error });
@@ -387,6 +358,27 @@ export default function Planner() {
                                     <Skeleton className="h-10 w-full rounded-xl" />
                                 </Card>
                             </motion.div>
+                        ) : startNow ? (
+                            <motion.div
+                                key={selectedAppliance.id + '-now'}
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -12 }}
+                                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                            >
+                                <Card className="sheet-surface p-6 space-y-2 border-primary/20 bg-primary/5 text-center">
+                                    <h3 className="text-lg font-medium text-muted-foreground">
+                                        Best time to run
+                                    </h3>
+                                    <p className="text-3xl font-bold text-foreground">Now</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        {plan.reason === 'small_gain'
+                                            ? `It won't get much cleaner in ${describeSpan(plan.coveredHours)}.`
+                                            : `It won't get any cleaner in ${describeSpan(plan.coveredHours)}.`}
+                                        {plan.nowAvg !== null && ` Starting now averages around ${plan.nowAvg} gCO₂/kWh.`}
+                                    </p>
+                                </Card>
+                            </motion.div>
                         ) : bestSlot ? (
                             <motion.div
                                 key={selectedAppliance.id + '-' + bestSlot.startTime}
@@ -401,10 +393,10 @@ export default function Planner() {
                                             Best time to run
                                         </h3>
                                         <p className="text-3xl font-bold text-foreground">
-                                            {format(parseISO(bestSlot.startTime), 'EEEE h:mm a')}
+                                            {formatLondonTimeWithDay(parseISO(bestSlot.startTime))}
                                         </p>
                                         <p className="text-sm text-green-600 font-medium">
-                                            {bestSlot.avgIntensity} gCO₂/kWh average
+                                            Around {roundPercent(plan.percentCleaner)}% cleaner ({plan.nowAvg} to {bestSlot.avgIntensity} gCO₂/kWh)
                                         </p>
                                     </div>
 
@@ -419,16 +411,13 @@ export default function Planner() {
 
                                     {savings > 0 && (
                                         <div className="bg-background/50 rounded-lg p-4 text-center">
-                                            <p className="text-sm text-muted-foreground">Impact vs Now</p>
+                                            <p className="text-sm text-muted-foreground">Compared with starting now</p>
                                             <p className="text-xl font-bold text-green-600 flex items-center justify-center gap-1">
                                                 <Leaf className="w-5 h-5" />
-                                                Save {savings}g CO₂
+                                                Save about {savings}g CO₂
                                             </p>
                                             <p className="text-xs text-muted-foreground mt-1">
-                                                {selectedAppliance.id === 'ev'
-                                                    ? `That's ${(savings / 120).toFixed(1)} fewer miles of petrol car emissions`
-                                                    : `Equivalent to charging a smartphone ${Math.round(savings / 5)} times`
-                                                }
+                                                {selectedAppliance.power} kW for {selectedAppliance.duration}h, using the forecast averages.
                                             </p>
                                         </div>
                                     )}
