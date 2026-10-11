@@ -1,4 +1,3 @@
-import { Activity, Leaf, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export type DashboardViewMode = 'intensity' | 'footprint' | 'demand';
@@ -33,8 +32,8 @@ function TabButton({
       tabIndex={isActive ? 0 : -1}
       aria-selected={isActive}
       aria-controls="dashboard-tab-content"
-      className={`relative flex-1 min-w-[100px] h-9 rounded-xl text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 z-10 ${
-        isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+      className={`relative flex-1 min-w-0 h-9 rounded-[10px] text-[14px] font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring z-10 ${
+        isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
       }`}
       onClick={onSelect}
       data-tour={dataTour}
@@ -42,7 +41,7 @@ function TabButton({
       {isActive && (
         <motion.div
           layoutId="dashboard-view-pill"
-          className="absolute inset-0 bg-primary/10 border border-primary/15 shadow-sm rounded-xl"
+          className="absolute inset-0 bg-card shadow-sm rounded-[10px]"
           transition={{ type: 'spring' as const, stiffness: 380, damping: 30 }}
         />
       )}
@@ -77,26 +76,26 @@ export function DashboardViewTabs({
       role="tablist"
       aria-label="Dashboard Views"
       onKeyDown={onKeyDown}
-      className="relative flex p-1.5 bg-muted/80 rounded-2xl overflow-hidden select-none border border-border/40"
+      className="relative flex p-1 bg-muted rounded-[14px] overflow-hidden select-none"
     >
       <TabButton
         mode="intensity"
         label="Intensity"
-        icon={<Activity className="w-4 h-4 mr-2" />}
+        icon={null}
         viewMode={viewMode}
         onSelect={() => select('intensity')}
       />
       <TabButton
         mode="demand"
         label="Demand"
-        icon={<Zap className="w-4 h-4 mr-2" />}
+        icon={null}
         viewMode={viewMode}
         onSelect={() => select('demand')}
       />
       <TabButton
         mode="footprint"
         label="Footprint"
-        icon={<Leaf className="w-4 h-4 mr-2" />}
+        icon={null}
         viewMode={viewMode}
         onSelect={() => select('footprint')}
         dataTour="view-footprint"

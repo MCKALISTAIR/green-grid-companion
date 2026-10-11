@@ -311,7 +311,7 @@ export default function HistoryPage() {
                                         <div className="text-sm space-y-1">
                                             <p className="font-semibold">Understanding the Graph</p>
                                             <p className="text-muted-foreground leading-relaxed">
-                                                The <span className="font-medium text-foreground">solid line</span> shows {actualLabel === 'Estimate' ? "GridSense's estimate of past" : 'actual'} carbon intensity, while the <span className="font-medium text-foreground">dotted line</span> shows the forecast. Compare them to see how accurate the predictions were!
+                                                The <span className="font-medium text-foreground">solid line</span> shows {actualLabel === 'Est' ? "GridSense's estimate of past" : 'actual'} carbon intensity, while the <span className="font-medium text-foreground">dotted line</span> shows the forecast. Compare them to see how accurate the predictions were!
                                             </p>
                                             {isLinked && (
                                                 <p className="text-muted-foreground leading-relaxed pt-1">
@@ -421,7 +421,7 @@ export default function HistoryPage() {
                                                     <span className="w-2 h-2 rounded-full bg-blue-500"></span> Forecast
                                                 </span>
                                                 <span className="flex items-center gap-1">
-                                                    <span className="w-2 h-2 rounded-full bg-green-500"></span> {actualLabel === 'Estimate' ? 'Estimate (GridSense)' : 'Actual'}
+                                                    <span className="w-2 h-2 rounded-full bg-green-500"></span> {actualLabel === 'Est' ? 'Estimate (GridSense)' : 'Actual'}
                                                 </span>
                                                 {isLinked && (
                                                     <span className="flex items-center gap-1">
@@ -453,7 +453,7 @@ export default function HistoryPage() {
                                         <tr>
                                             <th>Time</th>
                                             <th>Forecast (gCO₂/kWh)</th>
-                                            <th>{actualLabel === 'Estimate' ? 'GridSense estimate' : 'Actual'} (gCO₂/kWh)</th>
+                                            <th>{actualLabel === 'Est' ? 'GridSense estimate' : 'Actual'} (gCO₂/kWh)</th>
                                             {isLinked && <th>Usage (kWh)</th>}
                                         </tr>
                                     </thead>

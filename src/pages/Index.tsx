@@ -1,7 +1,6 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { NotificationType } from '@capacitor/haptics';
 import { toast } from 'sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { FootprintView } from '@/components/FootprintView';
@@ -10,37 +9,54 @@ import { useCarbonData } from '@/hooks/useCarbonData';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useOffline } from '@/hooks/useOffline';
 import { PullToRefresh } from '@/components/PullToRefresh';
-import { getErrorInfo } from '@/lib/errorUtils';
-import { ErrorState } from '@/components/ErrorState';
 import { useGridDemand } from '@/hooks/useGridDemand';
-import { SceneWaveDivider } from '@/components/scene/SceneWaveDivider';
-import { EnergyFactBubble } from '@/components/scene/EnergyFactBubble';
 import { LocationMismatchPrompt } from '@/components/LocationMismatchPrompt';
 import { YearWrapped } from '@/components/YearWrapped';
+import { StaleDataBadge } from '@/components/StaleDataBadge';
 import { getRenewablesPercentage } from '@/lib/generationUtils';
 import { useAppLocation } from '@/contexts/LocationContext';
 import { useYearWrappedAutoShow } from '@/hooks/useYearWrappedAutoShow';
-import { useEnvironmentalConditions } from '@/hooks/useEnvironmentalConditions';
 import { useIndexPageEffects } from '@/hooks/useIndexPageEffects';
 import { useThrottledRefetch } from '@/hooks/useThrottledRefetch';
-import { useRelativeTime } from '@/hooks/useRelativeTime';
-import { DashboardSkeleton } from '@/components/home/DashboardSkeleton';
-import {
-  DashboardViewTabs,
-  type DashboardViewMode,
-} from '@/components/home/DashboardViewTabs';
-import { IntensityDashboard } from '@/components/home/IntensityDashboard';
-import { IntensityHeroOverlay } from '@/components/home/IntensityHeroOverlay';
-import { useSceneGrowth } from '@/hooks/useSceneGrowth';
+import { useEnergyFacts } from '@/hooks/useEnergyFacts';
+import { useIsDesktop } from '@/hooks/useMediaQuery';
+import { DashboardViewTabs, type DashboardViewMode } from '@/components/home/DashboardViewTabs';
+import { HomeCards, HomeCardSkeletons, type HomeCardsModel } from '@/components/home/IntensityDashboard';
+import { IntensityHeroOverlay, isStaleReading, type HeroStatus } from '@/components/home/IntensityHeroOverlay';
+import { ScallopDivider } from '@/components/home/ScallopDivider';
+import { DayDetailSheet } from '@/components/forecast/DayDetailSheet';
+import { getNowOrWaitDecision, shadedWindow } from '@/lib/nowOrWait';
+import { formatLondonTime, londonDateKey, LONDON_TZ } from '@/lib/londonTime';
+import { COPY } from '@/lib/homeCopy';
+
+/** Re-render every minute so "now" (chart marker, freshness) keeps moving. */
+function useNow(stepMs = 60_000) {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), stepMs);
+    return () => clearInterval(id);
+  }, [stepMs]);
+  return now;
+}
+
+function greeting(now: Date): string {
+  const h = Number(new Intl.DateTimeFormat('en-GB', { timeZone: LONDON_TZ, hour: 'numeric', hourCycle: 'h23' }).format(now));
+  return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+}
 
 const Index = () => {
   const { postcode, setPostcode } = useAppLocation();
   const [viewMode, setViewMode] = useState<DashboardViewMode>('intensity');
   const { showYearWrapped, setShowYearWrapped, wrappedYear } = useYearWrappedAutoShow();
-  const { selection, notification } = useHaptics();
-
-  const [sparkleTrigger, setSparkleTrigger] = useState(false);
+  const { selection } = useHaptics();
+  const { tone } = useEnergyFacts();
+  const { isOffline } = useOffline();
+  const isDesktop = useIsDesktop();
+  const now = useNow();
+  const [openDay, setOpenDay] = useState<string | null>(null);
+  const [sameNote, setSameNote] = useState<string | null>(null);
 
   const {
     scheduleGreenAlerts,
@@ -56,49 +72,28 @@ const Index = () => {
 
   const {
     intensity,
-    previousIntensity,
     index,
     region,
     regionId,
     generationMix,
+    gbGeneration,
+    gbGenerationError,
+    gbGenerationRefetch,
+    gbIntensity,
     forecast,
     lastUpdated,
+    slotFrom,
+    slotTo,
+    fetchedAt,
     isLoading,
     isBackgroundFetching,
     isDegraded,
     isError,
-    error,
     refetch,
-    getNextUpdate,
-    nextUpdate,
   } = useCarbonData(postcode);
 
-  const { frequency: gridFrequency } = useGridDemand();
+  const { mix: gridMix, lastUpdated: gridTimestamp } = useGridDemand();
   const renewablesPct = getRenewablesPercentage(generationMix);
-  const sceneGrowth = useSceneGrowth(intensity, generationMix);
-
-  const cleanliness = useMemo(() => {
-    const band = index || 'moderate';
-    if (band === 'very low') return 1;
-    if (band === 'low') return 0.75;
-    if (band === 'moderate') return 0.45;
-    if (band === 'high') return 0.2;
-    return 0.05;
-  }, [index]);
-
-  const prevRenRef = useRef<number | null>(null);
-  useEffect(() => {
-    const thresholds = [50, 70, 80];
-    const prev = prevRenRef.current;
-    if (prev !== null && !isLoading) {
-      const crossed = thresholds.some((t) => prev < t && renewablesPct >= t);
-      if (crossed) {
-        setSparkleTrigger(true);
-        notification(NotificationType.Success);
-      }
-    }
-    prevRenRef.current = renewablesPct;
-  }, [renewablesPct, isLoading, notification]);
 
   useIndexPageEffects({
     postcode,
@@ -125,212 +120,210 @@ const Index = () => {
     skipToastDescription: 'Grid data updates every 30 minutes — give it a sec.',
   });
 
+  // Pull to refresh: no toast; if the half hour hasn't changed, say so inline (spec §4.9).
   const handleRefresh = async () => {
+    const before = slotFrom;
     const ran = await throttledRefetch();
     if (!ran) return;
+    if (before && before === slotFrom && slotTo) setSameNote(COPY.sameHalfHour(formatLondonTime(new Date(slotTo))));
+  };
+  useEffect(() => setSameNote(null), [slotFrom]);
+  useEffect(() => {
+    if (!sameNote) return;
+    const id = setTimeout(() => setSameNote(null), 8000);
+    return () => clearTimeout(id);
+  }, [sameNote]);
 
-    if (lastUpdated) {
-      const last = new Date(lastUpdated).getTime();
-      const next = last + 30 * 60 * 1000;
-      const now = new Date().getTime();
+  const hasReading = !isLoading && !isError;
+  const stale = hasReading && isStaleReading(slotTo, now.getTime());
+  const status: HeroStatus = isOffline
+    ? hasReading
+      ? 'offline-cached'
+      : 'offline-empty'
+    : isLoading
+      ? 'loading'
+      : isError
+        ? 'error'
+        : stale
+          ? 'stale'
+          : isBackgroundFetching
+            ? 'refreshing'
+            : 'ok';
 
-      if (next > now) {
-        const timeStr = new Date(next).toLocaleTimeString([], {
-          hour: '2-digit',
-          minute: '2-digit',
-        });
-        toast.info('Up to date', {
-          description: `Next Grid data update expected around ${timeStr}.`,
-        });
-      } else {
-        toast.info('Checked for updates', {
-          description: 'No new data from NESO yet.',
-        });
-      }
+  const decision = useMemo(() => getNowOrWaitDecision(hasReading ? intensity : null, forecast, now), [hasReading, intensity, forecast, now]);
+  const isRegional = !!regionId;
+  const regionName = region || 'GB';
+  const todayKey = londonDateKey(now);
+  const availableDays = useMemo(() => {
+    const keys = new Set<string>();
+    for (const f of forecast) {
+      if (typeof f.intensity?.forecast !== 'number') continue;
+      const k = londonDateKey(new Date(f.from));
+      if (k >= todayKey) keys.add(k);
     }
+    return [...keys].sort().slice(0, 3);
+  }, [forecast, todayKey]);
+
+  const nowInData = forecast.some((f) => Date.parse(f.from) <= now.getTime() && Date.parse(f.to) > now.getTime());
+  const m: HomeCardsModel = {
+    decision,
+    tone,
+    forecast,
+    region: regionName,
+    isRegional,
+    intensity,
+    regionalMix: generationMix,
+    gbGeneration,
+    gbGenerationError,
+    onRetryGeneration: () => void gbGenerationRefetch(),
+    gridMix,
+    gridTimestamp,
+    gbIntensity,
+    now,
+    showNowDot: !stale || nowInData,
+    note: status === 'offline-cached' && slotFrom ? COPY.offlineCached(formatLondonTime(new Date(slotFrom))) : null,
+    onOpenDay: setOpenDay,
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    const tabs: DashboardViewMode[] = ['intensity', 'demand', 'footprint'];
-    const currentIndex = tabs.indexOf(viewMode);
-    let nextIndex = currentIndex;
+  const hero = (variant: 'phone' | 'card') => (
+    <IntensityHeroOverlay
+      postcode={postcode}
+      setPostcode={setPostcode}
+      region={region}
+      intensity={intensity}
+      index={index}
+      generationMix={generationMix}
+      status={status}
+      renewablesPct={renewablesPct}
+      slotFrom={slotFrom}
+      slotTo={slotTo}
+      fetchedAt={fetchedAt}
+      tone={tone}
+      sameHalfHourNote={sameNote}
+      onRetry={() => void refetch()}
+      variant={variant}
+    />
+  );
 
-    if (e.key === 'ArrowRight') {
-      nextIndex = (currentIndex + 1) % tabs.length;
-    } else if (e.key === 'ArrowLeft') {
-      nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
-    } else if (e.key === 'Home') {
-      nextIndex = 0;
-    } else if (e.key === 'End') {
-      nextIndex = tabs.length - 1;
-    }
+  const tabs = (
+    <DashboardViewTabs
+      viewMode={viewMode}
+      onViewModeChange={setViewMode}
+      onSelectionHaptic={selection}
+      onKeyDown={(e) => {
+        const order: DashboardViewMode[] = ['intensity', 'demand', 'footprint'];
+        const i = order.indexOf(viewMode);
+        let n = i;
+        if (e.key === 'ArrowRight') n = (i + 1) % 3;
+        else if (e.key === 'ArrowLeft') n = (i + 2) % 3;
+        else if (e.key === 'Home') n = 0;
+        else if (e.key === 'End') n = 2;
+        if (n !== i) setViewMode(order[n]);
+      }}
+    />
+  );
 
-    if (nextIndex !== currentIndex) {
-      setViewMode(tabs[nextIndex]);
-      setTimeout(() => {
-        const activeTabEl = document.querySelector(
-          '[role="tab"][aria-selected="true"]',
-        ) as HTMLButtonElement | null;
-        activeTabEl?.focus();
-      }, 50);
-    }
-  };
+  const showCards = status !== 'offline-empty' && status !== 'error';
+  const cardsReady = showCards && status !== 'loading';
+  const degraded = isDegraded && (
+    <div className="flex items-start gap-3 rounded-[16px] border border-amber-200 bg-amber-50 p-3 text-[13px] text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+      <p>
+        <b>Regional data degraded.</b> We can&apos;t fetch {postcode} right now, so these are GB figures.
+      </p>
+    </div>
+  );
 
-  const { skyColor } = useEnvironmentalConditions(postcode, intensity);
-  const relativeTime = useRelativeTime(lastUpdated);
-  const freshnessColor = (() => {
-    if (!lastUpdated) return 'bg-muted-foreground/40';
-    const ageMins = (Date.now() - new Date(lastUpdated).getTime()) / 60000;
-    if (ageMins < 10) return 'bg-emerald-400';
-    if (ageMins < 35) return 'bg-amber-400';
-    return 'bg-destructive';
-  })();
+  const nonIntensity = viewMode === 'demand' ? <DemandView /> : viewMode === 'footprint' ? <FootprintView /> : null;
 
-  const glowClassSuffix = index ? index.replace(' ', '-') : 'moderate';
-  const glowClass = `glow-intensity-${glowClassSuffix}`;
+  const content = isDesktop ? (
+    <main className="home-shell px-7 py-6" data-layout="desktop">
+      <h1 className="sr-only">Carbon Intensity Dashboard</h1>
+      <header className="mb-5 flex items-end justify-between gap-6">
+        <div>
+          <p className="text-[26px] font-extrabold tracking-[-0.02em]">{greeting(now)}</p>
+          <p className="text-[13px] font-semibold text-muted-foreground">
+            {new Intl.DateTimeFormat('en-GB', { timeZone: LONDON_TZ, weekday: 'long', day: 'numeric', month: 'long' }).format(now)} · {regionName}
+          </p>
+        </div>
+        <div className="w-[340px]">{tabs}</div>
+      </header>
+      {nonIntensity ? (
+        <div className="max-w-5xl">{nonIntensity}</div>
+      ) : (
+        <div className="grid grid-cols-[480px_minmax(0,1fr)] items-start gap-5">
+          <div className="space-y-5">
+            {hero('card')}
+            <div className="home-feed space-y-5">
+              {degraded}
+              {cardsReady && <HomeCards m={m} slot="nowOrWait" />}
+              {cardsReady && <HomeCards m={m} slot="explainer" />}
+            </div>
+          </div>
+          <div className="space-y-5">
+            {status === 'loading' && <HomeCardSkeletons />}
+            {cardsReady && <HomeCards m={m} slot="next24" />}
+            {cardsReady && <HomeCards m={m} slot="genMix" />}
+            {cardsReady && <HomeCards m={m} slot="insights" />}
+          </div>
+        </div>
+      )}
+    </main>
+  ) : (
+    <main className="home-shell flex min-h-[100dvh] flex-col" data-layout="phone">
+      <h1 className="sr-only">Carbon Intensity Dashboard</h1>
+      {hero('phone')}
+      <div className="home-feed relative z-10 -mt-px flex-1 bg-background px-4 pb-4 pt-1">
+        <ScallopDivider className="scene-wave-divider pointer-events-none absolute inset-x-0 -top-6 h-6" />
+        <div className="space-y-[14px]">
+          {tabs}
+          {(status === 'stale' || status === 'offline-cached') && lastUpdated && (
+            <div className="flex justify-center">
+              <StaleDataBadge lastUpdated={lastUpdated} />
+            </div>
+          )}
+          {degraded}
+          {nonIntensity ?? (
+            <>
+              {status === 'loading' && <HomeCardSkeletons />}
+              {cardsReady && (
+                <>
+                  <HomeCards m={m} slot="nowOrWait" />
+                  <HomeCards m={m} slot="next24" />
+                  <HomeCards m={m} slot="explainer" />
+                  <HomeCards m={m} slot="genMix" />
+                  <HomeCards m={m} slot="insights" />
+                </>
+              )}
+            </>
+          )}
+          {cardsReady && !nonIntensity && <p className="px-1 text-[12px] font-semibold leading-[1.4] text-muted-foreground">{COPY.credit}</p>}
+        </div>
+      </div>
+    </main>
+  );
 
   return (
     <TooltipProvider>
-      <div
-        className="min-h-screen bg-background transition-colors duration-1000"
-        style={{ background: skyColor }}
-      >
+      <div className="min-h-screen bg-background">
         <PullToRefresh onRefresh={handleRefresh} disabled={isLoading}>
-          <main className="home-shell min-h-[100dvh] flex flex-col animate-in fade-in duration-700 lg:pb-0">
-            <h1 className="sr-only">Carbon Intensity Dashboard</h1>
-
-            <IntensityHeroOverlay
-              postcode={postcode}
-              setPostcode={setPostcode}
-              region={region}
-              intensity={intensity}
-              previousIntensity={previousIntensity}
-              index={index}
-              generationMix={generationMix}
-              isLoading={isLoading}
-              isBackgroundFetching={isBackgroundFetching}
-              isError={isError}
-              lastUpdated={lastUpdated}
-              nextUpdate={nextUpdate}
-              getNextUpdate={getNextUpdate}
-              relativeTime={relativeTime}
-              freshnessColor={freshnessColor}
-              renewablesPct={renewablesPct}
-              sparkleTrigger={sparkleTrigger}
-              onSparkleComplete={() => setSparkleTrigger(false)}
-              hideGauge={viewMode === 'demand'}
-            />
-
-            <div className="home-feed flex-1 px-4 pt-5 pb-[calc(7.5rem+env(safe-area-inset-bottom))] lg:pb-6 space-y-4 -mt-8 relative z-10 bg-card rounded-t-[1.75rem] shadow-[0_-12px_40px_-20px_rgba(15,23,42,0.18)] lg:max-w-7xl lg:mx-auto w-full lg:rounded-t-3xl lg:shadow-xl lg:-mt-10 lg:pt-8 lg:space-y-6">
-              <div className="scene-wave-divider absolute -top-[79px] left-0 right-0 h-[80px] pointer-events-none overflow-hidden z-20">
-                <SceneWaveDivider cleanliness={cleanliness} />
-              </div>
-
-              <div className="flex justify-center pt-0.5 pb-1 lg:hidden" aria-hidden>
-                <div className="h-1 w-10 rounded-full bg-muted-foreground/25" />
-              </div>
-
-              {isDegraded && (
-                <div className="mx-2 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-lg flex items-start gap-3 text-sm text-amber-800 dark:text-amber-200 animate-in fade-in">
-                  <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-500" />
-                  <div>
-                    <p className="font-semibold">Regional data degraded</p>
-                    <p>
-                      We're currently unable to fetch data for {postcode} and are showing National
-                      Grid averages instead.
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              <div className="px-1 pb-2 pt-0">
-                <EnergyFactBubble
-                  intensity={intensity}
-                  generationMix={generationMix}
-                  variant="plain"
-                  className="mx-auto max-w-prose text-center"
-                />
-              </div>
-
-              <AnimatePresence mode="wait">
-                {isError ? (
-                  <motion.div
-                    key="error"
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -12 }}
-                    transition={{ duration: 0.25 }}
-                    className="py-8 bg-card rounded-2xl border border-border shadow-lg"
-                  >
-                    <ErrorState
-                      title={getErrorInfo(error).title}
-                      description={getErrorInfo(error).description}
-                      steps={getErrorInfo(error).steps}
-                      retry={refetch}
-                    />
-                  </motion.div>
-                ) : isLoading && forecast.length === 0 ? (
-                  <motion.div
-                    key="loading"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <DashboardSkeleton />
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="content"
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -15 }}
-                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                    className="space-y-4"
-                  >
-                    <DashboardViewTabs
-                      viewMode={viewMode}
-                      onViewModeChange={setViewMode}
-                      onSelectionHaptic={selection}
-                      onKeyDown={handleKeyDown}
-                    />
-
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={viewMode}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.3, ease: 'easeOut' as const }}
-                        className="w-full pb-10"
-                      >
-                        {viewMode === 'demand' ? (
-                          <DemandView />
-                        ) : viewMode === 'footprint' ? (
-                          <FootprintView />
-                        ) : (
-                          <IntensityDashboard
-                            intensity={intensity}
-                            forecast={forecast}
-                            generationMix={generationMix}
-                            gridFrequency={gridFrequency}
-                            lastUpdated={lastUpdated}
-                            glowClass={glowClass}
-                            showWeatherInInsights={prefs.showWeatherInInsights}
-                            gardenDays={sceneGrowth.gardenDays}
-                            growthStage={sceneGrowth.stage}
-                            regionId={regionId ?? null}
-                            regionName={region}
-                          />
-                        )}
-                      </motion.div>
-                    </AnimatePresence>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </main>
+          <AnimatePresence mode="wait">
+            <motion.div key={isDesktop ? 'd' : 'p'} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+              {content}
+            </motion.div>
+          </AnimatePresence>
         </PullToRefresh>
+
+        <DayDetailSheet
+          dateKey={openDay}
+          onDateChange={setOpenDay}
+          availableDays={availableDays}
+          regionId={regionId}
+          regionName={regionName}
+          planWindow={shadedWindow(decision.plan)}
+          tone={tone}
+          placeholder={forecast}
+        />
 
         <LocationMismatchPrompt
           currentPostcode={postcode}
@@ -340,11 +333,7 @@ const Index = () => {
           }}
         />
 
-        <YearWrapped
-          open={showYearWrapped}
-          onOpenChange={setShowYearWrapped}
-          year={wrappedYear}
-        />
+        <YearWrapped open={showYearWrapped} onOpenChange={setShowYearWrapped} year={wrappedYear} />
       </div>
     </TooltipProvider>
   );

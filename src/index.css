@@ -867,6 +867,16 @@ p, blockquote {
   box-shadow: 0 14px 36px -14px hsl(var(--intensity-very-high) / 0.26), 0 0 0 1px hsl(var(--intensity-very-high) / 0.12) !important;
 }
 
+/* Phone tab bar (spec §4.10) */
+.tab-bar {
+  background: hsl(0 0% 100% / 0.82);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+}
+.dark .tab-bar {
+  background: hsl(var(--card) / 0.86);
+}
+
 /* Floating bottom dock — same paper as the home sheet (seam test) */
 .nav-dock {
   margin: 0 14px calc(12px + env(safe-area-inset-bottom));
@@ -927,32 +937,25 @@ p, blockquote {
 .home-scene {
   position: relative;
   width: 100%;
-  height: 62dvh;
-  min-height: 420px;
-  max-height: 720px;
+  /* Spec v1.0 §4.2: 520 tall on phones (incl. status bar), 480×480 card on desktop. */
+  height: 520px;
+}
+.home-scene[data-variant='card'] {
+  height: 480px;
+}
+/* Calmer scene: lower saturation; the skyline drops so it clears the meta block. */
+.home-scene__art {
+  filter: saturate(0.78);
+}
+.home-scene--offline .home-scene__art {
+  filter: saturate(0.55) brightness(0.92);
+}
+.home-scene--offline .home-scene__art * {
+  animation-play-state: paused !important;
 }
 
 /* Short-wide poses (iPhone Duo ~1.42:1). Matches isShortWideViewport() —
    width/height >= 1/1.55 ≈ 0.645. max-width keeps desktop/ultrawide on classic floor. */
-@media (min-aspect-ratio: 10 / 15.5) and (max-width: 960px) {
-  .home-scene {
-    height: min(48dvh, 360px);
-    min-height: 260px;
-    max-height: min(420px, 58dvh);
-  }
-
-  .home-scene-gauge {
-    padding-top: calc(max(env(safe-area-inset-top), 12px) + 2.25rem) !important;
-  }
-}
-
-@media (max-height: 640px) {
-  .home-scene {
-    height: min(48dvh, 360px);
-    min-height: 240px;
-    max-height: min(380px, 55dvh);
-  }
-}
 
 /*
  * Unfolded Duo / short landscape: side-by-side scene + feed. Keep primary chrome

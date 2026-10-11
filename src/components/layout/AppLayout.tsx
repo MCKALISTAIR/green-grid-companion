@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 
-const TABS = ['/', '/planner', '/map', '/settings'];
+const TABS = ['/', '/planner', '/history', '/map', '/settings'];
 
 export function AppLayout() {
   const location = useLocation();
@@ -56,8 +56,9 @@ export function AppLayout() {
     <div className="min-h-[100dvh] bg-background font-sans">
       <SideNav />
 
-      <div className="lg:pl-64 flex flex-col min-h-[100dvh] overflow-x-hidden">
-        <main className="flex-1 w-full max-w-7xl mx-auto pb-28 lg:pb-0 relative">
+      <div className="lg:pl-[232px] flex flex-col min-h-[100dvh] overflow-x-hidden">
+        {/* Bottom padding = tab bar (~57 px + safe area) + 16 (spec §4.10). */}
+        <main className="flex-1 w-full mx-auto pb-[calc(73px+env(safe-area-inset-bottom))] lg:pb-0 relative">
           <AnimatePresence mode="popLayout" custom={direction}>
             <motion.div
               key={location.pathname}

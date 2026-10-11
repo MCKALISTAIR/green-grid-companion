@@ -1,330 +1,218 @@
-import { AlertTriangle, ChevronDown, Info, Leaf, MapPin, RefreshCw, Trophy } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { useOffline } from '@/hooks/useOffline';
+import { Check, ChevronDown, Info, MapPin, RefreshCw } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { LocationManager } from '@/components/LocationManager';
-import { AnimatedIntensity } from '@/components/AnimatedIntensity';
-import { TypewriterText } from '@/components/TypewriterText';
-import { RenewableSparkle } from '@/components/RenewableSparkle';
 import { ComponentErrorBoundary } from '@/components/ComponentErrorBoundary';
 import { IntensityScene } from '@/components/IntensityScene';
-import { DEFINITIONS } from '@/lib/definitions';
-import { cn } from '@/lib/utils';
-import { getConditionLabel, getConditionParts } from '@/lib/conditionLabels';
-import { formatLondonTime } from '@/lib/londonTime';
-import { useEnergyFacts } from '@/hooks/useEnergyFacts';
-import { useTimeOfDay } from '@/hooks/useTimeOfDay';
-import { getCleanlinessBand } from '@/hooks/useCleanlinessBand';
-import type { GenerationMix } from '@/lib/carbonApi';
 import { CompactDataAttribution } from '@/components/attribution/DataAttribution';
+import { getConditionParts } from '@/lib/conditionLabels';
+import { formatLondonTime } from '@/lib/londonTime';
+import { COPY } from '@/lib/homeCopy';
+import type { CommentaryTone } from '@/lib/tone';
+import type { GenerationMix } from '@/lib/carbonApi';
+import { useTimeOfDay } from '@/hooks/useTimeOfDay';
+import { cn } from '@/lib/utils';
+
+type Band = 'very low' | 'low' | 'moderate' | 'high' | 'very high';
+
+export type HeroStatus = 'loading' | 'ok' | 'refreshing' | 'stale' | 'offline-cached' | 'offline-empty' | 'error';
+
+/** Fresh = the reading's half hour contains now and it was fetched under 35 minutes ago (spec §4.2). */
+export function isFreshReading(slotFrom: string | null, slotTo: string | null, fetchedAt: number | null, now = Date.now()): boolean {
+  if (!slotFrom || !slotTo || !fetchedAt) return false;
+  const a = Date.parse(slotFrom);
+  const b = Date.parse(slotTo);
+  return a <= now && now < b && now - fetchedAt < 35 * 60_000;
+}
+
+/** Stale = more than 35 minutes since the reading's half hour ended. */
+export function isStaleReading(slotTo: string | null, now = Date.now()): boolean {
+  if (!slotTo) return false;
+  return now - Date.parse(slotTo) > 35 * 60_000;
+}
 
 interface IntensityHeroOverlayProps {
   postcode: string;
   setPostcode: (value: string) => void;
   region: string | undefined;
   intensity: number;
-  previousIntensity: number | null | undefined;
   index: string;
   generationMix: GenerationMix[] | undefined;
-  isLoading: boolean;
-  isBackgroundFetching: boolean;
-  isError: boolean;
-  lastUpdated: string | null | undefined;
-  nextUpdate: string | Date | null | undefined;
-  getNextUpdate: (lastUpdated?: string) => Date | null;
-  relativeTime: string;
-  freshnessColor: string;
+  status: HeroStatus;
   renewablesPct: number;
-  sparkleTrigger: boolean;
-  onSparkleComplete: () => void;
-  hideGauge: boolean;
+  slotFrom: string | null;
+  slotTo: string | null;
+  fetchedAt: number | null;
+  tone: CommentaryTone;
+  /** Inline "same half hour" note after a pull with no new data. */
+  sameHalfHourNote?: string | null;
+  onRetry?: () => void;
+  /** Desktop: 480×480 card instead of the full-bleed phone hero. */
+  variant?: 'phone' | 'card';
 }
 
 /**
- * Carrot Weather–inspired scene HUD: one giant number, one condition line,
- * no glass card competing with the illustration.
+ * Home hero (spec §4.2): location pill, the number, band pill + Cheeky line,
+ * the zero-carbon badge (fresh 0 only) and the meta lines, over the scene.
+ * Text sits on sky only; the scene's skyline stays below the meta block.
  */
 export function IntensityHeroOverlay({
   postcode,
   setPostcode,
   region,
   intensity,
-  previousIntensity,
   index,
   generationMix,
-  isLoading,
-  isBackgroundFetching,
-  isError,
-  lastUpdated,
-  nextUpdate,
-  getNextUpdate,
-  relativeTime,
-  freshnessColor,
+  status,
   renewablesPct,
-  sparkleTrigger,
-  onSparkleComplete,
-  hideGauge,
+  slotFrom,
+  slotTo,
+  fetchedAt,
+  tone,
+  sameHalfHourNote,
+  onRetry,
+  variant = 'phone',
 }: IntensityHeroOverlayProps) {
-  const { tone } = useEnergyFacts();
   const { isNight } = useTimeOfDay();
-  // Only say 'Offline' when the device really is; otherwise the data source failed.
-  const { isOffline } = useOffline();
-  const band = getCleanlinessBand(intensity);
-  const isDirty = band === 'dirty' || band === 'very-dirty';
-  const needsHardScrim = isNight || isDirty;
-  const conditionLabel = getConditionLabel(index, tone, region ?? postcode);
+  const light = isNight || index === 'very high' || index === 'high';
+  const hasNumber = status === 'ok' || status === 'refreshing' || status === 'stale' || status === 'offline-cached';
+  const parts = getConditionParts(index, tone, region ?? postcode);
+  const badge = hasNumber && intensity === 0 && status !== 'stale' && status !== 'offline-cached' && isFreshReading(slotFrom, slotTo, fetchedAt);
+  const slot = slotFrom && slotTo ? `${formatLondonTime(new Date(slotFrom))}\u2013${formatLondonTime(new Date(slotTo))}` : null;
+  const ink = light ? 'text-white' : 'text-foreground';
+  const shadow = light ? 'drop-shadow-[0_1px_8px_rgba(0,0,0,0.55)]' : '';
+  const digits = String(intensity).length;
 
-  const nextUpdateLabel = (() => {
-    if (!lastUpdated) return '';
-    // Soften first-load / background refresh so FTUE never opens on "Update due".
-    if (isBackgroundFetching) return 'Updating…';
-    if (nextUpdate) {
-      const next = new Date(nextUpdate);
-      if (new Date() > next) return 'Refreshing soon';
-      return `Next ${formatLondonTime(next)}`;
-    }
-    const next = getNextUpdate(lastUpdated);
-    if (!next) return '';
-    if (new Date() > next) return 'Refreshing soon';
-    return `Next ${formatLondonTime(next)}`;
-  })();
+  let meta2: string | null = null;
+  if (status === 'refreshing') meta2 = COPY.updating;
+  else if (status === 'stale' && slotFrom) meta2 = COPY.stale(formatLondonTime(new Date(slotFrom)));
+  else if (status === 'offline-cached' && slotFrom) meta2 = COPY.offlineCached(formatLondonTime(new Date(slotFrom)));
+  else if (sameHalfHourNote) meta2 = sameHalfHourNote;
+  else if (fetchedAt && slotTo) meta2 = `Updated ${formatLondonTime(new Date(fetchedAt))} \u00b7 next at ${formatLondonTime(new Date(slotTo))}`;
 
-  // Band name big, Cheeky line underneath, so neither wraps on small phones.
-  const conditionParts = getConditionParts(index, tone, region ?? postcode);
-
-  const renewablesTone = needsHardScrim
-    ? 'text-white'
-    : renewablesPct >= 70
-      ? 'text-emerald-100'
-      : renewablesPct >= 50
-        ? 'text-lime-100'
-        : renewablesPct >= 30
-          ? 'text-amber-100'
-          : 'text-orange-100';
+  const pill = 'bg-[hsl(0_0%_100%/0.78)] backdrop-blur-[12px] border border-[hsl(0_0%_100%/0.9)] text-[hsl(210_28%_14%)] dark:bg-[hsl(220_25%_14%/0.7)] dark:text-white dark:border-white/20';
 
   return (
-    <div className="home-scene relative w-full">
+    <div
+      className={cn(
+        'home-scene relative w-full overflow-hidden',
+        variant === 'card' && 'rounded-[24px] shadow-[var(--shadow-md)]',
+        (status === 'offline-cached' || status === 'offline-empty') && 'home-scene--offline',
+      )}
+      data-variant={variant}
+    >
       <ComponentErrorBoundary name="Scene">
-        <IntensityScene
-          intensity={intensity}
-          index={index}
-          generationMix={generationMix}
-          hasLiveReading={!isLoading && !isError && !!lastUpdated}
-          className="h-full"
-          style={{ height: '100%' }}
-        />
-
-        <div className="absolute top-6 left-6 z-30 hidden lg:block">
-          <LocationManager
-            value={postcode}
-            onChange={setPostcode}
-            trigger={
-              <button className="flex items-center gap-2 text-white/90 text-sm font-semibold tracking-wide transition-all cursor-pointer bg-black/25 hover:bg-black/35 backdrop-blur-md px-4 py-2 rounded-full border border-white/15 hover:border-white/25 shadow-sm group">
-                <MapPin className="w-3.5 h-3.5" />
-                <span>{isLoading ? 'Loading...' : region || 'Select location'}</span>
-                {isBackgroundFetching ? (
-                  <RefreshCw className="w-3 h-3 animate-spin opacity-70" />
-                ) : (
-                  <ChevronDown className="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity" />
-                )}
-              </button>
-            }
+        <div className="home-scene__art absolute inset-0" aria-hidden>
+          <IntensityScene
+            intensity={intensity}
+            index={index}
+            generationMix={generationMix}
+            hasLiveReading={hasNumber && status !== 'stale'}
+            className="h-full"
+            style={{ height: '100%' }}
           />
-        </div>
-
-        <div className="absolute top-[calc(max(env(safe-area-inset-top),24px)+0.5rem)] right-4 z-30 lg:top-6 lg:right-6">
-          <Link to="/achievements">
-            <button
-              className="flex items-center justify-center text-white/90 transition-all cursor-pointer bg-black/25 hover:bg-black/35 active:scale-95 hover:scale-105 backdrop-blur-md p-2.5 rounded-full border border-white/15 hover:border-white/25 shadow-sm"
-              aria-label="Trophy Room"
-            >
-              <Trophy className="w-4 h-4 text-amber-300" />
-            </button>
-          </Link>
         </div>
       </ComponentErrorBoundary>
 
-      {!hideGauge && (
-        <div
-          className={cn(
-            'home-scene-gauge absolute inset-x-0 top-0 z-10 flex flex-col items-center pointer-events-none',
-            'pt-[calc(max(env(safe-area-inset-top),12px)+3.25rem)]',
-          )}
-          data-tour="intensity-gauge"
-        >
-          <div
-            aria-hidden
-            className={cn(
-              'absolute inset-x-0 top-0 pointer-events-none transition-[height,opacity] duration-700',
-              needsHardScrim
-                ? 'h-[62%] bg-gradient-to-b from-black/55 via-black/28 to-transparent'
-                : 'h-[55%] bg-gradient-to-b from-black/35 via-black/15 to-transparent',
-            )}
-          />
-          {needsHardScrim && (
-            <div
-              aria-hidden
-              className="absolute inset-x-0 top-[18%] h-40 pointer-events-none bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.35)_0%,transparent_70%)]"
+      <div
+        className={cn(
+          'home-scene-gauge absolute inset-x-0 top-0 z-10 px-5',
+          variant === 'phone' ? 'pt-[calc(max(env(safe-area-inset-top),20px)+8px)]' : 'pt-5',
+        )}
+        data-tour="intensity-gauge"
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div data-testid="hero-location" className="min-w-0">
+            <LocationManager
+              value={postcode}
+              onChange={setPostcode}
+              trigger={
+                <button type="button" className={cn('inline-flex h-[34px] max-w-full items-center gap-1.5 rounded-full px-3 text-[14px] font-bold shadow-sm', pill)} style={{ margin: '5px 0' }}>
+                  <MapPin className="h-4 w-4 shrink-0" aria-hidden />
+                  <span className="truncate">{status === 'loading' ? 'Loading\u2026' : region || 'Select location'}</span>
+                  {status === 'refreshing' ? <RefreshCw className="h-3.5 w-3.5 shrink-0 animate-spin" aria-hidden /> : <ChevronDown className="h-4 w-4 shrink-0" aria-hidden />}
+                </button>
+              }
             />
-          )}
+          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button type="button" aria-label="About this number" className={cn('grid h-9 w-9 shrink-0 place-items-center rounded-full shadow-sm', pill)}>
+                <Info className="h-[18px] w-[18px]" aria-hidden />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[270px] space-y-2 p-3 text-[13px]">
+              <p className="font-bold">Carbon intensity</p>
+              <p>{COPY.info}</p>
+              <CompactDataAttribution />
+            </PopoverContent>
+          </Popover>
+        </div>
 
-          <div className="relative flex flex-col items-center text-center w-full max-w-[22rem] px-4 pointer-events-auto">
-            <div className="lg:hidden mb-3">
-              <LocationManager
-                value={postcode}
-                onChange={setPostcode}
-                trigger={
-                  <button
-                    type="button"
-                    className="inline-flex items-center gap-1.5 text-white text-[13px] font-semibold tracking-wide hover:text-white/95 transition-colors drop-shadow-[0_1px_8px_rgba(0,0,0,0.65)]"
-                  >
-                    <MapPin className="w-3.5 h-3.5 opacity-90" />
-                    <span>{isLoading ? 'Loading…' : region || 'Select location'}</span>
-                    {isBackgroundFetching ? (
-                      <RefreshCw className="w-3 h-3 animate-spin opacity-70" />
-                    ) : (
-                      <ChevronDown className="w-3 h-3 opacity-70" />
-                    )}
-                  </button>
-                }
-              />
+        <div className={cn('mt-[22px]', ink, shadow)}>
+          {status === 'loading' ? (
+            <div aria-label="Loading carbon intensity" role="status" className="flex min-h-[91px] items-end">
+              <span className="h-[80px] w-[150px] animate-pulse rounded-2xl bg-white/50" style={{ animationDuration: '1.2s' }} />
+              <span className="mb-2 ml-3 text-[15px] font-bold">{tone === 'plain' ? COPY.loadingPlain : COPY.loadingCheeky}</span>
             </div>
-
-            <div className="flex items-end justify-center gap-2 min-h-[5.5rem]">
-              {isLoading ? (
-                <RefreshCw className="w-12 h-12 text-white animate-spin drop-shadow-lg" aria-label="Loading data" />
-              ) : isError ? (
-                <div className="flex flex-col items-center py-1">
-                  <AlertTriangle className="w-10 h-10 text-white animate-pulse mb-1 drop-shadow-md" />
-                  <span className="text-sm font-bold text-white/95 uppercase tracking-[0.18em]">
-                    {isOffline ? 'Offline' : 'Data unavailable'}
-                  </span>
-                </div>
-              ) : (
-                <>
-                  <AnimatedIntensity
-                    value={intensity}
-                    previousValue={previousIntensity ?? null}
-                    isUpdating={isBackgroundFetching}
-                    size="hero"
-                    highContrast={needsHardScrim}
-                  />
-                  <div className="flex flex-col items-start pb-2 gap-0.5">
-                    <span className="text-white text-base font-semibold leading-none tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.7)]">
-                      gCO₂
-                    </span>
-                    <span className="text-white/85 text-xs font-medium leading-none drop-shadow-[0_1px_8px_rgba(0,0,0,0.65)]">
-                      /kWh
-                    </span>
-                  </div>
-                </>
+          ) : status === 'error' || status === 'offline-empty' ? (
+            <div className="min-h-[91px]" role="alert">
+              <p className="text-[22px] font-extrabold leading-tight">{status === 'error' ? COPY.serviceError : COPY.offlineNoCache}</p>
+              {status === 'error' && onRetry && (
+                <button type="button" onClick={onRetry} className={cn('mt-3 min-h-11 rounded-full px-5 text-[14px] font-bold', pill)}>
+                  {COPY.tryAgain}
+                </button>
               )}
             </div>
-
-            {!isLoading && !isError && conditionLabel && (
-              <motion.div
-                key={conditionLabel}
-                className="mt-1 flex items-center gap-1.5"
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-              >
-                <p
-                  className={cn(
-                    // Intensity band labels — Plus Jakarta Sans bold (same face as HUD).
-                    'font-sans text-3xl sm:text-4xl font-bold text-white tracking-tight',
-                    needsHardScrim
-                      ? 'drop-shadow-[0_3px_16px_rgba(0,0,0,0.75)]'
-                      : 'drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)]',
-                    tone === 'plain' ? 'capitalize' : '',
-                  )}
+          ) : (
+            <>
+              <div className="flex items-baseline gap-2" data-testid="hero-number">
+                <span
+                  className={cn('font-extrabold leading-[0.95] tracking-[-0.045em] tabular-nums', digits >= 3 ? 'text-[80px] min-[375px]:text-[96px]' : 'text-[96px]')}
                 >
-                  <TypewriterText text={conditionParts.band} />
-                  {conditionParts.quip && (
-                    <span className="block mt-1 text-base sm:text-lg font-semibold text-white/95 normal-case">
-                      {conditionParts.quip}
-                    </span>
-                  )}
-                </p>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 rounded-full p-0 text-white/80 hover:text-white hover:bg-white/10"
-                      aria-label="What is carbon intensity?"
-                    >
-                      <Info className="w-3.5 h-3.5" aria-hidden="true" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[260px] p-3 text-xs bg-card border-border backdrop-blur-xl space-y-2">
-                    <p className="font-semibold">Carbon intensity</p>
-                    <p>{DEFINITIONS['Carbon Intensity']}</p>
-                    <p className="text-muted-foreground">{DEFINITIONS['gCO2/kWh']}</p>
-                    {index && tone !== 'plain' && (
-                      <p className="text-muted-foreground">
-                        Official band:{' '}
-                        <span className="font-semibold capitalize text-foreground">{index}</span>
-                      </p>
-                    )}
-                    <p className="text-muted-foreground">
-                      This is NESO&apos;s forecast for your region for this half hour. It updates every{' '}
-                      <span className="font-semibold text-foreground">30 minutes</span>.
-                    </p>
-                    <CompactDataAttribution />
-                  </PopoverContent>
-                </Popover>
-              </motion.div>
-            )}
-
-            {!isLoading && !isError && (
-              <div className="mt-3 flex flex-col items-center gap-2">
-                <div className="relative">
-                  <motion.p
-                    className={cn(
-                      'inline-flex items-center gap-1.5 text-sm font-semibold drop-shadow-[0_2px_10px_rgba(0,0,0,0.65)]',
-                      renewablesTone,
-                    )}
-                    key={Math.round(renewablesPct / 10)}
-                    animate={{ scale: [1, 1.04, 1] }}
-                    transition={{ duration: 0.35, ease: 'easeOut' as const }}
-                  >
-                    <Leaf className="w-3.5 h-3.5" aria-hidden="true" />
-                    {renewablesPct.toFixed(0)}% renewable
-                  </motion.p>
-                  <RenewableSparkle trigger={sparkleTrigger} onComplete={onSparkleComplete} />
-                </div>
-
-                {lastUpdated && (
-                  <div className="flex items-center gap-1.5 text-[11px] text-white font-medium drop-shadow-[0_1px_8px_rgba(0,0,0,0.65)]">
-                    <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
-                      <span
-                        className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-60 ${freshnessColor}`}
-                      />
-                      <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${freshnessColor}`} />
-                    </span>
-                    {isBackgroundFetching ? (
-                      <span>Updating…</span>
-                    ) : (
-                      <>
-                        <span>{relativeTime}</span>
-                        {nextUpdateLabel && (
-                          <>
-                            <span className="opacity-60">·</span>
-                            <span>{nextUpdateLabel}</span>
-                          </>
-                        )}
-                      </>
-                    )}
-                  </div>
-                )}
+                  {intensity}
+                </span>
+                <span className={cn('text-[15px] font-semibold', light ? 'text-white/80' : 'text-foreground/70')}>gCO₂/kWh</span>
               </div>
-            )}
-          </div>
+              <div className="mt-2.5 flex flex-wrap items-center gap-x-2.5 gap-y-1.5" data-testid="hero-band">
+                <span
+                  className="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-[13px] font-extrabold shadow-sm"
+                  style={{ color: `hsl(var(--intensity-${(index || 'moderate').replace(' ', '-')}-ink))` }}
+                >
+                  <span className="h-2 w-2 rounded-full" style={{ background: `hsl(var(--intensity-${(index || 'moderate').replace(' ', '-')}))` }} aria-hidden />
+                  {parts.band}
+                </span>
+                {parts.quip && <span className="text-[17px] font-bold leading-tight">{parts.quip}</span>}
+              </div>
+            </>
+          )}
         </div>
-      )}
+
+        {badge && (
+          <div
+            className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-intensity-very-low-ink px-3 py-1.5 text-[13px] font-bold text-white shadow-sm"
+            data-testid="zero-carbon-badge"
+            role="status"
+          >
+            <Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden />
+            {COPY.zeroBadge}
+          </div>
+        )}
+
+        {hasNumber && (
+          <div
+            className={cn('mt-3 space-y-0.5 text-[13px] font-semibold leading-[1.45]', light ? 'text-white/90' : 'text-foreground/[0.78]', shadow)}
+            data-testid="hero-meta"
+            aria-live="polite"
+          >
+            <p>
+              {Math.round(renewablesPct)}% renewable{slot ? ` \u00b7 Forecast for ${slot}` : ''}
+            </p>
+            {meta2 && <p>{meta2}</p>}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
+
+export type { Band };

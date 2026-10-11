@@ -1,28 +1,16 @@
 import { useLocation } from 'react-router-dom';
 import { useTransitionNavigate } from '@/hooks/useTransitionNavigate';
 import { Home, Trophy, CalendarDays, Settings2, History } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { motion, type Transition } from 'framer-motion';
 import { useHaptics } from '@/hooks/useHaptics';
-import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { cn } from '@/lib/utils';
-
-const pillTransition = { type: 'spring' as const, stiffness: 450, damping: 25 };
 
 interface BottomNavProps {
   onHomeClick?: () => void;
 }
 
-type TabDef = {
-  id: string;
-  path: string;
-  label: string;
-  Icon: typeof Home;
-  tour?: string;
-};
+type TabDef = { id: string; path: string; label: string; Icon: typeof Home; tour?: string };
 
-/** One active accent (primary green) — art direction: no rainbow Lucide docks. */
-const TABS: TabDef[] = [
+export const NAV_TABS: TabDef[] = [
   { id: 'home', path: '/', label: 'Home', Icon: Home },
   { id: 'plan', path: '/planner', label: 'Plan', Icon: CalendarDays, tour: 'nav-plan' },
   { id: 'history', path: '/history', label: 'History', Icon: History, tour: 'nav-history' },
@@ -30,72 +18,53 @@ const TABS: TabDef[] = [
   { id: 'settings', path: '/settings', label: 'Settings', Icon: Settings2 },
 ];
 
+/**
+ * Phone tab bar (spec §4.10): full width, frosted, 5 equal columns, primary
+ * for the active tab, aria-current on it, selection haptic on change.
+ */
 export function BottomNav({ onHomeClick }: BottomNavProps) {
   const navigate = useTransitionNavigate();
   const location = useLocation();
   const { selection } = useHaptics();
-  const shouldReduceMotion = useReducedMotion();
-
-  const isActive = (path: string) => location.pathname === path;
-
-  const squishBounce = {
-    initial: false as const,
-    animate: shouldReduceMotion ? {} : { scaleY: [1, 0.65, 1.25, 1] },
-    transition: { duration: 0.35, ease: [0.34, 1.56, 0.64, 1] } as Transition,
-  };
 
   const handleClick = (path: string) => {
-    selection();
-    if (path === '/' && location.pathname === '/' && onHomeClick) {
-      onHomeClick();
+    if (path === location.pathname) {
+      if (path === '/' && onHomeClick) onHomeClick();
       return;
     }
+    void selection();
     navigate(path);
   };
 
   return (
-    <div id="bottom-nav" className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
-      <div className="pointer-events-auto nav-dock max-w-md mx-auto">
-        <div className="grid grid-cols-5 h-[3.85rem] px-1.5">
-          {TABS.map(({ id, path, label, Icon, tour }) => {
-            const active = isActive(path);
-            return (
-              <Button
-                key={id}
-                variant="ghost"
+    <nav
+      id="bottom-nav"
+      aria-label="Main"
+      data-testid="bottom-nav"
+      className="tab-bar fixed inset-x-0 bottom-0 z-50 border-t border-border pt-2 pb-[calc(8px+env(safe-area-inset-bottom))]"
+    >
+      <ul className="grid grid-cols-5">
+        {NAV_TABS.map(({ id, path, label, Icon, tour }) => {
+          const active = location.pathname === path;
+          return (
+            <li key={id}>
+              <button
+                type="button"
                 data-tour={tour}
-                className={cn(
-                  'group relative z-10 flex flex-col items-center gap-0.5 h-auto py-2 px-1 rounded-xl transition-all',
-                  active
-                    ? 'font-bold text-primary'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-transparent',
-                )}
+                aria-current={active ? 'page' : undefined}
                 onClick={() => handleClick(path)}
-              >
-                {active && (
-                  <motion.div
-                    layoutId="bottom-nav-active-pill"
-                    className="absolute inset-1 rounded-xl -z-10 bg-primary/12"
-                    transition={pillTransition}
-                  />
+                className={cn(
+                  'flex min-h-[49px] w-full flex-col items-center justify-center gap-0.5 outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  active ? 'text-primary' : 'text-muted-foreground',
                 )}
-                <motion.span key={active ? `${id}-on` : `${id}-off`} {...squishBounce}>
-                  <Icon
-                    className={cn(
-                      'w-[1.35rem] h-[1.35rem] transition-transform duration-150 ease-out group-active:scale-90 group-active:-rotate-6 motion-reduce:transform-none',
-                      active && 'drop-shadow-sm',
-                    )}
-                    strokeWidth={active ? 2.4 : 1.85}
-                    fill={active ? 'currentColor' : 'none'}
-                    fillOpacity={active ? 0.18 : 0}
-                  />
-                </motion.span>
-                <span className="text-[10px] font-semibold tracking-wide">{label}</span>
-              </Button>
-            );
-          })}
-        </div>
-      </div>
-    </div>
+              >
+                <Icon className="h-6 w-6" strokeWidth={active ? 2.3 : 1.9} aria-hidden />
+                <span className="text-[11px] font-bold leading-tight">{label}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
   );
 }

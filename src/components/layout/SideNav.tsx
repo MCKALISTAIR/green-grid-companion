@@ -1,78 +1,54 @@
 import { useLocation } from 'react-router-dom';
 import { useTransitionNavigate } from '@/hooks/useTransitionNavigate';
-import { Home, ListOrdered, Calendar, Settings, Clock, Zap, type LucideIcon } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { VERSION_STRING } from '@/lib/version';
-import { motion } from 'framer-motion';
+import { TurbineLogo } from '@/components/TurbineLogo';
+import { NAV_TABS } from '@/components/BottomNav';
+import { useHaptics } from '@/hooks/useHaptics';
+import { COPY } from '@/lib/homeCopy';
+import { cn } from '@/lib/utils';
 
+/** Desktop side nav (spec §4.11): 232 px, white, logo row, five items, NESO credit pinned bottom. */
 export function SideNav() {
-    const navigate = useTransitionNavigate();
-    const location = useLocation();
+  const navigate = useTransitionNavigate();
+  const location = useLocation();
+  const { selection } = useHaptics();
 
-    const isActive = (path: string) => location.pathname === path;
-
-    const NavItem = ({ path, icon: Icon, label, dataTour }: { path: string; icon: LucideIcon; label: string; dataTour?: string }) => (
-        <Button
-            variant="ghost"
-            className={`w-full justify-start h-10 relative transition-all group ${
-                isActive(path) 
-                    ? 'text-primary font-medium' 
-                    : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
-            }`}
-            onClick={() => navigate(path)}
-            data-tour={dataTour}
-        >
-            {isActive(path) && (
-                <motion.div
-                    layoutId="side-nav-active-pill"
-                    className="absolute inset-0 rounded-lg bg-primary/12 -z-10"
-                    transition={{ type: 'spring' as const, stiffness: 450, damping: 25 }}
-                />
-            )}
-            <motion.div
-                className="flex items-center gap-3 w-full"
-                whileHover={{ x: 4 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ type: 'spring' as const, stiffness: 400, damping: 25 }}
-            >
-                <Icon className="w-5 h-5 transition-transform duration-200 group-hover:scale-110" />
-                {label}
-            </motion.div>
-        </Button>
-    );
-
-    return (
-        <div id="side-nav" className="hidden lg:flex flex-col w-64 h-full border-r border-border bg-card/50 backdrop-blur-xl fixed left-0 top-0 z-50 p-4">
-            {/* Logo / Brand */}
-            <div className="flex items-center gap-2 px-2 py-4 mb-6">
-                <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                    <Zap className="w-5 h-5 text-primary-foreground fill-current" />
-                </div>
-                <div className="flex flex-col">
-                    <span className="font-bold text-lg leading-none">GridSense</span>
-                    <span className="text-xs text-muted-foreground">Companion</span>
-                </div>
-            </div>
-
-            {/* Navigation */}
-            <nav className="flex-1 space-y-1">
-                <NavItem path="/" icon={Home} label="Dashboard" />
-                <NavItem path="/planner" icon={Calendar} label="Power Planner" dataTour="nav-plan" />
-                <NavItem path="/history" icon={Clock} label="History" dataTour="nav-history" />
-                <NavItem path="/map" icon={ListOrdered} label="Region Rank" dataTour="nav-rank" />
-            </nav>
-
-            {/* Footer / Settings */}
-            <div className="mt-auto pt-4">
-                <Separator className="mb-4" />
-                <NavItem path="/settings" icon={Settings} label="Settings" />
-                <div className="mt-4 px-2">
-                    <p className="text-xs text-muted-foreground text-center">
-                        {VERSION_STRING}
-                    </p>
-                </div>
-            </div>
-        </div>
-    );
+  return (
+    <aside id="side-nav" className="fixed inset-y-0 left-0 z-50 hidden w-[232px] flex-col border-r border-border bg-card px-3 py-5 lg:flex">
+      <div className="flex items-center gap-2.5 px-2">
+        <span className="grid h-[34px] w-[34px] place-items-center rounded-[10px] bg-primary text-primary-foreground">
+          <TurbineLogo className="h-5 w-5" />
+        </span>
+        <span className="text-[19px] font-extrabold tracking-[-0.01em]">GridSense</span>
+      </div>
+      <nav aria-label="Main" className="mt-6">
+        <ul className="space-y-1">
+          {NAV_TABS.map(({ id, path, label, Icon, tour }) => {
+            const active = location.pathname === path;
+            return (
+              <li key={id}>
+                <button
+                  type="button"
+                  data-tour={tour}
+                  aria-current={active ? 'page' : undefined}
+                  onClick={() => {
+                    if (active) return;
+                    void selection();
+                    navigate(path);
+                  }}
+                  className={cn(
+                    'flex w-full items-center gap-3 rounded-[12px] px-3 py-[11px] text-[14.5px] font-bold outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                    active ? 'bg-primary-soft text-primary' : 'text-foreground/80 hover:bg-muted',
+                  )}
+                >
+                  <Icon className="h-5 w-5" aria-hidden />
+                  {label}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+      <p className="mt-auto px-2 text-[12px] font-semibold leading-[1.4] text-muted-foreground">{COPY.credit}</p>
+    </aside>
+  );
 }
