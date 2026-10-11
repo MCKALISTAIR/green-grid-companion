@@ -239,11 +239,8 @@ const Onboarding = () => {
                 </CardContent>
                 <CardFooter className="justify-center py-3 bg-white/5 border-t border-white/5 text-xs text-white/60 text-center">
                     <p>
-                        By continuing you agree to the{' '}
-                        <a href="/terms" className="underline hover:text-white/95 transition-colors">
-                            Terms
-                        </a>{' '}
-                        and have read the{' '}
+                        {/* Terms link returns once the final terms are signed off (see Terms.tsx). */}
+                        By continuing you confirm you've read the{' '}
                         <a href="/privacy" className="underline hover:text-white/95 transition-colors">
                             Privacy Policy
                         </a>
