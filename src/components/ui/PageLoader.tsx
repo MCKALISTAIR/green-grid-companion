@@ -1,16 +1,14 @@
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
+import { readTone } from "@/lib/tone";
 import { TurbineSpinner } from "./turbine-spinner";
 
-const LOADING_TIPS = [
-  "Did you know? Running appliances during 'green status' hours can reduce your carbon footprint by up to 50%.",
-  "Tip: Lowering your wash temperature to 30°C saves around 38% energy compared to a 40°C wash.",
-  "Did you know? Leaving devices on standby accounts for up to 10% of an average UK home's electricity bill.",
-  "Tip: Smart charging your EV overnight helps balance the national grid and utilizes clean wind energy.",
-  "Did you know? Wind turbines produce their maximum energy output during breezy, overcast UK afternoons.",
-  "Tip: Boil only the amount of water you need in your kettle to save energy and speed up your tea break.",
-  "Did you know? LED light bulbs use up to 80% less energy and last 25 times longer than incandescent bulbs."
-];
+// Loading tips were removed (11 Oct 2026): their stats had no sources.
+// Add them back only with a cited source per line.
+
+const LOADER_COPY = {
+  cheeky: { title: 'Checking your grid…', detail: 'Fetching the latest half hour.' },
+  plain: { title: 'Loading grid data…', detail: 'Fetching the latest half hour.' },
+} as const;
 
 interface PageLoaderProps {
   message?: string;
@@ -18,22 +16,14 @@ interface PageLoaderProps {
 }
 
 export function PageLoader({ message, fullscreen = true }: PageLoaderProps) {
-  const [tipIndex, setTipIndex] = useState(0);
-
-  // Cycle tips every 4 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTipIndex((prev) => (prev + 1) % LOADING_TIPS.length);
-    }, 4500);
-    return () => clearInterval(interval);
-  }, []);
+  const copy = LOADER_COPY[readTone()];
 
   const containerClasses = fullscreen
     ? "fixed inset-0 z-50 flex flex-col items-center justify-center p-6 bg-background/80 backdrop-blur-md"
     : "flex flex-col items-center justify-center p-8 w-full min-h-[300px] rounded-2xl glass-card";
 
   return (
-    <div className={containerClasses}>
+    <div className={containerClasses} role="status" aria-live="polite" aria-label="Loading carbon intensity">
       <div className="flex flex-col items-center max-w-sm text-center gap-6">
         {/* Animated Turbine with pulsing glow ring */}
         <div className="relative flex items-center justify-center w-24 h-24">
@@ -69,28 +59,13 @@ export function PageLoader({ message, fullscreen = true }: PageLoaderProps) {
         {/* Loading Message */}
         <div className="space-y-1">
           <h3 className="text-base font-semibold tracking-tight text-foreground">
-            {message || "Optimizing Energy"}
+            {message || copy.title}
           </h3>
           <p className="text-xs text-muted-foreground animate-pulse">
-            Connecting to Green Grid...
+            {copy.detail}
           </p>
         </div>
 
-        {/* Cycling Energy-saving Tips */}
-        <div className="min-h-[64px] flex items-center justify-center px-4 py-3 rounded-xl bg-primary/5 border border-primary/10 w-full glass-card">
-          <AnimatePresence mode="wait">
-            <motion.p
-              key={tipIndex}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="text-xs text-foreground/80 font-medium leading-relaxed"
-            >
-              {LOADING_TIPS[tipIndex]}
-            </motion.p>
-          </AnimatePresence>
-        </div>
       </div>
     </div>
   );

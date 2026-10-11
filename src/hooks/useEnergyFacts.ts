@@ -1,29 +1,23 @@
 import { useState, useEffect, useCallback } from 'react';
-import { EnergyFact, getRandomFact, FactContext, FactTone } from '@/lib/energyFacts';
-
-type TonePreference = FactTone | 'mixed';
-
-const PREFS_KEY = 'gridgreen-fact-prefs';
+import { EnergyFact, getRandomFact, FactContext } from '@/lib/energyFacts';
+import { factPoolFor, readTone, writeTone, type CommentaryTone } from '@/lib/tone';
 
 export function useEnergyFacts() {
-    const [tone, setTone] = useState<TonePreference>(() => {
-        const saved = localStorage.getItem(PREFS_KEY);
-        return (saved as TonePreference) || 'friendly';
-    });
+    const [tone, setTone] = useState<CommentaryTone>(() => readTone());
 
     const [currentFact, setCurrentFact] = useState<EnergyFact | null>(null);
 
     // Persist preference
     useEffect(() => {
-        localStorage.setItem(PREFS_KEY, tone);
+        writeTone(tone);
     }, [tone]);
 
-    const updateTone = (newTone: TonePreference) => {
+    const updateTone = (newTone: CommentaryTone) => {
         setTone(newTone);
     };
 
     const refreshFact = useCallback((context: FactContext) => {
-        setCurrentFact(prev => getRandomFact(context, tone, prev?.id));
+        setCurrentFact(prev => getRandomFact(context, factPoolFor(tone), prev?.id));
     }, [tone]);
 
     return {
