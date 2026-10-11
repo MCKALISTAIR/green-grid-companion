@@ -38,15 +38,15 @@ const pct = (rate: number) => `${Math.round(rate * 100)}%`;
  */
 export const DIAGNOSTICS_DISCLOSURE = {
   always: [
-    'Crash reports: the error message and where in the code it happened, the app version, your browser or OS and device type, and the screen you were on. Locations and postcodes are removed first.',
-    'Your settings and this choice, kept on this device only.',
+    'Crash reports: what went wrong and where in the code, the app version, your browser or OS and device type, and the screen you were on. Locations and postcodes are removed first. They store nothing on your device.',
+    'Your region, settings, sign-in and offline data, and this choice, kept on this device so the app works.',
   ],
   ifAccepted: [
     `Performance data: how long screens and requests take, for ${pct(TRACES_SAMPLE_RATE)} of visits.`,
-    `Session recordings: a replay of taps and screen changes for ${pct(REPLAY_SESSION_SAMPLE_RATE)} of visits${REPLAY_ON_ERROR_SAMPLE_RATE > 0 ? ', and for visits where something goes wrong' : ''}. ${REPLAY_PRIVACY.maskAllText ? 'All text is hidden' : 'Text is shown'}, ${REPLAY_PRIVACY.maskAllInputs ? 'nothing you type is recorded' : 'inputs are recorded'}${REPLAY_PRIVACY.blockAllMedia ? ' and images are blocked' : ''}.`,
-    'While a recording runs, Sentry keeps a session id in this tab\'s session storage. It goes when you close the tab.',
+    `Session replays: a replay of taps and screen changes for ${pct(REPLAY_SESSION_SAMPLE_RATE)} of visits${REPLAY_ON_ERROR_SAMPLE_RATE > 0 ? ', and for visits where something goes wrong' : ''}. ${REPLAY_PRIVACY.maskAllText ? 'All text is hidden' : 'Text is shown'}, ${REPLAY_PRIVACY.maskAllInputs ? 'nothing you type is recorded' : 'inputs are recorded'}${REPLAY_PRIVACY.blockAllMedia ? ' and images are blocked' : ''}.`,
+    'While a replay runs, Sentry keeps a session id in this tab\'s session storage. It goes when you close the tab.',
   ],
-  never: ['No advertising cookies, no account or name, and nothing is sold.'],
+  never: ['No ads, no cross-site tracking, and we never sell your data.'],
 } as const;
 
 export interface MonitoringEnv {

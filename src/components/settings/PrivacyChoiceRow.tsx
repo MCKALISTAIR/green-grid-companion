@@ -25,7 +25,8 @@ export function PrivacyChoiceRow() {
         </div>
         <div>
           <h3 className="font-medium">{CONSENT_SETTINGS_COPY.title}</h3>
-          <p id={descId} className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground">{CONSENT_SETTINGS_COPY.helper}</p>
+          <p id={descId} className="mt-1 text-sm font-medium text-foreground">
             {CONSENT_SETTINGS_COPY.current[choice ?? 'unset']}{' '}
             <Link to="/privacy" className="text-primary underline underline-offset-2">
               {CONSENT_COPY.privacyLink}
@@ -49,6 +50,7 @@ export function PrivacyChoiceRow() {
           </Button>
         ))}
       </div>
+      <p className="text-xs text-muted-foreground">{CONSENT_SETTINGS_COPY.footnote}</p>
     </div>
   );
 }
