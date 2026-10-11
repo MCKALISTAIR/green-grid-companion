@@ -11,10 +11,12 @@ import {
   countSession,
   getNudgeAnswer,
   hasUsefulMoment,
+  markReadingShown,
   setNudgeAnswer,
   shouldNudgeNotifications,
 } from '@/lib/firstLaunch';
 import { NOTIFICATION_NUDGE_COPY } from '@/lib/voice/onboardingCopy';
+import { requestOverlay } from '@/lib/overlayQueue';
 
 export interface NotificationNudgeDeps {
   isSupported: boolean;
@@ -78,6 +80,7 @@ export function useIndexPageEffects({
   const { notification } = useHaptics();
   useEffect(() => {
     if (!hasReading) return;
+    markReadingShown(); // the privacy sheet waits for this, then the tips wait for it
     if (consumeFirstNumber()) void notification(NotificationType.Success);
     startTour();
   }, [hasReading, startTour, notification]);
@@ -102,24 +105,37 @@ export function useIndexPageEffects({
     nudgeShownRef.current = true;
     const { requestPermission, enableCleanAlerts } = notificationNudge;
     const c = NOTIFICATION_NUDGE_COPY;
-    toast(c.title, {
-      description: c.body,
-      duration: 15000,
-      action: {
-        label: c.yes,
-        onClick: async () => {
-          setNudgeAnswer('yes');
-          // Only now does the OS prompt appear.
-          const granted = await requestPermission();
-          if (granted) {
-            enableCleanAlerts();
-            toast.success(c.enabled);
-          } else {
-            toast(c.blocked);
-          }
+    // Wait for our turn: never on top of the privacy choice or the tips.
+    const turn = requestOverlay('other', 'notification-nudge');
+    turn.whenActive(() => {
+      toast(c.title, {
+        description: c.body,
+        duration: 15000,
+        onDismiss: () => turn.release(),
+        onAutoClose: () => turn.release(),
+        action: {
+          label: c.yes,
+          onClick: async () => {
+            turn.release();
+            setNudgeAnswer('yes');
+            // Only now does the OS prompt appear.
+            const granted = await requestPermission();
+            if (granted) {
+              enableCleanAlerts();
+              toast.success(c.enabled);
+            } else {
+              toast(c.blocked);
+            }
+          },
         },
-      },
-      cancel: { label: c.no, onClick: () => setNudgeAnswer('no') },
+        cancel: {
+          label: c.no,
+          onClick: () => {
+            turn.release();
+            setNudgeAnswer('no');
+          },
+        },
+      });
     });
   }, [hasReading, notificationNudge]);
 
