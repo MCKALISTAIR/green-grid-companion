@@ -157,7 +157,8 @@ export default function Settings() {
           isOffline={isOffline}
         />
 
-        <SettingsDebugSection />
+        {/* "Trigger Error" test tools: dev builds, or after unlocking Director Mode. */}
+        {(import.meta.env.DEV || unlocked) && <SettingsDebugSection />}
       </motion.div>
 
       <YearWrapped

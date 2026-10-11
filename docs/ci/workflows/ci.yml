@@ -1,0 +1,60 @@
+name: CI
+
+# Runs on every PR to main AND on every push to main. Lovable commits land on
+# main directly, so the push trigger is what gives those commits a status check.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Typecheck, lint, test, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Typecheck
+        run: npx tsc --noEmit -p tsconfig.app.json
+
+      - name: Lint (errors fail, warnings allowed)
+        run: npx eslint .
+
+      - name: Unit tests (Vitest on Node)
+        run: npx vitest run
+
+      - name: Production build
+        run: npx vite build
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_SUPABASE_PROJECT_ID: ${{ vars.VITE_SUPABASE_PROJECT_ID }}
+
+      - name: Dev/QA pages are not in the production bundle
+        run: |
+          if grep -rlE "Scene Visual Test|GridSense Design System|Turbine animation test" dist/assets/*.js; then
+            echo "::error::Dev/QA page code found in production bundle" >&2
+            exit 1
+          fi

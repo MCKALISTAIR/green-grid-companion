@@ -182,7 +182,9 @@ export default defineConfig(({ mode }) => {
   test: {
     environment: "jsdom",
     globals: true,
-    setupFiles: ["./src/test/setup.ts"],
+    // Absolute path: a relative setup path broke `bun run test` on Windows/OneDrive
+    // ("File URL path must be an absolute path", see the old test_output.txt).
+    setupFiles: [path.resolve(__dirname, "src/test/setup.ts")],
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
     coverage: {
       provider: 'v8',
