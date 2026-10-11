@@ -54,36 +54,51 @@ Services ID (`<appId>.web`). Align it when the final ID is chosen.
 
 ## Privacy manifest: what's declared and why
 
+Reconciled with the App Store privacy label draft
+(`gridsense-legal/app-store-privacy-labels.md`). Keep the two in step.
+
 Tracking: **No**. No tracking domains.
 
 Required-reason APIs (our own code only; Capacitor, Sentry and the plugins ship
-their own manifests):
+their own manifests). Re-check with Xcode's *Generate Privacy Report* after the
+first archive:
 
 - `UserDefaults` → `1C8F.1` (App Group shared between app and widget). App and widget.
 
-Collected data (app manifest; the widget collects nothing):
+Collected data (app manifest; the widget collects nothing; it only sends a
+public region number to the Carbon Intensity API):
 
-| Data type | Linked | Purpose | Source in code |
+| Data type | Linked | Purposes | Source in code |
 |---|---|---|---|
 | Email address | Yes | App functionality | Google / Apple sign-in (Supabase auth) |
-| Name | Yes | App functionality | Apple sign-in `name` scope, Google profile |
+| Name | Yes | App functionality | Apple `name` scope / Google profile; Supabase auth keeps provider metadata |
 | User ID | Yes | App functionality | Supabase user id (anonymous sessions too) |
-| Device ID | Yes | App functionality | APNs device token in `push_subscriptions` |
-| Coarse location | Yes | App functionality | postcode / region in `push_subscriptions`, preferences |
-| Other data types | Yes | App functionality | Octopus account, meter and consumption data; Tesla energy data (feature-flagged) |
+| Coarse location | Yes | App functionality | postcode in `push_subscriptions`, saved locations in `user_preferences` |
+| Precise location | No | App functionality | device coordinates sent to postcodes.io, Nominatim, Open-Meteo and the `weather` edge function (which logs them) |
+| Other user content | Yes | App functionality | saved location names, custom appliance/event names |
+| Other data types | Yes | App functionality | Octopus account, meter, consumption, dispatch data; household profile |
 | Crash data | No | App functionality | Sentry error reports (when DSN set) |
-| Performance data | No | App functionality | Sentry tracing, 10% sample |
-| Product interaction | No | App functionality | Sentry Session Replay (10% of sessions, 100% on error) |
+| Performance data | No | Analytics, App functionality | Sentry tracing, 10% sample |
+| Other diagnostic data | No | App functionality | Sentry breadcrumbs / logger |
+| Product interaction | No | Analytics, App functionality | Sentry Session Replay (10% of sessions, 100% on error) |
 
-Judgement calls to review against the final privacy policy and App Store
-privacy labels:
+Why precise location is declared: Apple counts data as collected when it leaves
+the device and can be kept longer than needed to answer the request. The
+`weather` function logs `lat, lon` and Open-Meteo keeps request logs with
+coordinates, so "not collected" is not defensible today. It is not linked
+because the coordinates are not stored against a user ID.
 
-- **Precise location** is not declared. Device coordinates are sent in real time
-  to postcodes.io (and Nominatim as fallback) to find the region and are not
-  stored by GridSense. If that changes, declare Precise Location.
-- If Session Replay is turned off or gated behind consent, Product Interaction
-  can be removed. If Sentry is tied to the signed-in user, flip the Sentry rows
-  to Linked = Yes.
+Open items:
+
+- **Name**: no app code persists the name, but Supabase auth stores OAuth
+  provider metadata. Declared conservatively; remove only if that metadata is
+  stripped.
+- **Device ID** was removed (APNs tokens are not Apple's "Device ID"; the
+  push row is covered by User ID / Coarse location), matching the label draft.
+- **Product interaction / performance data**: drop if Sentry Session Replay or
+  tracing is removed or gated off; flip to Linked if `Sentry.setUser` is ever added.
+- **Tesla** is feature-flagged off and not declared. Add it to Other data types
+  (and re-review location) if it is enabled.
 - Lovable's hosted analytics script only runs on the hosted website, not in the
   bundled iOS app.
 
