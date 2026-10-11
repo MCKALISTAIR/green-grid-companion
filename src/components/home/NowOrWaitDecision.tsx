@@ -1,103 +1,58 @@
-import { Link } from 'react-router-dom';
-import { ArrowRight, BatteryCharging, Clock3, Leaf } from 'lucide-react';
-import { motion } from 'framer-motion';
-import type { ForecastData } from '@/lib/carbonApi';
-import { getNowOrWaitDecision, isAnyTimePlan } from '@/lib/nowOrWait';
-import { useCountdown } from '@/hooks/useCountdown';
-import { cn } from '@/lib/utils';
-import { useEnergyFacts } from '@/hooks/useEnergyFacts';
+import { useEffect, useRef } from 'react';
+import { Check, Clock3 } from 'lucide-react';
+import type { NowOrWaitDecision as Decision } from '@/lib/nowOrWait';
 import { voiceNowOrWait } from '@/lib/voice/nowOrWaitVoice';
-import { markUsefulMoment } from '@/lib/firstLaunch';
+import type { CommentaryTone } from '@/lib/tone';
+import { useHaptics } from '@/hooks/useHaptics';
+import { cn } from '@/lib/utils';
 
 interface NowOrWaitDecisionProps {
-  intensity: number;
-  forecast: ForecastData[];
+  /** One decision object, shared with the Next 24 hours chart and the day sheet. */
+  decision: Decision;
+  tone: CommentaryTone;
 }
 
-/**
- * Primary home-sheet action: answer "use energy now or wait?"
- * before any secondary insight chrome.
- */
-export function NowOrWaitDecision({ intensity, forecast }: NowOrWaitDecisionProps) {
-  const decision = getNowOrWaitDecision(intensity, forecast);
-  const isUseNow = decision.action === 'use_now';
-  const countdown = useCountdown(decision.countdownTarget);
-  const { tone } = useEnergyFacts();
-  const voiced = voiceNowOrWait(decision, tone);
+/** Home "Now or wait?" card (spec §4.4). Logic is planLoad's; tails come from the voice module (#49). */
+export function NowOrWaitDecision({ decision, tone }: NowOrWaitDecisionProps) {
+  const go = decision.action !== 'wait';
+  const { impactLight } = useHaptics();
+  const prev = useRef(decision.action);
+  useEffect(() => {
+    if (prev.current !== decision.action) void impactLight();
+    prev.current = decision.action;
+  }, [decision.action, impactLight]);
+
+  const { headline, detail, tail } = voiceNowOrWait(decision, tone);
 
   return (
-    <motion.section
-      layout
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-      className={cn(
-        'sheet-surface px-4 py-4',
-        isUseNow
-          ? 'bg-intensity-very-low/[0.1] border-intensity-very-low/25'
-          : 'border-border/60',
-      )}
+    <section
+      className="rounded-[20px] bg-card px-4 pb-3.5 pt-4 shadow-[var(--shadow-md)]"
       aria-label="Now or wait decision"
       data-tour="now-or-wait"
+      data-testid="now-or-wait"
+      data-window-start={decision.windowStart?.toISOString() ?? ''}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">Now or wait?</span>
+        <span className="inline-flex h-7 items-center gap-1.5 rounded-full bg-muted px-2.5 text-[12px] font-bold text-foreground">
+          <Clock3 className="h-3.5 w-3.5" aria-hidden />
+          3-hour load
+        </span>
+      </div>
+      <div className="mt-2.5 flex items-center gap-3">
         <div
-          className={cn(
-            'w-11 h-11 rounded-2xl flex items-center justify-center shrink-0',
-            isUseNow ? 'bg-intensity-very-low/20' : 'bg-muted',
-          )}
+          className={cn('grid h-11 w-11 shrink-0 place-items-center rounded-[14px] text-primary', go ? 'bg-primary-soft' : 'bg-muted')}
+          aria-hidden
         >
-          {isUseNow ? (
-            <BatteryCharging className="w-5 h-5 text-intensity-very-low" />
-          ) : (
-            <Clock3 className="w-5 h-5 text-muted-foreground" />
-          )}
+          {go ? <Check className="h-[22px] w-[22px]" strokeWidth={2.6} /> : <Clock3 className="h-[22px] w-[22px]" strokeWidth={2.4} />}
         </div>
-
-        <div className="flex-1 min-w-0 space-y-1.5">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h2
-              className={cn(
-                'text-lg font-semibold tracking-tight font-display',
-                isUseNow ? 'text-intensity-very-low' : 'text-foreground',
-              )}
-            >
-              {voiced.headline}
-            </h2>
-            {isUseNow && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-intensity-very-low/20 text-intensity-very-low">
-                <Leaf className="w-3 h-3" />
-                {isAnyTimePlan(decision) ? 'Any time' : 'Now'}
-              </span>
-            )}
-            {!isUseNow && countdown && (
-              <span className="text-[10px] font-semibold tabular-nums px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
-                {countdown}
-              </span>
-            )}
-          </div>
-
-          <p className="text-sm text-muted-foreground leading-snug">
-            {voiced.detail}
-            {voiced.tail && <span className="text-foreground/80"> {voiced.tail}</span>}
-          </p>
-          <p className="text-xs text-muted-foreground/90 leading-snug line-clamp-2">{decision.tip}</p>
-
-          <Link
-            to="/planner"
-            onClick={markUsefulMoment}
-            className={cn(
-              'inline-flex items-center gap-1.5 mt-2 text-sm font-semibold transition-colors',
-              isUseNow
-                ? 'text-intensity-very-low hover:text-intensity-very-low/80'
-                : 'text-primary hover:text-primary/80',
-            )}
-          >
-            Plan a load
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
+        <div className="min-w-0" aria-live="polite">
+          <h2 className="text-[22px] font-extrabold leading-[1.2] tracking-[-0.02em] text-foreground">{headline}</h2>
+          {tail && <p className="text-[13.5px] font-bold text-primary">{tail}</p>}
         </div>
       </div>
-    </motion.section>
+      <p className="mt-2.5 text-[14px] leading-[1.5] text-foreground">{detail}</p>
+      <p className="mt-1.5 text-[12px] font-semibold leading-[1.4] text-muted-foreground">{decision.tip}</p>
+    </section>
   );
 }
