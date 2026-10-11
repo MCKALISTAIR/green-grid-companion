@@ -57,9 +57,9 @@ export function isEstimatedActual(item: Pick<ForecastData, 'intensity'>): boolea
   return Boolean(item.intensity?.actualEstimated);
 }
 
-/** Series label for past values: "Estimate" if any value is an app estimate. */
-export function actualSeriesLabel(items: Pick<ForecastData, 'intensity'>[]): 'Actual' | 'Estimate' {
-  return items.some(isEstimatedActual) ? 'Estimate' : 'Actual';
+/** Series label for past values: "Est" if any value is an app estimate (never called "actual"). */
+export function actualSeriesLabel(items: Pick<ForecastData, 'intensity'>[]): 'Actual' | 'Est' {
+  return items.some(isEstimatedActual) ? 'Est' : 'Actual';
 }
 
 export const REGION_IDS = {

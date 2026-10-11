@@ -18,15 +18,16 @@
     --popover: 0 0% 100%;
     --popover-foreground: 210 28% 14%;
 
-    /* Primary green for clean energy */
-    --primary: 158 64% 36%;
+    /* Primary green for clean energy (spec v1.0 §2.1: white on primary 5.1:1) */
+    --primary: 158 64% 30%;
+    --primary-soft: 158 50% 94%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 198 28% 90%;
     --secondary-foreground: 210 28% 14%;
 
     --muted: 198 22% 92%;
-    --muted-foreground: 205 12% 40%;
+    --muted-foreground: 205 14% 36%;
 
     --accent: 38 92% 58%;
     --accent-foreground: 32 70% 18%;
@@ -36,7 +37,7 @@
 
     --border: 200 18% 88%;
     --input: 200 18% 88%;
-    --ring: 158 64% 36%;
+    --ring: 158 64% 30%;
 
     --radius: 1.25rem;
 
@@ -46,6 +47,18 @@
     --intensity-moderate: 45 90% 55%;
     --intensity-high: 25 90% 55%;
     --intensity-very-high: 0 70% 50%;
+    /* Band ink: text, chart lines, chip text (fills above are decorative only) */
+    --intensity-very-low-ink: 152 72% 25%;
+    --intensity-low-ink: 85 70% 25%;
+    --intensity-moderate-ink: 36 90% 30%;
+    --intensity-high-ink: 22 85% 36%;
+    --intensity-very-high-ink: 0 70% 40%;
+
+    /* Chart series (detail / History) */
+    --series-forecast: 217 75% 50%;
+    --series-actual: 215 25% 20%;
+    --series-estimate: 205 14% 46%;
+    --chart-grid: 205 20% 60%;
 
     /* Generation mix colors */
     --gen-wind: 200 80% 55%;
@@ -72,12 +85,12 @@
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 210 28% 14%;
-    --sidebar-primary: 158 64% 36%;
+    --sidebar-primary: 158 64% 30%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 198 28% 90%;
     --sidebar-accent-foreground: 210 28% 14%;
     --sidebar-border: 200 18% 88%;
-    --sidebar-ring: 158 64% 36%;
+    --sidebar-ring: 158 64% 30%;
     --sidebar: 0 0% 98%;
 
     --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
@@ -107,6 +120,18 @@
 
     --primary: 158 55% 48%;
     --primary-foreground: 220 25% 10%;
+    --primary-soft: 158 30% 18%;
+
+    /* Band ink in dark = fills at L 62% (spec §2.1); checked on render, see PR notes */
+    --intensity-very-low-ink: 150 70% 62%;
+    --intensity-low-ink: 85 60% 62%;
+    --intensity-moderate-ink: 45 90% 62%;
+    --intensity-high-ink: 25 90% 62%;
+    --intensity-very-high-ink: 0 70% 62%;
+    --series-forecast: 217 85% 66%;
+    --series-actual: 0 0% 92%;
+    --series-estimate: 215 10% 62%;
+    --chart-grid: 215 12% 55%;
 
     --secondary: 220 18% 22%;
     --secondary-foreground: 0 0% 95%;

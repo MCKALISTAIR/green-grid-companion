@@ -39,6 +39,7 @@ export type NowOrWaitAction = 'use_now' | 'wait' | 'check_forecast';
  * - near_zero: the whole window is at or near zero carbon, so any time works
  * - flat: the whole window stays about the same, so any time works
  * - missing_data: half hours needed to judge "start now" are missing, so no answer
+ * - too_tight: a deadline is set and a load started now can't finish by it
  */
 export type NowOrWaitReason =
   | 'no_forecast'
@@ -47,7 +48,8 @@ export type NowOrWaitReason =
   | 'cleaner_later'
   | 'near_zero'
   | 'flat'
-  | 'missing_data';
+  | 'missing_data'
+  | 'too_tight';
 
 export interface LoadWindow {
   start: Date;
@@ -74,6 +76,12 @@ export interface LoadPlan {
   partial: boolean;
   /** Half hours missing inside the window we looked at (gaps, or a missing current half hour). */
   missingSlots: number;
+  /** The "start now" window (null when it can't be judged). */
+  nowWindow: LoadWindow | null;
+  /** Load length actually used, in 30-minute slots. */
+  loadSlots: number;
+  /** When a deadline is set: the cleanest start ignoring the deadline (for the hint). */
+  bestWithoutDeadline?: LoadWindow | null;
 }
 
 export interface PlanLoadOptions {
@@ -85,6 +93,8 @@ export interface PlanLoadOptions {
   slots?: number;
   /** Only consider starts before now + this many hours. null = whole forecast. */
   horizonHours?: number | null;
+  /** Load must finish by this instant (ms). Windows ending later are skipped. */
+  deadlineMs?: number | null;
 }
 
 interface Slot {
@@ -124,6 +134,70 @@ function windowAvg(slots: Slot[], i: number, len: number, firstValue?: number): 
   return sum / len;
 }
 
+/**
+ * Cleanest contiguous window of `len` slots starting at index >= `startIdx`
+ * and before `startBefore` (ms), ending by `mustEndBy`. Earliest wins ties;
+ * windows with a gap are skipped. Shared by planLoad and findCleanestWindow so
+ * the home card, Planner and day chart can't pick different windows.
+ */
+function scanCleanest(
+  slots: Slot[],
+  startIdx: number,
+  startBefore: number,
+  len: number,
+  mustEndBy: number = Infinity,
+): { i: number; avg: number } | null {
+  let best: { i: number; avg: number } | null = null;
+  for (let i = Math.max(0, startIdx); i < slots.length; i++) {
+    if (slots[i].from >= startBefore) break;
+    if (i + len - 1 >= slots.length || slots[i + len - 1].to > mustEndBy) continue;
+    const avg = windowAvg(slots, i, len);
+    if (avg === null) continue;
+    if (!best || avg < best.avg) best = { i, avg };
+  }
+  return best;
+}
+
+export interface FindCleanestWindowOptions {
+  /** Window must start at or after this instant (ms). */
+  fromMs: number;
+  /** Window must end by this instant (ms), e.g. the end of a London day. */
+  toMs: number;
+  /** Load length in 30-minute slots (defaults to the home card's 3 hours). */
+  slots?: number;
+}
+
+/**
+ * Cleanest `slots`-long window fully inside [fromMs, toMs], scored exactly like
+ * the Now-or-wait card (forecast values, gaps break a window, earliest wins
+ * ties). Null when no complete window fits.
+ */
+export function findCleanestWindow(
+  forecast: ForecastData[] | null | undefined,
+  { fromMs, toMs, slots: len = HOME_LOAD_SLOTS }: FindCleanestWindowOptions,
+): LoadWindow | null {
+  const all = toSlots(forecast ?? []).filter((s) => s.from >= fromMs && s.to <= toMs);
+  if (all.length < len) return null;
+  const best = scanCleanest(all, 0, toMs, len, toMs);
+  if (!best) return null;
+  return {
+    start: new Date(all[best.i].from),
+    end: new Date(all[best.i + len - 1].to),
+    avg: Math.round(best.avg),
+  };
+}
+
+/**
+ * The window a chart should shade for this plan: the later window when the
+ * answer is "wait", the start-now window when it's "now", and nothing when any
+ * time works or there's no answer. Same object the card describes.
+ */
+export function shadedWindow(plan: LoadPlan): LoadWindow | null {
+  if (plan.action === 'wait') return plan.best;
+  if (plan.reason === 'now_is_best' || plan.reason === 'small_gain') return plan.nowWindow;
+  return null;
+}
+
 function emptyPlan(nowAvg: number | null): LoadPlan {
   return {
     action: 'check_forecast',
@@ -136,6 +210,8 @@ function emptyPlan(nowAvg: number | null): LoadPlan {
     coveredHours: 0,
     partial: true,
     missingSlots: 0,
+    nowWindow: null,
+    loadSlots: 0,
   };
 }
 
@@ -149,6 +225,7 @@ export function planLoad({
   now = new Date(),
   slots: requestedSlots = HOME_LOAD_SLOTS,
   horizonHours = DECISION_HORIZON_HOURS,
+  deadlineMs = null,
 }: PlanLoadOptions): LoadPlan {
   const nowMs = now.getTime();
   const live = isUsableNumber(liveIntensity) ? liveIntensity : null;
@@ -163,13 +240,17 @@ export function planLoad({
 
   if (upcoming.length === 0) return emptyPlan(live);
 
-  const horizonEnd = horizonHours == null ? Infinity : nowMs + horizonHours * 3600_000;
+  const deadline = deadlineMs != null && Number.isFinite(deadlineMs) ? deadlineMs : null;
+  const horizonEnd = Math.min(
+    horizonHours == null ? Infinity : nowMs + horizonHours * 3600_000,
+    deadline ?? Infinity,
+  );
   // Slots we can use: everything up to the horizon (a load may run past it,
   // but it must *start* before it).
   const lastUsefulTo = upcoming[upcoming.length - 1].to;
   const coveredMs = Math.min(lastUsefulTo, horizonEnd) - nowMs;
   const coveredHours = Math.max(0, Math.round((coveredMs / 3600_000) * 2) / 2);
-  const partial = horizonHours != null && lastUsefulTo < horizonEnd - SLOT_MS;
+  const partial = (horizonHours != null || deadline != null) && lastUsefulTo < horizonEnd - SLOT_MS;
 
   // Partial forecast: shrink the load window so there's still something
   // later to compare with. Full forecasts (~96 slots) are unaffected.
@@ -195,19 +276,37 @@ export function planLoad({
   const current = upcoming[0].from <= nowMs ? 0 : -1;
   const nowAvg = current === 0 ? windowAvg(upcoming, 0, len, live ?? undefined) : null;
   if (nowAvg === null) {
-    return { ...emptyPlan(live), reason: 'missing_data', coveredHours, partial, missingSlots: Math.max(1, missingSlots) };
-  }
-
-  // Cleanest later start (earliest wins ties).
-  let best: { i: number; avg: number } | null = null;
-  for (let i = current === 0 ? 1 : 0; i < upcoming.length; i++) {
-    if (upcoming[i].from >= horizonEnd) break;
-    const avg = windowAvg(upcoming, i, len);
-    if (avg === null) continue;
-    if (!best || avg < best.avg) best = { i, avg };
+    return { ...emptyPlan(live), reason: 'missing_data', coveredHours, partial, missingSlots: Math.max(1, missingSlots), loadSlots: len };
   }
 
   const roundedNow = Math.round(nowAvg);
+  const nowWindow: LoadWindow = {
+    start: new Date(upcoming[0].from),
+    end: new Date(upcoming[len - 1].to),
+    avg: roundedNow,
+  };
+
+  // Deadline: a load started now must finish by it, or the answer is too_tight.
+  const mustEndBy = deadline ?? Infinity;
+  if (deadline != null && nowMs + len * SLOT_MS > deadline) {
+    return { ...emptyPlan(roundedNow), action: 'check_forecast', reason: 'too_tight', coveredHours, partial, missingSlots, nowWindow, loadSlots: len };
+  }
+
+  // Cleanest later start (earliest wins ties).
+  const best = scanCleanest(upcoming, current === 0 ? 1 : 0, horizonEnd, len, mustEndBy);
+  let bestWithoutDeadline: LoadWindow | null | undefined;
+  if (deadline != null) {
+    const free = scanCleanest(
+      upcoming,
+      current === 0 ? 1 : 0,
+      horizonHours == null ? Infinity : nowMs + horizonHours * 3600_000,
+      len,
+    );
+    bestWithoutDeadline = free
+      ? { start: new Date(upcoming[free.i].from), end: new Date(upcoming[free.i + len - 1].to), avg: Math.round(free.avg) }
+      : null;
+  }
+
   const base: LoadPlan = {
     action: 'use_now',
     reason: 'now_is_best',
@@ -219,6 +318,9 @@ export function planLoad({
     coveredHours,
     partial,
     missingSlots,
+    nowWindow,
+    loadSlots: len,
+    ...(bestWithoutDeadline !== undefined ? { bestWithoutDeadline } : {}),
   };
 
   // Whole window at/near zero or flat: any start time is as good as another,

@@ -22,7 +22,8 @@ export default {
 				foreground: 'hsl(var(--foreground))',
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
+					foreground: 'hsl(var(--primary-foreground))',
+					soft: 'hsl(var(--primary-soft))'
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
@@ -71,6 +72,16 @@ export default {
 					moderate: 'hsl(var(--intensity-moderate))',
 					high: 'hsl(var(--intensity-high))',
 					'very-high': 'hsl(var(--intensity-very-high))',
+					'very-low-ink': 'hsl(var(--intensity-very-low-ink))',
+					'low-ink': 'hsl(var(--intensity-low-ink))',
+					'moderate-ink': 'hsl(var(--intensity-moderate-ink))',
+					'high-ink': 'hsl(var(--intensity-high-ink))',
+					'very-high-ink': 'hsl(var(--intensity-very-high-ink))',
+				},
+				series: {
+					forecast: 'hsl(var(--series-forecast))',
+					actual: 'hsl(var(--series-actual))',
+					estimate: 'hsl(var(--series-estimate))'
 				},
 				gen: {
 					wind: 'hsl(var(--gen-wind))',

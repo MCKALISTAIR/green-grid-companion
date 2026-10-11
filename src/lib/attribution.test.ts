@@ -30,7 +30,7 @@ describe('attribution', () => {
     expect(items[0].intensity.actual).toBe(197); // 50% gas × NESO CCGT 394
     expect(isEstimatedActual(items[0])).toBe(true);
     expect(isEstimatedActual(items[1])).toBe(false);
-    expect(actualSeriesLabel(items)).toBe('Estimate');
+    expect(actualSeriesLabel(items)).toBe('Est');
     expect(actualSeriesLabel([items[1]])).toBe('Actual');
   });
 });
