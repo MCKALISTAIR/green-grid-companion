@@ -73,6 +73,16 @@ SQL
   fi
 fi
 
+if [[ -f "$HERE/user_data_cleanup_tests.sql" ]]; then
+  if ! out=$($PSQL -q -v ON_ERROR_STOP=1 -d "$DB" -At -F ' | ' -f - < "$HERE/user_data_cleanup_tests.sql" 2>&1); then
+    echo "user_data_cleanup_tests.sql errored:"; echo "$out"; exit 1
+  fi
+  echo "$out" | grep -E '^(PASS|FAIL) ' || true
+  summary=$(echo "$out" | tail -n 1)
+  echo "user data cleanup passed | failed: $summary"
+  [[ "$summary" =~ \|\ 0$ ]] || exit 1
+fi
+
 # 20261011100000_user_data_cleanup.sql: safe to re-apply, and it removes readings
 # orphaned before the trigger existed (fixture meter M-2 has no meter row).
 CLEANUP="$REPO/supabase/migrations/20261011100000_user_data_cleanup.sql"
