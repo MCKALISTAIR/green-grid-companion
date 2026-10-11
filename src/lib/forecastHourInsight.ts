@@ -10,7 +10,7 @@ export type ForecastHourInsight = {
   timeLabel: string;
   /** gCO₂/kWh value shown for the slot (actual preferred when present). */
   value: number;
-  /** National Grid intensity band for the slot. */
+  /** NESO intensity band for the slot. */
   band: string;
   /** Friendly / snarky condition line matching the home HUD. */
   condition: string;

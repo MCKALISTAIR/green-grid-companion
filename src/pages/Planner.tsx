@@ -33,6 +33,7 @@ const DEFAULT_APPLIANCES = [
 ];
 
 import { useAppLocation } from '@/contexts/LocationContext';
+import { EstimateDisclaimer } from '@/components/attribution/EstimateDisclaimer';
 
 export default function Planner() {
     const { settings, updateSetting } = useSettings();
@@ -419,6 +420,7 @@ export default function Planner() {
                                             <p className="text-xs text-muted-foreground mt-1">
                                                 {selectedAppliance.power} kW for {selectedAppliance.duration}h, using the forecast averages.
                                             </p>
+                                            <EstimateDisclaimer className="mt-1" />
                                         </div>
                                     )}
                                 </Card>

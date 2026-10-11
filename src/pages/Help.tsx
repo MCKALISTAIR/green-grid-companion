@@ -8,6 +8,7 @@ import {
     AccordionTrigger,
 } from '@/components/ui/accordion';
 import { motion } from 'framer-motion';
+import { DataAttribution } from '@/components/attribution/DataAttribution';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -70,15 +71,19 @@ export default function Help() {
                                 <div className="space-y-3 text-sm">
                                     <p><strong>Intensity Levels:</strong></p>
                                     <ul className="list-disc pl-5 space-y-1">
-                                        <li><strong>Very Low (0-50g)</strong>: Best time to use energy</li>
-                                        <li><strong>Low (50-100g)</strong>: Good time to use energy</li>
-                                        <li><strong>Moderate (100-150g)</strong>: Average carbon intensity</li>
-                                        <li><strong>High (150-200g)</strong>: Try to defer usage if possible</li>
-                                        <li><strong>Very High (200g+)</strong>: Avoid heavy usage</li>
+                                        <li><strong>Very Low</strong>: Best time to use energy</li>
+                                        <li><strong>Low</strong>: Good time to use energy</li>
+                                        <li><strong>Moderate</strong>: Average carbon intensity</li>
+                                        <li><strong>High</strong>: Try to defer usage if possible</li>
+                                        <li><strong>Very High</strong>: Avoid heavy usage</li>
                                     </ul>
+                                    <p className="text-muted-foreground">These bands come from NESO&apos;s Carbon Intensity API. NESO sets the gCO₂/kWh thresholds and lowers them over time as the grid gets cleaner, so the same number can land in a different band from one year to the next.</p>
 
                                     <p className="pt-2"><strong>How often does data update?</strong></p>
-                                    <p>Data updates every 30 minutes from the National Grid. Pull down on the home screen to manually refresh.</p>
+                                    <p>Data updates every 30 minutes from NESO. Pull down on the home screen to manually refresh.</p>
+
+                                    <p className="pt-2"><strong>Where does the data come from?</strong></p>
+                                    <DataAttribution className="text-muted-foreground" />
 
                                     <p className="pt-2"><strong>Why do regions differ?</strong></p>
                                     <p>The UK grid is divided into regions with different generation mixes. Windy Scotland often has lower intensity than areas relying on gas power.</p>

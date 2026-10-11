@@ -20,7 +20,7 @@ import {
 import { logger } from '@/lib/logger';
 
 // Calculate ms until next half-hour boundary (:00 or :30)
-// National Grid updates at these times, so we align our refreshes
+// NESO updates at these times, so we align our refreshes
 const getMsUntilNextHalfHour = (): number => {
   const now = new Date();
   const minutes = now.getMinutes();
@@ -243,7 +243,7 @@ export function useCarbonData(postcode: string) {
   const region = regionalDataQuery.data?.shortname
     ?? postcodeQuery.data?.shortname
     ?? foundRegion?.shortname
-    ?? (nationalQuery.data ? 'National Grid' : '');
+    ?? (nationalQuery.data ? 'National' : '');
 
   // Generation mix from regional or national
   const generationMix = regionalData?.generationmix ?? generationQuery.data ?? [];

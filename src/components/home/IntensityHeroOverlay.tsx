@@ -16,6 +16,7 @@ import { useEnergyFacts } from '@/hooks/useEnergyFacts';
 import { useTimeOfDay } from '@/hooks/useTimeOfDay';
 import { getCleanlinessBand } from '@/hooks/useCleanlinessBand';
 import type { GenerationMix } from '@/lib/carbonApi';
+import { CompactDataAttribution } from '@/components/attribution/DataAttribution';
 
 interface IntensityHeroOverlayProps {
   postcode: string;
@@ -255,9 +256,10 @@ export function IntensityHeroOverlay({
                       </p>
                     )}
                     <p className="text-muted-foreground">
-                      National Grid ESO publishes new figures every{' '}
+                      NESO publishes new figures every{' '}
                       <span className="font-semibold text-foreground">30 minutes</span>.
                     </p>
+                    <CompactDataAttribution />
                   </PopoverContent>
                 </Popover>
               </motion.div>

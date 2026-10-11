@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { VERSION_STRING } from '@/lib/version';
 import { settingsItemVariants } from './settingsMotion';
+import { DataAttribution } from '@/components/attribution/DataAttribution';
 
 interface SettingsFooterProps {
   isLinked: boolean;
@@ -28,17 +29,7 @@ export function SettingsFooter({
           Alistair McKay
         </a>
       </p>
-      <p>
-        Carbon data from{' '}
-        <a
-          href="https://www.carbonintensity.org.uk/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline hover:text-foreground transition-colors"
-        >
-          National Grid ESO
-        </a>
-      </p>
+      <DataAttribution className="max-w-sm mx-auto" />
       {isLinked && (
         <p>
           Footprint data powered by{' '}

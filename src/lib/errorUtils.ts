@@ -225,7 +225,7 @@ export function getErrorInfo(error: unknown): ErrorInfo {
     if (lowerMessage.includes('500') || lowerMessage.includes('server error')) {
         return {
             title: 'Server Error',
-            description: 'The National Grid service is having issues.',
+            description: 'The NESO carbon data service is having issues.',
             steps: [
                 "This is not your fault",
                 "Services usually recover within minutes",
