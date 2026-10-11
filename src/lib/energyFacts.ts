@@ -359,7 +359,7 @@ export const ENERGY_FACTS: EnergyFact[] = [
     {
         id: 'interconnector_4',
         text: "ElecLink, one of the power links to France, runs through the Channel Tunnel.",
-        source: 'https://www.eleclink.co.uk/',
+        source: 'https://www.eleclink.co.uk/about-us/what-we-do',
         category: 'general',
         tone: 'friendly',
         condition: () => true
