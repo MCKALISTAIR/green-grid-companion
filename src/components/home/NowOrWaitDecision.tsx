@@ -7,6 +7,7 @@ import { useCountdown } from '@/hooks/useCountdown';
 import { cn } from '@/lib/utils';
 import { useEnergyFacts } from '@/hooks/useEnergyFacts';
 import { voiceNowOrWait } from '@/lib/voice/nowOrWaitVoice';
+import { markUsefulMoment } from '@/lib/firstLaunch';
 
 interface NowOrWaitDecisionProps {
   intensity: number;
@@ -84,6 +85,7 @@ export function NowOrWaitDecision({ intensity, forecast }: NowOrWaitDecisionProp
 
           <Link
             to="/planner"
+            onClick={markUsefulMoment}
             className={cn(
               'inline-flex items-center gap-1.5 mt-2 text-sm font-semibold transition-colors',
               isUseNow

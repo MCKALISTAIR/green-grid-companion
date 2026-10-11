@@ -1,4 +1,6 @@
 // UK Carbon Intensity API Integration
+import { toOutwardCode } from '@/lib/postcode';
+
 const BASE_URL = 'https://api.carbonintensity.org.uk';
 
 export interface IntensityData {
@@ -117,7 +119,7 @@ export async function getCurrentIntensity(signal?: AbortSignal): Promise<Intensi
 
 // Get intensity for a specific postcode
 export async function getRegionalIntensity(postcode: string, signal?: AbortSignal): Promise<RegionalData> {
-  const cleanPostcode = postcode.split(' ')[0].toUpperCase();
+  const cleanPostcode = toOutwardCode(postcode).toUpperCase();
   const response = await fetchWithNoCache(`${BASE_URL}/regional/postcode/${cleanPostcode}`, signal);
   if (!response.ok) {
     throw new Error(`Failed to fetch regional data: ${response.status}`);
@@ -129,7 +131,7 @@ export async function getRegionalIntensity(postcode: string, signal?: AbortSigna
 
 // Get 48hr forecast for a postcode  
 export async function getRegionalForecast(postcode: string, signal?: AbortSignal): Promise<ForecastData[]> {
-  const cleanPostcode = postcode.split(' ')[0].toUpperCase();
+  const cleanPostcode = toOutwardCode(postcode).toUpperCase();
   const now = new Date().toISOString();
   const response = await fetchWithNoCache(`${BASE_URL}/regional/intensity/${now}/fw48h/postcode/${cleanPostcode}`, signal);
   if (!response.ok) {
