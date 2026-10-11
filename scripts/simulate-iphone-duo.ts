@@ -35,7 +35,8 @@ async function seedStorage(page: Page) {
   await page.addInitScript(() => {
     localStorage.setItem('onboarding_complete', 'true');
     localStorage.setItem('product_tour_seen', 'true');
-    localStorage.setItem('cookie-consent', 'accepted');
+    localStorage.setItem('cookie-consent', 'declined');
+    localStorage.setItem('cookie-consent-version', '2');
     localStorage.setItem('gridgreen-postcode', 'EH1');
     localStorage.setItem('gridgreen-scene-preference', 'countryside');
   });

@@ -9,6 +9,7 @@ import type { FactTone } from '@/lib/energyFacts';
 import type { SceneType } from '@/hooks/useSceneType';
 import { settingsItemVariants } from './settingsMotion';
 import { SettingsSectionHeading } from './SettingsSectionHeading';
+import { clearConsent, describeConsent, getConsent } from '@/lib/consent';
 
 type TonePreference = FactTone | 'mixed';
 type ScenePreference = 'auto' | SceneType;
@@ -164,9 +165,7 @@ export function SettingsPreferencesSection({
             <div>
               <h3 className="font-medium">Cookie Preferences</h3>
               <p className="text-sm text-muted-foreground">
-                {localStorage.getItem('cookie-consent')
-                  ? `Currently: ${localStorage.getItem('cookie-consent')}`
-                  : 'Not yet set'}
+                {`Currently: ${describeConsent(getConsent())}`}
               </p>
             </div>
           </div>
@@ -174,7 +173,7 @@ export function SettingsPreferencesSection({
             variant="outline"
             size="sm"
             onClick={() => {
-              localStorage.removeItem('cookie-consent');
+              clearConsent();
               toast.success('Cookie preferences reset. The banner will reappear.');
               window.location.reload();
             }}

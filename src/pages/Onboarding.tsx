@@ -107,10 +107,8 @@ const Onboarding = () => {
 
     const completeOnboarding = () => {
         localStorage.setItem('onboarding_complete', 'true');
-        // Essential storage only — treat continuing setup as consent so home is not blocked.
-        if (!localStorage.getItem('cookie-consent')) {
-            localStorage.setItem('cookie-consent', 'accepted');
-        }
+        // Do not record consent here: the (non-blocking) cookie banner asks on the
+        // home screen, and optional diagnostics stay off until the user accepts.
         navigate('/');
     };
 
