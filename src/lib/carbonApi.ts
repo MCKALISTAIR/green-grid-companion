@@ -276,12 +276,34 @@ export function getFuelColor(fuel: string): string {
   return colors[fuel.toLowerCase()] || 'bg-muted';
 }
 
-// Carbon Intensity Factors (gCO2/kWh)
+/**
+ * Per-fuel carbon intensity factors (gCO₂/kWh), from NESO's Carbon Intensity
+ * methodology, Table 1, and the live factors endpoint:
+ *   https://github.com/carbon-intensity/methodology/raw/master/Carbon%20Intensity%20Forecast%20Methodology.pdf
+ *   https://api.carbonintensity.org.uk/intensity/factors
+ *
+ * Mapping from the API's generation-mix fuels:
+ * - gas: NESO publishes Combined Cycle 394 and Open Cycle 651; the mix only
+ *   says "gas", so we use CCGT (394), which supplies almost all GB gas power.
+ * - other: NESO "Other" 300. (Oil, 935, isn't a separate fuel in the mix.)
+ * - nuclear, hydro, solar, wind (and pumped storage): 0.
+ * - imports: NESO has no single import factor. It works one out per
+ *   interconnected country each day from ENTSO-E data (defaults: French 53,
+ *   Belgian 179, Irish 458, Dutch 474) and the mix doesn't say where imports
+ *   came from. We use the French default, 53: France is the largest source
+ *   by interconnector capacity, and checked against a week of NESO regional
+ *   forecasts (4–11 Oct 2026) it was the closest single value for the
+ *   regions with the most imports (South England, South East, London). It
+ *   still overstates imports in a few regions and understates them in East
+ *   England, so these are GridSense estimates, never NESO actuals.
+ */
+export const IMPORTS_FACTOR = 53;
+
 export const CARBON_FACTORS: Record<string, number> = {
   biomass: 120,
-  coal: 820,
-  imports: 250, // Average estimate
-  gas: 390,
+  coal: 937,
+  imports: IMPORTS_FACTOR,
+  gas: 394,
   nuclear: 0,
   other: 300,
   hydro: 0,
