@@ -107,12 +107,12 @@ export async function installMocks(context, scenarioIn = {}) {
   await context.route(/sentry\.io|ingest\./, (route) => route.fulfill({ status: 204, body: '' }));
 }
 
-/** localStorage seed: onboarding done, no tour/splash, consent declined, South Scotland postcode. */
+/** localStorage seed: onboarding done, no tour/splash/notification ask (#52), consent declined, South Scotland postcode. */
 export function seedStorage({ postcode = 'EH1 1YZ', theme = 'light' } = {}) {
   return `(() => {
     if (sessionStorage.getItem('__seeded')) return; sessionStorage.setItem('__seeded', '1');
     const s = { 'onboarding_complete': 'true', 'product_tour_seen': 'true', 'skip_splash': 'true',
-      'cookie-consent': 'declined', 'cookie-consent-version': '2', 'gridgreen-postcode': ${JSON.stringify(postcode)},
+      'gridsense-notification-nudge': 'no', 'cookie-consent': 'declined', 'cookie-consent-version': '2', 'gridgreen-postcode': ${JSON.stringify(postcode)},
       'vite-ui-theme': ${JSON.stringify(theme)} };
     for (const [k, v] of Object.entries(s)) localStorage.setItem(k, v);
   })();`;

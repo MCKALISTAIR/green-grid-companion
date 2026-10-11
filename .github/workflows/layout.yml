@@ -19,7 +19,8 @@ jobs:
   layout:
     name: Layout guard (Playwright)
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # The guard itself takes ~2 min; 10 min leaves room for installs without letting a hang burn 20.
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -37,8 +38,20 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Cache Playwright browsers
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock', 'bun.lockb') }}
+
       - name: Install Playwright Chromium
+        if: steps.pw-cache.outputs.cache-hit != 'true'
         run: node node_modules/playwright/cli.js install --with-deps chromium
+
+      - name: Install Playwright system deps
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: node node_modules/playwright/cli.js install-deps chromium
 
       - name: Build production bundle
         run: npx vite build
@@ -48,4 +61,5 @@ jobs:
           VITE_SUPABASE_PROJECT_ID: ${{ vars.VITE_SUPABASE_PROJECT_ID }}
 
       - name: Run layout guard
+        timeout-minutes: 6
         run: node scripts/layout-guard.mjs

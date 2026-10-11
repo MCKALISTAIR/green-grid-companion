@@ -921,7 +921,9 @@ p, blockquote {
    width/height >= 1/1.55 ≈ 0.645. max-width keeps desktop/ultrawide on classic floor. */
 @media (min-aspect-ratio: 10 / 15.5) and (max-width: 960px) {
   .home-scene {
-    height: min(48dvh, 360px);
+    /* 384px (was 360px): portrait tablets (e.g. iPad 820x1180) also match this query, and
+       with the band line's quip the HUD's "x mins ago" row ran into the scalloped edge. */
+    height: min(48dvh, 384px);
     min-height: 260px;
     max-height: min(420px, 58dvh);
   }

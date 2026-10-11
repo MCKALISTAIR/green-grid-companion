@@ -15,6 +15,7 @@
  *   PW_CHROMIUM=/usr/bin/google-chrome  use a system Chrome instead of Playwright's
  */
 import { spawn } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 import { installMocks, seedStorage, SCENARIOS } from './layout/mock-api.mjs';
 import { GUARD_VIEWPORTS, checkHero, checkSheetEdge, checkScrollSpace } from './layout/checks.mjs';
@@ -29,15 +30,22 @@ const HERO_STATES = [
 const SCROLL_ROUTES = ['/history', '/settings', '/achievements', '/help', '/glossary', '/terms'];
 
 async function startPreview() {
-  const proc = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], { stdio: 'pipe', env: process.env });
+  // Run vite's own bin with node (not `npx`): killing an npx wrapper left the vite
+  // grandchild alive holding our pipes, so the script never exited in CI. Own
+  // process group so we can kill the whole tree.
+  const viteBin = fileURLToPath(new URL('../node_modules/vite/bin/vite.js', import.meta.url));
+  const proc = spawn(process.execPath, [viteBin, 'preview', '--port', String(PORT), '--strictPort'], {
+    stdio: ['ignore', 'ignore', 'pipe'], env: process.env, detached: true,
+  });
   proc.stderr.on('data', (d) => process.stderr.write(`[preview] ${d}`));
+  const stop = () => { try { process.kill(-proc.pid, 'SIGTERM'); } catch { /* already gone */ } };
   const url = `http://localhost:${PORT}`;
   for (let i = 0; i < 60; i++) {
-    try { if ((await fetch(url)).ok) return { proc, url }; } catch { /* not up yet */ }
+    try { if ((await fetch(url)).ok) return { stop, url }; } catch { /* not up yet */ }
     await new Promise((r) => setTimeout(r, 500));
   }
-  proc.kill();
-  throw new Error('vite preview did not start');
+  stop();
+  throw new Error('vite preview did not start within 30s');
 }
 
 async function openPage(browser, base, { viewport, scenario, route = '/' }) {
@@ -82,13 +90,14 @@ async function main() {
     }
   } finally {
     await browser.close();
-    server?.proc.kill('SIGTERM');
+    server?.stop();
   }
   if (failures.length) {
     console.error(`\nLayout guard: ${failures.length} failure(s) in ${checks} page checks:\n` + failures.map((f) => `  ✗ ${f}`).join('\n'));
     process.exit(1);
   }
   console.log(`Layout guard: ${checks} page checks passed.`);
+  process.exit(0); // don't let a stray handle keep CI waiting
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });
