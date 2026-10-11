@@ -95,7 +95,7 @@ export default function Glossary() {
     ];
 
     return (
-        <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
+        <div className="bg-background lg:pb-6">
             {/* Header */}
             <div className="md:hidden sticky top-0 z-40 flex items-center px-4 pb-4 pt-[calc(max(env(safe-area-inset-top),59px)+1rem)] bg-background/80 backdrop-blur-md border-b">
                 <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="-ml-2">

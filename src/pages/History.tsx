@@ -155,7 +155,7 @@ export default function HistoryPage() {
     if (isRegionError || isError) {
         const errorInfo = getErrorInfo(regionError || error);
         return (
-            <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
+            <div className="bg-background" data-testid="history-page">
                 <div className="p-4 space-y-6 pt-[calc(max(env(safe-area-inset-top),59px)+2rem)]">
                     <div>
                         <h1 className="text-2xl font-bold">Grid History</h1>
@@ -165,7 +165,6 @@ export default function HistoryPage() {
                         title={errorInfo.title}
                         description={errorInfo.description}
                         retry={() => date ? window.location.reload() : historyQuery.refetch()}
-                        fullScreen
                     />
                 </div>
             </div>
@@ -175,7 +174,7 @@ export default function HistoryPage() {
     // Empty state when no history data
     if (!isRegionLoading && !isLoading && data.length === 0) {
         return (
-            <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
+            <div className="bg-background" data-testid="history-page">
                 <div className="p-4 space-y-6 pt-[calc(max(env(safe-area-inset-top),59px)+2rem)]">
                     <div>
                         <h1 className="text-2xl font-bold">Grid History</h1>
@@ -185,7 +184,6 @@ export default function HistoryPage() {
                         icon={BarChart3}
                         title="No Historical Data"
                         description="We couldn't find any historical carbon intensity data for this region."
-                        fullScreen
                     />
                 </div>
             </div>
@@ -193,7 +191,9 @@ export default function HistoryPage() {
     }
 
     return (
-        <div className="page-shell">
+        // page-shell's min-height (100dvh) + bottom padding stacked on AppLayout's own
+        // nav padding (main pb-28), so the page always scrolled past its last card.
+        <div className="page-shell page-shell--fit" data-testid="history-page">
             <motion.div 
                 className="page-shell-inner space-y-6"
                 variants={containerVariants}
@@ -288,10 +288,13 @@ export default function HistoryPage() {
                     ) : (
                         <motion.div
                             key="content"
-                            initial={{ opacity: 0, y: 12 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -12 }}
-                            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                            // Variant labels (not an animate object) so the itemVariants children
+                            // below are driven to "show"; with an object they could stay at
+                            // opacity 0 and leave blank, scrollable space on the page.
+                            variants={containerVariants}
+                            initial="hidden"
+                            animate="show"
+                            exit="hidden"
                             className="space-y-4"
                         >
                         {showChartTip && (

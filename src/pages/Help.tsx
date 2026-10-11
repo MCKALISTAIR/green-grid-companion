@@ -27,7 +27,7 @@ export default function Help() {
     const navigate = useNavigate();
 
     return (
-        <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
+        <div className="bg-background lg:pb-6">
             <motion.div 
                 className="p-4 pt-[calc(max(env(safe-area-inset-top),59px)+1rem)] max-w-2xl mx-auto space-y-6"
                 variants={containerVariants}

@@ -772,6 +772,16 @@ p, blockquote {
   padding-bottom: calc(6rem + env(safe-area-inset-bottom));
 }
 
+/* For pages inside AppLayout, whose <main> already reserves room for the bottom nav:
+   no forced viewport height and no second bottom padding. */
+.page-shell.page-shell--fit {
+  min-height: 0;
+  padding-bottom: 0;
+}
+@media (min-width: 1024px) {
+  .page-shell.page-shell--fit { padding-bottom: 1.5rem; }
+}
+
 .page-shell-inner {
   padding-left: 1rem;
   padding-right: 1rem;

@@ -14,7 +14,7 @@ export default function AchievementsPage() {
     const progressPercent = Math.round((unlockedCount / totalCount) * 100);
 
     return (
-        <div className="page-shell">
+        <div className="page-shell page-shell--fit">
             <div className="page-shell-inner space-y-6">
                 <PageHeader
                     title="Trophy Room"

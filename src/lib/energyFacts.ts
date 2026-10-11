@@ -29,6 +29,12 @@ export interface EnergyFact {
     category: FactCategory;
     tone: FactTone;
     condition?: (context: FactContext) => boolean;
+    /**
+     * Where the claim was checked (reputable source URL; several separated by " ; ").
+     * Required for any line that states a number, date or record
+     * (enforced by src/lib/energyFacts.test.ts). Unverified facts were removed.
+     */
+    source?: string;
 }
 
 export const ENERGY_FACTS: EnergyFact[] = [
@@ -78,13 +84,6 @@ export const ENERGY_FACTS: EnergyFact[] = [
         condition: (c) => c.intensity > 200
     },
     {
-        id: 'dirty_snark_2',
-        text: "Coal is having a party and you're paying for it.",
-        category: 'dirty_energy',
-        tone: 'snarky',
-        condition: (c) => c.intensity > 200
-    },
-    {
         id: 'dirty_snark_3',
         text: "Eww. The electricity is spicy today.",
         category: 'dirty_energy',
@@ -129,13 +128,6 @@ export const ENERGY_FACTS: EnergyFact[] = [
         condition: (c) => c.windSpeed > 20
     },
     {
-        id: 'windy_friendly_1',
-        text: "High winds mean plenty of renewable energy from turbines today.",
-        category: 'windy',
-        tone: 'friendly',
-        condition: (c) => c.windSpeed > 15
-    },
-    {
         id: 'windy_friendly_2',
         text: "Wind farms generate significant power during gusty weather like this.",
         category: 'windy',
@@ -168,13 +160,6 @@ export const ENERGY_FACTS: EnergyFact[] = [
 
     // --- GENERAL / RANDOM ---
     {
-        id: 'general_snark_1',
-        text: "The UK hasn't burned coal for 0 days... oh wait.",
-        category: 'general',
-        tone: 'snarky',
-        condition: () => true
-    },
-    {
         id: 'general_snark_2',
         text: "If you're reading this, go drink some water.",
         category: 'general',
@@ -189,20 +174,6 @@ export const ENERGY_FACTS: EnergyFact[] = [
         condition: () => true
     },
     {
-        id: 'general_friendly_1',
-        text: "Did you know? A single wind turbine can power 1,500 homes.",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'general_friendly_2',
-        text: "Switching to LEDs can save up to 75% lighting energy.",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
         id: 'general_friendly_3',
         text: "Shifting usage to off-peak times helps balance the grid.",
         category: 'general',
@@ -210,214 +181,60 @@ export const ENERGY_FACTS: EnergyFact[] = [
         condition: () => true
     },
     {
-        id: 'general_friendly_4',
-        text: "The MySE 16-260 wind turbine stands 242m tall - that's taller than the Golden Gate Bridge towers!",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
         id: 'general_friendly_5',
-        text: "In 2020, the UK went a record-breaking 67 days, 22 hours without burning any coal.",
+        text: "In 2020, Britain went a record 67 days, 22 hours and 55 minutes without coal power.",
+        source: 'https://www.nationalgrideso.com/news/record-breaking-2020-becomes-greenest-year-britains-electricity ; https://www.independent.co.uk/climate-change/news/coal-free-power-uk-record-time-2020-how-long-renewable-energy-a9570891.html',
         category: 'general',
         tone: 'friendly',
         condition: () => true
     },
     {
         id: 'general_friendly_6',
-        text: "The Hornsea 2 offshore wind farm covers an area larger than the Maldives!",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'general_friendly_7',
-        text: "Scotland generates enough renewable energy to power all its homes twice over.",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'general_friendly_8',
-        text: "One rotation of a giant wind turbine can power a UK home for an entire day.",
+        text: "The Hornsea 2 offshore wind farm covers 462 km², more than the land area of the Maldives.",
+        source: 'https://cdn.orsted.com/-/media/www/docs/corp/uk/hornsea-project-two/hornsea-two-project-summary.pdf ; https://www.cia.gov/the-world-factbook/countries/maldives/',
         category: 'general',
         tone: 'friendly',
         condition: () => true
     },
     {
         id: 'general_friendly_9',
-        text: "The UK's first offshore wind farm opened in 2000 with just 2 turbines. Now we have thousands!",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'general_friendly_10',
-        text: "Solar panels in the UK generate enough electricity to power 4 million homes.",
+        text: "Britain's first offshore wind farm, at Blyth, opened in 2000 with just 2 turbines.",
+        source: 'https://en.wikipedia.org/wiki/Blyth_Offshore_Wind_Farm',
         category: 'general',
         tone: 'friendly',
         condition: () => true
     },
     {
         id: 'general_friendly_11',
-        text: "Nuclear power plants can run continuously for 18-24 months before refueling.",
+        text: "Many nuclear reactors run for 18 to 24 months between refuelling outages.",
+        source: 'https://www.eia.gov/todayinenergy/detail.php?id=37252',
         category: 'general',
         tone: 'friendly',
         condition: () => true
     },
     {
         id: 'general_friendly_12',
-        text: "The UK achieved its first coal-free day in over 130 years on April 21, 2017.",
+        text: "Britain had its first full day without coal power since 1882 on 21 April 2017.",
+        source: 'https://www.bbc.co.uk/news/uk-39675418',
         category: 'general',
         tone: 'friendly',
         condition: () => true
     },
     {
-        id: 'general_friendly_13',
-        text: "Wind turbines can operate at over 95% availability throughout their lifetime.",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'general_friendly_14',
-        text: "Renewable energy created over 44,000 jobs in the UK renewable electricity sector.",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'general_friendly_15',
-        text: "A single offshore wind turbine blade can be longer than a football pitch!",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'general_friendly_16',
-        text: "The UK has the world's largest installed offshore wind capacity.",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'general_friendly_17',
-        text: "Tidal power is predictable up to 100 years in advance - unlike wind or solar!",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'general_friendly_18',
-        text: "UK renewable energy capacity has quadrupled in the last decade.",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'general_friendly_19',
-        text: "Modern wind turbines can generate power at wind speeds as low as 7 mph.",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'general_friendly_20',
-        text: "Hydroelectric dams can switch from zero to full power in just 90 seconds!",
+        id: 'coal_power_ended',
+        text: "Britain's last coal power station, Ratcliffe-on-Soar, closed on 30 September 2024.",
+        source: 'https://www.uniper.energy/united-kingdom/power-plants-united-kingdom/ratcliffe-soar',
         category: 'general',
         tone: 'friendly',
         condition: () => true
     },
     // --- ELECTRIC VEHICLES ---
-    {
-        id: 'ev_friendly_1',
-        text: "EVs become greener than petrol cars after just 30,000 miles - including manufacturing!",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'ev_friendly_2',
-        text: "Electric motors are 95% efficient vs petrol engines at just 20-30%. Physics wins.",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'ev_friendly_3',
-        text: "Charging an EV overnight (7 hours) costs about £3-£5 for 200 miles of range.",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'ev_friendly_4',
-        text: "An EV charged during low-carbon periods can emit 3x less CO₂ than the same journey in a petrol car.",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'ev_friendly_5',
-        text: "Regenerative braking in EVs can recover up to 70% of energy when slowing down.",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'ev_friendly_6',
-        text: "The average UK EV driver saves £1,000+ per year on fuel compared to petrol.",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'ev_snark_1',
-        text: "Your EV uses the energy of a hairdryer to go a mile. Your petrol car? A bonfire.",
-        category: 'general',
-        tone: 'snarky',
-        condition: () => true
-    },
-    {
-        id: 'ev_snark_2',
-        text: "EVs: 95% efficient. Petrol cars: 20% efficient. The other 80%? Literally just heat.",
-        category: 'general',
-        tone: 'snarky',
-        condition: () => true
-    },
-    {
-        id: 'ev_snark_3',
-        text: "A full EV 'tank' costs less than a fancy coffee. Checkmate, fossil fuels.",
-        category: 'general',
-        tone: 'snarky',
-        condition: () => true
-    },
 
     // --- HEAT PUMPS (Air Source) ---
     {
         id: 'ashp_friendly_1',
         text: "Air source heat pumps deliver 3-4 kWh of heat for every 1 kWh of electricity used!",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'ashp_friendly_2',
-        text: "Heat pumps work efficiently even at -15°C, making them perfect for UK winters.",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'ashp_friendly_3',
-        text: "Switching from a gas boiler to a heat pump can cut your heating emissions by 70%.",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'ashp_friendly_4',
-        text: "Heat pumps can both heat AND cool your home - perfect for those rare UK heatwaves!",
+        source: 'https://energysavingtrust.org.uk/advice/in-depth-guide-to-heat-pumps/',
         category: 'general',
         tone: 'friendly',
         condition: () => true
@@ -425,6 +242,7 @@ export const ENERGY_FACTS: EnergyFact[] = [
     {
         id: 'ashp_snark_1',
         text: "Heat pumps are literally fridges running backwards. Science is wild.",
+        source: 'https://energysavingtrust.org.uk/advice/in-depth-guide-to-heat-pumps/',
         category: 'general',
         tone: 'snarky',
         condition: () => true
@@ -432,84 +250,15 @@ export const ENERGY_FACTS: EnergyFact[] = [
     {
         id: 'ashp_snark_2',
         text: "300% efficient heating? Your GCSE physics teacher is screaming. But it's true.",
+        source: 'https://energysavingtrust.org.uk/advice/in-depth-guide-to-heat-pumps/',
         category: 'general',
         tone: 'snarky',
         condition: () => true
     },
 
     // --- GROUND SOURCE HEAT PUMPS ---
-    {
-        id: 'gshp_friendly_1',
-        text: "Ground source heat pumps can achieve 400% efficiency - 4x more heat than electricity used!",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'gshp_friendly_2',
-        text: "The ground stays a constant 10-15°C year-round, making GSHPs incredibly stable and efficient.",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'gshp_friendly_3',
-        text: "Ground source heat pump systems can last 50+ years with minimal maintenance.",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'gshp_friendly_4',
-        text: "GSHPs are virtually silent and invisible once installed - all the action is underground!",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'gshp_snark_1',
-        text: "Your garden is sitting on a free, infinite heat source. Ground source heat pumps: nature's cheat code.",
-        category: 'general',
-        tone: 'snarky',
-        condition: () => true
-    },
-    {
-        id: 'gshp_snark_2',
-        text: "Ground source heat pumps: because why burn gas when you can harvest free underground warmth?",
-        category: 'general',
-        tone: 'snarky',
-        condition: () => true
-    },
 
     // --- HOME ENERGY EFFICIENCY ---
-    {
-        id: 'efficiency_friendly_1',
-        text: "LED bulbs use 75% less energy than traditional bulbs and last 25x longer!",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'efficiency_friendly_2',
-        text: "Proper loft insulation can save £355/year and prevent 1 tonne of CO₂ emissions.",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'efficiency_friendly_3',
-        text: "A smart thermostat can reduce heating bills by 20-30% through automated scheduling.",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'efficiency_friendly_4',
-        text: "Switching one bulb to LED saves £7/year and 40kg CO₂ - imagine your whole house!",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
     {
         id: 'efficiency_snark_1',
         text: "Your old lightbulbs are basically tiny space heaters that happen to glow. Upgrade already.",
@@ -517,39 +266,11 @@ export const ENERGY_FACTS: EnergyFact[] = [
         tone: 'snarky',
         condition: () => true
     },
-    {
-        id: 'efficiency_snark_2',
-        text: "Leaving your TV on standby all year wastes £80. That's like 16 fancy coffees. You monster.",
-        category: 'general',
-        tone: 'snarky',
-        condition: () => true
-    },
 
     // --- BATTERY STORAGE & GRID BALANCING ---
     {
-        id: 'battery_friendly_1',
-        text: "The UK's largest battery storage facility can power 300,000 homes for 2 hours!",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
         id: 'battery_friendly_2',
         text: "Home battery systems let you store cheap overnight electricity for daytime use.",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'battery_friendly_3',
-        text: "Vehicle-to-Grid (V2G) technology lets your EV power your home during peak times!",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'battery_friendly_4',
-        text: "Grid-scale batteries respond to frequency changes in milliseconds, keeping the lights on.",
         category: 'general',
         tone: 'friendly',
         condition: () => true
@@ -572,7 +293,8 @@ export const ENERGY_FACTS: EnergyFact[] = [
     // --- HYDROELECTRIC POWER ---
     {
         id: 'hydro_friendly_1',
-        text: "Dinorwig power station can go from 0 to 1,800MW in just 16 seconds - Europe's fastest!",
+        text: "Dinorwig power station can go from 0 to 1,728MW in about 16 seconds.",
+        source: 'https://www.power-technology.com/features/featuredinorwig-a-unique-power-plant-in-the-north-of-wales-5773187/',
         category: 'general',
         tone: 'friendly',
         condition: () => true
@@ -585,22 +307,9 @@ export const ENERGY_FACTS: EnergyFact[] = [
         condition: () => true
     },
     {
-        id: 'hydro_friendly_3',
-        text: "Dinorwig's reservoir holds enough water to make 2.4 billion cups of tea!",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'hydro_friendly_4',
-        text: "Small-scale hydro systems can generate power for rural homes 24/7 from streams.",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
         id: 'hydro_snark_1',
         text: "Dinorwig is carved inside a mountain. Because regular power stations are too mainstream.",
+        source: 'https://www.ice.org.uk/what-is-civil-engineering/infrastructure-projects/dinorwig-power-station',
         category: 'general',
         tone: 'snarky',
         condition: () => true
@@ -614,34 +323,6 @@ export const ENERGY_FACTS: EnergyFact[] = [
     },
 
     // --- DOMESTIC SOLAR PANELS ---
-    {
-        id: 'solar_domestic_1',
-        text: "A typical UK home solar system produces 3,500 kWh/year - enough to run all your appliances!",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'solar_domestic_2',
-        text: "Solar panels work on cloudy days - UK homes can still generate 10-25% capacity in diffuse light.",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'solar_domestic_3',
-        text: "Over 1.3 million UK homes now have solar panels - enough to power a city twice the size of Leeds!",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'solar_domestic_4',
-        text: "Solar panels typically pay for themselves in 10-15 years and last 25+ years.",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
     {
         id: 'solar_domestic_snark_1',
         text: "Your roof is just sitting there. Doing nothing. Put some panels on it already.",
@@ -658,60 +339,12 @@ export const ENERGY_FACTS: EnergyFact[] = [
     },
 
     // --- SMART ENERGY USAGE ---
-    {
-        id: 'smart_usage_1',
-        text: "Running your dishwasher at 2am instead of 6pm can cut carbon emissions by 50%!",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'smart_usage_2',
-        text: "Time-of-use tariffs can save £300+/year if you shift usage to off-peak hours.",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'smart_usage_3',
-        text: "Charging your EV between midnight and 5am can cost 70% less than peak times.",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'smart_usage_4',
-        text: "Smart meters show real-time energy use, helping UK households save an average of £75/year.",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'smart_usage_snark_1',
-        text: "Washing clothes at 3am is weird. Saving 60% on carbon? Worth it.",
-        category: 'general',
-        tone: 'snarky',
-        condition: () => true
-    },
-    {
-        id: 'smart_usage_snark_2',
-        text: "Your oven doesn't need to preheat for 20 minutes. That's a scam by Big Oven.",
-        category: 'general',
-        tone: 'snarky',
-        condition: () => true
-    },
 
     // --- GRID INTERCONNECTORS ---
     {
-        id: 'interconnector_1',
-        text: "The UK can import 7,400MW from Europe via undersea cables - enough for 7 million homes!",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
         id: 'interconnector_2',
         text: "The North Sea Link to Norway brings renewable hydro power to the UK via a 720km cable.",
+        source: 'https://www.northsealink.com/north-sea-link/overview',
         category: 'general',
         tone: 'friendly',
         condition: () => true
@@ -725,7 +358,8 @@ export const ENERGY_FACTS: EnergyFact[] = [
     },
     {
         id: 'interconnector_4',
-        text: "The France interconnector runs through the Channel Tunnel - sharing power and infrastructure!",
+        text: "ElecLink, one of the power links to France, runs through the Channel Tunnel.",
+        source: 'https://www.eleclink.co.uk/',
         category: 'general',
         tone: 'friendly',
         condition: () => true
@@ -747,69 +381,13 @@ export const ENERGY_FACTS: EnergyFact[] = [
 
     // --- EVERYDAY CARBON COMPARISONS ---
     {
-        id: 'comparison_friendly_1',
-        text: "Boiling only the water you need saves 11kg CO₂/year - same as 55 miles of driving!",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'comparison_friendly_2',
-        text: "Streaming 1 hour of Netflix uses about 100g CO₂ - the same as driving 400 metres.",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'comparison_friendly_3',
-        text: "Sending 65 emails equals 1km of driving. Maybe skip 'reply all' next time!",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'comparison_friendly_4',
-        text: "Drying clothes on a rack instead of a tumble dryer saves 440kg CO₂/year per household.",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'comparison_friendly_5',
-        text: "Your phone charger uses about 5 kWh/year. That's roughly 1.5kg CO₂ - basically nothing!",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
-    {
-        id: 'comparison_snark_1',
-        text: "You're boiling enough water for 12 teas when you need one. Calm down.",
-        category: 'general',
-        tone: 'snarky',
-        condition: () => true
-    },
-    {
         id: 'comparison_snark_2',
         text: "Leaving your laptop charger plugged in wastes power. It's not going to run away.",
         category: 'general',
         tone: 'snarky',
         condition: () => true
     },
-    {
-        id: 'comparison_snark_3',
-        text: "Bitcoin mining uses more electricity than Argentina. The entire country. Let that sink in.",
-        category: 'general',
-        tone: 'snarky',
-        condition: () => true
-    },
 
-    {
-        id: 'coal_free_record',
-        text: "The UK's record coal-free run was 67 days, 22 hours in 2020.",
-        category: 'general',
-        tone: 'friendly',
-        condition: () => true
-    },
     // Note: coal_free_current fact will be added dynamically by useEnergyFacts hook
 ];
 
