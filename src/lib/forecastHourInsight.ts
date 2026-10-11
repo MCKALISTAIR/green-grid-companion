@@ -2,6 +2,7 @@ import { format, parseISO, isBefore, differenceInMinutes } from 'date-fns';
 import type { ForecastData } from '@/lib/carbonApi';
 import { getConditionLabel, type ConditionTone } from '@/lib/conditionLabels';
 import type { NowOrWaitAction } from '@/lib/nowOrWait';
+import { getSlotDisplayValue } from '@/lib/forecastUtils';
 
 export type ForecastHourInsight = {
   /** Forecast slot index into the array. */
@@ -34,8 +35,8 @@ const WASH: Record<string, string> = {
   'very high': 'bg-intensity-very-high/10 border-intensity-very-high/25',
 };
 
-function resolveValue(item: ForecastData): number {
-  return item.intensity.actual ?? item.intensity.forecast;
+function resolveValue(item: ForecastData, now: Date): number {
+  return getSlotDisplayValue(item, now) ?? 0;
 }
 
 function resolveBand(item: ForecastData): string {
@@ -132,7 +133,7 @@ export function getForecastHourInsight(
   const to = parseISO(item.to);
   const isPast = isBefore(to, now);
   const isCurrent = !isBefore(now, time) && isBefore(now, to);
-  const value = resolveValue(item);
+  const value = resolveValue(item, now);
   const band = resolveBand(item);
   const inBestWindow = bestBlockIndexes.has(selectedIndex);
   const minutesUntil = Math.max(0, differenceInMinutes(time, now));

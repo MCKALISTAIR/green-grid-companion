@@ -51,6 +51,7 @@ const Index = () => {
     previousIntensity,
     index,
     region,
+    regionId,
     generationMix,
     forecast,
     lastUpdated,
@@ -302,6 +303,8 @@ const Index = () => {
                             showWeatherInInsights={prefs.showWeatherInInsights}
                             gardenDays={sceneGrowth.gardenDays}
                             growthStage={sceneGrowth.stage}
+                            regionId={regionId ?? null}
+                            regionName={region}
                           />
                         )}
                       </motion.div>
