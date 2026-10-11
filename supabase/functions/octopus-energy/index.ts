@@ -374,7 +374,7 @@ Deno.serve(async (req: Request) => {
                     if (point) intensityMap.set(item.from, point);
                     else skippedIntensity++;
                   }
-                  if (skippedIntensity > 0) console.warn(`[FOOTPRINT] Skipped ${skippedIntensity} half-hour(s) with no usable intensity data for meter ${mpan}`);
+                  if (skippedIntensity > 0) console.warn(`[FOOTPRINT] Skipped ${skippedIntensity} half-hour(s) with no usable intensity data`);
 
                   // Store footprint records if intensity was found
                   const footprintRecords: FootprintRecord[] = [];
@@ -488,7 +488,7 @@ Deno.serve(async (req: Request) => {
                   if (point) intensityMap.set(item.from, point);
                   else skippedIntensity++;
                 }
-                if (skippedIntensity > 0) console.warn(`[FOOTPRINT] Skipped ${skippedIntensity} half-hour(s) with no usable intensity data for meter ${mpan}`);
+                if (skippedIntensity > 0) console.warn(`[FOOTPRINT] Skipped ${skippedIntensity} half-hour(s) with no usable intensity data`);
 
                 const footprintRecords: FootprintRecord[] = [];
                 for (const record of consumption) {
@@ -1159,7 +1159,7 @@ Deno.serve(async (req: Request) => {
             if (point) intensityMap.set(item.from, point);
             else skippedIntensity++;
           }
-          if (skippedIntensity > 0) console.warn(`[FOOTPRINT] Skipped ${skippedIntensity} half-hour(s) with no usable intensity data for meter ${mpan}`);
+          if (skippedIntensity > 0) console.warn(`[FOOTPRINT] Skipped ${skippedIntensity} half-hour(s) with no usable intensity data`);
         } catch (error) {
           console.error(`Batch fetch failed for meter ${mpan}:`, error);
           continue;
