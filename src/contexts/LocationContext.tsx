@@ -3,6 +3,7 @@ import { resolvePostcode } from '@/lib/location';
 import { Capacitor } from '@capacitor/core';
 import { Geolocation } from '@capacitor/geolocation';
 import { logger } from '@/lib/logger';
+import { toOutwardCode } from '@/lib/postcode';
 
 interface Coordinates {
   lat: number;
@@ -26,7 +27,12 @@ const DEFAULT_COORDS = { lat: 51.5074, lon: -0.1278 };
 
 export function LocationProvider({ children }: { children: React.ReactNode }) {
   const [postcode, setPostcodeState] = useState<string>(() => {
-    return localStorage.getItem(POSTCODE_KEY) || '';
+    // Only the outward code is kept. Older installs may have a full postcode
+    // saved, so trim it on first read.
+    const saved = localStorage.getItem(POSTCODE_KEY) || '';
+    const outward = saved ? toOutwardCode(saved) : '';
+    if (outward !== saved) localStorage.setItem(POSTCODE_KEY, outward);
+    return outward;
   });
 
   const [coordinates, setCoordinates] = useState<Coordinates | null>(() => {
@@ -49,7 +55,8 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const setPostcode = useCallback((newPostcode: string) => {
+  const setPostcode = useCallback((input: string) => {
+    const newPostcode = input ? toOutwardCode(input) : '';
     setPostcodeState(newPostcode);
     if (newPostcode) {
       localStorage.setItem(POSTCODE_KEY, newPostcode);

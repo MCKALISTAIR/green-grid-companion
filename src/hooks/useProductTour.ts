@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
-import { PRODUCT_TOUR_STEPS } from '@/data/product-tour';
+import { buildProductTourSteps } from '@/data/product-tour';
+import { readTone } from '@/lib/tone';
+import { isNationalMode } from '@/lib/postcode';
 
 // Wait for page elements to render and settle before starting the tour
 const TOUR_START_DELAY_MS = 1000;
@@ -15,7 +17,11 @@ function buildViewportAwareSteps() {
     const isMobile = window.innerWidth < LG_BREAKPOINT;
     const navPrefix = isMobile ? '#bottom-nav' : '#side-nav';
 
-    return PRODUCT_TOUR_STEPS.map(step => {
+    const steps = buildProductTourSteps({
+        tone: readTone(),
+        national: isNationalMode(localStorage.getItem('gridgreen-postcode')),
+    });
+    return steps.map(step => {
         if (typeof step.element === 'string' && step.element.includes('nav-')) {
             return {
                 ...step,
@@ -28,14 +34,27 @@ function buildViewportAwareSteps() {
 
 function createTourDriver() {
     return driver({
-        showProgress: true,
+        showProgress: false,
         animate: true,
         allowClose: true,
-        doneBtnText: 'Got it!',
-        nextBtnText: 'Next →',
-        prevBtnText: '← Back',
+        // "previous" is reused as "Skip tips"; there's nothing to go back to in a 2-tip tour.
+        showButtons: ['previous', 'next'],
+        doneBtnText: 'Done',
+        nextBtnText: 'Next',
+        prevBtnText: 'Skip tips',
         popoverClass: 'gridsense-tour-popover',
         steps: buildViewportAwareSteps(),
+        onPopoverRender: (popover, { driver: d }) => {
+            if (d.isLastStep()) {
+                popover.previousButton.style.display = 'none';
+            } else {
+                popover.previousButton.disabled = false;
+                popover.previousButton.classList.remove('driver-popover-btn-disabled');
+            }
+        },
+        onPrevClick: (_el, _step, { driver: d }) => {
+            d.destroy();
+        },
         onDestroyed: () => {
             localStorage.setItem('product_tour_seen', 'true');
         }
