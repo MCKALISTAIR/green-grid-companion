@@ -6,7 +6,7 @@ import { isSameDay, subDays } from 'date-fns';
 
 export function AchievementManager() {
     const { unlock, progress } = useAchievements();
-    const { intensity, isLoading } = useCarbonData(''); // National data
+    const { intensity, isLoading, isError } = useCarbonData(''); // National data
 
     useEffect(() => {
         const checkAchievements = () => {
@@ -29,7 +29,7 @@ export function AchievementManager() {
             }
 
             // 3. Clean Streak
-            if (!isLoading && intensity !== undefined && intensity < 50) {
+            if (!isLoading && !isError && intensity !== undefined && intensity < 50) {
                 const streakKey = 'gridgreen-clean-streak-last';
                 const lastStreakDate = localStorage.getItem(streakKey);
 
@@ -65,7 +65,7 @@ export function AchievementManager() {
 
         const timeout = setTimeout(checkAchievements, 2000); // Wait for data load
         return () => clearTimeout(timeout);
-    }, [unlock, progress, intensity, isLoading]);
+    }, [unlock, progress, intensity, isLoading, isError]);
 
     return null; // Invisible component
 }

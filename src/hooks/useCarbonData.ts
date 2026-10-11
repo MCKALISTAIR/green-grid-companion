@@ -222,10 +222,13 @@ export function useCarbonData(postcode: string) {
   // Extract data from specific regional query or fallback to national
   const regionalData = regionalDataQuery.data?.data?.[0];
 
-  // Use regional data if available, otherwise national
-  const intensity = regionalData?.intensity?.forecast
-    ?? nationalQuery.data?.intensity?.forecast
-    ?? 0;
+  // Use regional data if available, otherwise national. `intensity` is only 0 when
+  // there is no reading yet (hasReading = false); isLoading/isError cover that case
+  // so the UI never shows 0 / 'moderate' as if it were real.
+  const liveForecast = regionalData?.intensity?.forecast
+    ?? nationalQuery.data?.intensity?.forecast;
+  const hasReading = typeof liveForecast === 'number' && Number.isFinite(liveForecast);
+  const intensity = hasReading ? liveForecast : 0;
   const index = regionalData?.intensity?.index
     ?? nationalQuery.data?.intensity?.index
     ?? 'moderate';
@@ -254,8 +257,13 @@ export function useCarbonData(postcode: string) {
     (!!regionId && !regionalDataQuery.data && regionalDataQuery.isLoading)
   ) : (!nationalQuery.data && nationalQuery.isLoading);
 
-  // isLoading should only be true on initial load, not during background refetches
-  const isLoading = isInitialLoad;
+  // isLoading should only be true on initial load, not during background refetches.
+  // Also stay loading while there's no reading but a query is still on its way
+  // (e.g. postcode lookup or national fallback still pending).
+  const awaitingReading = !hasReading && (
+    nationalQuery.isLoading || regionalListQuery.isLoading || postcodeQuery.isLoading || regionalDataQuery.isLoading
+  );
+  const isLoading = isInitialLoad || awaitingReading;
 
   return {
     // Current intensity
@@ -284,9 +292,10 @@ export function useCarbonData(postcode: string) {
 
     // Robustness: Only report error if we have NO data to show.
     // If Regional fails but National is okay, we show National (graceful degradation).
-    isError: postcode
+    // Also an error if everything has settled and there's still no reading to show.
+    isError: (postcode
       ? ((regionalListQuery.isError || regionalDataQuery.isError) && nationalQuery.isError)
-      : nationalQuery.isError,
+      : nationalQuery.isError) || (!hasReading && !isLoading),
 
     // Flag to explicitly identify graceful degradation so UI can warn the user
     isDegraded: !!postcode && (regionalDataQuery.isError || regionalListQuery.isError) && !nationalQuery.isError,

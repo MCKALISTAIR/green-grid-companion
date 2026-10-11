@@ -244,7 +244,11 @@ const Onboarding = () => {
                 </CardContent>
                 <CardFooter className="justify-center py-4 bg-white/5 border-t border-white/5 text-xs text-white/60">
                     <p>
-                        By continuing, you agree to our{' '}
+                        By continuing you agree to the{' '}
+                        <a href="/terms" className="underline hover:text-white/95 transition-colors">
+                            Terms
+                        </a>{' '}
+                        and have read the{' '}
                         <a href="/privacy" className="underline hover:text-white/95 transition-colors">
                             Privacy Policy
                         </a>

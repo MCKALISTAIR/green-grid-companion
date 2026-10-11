@@ -231,8 +231,8 @@ Deno.serve(async (req) => {
           `Today's average: ${avgIntensity}g CO₂/kWh.`,
           `${greenHours}h of green energy expected 🌿`,
           `Best window: ${bestStartFmt}–${bestEndFmt} (${bestDurationH}h${bestLabel})`,
-          `· Worst: ${worstFmt}${worstLabel} (${worstTime?.intensity.forecast}g)`
-        ].join(' '),
+          worstTime ? `· Worst: ${worstFmt}${worstLabel} (${worstTime.intensity.forecast}g CO₂/kWh)` : ''
+        ].filter(Boolean).join(' '),
         platform: sub.platform,
         isSandbox: sub.is_sandbox,
       });

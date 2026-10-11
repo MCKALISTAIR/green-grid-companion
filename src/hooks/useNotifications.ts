@@ -119,7 +119,7 @@ export function useNotifications() {
                     notifications: [{
                         id: NOTIFICATION_IDS.LIVE_GREEN,
                         title: "🟢 Live Energy Alert",
-                        body: `Grid is GREEN right now! Intensity is ${nowSlot.intensity.forecast}g.`,
+                        body: `Grid is GREEN right now! Intensity is ${nowSlot.intensity.forecast}g CO₂/kWh.`,
                         schedule: { at: new Date(Date.now() + 1000) }, // Immediate
                         smallIcon: 'ic_stat_leaf',
                     }]
@@ -354,7 +354,7 @@ export function useNotifications() {
                 pendingNotifications.push({
                     id: greenAlertId(startTime.getTime()),
                     title: "💚 Perfect Time to Use Energy",
-                    body: `Grid is running clean! Great time to charge devices, run the dishwasher, or do laundry (${slot.intensity.forecast}g CO₂).`,
+                    body: `Grid is running clean! Great time to charge devices, run the dishwasher, or do laundry (${slot.intensity.forecast}g CO₂/kWh).`,
                     schedule: { at: startTime },
                     smallIcon: 'ic_stat_leaf',
                     actionTypeId: "",
@@ -428,7 +428,7 @@ export function useNotifications() {
                 pendingNotifications.push({
                     id: highAlertId(startTime.getTime()),
                     title: "⚠️ High Carbon Period Starting",
-                    body: `The grid is getting dirtier (${slot.intensity.forecast}g CO₂). Consider delaying heavy appliance use if possible.`,
+                    body: `The grid is getting dirtier (${slot.intensity.forecast}g CO₂/kWh). Consider delaying heavy appliance use if possible.`,
                     schedule: { at: startTime },
                     smallIcon: 'ic_stat_leaf',
                     actionTypeId: "",
