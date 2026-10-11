@@ -347,7 +347,7 @@ function Cottage({
   timeOfDay?: TimeOfDayLandscape;
 }) {
   const [windowLit, setWindowLit] = useState(isNight);
-  const { impactLight } = useHaptics();
+  const { impactLight } = useHaptics({ decorative: true });
   const litColor = getWindowLitColor(cleanliness, isNight ? 'night' : timeOfDay);
 
   // Keep window in sync with isNight unless clicked

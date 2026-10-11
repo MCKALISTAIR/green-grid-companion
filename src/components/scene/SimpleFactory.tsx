@@ -20,7 +20,7 @@ interface SootParticle {
  * Now supports click-to-sputter animations with soot particle bursts and haptics.
  */
 export function SimpleFactory({ className = '', isNight = false, style }: SimpleFactoryProps) {
-    const { impactLight } = useHaptics();
+    const { impactLight } = useHaptics({ decorative: true });
     const shouldReduceMotion = useReducedMotion();
     const [isWobbling, setIsWobbling] = useState(false);
     const [particles, setParticles] = useState<SootParticle[]>([]);

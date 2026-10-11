@@ -11,8 +11,8 @@ interface ErrorStateProps {
 }
 
 export function ErrorState({
-    title = "Connection Lost",
-    description = "We couldn't connect to the grid. Please check your internet connection.",
+    title = "Can't reach the grid data",
+    description = "Check your connection, then try again.",
     steps,
     retry,
     fullScreen = false
@@ -52,7 +52,7 @@ export function ErrorState({
             {retry && (
                 <Button onClick={retry} size="lg" className="gap-2">
                     <RefreshCw className="w-4 h-4" />
-                    Try Again
+                    Try again
                 </Button>
             )}
         </div>

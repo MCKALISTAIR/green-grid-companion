@@ -11,7 +11,7 @@ interface InteractiveCloudProps {
 
 export function InteractiveCloud({ className, style, shouldReduceMotion }: InteractiveCloudProps) {
   const [isPuffed, setIsPuffed] = useState(false);
-  const { impactLight } = useHaptics();
+  const { impactLight } = useHaptics({ decorative: true });
 
   const handleTap = () => {
     if (isPuffed) return;

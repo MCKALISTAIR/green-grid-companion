@@ -65,7 +65,7 @@ export function IntensityScene({
   const { weather: realWeather } = useWeatherData();
   const { unlock } = useAchievements();
   const { active: isDirectorMode, overrides } = useSceneDirector();
-  const { impactMedium, notification } = useHaptics();
+  const { impactLight: impactMedium, notification } = useHaptics({ decorative: true }); // scene taps: light, decorative
   const shouldReduceMotion = useReducedMotion();
   const { sceneType: autoSceneType } = useSceneType();
 

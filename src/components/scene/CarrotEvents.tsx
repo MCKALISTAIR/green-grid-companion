@@ -5,7 +5,7 @@ import { useState } from 'react';
 
 // 🛸 UFO Component with click-to-abduct-sheep easter egg
 export function UFO({ onComplete }: { onComplete: () => void }) {
-    const { impactMedium } = useHaptics();
+    const { impactLight: impactMedium } = useHaptics({ decorative: true });
     const shouldReduceMotion = useReducedMotion();
     const [isAbducting, setIsAbducting] = useState(false);
     const [bubbleText, setBubbleText] = useState<string | null>(null);

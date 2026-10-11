@@ -10,5 +10,5 @@ export const DEFINITIONS = {
     'Solar': "Clean energy generated from sunlight.",
     'Wind': "Clean energy generated from wind turbines.",
     'Other': "Other energy sources not categorized elsewhere.",
-    'GW': "Gigawatt (GW) is a unit of power equal to one billion watts. 1 GW is roughly enough to power 750,000 homes.",
+    'GW': "A gigawatt (GW) is a unit of power: one billion watts, or a million kilowatts.",
 };

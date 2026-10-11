@@ -25,7 +25,7 @@ export function Sheep({ x, y, scale = 1, isNight, delay = 0 }: SheepProps) {
     const [bubbleText, setBubbleText] = useState<string | null>(null);
     const [clickCount, setClickCount] = useState(0);
     const id = useId();
-    const { impactMedium } = useHaptics();
+    const { impactLight: impactMedium } = useHaptics({ decorative: true });
     const shouldReduceMotion = useReducedMotion();
 
     const handleClick = () => {

@@ -133,8 +133,8 @@ export function DemandView() {
                                         </Button>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-[280px] p-3 text-xs bg-card border-border">
-                                        <p className="font-semibold mb-1">UK-Wide Data</p>
-                                        <p>This shows total demand for the entire UK electricity grid. The grid operates as a single synchronized system.</p>
+                                        <p className="font-semibold mb-1">Great Britain</p>
+                                        <p>This is total demand on Great Britain&apos;s electricity grid, which runs as one synchronised system. Northern Ireland has its own grid and isn&apos;t included.</p>
 
                                         <div className="mt-3 pt-2 border-t border-border/50">
                                             <p className="font-semibold mb-1">Units (GW)</p>

@@ -16,7 +16,7 @@ interface BurstSteam {
 
 export function NuclearCoolingTower({ x, steamIntensity = 0.7, isNight }: NuclearCoolingTowerProps) {
     const id = useId();
-    const { impactLight } = useHaptics();
+    const { impactLight } = useHaptics({ decorative: true });
     const shouldReduceMotion = useReducedMotion();
     
     const [bursts, setBursts] = useState<BurstSteam[]>([]);

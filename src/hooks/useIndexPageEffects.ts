@@ -79,8 +79,16 @@ export function useIndexPageEffects({
   useEffect(() => {
     if (!hasReading) return;
     if (consumeFirstNumber()) void notification(NotificationType.Success);
+    // TODO(overlay-queue): when Builder's overlay queue lands, request the tips
+    // through it (e.g. requestOverlay('tips')) so they wait for the consent sheet
+    // and never stack with another overlay. Until then they start directly.
     startTour();
   }, [hasReading, startTour, notification]);
+
+  // Data failed after React Query's retries: one Error haptic per failure, not per retry.
+  useEffect(() => {
+    if (isError) void notification(NotificationType.Error);
+  }, [isError, notification]);
 
   // Ask about notifications only after a useful moment (Plan a load tapped, or a
   // second session), once, and only while the OS hasn't been asked yet.

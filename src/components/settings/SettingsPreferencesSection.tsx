@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Activity, Cookie, MapPin, MessageSquare, Paintbrush, Play, Sparkles, ChevronRight } from 'lucide-react';
+import { Activity, Cookie, Vibrate, MapPin, MessageSquare, Paintbrush, Play, Sparkles, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -10,6 +10,7 @@ import type { SceneType } from '@/hooks/useSceneType';
 import { settingsItemVariants } from './settingsMotion';
 import { SettingsSectionHeading } from './SettingsSectionHeading';
 import { clearConsent, describeConsent, getConsent } from '@/lib/consent';
+import { useHapticsPreference } from '@/hooks/useHaptics';
 
 type TonePreference = CommentaryTone;
 type ScenePreference = 'auto' | SceneType;
@@ -35,6 +36,7 @@ export function SettingsPreferencesSection({
   autoDetected,
   replayTour,
 }: SettingsPreferencesSectionProps) {
+  const haptics = useHapticsPreference();
   return (
     <motion.div variants={settingsItemVariants} className="space-y-4">
       <SettingsSectionHeading>Preferences</SettingsSectionHeading>
@@ -42,7 +44,7 @@ export function SettingsPreferencesSection({
       <div className="flex flex-col gap-3">
         <div className="sheet-surface p-4 space-y-3">
           <div className="flex items-center gap-2">
-            <MessageSquare className="w-5 h-5 text-primary" />
+            <MessageSquare className="w-5 h-5 shrink-0 text-primary" aria-hidden="true" />
             <div>
               <h3 className="font-medium">Commentary Style</h3>
               <p className="text-sm text-muted-foreground">
@@ -67,6 +69,34 @@ export function SettingsPreferencesSection({
               <Label htmlFor="tone-plain">Plain</Label>
             </div>
           </RadioGroup>
+        </div>
+
+        <div className="sheet-surface p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-full">
+                <Vibrate className="w-5 h-5 text-primary" aria-hidden="true" />
+              </div>
+              <div>
+                <h3 className="font-medium" id="haptics-label">Haptics</h3>
+                <p className="text-sm text-muted-foreground" id="haptics-desc">
+                  Small taps for things that matter. Playful ones skip when Reduce Motion is on.
+                </p>
+              </div>
+            </div>
+            <button
+              role="switch"
+              aria-checked={haptics.enabled}
+              aria-labelledby="haptics-label"
+              aria-describedby="haptics-desc"
+              onClick={() => haptics.setEnabled(!haptics.enabled)}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${haptics.enabled ? 'bg-primary' : 'bg-input'}`}
+            >
+              <span
+                className={`pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform ${haptics.enabled ? 'translate-x-5' : 'translate-x-0'}`}
+              />
+            </button>
+          </div>
         </div>
 
         <div className="sheet-surface p-4">

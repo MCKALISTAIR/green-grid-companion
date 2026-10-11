@@ -5,13 +5,27 @@ import { useOffline } from '@/hooks/useOffline';
 import { Button } from '@/components/ui/button';
 import { useHaptics } from '@/hooks/useHaptics';
 import { NotificationType } from '@capacitor/haptics';
+import { useQueryClient } from '@tanstack/react-query';
+import { BACK_ONLINE_TEXT, CARBON_QUERY_ROOTS, offlineBannerText } from '@/lib/voice/statesCopy';
 
 export function OfflineIndicator() {
   const { isOffline, wasOffline, clearWasOffline } = useOffline();
   const [showReconnected, setShowReconnected] = useState(false);
   const { notification } = useHaptics();
+  const queryClient = useQueryClient();
+  // Newest cached carbon figures (the query cache is persisted to localStorage).
+  const savedAt = isOffline
+    ? Math.max(
+        0,
+        ...queryClient
+          .getQueryCache()
+          .getAll()
+          .filter((q) => CARBON_QUERY_ROOTS.has(String(q.queryKey[0])) && q.state.data !== undefined)
+          .map((q) => q.state.dataUpdatedAt),
+      ) || null
+    : null;
 
-  // Buzz warning when dropping offline
+  // One Warning when dropping offline. No buzz on reconnect: the banner is enough.
   useEffect(() => {
     if (isOffline) {
       notification(NotificationType.Warning);
@@ -21,14 +35,13 @@ export function OfflineIndicator() {
   useEffect(() => {
     if (wasOffline) {
       setShowReconnected(true);
-      notification(NotificationType.Success); // Buzz success when back online
       const timer = setTimeout(() => {
         setShowReconnected(false);
         clearWasOffline();
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [wasOffline, clearWasOffline, notification]);
+  }, [wasOffline, clearWasOffline]);
 
   const handleRefresh = () => {
     window.location.reload();
@@ -50,7 +63,7 @@ export function OfflineIndicator() {
           <div className="flex items-center justify-center gap-3 max-w-md mx-auto">
             <WifiOff className="w-5 h-5 shrink-0" aria-hidden="true" />
             <span className="text-sm font-medium">
-              You&apos;re offline. Showing the last cached grid data if available.
+              {offlineBannerText(savedAt)}
             </span>
           </div>
         </motion.div>
@@ -71,7 +84,7 @@ export function OfflineIndicator() {
             <div className="flex items-center gap-3">
               <Wifi className="w-5 h-5 shrink-0" aria-hidden="true" />
               <span className="text-sm font-medium">
-                Back online!
+                {BACK_ONLINE_TEXT}
               </span>
             </div>
             <Button

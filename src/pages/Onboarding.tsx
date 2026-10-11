@@ -162,6 +162,7 @@ const Onboarding = () => {
 
                     <Button
                         size="lg"
+                        haptic
                         className="w-full font-semibold"
                         onClick={handleEnableLocation}
                         disabled={isLoadingLocation}
@@ -212,6 +213,7 @@ const Onboarding = () => {
                         />
                         <Button
                             type="submit"
+                            haptic
                             variant="secondary"
                             size="lg"
                             disabled={!manualPostcode.trim()}

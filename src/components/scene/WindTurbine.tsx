@@ -20,7 +20,7 @@ const TurbinePhrases = [
 
 export function WindTurbine({ scale = 1, speed = 4, onClick }: WindTurbineProps) {
   const id = useId();
-  const { impactLight } = useHaptics();
+  const { impactLight } = useHaptics({ decorative: true });
   const shouldReduceMotion = useReducedMotion();
   
   const [bubbleText, setBubbleText] = useState<string | null>(null);
