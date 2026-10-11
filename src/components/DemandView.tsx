@@ -16,6 +16,7 @@ import { StaleDataBadge } from '@/components/StaleDataBadge';
 import { useRelativeTime } from '@/hooks/useRelativeTime';
 import { useEffect, useState } from 'react';
 import { DemandConfetti } from '@/components/DemandConfetti';
+import { GridMixAttribution } from '@/components/attribution/DataAttribution';
 
 export function DemandView() {
     const { demand, mix, mixWithTrends, frequency: gridFrequency, embeddedSolarMW, isLoading, error, refetch, lastUpdated } = useGridDemand();
@@ -398,6 +399,8 @@ export function DemandView() {
                     );
                 })}
             </div>
+
+            <GridMixAttribution className="px-1" />
         </div>
     );
 }

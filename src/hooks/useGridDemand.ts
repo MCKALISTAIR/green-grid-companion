@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRef, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { GridDataUnavailableError, gridDemandUnavailableReason, liveGridFrequency } from '@/lib/gridDemand';
 
 export interface GenerationSourceMW {
     id: string;
@@ -10,14 +11,26 @@ export interface GenerationSourceMW {
     mw: number | null;
 }
 
+/**
+ * Response of supabase/functions/grid-demand (see _shared/grid-demand.ts).
+ * `timestamp` is the time the figures describe (Elexon FUELINST interval
+ * start), not when the request ran. Null when status is "unavailable".
+ */
 export interface GridDemandData {
-    timestamp: string;
-    settlementDate: string | null;
-    settlementPeriod: number | null;
+    status: 'ok' | 'unavailable';
+    reason?: string;
+    timestamp: string | null;
+    dataTime: string | null;
+    fetchedAt: string;
+    settlementDate?: string | null;
+    settlementPeriod?: number | null;
     totalDemandMW: number | null;
+    totalSupplyMW?: number | null;
     gridFrequency: number | null;
+    frequencyTime: string | null;
     embeddedSolarMW: number | null;
     embeddedWindMW: number | null;
+    embeddedIsEstimate?: boolean;
     mix: GenerationSourceMW[];
 }
 
@@ -52,9 +65,15 @@ export function useGridDemand() {
         retry: 2,
     });
 
+    // Only show figures that are live (status ok, recent data time). Old or
+    // unavailable responses are hidden rather than shown with a "stale" badge.
+    const unavailableReason = gridDemandUnavailableReason(data);
+    const live = unavailableReason === null ? data : undefined;
+
     // Compute mix with trend data
     const mixWithTrends: MixWithTrend[] = useMemo(() => {
-        if (!data?.mix) return [];
+        if (!live?.mix) return [];
+        const data = live;
 
         const isNewData = data.timestamp !== lastTimestampRef.current;
         const result: MixWithTrend[] = [];
@@ -95,18 +114,22 @@ export function useGridDemand() {
         }
 
         return result;
-    }, [data]);
+    }, [live]);
 
     return {
-        demand: data?.totalDemandMW,
-        frequency: data?.gridFrequency,
-        embeddedSolarMW: data?.embeddedSolarMW ?? null,
-        embeddedWindMW: data?.embeddedWindMW ?? null,
-        mix: data?.mix || [],
+        demand: live?.totalDemandMW ?? null,
+        frequency: liveGridFrequency(data),
+        // NESO's embedded solar estimate covers all solar that isn't metered on the
+        // transmission network (rooftop *and* most solar farms), and FUELINST has
+        // no solar at all, so there is no honest utility-scale vs rooftop split.
+        // Null hides that split; the raw figure is still in the response.
+        embeddedSolarMW: null,
+        embeddedWindMW: live?.embeddedWindMW ?? null,
+        mix: live?.mix || [],
         mixWithTrends,
-        lastUpdated: data?.timestamp,
+        lastUpdated: live?.timestamp ?? undefined,
         isLoading,
-        error,
+        error: error ?? (data && unavailableReason ? new GridDataUnavailableError(unavailableReason) : null),
         refetch,
     };
 }
