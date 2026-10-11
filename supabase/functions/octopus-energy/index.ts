@@ -6,6 +6,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 declare const Deno: any;
 
 import { corsHeaders } from '../_shared/cors.ts';
+import { parseIntensityPoint } from '../_shared/intensity-point.ts';
 import {
   verifySchedulerRequest,
   cronAuthErrorResponse,
@@ -14,7 +15,6 @@ import {
   type SchedulerSecretRpcClient,
 } from '../_shared/cron-auth.ts';
 import { apiKeyHint } from '../_shared/credential-crypto.ts';
-import { parseIntensityPoint } from '../_shared/intensity-point.ts';
 import {
   createKeyLoader,
   selectCredentialRows,
