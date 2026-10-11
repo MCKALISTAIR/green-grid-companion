@@ -3,6 +3,7 @@ import {
   MIN_GRAMS_CLEANER,
   MIN_PERCENT_CLEANER,
   OPTIMAL_WINDOW_SLOTS,
+  classifySpread,
 } from '@/lib/forecastWindows';
 import { formatLondonTime, londonDayLabel } from '@/lib/londonTime';
 
@@ -25,6 +26,8 @@ export const HOME_LOAD_SLOTS = OPTIMAL_WINDOW_SLOTS;
 
 const SLOT_MS = 30 * 60_000;
 
+const UNIT = 'gCO₂/kWh';
+
 export type NowOrWaitAction = 'use_now' | 'wait' | 'check_forecast';
 
 /**
@@ -33,8 +36,18 @@ export type NowOrWaitAction = 'use_now' | 'wait' | 'check_forecast';
  * - now_is_best: starting now is the cleanest option (includes ties)
  * - small_gain: a later start is a bit cleaner, but under the threshold
  * - cleaner_later: a later start is meaningfully cleaner, so wait
+ * - near_zero: the whole window is at or near zero carbon, so any time works
+ * - flat: the whole window stays about the same, so any time works
+ * - missing_data: half hours needed to judge "start now" are missing, so no answer
  */
-export type NowOrWaitReason = 'no_forecast' | 'now_is_best' | 'small_gain' | 'cleaner_later';
+export type NowOrWaitReason =
+  | 'no_forecast'
+  | 'now_is_best'
+  | 'small_gain'
+  | 'cleaner_later'
+  | 'near_zero'
+  | 'flat'
+  | 'missing_data';
 
 export interface LoadWindow {
   start: Date;
@@ -59,6 +72,8 @@ export interface LoadPlan {
   coveredHours: number;
   /** True when the forecast is shorter than the requested horizon. */
   partial: boolean;
+  /** Half hours missing inside the window we looked at (gaps, or a missing current half hour). */
+  missingSlots: number;
 }
 
 export interface PlanLoadOptions {
@@ -120,6 +135,7 @@ function emptyPlan(nowAvg: number | null): LoadPlan {
     waitMinutes: 0,
     coveredHours: 0,
     partial: true,
+    missingSlots: 0,
   };
 }
 
@@ -138,6 +154,12 @@ export function planLoad({
   const live = isUsableNumber(liveIntensity) ? liveIntensity : null;
   const all = toSlots(forecast ?? []);
   const upcoming = all.filter((s) => s.to > nowMs);
+  // A live reading is real data for the current half hour: if the forecast row
+  // for it is missing but the next one starts within half an hour, stand the
+  // live value in for it (never a made-up value).
+  if (live !== null && upcoming.length && upcoming[0].from > nowMs && upcoming[0].from - nowMs <= SLOT_MS) {
+    upcoming.unshift({ from: upcoming[0].from - SLOT_MS, to: upcoming[0].from, value: live });
+  }
 
   if (upcoming.length === 0) return emptyPlan(live);
 
@@ -156,16 +178,25 @@ export function planLoad({
     Math.min(Math.round(requestedSlots), Math.floor(upcoming.length / 2)),
   );
 
-  // "Start now" option.
-  const current = upcoming[0].from <= nowMs ? 0 : -1;
-  let nowAvg: number | null = null;
-  if (current === 0) {
-    nowAvg = windowAvg(upcoming, 0, len, live ?? undefined);
-    if (nowAvg === null) nowAvg = live ?? upcoming[0].value;
-  } else if (live !== null) {
-    nowAvg = live;
+  // Missing half hours inside the window we're judging (never treated as 0).
+  const considered = upcoming.filter((s) => s.from < horizonEnd);
+  const nowSlotStart = Math.floor(nowMs / SLOT_MS) * SLOT_MS;
+  let missingSlots = 0;
+  if (considered.length && considered[0].from > nowSlotStart) {
+    missingSlots += Math.round((considered[0].from - nowSlotStart) / SLOT_MS);
   }
-  if (nowAvg === null) return emptyPlan(null);
+  for (let i = 1; i < considered.length; i++) {
+    const gap = considered[i].from - considered[i - 1].to;
+    if (gap > 0) missingSlots += Math.round(gap / SLOT_MS);
+  }
+
+  // "Start now" option. It needs the current half hour and a complete load
+  // window; otherwise we can't honestly say "now", so we say data is missing.
+  const current = upcoming[0].from <= nowMs ? 0 : -1;
+  const nowAvg = current === 0 ? windowAvg(upcoming, 0, len, live ?? undefined) : null;
+  if (nowAvg === null) {
+    return { ...emptyPlan(live), reason: 'missing_data', coveredHours, partial, missingSlots: Math.max(1, missingSlots) };
+  }
 
   // Cleanest later start (earliest wins ties).
   let best: { i: number; avg: number } | null = null;
@@ -187,13 +218,21 @@ export function planLoad({
     waitMinutes: 0,
     coveredHours,
     partial,
+    missingSlots,
   };
+
+  // Whole window at/near zero or flat: any start time is as good as another,
+  // so say that instead of implying "now" beats later.
+  const windowValues = considered.map((s, i) => (i === 0 && current === 0 && live !== null ? live : s.value));
+  const spread = classifySpread(windowValues);
+  const anyTime: LoadPlan | null =
+    spread === 'near_zero' || spread === 'flat' ? { ...base, reason: spread } : null;
 
   if (!best) {
     // Nothing after the current half hour to compare with: that's a partial
     // forecast, not proof that now is best.
     const laterSlots = upcoming.length - (current === 0 ? 1 : 0);
-    return laterSlots === 0 ? emptyPlan(roundedNow) : base;
+    return laterSlots === 0 ? emptyPlan(roundedNow) : (anyTime ?? base);
   }
 
   const bestWindow: LoadWindow = {
@@ -203,12 +242,13 @@ export function planLoad({
   };
   const grams = roundedNow - bestWindow.avg;
 
-  if (grams <= 0) return { ...base, best: bestWindow };
+  if (grams <= 0) return { ...(anyTime ?? base), best: bestWindow };
 
   const percent = roundedNow > 0 ? (grams / roundedNow) * 100 : 0;
   const worthWaiting = percent >= MIN_PERCENT_CLEANER && grams >= MIN_GRAMS_CLEANER;
 
   if (!worthWaiting) {
+    if (anyTime) return { ...anyTime, best: bestWindow };
     return {
       ...base,
       reason: 'small_gain',
@@ -262,6 +302,25 @@ function describeRange(start: Date, end: Date, now: Date): string {
   return day ? `${range} ${day}` : range;
 }
 
+/** Shared "any time works" detail line for near-zero or flat windows (home card and Planner). */
+export function describeAnyTime(plan: Pick<LoadPlan, 'reason' | 'coveredHours' | 'nowAvg'>): string {
+  const span = describeSpan(plan.coveredHours);
+  const around = plan.nowAvg !== null ? `, around ${plan.nowAvg} ${UNIT}` : '';
+  return plan.reason === 'near_zero'
+    ? `The grid here is at or near zero carbon for ${span}${around}, so there's no cleaner time to wait for.`
+    : `It stays about the same for ${span}${around}, so there's no cleaner time to wait for.`;
+}
+
+export const MISSING_SLOTS_NOTE = 'Some half hours are missing from the forecast, so this is based on the hours we have.';
+export const MISSING_DATA_TITLE = 'Some of the forecast is missing';
+export const MISSING_DATA_DETAIL =
+  "Half hours are missing from the forecast, so we can't compare starting now with later yet.";
+
+/** True when the plan says any start time is as good as another. */
+export function isAnyTimePlan(plan: Pick<LoadPlan, 'reason'>): boolean {
+  return plan.reason === 'near_zero' || plan.reason === 'flat';
+}
+
 export interface NowOrWaitDecision {
   action: NowOrWaitAction;
   reason: NowOrWaitReason;
@@ -275,7 +334,6 @@ export interface NowOrWaitDecision {
   plan: LoadPlan;
 }
 
-const UNIT = 'gCO₂/kWh';
 
 /**
  * Home-card answer to "use energy now or wait?" for a 3-hour load.
@@ -302,7 +360,26 @@ export function getNowOrWaitDecision(
     plan,
   };
 
+  const tip = plan.missingSlots > 0 ? MISSING_SLOTS_NOTE : basis;
+
   switch (plan.reason) {
+    case 'missing_data':
+      return {
+        ...common,
+        headline: 'Forecast has gaps',
+        detail: MISSING_DATA_DETAIL,
+        tip: 'Pull down to refresh, or check back in a few minutes.',
+      };
+
+    case 'near_zero':
+    case 'flat':
+      return {
+        ...common,
+        headline: 'Any time works',
+        detail: describeAnyTime(plan),
+        tip,
+      };
+
     case 'no_forecast':
       return {
         ...common,
@@ -320,8 +397,8 @@ export function getNowOrWaitDecision(
         ...common,
         headline: `Wait ${describeWait(plan.waitMinutes)}`,
         detail: `It'll be around ${roundPercent(plan.percentCleaner)}% cleaner (${plan.nowAvg} to ${best.avg} ${UNIT}) ${describeRange(best.start, best.end, now)}.`,
-        tip: basis,
         countdownTarget: best.start,
+        tip,
       };
     }
 
@@ -330,7 +407,7 @@ export function getNowOrWaitDecision(
         ...common,
         headline: "Now's good",
         detail: `It won't get much cleaner in ${describeSpan(plan.coveredHours)}. Starting now averages around ${plan.nowAvg} ${UNIT}, and the best later start is around ${plan.best!.avg}.`,
-        tip: basis,
+        tip,
       };
 
     case 'now_is_best':
@@ -339,7 +416,7 @@ export function getNowOrWaitDecision(
         ...common,
         headline: "Now's good",
         detail: `It won't get any cleaner in ${describeSpan(plan.coveredHours)}. Starting now averages around ${plan.nowAvg} ${UNIT}.`,
-        tip: basis,
+        tip,
       };
   }
 }

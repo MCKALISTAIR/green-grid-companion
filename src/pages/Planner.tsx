@@ -14,7 +14,16 @@ import { getIntensityColor, getIntensityTextColor } from '@/lib/carbonApi';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { plannerReminderId } from '@/lib/notificationIds';
 import { parseISO, subMinutes, isFuture } from 'date-fns';
-import { planLoad, describeSpan, roundPercent } from '@/lib/nowOrWait';
+import {
+    planLoad,
+    describeSpan,
+    roundPercent,
+    describeAnyTime,
+    isAnyTimePlan,
+    MISSING_SLOTS_NOTE,
+    MISSING_DATA_TITLE,
+    MISSING_DATA_DETAIL,
+} from '@/lib/nowOrWait';
 import { formatLondonTime, formatLondonTimeWithDay } from '@/lib/londonTime';
 import { PullToRefresh } from '@/components/PullToRefresh';
 import { TurbineSpinner } from '@/components/ui/turbine-spinner';
@@ -371,12 +380,17 @@ export default function Planner() {
                                     <h3 className="text-lg font-medium text-muted-foreground">
                                         Best time to run
                                     </h3>
-                                    <p className="text-3xl font-bold text-foreground">Now</p>
+                                    <p className="text-3xl font-bold text-foreground">{isAnyTimePlan(plan) ? 'Any time' : 'Now'}</p>
                                     <p className="text-sm text-muted-foreground">
-                                        {plan.reason === 'small_gain'
-                                            ? `It won't get much cleaner in ${describeSpan(plan.coveredHours)}.`
-                                            : `It won't get any cleaner in ${describeSpan(plan.coveredHours)}.`}
-                                        {plan.nowAvg !== null && ` Starting now averages around ${plan.nowAvg} gCO₂/kWh.`}
+                                        {isAnyTimePlan(plan)
+                                            ? describeAnyTime(plan)
+                                            : <>
+                                                {plan.reason === 'small_gain'
+                                                    ? `It won't get much cleaner in ${describeSpan(plan.coveredHours)}.`
+                                                    : `It won't get any cleaner in ${describeSpan(plan.coveredHours)}.`}
+                                                {plan.nowAvg !== null && ` Starting now averages around ${plan.nowAvg} gCO₂/kWh.`}
+                                            </>}
+                                        {plan.missingSlots > 0 && ` ${MISSING_SLOTS_NOTE}`}
                                     </p>
                                 </Card>
                             </motion.div>
@@ -399,6 +413,9 @@ export default function Planner() {
                                         <p className="text-sm text-green-600 font-medium">
                                             Around {roundPercent(plan.percentCleaner)}% cleaner ({plan.nowAvg} to {bestSlot.avgIntensity} gCO₂/kWh)
                                         </p>
+                                        {plan.missingSlots > 0 && (
+                                            <p className="text-sm text-muted-foreground">{MISSING_SLOTS_NOTE}</p>
+                                        )}
                                     </div>
 
                                     <Button
@@ -433,9 +450,13 @@ export default function Planner() {
                                 exit={{ opacity: 0 }}
                             >
                                 <Card className="sheet-surface p-6 space-y-3">
-                                    <p className="font-medium text-foreground">No forecast data available</p>
+                                    <p className="font-medium text-foreground">
+                                        {plan.reason === 'missing_data' ? MISSING_DATA_TITLE : 'No forecast data available'}
+                                    </p>
                                     <p className="text-sm text-muted-foreground">
-                                        We need a carbon intensity forecast to find your best window. Pull to refresh, or check your connection.
+                                        {plan.reason === 'missing_data'
+                                            ? `${MISSING_DATA_DETAIL} Pull to refresh, or try again later.`
+                                            : 'We need a carbon intensity forecast to find your best window. Pull to refresh, or check your connection.'}
                                     </p>
                                 </Card>
                             </motion.div>

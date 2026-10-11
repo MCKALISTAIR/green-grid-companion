@@ -90,11 +90,11 @@ describe('planLoad', () => {
     expect(plan.action).toBe('use_now');
   });
 
-  it('treats a tie as now (no point waiting for the same)', () => {
+  it('treats a flat forecast as "any time", not as now beating later', () => {
     const fc = forecastFrom(flat(48, 150));
     const plan = planLoad({ forecast: fc, liveIntensity: 150, now: NOW });
     expect(plan.action).toBe('use_now');
-    expect(plan.reason).toBe('now_is_best');
+    expect(plan.reason).toBe('flat');
     expect(plan.gramsCleaner).toBe(0);
   });
 

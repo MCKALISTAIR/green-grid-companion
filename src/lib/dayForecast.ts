@@ -1,5 +1,6 @@
 import type { ForecastData } from '@/lib/carbonApi';
 import { LONDON_TZ, formatLondonTime, londonDateKey } from '@/lib/londonTime';
+import { classifySpread, type SpreadKind } from '@/lib/forecastWindows';
 
 /**
  * Pure helpers for the 48-hour overview cards.
@@ -114,6 +115,8 @@ export interface DailyStats {
   actualsEstimated: boolean;
   /** Every forecast value that day is exactly 0 (NESO's regional model does this for wind/nuclear-heavy regions). */
   allZero: boolean;
+  /** Same classification the Now-or-wait card and Planner use (null = no data). */
+  spread: SpreadKind | null;
 }
 
 function stats(values: number[]) {
@@ -166,6 +169,7 @@ export function getDailyStats(forecast: ForecastData[], now: Date = new Date()):
       hasActuals,
       actualsEstimated: hasActuals && values.estimated,
       allZero: values.forecast.length > 0 && values.forecast.every((v) => v === 0),
+      spread: classifySpread(values.forecast),
     });
   });
 

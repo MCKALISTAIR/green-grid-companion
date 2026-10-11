@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, BatteryCharging, Clock3, Leaf } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { ForecastData } from '@/lib/carbonApi';
-import { getNowOrWaitDecision } from '@/lib/nowOrWait';
+import { getNowOrWaitDecision, isAnyTimePlan } from '@/lib/nowOrWait';
 import { useCountdown } from '@/hooks/useCountdown';
 import { cn } from '@/lib/utils';
 
@@ -62,7 +62,7 @@ export function NowOrWaitDecision({ intensity, forecast }: NowOrWaitDecisionProp
             {isUseNow && (
               <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-intensity-very-low/20 text-intensity-very-low">
                 <Leaf className="w-3 h-3" />
-                Now
+                {isAnyTimePlan(decision) ? 'Any time' : 'Now'}
               </span>
             )}
             {!isUseNow && countdown && (
