@@ -49,6 +49,11 @@ export async function heroBoxes(page, { region = 'South Scotland', band = 'Very 
     ]),
     band: await firstVisibleBox(page, ['[data-testid="hero-band"]', `.home-scene-gauge p:has-text("${band}")`]),
     trophy: await firstVisibleBox(page, ['[aria-label="Trophy Room"]']),
+    meta: await firstVisibleBox(page, ['[data-testid="hero-meta"]']),
+    sheetTop: await page.evaluate(() => {
+      const el = document.querySelector('.home-feed');
+      return el ? el.getBoundingClientRect().top : null;
+    }),
   };
 }
 
@@ -68,6 +73,12 @@ export async function checkHero(page, { scenario, expectBadge, region, viewport 
     for (let j = i + 1; j < named.length; j++) {
       const [p, q] = [named[i], named[j]];
       if (intersects(b[p], b[q])) fails.push(`${tag} ${p} overlaps ${q} (${fmt(b[p])} vs ${fmt(b[q])})`);
+    }
+  }
+  // Nothing in the HUD may slide under the sheet (its scalloped crests rise ~22px above it).
+  if (b.sheetTop !== null) {
+    for (const k of ['number', 'band', 'badge', 'meta']) {
+      if (b[k] && b[k].y + b[k].height > b.sheetTop - 22 + 1) fails.push(`${tag} hero ${k} is covered by the sheet (bottom ${Math.round(b[k].y + b[k].height)}, sheet top ${Math.round(b.sheetTop)})`);
     }
   }
   if (b.header) {
