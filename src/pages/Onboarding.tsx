@@ -1,90 +1,120 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Navigation, ArrowRight, Zap } from 'lucide-react';
+import { ArrowRight, Navigation } from 'lucide-react';
 import { Geolocation as CapacitorGeolocation } from '@capacitor/geolocation';
+import { NotificationType } from '@capacitor/haptics';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
 import { TurbineSpinner } from '@/components/ui/turbine-spinner';
 import { IntensityScene } from '@/components/IntensityScene';
 import { TurbineLogo } from '@/components/TurbineLogo';
 import { useAppLocation } from '@/contexts/LocationContext';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useHaptics } from '@/hooks/useHaptics';
+import { markFirstNumberPending } from '@/lib/firstLaunch';
+import {
+    NATIONAL_POSTCODE,
+    isNorthernIrelandPostcode,
+    isValidPostcode,
+    toOutwardCode,
+} from '@/lib/postcode';
+import { ONBOARDING_COPY } from '@/lib/voice/onboardingCopy';
 
-type OnboardingStep = 'welcome' | 'location';
+type Notice = { kind: 'denied' | 'deniedForever' | 'failed' | 'invalid' | 'northernIreland' } | null;
+
+// Neutral scene while we don't know the grid yet: no band, no celebrations.
+const NEUTRAL_SCENE = {
+    intensity: 150,
+    index: 'moderate' as const,
+    sceneTypeOverride: 'countryside' as const,
+    timeOfDayOverride: 'dusk' as const,
+    weatherOverride: { condition: 'clear' as const, windSpeed: 6 },
+};
 
 const Onboarding = () => {
     const navigate = useNavigate();
     const { setPostcode: setAppPostcode } = useAppLocation();
-    const [step, setStep] = useState<OnboardingStep>('welcome');
+    const { notification } = useHaptics();
     const [isLoadingLocation, setIsLoadingLocation] = useState(false);
     const [manualPostcode, setManualPostcode] = useState('');
+    const [notice, setNotice] = useState<Notice>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
 
-    const sceneProps =
-        step === 'welcome'
-            ? {
-                intensity: 30,
-                index: 'very low' as const,
-                sceneTypeOverride: 'countryside' as const,
-                timeOfDayOverride: 'midday' as const,
-                weatherOverride: { condition: 'clear' as const, windSpeed: 8 },
-            }
-            : {
-                intensity: 180,
-                index: 'moderate' as const,
-                sceneTypeOverride: 'city' as const,
-                timeOfDayOverride: 'midday' as const,
-                weatherOverride: { condition: 'clear' as const, windSpeed: 4 },
-            };
+    const completeOnboarding = () => {
+        localStorage.setItem('onboarding_complete', 'true');
+        markFirstNumberPending();
+        // Do not record consent here: the (non-blocking) cookie banner asks on the
+        // home screen, and optional diagnostics stay off until the user accepts.
+        navigate('/');
+    };
 
     const finishWithPostcode = (postcode: string) => {
-        setAppPostcode(postcode);
-        if (postcode.toUpperCase().startsWith('BT')) {
-            toast.warning('Northern Ireland grid data is not supported. GB National average will be shown.', {
-                duration: 6000,
-            });
-        } else {
-            toast.success(`Location set to ${postcode}`);
+        if (isNorthernIrelandPostcode(postcode)) {
+            // Say so before switching to the GB average, rather than in a toast that vanishes.
+            setNotice({ kind: 'northernIreland' });
+            return;
         }
+        setAppPostcode(toOutwardCode(postcode));
         completeOnboarding();
     };
 
+    const showNational = () => {
+        setAppPostcode(NATIONAL_POSTCODE);
+        completeOnboarding();
+    };
+
+    const fail = (kind: 'denied' | 'deniedForever' | 'failed') => {
+        setNotice({ kind });
+        void notification(NotificationType.Error);
+        // Hand over to the postcode field.
+        setTimeout(() => inputRef.current?.focus(), 50);
+    };
+
     const handleEnableLocation = async () => {
+        setNotice(null);
         setIsLoadingLocation(true);
 
         try {
-            const permissionStatus = await CapacitorGeolocation.checkPermissions();
+            let status: string | undefined;
+            try {
+                status = (await CapacitorGeolocation.checkPermissions()).location;
+            } catch {
+                status = undefined; // Permissions API missing (some browsers): just try.
+            }
 
-            if (permissionStatus.location === 'denied') {
-                const request = await CapacitorGeolocation.requestPermissions();
-                if (request.location === 'denied') {
-                    toast.error('Location permission denied. Please enter postcode manually.');
-                    setIsLoadingLocation(false);
-                    return;
+            if (status === 'denied') {
+                // iOS won't show the prompt again once denied.
+                fail('deniedForever');
+                return;
+            }
+            if (status === 'prompt' || status === 'prompt-with-rationale') {
+                try {
+                    const request = await CapacitorGeolocation.requestPermissions();
+                    if (request.location === 'denied') {
+                        fail('denied');
+                        return;
+                    }
+                } catch {
+                    // Web: requestPermissions isn't implemented; getCurrentPosition prompts instead.
                 }
             }
 
-            const position = await CapacitorGeolocation.getCurrentPosition();
+            const position = await CapacitorGeolocation.getCurrentPosition({ timeout: 10000 });
             const { latitude, longitude } = position.coords;
 
             const response = await fetch(`https://api.postcodes.io/postcodes?lon=${longitude}&lat=${latitude}`);
             const data = await response.json();
 
             if (data.status === 200 && data.result && data.result.length > 0) {
-                const postcode = data.result[0].outcode as string;
-                finishWithPostcode(postcode);
+                finishWithPostcode(data.result[0].outcode as string);
             } else {
                 throw new Error('Could not determine postcode from location');
             }
         } catch (error) {
             logger.error('Onboarding geolocation failed', { error });
-            let errorMessage = 'Failed to get location.';
-            if (error instanceof Error && error.message.includes('denied')) {
-                errorMessage = 'Location permission denied. Please enter postcode manually.';
-            }
-            toast.error(errorMessage);
+            const message = error instanceof Error ? error.message.toLowerCase() : '';
+            fail(message.includes('denied') || message.includes('permission') ? 'denied' : 'failed');
         } finally {
             setIsLoadingLocation(false);
         }
@@ -92,157 +122,122 @@ const Onboarding = () => {
 
     const handleManualSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!manualPostcode.trim()) return;
-
-        const cleanPostcode = manualPostcode.trim().toUpperCase();
-        const POSTCODE_REGEX = /^([A-Z]{1,2}\d[A-Z\d]?)(\s*\d[A-Z]{2})?$/i;
-
-        if (!POSTCODE_REGEX.test(cleanPostcode)) {
-            toast.error('Please enter a valid UK postcode (e.g., SW1A 1AA or SW1A)');
+        const value = manualPostcode.trim();
+        if (!value) return;
+        if (!isValidPostcode(value)) {
+            setNotice({ kind: 'invalid' });
+            void notification(NotificationType.Error);
             return;
         }
-
-        finishWithPostcode(cleanPostcode);
+        setNotice(null);
+        finishWithPostcode(value);
     };
 
-    const completeOnboarding = () => {
-        localStorage.setItem('onboarding_complete', 'true');
-        // Do not record consent here: the (non-blocking) cookie banner asks on the
-        // home screen, and optional diagnostics stay off until the user accepts.
-        navigate('/');
-    };
-
-    const renderWelcomeStep = () => (
-        <div className="space-y-6 text-center">
-            <div className="mx-auto w-20 h-20 text-emerald-400">
-                <TurbineLogo className="w-full h-full" />
-            </div>
-            <div className="space-y-2">
-                <p className="text-sm font-semibold tracking-[0.2em] uppercase text-emerald-400/90">GridSense</p>
-                <h2 className="text-2xl font-display font-semibold text-white tracking-tight">
-                    Know when to use energy
-                </h2>
-                <p className="text-sm text-white/70 leading-relaxed max-w-sm mx-auto">
-                    See how clean the UK grid is right now — and whether to use power now or wait for a greener window.
-                </p>
-            </div>
-
-            <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
-                <Button className="w-full" size="lg" onClick={() => setStep('location')}>
-                    Find my grid
-                    <Zap className="w-4 h-4 ml-2" />
-                </Button>
-            </motion.div>
-        </div>
-    );
-
-    const renderLocationStep = () => (
-        <div className="space-y-4">
-            <div className="text-center space-y-2 mb-6">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-                    <MapPin className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="text-lg font-semibold">Where are you?</h3>
-                <p className="text-sm text-muted-foreground">We need your location to find the nearest grid region.</p>
-            </div>
-
-            <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
-                <Button
-                    size="lg"
-                    className="w-full font-semibold relative overflow-hidden group"
-                    onClick={handleEnableLocation}
-                    disabled={isLoadingLocation}
-                >
-                    {isLoadingLocation ? (
-                        <>
-                            <TurbineSpinner size="sm" className="mr-2" />
-                            Finding you...
-                        </>
-                    ) : (
-                        <>
-                            <Navigation className="w-4 h-4 mr-2 group-hover:rotate-12 transition-transform duration-200" />
-                            Use Current Location
-                        </>
-                    )}
-                </Button>
-            </motion.div>
-
-            <div className="relative py-2">
-                <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-muted" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-transparent px-2 text-muted-foreground">Or</span>
-                </div>
-            </div>
-
-            <form onSubmit={handleManualSubmit} className="space-y-2">
-                <div className="flex gap-2">
-                    <Input
-                        placeholder="Enter Postcode (e.g. SW1)"
-                        value={manualPostcode}
-                        onChange={(e) => setManualPostcode(e.target.value)}
-                        className="bg-background/50 h-11"
-                    />
-                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                        <Button type="submit" variant="secondary" size="lg" disabled={!manualPostcode.trim()} className="px-4 h-11">
-                            <ArrowRight className="w-4 h-4" />
-                        </Button>
-                    </motion.div>
-                </div>
-            </form>
-
-            <button
-                type="button"
-                onClick={() => setStep('welcome')}
-                className="w-full text-xs text-white/50 hover:text-white/80 transition-colors pt-1"
-            >
-                Back
-            </button>
-        </div>
-    );
+    const c = ONBOARDING_COPY;
 
     return (
-        <div className="dark relative min-h-screen min-h-[100dvh] w-full flex items-center justify-center p-4 overflow-hidden bg-slate-950">
-            <div className="absolute inset-0 w-full h-full -z-10 opacity-70 pointer-events-none select-none">
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={sceneProps.sceneTypeOverride + '-' + sceneProps.timeOfDayOverride}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 1.0, ease: 'easeInOut' }}
-                        className="w-full h-full"
-                    >
-                        <IntensityScene
-                            intensity={sceneProps.intensity}
-                            index={sceneProps.index}
-                            sceneTypeOverride={sceneProps.sceneTypeOverride}
-                            timeOfDayOverride={sceneProps.timeOfDayOverride}
-                            weatherOverride={sceneProps.weatherOverride}
-                            className="w-full h-full scale-105"
-                            style={{ height: '100%' }}
-                        />
-                    </motion.div>
-                </AnimatePresence>
+        <div className="dark relative min-h-screen min-h-[100dvh] w-full flex items-center justify-center px-4 py-[max(env(safe-area-inset-top),1rem)] overflow-hidden bg-slate-950">
+            <div className="absolute inset-0 w-full h-full -z-10 opacity-70 pointer-events-none select-none" aria-hidden="true">
+                <IntensityScene
+                    intensity={NEUTRAL_SCENE.intensity}
+                    index={NEUTRAL_SCENE.index}
+                    sceneTypeOverride={NEUTRAL_SCENE.sceneTypeOverride}
+                    timeOfDayOverride={NEUTRAL_SCENE.timeOfDayOverride}
+                    weatherOverride={NEUTRAL_SCENE.weatherOverride}
+                    hasLiveReading={false}
+                    className="w-full h-full scale-105"
+                    style={{ height: '100%' }}
+                />
             </div>
-            <Card className="w-full max-w-md shadow-2xl border-white/10 bg-slate-900/60 dark:bg-slate-950/60 backdrop-blur-xl text-white overflow-hidden">
-                <CardContent className="p-6 min-h-[360px] flex flex-col justify-center">
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={step}
-                            initial={{ opacity: 0, scale: 0.94, y: 15 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.94, y: -15 }}
-                            transition={{ type: 'spring', stiffness: 320, damping: 26 }}
-                            className="w-full"
+            <Card className="w-full max-w-md shadow-2xl border-white/10 bg-slate-900/70 dark:bg-slate-950/70 backdrop-blur-xl text-white overflow-hidden">
+                <CardContent className="p-5 sm:p-6 space-y-4">
+                    <div className="text-center space-y-2">
+                        <div className="mx-auto w-12 h-12 text-emerald-400" aria-hidden="true">
+                            <TurbineLogo className="w-full h-full" />
+                        </div>
+                        <p className="text-xs font-semibold tracking-[0.2em] uppercase text-emerald-400/90">GridSense</p>
+                        <h1 className="text-2xl font-display font-semibold text-white tracking-tight leading-tight">{c.title}</h1>
+                        <p className="text-sm text-white/75 leading-relaxed">{c.body}</p>
+                    </div>
+
+                    <Button
+                        size="lg"
+                        className="w-full font-semibold"
+                        onClick={handleEnableLocation}
+                        disabled={isLoadingLocation}
+                    >
+                        {isLoadingLocation ? (
+                            <>
+                                <TurbineSpinner size="sm" className="mr-2" />
+                                {c.finding}
+                            </>
+                        ) : (
+                            <>
+                                <Navigation className="w-4 h-4 mr-2" aria-hidden="true" />
+                                {c.useLocation}
+                            </>
+                        )}
+                    </Button>
+
+                    <div aria-live="polite" className="empty:hidden">
+                        {notice && notice.kind !== 'northernIreland' && (
+                            <p className="text-sm text-white/85 text-center" role={notice.kind === 'invalid' ? 'alert' : undefined}>
+                                {notice.kind === 'invalid' ? c.invalid : notice.kind === 'failed' ? c.failed : c.denied}
+                                {notice.kind === 'deniedForever' && <> {c.deniedForever}</>}
+                            </p>
+                        )}
+                        {notice?.kind === 'northernIreland' && (
+                            <div className="rounded-xl bg-white/10 p-3 space-y-2 text-center">
+                                <p className="text-sm text-white/90">{c.northernIreland}</p>
+                                <Button size="sm" variant="secondary" onClick={showNational}>
+                                    {c.northernIrelandCta}
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+
+                    <form onSubmit={handleManualSubmit} className="flex gap-2" noValidate>
+                        <label htmlFor="onboarding-postcode" className="sr-only">Postcode</label>
+                        <Input
+                            id="onboarding-postcode"
+                            ref={inputRef}
+                            placeholder={c.placeholder}
+                            value={manualPostcode}
+                            onChange={(e) => setManualPostcode(e.target.value)}
+                            autoComplete="postal-code"
+                            autoCapitalize="characters"
+                            enterKeyHint="go"
+                            className="bg-background/50 h-11"
+                            aria-invalid={notice?.kind === 'invalid' || undefined}
+                        />
+                        <Button
+                            type="submit"
+                            variant="secondary"
+                            size="lg"
+                            disabled={!manualPostcode.trim()}
+                            className="px-4 h-11"
+                            aria-label={c.submitLabel}
                         >
-                            {step === 'welcome' && renderWelcomeStep()}
-                            {step === 'location' && renderLocationStep()}
-                        </motion.div>
-                    </AnimatePresence>
+                            <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                        </Button>
+                    </form>
+
+                    <p className="text-xs text-white/65 text-center">
+                        {c.keepNote}{' '}
+                        <a href="/privacy" className="underline hover:text-white/95 transition-colors">
+                            Privacy Policy
+                        </a>
+                    </p>
+
+                    <button
+                        type="button"
+                        onClick={showNational}
+                        className="w-full min-h-11 text-sm font-medium text-white/80 underline-offset-4 hover:underline hover:text-white transition-colors"
+                    >
+                        {c.skip}
+                    </button>
                 </CardContent>
-                <CardFooter className="justify-center py-4 bg-white/5 border-t border-white/5 text-xs text-white/60">
+                <CardFooter className="justify-center py-3 bg-white/5 border-t border-white/5 text-xs text-white/60 text-center">
                     <p>
                         By continuing you agree to the{' '}
                         <a href="/terms" className="underline hover:text-white/95 transition-colors">

@@ -5,13 +5,13 @@ import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import type { FactTone } from '@/lib/energyFacts';
+import type { CommentaryTone } from '@/lib/tone';
 import type { SceneType } from '@/hooks/useSceneType';
 import { settingsItemVariants } from './settingsMotion';
 import { SettingsSectionHeading } from './SettingsSectionHeading';
 import { clearConsent, describeConsent, getConsent } from '@/lib/consent';
 
-type TonePreference = FactTone | 'mixed';
+type TonePreference = CommentaryTone;
 type ScenePreference = 'auto' | SceneType;
 
 interface SettingsPreferencesSectionProps {
@@ -46,8 +46,8 @@ export function SettingsPreferencesSection({
             <div>
               <h3 className="font-medium">Commentary Style</h3>
               <p className="text-sm text-muted-foreground">
-                Friendly is the default. Snarky adds Carrot-style quips to energy facts and the home
-                condition line.
+                Cheeky adds a short line about the grid on the home screen and in some alerts. Plain
+                sticks to the facts. The numbers and advice are the same in both.
               </p>
             </div>
           </div>
@@ -56,18 +56,15 @@ export function SettingsPreferencesSection({
             value={tone}
             onValueChange={(val) => setTone(val as TonePreference)}
             className="flex flex-wrap gap-4 pt-1"
+            aria-label="Commentary style"
           >
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="friendly" id="tone-friendly" />
-              <Label htmlFor="tone-friendly">Friendly</Label>
+              <RadioGroupItem value="cheeky" id="tone-cheeky" />
+              <Label htmlFor="tone-cheeky">Cheeky</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="snarky" id="tone-snarky" />
-              <Label htmlFor="tone-snarky">Snarky</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="mixed" id="tone-mixed" />
-              <Label htmlFor="tone-mixed">Mixed</Label>
+              <RadioGroupItem value="plain" id="tone-plain" />
+              <Label htmlFor="tone-plain">Plain</Label>
             </div>
           </RadioGroup>
         </div>

@@ -33,7 +33,8 @@ describe('hourly forecast bar and tooltip agree', () => {
     expect(current.intensity.actual ?? null).toBeNull();
     // A finished half hour with imports still gets a labelled estimate.
     const past = rows.find((r) => r.from === '2026-10-11T09:30Z')!;
-    expect(past.intensity.actual).toBe(3);
+    // 1.3% imports × 53 (NESO French default) = 0.7, shown as 1 g; NESO forecasts 0.
+    expect(past.intensity.actual).toBe(1);
     expect(past.intensity.actualEstimated).toBe(true);
   });
 
@@ -43,7 +44,7 @@ describe('hourly forecast bar and tooltip agree', () => {
     const rows = await loadSouthScotland();
     const i = rows.findIndex((r) => r.from === '2026-10-11T10:00Z');
     expect(getSlotDisplayValue(rows[i], NOW)).toBe(rows[i].intensity.forecast);
-    expect(getForecastHourInsight(rows, i, 0, 'friendly', NOW)!.value).toBe(0);
+    expect(getForecastHourInsight(rows, i, 0, 'plain', NOW)!.value).toBe(0);
   });
 
   it('uses the actual only once the half hour has ended', () => {

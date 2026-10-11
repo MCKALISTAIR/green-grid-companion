@@ -5,6 +5,9 @@ import type { ForecastData } from '@/lib/carbonApi';
 import { getNowOrWaitDecision, isAnyTimePlan } from '@/lib/nowOrWait';
 import { useCountdown } from '@/hooks/useCountdown';
 import { cn } from '@/lib/utils';
+import { useEnergyFacts } from '@/hooks/useEnergyFacts';
+import { voiceNowOrWait } from '@/lib/voice/nowOrWaitVoice';
+import { markUsefulMoment } from '@/lib/firstLaunch';
 
 interface NowOrWaitDecisionProps {
   intensity: number;
@@ -19,6 +22,8 @@ export function NowOrWaitDecision({ intensity, forecast }: NowOrWaitDecisionProp
   const decision = getNowOrWaitDecision(intensity, forecast);
   const isUseNow = decision.action === 'use_now';
   const countdown = useCountdown(decision.countdownTarget);
+  const { tone } = useEnergyFacts();
+  const voiced = voiceNowOrWait(decision, tone);
 
   return (
     <motion.section
@@ -57,7 +62,7 @@ export function NowOrWaitDecision({ intensity, forecast }: NowOrWaitDecisionProp
                 isUseNow ? 'text-intensity-very-low' : 'text-foreground',
               )}
             >
-              {decision.headline}
+              {voiced.headline}
             </h2>
             {isUseNow && (
               <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-intensity-very-low/20 text-intensity-very-low">
@@ -72,11 +77,15 @@ export function NowOrWaitDecision({ intensity, forecast }: NowOrWaitDecisionProp
             )}
           </div>
 
-          <p className="text-sm text-muted-foreground leading-snug">{decision.detail}</p>
+          <p className="text-sm text-muted-foreground leading-snug">
+            {voiced.detail}
+            {voiced.tail && <span className="text-foreground/80"> {voiced.tail}</span>}
+          </p>
           <p className="text-xs text-muted-foreground/90 leading-snug line-clamp-2">{decision.tip}</p>
 
           <Link
             to="/planner"
+            onClick={markUsefulMoment}
             className={cn(
               'inline-flex items-center gap-1.5 mt-2 text-sm font-semibold transition-colors',
               isUseNow

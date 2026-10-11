@@ -226,12 +226,12 @@ Deno.serve(async (req) => {
 
       notifications.push({
         token: sub.device_token,
-        title: `🌅 Daily Energy Outlook`,
+        title: `Today's grid outlook`,
         body: [
-          `Today's average: ${avgIntensity}g CO₂/kWh.`,
-          `${greenHours}h of green energy expected 🌿`,
-          `Best window: ${bestStartFmt}–${bestEndFmt} (${bestDurationH}h${bestLabel})`,
-          worstTime ? `· Worst: ${worstFmt}${worstLabel} (${worstTime.intensity.forecast}g CO₂/kWh)` : ''
+          `Average forecast today: ${avgIntensity} gCO₂/kWh.`,
+          `${greenHours === 1 ? '1 hour' : `${greenHours} hours`} forecast low or very low.`,
+          `Best window: ${bestStartFmt} to ${bestEndFmt} (${bestDurationH}h${bestLabel}).`,
+          worstTime ? `Dirtiest: ${worstFmt}${worstLabel} (${worstTime.intensity.forecast} gCO₂/kWh).` : ''
         ].filter(Boolean).join(' '),
         platform: sub.platform,
         isSandbox: sub.is_sandbox,

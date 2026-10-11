@@ -1,4 +1,4 @@
-import { ATTRIBUTION, DERIVED_DATA_NOTE } from '@/lib/attribution';
+import { ATTRIBUTION, DERIVED_DATA_NOTE, elexonAttributionStatement } from '@/lib/attribution';
 import { cn } from '@/lib/utils';
 
 const linkClass = 'underline hover:text-foreground transition-colors';
@@ -21,6 +21,7 @@ export function DataAttribution({ className }: { className?: string }) {
         , licensed under{' '}
         <ExternalLink href={ATTRIBUTION.ccBy4.url}>{ATTRIBUTION.ccBy4.label}</ExternalLink>.
       </p>
+      <GridMixAttributionText />
       <p>{DERIVED_DATA_NOTE}</p>
       <p>
         <ExternalLink href={ATTRIBUTION.openMeteo.url}>{ATTRIBUTION.openMeteo.label}</ExternalLink> (
@@ -39,5 +40,29 @@ export function CompactDataAttribution({ className }: { className?: string }) {
       <ExternalLink href={ATTRIBUTION.ccBy4.url}>{ATTRIBUTION.ccBy4.label}</ExternalLink>).{' '}
       <ExternalLink href={ATTRIBUTION.openMeteo.url}>{ATTRIBUTION.openMeteo.label}</ExternalLink>.
     </p>
+  );
+}
+
+/**
+ * Credit for the live generation mix in GW (grid-demand): Elexon BMRS metered
+ * generation plus NESO's estimate of small-scale solar and wind.
+ */
+function GridMixAttributionText() {
+  return (
+    <p>
+      Live generation mix: {elexonAttributionStatement()} (
+      <ExternalLink href={ATTRIBUTION.elexon.licenceUrl}>{ATTRIBUTION.elexon.licenceLabel}</ExternalLink>).
+      Small-scale solar and wind are NESO estimates. {ATTRIBUTION.nesoDataPortal.statement} (
+      <ExternalLink href={ATTRIBUTION.nesoDataPortal.licenceUrl}>{ATTRIBUTION.nesoDataPortal.licenceLabel}</ExternalLink>).
+    </p>
+  );
+}
+
+/** Credit line shown under the live generation mix (Demand view). */
+export function GridMixAttribution({ className }: { className?: string }) {
+  return (
+    <div className={cn('text-xs text-muted-foreground', className)}>
+      <GridMixAttributionText />
+    </div>
   );
 }

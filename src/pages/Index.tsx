@@ -42,8 +42,16 @@ const Index = () => {
 
   const [sparkleTrigger, setSparkleTrigger] = useState(false);
 
-  const { scheduleGreenAlerts, scheduleDailyForecast, scheduleHighIntensityAlerts, prefs } =
-    useNotifications();
+  const {
+    scheduleGreenAlerts,
+    scheduleDailyForecast,
+    scheduleHighIntensityAlerts,
+    prefs,
+    isSupported: notificationsSupported,
+    permissionStatus: notificationPermission,
+    requestPermission: requestNotificationPermission,
+    updatePreference: updateNotificationPreference,
+  } = useNotifications();
   useOctopusEnergy();
 
   const {
@@ -102,6 +110,14 @@ const Index = () => {
     scheduleGreenAlerts,
     scheduleDailyForecast,
     scheduleHighIntensityAlerts,
+    isError,
+    notificationNudge: {
+      isSupported: notificationsSupported,
+      permissionStatus: notificationPermission,
+      alertsAlreadyOn: prefs.lowIntensityEnabled,
+      requestPermission: requestNotificationPermission,
+      enableCleanAlerts: () => updateNotificationPreference('lowIntensityEnabled', true),
+    },
   });
 
   const throttledRefetch = useThrottledRefetch(refetch, {
