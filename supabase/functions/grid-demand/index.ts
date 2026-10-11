@@ -6,28 +6,44 @@ declare const Deno: any;
 
 import { corsHeaders } from '../_shared/cors.ts';
 import { checkRateLimit } from '../_shared/rate-limit.ts';
+import {
+  buildGridDemand,
+  embeddedForecastUrl,
+  frequencyUrl,
+  fuelinstUrl,
+} from '../_shared/grid-demand.ts';
 
-interface IntensityResponse {
-  data: {
-    generationmix: {
-      fuel: string;
-      perc: number;
-    }[];
-  };
-}
+/**
+ * Live GB generation mix in MW.
+ *
+ * Sources and rules are documented in ../_shared/grid-demand.ts:
+ * - Elexon BMRS FUELINST (5-min metered transmission generation + interconnectors)
+ * - NESO Embedded Solar and Wind Forecast (current half hour; embedded output is not metered live)
+ * - Elexon BMRS FREQ (system frequency)
+ * All keyless. Figures older than the thresholds there are refused and the
+ * response says status "unavailable" instead of returning old or estimated
+ * totals. (This used to read NESO "Historic Demand Data 2025", frozen at
+ * 31 Dec 2025, and multiply today's % shares by it.)
+ */
 
-interface NesoResponse {
-  result: {
-    records: {
-      SETTLEMENT_DATE: string;
-      SETTLEMENT_PERIOD: number;
-      TSD: number; // Transmission System Demand
-      ND: number; // National Demand
-      ENGLAND_WALES_DEMAND: number;
-      EMBEDDED_WIND_GENERATION: number;
-      EMBEDDED_SOLAR_GENERATION: number;
-    }[];
-  };
+const UPSTREAM_TIMEOUT_MS = 8000;
+
+/** GET JSON; null on network error, timeout, non-2xx or bad JSON. Never a fake value. */
+async function getJson(label: string, url: string): Promise<unknown | null> {
+  try {
+    const res = await fetch(url, {
+      headers: { Accept: 'application/json' },
+      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+    });
+    if (!res.ok) {
+      console.warn(`[grid-demand] ${label} responded ${res.status}`);
+      return null;
+    }
+    return await res.json();
+  } catch (err) {
+    console.warn(`[grid-demand] ${label} failed:`, err instanceof Error ? err.message : err);
+    return null;
+  }
 }
 
 Deno.serve(async (req: Request) => {
@@ -55,126 +71,23 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    console.log('Fetching grid demand data...');
+    const now = new Date();
+    const [fuelinst, embedded, frequency] = await Promise.all([
+      getJson('Elexon FUELINST', fuelinstUrl(now)),
+      getJson('NESO embedded forecast', embeddedForecastUrl()),
+      getJson('Elexon FREQ', frequencyUrl(now)),
+    ]);
 
-    // 1. Fetch Generation Mix % from Carbon Intensity API
-    const mixPromise = fetch('https://api.carbonintensity.org.uk/generation', {
-      headers: { 'Accept': 'application/json' }
-    }).then(res => res.json() as Promise<IntensityResponse>);
-
-    // 2. Fetch Demand from NESO Data Portal (SQL search for latest record)
-    // Resource ID for "Historic Demand Data 2025": b2bde559-3455-4021-b179-dfe60c0337b0
-    // We sort by _id desc to get the latest inserted row, or we could sort by date
-    const resourceId = 'b2bde559-3455-4021-b179-dfe60c0337b0';
-    const nesoUrl = `https://api.neso.energy/api/3/action/datastore_search_sql?sql=SELECT * from "${resourceId}" ORDER BY "_id" DESC LIMIT 1`;
-
-    const demandPromise = fetch(nesoUrl).then(res => res.json() as Promise<NesoResponse>);
-
-    // 3. Fetch real-time frequency from Elexon Insights Solution REST API (public, no key required)
-    const frequencyPromise = (async () => {
-      try {
-        console.log('Fetching real-time frequency from Elexon...');
-        const freqRes = await fetch('https://data.elexon.co.uk/bmrs/api/v1/system/frequency');
-
-        if (!freqRes.ok) {
-          console.warn(`Real-time frequency request failed: ${freqRes.status}`);
-          return null;
-        }
-
-        interface ElexonFreqItem {
-          measurementTime: string;
-          frequency: number;
-        }
-        const data = await freqRes.json();
-        if (Array.isArray(data) && data.length > 0) {
-          // Sort by measurementTime descending to find the latest
-          const sorted = (data as ElexonFreqItem[]).sort((a, b) => 
-            new Date(b.measurementTime).getTime() - new Date(a.measurementTime).getTime()
-          );
-          const latest = sorted[0];
-          const frequency = latest.frequency;
-          console.log(`Real-time frequency: ${frequency} Hz (measured at ${latest.measurementTime})`);
-          return { frequency };
-        }
-
-        console.warn('Could not parse frequency from Elexon API: empty or invalid array');
-        return null;
-      } catch (err) {
-        console.error('Error fetching real-time frequency from Elexon:', err);
-        return null;
-      }
-    })();
-
-    // Use Promise.allSettled so one failure doesn't block the other
-    const [mixResult, demandResult, freqResult] = await Promise.allSettled([mixPromise, demandPromise, frequencyPromise]);
-
-    let mixData: IntensityResponse | null = null;
-    let demandData: NesoResponse | null = null;
-    let frequencyData: { frequency: number } | null = null;
-
-    if (mixResult.status === 'fulfilled') {
-      mixData = mixResult.value;
-    } else {
-      console.error('Failed to fetch generation mix:', mixResult.reason);
+    const body = buildGridDemand({ now, fuelinst, embedded, frequency });
+    if (body.status === 'unavailable') {
+      console.warn(`[grid-demand] unavailable: ${body.reason} (newest data ${body.dataTime ?? 'none'})`);
     }
 
-    if (demandResult.status === 'fulfilled') {
-      demandData = demandResult.value;
-    } else {
-      console.warn('Failed to fetch demand data:', demandResult.reason);
-    }
-
-    if (freqResult.status === 'fulfilled') {
-      frequencyData = freqResult.value;
-    } else {
-      console.warn('Failed to fetch frequency data:', freqResult.reason);
-    }
-
-    // Validation - We need at least the mix to show something useful
-    if (!mixData?.data?.generationmix) {
-      throw new Error('Failed to fetch generation mix');
-    }
-
-    const latestDemand = demandData?.result?.records?.[0];
-
-    // Use National Demand (ND) as the headline figure
-    const totalDemandMW = latestDemand?.ND ?? null;
-
-    // Extract frequency from the real-time data (new format: { frequency: number })
-    const gridFrequency = frequencyData?.frequency ?? null;
-
-    // Calculate MW for each source based on percentage
-    // Note: The percentages from carbonintensity.org.uk might slightly disagree with NESO MWs if timestamps drift,
-    // but it's the best approximation we have without a raw MW feed for everything.
-    const mixMW = mixData.data.generationmix.map(source => ({
-      id: source.fuel,
-      name: source.fuel,
-      perc: source.perc,
-      mw: totalDemandMW !== null ? Math.round(totalDemandMW * (source.perc / 100)) : null
-    }));
-
-    // Sort by percentage descending if MW is not available, otherwise MW
-    mixMW.sort((a, b) => {
-      if (a.mw !== null && b.mw !== null) {
-        return b.mw - a.mw;
-      }
-      return b.perc - a.perc;
-    });
-
-    return new Response(
-      JSON.stringify({
-        timestamp: new Date().toISOString(),
-        settlementDate: latestDemand?.SETTLEMENT_DATE ?? null,
-        settlementPeriod: latestDemand?.SETTLEMENT_PERIOD ?? null,
-        totalDemandMW: totalDemandMW,
-        gridFrequency: gridFrequency,
-        embeddedSolarMW: latestDemand?.EMBEDDED_SOLAR_GENERATION ?? null,
-        embeddedWindMW: latestDemand?.EMBEDDED_WIND_GENERATION ?? null,
-        mix: mixMW
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
-
+    // 200 either way so the client still gets frequency and the reason;
+    // the app shows its "unavailable" state when status !== 'ok'.
+    return new Response(JSON.stringify(body), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+    })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error:', message);
