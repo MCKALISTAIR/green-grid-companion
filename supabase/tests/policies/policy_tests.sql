@@ -93,7 +93,7 @@ END $$;
 DO $$ DECLARE c text; BEGIN FOR c IN SELECT command FROM cron.job LOOP EXECUTE c; END LOOP; END $$;
 INSERT INTO results SELECT 'all 4 cron jobs send the scheduler secret', count(*) = 4 AND bool_and(headers->>'x-cron-secret' = public.get_scheduler_secret()), count(*)::text || ' calls' FROM net.calls;
 INSERT INTO results SELECT 'cron jobs target the real project URL', bool_and(url LIKE 'https://klwezcjmlrdwvvzisdtd.supabase.co/functions/v1/%'), string_agg(DISTINCT split_part(url, '/functions', 1), ',') FROM net.calls;
-INSERT INTO results SELECT 'cron job set unchanged (4 jobs)', count(*) = 4, string_agg(jobname, ',') FROM cron.job;
+INSERT INTO results SELECT 'cron job set: 4 notification jobs + push cleanup', count(*) = 5 AND bool_or(jobname = 'cleanup-push-subscriptions-daily'), string_agg(jobname, ',') FROM cron.job;
 
 -- 6. Anonymous-access tidy-up (20261010170000_anon_access_tidy.sql)
 -- Fixture: user 1 owns meter M-1; M-2 has orphaned history (its owner disconnected).

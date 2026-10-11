@@ -1,6 +1,14 @@
 // Push Notification Utility for Deno Edge Functions
 // Supports APNs (Apple Push Notification service) and FCM v1 (Firebase Cloud Messaging)
 
+import { isDeadPushToken, removeDeadPushTokens } from "./push-cleanup.ts";
+
+async function deleteSubscriptionsByToken(tokens: string[]) {
+  const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
+  const client = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  return await client.from("push_subscriptions").delete().in("device_token", tokens);
+}
+
 // Helper to convert PEM string to binary Der ArrayBuffer
 function pemToDer(pem: string): Uint8Array<ArrayBuffer> {
   const cleanPem = pem
@@ -198,6 +206,8 @@ export async function sendPushNotifications(notifications: PushNotificationPaylo
     }
   }
 
+  const deadTokens: string[] = [];
+
   // Send notifications in parallel batches
   const promises = notifications.map(async (n) => {
     const platform = n.platform || "ios";
@@ -232,6 +242,7 @@ export async function sendPushNotifications(notifications: PushNotificationPaylo
         } else {
           const text = await response.text();
           console.error(`[PUSH] Failed APNs send to ${n.token.substring(0, 10)}... Status: ${response.status}. Reason: ${text}`);
+          if (isDeadPushToken("apns", response.status, text)) deadTokens.push(n.token);
         }
       } catch (err) {
         console.error(`[PUSH] APNs fetch error for ${n.token.substring(0, 10)}...`, err);
@@ -264,6 +275,7 @@ export async function sendPushNotifications(notifications: PushNotificationPaylo
         } else {
           const text = await response.text();
           console.error(`[PUSH] Failed FCM send to ${n.token.substring(0, 10)}... Status: ${response.status}. Reason: ${text}`);
+          if (isDeadPushToken("fcm", response.status, text)) deadTokens.push(n.token);
         }
       } catch (err) {
         console.error(`[PUSH] FCM fetch error for ${n.token.substring(0, 10)}...`, err);
@@ -274,4 +286,7 @@ export async function sendPushNotifications(notifications: PushNotificationPaylo
   });
 
   await Promise.all(promises);
+
+  // Clean up subscriptions for uninstalled apps / revoked permissions.
+  await removeDeadPushTokens(deadTokens, deleteSubscriptionsByToken);
 }

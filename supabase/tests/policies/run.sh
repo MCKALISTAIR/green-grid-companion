@@ -72,3 +72,30 @@ SQL
     echo "FAIL | expected the no-plaintext constraint to be skipped (found $has)"; exit 1
   fi
 fi
+
+if [[ -f "$HERE/user_data_cleanup_tests.sql" ]]; then
+  if ! out=$($PSQL -q -v ON_ERROR_STOP=1 -d "$DB" -At -F ' | ' -f - < "$HERE/user_data_cleanup_tests.sql" 2>&1); then
+    echo "user_data_cleanup_tests.sql errored:"; echo "$out"; exit 1
+  fi
+  echo "$out" | grep -E '^(PASS|FAIL) ' || true
+  summary=$(echo "$out" | tail -n 1)
+  echo "user data cleanup passed | failed: $summary"
+  [[ "$summary" =~ \|\ 0$ ]] || exit 1
+fi
+
+# 20261011100000_user_data_cleanup.sql: safe to re-apply, and it removes readings
+# orphaned before the trigger existed (fixture meter M-2 has no meter row).
+CLEANUP="$REPO/supabase/migrations/20261011100000_user_data_cleanup.sql"
+if [[ -f "$CLEANUP" ]]; then
+  if ! out=$($PSQL -q -v ON_ERROR_STOP=1 -d "$DB" -f - < "$CLEANUP" 2>&1); then
+    echo "FAIL re-applying $(basename "$CLEANUP")"; echo "$out"; exit 1
+  fi
+  left=$($PSQL -At -d "$DB" -c "SELECT (SELECT count(*) FROM public.octopus_consumption WHERE mpan = 'M-2') + (SELECT count(*) FROM public.carbon_footprint WHERE mpan = 'M-2')")
+  kept=$($PSQL -At -d "$DB" -c "SELECT count(*) FROM public.octopus_consumption WHERE mpan = 'M-1'")
+  jobs=$($PSQL -At -d "$DB" -c "SELECT count(*) FROM cron.job WHERE jobname = 'cleanup-push-subscriptions-daily'")
+  if [[ "$left" == "0" && "$kept" == "1" && "$jobs" == "1" ]]; then
+    echo "PASS | user_data_cleanup re-applies, removes orphaned readings, keeps owned ones, one cron job"
+  else
+    echo "FAIL | user_data_cleanup re-apply (orphans left: $left, owned kept: $kept, jobs: $jobs)"; exit 1
+  fi
+fi
