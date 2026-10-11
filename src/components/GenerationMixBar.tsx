@@ -1,5 +1,5 @@
 import { GenerationMix, getFuelColor } from '@/lib/carbonApi';
-import { Home, Factory, Flame, Wind, Sun, Atom, Droplets, Leaf, Mountain, ArrowLeftRight, Zap, Cable, type LucideIcon } from 'lucide-react';
+import { Home, Factory } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
@@ -14,38 +14,18 @@ import { DEFINITIONS } from '@/lib/definitions';
 import { ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MixItem, getSortedMix, getRenewablesPercentage, getEmbeddedSolarPercentage, getTotalSolarMW } from '@/lib/generationUtils';
+import { getFuelTone } from '@/lib/fuelColors';
+import { FuelChip, FuelShareBar } from '@/components/generation/FuelVisuals';
 
 export type { MixItem };
 
-/** Returns a thematic Lucide icon component for a given fuel type string */
-export function getFuelIcon(fuel: string): LucideIcon {
-  switch (fuel.toLowerCase()) {
-    case 'gas':           return Flame;
-    case 'wind':          return Wind;
-    case 'solar':         return Sun;
-    case 'nuclear':       return Atom;
-    case 'hydro':         return Droplets;
-    case 'biomass':       return Leaf;
-    case 'coal':          return Mountain;
-    case 'imports':       return ArrowLeftRight;
-    case 'interconnectors': return Cable;
-    default:              return Zap;
-  }
-}
+import { getFuelIcon } from '@/components/generation/fuelIcons';
 
-/** Raw hex for each fuel — used for rgba() card tinting and fill bars */
+export { getFuelIcon };
+
+/** Bright hex for each fuel (stacked bar). Tokens live in src/lib/fuelColors.ts. */
 export function getFuelHex(fuel: string): string {
-  switch (fuel.toLowerCase()) {
-    case 'gas':     return '#f97316'; // orange
-    case 'wind':    return '#38bdf8'; // sky blue
-    case 'solar':   return '#facc15'; // yellow
-    case 'nuclear': return '#a78bfa'; // purple
-    case 'hydro':   return '#34d399'; // emerald
-    case 'biomass': return '#4ade80'; // green
-    case 'coal':    return '#78716c'; // stone
-    case 'imports': return '#f472b6'; // pink
-    default:        return '#94a3b8'; // slate
-  }
+  return getFuelTone(fuel).hex;
 }
 
 interface GenerationMixBarProps {
@@ -257,23 +237,19 @@ export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolar
               const fuelKey = item.fuel.charAt(0).toUpperCase() + item.fuel.slice(1);
               const definition = DEFINITIONS[fuelKey as keyof typeof DEFINITIONS] || DEFINITIONS['Other'];
 
-              const Icon = getFuelIcon(item.fuel);
-              const hex = getFuelHex(item.fuel);
-              const [r, g, b] = [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)];
+              const isLargest = item.fuel === dominantFuel;
 
               return (
                 <div
                   key={item.fuel}
-                  className="rounded-xl border border-border/60 overflow-hidden"
-                  style={{ background: `linear-gradient(135deg, rgba(${r},${g},${b},0.08) 0%, transparent 55%)` }}
+                  data-dialog-fuel={item.fuel}
+                  className={`rounded-xl border bg-card overflow-hidden ${isLargest ? 'border-foreground/25' : 'border-border/60'}`}
                 >
                   {/* Header row */}
                   <div className="flex items-center justify-between px-3 pt-3 pb-1">
                     <div className="flex items-center gap-3">
-                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${getFuelColor(item.fuel)}`}>
-                        <Icon className="w-5 h-5 text-white" aria-hidden="true" />
-                      </div>
-                      <span className="font-semibold capitalize text-base">{item.fuel}</span>
+                      <FuelChip fuel={item.fuel} perc={item.perc} size="lg" strong={isLargest} animated={!shouldReduceMotion} />
+                      <span className="font-normal capitalize text-base">{item.fuel}</span>
                     </div>
                     <div className="text-right">
                       <span className="block text-lg font-bold tabular-nums">
@@ -321,17 +297,9 @@ export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolar
                     </div>
                   )}
 
-                  {/* Mini fill bar — encodes % share of total mix */}
-                  <div className="h-1 w-full mt-1" style={{ backgroundColor: `rgba(${r},${g},${b},0.12)` }}>
-                    <div
-                      className="h-full transition-all duration-700 ease-out"
-                      style={{
-                        width: `${Math.min(item.perc, 100)}%`,
-                        backgroundColor: hex,
-                        opacity: item.perc === 0 ? 0.15 : 0.6,
-                      }}
-                      role="presentation"
-                    />
+                  {/* Share bar: the colour carrier */}
+                  <div className="px-3 pb-3 pt-1">
+                    <FuelShareBar fuel={item.fuel} perc={item.perc} />
                   </div>
                 </div>
               );

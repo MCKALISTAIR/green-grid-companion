@@ -95,3 +95,20 @@ describe('shouldCelebrateZeroCarbon', () => {
     expect(shouldCelebrateZeroCarbon(Number.NaN, true)).toBe(false);
   });
 });
+
+describe('isReadingFresh (zero-carbon chip gate)', () => {
+  const now = Date.parse('2026-10-11T10:00:00Z');
+  it('is fresh up to 45 minutes and stale after', async () => {
+    const { isReadingFresh, ZERO_CARBON_MAX_AGE_MINUTES } = await import('./sceneUtils');
+    expect(ZERO_CARBON_MAX_AGE_MINUTES).toBe(45);
+    expect(isReadingFresh('2026-10-11T09:30:00Z', undefined, now)).toBe(true);
+    expect(isReadingFresh('2026-10-11T09:15:00Z', undefined, now)).toBe(true);
+    expect(isReadingFresh('2026-10-11T09:14:00Z', undefined, now)).toBe(false);
+    expect(isReadingFresh('2026-10-11T09:00:00Z', undefined, now)).toBe(false);
+  });
+  it('treats missing or invalid times as not fresh', async () => {
+    const { isReadingFresh } = await import('./sceneUtils');
+    expect(isReadingFresh(null, undefined, now)).toBe(false);
+    expect(isReadingFresh('not a date', undefined, now)).toBe(false);
+  });
+});

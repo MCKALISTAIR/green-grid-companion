@@ -1,7 +1,8 @@
 import { Zap, RefreshCw, AlertTriangle, Info, Activity, Home } from 'lucide-react';
 import { motion, useSpring, useTransform } from 'framer-motion';
 import { Card } from '@/components/ui/card';
-import { GenerationMixBar, getFuelIcon, getFuelHex } from '@/components/GenerationMixBar';
+import { GenerationMixBar } from '@/components/GenerationMixBar';
+import { GenerationSourceCards } from '@/components/generation/GenerationSourceCards';
 import { useGridDemand } from '@/hooks/useGridDemand';
 import { useSettings } from '@/hooks/useSettings';
 import { Button } from '@/components/ui/button';
@@ -219,185 +220,12 @@ export function DemandView() {
                 <GenerationMixBar mix={sortedMix} showMW={true} embeddedSolarMW={embeddedSolarMW} />
             </Card>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                {sortedMixWithTrends.map((source, idx) => {
-                    const fuelKey = source.fuel?.toLowerCase() || source.name?.toLowerCase() || '';
-                    const streak = streakByFuel[fuelKey];
-                    const milestone = milestoneByFuel[fuelKey];
-                    const hasInsight = (streak?.isActive) || milestone;
-                    const Icon = getFuelIcon(fuelKey);
-                    const hex = getFuelHex(fuelKey);
-                    const r = parseInt(hex.slice(1, 3), 16);
-                    const g = parseInt(hex.slice(3, 5), 16);
-                    const b = parseInt(hex.slice(5, 7), 16);
-                    const getCategoryLabel = (key: string): string => {
-                        switch (key) {
-                            case 'wind':
-                            case 'solar':
-                            case 'hydro':
-                                return 'Renewable';
-                            case 'biomass':
-                                return 'Kind of Renewable';
-                            case 'nuclear':
-                                return 'Low Carbon';
-                            case 'gas':
-                            case 'coal':
-                                return 'Fossil Fuel';
-                            case 'imports':
-                            case 'interconnectors':
-                                return 'Import';
-                            default:
-                                return '';
-                        }
-                    };
-                    const categoryLabel = getCategoryLabel(fuelKey);
-                    const isZero = source.perc === 0;
-
-                    return (
-                    <motion.div
-                            key={source.id}
-                            initial={{ opacity: 0, y: 8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{
-                              delay: idx * 0.04,
-                              duration: 0.35,
-                              ease: [0.25, 0.46, 0.45, 0.94],
-                            }}
-                            whileHover={{ y: -2 }}
-                        >
-                            <Card
-                                className={`relative p-3 pb-4 overflow-hidden ${hasInsight ? 'ring-1 ring-primary/30' : ''}`}
-                                style={{
-                                    background: `linear-gradient(180deg, rgba(${r},${g},${b},0.08) 0%, transparent 70%)`,
-                                    borderColor: `rgba(${r},${g},${b},0.22)`,
-                                }}
-                            >
-                                {/* Accent stripe — fuel colour is data, not chrome */}
-                                <div
-                                    className="absolute left-0 top-0 bottom-0 w-1"
-                                    style={{ backgroundColor: hex, opacity: isZero ? 0.2 : 0.85 }}
-                                    aria-hidden
-                                />
-
-                                <div className="flex items-start justify-between gap-2">
-                                    <div className="flex items-center gap-2 min-w-0">
-                                        <motion.div
-                                            className="w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0"
-                                            style={{ backgroundColor: hex, opacity: isZero ? 0.35 : 1 }}
-                                            animate={
-                                                !isZero && fuelKey === 'solar'
-                                                    ? { rotate: [0, 8, -8, 0] }
-                                                    : !isZero && fuelKey === 'wind'
-                                                        ? { rotate: [0, 360] }
-                                                        : !isZero && fuelKey === 'gas'
-                                                            ? { scale: [1, 1.08, 1] }
-                                                            : {}
-                                            }
-                                            transition={
-                                                fuelKey === 'wind'
-                                                    ? { duration: 8, repeat: Infinity, ease: 'linear' as const }
-                                                    : { duration: fuelKey === 'gas' ? 1.6 : 4, repeat: Infinity, ease: 'easeInOut' as const }
-                                            }
-                                        >
-                                            <Icon className="w-4 h-4 text-white" aria-hidden="true" />
-                                        </motion.div>
-                                        <div className="min-w-0">
-                                            <div className="flex items-center gap-1">
-                                                <span className="text-sm font-semibold capitalize truncate">{source.name}</span>
-                                                <FuelTrendIndicator
-                                                    currentPerc={source.perc}
-                                                    previousPerc={source.previousPerc}
-                                                    trend={source.trend}
-                                                    showDiff={false}
-                                                />
-                                            </div>
-                                            {categoryLabel && !isZero && (
-                                                <div className="flex items-center gap-1">
-                                                    <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                                                        {categoryLabel}
-                                                    </span>
-                                                    {fuelKey === 'biomass' && (
-                                                        <Popover>
-                                                            <PopoverTrigger asChild>
-                                                                <button
-                                                                    className="h-3.5 w-3.5 rounded-full p-0 flex items-center justify-center hover:bg-muted transition-colors"
-                                                                    aria-label="More information about Biomass classification"
-                                                                >
-                                                                    <Info className="w-2.5 h-2.5 cursor-help text-muted-foreground" />
-                                                                </button>
-                                                            </PopoverTrigger>
-                                                            <PopoverContent className="w-[240px] p-3 text-xs bg-card border-border z-50">
-                                                                <p className="font-semibold mb-1">Kind of Renewable?</p>
-                                                                <p>Biomass is officially classified as a renewable energy source by grid standards since the organic matter burned can be replenished. However, it still involves burning fuel (combustion), which releases direct carbon emissions at the point of generation.</p>
-                                                            </PopoverContent>
-                                                        </Popover>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        {source.mw !== null && (
-                                            <span className="block text-base font-bold font-mono tabular-nums leading-tight">
-                                                {(source.mw / 1000).toFixed(2)}
-                                                <span className="text-xs font-medium font-sans text-muted-foreground ml-0.5">GW</span>
-                                            </span>
-                                        )}
-                                        <div className="flex items-center justify-end gap-1">
-                                            <span className="text-xs text-muted-foreground tabular-nums">{source.perc}%</span>
-                                            {source.previousPerc !== null && source.trend && source.trend !== 'stable' && (
-                                                <span className={`text-[10px] tabular-nums ${source.trend === 'up' ? 'text-primary' : 'text-destructive'}`}>
-                                                    ({source.trend === 'up' ? '+' : ''}{(source.perc - source.previousPerc).toFixed(1)})
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Animated share bar */}
-                                <div
-                                    className="mt-3 h-1.5 w-full rounded-full overflow-hidden"
-                                    style={{ backgroundColor: `rgba(${r},${g},${b},0.12)` }}
-                                >
-                                    <motion.div
-                                        className="h-full rounded-full"
-                                        style={{ backgroundColor: hex, opacity: isZero ? 0.2 : 0.9 }}
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${Math.min(source.perc, 100)}%` }}
-                                        transition={{ duration: 0.8, ease: 'easeOut' as const, delay: idx * 0.04 }}
-                                    />
-                                </div>
-
-                                {/* Solar: show utility vs rooftop split */}
-                                {fuelKey === 'solar' && embeddedSolarMW !== null && source.mw !== null && source.mw > 0 && (
-                                    <div className="mt-2 pt-2 border-t border-border/40 space-y-1">
-                                        <div className="flex items-center justify-between text-xs">
-                                            <span className="text-muted-foreground">Utility-scale</span>
-                                            <span className="font-medium font-mono tabular-nums">{((source.mw - embeddedSolarMW) / 1000).toFixed(2)} GW</span>
-                                        </div>
-                                        <div className="flex items-center justify-between text-xs">
-                                            <span className="text-muted-foreground flex items-center gap-1">
-                                                <Home className="w-3 h-3" /> Rooftop
-                                            </span>
-                                            <span className="font-medium font-mono tabular-nums">{(embeddedSolarMW / 1000).toFixed(2)} GW</span>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {hasInsight && (
-                                    <div className="mt-2 pt-2 border-t border-border/40">
-                                        <FuelInsightBadge
-                                            streak={streak?.isActive ? streak : undefined}
-                                            milestone={milestone}
-                                            compact
-                                        />
-                                    </div>
-                                )}
-                            </Card>
-                        </motion.div>
-                    );
-                })}
-            </div>
+            <GenerationSourceCards
+                sources={sortedMixWithTrends}
+                embeddedSolarMW={embeddedSolarMW}
+                streakByFuel={streakByFuel}
+                milestoneByFuel={milestoneByFuel}
+            />
         </div>
     );
 }

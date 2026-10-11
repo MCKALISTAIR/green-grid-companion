@@ -21,7 +21,7 @@ export function MarkdownDocument({ source }: { source: string }) {
             );
           case 'quote':
             return (
-              <blockquote key={k} className="space-y-1 rounded-md border-l-4 border-amber-400 bg-amber-50/60 p-3 text-sm text-muted-foreground dark:bg-amber-400/10">
+              <blockquote key={k} className="space-y-1 rounded-lg border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
                 {b.lines.map((l, j) => <p key={`${k}-${j}`}>{renderInline(l, `${k}-${j}`)}</p>)}
               </blockquote>
             );
