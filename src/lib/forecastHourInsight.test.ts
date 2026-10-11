@@ -36,7 +36,7 @@ describe('getForecastHourInsight', () => {
 
   it('links selected hour value, band, and vs-now copy', () => {
     const forecast = [slot(2, 60, 'very low'), slot(3, 180, 'high')];
-    const insight = getForecastHourInsight(forecast, 0, 150, 'friendly');
+    const insight = getForecastHourInsight(forecast, 0, 150, 'plain');
     expect(insight).not.toBeNull();
     expect(insight!.value).toBe(60);
     expect(insight!.band).toBe('very low');
@@ -51,7 +51,7 @@ describe('getForecastHourInsight', () => {
       forecast,
       0,
       200,
-      'friendly',
+      'plain',
       new Date(),
       new Set([0, 1]),
     );
@@ -59,15 +59,15 @@ describe('getForecastHourInsight', () => {
     expect(insight!.action.toLowerCase()).toMatch(/best window/);
   });
 
-  it('uses snarky condition labels when tone is snarky', () => {
+  it('adds a Cheeky line after the band name in Cheeky', () => {
     const forecast = [slot(1, 40, 'very low')];
-    const insight = getForecastHourInsight(forecast, 0, 120, 'snarky', new Date(), new Set());
-    expect(insight!.condition.toLowerCase()).not.toBe('very low');
+    const insight = getForecastHourInsight(forecast, 0, 120, 'cheeky', new Date(), new Set());
+    expect(insight!.condition).toMatch(/^Very low\. .+/);
   });
 
   it('reports dirtier-than-now for high future hours', () => {
     const forecast = [slot(2, 280, 'very high')];
-    const insight = getForecastHourInsight(forecast, 0, 90, 'friendly');
+    const insight = getForecastHourInsight(forecast, 0, 90, 'plain');
     expect(insight!.vsNow).toMatch(/dirtier than now/i);
     expect(insight!.action.toLowerCase()).toMatch(/avoid|heavy|shift/);
   });
@@ -75,7 +75,7 @@ describe('getForecastHourInsight', () => {
   it('uses live-grid wording for the current slot instead of vs-now', () => {
     const now = new Date('2026-09-21T15:10:00.000Z');
     const forecast = [slotAt(new Date('2026-09-21T15:00:00.000Z'), 214, 'high')];
-    const insight = getForecastHourInsight(forecast, 0, 166, 'friendly', now);
+    const insight = getForecastHourInsight(forecast, 0, 166, 'plain', now);
     expect(insight!.isCurrent).toBe(true);
     expect(insight!.vsNow).toMatch(/live grid reading/i);
   });
@@ -107,13 +107,13 @@ describe('current-hour line agrees with the now-or-wait card', () => {
   const current = [slotAt(new Date('2026-09-21T15:00:00.000Z'), 260, 'high')];
 
   it('does not say "wait" when the card says now', () => {
-    const insight = getForecastHourInsight(current, 0, 260, 'friendly', now, new Set(), 'use_now');
+    const insight = getForecastHourInsight(current, 0, 260, 'plain', now, new Set(), 'use_now');
     expect(insight!.action.toLowerCase()).not.toMatch(/wait/);
   });
 
   it('says wait when the card says wait, even in a clean hour', () => {
     const clean = [slotAt(new Date('2026-09-21T15:00:00.000Z'), 45, 'very low')];
-    const insight = getForecastHourInsight(clean, 0, 45, 'friendly', now, new Set([0]), 'wait');
+    const insight = getForecastHourInsight(clean, 0, 45, 'plain', now, new Set([0]), 'wait');
     expect(insight!.action).toMatch(/wait if you can/i);
     expect(insight!.action).not.toMatch(/best window is open/i);
   });
@@ -122,7 +122,7 @@ describe('current-hour line agrees with the now-or-wait card', () => {
     const bands = ['very low', 'low', 'moderate', 'high', 'very high'] as const;
     for (const band of bands) {
       const f = [slotAt(new Date('2026-09-21T15:00:00.000Z'), 100, band)];
-      expect(getForecastHourInsight(f, 0, 100, 'friendly', now)!.action).not.toMatch(/—/);
+      expect(getForecastHourInsight(f, 0, 100, 'plain', now)!.action).not.toMatch(/—/);
     }
   });
 });

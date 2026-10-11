@@ -43,7 +43,7 @@ describe('hourly forecast bar and tooltip agree', () => {
     const rows = await loadSouthScotland();
     const i = rows.findIndex((r) => r.from === '2026-10-11T10:00Z');
     expect(getSlotDisplayValue(rows[i], NOW)).toBe(rows[i].intensity.forecast);
-    expect(getForecastHourInsight(rows, i, 0, 'friendly', NOW)!.value).toBe(0);
+    expect(getForecastHourInsight(rows, i, 0, 'plain', NOW)!.value).toBe(0);
   });
 
   it('uses the actual only once the half hour has ended', () => {

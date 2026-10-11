@@ -5,6 +5,15 @@ import { useEffect, useState, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
+import { readTone } from '@/lib/tone';
+import {
+    cleanWindowNotification,
+    dailyOutlookBody,
+    DAILY_OUTLOOK_TITLE,
+    highWindowNotification,
+    liveCleanNotification,
+    NO_DAILY_FORECAST_BODY,
+} from '@/lib/voice/notificationCopy';
 import {
     NOTIFICATION_IDS,
     filterNotificationIds,
@@ -118,8 +127,7 @@ export function useNotifications() {
                 await LocalNotifications.schedule({
                     notifications: [{
                         id: NOTIFICATION_IDS.LIVE_GREEN,
-                        title: "🟢 Live Energy Alert",
-                        body: `Grid is GREEN right now! Intensity is ${nowSlot.intensity.forecast}g CO₂/kWh.`,
+                        ...liveCleanNotification(nowSlot.intensity.forecast, prefs.lowIntensityThreshold, readTone()),
                         schedule: { at: new Date(Date.now() + 1000) }, // Immediate
                         smallIcon: 'ic_stat_leaf',
                     }]
@@ -199,7 +207,7 @@ export function useNotifications() {
             return slotTime >= today && slotTime <= endOfDay;
         });
 
-        if (todaySlots.length === 0) return 'Check the app for today\'s forecast.';
+        if (todaySlots.length === 0) return NO_DAILY_FORECAST_BODY;
 
         const avgIntensity = Math.round(
             todaySlots.reduce((sum, slot) => sum + slot.intensity.forecast, 0) / todaySlots.length
@@ -238,14 +246,20 @@ export function useNotifications() {
             longestGreenStart = currentGreenStart;
         }
 
-        let bestTimeStr = '';
-        if (longestGreenStart && longestGreenDuration >= 1) {
-            const endTime = new Date(longestGreenStart.getTime() + longestGreenDuration * 60 * 60 * 1000);
-            const formatTime = (d: Date) => d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
-            bestTimeStr = ` Best window: ${formatTime(longestGreenStart)}-${formatTime(endTime)} (${longestGreenDuration}h).`;
-        }
+        const best = longestGreenStart && longestGreenDuration >= 1
+            ? {
+                start: longestGreenStart,
+                end: new Date(longestGreenStart.getTime() + longestGreenDuration * 60 * 60 * 1000),
+                hours: longestGreenDuration,
+            }
+            : null;
 
-        return `Today's average: ${avgIntensity}g CO₂/kWh. ${lowHours > 0 ? `${lowHours}h of green energy expected 🌿` : 'Limited green periods today.'}${bestTimeStr}`;
+        return dailyOutlookBody({
+            avg: avgIntensity,
+            cleanHours: lowHours,
+            threshold: prefs.lowIntensityThreshold,
+            best,
+        });
     }, [prefs.lowIntensityThreshold]);
 
     const scheduleDailyForecast = useCallback(async (forecast: ForecastData[]) => {
@@ -274,7 +288,7 @@ export function useNotifications() {
             await LocalNotifications.schedule({
                 notifications: [{
                     id: NOTIFICATION_IDS.DAILY_FORECAST,
-                    title: '🌅 Daily Energy Outlook',
+                    title: DAILY_OUTLOOK_TITLE,
                     body: summary,
                     schedule: {
                         on: { hour: hours, minute: minutes },
@@ -353,8 +367,7 @@ export function useNotifications() {
 
                 pendingNotifications.push({
                     id: greenAlertId(startTime.getTime()),
-                    title: "💚 Perfect Time to Use Energy",
-                    body: `Grid is running clean! Great time to charge devices, run the dishwasher, or do laundry (${slot.intensity.forecast}g CO₂/kWh).`,
+                    ...cleanWindowNotification(startTime, slot.intensity.forecast, prefs.lowIntensityThreshold, readTone()),
                     schedule: { at: startTime },
                     smallIcon: 'ic_stat_leaf',
                     actionTypeId: "",
@@ -427,8 +440,7 @@ export function useNotifications() {
 
                 pendingNotifications.push({
                     id: highAlertId(startTime.getTime()),
-                    title: "⚠️ High Carbon Period Starting",
-                    body: `The grid is getting dirtier (${slot.intensity.forecast}g CO₂/kWh). Consider delaying heavy appliance use if possible.`,
+                    ...highWindowNotification(startTime, slot.intensity.forecast, prefs.highIntensityThreshold, readTone()),
                     schedule: { at: startTime },
                     smallIcon: 'ic_stat_leaf',
                     actionTypeId: "",

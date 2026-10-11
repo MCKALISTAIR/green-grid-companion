@@ -88,7 +88,7 @@ export function EnergyFactBubble({ intensity, generationMix, className, variant 
               ${variant === 'bubble'
                 ? 'rounded-2xl text-xs md:text-sm font-medium p-3 shadow-lg backdrop-blur-md border border-white/20'
                 : 'rounded-none py-2.5 px-1 bg-transparent border-0 mx-auto w-fit max-w-[92%] font-sans italic text-[15px] sm:text-base font-medium leading-snug'}
-              ${variant === 'bubble' && tone === 'snarky'
+              ${variant === 'bubble' && tone === 'cheeky'
                                 ? 'bg-primary/25 text-primary-foreground hover:bg-primary/35'
                                 : variant === 'bubble'
                                     ? 'bg-white/30 text-slate-800 dark:text-slate-100 hover:bg-white/40'
@@ -110,7 +110,7 @@ export function EnergyFactBubble({ intensity, generationMix, className, variant 
                         {variant === 'bubble' && (
                             <div className={`
               absolute -bottom-2 right-6 w-4 h-4 rotate-45 
-              ${tone === 'snarky' ? 'bg-primary/30' : 'bg-white/30'}
+              ${tone === 'cheeky' ? 'bg-primary/30' : 'bg-white/30'}
               backdrop-blur-md border-r border-b border-white/20
             `} />
                         )}

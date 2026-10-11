@@ -13,6 +13,7 @@ import { IntensityScene } from '@/components/IntensityScene';
 import { DEFINITIONS } from '@/lib/definitions';
 import { cn } from '@/lib/utils';
 import { getConditionLabel } from '@/lib/conditionLabels';
+import { formatLondonTime } from '@/lib/londonTime';
 import { useEnergyFacts } from '@/hooks/useEnergyFacts';
 import { useTimeOfDay } from '@/hooks/useTimeOfDay';
 import { getCleanlinessBand } from '@/hooks/useCleanlinessBand';
@@ -82,12 +83,12 @@ export function IntensityHeroOverlay({
     if (nextUpdate) {
       const next = new Date(nextUpdate);
       if (new Date() > next) return 'Refreshing soon';
-      return `Next ${next.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+      return `Next ${formatLondonTime(next)}`;
     }
     const next = getNextUpdate(lastUpdated);
     if (!next) return '';
     if (new Date() > next) return 'Refreshing soon';
-    return `Next ${next.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    return `Next ${formatLondonTime(next)}`;
   })();
 
   const renewablesTone = needsHardScrim
@@ -234,7 +235,7 @@ export function IntensityHeroOverlay({
                     needsHardScrim
                       ? 'drop-shadow-[0_3px_16px_rgba(0,0,0,0.75)]'
                       : 'drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)]',
-                    tone === 'friendly' ? 'capitalize' : '',
+                    tone === 'plain' ? 'capitalize' : '',
                   )}
                 >
                   <TypewriterText text={conditionLabel} />
@@ -254,14 +255,14 @@ export function IntensityHeroOverlay({
                     <p className="font-semibold">Carbon intensity</p>
                     <p>{DEFINITIONS['Carbon Intensity']}</p>
                     <p className="text-muted-foreground">{DEFINITIONS['gCO2/kWh']}</p>
-                    {index && tone !== 'friendly' && (
+                    {index && tone !== 'plain' && (
                       <p className="text-muted-foreground">
                         Official band:{' '}
                         <span className="font-semibold capitalize text-foreground">{index}</span>
                       </p>
                     )}
                     <p className="text-muted-foreground">
-                      NESO publishes new figures every{' '}
+                      This is NESO&apos;s forecast for your region for this half hour. It updates every{' '}
                       <span className="font-semibold text-foreground">30 minutes</span>.
                     </p>
                     <CompactDataAttribution />

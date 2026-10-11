@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { useNotifications, DIGEST_DELIVERY_AVAILABLE } from '@/hooks/useNotifications';
 import { MonthlyReportPreview } from './MonthlyReportPreview';
 import { logger } from '@/lib/logger';
+import { TEST_NOTIFICATION } from '@/lib/voice/notificationCopy';
 
 interface NotificationSettingsProps {
   onClose?: () => void;
@@ -151,8 +152,8 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
                 try {
                   await LocalNotifications.schedule({
                     notifications: [{
-                      title: 'GridSense Test',
-                      body: '✅ Notifications are working perfectly!',
+                      title: TEST_NOTIFICATION.title,
+                      body: TEST_NOTIFICATION.body,
                       id: Date.now(),
                       schedule: { at: new Date(Date.now() + 1000) },
                     }]
@@ -210,7 +211,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
               className="w-full"
             />
             <p className="text-[11px] text-muted-foreground leading-relaxed">
-              You'll be notified <span className="font-medium text-foreground">once</span> when intensity drops below {localThreshold} gCO₂/kWh, and <span className="font-medium text-foreground">once</span> when it rises back above — not on every change.
+              You'll be notified <span className="font-medium text-foreground">once</span> when intensity drops below {localThreshold} gCO₂/kWh, and <span className="font-medium text-foreground">once</span> when it rises back above. Not on every change.
             </p>
             <div className="pt-4 mt-4 border-t border-border/50">
               <div className="flex items-center justify-between">
@@ -218,7 +219,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
                   <div className="text-sm font-medium">Live Accuracy Mode</div>
                   <p className="text-[10px] text-muted-foreground">
                     Uses live checks instead of pre-scheduling green windows.
-                    {isNative ? ' (Background Fetch — may use slightly more battery.)' : ' (Tab must remain open.)'}
+                    {isNative ? ' (Background Fetch, which may use slightly more battery.)' : ' (Tab must remain open.)'}
                     {' '}Planner reminders still work.
                   </p>
                 </div>
@@ -282,7 +283,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
               className="w-full"
             />
             <p className="text-[11px] text-muted-foreground leading-relaxed">
-              You'll be notified <span className="font-medium text-foreground">once</span> when intensity rises above {localHighThreshold} gCO₂/kWh, and <span className="font-medium text-foreground">once</span> when it drops back below — not on every change.
+              You'll be notified <span className="font-medium text-foreground">once</span> when intensity rises above {localHighThreshold} gCO₂/kWh, and <span className="font-medium text-foreground">once</span> when it drops back below. Not on every change.
             </p>
           </div>
         )}
@@ -384,7 +385,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
         </div>
         {!DIGEST_DELIVERY_AVAILABLE && (
           <p className="text-xs text-muted-foreground border-t border-border pt-3">
-            Same as weekly digests — preview below is illustrative only until push delivery ships.
+            Same as weekly digests: the preview below is only an example until push delivery ships.
           </p>
         )}
         <div className="pt-1">

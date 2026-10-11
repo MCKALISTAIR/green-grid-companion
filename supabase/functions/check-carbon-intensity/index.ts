@@ -164,16 +164,16 @@ Deno.serve(async (req) => {
           if (currentState === 'below') {
             notifications.push({
               token: sub.device_token,
-              title: '⚡ Low Carbon — Start Load Shifting!',
-              body: `Carbon intensity dropped to ${regionIntensity.intensity}g CO₂/kWh (${regionIntensity.index}). Great time to charge your EV or run appliances!`,
+              title: `${regionIntensity.intensity} gCO₂/kWh. Grid's looking clean`,
+              body: `That's at or under your ${sub.low_intensity_threshold} gCO₂/kWh alert (${regionIntensity.index}). A good time for the big loads.`,
               platform: sub.platform,
               isSandbox: sub.is_sandbox,
             });
           } else if (currentState === 'above' && previousState === 'below') {
             notifications.push({
               token: sub.device_token,
-              title: '📈 Carbon Rising — Load Shifting Window Closed',
-              body: `Carbon intensity is now ${regionIntensity.intensity}g CO₂/kWh (${regionIntensity.index}). Consider pausing non-essential usage until it drops again.`,
+              title: `Clean spell over: ${regionIntensity.intensity} gCO₂/kWh`,
+              body: `That's back over your ${sub.low_intensity_threshold} gCO₂/kWh alert (${regionIntensity.index}). Big loads can wait for the next clean spell.`,
               platform: sub.platform,
               isSandbox: sub.is_sandbox,
             });
@@ -191,16 +191,16 @@ Deno.serve(async (req) => {
           if (currentHighState === 'above') {
             notifications.push({
               token: sub.device_token,
-              title: '🔴 High Carbon — Reduce Usage!',
-              body: `Carbon intensity rose to ${regionIntensity.intensity}g CO₂/kWh (${regionIntensity.index}). Consider delaying heavy appliance use until the grid is cleaner.`,
+              title: `${regionIntensity.intensity} gCO₂/kWh. Grid's gone grumpy`,
+              body: `That's at or past your ${sub.high_intensity_threshold} gCO₂/kWh alert (${regionIntensity.index}). If something can wait, let it.`,
               platform: sub.platform,
               isSandbox: sub.is_sandbox,
             });
           } else if (currentHighState === 'below' && previousHighState === 'above') {
             notifications.push({
               token: sub.device_token,
-              title: '🟢 Carbon Dropping — High Intensity Period Over',
-              body: `Carbon intensity is now ${regionIntensity.intensity}g CO₂/kWh (${regionIntensity.index}). The grid is getting cleaner again.`,
+              title: `${regionIntensity.intensity} gCO₂/kWh. Grid's cheering up`,
+              body: `That's back under your ${sub.high_intensity_threshold} gCO₂/kWh alert (${regionIntensity.index}).`,
               platform: sub.platform,
               isSandbox: sub.is_sandbox,
             });

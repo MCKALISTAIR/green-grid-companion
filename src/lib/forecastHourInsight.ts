@@ -118,7 +118,7 @@ export function getForecastHourInsight(
   forecast: ForecastData[],
   selectedIndex: number,
   currentIntensity: number,
-  tone: ConditionTone = 'friendly',
+  tone: ConditionTone = 'plain',
   now: Date = new Date(),
   bestBlockIndexes: Set<number> = new Set(),
   /** The home card's answer, so the current-hour line never contradicts it. */
