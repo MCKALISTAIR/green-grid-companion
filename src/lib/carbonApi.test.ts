@@ -1,5 +1,17 @@
 import { describe, it, expect } from 'vitest';
-import { calculateIntensityFromMix, getIntensityColor, REGION_IDS, UK_REGIONS, UK_REGIONS_CONFIG } from '@/lib/carbonApi';
+import {
+    CARBON_FACTORS,
+    IMPORTS_FACTOR,
+    calculateIntensityFromMix,
+    getIntensityColor,
+    REGION_IDS,
+    UK_REGIONS,
+    UK_REGIONS_CONFIG,
+} from '@/lib/carbonApi';
+import southScotlandWeek from '@/test/fixtures/neso-regional-south-scotland-history-2026-10-04.json';
+import southEastWeek from '@/test/fixtures/neso-regional-south-east-week-2026-10-04.json';
+
+type Slot = { intensity: { forecast: number }; generationmix: { fuel: string; perc: number }[] };
 
 describe('carbonApi', () => {
     describe('calculateIntensityFromMix', () => {
@@ -10,10 +22,43 @@ describe('carbonApi', () => {
         it('calculates correct intensity from mix', () => {
             const mix = [
                 { fuel: 'wind', perc: 50 }, // 0 gCO2
-                { fuel: 'gas', perc: 50 }   // 390 gCO2
+                { fuel: 'gas', perc: 50 }   // 394 gCO2 (NESO CCGT)
             ];
-            // (0.5 * 0) + (0.5 * 390) = 195
-            expect(calculateIntensityFromMix(mix)).toBe(195);
+            // (0.5 * 0) + (0.5 * 394) = 197
+            expect(calculateIntensityFromMix(mix)).toBe(197);
+        });
+
+        it('uses NESO methodology factors (Table 1 / /intensity/factors)', () => {
+            expect(CARBON_FACTORS).toEqual({
+                biomass: 120,
+                coal: 937,
+                imports: 53,
+                gas: 394,
+                nuclear: 0,
+                other: 300,
+                hydro: 0,
+                solar: 0,
+                wind: 0,
+            });
+            expect(IMPORTS_FACTOR).toBe(53); // NESO's French imports default
+        });
+
+        it('South Scotland zero-carbon week (4-11 Oct): Est is 0 whenever NESO forecasts 0, bar a few import-heavy half hours', () => {
+            const slots = (southScotlandWeek as { data: { data: Slot[] } }).data.data;
+            const zero = slots.filter((s) => s.intensity.forecast === 0);
+            expect(zero.length).toBeGreaterThan(300);
+            const nonZeroEst = zero.map((s) => calculateIntensityFromMix(s.generationmix)).filter((v) => v > 0);
+            // Imports carry a non-zero factor, so a half hour with >= 1% imports
+            // rounds to 1 g. NESO's own import factor that day was lower.
+            expect(nonZeroEst.every((v) => v <= 1)).toBe(true);
+            expect(nonZeroEst.length / zero.length).toBeLessThan(0.02);
+        });
+
+        it('South East week (4-11 Oct, ~32% imports): Est tracks the NESO forecast to within ~10 g on average', () => {
+            const slots = (southEastWeek as { data: Slot[] }).data;
+            const errors = slots.map((s) => Math.abs(calculateIntensityFromMix(s.generationmix) - s.intensity.forecast));
+            const mae = errors.reduce((a, b) => a + b, 0) / errors.length;
+            expect(mae).toBeLessThan(10); // the old factors (imports 250) were ~58 g out
         });
 
         it('handles null percentages gracefully', () => {

@@ -33,7 +33,8 @@ describe('hourly forecast bar and tooltip agree', () => {
     expect(current.intensity.actual ?? null).toBeNull();
     // A finished half hour with imports still gets a labelled estimate.
     const past = rows.find((r) => r.from === '2026-10-11T09:30Z')!;
-    expect(past.intensity.actual).toBe(3);
+    // 1.3% imports × 53 (NESO French default) = 0.7, shown as 1 g; NESO forecasts 0.
+    expect(past.intensity.actual).toBe(1);
     expect(past.intensity.actualEstimated).toBe(true);
   });
 
