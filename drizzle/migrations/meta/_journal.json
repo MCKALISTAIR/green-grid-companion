@@ -8,6 +8,13 @@
       "when": 1791650374506,
       "tag": "0000_anon_access_tidy",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791709560210,
+      "tag": "0001_tesla_credentials_token_privacy",
+      "breakpoints": true
     }
   ]
 }
