@@ -19,7 +19,8 @@ describe('getSmartTip', () => {
   });
 
   it('celebrates very low current intensity', () => {
-    const forecast = Array.from({ length: 24 }, (_, i) => slot(i + 1, 80));
+    // Contiguous half hours (a gapped forecast now says data is missing instead).
+    const forecast = Array.from({ length: 48 }, (_, i) => slot(0.5 + i * 0.5, 80));
     expect(getSmartTip(40, forecast)).toMatch(/^Now's good\. It won't get any cleaner/);
   });
 
@@ -30,7 +31,10 @@ describe('getSmartTip', () => {
       const clean = hoursFromNow >= 2 && hoursFromNow < 5;
       return slot(hoursFromNow, clean ? 55 : 200);
     });
-    expect(getSmartTip(180, forecast)).toMatch(/^Wait about 2 hours\. It'll be around 70% cleaner \(180 to 55/);
+    // The live reading stands in for the missing current half hour, so "start
+    // now" is the 3-hour window average (180, 200, 200, 200, 55, 55), as it is
+    // whenever the current half hour is in the forecast.
+    expect(getSmartTip(180, forecast)).toMatch(/^Wait about 2 hours\. It'll be around 65% cleaner \(148 to 55/);
   });
 });
 

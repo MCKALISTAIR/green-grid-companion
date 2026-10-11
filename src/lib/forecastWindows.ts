@@ -10,6 +10,29 @@ export const MIN_PERCENT_CLEANER = 12;
 /** ...and at least this many gCO₂/kWh cleaner, so tiny grids don't trigger "wait". */
 export const MIN_GRAMS_CLEANER = 15;
 
+/** At or below this, a whole window counts as "at or near zero carbon" (gCO₂/kWh). */
+export const NEAR_ZERO_MAX = 10;
+
+export type SpreadKind = 'near_zero' | 'flat' | 'varied';
+
+/**
+ * How much a run of intensity values moves. Shared by the Now-or-wait card,
+ * the Power Planner and the 48-hour overview so they describe the same data
+ * the same way.
+ * - near_zero: every value is at or below NEAR_ZERO_MAX
+ * - flat: the spread is under MIN_GRAMS_CLEANER, so no start time is meaningfully cleaner
+ * - varied: anything else
+ * Callers pass real values only (missing values must be dropped, never 0).
+ */
+export function classifySpread(values: number[]): SpreadKind | null {
+  if (values.length === 0) return null;
+  const max = Math.max(...values);
+  const min = Math.min(...values);
+  if (max <= NEAR_ZERO_MAX) return 'near_zero';
+  if (max - min < MIN_GRAMS_CLEANER) return 'flat';
+  return 'varied';
+}
+
 export interface ForecastWindow {
   bestStart: Date;
   bestEnd: Date;
