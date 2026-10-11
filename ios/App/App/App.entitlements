@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Push Notifications. Xcode/export switches this to "production" for App Store/TestFlight builds. -->
+	<key>aps-environment</key>
+	<string>development</string>
+	<!-- Sign in with Apple -->
+	<key>com.apple.developer.applesignin</key>
+	<array>
+		<string>Default</string>
+	</array>
+	<!-- App Group shared with GridSenseWidget (value set by GS_APP_GROUP_ID build setting) -->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>$(GS_APP_GROUP_ID)</string>
+	</array>
+</dict>
+</plist>

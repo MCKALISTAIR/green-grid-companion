@@ -31,8 +31,10 @@ struct IntensityValue: Codable {
 
 // MARK: - Timeline Provider
 struct Provider: TimelineProvider {
-    // Must match the suite name in SharedPrefsPlugin.swift
-    let suiteName = "group.app.lovable.1558020f8a4c43dc9ea079533f5d485c"
+    // App Group shared with the main app. Read from the widget's Info.plist
+    // (GSAppGroupIdentifier, filled from the GS_APP_GROUP_ID build setting)
+    // so it always matches the app's SharedPrefsPlugin and entitlements.
+    let suiteName = Bundle.main.object(forInfoDictionaryKey: "GSAppGroupIdentifier") as? String
 
     func placeholder(in context: Context) -> SimpleEntry {
         SimpleEntry(date: Date(), intensity: 50, index: "low", status: "Active")
@@ -45,7 +47,7 @@ struct Provider: TimelineProvider {
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<SimpleEntry>) -> Void) {
         // 1. Try to read selected Region ID from App Group
-        let userDefaults = UserDefaults(suiteName: suiteName)
+        let userDefaults = suiteName.flatMap { UserDefaults(suiteName: $0) }
         let regionId = userDefaults?.string(forKey: "selected_region_id")?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         
         // 2. Build URL based on region
@@ -84,7 +86,7 @@ struct Provider: TimelineProvider {
                        let firstRegionData = decoded.data.first?.data.first {
                         let intensity = firstRegionData.intensity.forecast
                         let index = firstRegionData.intensity.index
-                        let entry = SimpleEntry(date: currentDate, intensity: intensity, index: index, status: "Regional: \(regionId!)")
+                        let entry = SimpleEntry(date: currentDate, intensity: intensity, index: index, status: "Regional: \(regionId)")
                         entries.append(entry)
                     }
                 } else {
@@ -139,10 +141,6 @@ struct GridSenseWidgetEntryView : View {
 
     var body: some View {
         ZStack {
-            // Background
-            ContainerRelativeShape()
-                .fill(backgroundColor.gradient)
-            
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Image(systemName: "leaf.fill")
@@ -187,6 +185,30 @@ struct GridSenseWidgetEntryView : View {
                 }
             }
             .padding()
+        }
+        .widgetBackground(backgroundGradient)
+    }
+
+    // Color.gradient is iOS 16+; build the gradient by hand so the widget
+    // still runs on iOS 15 (the app's deployment target).
+    var backgroundGradient: LinearGradient {
+        LinearGradient(
+            colors: [backgroundColor, backgroundColor.opacity(0.85)],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+}
+
+// iOS 17+ shows "Please adopt containerBackground API" instead of the widget
+// unless the background is supplied via containerBackground(for: .widget).
+extension View {
+    @ViewBuilder
+    func widgetBackground<Background: View>(_ background: Background) -> some View {
+        if #available(iOSApplicationExtension 17.0, *) {
+            containerBackground(for: .widget) { background }
+        } else {
+            self.background(background)
         }
     }
 }
