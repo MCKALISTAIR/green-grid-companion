@@ -127,7 +127,7 @@ const Index = () => {
         });
       } else {
         toast.info('Checked for updates', {
-          description: 'No new data from National Grid yet.',
+          description: 'No new data from NESO yet.',
         });
       }
     }

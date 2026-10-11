@@ -1,4 +1,4 @@
-import { ForecastData, getIntensityColor, getIntensityTextColor } from '@/lib/carbonApi';
+import { ForecastData, getIntensityColor, getIntensityTextColor, isEstimatedActual } from '@/lib/carbonApi';
 import { format, parseISO } from 'date-fns';
 import { useRef, useLayoutEffect, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -265,7 +265,7 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
             <tr>
               <th>Time</th>
               <th>Forecast (gCO₂/kWh)</th>
-              <th>Actual (gCO₂/kWh)</th>
+              <th>Actual or GridSense estimate (gCO₂/kWh)</th>
             </tr>
           </thead>
           <tbody>
@@ -273,7 +273,10 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
               <tr key={i}>
                 <td>{format(parseISO(item.from), 'PPpp')}</td>
                 <td>{item.intensity.forecast}</td>
-                <td>{item.intensity.actual ?? 'N/A'}</td>
+                <td>
+                  {item.intensity.actual ?? 'N/A'}
+                  {item.intensity.actual != null && isEstimatedActual(item) ? ' (GridSense estimate)' : ''}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -507,7 +510,9 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
                         </div>
                         {hasActual && (
                           <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground">Actual:</span>
+                            <span className="text-muted-foreground">
+                              {isEstimatedActual(item) ? 'Estimate (GridSense):' : 'Actual:'}
+                            </span>
                             <span className="font-medium">{item.intensity.actual}g</span>
                           </div>
                         )}

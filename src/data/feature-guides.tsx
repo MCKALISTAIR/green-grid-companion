@@ -132,7 +132,7 @@ export const FEATURE_GUIDES = [
                 </ul>
 
                 <p>
-                    Tap the <strong>Map Icon</strong> (top right) to verify the live generation map provided by National Grid ESO.
+                    Tap the <strong>Map Icon</strong> (top right) to verify the live generation map provided by NESO.
                 </p>
             </div>
         )

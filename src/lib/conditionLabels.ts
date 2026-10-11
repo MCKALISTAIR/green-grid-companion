@@ -37,7 +37,7 @@ function pickVariant(variants: string[], salt: string): string {
 
 /**
  * Resolve the hero condition line for an intensity index + commentary tone.
- * Friendly → official National Grid band name.
+ * Friendly → official NESO band name.
  * Snarky → witty Carrot-style label.
  * Mixed → snarky with a gentle official fallback if unknown.
  */

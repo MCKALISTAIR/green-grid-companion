@@ -19,6 +19,8 @@ interface DailyStats {
     maxActual?: number;
     avgActual?: number;
     hasActuals: boolean;
+    /** Past values were calculated by GridSense from the fuel mix, not published by NESO. */
+    actualsEstimated?: boolean;
 }
 
 const cardVariants: Variants = {
@@ -56,7 +58,7 @@ const iconHighVariants: Variants = {
 
 export function ForecastSummary({ forecast }: ForecastSummaryProps) {
     const stats = useMemo(() => {
-        const grouped = new Map<string, { forecast: number[], actual: number[] }>();
+        const grouped = new Map<string, { forecast: number[], actual: number[], estimated?: boolean }>();
 
         // Group intensity values by date
         forecast.forEach(item => {
@@ -73,6 +75,7 @@ export function ForecastSummary({ forecast }: ForecastSummaryProps) {
 
             if (item.intensity.actual !== undefined && item.intensity.actual !== null) {
                 group.actual.push(item.intensity.actual);
+                if (item.intensity.actualEstimated) group.estimated = true;
             }
         });
 
@@ -104,7 +107,7 @@ export function ForecastSummary({ forecast }: ForecastSummaryProps) {
                 avgActual = Math.round(values.actual.reduce((a, b) => a + b, 0) / values.actual.length);
             }
 
-            result.push({ date: dateKey, label, min, max, avg, minActual, maxActual, avgActual, hasActuals });
+            result.push({ date: dateKey, label, min, max, avg, minActual, maxActual, avgActual, hasActuals, actualsEstimated: Boolean(values.estimated) });
         });
 
         // Sort by date to ensure correct order
@@ -138,7 +141,7 @@ export function ForecastSummary({ forecast }: ForecastSummaryProps) {
                                     </h4>
                                     {day.hasActuals && (
                                         <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-secondary/20 text-secondary-foreground font-medium transition-colors hover:bg-secondary/30">
-                                            Actuals Available
+                                            {day.actualsEstimated ? 'GridSense estimates' : 'Actuals Available'}
                                         </span>
                                     )}
                                 </div>

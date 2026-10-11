@@ -51,6 +51,7 @@ import {
 } from 'recharts';
 import { format, parseISO, startOfDay, getHours } from 'date-fns';
 import { ComponentErrorBoundary } from '@/components/ComponentErrorBoundary';
+import { EstimateDisclaimer } from '@/components/attribution/EstimateDisclaimer';
 import {
   GreenScoreExplainerContent,
   getGreenScoreRating,
@@ -394,6 +395,8 @@ export function FootprintView() {
               </p>
             </div>
           </div>
+
+          <EstimateDisclaimer />
 
           {hasCredentials && (
             <div className="rounded-lg border border-border bg-muted/40 p-3 text-sm text-foreground">
@@ -1144,6 +1147,7 @@ export function FootprintView() {
         </>
       )
       }
+      <EstimateDisclaimer className="text-center pt-2" />
     </div >
   );
 }

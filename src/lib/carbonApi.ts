@@ -39,9 +39,25 @@ export interface ForecastData {
   intensity: {
     forecast: number;
     actual?: number | null;
+    /**
+     * True when `actual` was not published by NESO and GridSense calculated it
+     * from the generation mix (calculateIntensityFromMix). The regional API has
+     * no actuals, so past regional values are always app estimates.
+     */
+    actualEstimated?: boolean;
     index: 'very low' | 'low' | 'moderate' | 'high' | 'very high';
   };
   generationmix?: GenerationMix[];
+}
+
+/** True when the item's "actual" is a GridSense estimate rather than a NESO figure. */
+export function isEstimatedActual(item: Pick<ForecastData, 'intensity'>): boolean {
+  return Boolean(item.intensity?.actualEstimated);
+}
+
+/** Series label for past values: "Estimate" if any value is an app estimate. */
+export function actualSeriesLabel(items: Pick<ForecastData, 'intensity'>[]): 'Actual' | 'Estimate' {
+  return items.some(isEstimatedActual) ? 'Estimate' : 'Actual';
 }
 
 export const REGION_IDS = {
@@ -153,6 +169,7 @@ export async function getRegionalHistoryAndForecast(regionId: number, from: stri
       const mix = item.generationmix;
       if (mix) {
         item.intensity.actual = calculateIntensityFromMix(mix);
+        item.intensity.actualEstimated = true;
       }
     }
     return item;

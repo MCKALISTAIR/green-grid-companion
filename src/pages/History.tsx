@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getRegionalHistoryAndForecast, getNationalHistoryAndForecast, ForecastData } from '@/lib/carbonApi';
+import { getRegionalHistoryAndForecast, getNationalHistoryAndForecast, ForecastData, actualSeriesLabel } from '@/lib/carbonApi';
 import { useCarbonData } from '@/hooks/useCarbonData';
 import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -96,6 +96,8 @@ export default function HistoryPage() {
     }, [date, unlock]);
 
     const data = displayData;
+    // Regional "actuals" are GridSense estimates (NESO publishes none), so say so.
+    const actualLabel = actualSeriesLabel(data);
 
     // Calculate simple stats
     const avgIntensity = data.length > 0
@@ -305,7 +307,7 @@ export default function HistoryPage() {
                                         <div className="text-sm space-y-1">
                                             <p className="font-semibold">Understanding the Graph</p>
                                             <p className="text-muted-foreground leading-relaxed">
-                                                The <span className="font-medium text-foreground">solid line</span> shows actual carbon intensity, while the <span className="font-medium text-foreground">dotted line</span> shows the forecast. Compare them to see how accurate the predictions were!
+                                                The <span className="font-medium text-foreground">solid line</span> shows {actualLabel === 'Estimate' ? "GridSense's estimate of past" : 'actual'} carbon intensity, while the <span className="font-medium text-foreground">dotted line</span> shows the forecast. Compare them to see how accurate the predictions were!
                                             </p>
                                             {isLinked && (
                                                 <p className="text-muted-foreground leading-relaxed pt-1">
@@ -415,7 +417,7 @@ export default function HistoryPage() {
                                                     <span className="w-2 h-2 rounded-full bg-blue-500"></span> Forecast
                                                 </span>
                                                 <span className="flex items-center gap-1">
-                                                    <span className="w-2 h-2 rounded-full bg-green-500"></span> Actual
+                                                    <span className="w-2 h-2 rounded-full bg-green-500"></span> {actualLabel === 'Estimate' ? 'Estimate (GridSense)' : 'Actual'}
                                                 </span>
                                                 {isLinked && (
                                                     <span className="flex items-center gap-1">
@@ -447,7 +449,7 @@ export default function HistoryPage() {
                                         <tr>
                                             <th>Time</th>
                                             <th>Forecast (gCO₂/kWh)</th>
-                                            <th>Actual (gCO₂/kWh)</th>
+                                            <th>{actualLabel === 'Estimate' ? 'GridSense estimate' : 'Actual'} (gCO₂/kWh)</th>
                                             {isLinked && <th>Usage (kWh)</th>}
                                         </tr>
                                     </thead>
@@ -509,7 +511,7 @@ export default function HistoryPage() {
                                             }}
                                             labelFormatter={(label) => <span className="font-semibold text-foreground">{label}</span>}
                                             formatter={(value: number | string, name: string, props: { payload: { carbonMass?: number } }) => {
-                                                if (name === 'Actual' || name === 'Forecast') return [`${value} gCO2/kWh`, name];
+                                                if (name === actualLabel || name === 'Forecast') return [`${value} gCO2/kWh`, name];
                                                 if (name === 'Usage (kWh)') {
                                                     const carbonMass = props.payload.carbonMass;
                                                     return [
@@ -549,7 +551,7 @@ export default function HistoryPage() {
                                             yAxisId="left"
                                             type="monotone"
                                             dataKey="actual"
-                                            name="Actual"
+                                            name={actualLabel}
                                             stroke="hsl(var(--chart-1))"
                                             fillOpacity={1}
                                             fill="url(#colorActual)"

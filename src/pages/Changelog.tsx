@@ -103,7 +103,7 @@ const changelog: ChangelogEntry[] = [
     date: '2026-01-29',
     title: 'Seamless Data Updates',
     changes: [
-      { type: 'feature', description: 'Smart background refresh synced to National Grid update schedule' },
+      { type: 'feature', description: 'Smart background refresh synced to NESO update schedule' },
       { type: 'feature', description: 'Animated intensity counter with directional indicators' },
       { type: 'improvement', description: 'Removed "Waiting..." label - data now updates silently' },
       { type: 'improvement', description: 'Haptic feedback on intensity changes (iOS)' },

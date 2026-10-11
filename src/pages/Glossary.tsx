@@ -181,7 +181,7 @@ export default function Glossary() {
                         </CardHeader>
                         <CardContent className="space-y-4 text-sm text-muted-foreground leading-relaxed">
                             <p>
-                                We source our data directly from the **National Grid ESO** (Electricity System Operator). They manage the flow of electricity across Great Britain in real-time.
+                                We source our data directly from **NESO** (the National Energy System Operator). They manage the flow of electricity across Great Britain in real-time.
                             </p>
                             <div className="bg-background/50 p-3 rounded-lg border border-border/50">
                                 <h4 className="font-semibold text-foreground mb-1 flex items-center gap-2">
@@ -193,7 +193,7 @@ export default function Glossary() {
                                     But millions of homes have **rooftop solar panels** that feed energy directly into local wires. These are "invisible" to the main national grid meters.
                                 </p>
                                 <p className="mt-2">
-                                    To solve this, the National Grid uses sophisticated **AI and weather models** to estimate how much "Embedded Generation" is happening.
+                                    To solve this, NESO uses sophisticated **AI and weather models** to estimate how much "Embedded Generation" is happening.
                                     <br />
                                     So when you see "Solar" data here, it's actually a smart blend of real meter readings and high-tech weather forecasting!
                                 </p>

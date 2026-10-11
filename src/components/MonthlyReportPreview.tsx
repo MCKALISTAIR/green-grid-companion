@@ -302,7 +302,7 @@ export function MonthlyReportPreview() {
 
       <div className="mt-3 pt-2 border-t border-border/50 flex items-center justify-between">
         <span className="text-xs text-muted-foreground">
-          Based on {stats.footprint_records} readings
+          Based on {stats.footprint_records} readings. Estimates, not advice.
         </span>
         <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={fetchPreview}>
           Refresh
