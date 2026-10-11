@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 import { corsHeaders } from '../_shared/cors.ts';
+import { normalizeSubscriptionPostcode } from '../_shared/subscription-postcode.ts';
 
 interface PushSubscriptionData {
   device_token: string;
@@ -178,11 +179,12 @@ Deno.serve(async (req) => {
           );
         }
 
-        // Validate postcode format (basic UK postcode validation)
-        const postcodeRegex = /^[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2}$/i;
-        if (!postcodeRegex.test(body.postcode.trim())) {
+        // The app only keeps the outward code ("SW1A") or "GB" (national).
+        // Never require a full postcode; if one arrives, store only the outward code.
+        const postcode = normalizeSubscriptionPostcode(body.postcode);
+        if (!postcode) {
           return new Response(
-            JSON.stringify({ error: 'Invalid postcode format' }),
+            JSON.stringify({ error: 'Invalid postcode: send an outward code such as SW1A, or GB' }),
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
@@ -281,7 +283,7 @@ Deno.serve(async (req) => {
           .upsert({
             device_token: body.device_token,
             user_id: userId || (existingSub ? existingSub.user_id : null),
-            postcode: body.postcode.trim().toUpperCase(),
+            postcode,
             platform: body.platform?.toLowerCase() || 'ios',
             low_intensity_enabled: body.low_intensity_enabled ?? false,
             low_intensity_threshold: body.low_intensity_threshold ?? 100,

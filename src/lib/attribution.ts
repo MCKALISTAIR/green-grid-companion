@@ -14,6 +14,17 @@
  *   Embedded (small-scale) solar and wind estimates: NESO Data Portal under the
  *   NESO Open Data Licence v1.0, which requires "Supported by National Energy SO
  *   Open Data". https://www.neso.energy/data-portal/neso-open-licence
+ * - Place search and reverse geocoding: Nominatim (OpenStreetMap data, ODbL).
+ *   OSM requires "© OpenStreetMap contributors" plus making clear the data is
+ *   under the ODbL, e.g. by linking https://www.openstreetmap.org/copyright.
+ *   No map tiles are used.
+ * - Postcode lookups: postcodes.io, built on the ONS Postcode Directory (OGL v3).
+ *   ONS requires these statements wherever the data is used:
+ *   "Contains OS data © Crown copyright and database right {year}",
+ *   "Contains Royal Mail data © Royal Mail copyright and database right {year}",
+ *   "Source: Office for National Statistics licensed under the Open Government Licence v.3.0".
+ *   https://www.ons.gov.uk/methodology/geography/licences
+ * Years are the current year, computed at render time.
  */
 export const ATTRIBUTION = {
   neso: {
@@ -41,6 +52,18 @@ export const ATTRIBUTION = {
     licenceLabel: 'NESO Open Data Licence',
     licenceUrl: 'https://www.neso.energy/data-portal/neso-open-licence',
   },
+  osm: {
+    label: '© OpenStreetMap contributors',
+    url: 'https://www.openstreetmap.org/copyright',
+    licenceLabel: 'ODbL',
+    licenceUrl: 'https://opendatacommons.org/licenses/odbl/',
+  },
+  postcodesIo: {
+    name: 'postcodes.io',
+    url: 'https://postcodes.io/',
+    onsLicencesUrl: 'https://www.ons.gov.uk/methodology/geography/licences',
+    oglUrl: 'https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/',
+  },
   ccBy4: {
     label: 'CC BY 4.0',
     url: 'https://creativecommons.org/licenses/by/4.0/',
@@ -50,6 +73,15 @@ export const ATTRIBUTION = {
 /** Wording required by the BMRS Data Licence (year = year of use). */
 export function elexonAttributionStatement(year: number = new Date().getFullYear()): string {
   return `Contains BMRS data © Elexon Limited copyright and database right ${year}`;
+}
+
+/** Statements the ONS requires for its postcode products (used via postcodes.io). */
+export function onsPostcodeStatements(year: number = new Date().getFullYear()): string[] {
+  return [
+    `Contains OS data © Crown copyright and database right ${year}`,
+    `Contains Royal Mail data © Royal Mail copyright and database right ${year}`,
+    'Source: Office for National Statistics licensed under the Open Government Licence v.3.0',
+  ];
 }
 
 /** Shown wherever GridSense derives or fills in values itself. */
