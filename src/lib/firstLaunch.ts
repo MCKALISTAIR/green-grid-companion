@@ -76,3 +76,27 @@ export function shouldNudgeNotifications(opts: {
   if (opts.permission !== 'prompt') return false;
   return opts.usefulMoment || opts.sessions >= 2;
 }
+
+/* ---- "The number is on screen" signal: the privacy sheet waits for it on home ---- */
+const READING_SHOWN_EVENT = 'gridsense:reading-shown';
+let readingShown = false;
+
+export function markReadingShown(): void {
+  if (readingShown) return;
+  readingShown = true;
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(READING_SHOWN_EVENT));
+}
+
+export function hasReadingShown(): boolean {
+  return readingShown;
+}
+
+export function onReadingShown(cb: () => void): () => void {
+  if (readingShown) {
+    cb();
+    return () => {};
+  }
+  if (typeof window === 'undefined') return () => {};
+  window.addEventListener(READING_SHOWN_EVENT, cb, { once: true });
+  return () => window.removeEventListener(READING_SHOWN_EVENT, cb);
+}

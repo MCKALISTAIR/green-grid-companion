@@ -89,6 +89,14 @@
 
     --shadow-sm: 0 1px 2px 0 hsl(210 20% 20% / 0.04);
     --shadow-md: 0 8px 20px -8px hsl(210 20% 20% / 0.12);
+    /* Privacy choice sheet (GridSense Design owns the values). */
+    --consent-sheet-margin: 12px;
+    --consent-sheet-gap: 8px;
+    --consent-sheet-radius: var(--radius);
+    --consent-sheet-padding: 16px;
+    --consent-sheet-max-height: 40dvh;
+    --consent-sheet-enter: 240ms;
+    --consent-sheet-enter-reduced: 150ms;
     --shadow-lg: 0 16px 40px -12px hsl(210 20% 20% / 0.14);
     --shadow-xl: 0 24px 56px -16px hsl(210 20% 20% / 0.18);
 
@@ -975,5 +983,73 @@ p, blockquote {
 
   .home-feed .scene-wave-divider {
     display: none;
+  }
+}
+/* ==========================================
+   Privacy choice sheet (CookieConsent.tsx)
+   Non-modal, docked above the tab bar (--consent-sheet-bottom is set from the
+   tab bar's measured position), no scrim. Body scrolls; buttons stay visible.
+   ========================================== */
+.consent-sheet {
+  position: fixed;
+  z-index: 45; /* below the tab bar (z-50), above page content */
+  left: var(--consent-sheet-margin);
+  right: var(--consent-sheet-margin);
+  bottom: calc(var(--consent-sheet-bottom, env(safe-area-inset-bottom)) + var(--consent-sheet-gap));
+  margin: 0 auto;
+  max-width: 34rem;
+  max-height: var(--consent-sheet-max-height);
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--consent-sheet-radius);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  box-shadow: var(--shadow-md);
+  animation: consent-sheet-in var(--consent-sheet-enter) ease-out both;
+}
+
+.consent-sheet__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--consent-sheet-padding) var(--consent-sheet-padding) 8px;
+}
+
+.consent-sheet__actions {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 8px var(--consent-sheet-padding) var(--consent-sheet-padding);
+  border-top: 1px solid hsl(var(--border) / 0.6);
+}
+
+.consent-sheet__button {
+  min-height: 44px;
+  height: auto;
+  width: 100%;
+  white-space: normal;
+}
+
+/* Reserve the sheet's height at the end of the page while it's open. */
+body {
+  padding-bottom: var(--consent-sheet-space, 0px);
+}
+
+@keyframes consent-sheet-in {
+  from { transform: translateY(16px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes consent-sheet-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .consent-sheet {
+    animation: consent-sheet-fade var(--consent-sheet-enter-reduced) ease-out both;
   }
 }
