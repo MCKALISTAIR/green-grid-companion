@@ -215,9 +215,24 @@ export async function getRegionalIntensityById(regionId: number, signal?: AbortS
 
 // Get national generation mix
 export async function getGenerationMix(signal?: AbortSignal): Promise<GenerationMix[]> {
+  return (await getGenerationSnapshot(signal)).generationmix;
+}
+
+/** GB generation mix with the NESO half hour it describes (for the "GB · 10:30–11:00" chip). */
+export interface GenerationSnapshot {
+  from: string | null;
+  to: string | null;
+  generationmix: GenerationMix[];
+}
+
+export async function getGenerationSnapshot(signal?: AbortSignal): Promise<GenerationSnapshot> {
   const response = await fetchWithNoCache(`${BASE_URL}/generation`, signal);
   const data = await response.json();
-  return data.data.generationmix;
+  return {
+    from: typeof data?.data?.from === 'string' ? data.data.from : null,
+    to: typeof data?.data?.to === 'string' ? data.data.to : null,
+    generationmix: data?.data?.generationmix ?? [],
+  };
 }
 
 // Interface for items in the /regional endpoint

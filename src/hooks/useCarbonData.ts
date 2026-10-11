@@ -6,7 +6,8 @@ import {
   getNationalHistoryAndForecast,
   getRegionalIntensityById,
   getRegionalIntensity,
-  getGenerationMix,
+  getGenerationSnapshot,
+  type GenerationSnapshot,
   getCurrentIntensity,
   getAllRegions,
   UK_REGIONS,
@@ -191,9 +192,9 @@ export function useCarbonData(postcode: string) {
     retry: 2,
   });
 
-  const generationQuery = useQuery<GenerationMix[]>({
-    queryKey: ['generation'],
-    queryFn: ({ signal }) => getGenerationMix(signal),
+  const generationQuery = useQuery<GenerationSnapshot>({
+    queryKey: ['generation', 'snapshot'],
+    queryFn: ({ signal }) => getGenerationSnapshot(signal),
     staleTime: 1000 * 60 * 10, // 10 minutes
     gcTime: 1000 * 60 * 60, // 1 hour
     // No refetchInterval - we use smart setTimeout instead
@@ -249,7 +250,7 @@ export function useCarbonData(postcode: string) {
     ?? (nationalQuery.data ? 'National' : '');
 
   // Generation mix from regional or national
-  const generationMix = regionalData?.generationmix ?? generationQuery.data ?? [];
+  const generationMix = regionalData?.generationmix ?? generationQuery.data?.generationmix ?? [];
 
   // Determine if this is an initial load (no data yet) vs background refetch
   const isInitialLoad = postcode ? (
@@ -274,8 +275,19 @@ export function useCarbonData(postcode: string) {
     regionId, // Export regionId for use in other hooks/pages
     lastUpdated: regionalData?.from || nationalQuery.data?.from,
 
-    // Generation mix
+    // Generation mix (regional when a region is set)
     generationMix,
+    /** GB mix and the NESO half hour it describes (Generation mix card). */
+    gbGeneration: generationQuery.data ?? null,
+    gbGenerationError: generationQuery.isError,
+    gbGenerationRefetch: generationQuery.refetch,
+    /** GB intensity for the current half hour (region vs GB row). */
+    gbIntensity: nationalQuery.data?.intensity ?? null,
+    /** Start/end of the half hour the hero number describes. */
+    slotFrom: regionalData?.from || nationalQuery.data?.from || null,
+    slotTo: regionalData?.to || nationalQuery.data?.to || null,
+    /** When the current reading was last fetched (ms). */
+    fetchedAt: Math.max(regionalDataQuery.dataUpdatedAt || 0, nationalQuery.dataUpdatedAt || 0) || null,
 
     // Forecast
     forecast: forecastQuery.data ?? [],
