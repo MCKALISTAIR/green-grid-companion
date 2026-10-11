@@ -39,7 +39,10 @@ describe('monitoring', () => {
     consent = true;
     expect(sampler({})).toBe(0.1);
     expect(opts.sendDefaultPii).toBe(false);
-    expect(opts.integrations).toEqual([]);
+    // Defaults minus session tracking; tracing/replay are never in the initial list.
+    const fake = ['InboundFilters', 'BrowserSession', 'GlobalHandlers', 'Dedupe'].map((name) => ({ name, setupOnce() {} }));
+    const kept = (opts.integrations as (d: typeof fake) => typeof fake)(fake).map((i) => i.name);
+    expect(kept).toEqual(['InboundFilters', 'GlobalHandlers', 'Dedupe']);
     expect(opts.release).toBe('gridsense@1.6.0');
   });
 });
