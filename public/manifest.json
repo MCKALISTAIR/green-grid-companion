@@ -1,4 +1,5 @@
 {
+    "id": "/",
     "short_name": "GridSense",
     "name": "GridSense - UK Carbon Intensity",
     "description": "Track UK carbon intensity and find the best times to use clean energy.",
@@ -18,11 +19,17 @@
     ],
     "start_url": "/",
     "display": "standalone",
-    "display_override": ["standalone", "fullscreen"],
+    "display_override": [
+        "standalone",
+        "fullscreen"
+    ],
     "orientation": "portrait",
     "theme_color": "#0f172a",
     "background_color": "#0f172a",
-    "categories": ["utilities", "lifestyle"],
+    "categories": [
+        "utilities",
+        "lifestyle"
+    ],
     "scope": "/",
     "lang": "en-GB"
 }

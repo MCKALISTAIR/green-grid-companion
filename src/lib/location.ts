@@ -162,16 +162,46 @@ export async function getRegionFromCoordinates(lat: number, lon: number): Promis
     return result;
 }
 
+const FULL_POSTCODE_RE = /^[A-Z]{1,2}\d[A-Z\d]?\d[A-Z]{2}$/;
+const OUTCODE_RE = /^[A-Z]{1,2}\d[A-Z\d]?$/;
+
+// One lookup per postcode per session; also de-duplicates concurrent callers
+// (dashboard + status bar both resolve the same postcode on load).
+const postcodeLookupCache = new Map<string, Promise<{ lat: number; lon: number } | null>>();
+
+/** Test hook. */
+export function clearPostcodeLookupCache(): void {
+    postcodeLookupCache.clear();
+}
+
 /**
- * Resolve a postcode to coordinates (Lat/Lon) using postcodes.io
+ * Resolve a postcode to coordinates (Lat/Lon) using postcodes.io.
+ *
+ * - Full postcodes ("SW1A 1AA") use /postcodes/{postcode}.
+ * - Outward codes ("SW1A", "CF10") use /outcodes/{outcode}. Calling /postcodes/
+ *   with an outcode always 404s, which is what the live app was doing.
+ * - Broad areas / region names ("EH", "Scotland") map to a representative outcode.
  */
 export async function resolvePostcode(postcode: string): Promise<{ lat: number; lon: number } | null> {
+    const key = postcode.replace(/\s+/g, '').toUpperCase();
+    if (!key) return null;
+    const cached = postcodeLookupCache.get(key);
+    if (cached) return cached;
+    const lookup = resolvePostcodeUncached(postcode).then((result) => {
+        // Don't pin failures for the whole session; allow a later retry.
+        if (!result) postcodeLookupCache.delete(key);
+        return result;
+    });
+    postcodeLookupCache.set(key, lookup);
+    return lookup;
+}
+
+async function resolvePostcodeUncached(postcode: string): Promise<{ lat: number; lon: number } | null> {
     try {
         const cleanPostcode = postcode.replace(/\s+/g, '').toUpperCase();
 
         // Region selections in the app are often broad postcode areas (e.g. "EH", "DG")
-        // rather than full postcodes. postcodes.io cannot resolve those via /postcodes/*,
-        // so use a stable representative outward code before falling back.
+        // rather than full postcodes, so use a stable representative outward code.
         const representativeOutcodes: Record<string, string> = {
             GB: 'SW1A', Scotland: 'EH1', SCOTLAND: 'EH1', England: 'SW1A', ENGLAND: 'SW1A', Wales: 'CF10', WALES: 'CF10',
             AB: 'AB10', IV: 'IV1', KW: 'KW1', PH: 'PH1', ZE: 'ZE1', HS: 'HS1',
@@ -182,12 +212,13 @@ export async function resolvePostcode(postcode: string): Promise<{ lat: number; 
             PO: 'PO1', OX: 'OX1', LE: 'LE1', BD: 'BD1', CV: 'CV1', BT: 'BT1', IM: 'IM1', JE: 'JE1', GY: 'GY1',
         };
 
-        const tryPostcode = async (value: string) => {
-            const response = await fetch(`https://api.postcodes.io/postcodes/${value}`);
+        const lookup = async (endpoint: 'postcodes' | 'outcodes', value: string) => {
+            const response = await fetch(`https://api.postcodes.io/${endpoint}/${encodeURIComponent(value)}`);
             if (!response.ok) return null;
 
             const data = await response.json();
-            if (data.status === 200 && data.result) {
+            if (data.status === 200 && data.result
+                && typeof data.result.latitude === 'number' && typeof data.result.longitude === 'number') {
                 return {
                     lat: data.result.latitude,
                     lon: data.result.longitude
@@ -196,13 +227,22 @@ export async function resolvePostcode(postcode: string): Promise<{ lat: number; 
             return null;
         };
 
-        const exact = await tryPostcode(cleanPostcode);
-        if (exact) return exact;
+        if (FULL_POSTCODE_RE.test(cleanPostcode)) {
+            const exact = await lookup('postcodes', cleanPostcode);
+            if (exact) return exact;
+            // Unknown/terminated full postcode: fall back to its outward code.
+            const outward = cleanPostcode.slice(0, -3);
+            return OUTCODE_RE.test(outward) ? await lookup('outcodes', outward) : null;
+        }
+
+        if (OUTCODE_RE.test(cleanPostcode)) {
+            const outcode = await lookup('outcodes', cleanPostcode);
+            if (outcode) return outcode;
+        }
 
         const representative = representativeOutcodes[cleanPostcode] ?? representativeOutcodes[postcode];
         if (representative) {
-            const represented = await tryPostcode(representative);
-            if (represented) return represented;
+            return await lookup('outcodes', representative);
         }
 
         return null;

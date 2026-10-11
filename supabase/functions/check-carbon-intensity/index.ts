@@ -9,6 +9,7 @@ import {
   type SchedulerSecretRpcClient,
 } from '../_shared/cron-auth.ts';
 import { createKeyLoader, backfillLegacyCredentials } from '../_shared/octopus-credentials.ts';
+import { fetchNationalIntensity, toIntensityReading, type IntensityReading } from '../_shared/intensity-reading.ts';
 
 interface CarbonIntensityResponse {
   data: Array<{
@@ -75,12 +76,16 @@ Deno.serve(async (req) => {
     const regions = carbonData.data[0]?.data || [];
 
     // Create a map of postcode prefix to intensity
-    const intensityByRegion = new Map<string, { intensity: number; index: string }>();
+    // Only real, well-formed readings go in; a region with missing data is left
+    // out (and then falls back to the national reading, or is skipped).
+    const intensityByRegion = new Map<string, IntensityReading>();
     for (const region of regions) {
-      intensityByRegion.set(region.shortname.toLowerCase(), {
-        intensity: region.intensity.forecast,
-        index: region.intensity.index,
-      });
+      const reading = toIntensityReading(region?.intensity);
+      if (region?.shortname && reading) {
+        intensityByRegion.set(region.shortname.toLowerCase(), reading);
+      } else {
+        console.warn(`[INTENSITY] Ignoring region with invalid data: ${region?.shortname ?? 'unknown'}`);
+      }
     }
 
     // Get all subscriptions that have low OR high intensity alerts enabled
@@ -97,20 +102,22 @@ Deno.serve(async (req) => {
     const stateUpdates: Array<{ id: string; low_state?: string; high_state?: string }> = [];
 
     // Cache for postcode-to-region lookups to avoid redundant searches
-    const postcodeCache = new Map<string, { intensity: number; index: string }>();
-    let nationalIntensityCache: { intensity: number; index: string } | null = null;
+    const postcodeCache = new Map<string, IntensityReading | null>();
+    // undefined = not fetched yet; null = fetch failed (don't retry per subscription).
+    let nationalIntensityCache: IntensityReading | null | undefined = undefined;
+    let skippedNoData = 0;
 
     // Helper function to get region intensity with caching
-    const getRegionIntensity = async (postcode: string) => {
+    const getRegionIntensity = async (postcode: string): Promise<IntensityReading | null> => {
       const postcodeLower = postcode.toLowerCase();
 
       // Check cache first
       if (postcodeCache.has(postcodeLower)) {
-        return postcodeCache.get(postcodeLower)!;
+        return postcodeCache.get(postcodeLower) ?? null;
       }
 
       // Try exact match
-      let regionIntensity = intensityByRegion.get(postcodeLower);
+      let regionIntensity: IntensityReading | null | undefined = intensityByRegion.get(postcodeLower);
 
       // If no exact match, try to find by first letter(s)
       if (!regionIntensity) {
@@ -122,28 +129,31 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Default to national if no region match
+      // Default to national if no region match. Never invent a number: if the
+      // national reading is unavailable, return null and the caller skips.
       if (!regionIntensity) {
-        if (!nationalIntensityCache) {
-          const nationalResponse = await fetch('https://api.carbonintensity.org.uk/intensity');
-          const nationalData = await nationalResponse.json();
-          nationalIntensityCache = {
-            intensity: nationalData.data[0]?.intensity?.forecast || 200,
-            index: nationalData.data[0]?.intensity?.index || 'moderate',
-          };
+        if (nationalIntensityCache === undefined) {
+          nationalIntensityCache = await fetchNationalIntensity();
         }
         regionIntensity = nationalIntensityCache;
       }
 
       // Cache the result
-      postcodeCache.set(postcodeLower, regionIntensity);
-      return regionIntensity;
+      postcodeCache.set(postcodeLower, regionIntensity ?? null);
+      return regionIntensity ?? null;
     };
 
     // Check each subscription
     for (const sub of subscriptions as PushSubscription[]) {
       // Get region intensity (with caching)
       const regionIntensity = await getRegionIntensity(sub.postcode);
+      if (!regionIntensity) {
+        // No trustworthy reading: send nothing and leave alert state unchanged
+        // so the next run (every 30 min) re-evaluates with real data.
+        skippedNoData++;
+        console.warn(`[INTENSITY] No valid reading for subscription ${sub.id}; skipping`);
+        continue;
+      }
 
       // === LOW INTENSITY ALERTS ===
       if (sub.low_intensity_enabled) {
@@ -222,7 +232,7 @@ Deno.serve(async (req) => {
       })
     );
 
-    console.log(`Checked ${subscriptions?.length || 0} subscriptions, ${stateUpdates.length} state changes, ${notifications.length} notifications to send`);
+    console.log(`Checked ${subscriptions?.length || 0} subscriptions, ${stateUpdates.length} state changes, ${notifications.length} notifications to send, ${skippedNoData} skipped (no valid intensity data)`);
 
     // Actually deliver the push notifications to APNs/FCM
     try {
@@ -247,6 +257,7 @@ Deno.serve(async (req) => {
         checked: subscriptions?.length || 0,
         stateChanges: stateUpdates.length,
         notifications: notifications.length,
+        skipped_no_data: skippedNoData,
         legacy_credentials: legacyCredentials,
       }),
       {

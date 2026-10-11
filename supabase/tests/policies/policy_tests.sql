@@ -1,5 +1,6 @@
 -- Policy/privilege assertions for 20261003120000_security_hardening.sql
 -- and 20261010170000_anon_access_tidy.sql
+-- and 20261011090000_tesla_credentials_token_privacy.sql
 \set ON_ERROR_STOP 1
 \pset footer off
 SET client_min_messages = warning;
@@ -156,6 +157,22 @@ SELECT pg_temp.check('app: push subscriptions own-row select', 'authenticated', 
 INSERT INTO results SELECT 'no-plaintext constraint added (0 plaintext keys at migration time)', count(*) = 1, count(*)::text FROM pg_constraint WHERE conrelid = 'public.octopus_credentials'::regclass AND conname = 'octopus_credentials_no_plaintext';
 SELECT pg_temp.check('service_role cannot store a plaintext key', 'service_role', NULL, $q$UPDATE public.octopus_credentials SET api_key = 'sk_live_x' WHERE user_id = '11111111-1111-1111-1111-111111111111' RETURNING user_id::text$q$, 'ERR:%octopus_credentials_no_plaintext%');
 SELECT pg_temp.check('service_role can still store an encrypted key', 'service_role', NULL, $q$INSERT INTO public.octopus_credentials (user_id, account_number, api_key, api_key_encrypted, api_key_hint) VALUES ('11111111-1111-1111-1111-111111111111','A-11111111',NULL,'v1.eee.fff','EEEE') ON CONFLICT (user_id) DO UPDATE SET api_key = excluded.api_key, api_key_encrypted = excluded.api_key_encrypted RETURNING api_key_hint$q$, 'OK:AAAA');
+
+-- 7. tesla_credentials tokens (20261011090000_tesla_credentials_token_privacy.sql)
+INSERT INTO public.tesla_credentials (user_id, access_token, refresh_token, token_expires_at) VALUES
+  ('11111111-1111-1111-1111-111111111111', 'tesla_access_1', 'tesla_refresh_1', now() + interval '1 hour'),
+  ('22222222-2222-2222-2222-222222222222', 'tesla_access_2', 'tesla_refresh_2', now() + interval '1 hour');
+SELECT pg_temp.check('anon cannot read tesla_credentials', 'anon', NULL, $q$SELECT count(*)::text FROM public.tesla_credentials$q$, 'ERR:permission denied%');
+SELECT pg_temp.check('user cannot read own tesla access_token', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$SELECT access_token FROM public.tesla_credentials LIMIT 1$q$, 'ERR:permission denied%');
+SELECT pg_temp.check('user cannot read own tesla refresh_token', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$SELECT refresh_token FROM public.tesla_credentials LIMIT 1$q$, 'ERR:permission denied%');
+SELECT pg_temp.check('user cannot select * from tesla_credentials', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$SELECT count(*)::text FROM (SELECT * FROM public.tesla_credentials) s$q$, 'ERR:permission denied%');
+SELECT pg_temp.check('user sees only own tesla row (safe columns)', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$SELECT string_agg(user_id::text, ',') FROM public.tesla_credentials WHERE token_expires_at > now()$q$, 'OK:11111111-1111-1111-1111-111111111111');
+SELECT pg_temp.check('user cannot insert tesla tokens', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$INSERT INTO public.tesla_credentials (user_id, access_token, refresh_token, token_expires_at) VALUES ('11111111-1111-1111-1111-111111111111','a','b',now()) RETURNING user_id::text$q$, 'ERR:permission denied%');
+SELECT pg_temp.check('user cannot update tesla tokens', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$UPDATE public.tesla_credentials SET access_token = 'x' RETURNING user_id::text$q$, 'ERR:permission denied%');
+SELECT pg_temp.check('app: has_tesla_linked true with a live token', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$SELECT public.has_tesla_linked()::text$q$, 'OK:true');
+SELECT pg_temp.check('service_role can read tesla tokens', 'service_role', NULL, $q$SELECT access_token FROM public.tesla_credentials WHERE user_id = '22222222-2222-2222-2222-222222222222'$q$, 'OK:tesla_access_2');
+SELECT pg_temp.check('tesla unlink: user cannot delete others tesla credentials', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$WITH d AS (DELETE FROM public.tesla_credentials WHERE user_id = '22222222-2222-2222-2222-222222222222' RETURNING 1) SELECT count(*)::text FROM d$q$, 'OK:0');
+SELECT pg_temp.check('tesla unlink: user deletes own tesla credentials', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$WITH d AS (DELETE FROM public.tesla_credentials WHERE user_id = '11111111-1111-1111-1111-111111111111' RETURNING 1) SELECT count(*)::text FROM d$q$, 'OK:1');
 
 SELECT CASE WHEN ok THEN 'PASS' ELSE 'FAIL' END AS result, name, CASE WHEN ok THEN '' ELSE detail END AS detail FROM results;
 SELECT count(*) FILTER (WHERE ok) AS passed, count(*) FILTER (WHERE NOT ok) AS failed FROM results;

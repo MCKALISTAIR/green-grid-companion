@@ -84,6 +84,8 @@ export default defineConfig(({ mode }) => {
       includeAssets: ['favicon.ico', 'icon-192.png', 'icon-512.png'],
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        // Share-card image is for crawlers only; don't precache it on devices.
+        globIgnores: ['**/og-image.png'],
         navigateFallbackDenylist: [/^\/~oauth/],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
@@ -123,24 +125,10 @@ export default defineConfig(({ mode }) => {
           },
         ],
       },
-      manifest: {
-        name: 'GridSense Companion',
-        short_name: 'GridSense',
-        description: 'Track UK Grid Carbon Intensity',
-        theme_color: '#ffffff',
-        icons: [
-          {
-            src: 'icon-192.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: 'icon-512.png',
-            sizes: '512x512',
-            type: 'image/png'
-          }
-        ]
-      }
+      // Single web manifest: public/manifest.json (linked from index.html).
+      // The plugin used to generate a second, conflicting manifest.webmanifest
+      // ("GridSense Companion", theme #ffffff); keep it off so there is one source.
+      manifest: false,
     })
   ].filter(Boolean),
   resolve: {
