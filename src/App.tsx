@@ -31,6 +31,7 @@ const Planner = lazy(() => import("./pages/Planner"));
 const MapPage = lazy(() => import("./pages/Map"));
 const Settings = lazy(() => import("./pages/Settings"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const Terms = lazy(() => import("./pages/Terms"));
 const Glossary = lazy(() => import("./pages/Glossary"));
 const HistoryPage = lazy(() => import("./pages/History"));
 const ManageLocations = lazy(() => import("./pages/ManageLocations"));
@@ -139,6 +140,7 @@ function AppContent() {
             <Route path="/map" element={<Suspense fallback={<PageLoader />}><MapPage /></Suspense>} />
             <Route path="/settings" element={<Suspense fallback={<PageLoader />}><Settings /></Suspense>} />
             <Route path="/privacy" element={<Suspense fallback={<PageLoader />}><PrivacyPolicy /></Suspense>} />
+            <Route path="/terms" element={<Suspense fallback={<PageLoader />}><Terms /></Suspense>} />
             <Route path="/glossary" element={<Suspense fallback={<PageLoader />}><Glossary /></Suspense>} />
             <Route path="/history" element={<Suspense fallback={<PageLoader />}><HistoryPage /></Suspense>} />
             <Route path="/locations" element={<Suspense fallback={<PageLoader />}><ManageLocations /></Suspense>} />

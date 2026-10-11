@@ -14,6 +14,7 @@ import {
   type SchedulerSecretRpcClient,
 } from '../_shared/cron-auth.ts';
 import { apiKeyHint } from '../_shared/credential-crypto.ts';
+import { parseIntensityPoint } from '../_shared/intensity-point.ts';
 import {
   createKeyLoader,
   selectCredentialRows,
@@ -366,13 +367,14 @@ Deno.serve(async (req: Request) => {
                     intensityList = intensityJson.data || [];
                   }
 
+                  // No made-up 0 / 'moderate': half-hours without real data are skipped.
+                  let skippedIntensity = 0;
                   for (const item of intensityList) {
-                    if (item.from && item.intensity) {
-                      const value = item.intensity.actual ?? item.intensity.forecast ?? 0;
-                      const index = item.intensity.index || 'moderate';
-                      intensityMap.set(item.from, { intensity: value, index });
-                    }
+                    const point = item?.from ? parseIntensityPoint(item) : null;
+                    if (point) intensityMap.set(item.from, point);
+                    else skippedIntensity++;
                   }
+                  if (skippedIntensity > 0) console.warn(`[FOOTPRINT] Skipped ${skippedIntensity} half-hour(s) with no usable intensity data for meter ${mpan}`);
 
                   // Store footprint records if intensity was found
                   const footprintRecords: FootprintRecord[] = [];
@@ -479,13 +481,14 @@ Deno.serve(async (req: Request) => {
                   intensityList = intensityJson.data || [];
                 }
 
+                // No made-up 0 / 'moderate': half-hours without real data are skipped.
+                let skippedIntensity = 0;
                 for (const item of intensityList) {
-                  if (item.from && item.intensity) {
-                    const value = item.intensity.actual ?? item.intensity.forecast ?? 0;
-                    const index = item.intensity.index || 'moderate';
-                    intensityMap.set(item.from, { intensity: value, index });
-                  }
+                  const point = item?.from ? parseIntensityPoint(item) : null;
+                  if (point) intensityMap.set(item.from, point);
+                  else skippedIntensity++;
                 }
+                if (skippedIntensity > 0) console.warn(`[FOOTPRINT] Skipped ${skippedIntensity} half-hour(s) with no usable intensity data for meter ${mpan}`);
 
                 const footprintRecords: FootprintRecord[] = [];
                 for (const record of consumption) {
@@ -1149,13 +1152,14 @@ Deno.serve(async (req: Request) => {
             intensityList = intensityJson.data || [];
           }
 
+          // No made-up 0 / 'moderate': half-hours without real data are skipped.
+          let skippedIntensity = 0;
           for (const item of intensityList) {
-            if (item.from && item.intensity) {
-              const value = item.intensity.actual ?? item.intensity.forecast ?? 0;
-              const index = item.intensity.index || 'moderate';
-              intensityMap.set(item.from, { intensity: value, index });
-            }
+            const point = item?.from ? parseIntensityPoint(item) : null;
+            if (point) intensityMap.set(item.from, point);
+            else skippedIntensity++;
           }
+          if (skippedIntensity > 0) console.warn(`[FOOTPRINT] Skipped ${skippedIntensity} half-hour(s) with no usable intensity data for meter ${mpan}`);
         } catch (error) {
           console.error(`Batch fetch failed for meter ${mpan}:`, error);
           continue;

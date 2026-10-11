@@ -2,6 +2,7 @@ import { AlertTriangle, ChevronDown, Info, Leaf, MapPin, RefreshCw, Trophy } fro
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { useOffline } from '@/hooks/useOffline';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { LocationManager } from '@/components/LocationManager';
 import { AnimatedIntensity } from '@/components/AnimatedIntensity';
@@ -66,6 +67,8 @@ export function IntensityHeroOverlay({
 }: IntensityHeroOverlayProps) {
   const { tone } = useEnergyFacts();
   const { isNight } = useTimeOfDay();
+  // Only say 'Offline' when the device really is; otherwise the data source failed.
+  const { isOffline } = useOffline();
   const band = getCleanlinessBand(intensity);
   const isDirty = band === 'dirty' || band === 'very-dirty';
   const needsHardScrim = isNight || isDirty;
@@ -190,7 +193,9 @@ export function IntensityHeroOverlay({
               ) : isError ? (
                 <div className="flex flex-col items-center py-1">
                   <AlertTriangle className="w-10 h-10 text-white animate-pulse mb-1 drop-shadow-md" />
-                  <span className="text-sm font-bold text-white/95 uppercase tracking-[0.18em]">Offline</span>
+                  <span className="text-sm font-bold text-white/95 uppercase tracking-[0.18em]">
+                    {isOffline ? 'Offline' : 'Data unavailable'}
+                  </span>
                 </div>
               ) : (
                 <>
