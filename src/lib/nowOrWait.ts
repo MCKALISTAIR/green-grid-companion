@@ -109,6 +109,59 @@ function windowAvg(slots: Slot[], i: number, len: number, firstValue?: number): 
   return sum / len;
 }
 
+/**
+ * Cleanest contiguous window of `len` slots whose start is at index >= `startIdx`
+ * and before `startBefore` (ms). Earliest wins ties; windows with a gap are skipped.
+ * Shared by planLoad and findCleanestWindow so the home card and the day chart
+ * can never pick different windows from the same data.
+ */
+function scanCleanest(
+  slots: Slot[],
+  startIdx: number,
+  startBefore: number,
+  len: number,
+  mustEndBy: number = Infinity,
+): { i: number; avg: number } | null {
+  let best: { i: number; avg: number } | null = null;
+  for (let i = Math.max(0, startIdx); i < slots.length; i++) {
+    if (slots[i].from >= startBefore) break;
+    if (i + len - 1 >= slots.length || slots[i + len - 1].to > mustEndBy) continue;
+    const avg = windowAvg(slots, i, len);
+    if (avg === null) continue;
+    if (!best || avg < best.avg) best = { i, avg };
+  }
+  return best;
+}
+
+export interface FindCleanestWindowOptions {
+  /** Window must start at or after this instant (ms). */
+  fromMs: number;
+  /** Window must end by this instant (ms), e.g. the end of a London day. */
+  toMs: number;
+  /** Load length in 30-minute slots (defaults to the home card's 3 hours). */
+  slots?: number;
+}
+
+/**
+ * Cleanest `slots`-long window fully inside [fromMs, toMs], using exactly the
+ * same scoring as the Now-or-wait card (forecast values, gaps break a window,
+ * earliest wins ties). Returns null when no complete window fits.
+ */
+export function findCleanestWindow(
+  forecast: ForecastData[] | null | undefined,
+  { fromMs, toMs, slots: len = HOME_LOAD_SLOTS }: FindCleanestWindowOptions,
+): LoadWindow | null {
+  const all = toSlots(forecast ?? []).filter((s) => s.from >= fromMs && s.to <= toMs);
+  if (all.length < len) return null;
+  const best = scanCleanest(all, 0, toMs, len, toMs);
+  if (!best) return null;
+  return {
+    start: new Date(all[best.i].from),
+    end: new Date(all[best.i + len - 1].to),
+    avg: Math.round(best.avg),
+  };
+}
+
 function emptyPlan(nowAvg: number | null): LoadPlan {
   return {
     action: 'check_forecast',
@@ -168,13 +221,7 @@ export function planLoad({
   if (nowAvg === null) return emptyPlan(null);
 
   // Cleanest later start (earliest wins ties).
-  let best: { i: number; avg: number } | null = null;
-  for (let i = current === 0 ? 1 : 0; i < upcoming.length; i++) {
-    if (upcoming[i].from >= horizonEnd) break;
-    const avg = windowAvg(upcoming, i, len);
-    if (avg === null) continue;
-    if (!best || avg < best.avg) best = { i, avg };
-  }
+  const best = scanCleanest(upcoming, current === 0 ? 1 : 0, horizonEnd, len);
 
   const roundedNow = Math.round(nowAvg);
   const base: LoadPlan = {

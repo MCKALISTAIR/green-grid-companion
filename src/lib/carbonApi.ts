@@ -163,17 +163,53 @@ export async function getRegionalHistoryAndForecast(regionId: number, from: stri
   const json = await response.json();
   const data: ForecastData[] = json.data?.data || [];
 
-  // Backfill 'actual' if missing, using generation mix
+  // Backfill 'actual' if missing, using generation mix. Only when there is a
+  // real mix to work from: an empty or missing mix stays null (never a fake 0).
   return data.map(item => {
     if (item.intensity.actual === undefined || item.intensity.actual === null) {
       const mix = item.generationmix;
-      if (mix) {
+      if (hasUsableMix(mix)) {
         item.intensity.actual = calculateIntensityFromMix(mix);
         item.intensity.actualEstimated = true;
       }
     }
     return item;
   });
+}
+
+function hasUsableMix(mix: GenerationMix[] | undefined): mix is GenerationMix[] {
+  if (!Array.isArray(mix) || mix.length === 0) return false;
+  const total = mix.reduce((sum, m) => sum + (Number.isFinite(m?.perc) ? m.perc : 0), 0);
+  return total > 0;
+}
+
+/**
+ * Half-hourly intensity for one region or GB between two instants, exactly as
+ * NESO publishes it. Regional rows have forecasts only (no actuals, and no
+ * GridSense backfill), so callers can't mistake an estimate for a measurement.
+ * `regionId` null/0 = GB national, which does include NESO actuals.
+ */
+export async function getIntensityRange(
+  regionId: number | null | undefined,
+  from: string,
+  to: string,
+  signal?: AbortSignal,
+): Promise<ForecastData[]> {
+  const isNational = !regionId;
+  const url = isNational
+    ? `${BASE_URL}/intensity/${from}/${to}`
+    : `${BASE_URL}/regional/intensity/${from}/${to}/regionid/${regionId}`;
+  const response = await fetchWithNoCache(url, signal);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch intensity range: ${response.status}`);
+  }
+  const json = await response.json();
+  const rows: ForecastData[] = (isNational ? json.data : json.data?.data) || [];
+  if (isNational) return rows;
+  return rows.map((row) => ({
+    ...row,
+    intensity: { ...row.intensity, actual: null, actualEstimated: false },
+  }));
 }
 
 // Get National history + forecast

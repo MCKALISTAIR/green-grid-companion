@@ -31,6 +31,9 @@ interface IntensityDashboardProps {
   /** Garden day count for stage-up copy only (never persistent chrome). */
   gardenDays?: number;
   growthStage?: SceneGrowthStage;
+  /** NESO region id for the day-detail sheet (null/0 = GB national). */
+  regionId?: number | null;
+  regionName?: string;
 }
 
 /**
@@ -48,6 +51,8 @@ export function IntensityDashboard({
   showWeatherInInsights,
   gardenDays = 0,
   growthStage = 0,
+  regionId = null,
+  regionName = '',
 }: IntensityDashboardProps) {
   const [moreOpen, setMoreOpen] = useState(false);
 
@@ -104,7 +109,7 @@ export function IntensityDashboard({
             </ComponentErrorBoundary>
 
             <ComponentErrorBoundary name="Daily Forecast">
-              <ForecastSummary forecast={forecast} />
+              <ForecastSummary forecast={forecast} regionId={regionId} regionName={regionName} />
             </ComponentErrorBoundary>
 
             {showWeatherInInsights && (
