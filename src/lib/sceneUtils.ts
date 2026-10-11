@@ -201,3 +201,22 @@ export function getTurbineBottomPct(layer: HillLayer, leftPct: number, container
 export function shouldCelebrateZeroCarbon(intensity: number, hasLiveReading: boolean): boolean {
     return hasLiveReading && Number.isFinite(intensity) && intensity <= 0;
 }
+
+/**
+ * Readings older than this don't get the "Zero-carbon power right now" chip or
+ * celebration. NESO publishes every 30 min, and the hero's freshness dot turns
+ * red at 35 min; 45 min allows one missed update plus a small grace period.
+ */
+export const ZERO_CARBON_MAX_AGE_MINUTES = 45;
+
+/** True when `lastUpdated` is a valid time no older than `maxAgeMinutes`. */
+export function isReadingFresh(
+    lastUpdated: string | Date | null | undefined,
+    maxAgeMinutes = ZERO_CARBON_MAX_AGE_MINUTES,
+    now: number = Date.now(),
+): boolean {
+    if (!lastUpdated) return false;
+    const t = new Date(lastUpdated).getTime();
+    if (!Number.isFinite(t)) return false;
+    return now - t <= maxAgeMinutes * 60000;
+}

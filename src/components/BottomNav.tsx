@@ -55,7 +55,7 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
 
   return (
     <div id="bottom-nav" className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
-      <div className="pointer-events-auto nav-dock max-w-md mx-auto">
+      <div className="pointer-events-auto nav-dock max-w-md mx-auto" data-testid="bottom-nav">
         <div className="grid grid-cols-5 h-[3.85rem] px-1.5">
           {TABS.map(({ id, path, label, Icon, tour }) => {
             const active = isActive(path);

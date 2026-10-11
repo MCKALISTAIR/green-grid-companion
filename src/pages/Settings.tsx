@@ -83,7 +83,7 @@ export default function Settings() {
   const isMac = typeof navigator !== 'undefined' && navigator.userAgent.includes('Macintosh');
 
   return (
-    <div className="page-shell">
+    <div className="page-shell page-shell--fit">
       <motion.div
         className="page-shell-inner space-y-8"
         variants={settingsContainerVariants}

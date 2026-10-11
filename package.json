@@ -12,6 +12,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:layout": "node scripts/layout-guard.mjs",
+    "layout:sweep": "node scripts/layout-sweep.mjs",
     "build:mobile": "vite build && npx cap sync",
     "sync-version": "npx tsx scripts/update-version.ts",
     "sim:duo": "npx tsx scripts/simulate-iphone-duo.ts"
