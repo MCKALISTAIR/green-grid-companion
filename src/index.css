@@ -990,3 +990,58 @@ p, blockquote {
     display: none;
   }
 }
+/* Generation mix motion cues (spec §4.7): only when share > 0 and motion is allowed. */
+.gen-anim--solar::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 12px;
+  background: radial-gradient(circle, hsl(var(--gen-solar) / 0.9) 0%, transparent 70%);
+  animation: gen-halo 3s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes gen-halo {
+  0%, 100% { transform: scale(0.96); opacity: 0.2; }
+  50% { transform: scale(1.04); opacity: 0.35; }
+}
+.gen-anim--gas::after {
+  content: '';
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: hsl(var(--gen-gas));
+  border: 1.5px solid hsl(var(--card));
+  animation: gen-flicker 1.6s steps(1, end) infinite;
+}
+@keyframes gen-flicker {
+  0% { opacity: 1; } 18% { opacity: 0.6; } 31% { opacity: 0.95; } 47% { opacity: 0.7; } 63% { opacity: 1; } 82% { opacity: 0.65; }
+}
+.gen-gusts {
+  position: absolute;
+  left: 33px;
+  top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.gen-gusts i {
+  display: block;
+  height: 2px;
+  border-radius: 2px;
+  background: hsl(var(--gen-wind));
+  animation: gen-gust 2.4s ease-in-out infinite;
+}
+.gen-gusts i:nth-child(1) { width: 9px; }
+.gen-gusts i:nth-child(2) { width: 13px; animation-delay: 0.4s; }
+.gen-gusts i:nth-child(3) { width: 7px; animation-delay: 0.8s; }
+@keyframes gen-gust {
+  0% { transform: translateX(-3px); opacity: 0; }
+  40% { opacity: 1; }
+  100% { transform: translateX(4px); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gen-anim--solar::before, .gen-anim--gas::after, .gen-gusts i { animation: none !important; }
+}
