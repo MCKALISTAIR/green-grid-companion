@@ -237,9 +237,24 @@ GridSense is a mobile-first companion app designed to help UK (and future) energ
     | `VITE_SUPABASE_URL` | Optional* | Supabase project REST URL |
     | `VITE_SUPABASE_PUBLISHABLE_KEY` | Optional* | Supabase anon/public JWT key |
     | `VITE_SUPABASE_PROJECT_ID` | Optional* | Supabase project reference ID |
-    | `VITE_SENTRY_DSN` | Optional | Sentry error monitoring DSN |
+    | `VITE_SENTRY_DSN` | Optional | Sentry error monitoring DSN (production builds only; see *Error monitoring* below) |
 
     > **⚠️ Important:** If you skip the `.env` file, `npm run dev` will silently use the **production** Supabase database via hardcoded fallback values in `vite.config.ts`. Always configure `.env` if you want an isolated local environment.
+
+    **Error monitoring (Sentry).** Production builds turn Sentry on automatically when
+    `VITE_SENTRY_DSN` is present at build time; there is no DSN in the code. A DSN is a public
+    browser value (not a secret), so for the Lovable-hosted build put it in a committed
+    `.env.production` file at the repo root (`.env` itself is gitignored here):
+
+    ```sh
+    VITE_SENTRY_DSN="https://<key>@o<org>.ingest.sentry.io/<project>"
+    ```
+
+    Do **not** add it under Lovable Cloud → Secrets: those are edge-function secrets and
+    Lovable rejects `VITE_` names there. The Sentry release is `gridsense@<package.json version>`
+    (injected by `vite.config.ts`). Crash reports always run once the DSN is set; performance
+    tracing and Session Replay (masked) only run after the user accepts the cookie banner
+    (`src/lib/monitoring.ts`, `src/lib/consent.ts`).
 
 4.  **Run the web development server**
     ```sh

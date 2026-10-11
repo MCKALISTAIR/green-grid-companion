@@ -12,7 +12,8 @@ await context.addInitScript(() => {
   localStorage.setItem('gridgreen-scene-preference', 'city');
   localStorage.setItem('onboarding_complete', 'true');
   localStorage.setItem('gridgreen-postcode', 'EC1A');
-  localStorage.setItem('cookie-consent', 'accepted');
+  localStorage.setItem('cookie-consent', 'declined');
+  localStorage.setItem('cookie-consent-version', '2');
   localStorage.setItem('skip_splash', 'true');
   localStorage.setItem('product_tour_seen', 'true');
   localStorage.removeItem('history-chart-tip-seen');

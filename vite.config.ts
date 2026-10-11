@@ -3,6 +3,14 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from 'vite-plugin-pwa';
+import { readFileSync } from "fs";
+
+// Single source of truth for the release version (Sentry release, PACKAGE_VERSION).
+// Read from package.json directly: Lovable's build does not always run through
+// `npm run`, so npm_package_version can be missing.
+const pkgVersion: string = JSON.parse(
+  readFileSync(path.resolve(__dirname, "package.json"), "utf-8"),
+).version;
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -17,7 +25,8 @@ export default defineConfig(({ mode }) => {
   if (!process.env.VITE_SUPABASE_PROJECT_ID) {
     fallbackEnv['import.meta.env.VITE_SUPABASE_PROJECT_ID'] = JSON.stringify('klwezcjmlrdwvvzisdtd');
   }
-  fallbackEnv['import.meta.env.PACKAGE_VERSION'] = JSON.stringify(process.env.npm_package_version || '1.6.0');
+  fallbackEnv['import.meta.env.PACKAGE_VERSION'] = JSON.stringify(pkgVersion);
+  fallbackEnv['import.meta.env.VITE_APP_VERSION'] = JSON.stringify(pkgVersion);
 
   return ({
   define: fallbackEnv,

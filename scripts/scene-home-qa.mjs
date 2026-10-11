@@ -16,7 +16,8 @@ const browser = await chromium.launch();
 for (const { theme, postcode } of cases) {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
   await context.addInitScript(({ theme, postcode }) => {
-    localStorage.setItem('cookie-consent', 'accepted');
+    localStorage.setItem('cookie-consent', 'declined');
+    localStorage.setItem('cookie-consent-version', '2');
     localStorage.setItem('onboarding_complete', 'true');
     localStorage.setItem('product_tour_seen', 'true');
     localStorage.setItem('gridgreen-postcode', postcode);
