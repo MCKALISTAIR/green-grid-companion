@@ -1,6 +1,6 @@
 import { format, parseISO, isBefore, differenceInMinutes } from 'date-fns';
 import type { ForecastData } from '@/lib/carbonApi';
-import { getConditionLabel, type ConditionTone } from '@/lib/conditionLabels';
+import { getConditionParts, type ConditionTone } from '@/lib/conditionLabels';
 import type { NowOrWaitAction } from '@/lib/nowOrWait';
 import { getSlotDisplayValue } from '@/lib/forecastUtils';
 
@@ -143,7 +143,8 @@ export function getForecastHourInsight(
     timeLabel: buildTimeLabel(item.from, now, isCurrent, isPast),
     value,
     band,
-    condition: getConditionLabel(band, tone, item.from),
+    // Band name only: the Cheeky line is too long for the chart strip and would truncate.
+    condition: getConditionParts(band, tone, item.from).band,
     vsNow: buildVsNow(value, currentIntensity, isCurrent),
     action: buildAction(
       band,

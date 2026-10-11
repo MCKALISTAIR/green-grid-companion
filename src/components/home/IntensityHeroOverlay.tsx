@@ -12,7 +12,7 @@ import { ComponentErrorBoundary } from '@/components/ComponentErrorBoundary';
 import { IntensityScene } from '@/components/IntensityScene';
 import { DEFINITIONS } from '@/lib/definitions';
 import { cn } from '@/lib/utils';
-import { getConditionLabel } from '@/lib/conditionLabels';
+import { getConditionLabel, getConditionParts } from '@/lib/conditionLabels';
 import { formatLondonTime } from '@/lib/londonTime';
 import { useEnergyFacts } from '@/hooks/useEnergyFacts';
 import { useTimeOfDay } from '@/hooks/useTimeOfDay';
@@ -90,6 +90,9 @@ export function IntensityHeroOverlay({
     if (new Date() > next) return 'Refreshing soon';
     return `Next ${formatLondonTime(next)}`;
   })();
+
+  // Band name big, Cheeky line underneath, so neither wraps on small phones.
+  const conditionParts = getConditionParts(index, tone, region ?? postcode);
 
   const renewablesTone = needsHardScrim
     ? 'text-white'
@@ -238,7 +241,12 @@ export function IntensityHeroOverlay({
                     tone === 'plain' ? 'capitalize' : '',
                   )}
                 >
-                  <TypewriterText text={conditionLabel} />
+                  <TypewriterText text={conditionParts.band} />
+                  {conditionParts.quip && (
+                    <span className="block mt-1 text-base sm:text-lg font-semibold text-white/95 normal-case">
+                      {conditionParts.quip}
+                    </span>
+                  )}
                 </p>
                 <Popover>
                   <PopoverTrigger asChild>

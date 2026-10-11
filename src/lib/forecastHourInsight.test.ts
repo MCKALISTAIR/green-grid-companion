@@ -59,10 +59,10 @@ describe('getForecastHourInsight', () => {
     expect(insight!.action.toLowerCase()).toMatch(/best window/);
   });
 
-  it('adds a Cheeky line after the band name in Cheeky', () => {
+  it('shows the official band name in the chart strip in both tones', () => {
     const forecast = [slot(1, 40, 'very low')];
     const insight = getForecastHourInsight(forecast, 0, 120, 'cheeky', new Date(), new Set());
-    expect(insight!.condition).toMatch(/^Very low\. .+/);
+    expect(insight!.condition).toBe('Very low');
   });
 
   it('reports dirtier-than-now for high future hours', () => {
