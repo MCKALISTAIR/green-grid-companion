@@ -11,8 +11,11 @@ export const CONSENT_COPY = {
     cheeky: 'Quick one before we crack on',
     plain: 'Your privacy choice',
   } satisfies Record<CommentaryTone, string>,
+  // What's collected and the lawful basis: GridSense Launch's wording wins
+  // (/workspace/gridsense-legal/cookie-banner.md rev 2 + the approved crash
+  // clause). Title, tone and layout: GridSense Design's spec.
   crashClause: 'We send crash reports (what went wrong and on what device, not who you are) so we can fix bugs.',
-  body: 'We keep your settings on this device. If you accept, we also use Sentry for performance data and occasional privacy-masked session recordings. No advertising cookies.',
+  body: 'We keep your region and settings on this device so the app works. Crash reports store nothing on your device. If you accept, we also use Sentry to measure app speed and record occasional session replays, with all text and images hidden. No ads, no cross-site tracking, and we never sell your data.',
   privacyLink: 'Privacy policy',
   details: 'Details',
   detailsHeadings: {
@@ -28,11 +31,13 @@ export const CONSENT_COPY = {
 
 export const CONSENT_SETTINGS_COPY = {
   title: 'Privacy',
+  helper: "Performance timings and masked session replays help us make GridSense faster and fix bugs. They only run if you've chosen Accept.",
   current: {
-    accepted: 'Optional diagnostics on: performance data and session recordings.',
-    declined: 'Essentials only: crash reports and your settings.',
-    unset: 'Not chosen yet.',
+    accepted: 'Currently: optional diagnostics on.',
+    declined: 'Currently: essentials only.',
+    unset: 'Currently: not chosen yet.',
   },
+  footnote: 'Essential storage (region, settings, sign-in, offline data) and crash reports always stay on. Crash reports use no cookies or device storage.',
   saved: {
     accepted: 'Saved. Optional diagnostics are on.',
     declined: 'Saved. Essentials only.',
