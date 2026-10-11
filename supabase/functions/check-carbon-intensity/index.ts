@@ -151,7 +151,7 @@ Deno.serve(async (req) => {
         // No trustworthy reading: send nothing and leave alert state unchanged
         // so the next run (every 30 min) re-evaluates with real data.
         skippedNoData++;
-        console.warn(`[INTENSITY] No valid reading for subscription ${sub.id} (postcode ${sub.postcode}); skipping`);
+        console.warn(`[INTENSITY] No valid reading for subscription ${sub.id}; skipping`);
         continue;
       }
 
