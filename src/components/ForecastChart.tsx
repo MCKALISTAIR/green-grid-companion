@@ -2,7 +2,7 @@ import { ForecastData, getIntensityColor, getIntensityTextColor, isEstimatedActu
 import { format, parseISO } from 'date-fns';
 import { useRef, useLayoutEffect, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getForecastMax, getForecastDifferences } from '@/lib/forecastUtils';
+import { getForecastMax, getForecastDifferences, getSlotDisplayValue } from '@/lib/forecastUtils';
 import { createPortal } from 'react-dom';
 import { Target, ArrowUp, ArrowDown, Clock3, Leaf, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -118,8 +118,8 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
     }
   }, [forecast]);
 
-  const maxForecast = getForecastMax(forecast);
   const now = new Date();
+  const maxForecast = getForecastMax(forecast, now);
 
   const hasSeparatorArray = forecast.map((item, i) => {
     const prevItem = forecast[i - 1];
@@ -379,6 +379,7 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
               const prevItem = forecast[i - 1];
               const prevTime = prevItem ? parseISO(prevItem.from) : null;
               const showSeparator = !prevTime || time.getDate() !== prevTime.getDate();
+              const displayValue = getSlotDisplayValue(item, now);
               const isSelected = selectedIndex === i;
               const dimOthers = selectedIndex !== null && !isSelected;
 
@@ -436,7 +437,7 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
                             initial={{ height: 0, opacity: 0 }}
                             animate={{
                               height: `${Math.max(
-                                ((item.intensity.actual ?? item.intensity.forecast) /
+                                ((displayValue ?? 0) /
                                   maxForecast) *
                                   100,
                                 10,
@@ -468,9 +469,7 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
                               : 'text-foreground',
                           )}
                         >
-                          {isUnknown
-                            ? '?'
-                            : (item.intensity.actual ?? item.intensity.forecast)}
+                          {isUnknown || displayValue === null ? '?' : displayValue}
                         </span>
 
                         {showDifference && (
@@ -506,7 +505,7 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
                         <span className="font-semibold capitalize">{item.intensity.index}</span>
                         <div className="flex items-center gap-2">
                           <span className="text-muted-foreground">Forecast:</span>
-                          <span className="font-medium">{item.intensity.forecast}g</span>
+                          <span className="font-medium">{isUnknown ? 'No data' : `${item.intensity.forecast}g`}</span>
                         </div>
                         {hasActual && (
                           <div className="flex items-center gap-2">

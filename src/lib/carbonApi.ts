@@ -163,17 +163,30 @@ export async function getRegionalHistoryAndForecast(regionId: number, from: stri
   const json = await response.json();
   const data: ForecastData[] = json.data?.data || [];
 
-  // Backfill 'actual' if missing, using generation mix
+  // Backfill 'actual' if missing, using generation mix, for half-hours that have
+  // already happened. Future rows keep NESO's forecast only: backfilling them made
+  // the hourly chart's bar (estimate) disagree with its tooltip (forecast).
+  // Only when there is a real mix to work from: an empty or missing mix stays
+  // null (never a fake 0).
+  const nowMs = Date.now();
   return data.map(item => {
-    if (item.intensity.actual === undefined || item.intensity.actual === null) {
+    const endMs = Date.parse(item.to);
+    const hasEnded = Number.isFinite(endMs) ? endMs <= nowMs : false;
+    if (hasEnded && (item.intensity.actual === undefined || item.intensity.actual === null)) {
       const mix = item.generationmix;
-      if (mix) {
+      if (hasUsableMix(mix)) {
         item.intensity.actual = calculateIntensityFromMix(mix);
         item.intensity.actualEstimated = true;
       }
     }
     return item;
   });
+}
+
+function hasUsableMix(mix: GenerationMix[] | undefined): mix is GenerationMix[] {
+  if (!Array.isArray(mix) || mix.length === 0) return false;
+  const total = mix.reduce((sum, m) => sum + (Number.isFinite(m?.perc) ? m.perc : 0), 0);
+  return total > 0;
 }
 
 // Get National history + forecast

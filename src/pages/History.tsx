@@ -34,6 +34,7 @@ const itemVariants = {
 };
 
 import { useHistoricalCarbon } from '@/hooks/useHistoricalCarbon';
+import { averageForecast, historyYAxisMax, isNearZeroRange, toHistoryPoint } from '@/lib/historyChart';
 import { IntensityScene } from '@/components/IntensityScene';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useAppLocation } from '@/contexts/LocationContext';
@@ -100,9 +101,8 @@ export default function HistoryPage() {
     const actualLabel = actualSeriesLabel(data);
 
     // Calculate simple stats
-    const avgIntensity = data.length > 0
-        ? Math.round(data.reduce((acc, curr) => acc + curr.intensity.forecast, 0) / data.length)
-        : 0;
+    // Only half-hours that have a forecast count (missing ones are not 0).
+    const avgIntensity = averageForecast(data) ?? 0;
 
     // Merge consumption data
     const chartData = useMemo(() => {
@@ -121,16 +121,20 @@ export default function HistoryPage() {
             // Fallback: Group by hour if slots don't align perfectly? 
             // For now, strict match or null.
 
+            const { forecast, actual } = toHistoryPoint(item);
             return {
                 time: item.from,
-                forecast: item.intensity.forecast,
-                actual: item.intensity.actual ?? null,
+                forecast,
+                actual,
                 consumption: consumptionRecord ? consumptionRecord.consumption_kwh : null,
                 carbonMass: consumptionRecord ? consumptionRecord.carbon_g : null,
                 formattedTime: format(itemDate, timeRange === '24h' ? 'HH:mm' : 'dd MMM HH:mm'),
             };
         });
     }, [data, footprint, timeRange]);
+
+    const yAxisMax = useMemo(() => historyYAxisMax(chartData), [chartData]);
+    const nearZeroRegion = !!regionId && isNearZeroRange(chartData);
 
     // Compute consumption stats if available
     const totalConsumption = useMemo(() => {
@@ -457,7 +461,7 @@ export default function HistoryPage() {
                                         {chartData.map((item, i) => (
                                             <tr key={i}>
                                                 <td>{item.formattedTime}</td>
-                                                <td>{item.forecast}</td>
+                                                <td>{item.forecast ?? 'N/A'}</td>
                                                 <td>{item.actual ?? 'N/A'}</td>
                                                 {isLinked && <td>{item.consumption ?? 'N/A'}</td>}
                                             </tr>
@@ -465,6 +469,11 @@ export default function HistoryPage() {
                                     </tbody>
                                 </table>
                             </div>
+                            {nearZeroRegion && (
+                                <p className="px-6 pb-2 text-xs text-muted-foreground" data-testid="history-near-zero-note">
+                                    NESO's regional forecast for {region} stayed near 0 for most of this period, because local power was almost all wind and nuclear.
+                                </p>
+                            )}
                             <div className="h-[300px] w-full">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <ComposedChart data={chartData}>
@@ -489,6 +498,8 @@ export default function HistoryPage() {
                                         />
                                         <YAxis
                                             yAxisId="left"
+                                            domain={[0, yAxisMax]}
+                                            allowDecimals={false}
                                             tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
                                             tickLine={false}
                                             axisLine={false}
@@ -546,6 +557,7 @@ export default function HistoryPage() {
                                             fill="url(#colorForecast)"
                                             strokeWidth={2}
                                             strokeDasharray="4 4"
+                                            connectNulls={false}
                                         />
                                         <Area
                                             yAxisId="left"
@@ -556,6 +568,7 @@ export default function HistoryPage() {
                                             fillOpacity={1}
                                             fill="url(#colorActual)"
                                             strokeWidth={2}
+                                            connectNulls={false}
                                         />
                                         {/* Interactive Brush for zooming/panning */}
                                         <Brush
