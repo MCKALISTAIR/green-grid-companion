@@ -14,6 +14,7 @@ import {
   type SchedulerSecretRpcClient,
 } from '../_shared/cron-auth.ts';
 import { apiKeyHint } from '../_shared/credential-crypto.ts';
+import { deleteOctopusUsageData, type UserDataClient } from '../_shared/user-data.ts';
 import {
   createKeyLoader,
   selectCredentialRows,
@@ -867,7 +868,16 @@ Deno.serve(async (req: Request) => {
         );
       }
 
-      await supabase.from('octopus_meters').delete().eq('user_id', userId);
+      // Remove the readings, footprint and dispatches too (not just the meters),
+      // otherwise MPAN-keyed rows are left behind with nothing linking them to the user.
+      const removed = await deleteOctopusUsageData(supabase as unknown as UserDataClient, userId);
+      if (removed.errors.length > 0) {
+        console.error('[DISCONNECT] Some Octopus data could not be deleted:', removed.errors);
+        return new Response(
+          JSON.stringify({ error: 'Disconnected, but some stored data could not be deleted. Please try again.' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
 
       return new Response(
         JSON.stringify({ success: true }),

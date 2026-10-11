@@ -17,7 +17,8 @@ Deno.serve(async (req: Request) => {
     const rateLimit = await checkRateLimit(clientIP, 20, 60); // 20 req/min
 
     if (!rateLimit.allowed) {
-        console.warn(`[RATE LIMIT] Blocked weather request from IP ${clientIP}. Retry after ${rateLimit.retryAfter}s`);
+        // Don't log the IP (personal data); the rate limiter already keys on it.
+        console.warn(`[RATE LIMIT] Blocked weather request. Retry after ${rateLimit.retryAfter}s`);
         return new Response(
             JSON.stringify({ error: 'Too many requests', retryAfter: rateLimit.retryAfter }),
             {
@@ -52,11 +53,15 @@ Deno.serve(async (req: Request) => {
             )
         }
 
-        console.log(`Fetching weather for ${lat}, ${lon}`)
+        // Privacy: never log coordinates, and only send ~1 km precision (2 dp) to
+        // Open-Meteo, which is finer than its model grid anyway.
+        const roundedLat = Math.round(lat * 100) / 100
+        const roundedLon = Math.round(lon * 100) / 100
+        console.log('Fetching weather')
 
         // Open-Meteo Free API
         // Current weather: temperature, wind speed, cloud cover, weather code
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,cloud_cover,wind_speed_10m,weather_code&wind_speed_unit=mph`
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${roundedLat}&longitude=${roundedLon}&current=temperature_2m,cloud_cover,wind_speed_10m,weather_code&wind_speed_unit=mph`
 
         const response = await fetch(url)
         const data = await response.json()

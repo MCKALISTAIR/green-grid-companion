@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import type { User } from '@supabase/supabase-js';
 import { Capacitor } from '@capacitor/core';
 import { APP_SCHEME } from '@/config';
+import { getAppleAuthorizationForDeletion } from '@/lib/appleRevocation';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -159,7 +160,12 @@ export function AccountBackup({ isSyncing, lastSyncedAt, onSyncNow, formatLastSy
     setIsDeleting(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('delete-account');
+      // Sign in with Apple: get a fresh code so the server can revoke GridSense's access.
+      const usesApple = !!user?.identities?.some((i) => i.provider === 'apple');
+      const appleAuth = usesApple ? await getAppleAuthorizationForDeletion() : null;
+      const { data, error } = await supabase.functions.invoke('delete-account', {
+        body: appleAuth ?? {},
+      });
 
       if (error) {
         toast.error('Account deletion failed. Please try again.');
@@ -174,6 +180,9 @@ export function AccountBackup({ isSyncing, lastSyncedAt, onSyncNow, formatLastSy
       await supabase.auth.signOut({ scope: 'local' });
 
       toast.success('Your account and all data have been permanently deleted.');
+      if (usesApple && data?.apple_revocation !== 'revoked') {
+        toast.info('To finish, remove GridSense in your iPhone Settings: [your name] > Sign-In & Security > Sign in with Apple.');
+      }
       setShowDeleteDialog(false);
     } catch (err) {
       console.error('Delete account error:', err);

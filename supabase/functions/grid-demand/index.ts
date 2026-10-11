@@ -40,7 +40,7 @@ Deno.serve(async (req: Request) => {
   const rateLimit = await checkRateLimit(clientIP, 30, 60); // 30 req/min
 
   if (!rateLimit.allowed) {
-    console.warn(`[RATE LIMIT] Blocked request from IP ${clientIP}. Retry after ${rateLimit.retryAfter}s`);
+    console.warn(`[RATE LIMIT] Blocked request. Retry after ${rateLimit.retryAfter}s`);
     return new Response(
       JSON.stringify({ error: 'Too many requests', retryAfter: rateLimit.retryAfter }),
       {

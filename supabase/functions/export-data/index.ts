@@ -57,6 +57,7 @@ Deno.serve(async (req) => {
       teslaEnergyDataResult,
       teslaEnergySitesResult,
       preferencesResult,
+      pushSubscriptionsResult,
     ] = await Promise.all([
       adminClient.from("octopus_credentials").select("account_number, created_at, updated_at").eq("user_id", userId),
       mpans.length > 0
@@ -73,6 +74,7 @@ Deno.serve(async (req) => {
       adminClient.from("tesla_energy_data").select("*").eq("user_id", userId).order("timestamp", { ascending: false }),
       adminClient.from("tesla_energy_sites").select("*").eq("user_id", userId),
       adminClient.from("user_preferences").select("*").eq("user_id", userId),
+      adminClient.from("push_subscriptions").select("*").eq("user_id", userId).order("created_at", { ascending: true }),
     ]);
 
     const exportData = {
@@ -81,7 +83,7 @@ Deno.serve(async (req) => {
         user_id: userId,
         email: user.email,
         format_version: "1.0",
-        description: "Complete data export under GDPR Article 20 (right to data portability)",
+        description: "Copy of your personal data under the UK GDPR (Articles 15 and 20: right of access and right to data portability) and the Data Protection Act 2018",
       },
       account: {
         email: user.email,
@@ -112,6 +114,14 @@ Deno.serve(async (req) => {
         energy_sites: teslaEnergySitesResult.data || [],
       },
       preferences: preferencesResult.data?.[0] || null,
+      // Push notification settings for devices linked to this account. The device
+      // token itself is a delivery credential, so only its last 6 characters are shown.
+      push_subscriptions: (pushSubscriptionsResult.data || []).map(
+        ({ device_token, ...rest }: { device_token?: string } & Record<string, unknown>) => ({
+          ...rest,
+          device_token_hint: device_token ? `…${String(device_token).slice(-6)}` : null,
+        }),
+      ),
     };
 
     // Count total records
@@ -123,7 +133,8 @@ Deno.serve(async (req) => {
       (teslaVehiclesResult.data?.length || 0) +
       (teslaChargingResult.data?.length || 0) +
       (teslaEnergyDataResult.data?.length || 0) +
-      (teslaEnergySitesResult.data?.length || 0);
+      (teslaEnergySitesResult.data?.length || 0) +
+      (pushSubscriptionsResult.data?.length || 0);
 
     console.log(`Data export complete: ${totalRecords} records for user ${userId.substring(0, 8)}...`);
 

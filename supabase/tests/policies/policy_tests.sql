@@ -1,5 +1,6 @@
 -- Policy/privilege assertions for 20261003120000_security_hardening.sql
 -- and 20261010170000_anon_access_tidy.sql
+-- and 20261011100000_user_data_cleanup.sql
 \set ON_ERROR_STOP 1
 \pset footer off
 SET client_min_messages = warning;
@@ -92,7 +93,7 @@ END $$;
 DO $$ DECLARE c text; BEGIN FOR c IN SELECT command FROM cron.job LOOP EXECUTE c; END LOOP; END $$;
 INSERT INTO results SELECT 'all 4 cron jobs send the scheduler secret', count(*) = 4 AND bool_and(headers->>'x-cron-secret' = public.get_scheduler_secret()), count(*)::text || ' calls' FROM net.calls;
 INSERT INTO results SELECT 'cron jobs target the real project URL', bool_and(url LIKE 'https://klwezcjmlrdwvvzisdtd.supabase.co/functions/v1/%'), string_agg(DISTINCT split_part(url, '/functions', 1), ',') FROM net.calls;
-INSERT INTO results SELECT 'cron job set unchanged (4 jobs)', count(*) = 4, string_agg(jobname, ',') FROM cron.job;
+INSERT INTO results SELECT 'cron job set: 4 notification jobs + push cleanup', count(*) = 5 AND bool_or(jobname = 'cleanup-push-subscriptions-daily'), string_agg(jobname, ',') FROM cron.job;
 
 -- 6. Anonymous-access tidy-up (20261010170000_anon_access_tidy.sql)
 -- Fixture: user 1 owns meter M-1; M-2 has orphaned history (its owner disconnected).
@@ -156,6 +157,45 @@ SELECT pg_temp.check('app: push subscriptions own-row select', 'authenticated', 
 INSERT INTO results SELECT 'no-plaintext constraint added (0 plaintext keys at migration time)', count(*) = 1, count(*)::text FROM pg_constraint WHERE conrelid = 'public.octopus_credentials'::regclass AND conname = 'octopus_credentials_no_plaintext';
 SELECT pg_temp.check('service_role cannot store a plaintext key', 'service_role', NULL, $q$UPDATE public.octopus_credentials SET api_key = 'sk_live_x' WHERE user_id = '11111111-1111-1111-1111-111111111111' RETURNING user_id::text$q$, 'ERR:%octopus_credentials_no_plaintext%');
 SELECT pg_temp.check('service_role can still store an encrypted key', 'service_role', NULL, $q$INSERT INTO public.octopus_credentials (user_id, account_number, api_key, api_key_encrypted, api_key_hint) VALUES ('11111111-1111-1111-1111-111111111111','A-11111111',NULL,'v1.eee.fff','EEEE') ON CONFLICT (user_id) DO UPDATE SET api_key = excluded.api_key, api_key_encrypted = excluded.api_key_encrypted RETURNING api_key_hint$q$, 'OK:AAAA');
+
+-- 8. User data cleanup (20261011100000_user_data_cleanup.sql)
+-- 8a. Deleting a meter (Octopus disconnect) removes its readings and dispatches
+INSERT INTO public.octopus_meters (user_id, mpan, serial_number) VALUES ('22222222-2222-2222-2222-222222222222', 'M-9', 'S9');
+INSERT INTO public.octopus_consumption (interval_start, interval_end, consumption_kwh, mpan, serial_number) VALUES ('2026-10-02 00:00Z', '2026-10-02 00:30Z', 0.5, 'M-9', 'S9');
+INSERT INTO public.carbon_footprint (interval_start, interval_end, consumption_kwh, intensity_gco2_kwh, carbon_g, intensity_index, mpan) VALUES ('2026-10-02 00:00Z', '2026-10-02 00:30Z', 0.5, 100, 50, 'low', 'M-9');
+INSERT INTO public.octopus_intelligent_dispatches (user_id, mpan, dispatch_type, start_time, end_time) VALUES ('22222222-2222-2222-2222-222222222222', 'M-9', 'completed', '2026-10-02 01:00Z', '2026-10-02 02:00Z');
+SELECT pg_temp.check('disconnect: service_role deletes meter', 'service_role', NULL, $q$WITH d AS (DELETE FROM public.octopus_meters WHERE mpan = 'M-9' RETURNING 1) SELECT count(*)::text FROM d$q$, 'OK:1');
+INSERT INTO results SELECT 'disconnect: meter consumption deleted', count(*) = 0, count(*)::text FROM public.octopus_consumption WHERE mpan = 'M-9';
+INSERT INTO results SELECT 'disconnect: meter footprint deleted', count(*) = 0, count(*)::text FROM public.carbon_footprint WHERE mpan = 'M-9';
+INSERT INTO results SELECT 'disconnect: meter dispatches deleted', count(*) = 0, count(*)::text FROM public.octopus_intelligent_dispatches WHERE mpan = 'M-9';
+INSERT INTO results SELECT 'disconnect: other users readings untouched', count(*) = 1, count(*)::text FROM public.octopus_consumption WHERE mpan = 'M-1';
+
+-- 8b. Deleting the auth user cascades all the way down
+INSERT INTO auth.users VALUES ('44444444-4444-4444-4444-444444444444', false);
+INSERT INTO public.octopus_meters (user_id, mpan, serial_number) VALUES ('44444444-4444-4444-4444-444444444444', 'M-4', 'S4');
+INSERT INTO public.octopus_consumption (interval_start, interval_end, consumption_kwh, mpan, serial_number) VALUES ('2026-10-02 00:00Z', '2026-10-02 00:30Z', 0.5, 'M-4', 'S4');
+INSERT INTO public.carbon_footprint (interval_start, interval_end, consumption_kwh, intensity_gco2_kwh, carbon_g, intensity_index, mpan) VALUES ('2026-10-02 00:00Z', '2026-10-02 00:30Z', 0.5, 100, 50, 'low', 'M-4');
+INSERT INTO public.octopus_intelligent_dispatches (user_id, mpan, dispatch_type, start_time, end_time) VALUES ('44444444-4444-4444-4444-444444444444', 'M-OTHER', 'planned', '2026-10-02 01:00Z', '2026-10-02 02:00Z');
+INSERT INTO public.push_subscriptions (device_token, postcode, user_id) VALUES ('tok-4', 'SW1', '44444444-4444-4444-4444-444444444444');
+DELETE FROM auth.users WHERE id = '44444444-4444-4444-4444-444444444444';
+INSERT INTO results SELECT 'account delete: meters, readings, dispatches, push gone',
+  (SELECT count(*) FROM public.octopus_meters WHERE mpan = 'M-4') + (SELECT count(*) FROM public.octopus_consumption WHERE mpan = 'M-4')
+  + (SELECT count(*) FROM public.carbon_footprint WHERE mpan = 'M-4') + (SELECT count(*) FROM public.octopus_intelligent_dispatches WHERE user_id = '44444444-4444-4444-4444-444444444444')
+  + (SELECT count(*) FROM public.push_subscriptions WHERE device_token = 'tok-4') = 0, 'remaining rows';
+SELECT pg_temp.check('dispatches need a real user (FK)', 'service_role', NULL, $q$INSERT INTO public.octopus_intelligent_dispatches (user_id, mpan, dispatch_type, start_time, end_time) VALUES ('99999999-9999-9999-9999-999999999999', 'M-X', 'planned', now(), now()) RETURNING 1::text$q$, 'ERR:%foreign key%');
+SELECT pg_temp.check('authenticated cannot call fn_delete_meter_readings directly', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$SELECT public.fn_delete_meter_readings()::text$q$, 'ERR:%');
+
+-- 8c. Push subscriptions with no account
+INSERT INTO public.push_subscriptions (device_token, postcode, user_id, updated_at) VALUES
+  ('anon-old-off', 'SW1', NULL, now() - interval '40 days'),
+  ('anon-recent-off', 'SW1', NULL, now() - interval '5 days'),
+  ('acct-old-off', 'SW1', '22222222-2222-2222-2222-222222222222', now() - interval '40 days');
+INSERT INTO public.push_subscriptions (device_token, postcode, user_id, low_intensity_enabled, updated_at) VALUES
+  ('anon-old-on', 'SW1', NULL, true, now() - interval '400 days');
+SELECT pg_temp.check('anon cannot run push cleanup', 'anon', NULL, $q$SELECT public.fn_cleanup_push_subscriptions()::text$q$, 'ERR:permission denied%');
+SELECT pg_temp.check('authenticated cannot run push cleanup', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$SELECT public.fn_cleanup_push_subscriptions()::text$q$, 'ERR:permission denied%');
+SELECT pg_temp.check('push cleanup removes only stale, all-off, no-account rows', 'service_role', NULL, $q$SELECT public.fn_cleanup_push_subscriptions()::text$q$, 'OK:1');
+INSERT INTO results SELECT 'push cleanup keeps enabled / recent / account-linked rows', count(*) = 3, string_agg(device_token, ',') FROM public.push_subscriptions WHERE device_token IN ('anon-old-off','anon-recent-off','acct-old-off','anon-old-on');
 
 SELECT CASE WHEN ok THEN 'PASS' ELSE 'FAIL' END AS result, name, CASE WHEN ok THEN '' ELSE detail END AS detail FROM results;
 SELECT count(*) FILTER (WHERE ok) AS passed, count(*) FILTER (WHERE NOT ok) AS failed FROM results;
