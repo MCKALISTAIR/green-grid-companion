@@ -12,6 +12,23 @@ const NotFound = () => {
     logger.warn('404: User attempted to access non-existent route', { path: location.pathname });
   }, [location.pathname]);
 
+  // Lovable hosting serves index.html with HTTP 200 for every path (SPA fallback),
+  // so a real 404 status is not possible from the app. Tell crawlers not to index
+  // these soft-404s instead.
+  useEffect(() => {
+    const meta = document.createElement('meta');
+    meta.name = 'robots';
+    meta.content = 'noindex';
+    meta.setAttribute('data-gridsense', 'not-found');
+    document.head.appendChild(meta);
+    const previousTitle = document.title;
+    document.title = 'Page not found · GridSense';
+    return () => {
+      meta.remove();
+      document.title = previousTitle;
+    };
+  }, []);
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-6">
       <div className="text-center space-y-6 max-w-md">

@@ -39,9 +39,17 @@ const Help = lazy(() => import("./pages/Help"));
 const FeatureGuides = lazy(() => import("./pages/FeatureGuides"));
 const GuideDetail = lazy(() => import("./pages/GuideDetail"));
 const NotFound = lazy(() => import("./pages/NotFound"));
-const TurbineTest = lazy(() => import("./pages/TurbineTest"));
-const SceneTestPage = lazy(() => import("./pages/SceneTest"));
-const DesignSystemPage = lazy(() => import("./pages/DesignSystem"));
+// Dev/QA pages (/__turbine-test, /__scene-test, /__design-system) exist only in
+// dev builds (`vite` / `vite build --mode development`), or when a build sets
+// VITE_ENABLE_DEV_ROUTES=true (the CI a11y audit does, to keep auditing
+// /__design-system). In the Lovable production build neither is true, so the
+// routes are not registered, the page chunks are dropped from the bundle, and
+// those URLs fall through to NotFound.
+const DEV_ROUTES_ENABLED =
+  import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEV_ROUTES === "true";
+const TurbineTest = DEV_ROUTES_ENABLED ? lazy(() => import("./pages/TurbineTest")) : null;
+const SceneTestPage = DEV_ROUTES_ENABLED ? lazy(() => import("./pages/SceneTest")) : null;
+const DesignSystemPage = DEV_ROUTES_ENABLED ? lazy(() => import("./pages/DesignSystem")) : null;
 const ChargingHistory = lazy(() => import("./pages/ChargingHistory"));
 const AchievementsPage = lazy(() => import('./pages/Achievements'));
 import AuthCallback from "./pages/AuthCallback";
@@ -148,9 +156,9 @@ function AppContent() {
             <Route path="/guides/:id" element={<Suspense fallback={<PageLoader />}><GuideDetail /></Suspense>} />
             <Route path="/charging-history" element={<Suspense fallback={<PageLoader />}><ChargingHistory /></Suspense>} />
             <Route path="/achievements" element={<Suspense fallback={<PageLoader />}><AchievementsPage /></Suspense>} />
-            <Route path="/__turbine-test" element={<Suspense fallback={<PageLoader />}><TurbineTest /></Suspense>} />
-            <Route path="/__scene-test" element={<Suspense fallback={<PageLoader />}><SceneTestPage /></Suspense>} />
-            <Route path="/__design-system" element={<Suspense fallback={<PageLoader />}><DesignSystemPage /></Suspense>} />
+            {TurbineTest && <Route path="/__turbine-test" element={<Suspense fallback={<PageLoader />}><TurbineTest /></Suspense>} />}
+            {SceneTestPage && <Route path="/__scene-test" element={<Suspense fallback={<PageLoader />}><SceneTestPage /></Suspense>} />}
+            {DesignSystemPage && <Route path="/__design-system" element={<Suspense fallback={<PageLoader />}><DesignSystemPage /></Suspense>} />}
             <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />
           </Route>
           <Route path="/onboarding" element={<Suspense fallback={<PageLoader />}><Onboarding /></Suspense>} />
