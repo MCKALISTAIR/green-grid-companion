@@ -4,7 +4,7 @@ import type { Transition, Variants } from 'framer-motion';
 export const easeOutExpo: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 export const pageTransition: Transition = {
-  duration: 0.22,
+  duration: 0.28,
   ease: easeOutExpo,
 };
 
