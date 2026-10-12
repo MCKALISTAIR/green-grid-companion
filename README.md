@@ -204,7 +204,7 @@ GridSense is a mobile-first companion app designed to help UK (and future) energ
 *   **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 *   **Charting**: [Recharts](https://recharts.org/)
 *   **Background Tasks**: `@transistorsoft/capacitor-background-fetch`
-*   **Data Source**: [Carbon Intensity API](https://carbon-intensity.github.io/api-definitions/) (National Grid ESO)
+*   **Data Source**: [Carbon Intensity API](https://carbon-intensity.github.io/api-definitions/) (NESO)
 
 ## 🚀 Getting Started
 
@@ -406,4 +406,4 @@ npx playwright test e2e/scene-vrt.spec.ts
 
 ## 📄 License
 
-This project is open-source and available under the MIT License.
+GridSense's design, code, artwork and text are proprietary. The source is not open source and is not licensed for reuse. Third-party data remains under its own licences (see in-app Settings credits and `/terms`).
