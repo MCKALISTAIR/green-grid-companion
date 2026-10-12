@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAppLocation } from '@/contexts/LocationContext';
+import { roundCoord } from '@/lib/coords';
 
 export interface WeatherData {
     current: {
@@ -21,8 +22,9 @@ export function useWeather(lat?: number, lon?: number) {
     const { coordinates } = useAppLocation();
 
     // Prioritize passed arguments, then context coordinates, then default to London
-    const effectiveLat = lat ?? coordinates?.lat ?? 51.5074;
-    const effectiveLon = lon ?? coordinates?.lon ?? -0.1278;
+    // Rounded to 2 dp on the device before the call (the edge function rounds again).
+    const effectiveLat = roundCoord(lat ?? coordinates?.lat ?? 51.5074);
+    const effectiveLon = roundCoord(lon ?? coordinates?.lon ?? -0.1278);
 
     return useQuery<WeatherData>({
         queryKey: ['weather', effectiveLat, effectiveLon],

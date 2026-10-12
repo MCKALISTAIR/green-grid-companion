@@ -4,6 +4,7 @@ import { Capacitor } from '@capacitor/core';
 import { Geolocation } from '@capacitor/geolocation';
 import { logger } from '@/lib/logger';
 import { resolvePostcode } from '@/lib/location';
+import { coordParams, roundCoords } from '@/lib/coords';
 
 // Weather condition types based on WMO codes
 export type WeatherCondition =
@@ -90,9 +91,11 @@ function parseWeatherResponse(data: WeatherApiResponse): WeatherData {
 }
 
 async function fetchWeather(lat: number, lon: number): Promise<WeatherData> {
+  // Only 2-dp coordinates leave the device (src/lib/coords.ts).
+  const rounded = coordParams(lat, lon);
   const params = new URLSearchParams({
-    latitude: lat.toString(),
-    longitude: lon.toString(),
+    latitude: rounded.lat,
+    longitude: rounded.lon,
     current: 'temperature_2m,relative_humidity_2m,weather_code,cloud_cover,wind_speed_10m',
     timezone: 'auto',
   });
@@ -171,7 +174,7 @@ export function useWeatherData(postcode?: string) {
           throw new Error('Geolocation not available');
         }
 
-        const newCoords = { lat: latitude, lon: longitude };
+        const newCoords = roundCoords({ lat: latitude, lon: longitude });
         // Only cache if it's the device location (not a specific postcode override)
         if (!postcode) {
           localStorage.setItem('gridgreen-coords', JSON.stringify(newCoords));

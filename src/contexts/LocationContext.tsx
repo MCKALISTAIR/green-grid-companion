@@ -4,6 +4,7 @@ import { Capacitor } from '@capacitor/core';
 import { Geolocation } from '@capacitor/geolocation';
 import { logger } from '@/lib/logger';
 import { toOutwardCode } from '@/lib/postcode';
+import { roundCoords } from '@/lib/coords';
 
 interface Coordinates {
   lat: number;
@@ -111,7 +112,8 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
 
             if (!isMounted) return;
 
-            const newCoords = { lat: latitude, lon: longitude };
+            // Kept at 2 dp: these feed the weather call, so round before storing.
+            const newCoords = roundCoords({ lat: latitude, lon: longitude });
             localStorage.setItem(COORDS_KEY, JSON.stringify(newCoords));
             setCoordinates(newCoords);
           } catch (e) {

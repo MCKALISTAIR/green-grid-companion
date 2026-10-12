@@ -2,6 +2,7 @@
 import { UK_REGIONS, getRegionalIntensity } from './carbonApi';
 import { logger } from './logger';
 import { supabase } from '@/integrations/supabase/client';
+import { roundCoords, postcodesIoReverseUrl, nominatimReverseUrl } from '@/lib/coords';
 
 // Interfaces for API responses
 interface NominatimResult {
@@ -126,7 +127,10 @@ export async function searchLocation(query: string): Promise<LocationSearchResul
 /**
  * Get region from coordinates
  */
-export async function getRegionFromCoordinates(lat: number, lon: number): Promise<LocationSearchResult | null> {
+export async function getRegionFromCoordinates(rawLat: number, rawLon: number): Promise<LocationSearchResult | null> {
+    // Round on the device first: the cache key, logs and both lookups only ever see 2 dp.
+    const { lat, lon } = roundCoords({ lat: rawLat, lon: rawLon });
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
     const cached = getFromCoordinateCache(lat, lon);
     if (cached !== undefined) {
         logger.debug('Coordinate geocoding cache hit', { lat, lon, result: cached });
@@ -135,14 +139,14 @@ export async function getRegionFromCoordinates(lat: number, lon: number): Promis
 
     let result: LocationSearchResult | null = null;
     try {
-        const res = await fetch(`https://api.postcodes.io/postcodes?lon=${lon}&lat=${lat}`);
+        const res = await fetch(postcodesIoReverseUrl(lat, lon));
         if (!res.ok) return null;
 
         const data = await res.json();
         // If postcodes.io fails (e.g. offshore or remote), try Nominatim reverse geocode
         if (!data.result || data.result.length === 0) {
             logger.debug('Postcodes.io returned no results, trying Nominatim reverse geocode');
-            const nomRes = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`);
+            const nomRes = await fetch(nominatimReverseUrl(lat, lon));
             if (nomRes.ok) {
                 const nomData = await nomRes.json();
                 if (nomData.address?.postcode) {

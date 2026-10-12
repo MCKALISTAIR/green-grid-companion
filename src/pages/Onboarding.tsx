@@ -10,6 +10,7 @@ import { logger } from '@/lib/logger';
 import { TurbineSpinner } from '@/components/ui/turbine-spinner';
 import { IntensityScene } from '@/components/IntensityScene';
 import { TurbineLogo } from '@/components/TurbineLogo';
+import { postcodesIoReverseUrl } from '@/lib/coords';
 import { useAppLocation } from '@/contexts/LocationContext';
 import { useHaptics } from '@/hooks/useHaptics';
 import { markFirstNumberPending } from '@/lib/firstLaunch';
@@ -103,7 +104,8 @@ const Onboarding = () => {
             const position = await CapacitorGeolocation.getCurrentPosition({ timeout: 10000 });
             const { latitude, longitude } = position.coords;
 
-            const response = await fetch(`https://api.postcodes.io/postcodes?lon=${longitude}&lat=${latitude}`);
+            // Only 2-dp coordinates leave the device (src/lib/coords.ts).
+            const response = await fetch(postcodesIoReverseUrl(latitude, longitude));
             const data = await response.json();
 
             if (data.status === 200 && data.result && data.result.length > 0) {
