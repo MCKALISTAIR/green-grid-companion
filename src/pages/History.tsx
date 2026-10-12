@@ -24,13 +24,17 @@ const containerVariants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
-    transition: { staggerChildren: 0.04 }
-  }
+    transition: { staggerChildren: 0.03, delayChildren: 0.02 },
+  },
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 15 },
-  show: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 350, damping: 25 } }
+  hidden: { opacity: 0, y: 8 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { type: 'spring' as const, stiffness: 380, damping: 28 },
+  },
 };
 
 import { useHistoricalCarbon } from '@/hooks/useHistoricalCarbon';
@@ -251,7 +255,7 @@ export default function HistoryPage() {
                     />
                 </motion.div>
 
-                <AnimatePresence mode="wait">
+                <AnimatePresence mode="wait" initial={false}>
                     {!postcode ? (
                         <motion.div key="no-postcode" variants={itemVariants}>
                             <Card className="sheet-surface p-6 text-center">
@@ -264,7 +268,7 @@ export default function HistoryPage() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            transition={{ duration: 0.2 }}
+                            transition={{ duration: 0.18 }}
                             className="space-y-4"
                         >
                             <div className="grid grid-cols-2 gap-4">
