@@ -18,7 +18,7 @@ interface PageLoaderProps {
   fullscreen?: boolean;
 }
 
-export function PageLoader({ message, fullscreen = true }: PageLoaderProps) {
+export function PageLoader({ message, fullscreen = false }: PageLoaderProps) {
   const copy = LOADER_COPY[readTone()];
   const shouldReduceMotion = useReducedMotion();
 
