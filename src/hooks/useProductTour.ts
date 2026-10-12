@@ -4,6 +4,7 @@ import 'driver.js/dist/driver.css';
 import { buildProductTourSteps } from '@/data/product-tour';
 import { readTone } from '@/lib/tone';
 import { isNationalMode } from '@/lib/postcode';
+import { requestOverlay, type OverlayHandle } from '@/lib/overlayQueue';
 
 // Wait for page elements to render and settle before starting the tour
 const TOUR_START_DELAY_MS = 1000;
@@ -32,7 +33,7 @@ function buildViewportAwareSteps() {
     });
 }
 
-function createTourDriver() {
+function createTourDriver(onDone: () => void) {
     return driver({
         showProgress: false,
         animate: true,
@@ -57,6 +58,7 @@ function createTourDriver() {
         },
         onDestroyed: () => {
             localStorage.setItem('product_tour_seen', 'true');
+            onDone();
         }
     });
 }
@@ -64,6 +66,14 @@ function createTourDriver() {
 export function useProductTour() {
     const driverObj = useRef<ReturnType<typeof driver> | null>(null);
     const lastIsMobile = useRef<boolean | null>(null);
+    // The tips take a turn in the shared overlay queue (after the privacy choice).
+    const turn = useRef<OverlayHandle | null>(null);
+    const rebuilding = useRef(false);
+    const releaseTurn = useCallback(() => {
+        if (rebuilding.current) return;
+        turn.current?.release();
+        turn.current = null;
+    }, []);
 
     const rebuildDriver = useCallback(() => {
         const isMobile = window.innerWidth < LG_BREAKPOINT;
@@ -74,15 +84,17 @@ export function useProductTour() {
         lastIsMobile.current = isMobile;
 
         const wasActive = driverObj.current?.isActive?.() ?? false;
+        rebuilding.current = wasActive; // keep our overlay turn across a rebuild
         driverObj.current?.destroy();
-        driverObj.current = createTourDriver();
+        rebuilding.current = false;
+        driverObj.current = createTourDriver(releaseTurn);
 
         // If a tour was mid-flight when the viewport crossed lg (fold/unfold / rotate),
         // restart from the beginning with correct anchors rather than pointing at hidden nav.
         if (wasActive) {
             driverObj.current.drive();
         }
-    }, []);
+    }, [releaseTurn]);
 
     useEffect(() => {
         rebuildDriver();
@@ -103,27 +115,37 @@ export function useProductTour() {
             window.visualViewport?.removeEventListener('resize', onResize);
             driverObj.current?.destroy();
             driverObj.current = null;
+            turn.current?.release();
+            turn.current = null;
         };
     }, [rebuildDriver]);
+
+    const runWhenOurTurn = useCallback((delayMs: number) => {
+        if (turn.current) return; // already waiting or running
+        const handle = requestOverlay('tips', 'product-tour');
+        turn.current = handle;
+        handle.whenActive(() => {
+            setTimeout(() => {
+                if (turn.current !== handle) return;
+                rebuildDriver();
+                driverObj.current?.drive();
+                if (!driverObj.current?.isActive?.()) releaseTurn(); // nothing to show
+            }, delayMs);
+        });
+    }, [rebuildDriver, releaseTurn]);
 
     const startTour = useCallback(() => {
         const seen = localStorage.getItem('product_tour_seen');
         const onboardingComplete = localStorage.getItem('onboarding_complete');
 
         if (!seen && onboardingComplete === 'true') {
-            setTimeout(() => {
-                rebuildDriver();
-                driverObj.current?.drive();
-            }, TOUR_START_DELAY_MS);
+            runWhenOurTurn(TOUR_START_DELAY_MS);
         }
-    }, [rebuildDriver]);
+    }, [runWhenOurTurn]);
 
     const replayTour = useCallback(() => {
-        setTimeout(() => {
-            rebuildDriver();
-            driverObj.current?.drive();
-        }, 300);
-    }, [rebuildDriver]);
+        runWhenOurTurn(300);
+    }, [runWhenOurTurn]);
 
     return { startTour, replayTour };
 }

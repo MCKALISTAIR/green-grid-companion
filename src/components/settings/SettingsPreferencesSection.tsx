@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Activity, Cookie, Vibrate, MapPin, MessageSquare, Paintbrush, Play, Sparkles, ChevronRight } from 'lucide-react';
+import { Activity, Vibrate, MapPin, MessageSquare, Paintbrush, Play, Sparkles, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -9,7 +9,7 @@ import type { CommentaryTone } from '@/lib/tone';
 import type { SceneType } from '@/hooks/useSceneType';
 import { settingsItemVariants } from './settingsMotion';
 import { SettingsSectionHeading } from './SettingsSectionHeading';
-import { clearConsent, describeConsent, getConsent } from '@/lib/consent';
+import { PrivacyChoiceRow } from '@/components/settings/PrivacyChoiceRow';
 import { useHapticsPreference } from '@/hooks/useHaptics';
 
 type TonePreference = CommentaryTone;
@@ -184,30 +184,7 @@ export function SettingsPreferencesSection({
           </motion.div>
         </Link>
 
-        <div className="flex items-center justify-between sheet-surface p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-full">
-              <Cookie className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <h3 className="font-medium">Cookie Preferences</h3>
-              <p className="text-sm text-muted-foreground">
-                {`Currently: ${describeConsent(getConsent())}`}
-              </p>
-            </div>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              clearConsent();
-              toast.success('Cookie preferences reset. The banner will reappear.');
-              window.location.reload();
-            }}
-          >
-            Reset
-          </Button>
-        </div>
+        <PrivacyChoiceRow />
 
         <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg hover:from-primary/15 hover:to-primary/10 transition-colors">
           <div className="flex items-center gap-3">
