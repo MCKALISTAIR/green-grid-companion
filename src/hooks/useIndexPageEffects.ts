@@ -82,9 +82,7 @@ export function useIndexPageEffects({
     if (!hasReading) return;
     markReadingShown(); // the privacy sheet waits for this, then the tips wait for it
     if (consumeFirstNumber()) void notification(NotificationType.Success);
-    // TODO(overlay-queue): when Builder's overlay queue lands, request the tips
-    // through it (e.g. requestOverlay('tips')) so they wait for the consent sheet
-    // and never stack with another overlay. Until then they start directly.
+    // Tips go through the overlay queue (consent > tips > other) inside startTour.
     startTour();
   }, [hasReading, startTour, notification]);
 
