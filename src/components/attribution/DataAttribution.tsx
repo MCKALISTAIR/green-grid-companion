@@ -1,4 +1,4 @@
-import { ATTRIBUTION, DERIVED_DATA_NOTE, elexonAttributionStatement } from '@/lib/attribution';
+import { ATTRIBUTION, DERIVED_DATA_NOTE, elexonAttributionStatement, onsPostcodeStatements } from '@/lib/attribution';
 import { cn } from '@/lib/utils';
 
 const linkClass = 'underline hover:text-foreground transition-colors';
@@ -26,6 +26,15 @@ export function DataAttribution({ className }: { className?: string }) {
       <p>
         <ExternalLink href={ATTRIBUTION.openMeteo.url}>{ATTRIBUTION.openMeteo.label}</ExternalLink> (
         <ExternalLink href={ATTRIBUTION.openMeteo.licenceUrl}>{ATTRIBUTION.ccBy4.label}</ExternalLink>).
+      </p>
+      <p>
+        Place search:{' '}
+        <ExternalLink href={ATTRIBUTION.osm.url}>{ATTRIBUTION.osm.label}</ExternalLink>, data available under the{' '}
+        <ExternalLink href={ATTRIBUTION.osm.licenceUrl}>{ATTRIBUTION.osm.licenceLabel}</ExternalLink>.
+      </p>
+      <p>
+        Postcode lookups by <ExternalLink href={ATTRIBUTION.postcodesIo.url}>{ATTRIBUTION.postcodesIo.name}</ExternalLink>.{' '}
+        {onsPostcodeStatements().map((s) => `${s}.`).join(' ')}
       </p>
     </div>
   );

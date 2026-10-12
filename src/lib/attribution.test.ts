@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getRegionalHistoryAndForecast, actualSeriesLabel, isEstimatedActual } from './carbonApi';
-import { ATTRIBUTION } from './attribution';
+import { ATTRIBUTION, elexonAttributionStatement, onsPostcodeStatements } from './attribution';
 import { vi, afterEach } from 'vitest';
 
 afterEach(() => vi.restoreAllMocks());
@@ -10,6 +10,17 @@ describe('attribution', () => {
     expect(ATTRIBUTION.neso.name).toBe('NESO');
     expect(ATTRIBUTION.ccBy4.url).toBe('https://creativecommons.org/licenses/by/4.0/');
     expect(ATTRIBUTION.openMeteo.label).toBe('Weather data by Open-Meteo.com');
+  });
+
+  it('credits OpenStreetMap (ODbL) and the ONS postcode statements', () => {
+    expect(ATTRIBUTION.osm.label).toBe('© OpenStreetMap contributors');
+    expect(ATTRIBUTION.osm.url).toBe('https://www.openstreetmap.org/copyright');
+    expect(onsPostcodeStatements(2026)).toEqual([
+      'Contains OS data © Crown copyright and database right 2026',
+      'Contains Royal Mail data © Royal Mail copyright and database right 2026',
+      'Source: Office for National Statistics licensed under the Open Government Licence v.3.0',
+    ]);
+    expect(elexonAttributionStatement(2026)).toContain('Elexon Limited');
   });
 
   it('marks backfilled regional actuals as GridSense estimates', async () => {

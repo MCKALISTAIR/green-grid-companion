@@ -95,7 +95,7 @@ export default function PrivacyPolicy() {
                         <p>The app interacts with the following services to function:</p>
                         <ul className="list-disc pl-4 space-y-1">
                             <li>
-                                <strong>National Grid ESO</strong> — To fetch carbon intensity data for your region.
+                                <strong>NESO (National Energy System Operator)</strong> — To fetch carbon intensity data for your region.
                             </li>
                             <li>
                                 <strong>Octopus Energy API</strong> — To securely fetch your smart meter consumption data (only if you voluntarily link your account).

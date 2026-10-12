@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MarkdownDocument } from '@/components/MarkdownDocument';
-// Draft terms (source: gridsense-legal/terms.md). [CONFIRM] markers stay visible until Alistair resolves them.
 import termsSource from '@/content/terms.md?raw';
 
 export default function Terms() {
