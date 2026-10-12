@@ -303,7 +303,7 @@ function ComponentInventory() {
         { name: "ForecastChart", purpose: "24h forecast with cross-linked hour picker + BEST ribbon.", path: "src/components/ForecastChart.tsx" },
         { name: "StaleDataBadge", purpose: "Marks data older than 35m.", path: "src/components/StaleDataBadge.tsx" },
         { name: "OfflineIndicator", purpose: "Top banner on connectivity loss.", path: "src/components/OfflineIndicator.tsx" },
-        { name: "TurbineSpinner", purpose: "Brand loading state. Replaces generic spinners.", path: "src/components/ui/turbine-spinner.tsx" },
+        { name: "TurbineSpinner", purpose: "Brand loading state — same TurbineLogo as splash/onboarding, sized for buttons and loaders.", path: "src/components/ui/turbine-spinner.tsx" },
         { name: "EmptyState / ErrorState", purpose: "Standard zero/failure presentations.", path: "src/components/EmptyState.tsx" },
       ],
     },
