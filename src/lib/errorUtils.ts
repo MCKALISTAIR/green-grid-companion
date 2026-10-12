@@ -169,12 +169,11 @@ export function getErrorInfo(error: unknown): ErrorInfo {
     // Check if offline first
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
         return {
-            title: "You're Offline",
-            description: "We couldn't connect to the grid data.",
+            title: "You're offline",
+            description: "We'll fetch your number when you're back.",
             steps: [
-                "Check your Wi-Fi or mobile data connection",
-                "Disable Airplane mode if it's on",
-                "Try refreshing the page"
+                "Check your Wi-Fi or mobile data",
+                "Turn off Airplane mode if it's on",
             ],
             isOffline: true,
         };
@@ -187,11 +186,10 @@ export function getErrorInfo(error: unknown): ErrorInfo {
     // Timeout errors
     if (lowerMessage.includes('timeout') || lowerMessage.includes('timed out')) {
         return {
-            title: 'Request Timeout',
-            description: 'The server took too long to respond.',
+            title: 'That took too long',
+            description: "The carbon intensity service didn't answer in time.",
             steps: [
-                "Check your internet speed",
-                "Wait a moment and try again",
+                "Try again in a moment",
             ]
         };
     }
@@ -199,12 +197,11 @@ export function getErrorInfo(error: unknown): ErrorInfo {
     // Network/fetch errors
     if (lowerMessage.includes('network') || lowerMessage.includes('fetch')) {
         return {
-            title: 'Connection Failed',
-            description: "We couldn't reach the Carbon Intensity server.",
+            title: "Can't reach the grid data",
+            description: "We couldn't reach the carbon intensity service.",
             steps: [
-                "Check your internet connection",
-                "The API might be down temporarily",
-                "Try again in a few minutes"
+                "Check your connection",
+                "Try again in a few minutes",
             ]
         };
     }
@@ -212,11 +209,10 @@ export function getErrorInfo(error: unknown): ErrorInfo {
     // Permission/auth errors
     if (lowerMessage.includes('unauthorized') || lowerMessage.includes('forbidden')) {
         return {
-            title: 'Access Denied',
-            description: "You don't have permission to access this data.",
+            title: 'Not signed in',
+            description: "Your session may have run out.",
             steps: [
-                "Try signing out and signing back in",
-                "Check if your session has expired"
+                "Sign out, then sign back in",
             ]
         };
     }
@@ -224,12 +220,10 @@ export function getErrorInfo(error: unknown): ErrorInfo {
     // API/server errors
     if (lowerMessage.includes('500') || lowerMessage.includes('server error')) {
         return {
-            title: 'Server Error',
-            description: 'The NESO carbon data service is having issues.',
+            title: "The data service isn't answering",
+            description: "NESO's carbon intensity service is having a problem. It's not you.",
             steps: [
-                "This is not your fault",
-                "Services usually recover within minutes",
-                "Try again later"
+                "Try again in a few minutes",
             ]
         };
     }
@@ -237,22 +231,20 @@ export function getErrorInfo(error: unknown): ErrorInfo {
     // Rate limiting
     if (lowerMessage.includes('rate limit') || lowerMessage.includes('too many requests')) {
         return {
-            title: 'Too Many Requests',
-            description: 'You are sending too many requests.',
+            title: 'Too many refreshes',
+            description: 'The data only changes every 30 minutes.',
             steps: [
-                "Wait a moment before trying again",
-                "Don't refresh too quickly"
+                "Wait a moment, then try again",
             ]
         };
     }
 
     // Default error
     return {
-        title: 'Something Went Wrong',
-        description: 'We encountered an unexpected error.',
+        title: 'Something went wrong',
+        description: "We couldn't load this just now.",
         steps: [
-            "Try refreshing the app",
-            "Clear your cache if the issue persists"
+            "If it keeps happening, close and reopen GridSense",
         ]
     };
 }

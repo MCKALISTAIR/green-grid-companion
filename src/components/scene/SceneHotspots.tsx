@@ -25,7 +25,7 @@ interface Props {
  */
 export function SceneHotspots({ hotspots }: Props) {
     const [activeId, setActiveId] = useState<string | null>(null);
-    const { selection } = useHaptics();
+    const { selection } = useHaptics({ decorative: true });
 
     const close = useCallback(() => setActiveId(null), []);
 

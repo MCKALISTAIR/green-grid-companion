@@ -46,7 +46,7 @@ export function EmptyState({
                 {isOffline && (
                     <div className="mt-4 flex items-center gap-2 text-sm text-amber-600 bg-amber-50 dark:bg-amber-950/30 px-3 py-1.5 rounded-md">
                         <WifiOff className="w-4 h-4" />
-                        <span>Internet connection required to fetch data.</span>
+                        <span>You&apos;re offline. We&apos;ll fetch this when you&apos;re back.</span>
                     </div>
                 )}
             </motion.div>

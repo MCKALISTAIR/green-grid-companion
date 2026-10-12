@@ -126,7 +126,7 @@ function OceanWaves({ sea, seaHighlight, foam, skipIntro }: { sea: string; seaHi
 // Lighthouse
 function Lighthouse({ x, isNight, fill, skipIntro }: { x: number; isNight: boolean; fill: string; skipIntro?: boolean }) {
   const [isFlashing, setIsFlashing] = useState(false);
-  const { impactMedium } = useHaptics();
+  const { impactLight: impactMedium } = useHaptics({ decorative: true });
 
   const handleClick = () => {
     if (isFlashing) return;

@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { motion, useSpring, useTransform, AnimatePresence } from 'framer-motion';
 import { TrendingUp, TrendingDown } from 'lucide-react';
-import { useHaptics } from '@/hooks/useHaptics';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useCleanlinessBand } from '@/hooks/useCleanlinessBand';
 import { cn } from '@/lib/utils';
@@ -30,7 +29,6 @@ export function AnimatedIntensity({
 }: AnimatedIntensityProps) {
   const [showArrow, setShowArrow] = useState(false);
   const [direction, setDirection] = useState<'up' | 'down' | null>(null);
-  const { impactLight } = useHaptics();
   const shouldReduceMotion = useReducedMotion();
   const hasAnimatedRef = useRef(false);
 
@@ -79,8 +77,8 @@ export function AnimatedIntensity({
     setDirection(newDirection);
     setShowArrow(true);
 
-    // Trigger haptic feedback
-    impactLight();
+    // No haptic here: buzzing on every half-hourly update was too chatty.
+    // Band changes still get one (StateTransitionFX).
 
     // Hide arrow after 2 seconds
     const timer = setTimeout(() => {
@@ -88,7 +86,7 @@ export function AnimatedIntensity({
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [value, previousValue, impactLight]);
+  }, [value, previousValue]);
 
   // Halo pulse when the cleanliness band changes (e.g. green → amber)
   const { transition } = useCleanlinessBand(value);

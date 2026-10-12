@@ -1,7 +1,6 @@
 import * as React from "react";
 import * as SliderPrimitive from "@radix-ui/react-slider";
-import { Capacitor } from "@capacitor/core";
-import { Haptics, ImpactStyle } from "@capacitor/haptics";
+import { hapticSelectionChanged } from "@/lib/haptics";
 
 import { cn } from "@/lib/utils";
 
@@ -17,13 +16,9 @@ const Slider = React.forwardRef<
 
   const handleValueChange = async (value: number[]) => {
     // Provide haptic feedback on value changes (throttled to prevent too many triggers)
-    if (haptic && Capacitor.isNativePlatform() && value[0] !== lastValue.current) {
+    if (haptic && value[0] !== lastValue.current) {
       lastValue.current = value[0];
-      try {
-        await Haptics.selectionChanged();
-      } catch (error) {
-        // Haptic feedback failed silently
-      }
+      void hapticSelectionChanged();
     }
     onValueChange?.(value);
   };

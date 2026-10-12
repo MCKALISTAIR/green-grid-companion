@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as SwitchPrimitives from "@radix-ui/react-switch";
-import { Capacitor } from "@capacitor/core";
-import { Haptics, ImpactStyle } from "@capacitor/haptics";
+import { hapticImpact } from "@/lib/haptics";
+import { ImpactStyle } from "@capacitor/haptics";
 
 import { cn } from "@/lib/utils";
 
@@ -14,13 +14,7 @@ const Switch = React.forwardRef<
   SwitchProps
 >(({ className, haptic = true, onCheckedChange, ...props }, ref) => {
   const handleCheckedChange = async (checked: boolean) => {
-    if (haptic && Capacitor.isNativePlatform()) {
-      try {
-        await Haptics.impact({ style: ImpactStyle.Medium });
-      } catch (error) {
-        // Haptic feedback failed silently
-      }
-    }
+    if (haptic) void hapticImpact(ImpactStyle.Light);
     onCheckedChange?.(checked);
   };
 

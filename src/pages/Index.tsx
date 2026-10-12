@@ -33,12 +33,15 @@ import {
 import { IntensityDashboard } from '@/components/home/IntensityDashboard';
 import { IntensityHeroOverlay } from '@/components/home/IntensityHeroOverlay';
 import { useSceneGrowth } from '@/hooks/useSceneGrowth';
+import { formatLondonTime } from '@/lib/londonTime';
 
 const Index = () => {
   const { postcode, setPostcode } = useAppLocation();
   const [viewMode, setViewMode] = useState<DashboardViewMode>('intensity');
   const { showYearWrapped, setShowYearWrapped, wrappedYear } = useYearWrappedAutoShow();
-  const { selection, notification } = useHaptics();
+  const { selection } = useHaptics();
+  // Renewables milestones are a nice-to-have: skipped under Reduce Motion or Haptics off.
+  const { notification: decorativeNotification } = useHaptics({ decorative: true });
 
   const [sparkleTrigger, setSparkleTrigger] = useState(false);
 
@@ -94,11 +97,11 @@ const Index = () => {
       const crossed = thresholds.some((t) => prev < t && renewablesPct >= t);
       if (crossed) {
         setSparkleTrigger(true);
-        notification(NotificationType.Success);
+        decorativeNotification(NotificationType.Success);
       }
     }
     prevRenRef.current = renewablesPct;
-  }, [renewablesPct, isLoading, notification]);
+  }, [renewablesPct, isLoading, decorativeNotification]);
 
   useIndexPageEffects({
     postcode,
@@ -122,7 +125,7 @@ const Index = () => {
 
   const throttledRefetch = useThrottledRefetch(refetch, {
     cooldownMs: 10_000,
-    skipToastDescription: 'Grid data updates every 30 minutes — give it a sec.',
+    skipToastDescription: 'Grid data updates every 30 minutes. Give it a sec.',
   });
 
   const handleRefresh = async () => {
@@ -135,16 +138,13 @@ const Index = () => {
       const now = new Date().getTime();
 
       if (next > now) {
-        const timeStr = new Date(next).toLocaleTimeString([], {
-          hour: '2-digit',
-          minute: '2-digit',
-        });
-        toast.info('Up to date', {
-          description: `Next Grid data update expected around ${timeStr}.`,
+        const timeStr = formatLondonTime(new Date(next));
+        toast.info('Same half hour, same number', {
+          description: `Next update around ${timeStr}.`,
         });
       } else {
         toast.info('Checked for updates', {
-          description: 'No new data from NESO yet.',
+          description: 'Nothing new from NESO yet. Try again in a few minutes.',
         });
       }
     }

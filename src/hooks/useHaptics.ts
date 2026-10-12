@@ -1,64 +1,40 @@
-
-import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
+import { ImpactStyle, NotificationType } from '@capacitor/haptics';
 import { Capacitor } from '@capacitor/core';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import {
+  hapticImpact,
+  hapticNotification,
+  hapticSelection,
+  isHapticsEnabled,
+  setHapticsEnabled,
+  subscribeHaptics,
+  type HapticGateOptions,
+} from '@/lib/haptics';
 
-export function useHaptics() {
+/**
+ * Haptics, gated by Settings > Haptics and (for `decorative: true`) by Reduce Motion.
+ * See src/lib/haptics.ts.
+ */
+export function useHaptics(opts: HapticGateOptions = {}) {
   const isAvailable = Capacitor.isNativePlatform();
+  const decorative = !!opts.decorative;
 
-  const impactLight = useCallback(async () => {
-    if (!isAvailable) return;
-    try {
-      await Haptics.impact({ style: ImpactStyle.Light });
-    } catch (e) {
-      // Fail silently
-    }
-  }, [isAvailable]);
+  const impactLight = useCallback(() => hapticImpact(ImpactStyle.Light, { decorative }), [decorative]);
+  const impactMedium = useCallback(() => hapticImpact(ImpactStyle.Medium, { decorative }), [decorative]);
+  const impactHeavy = useCallback(() => hapticImpact(ImpactStyle.Heavy, { decorative }), [decorative]);
+  const notification = useCallback(
+    (type: NotificationType) => hapticNotification(type, { decorative }),
+    [decorative],
+  );
+  const selection = useCallback(() => hapticSelection({ decorative }), [decorative]);
 
-  const impactMedium = useCallback(async () => {
-    if (!isAvailable) return;
-    try {
-      await Haptics.impact({ style: ImpactStyle.Medium });
-    } catch (e) {
-      // Fail silently
-    }
-  }, [isAvailable]);
+  return { impactLight, impactMedium, impactHeavy, notification, selection, isAvailable };
+}
 
-  const impactHeavy = useCallback(async () => {
-    if (!isAvailable) return;
-    try {
-      await Haptics.impact({ style: ImpactStyle.Heavy });
-    } catch (e) {
-      // Fail silently
-    }
-  }, [isAvailable]);
-
-  const notification = useCallback(async (type: NotificationType) => {
-    if (!isAvailable) return;
-    try {
-      await Haptics.notification({ type });
-    } catch (e) {
-      // Fail silently
-    }
-  }, [isAvailable]);
-
-  const selection = useCallback(async () => {
-    if (!isAvailable) return;
-    try {
-      await Haptics.selectionStart();
-      await Haptics.selectionChanged();
-      await Haptics.selectionEnd();
-    } catch (e) {
-      // Fail silently
-    }
-  }, [isAvailable]);
-
-  return {
-    impactLight,
-    impactMedium,
-    impactHeavy,
-    notification,
-    selection,
-    isAvailable
-  };
+/** Settings > Haptics toggle state, shared across the app. */
+export function useHapticsPreference() {
+  const [enabled, setEnabled] = useState(isHapticsEnabled);
+  useEffect(() => subscribeHaptics(setEnabled), []);
+  const update = useCallback((on: boolean) => setHapticsEnabled(on), []);
+  return { enabled, setEnabled: update };
 }

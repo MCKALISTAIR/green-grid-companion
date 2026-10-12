@@ -2,8 +2,8 @@
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
-import { Capacitor } from "@capacitor/core";
-import { Haptics, ImpactStyle } from "@capacitor/haptics";
+import { hapticImpact } from "@/lib/haptics";
+import { ImpactStyle } from "@capacitor/haptics";
 
 import { cn } from "@/lib/utils";
 
@@ -42,17 +42,12 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, haptic = true, hapticStyle = ImpactStyle.Light, onClick, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, haptic = false, hapticStyle = ImpactStyle.Light, onClick, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
 
     const handleClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
-      if (haptic && Capacitor.isNativePlatform()) {
-        try {
-          await Haptics.impact({ style: hapticStyle });
-        } catch (error) {
-          // Haptic feedback failed silently
-        }
-      }
+      // Opt-in only (primary CTAs). Gated by Settings > Haptics.
+      if (haptic) void hapticImpact(hapticStyle);
       onClick?.(e);
     };
 
