@@ -1,9 +1,10 @@
 import { useOutlet, useLocation } from 'react-router-dom';
-import { useRef, useState, type ReactNode } from 'react';
+import { Suspense, useRef, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { getNavSlideDirection, type NavSlideDirection } from '@/lib/navTabs';
 import { createPageSlideVariants, pageTransition } from '@/lib/motion';
+import { PageLoader } from '@/components/ui/PageLoader';
 
 /**
  * Captures the route element at mount so AnimatePresence can exit the
@@ -42,7 +43,13 @@ export function AnimatedOutlet() {
         transition={pageTransition}
         className="w-full min-h-full"
       >
-        <FrozenRoute>{outlet}</FrozenRoute>
+        {/*
+          Suspense must live *inside* the keyed layer. An outer boundary would
+          unmount AnimatePresence on chunk miss and kill the exit slide.
+        */}
+        <Suspense fallback={<PageLoader fullscreen={false} />}>
+          <FrozenRoute>{outlet}</FrozenRoute>
+        </Suspense>
       </motion.div>
     </AnimatePresence>
   );
