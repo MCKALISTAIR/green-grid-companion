@@ -37,22 +37,28 @@ export function AppLayout() {
 
       <div className="lg:pl-64 flex flex-col min-h-[100dvh] overflow-x-hidden">
         <main className="flex-1 w-full max-w-7xl mx-auto pb-28 lg:pb-0 relative">
-          <AnimatePresence mode="wait" initial={false} custom={direction}>
-            <motion.div
-              key={location.pathname}
-              custom={direction}
-              variants={slideVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={pageTransition}
-              className="w-full h-full"
-            >
-              <Suspense fallback={<PageLoader fullscreen={false} />}>
+          {/*
+            Suspense sits outside the keyed motion node so a chunk miss does not
+            remount a brand-new boundary on every tab (which forced a loader flash).
+            startTransition in useTransitionNavigate also keeps the prior page up
+            until the next lazy route is ready.
+          */}
+          <Suspense fallback={<PageLoader fullscreen={false} />}>
+            <AnimatePresence mode="wait" initial={false} custom={direction}>
+              <motion.div
+                key={location.pathname}
+                custom={direction}
+                variants={slideVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={pageTransition}
+                className="w-full h-full"
+              >
                 <Outlet />
-              </Suspense>
-            </motion.div>
-          </AnimatePresence>
+              </motion.div>
+            </AnimatePresence>
+          </Suspense>
         </main>
 
         <div className="lg:hidden">
