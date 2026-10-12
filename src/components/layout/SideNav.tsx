@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { VERSION_STRING } from '@/lib/version';
 import { motion } from 'framer-motion';
+import { prefetchMainTab } from '@/lib/navTabs';
 
 export function SideNav() {
     const navigate = useTransitionNavigate();
@@ -21,6 +22,8 @@ export function SideNav() {
                     : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
             }`}
             onClick={() => navigate(path)}
+            onPointerEnter={() => prefetchMainTab(path)}
+            onFocus={() => prefetchMainTab(path)}
             data-tour={dataTour}
         >
             {isActive(path) && (

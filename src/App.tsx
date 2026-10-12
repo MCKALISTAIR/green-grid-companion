@@ -13,7 +13,6 @@ import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useSmartPrefetch } from "@/hooks/useSmartPrefetch";
-import { useRoutePrefetch } from "@/hooks/useRoutePrefetch";
 import ScrollToTop from "@/components/ScrollToTop";
 import { logger } from "@/lib/logger";
 import { AchievementManager } from "@/components/AchievementManager";
@@ -25,16 +24,18 @@ import { DeepLinkHandler } from "@/components/DeepLinkHandler";
 import { CookieConsent } from "@/components/CookieConsent";
 import { LocationProvider } from "@/contexts/LocationContext";
 
-// Lazy load pages
-const Index = lazy(() => import("./pages/Index"));
+// Primary tabs are eager so dock/side-nav switches never suspend mid-slide.
+import Index from "./pages/Index";
+import Planner from "./pages/Planner";
+import MapPage from "./pages/Map";
+import Settings from "./pages/Settings";
+import HistoryPage from "./pages/History";
+
+// Secondary pages stay lazy
 const Onboarding = lazy(() => import("./pages/Onboarding"));
-const Planner = lazy(() => import("./pages/Planner"));
-const MapPage = lazy(() => import("./pages/Map"));
-const Settings = lazy(() => import("./pages/Settings"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Glossary = lazy(() => import("./pages/Glossary"));
-const HistoryPage = lazy(() => import("./pages/History"));
 const ManageLocations = lazy(() => import("./pages/ManageLocations"));
 const Changelog = lazy(() => import("./pages/Changelog"));
 const Help = lazy(() => import("./pages/Help"));
@@ -103,9 +104,6 @@ function AppContent() {
 
   // Smart prefetch saved locations in the background
   useSmartPrefetch();
-
-  // Warm primary tab chunks so first nav rarely hits Suspense mid-slide
-  useRoutePrefetch();
 
   // Register service worker for offline support
   useEffect(() => {

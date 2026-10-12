@@ -4,10 +4,13 @@ import { useCallback } from 'react';
 /**
  * Navigate helper for primary chrome (bottom/side nav).
  *
- * AppLayout owns page enter/exit with framer-motion. We intentionally do not
- * wrap navigations in document.startViewTransition here — a root view-transition
- * cross-fade fights the directional slide and also animates the dock, which
- * should stay put while content moves.
+ * AppLayout's AnimatedOutlet owns enter/exit with framer-motion. We do not wrap
+ * navigations in startTransition — concurrent deferred updates skip
+ * AnimatePresence exit frames, which reads as a hard cut. Chunk warmth comes
+ * from idle + hover prefetch instead.
+ *
+ * We also skip document.startViewTransition: a root cross-fade fights the
+ * directional slide and animates the dock.
  */
 export function useTransitionNavigate() {
   const navigate = useNavigate();
