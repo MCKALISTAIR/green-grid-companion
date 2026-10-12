@@ -6,6 +6,7 @@ import { motion, type Transition } from 'framer-motion';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { cn } from '@/lib/utils';
+import { prefetchMainTab } from '@/lib/navTabs';
 
 const pillTransition = { type: 'spring' as const, stiffness: 450, damping: 25 };
 
@@ -71,6 +72,8 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
                     : 'text-muted-foreground hover:text-foreground hover:bg-transparent',
                 )}
                 onClick={() => handleClick(path)}
+                onPointerEnter={() => prefetchMainTab(path)}
+                onFocus={() => prefetchMainTab(path)}
               >
                 {active && (
                   <motion.div
