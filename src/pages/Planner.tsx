@@ -4,6 +4,7 @@ import { useSettings } from '@/hooks/useSettings';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
+import { easeOutExpo, stateTransition } from '@/lib/motion';
 import { ErrorState } from '@/components/ErrorState';
 import { getErrorInfo } from '@/lib/errorUtils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
@@ -338,14 +339,14 @@ export default function Planner() {
                         </Dialog>
                     </div>
 
-                    <AnimatePresence mode="wait">
+                    <AnimatePresence mode="wait" initial={false}>
                         {isLoading ? (
                             <motion.div
                                 key="loading"
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                transition={{ duration: 0.2 }}
+                                transition={stateTransition}
                             >
                                 <Card className="sheet-surface p-6 space-y-6">
                                     <div className="flex items-center justify-between pb-2 border-b border-muted">
@@ -371,10 +372,10 @@ export default function Planner() {
                         ) : startNow ? (
                             <motion.div
                                 key={selectedAppliance.id + '-now'}
-                                initial={{ opacity: 0, y: 12 }}
+                                initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -12 }}
-                                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                                exit={{ opacity: 0, y: -8 }}
+                                transition={{ duration: 0.24, ease: easeOutExpo }}
                             >
                                 <Card className="sheet-surface p-6 space-y-2 border-primary/20 bg-primary/5 text-center">
                                     <h3 className="text-lg font-medium text-muted-foreground">
@@ -397,10 +398,10 @@ export default function Planner() {
                         ) : bestSlot ? (
                             <motion.div
                                 key={selectedAppliance.id + '-' + bestSlot.startTime}
-                                initial={{ opacity: 0, y: 12 }}
+                                initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -12 }}
-                                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                                exit={{ opacity: 0, y: -8 }}
+                                transition={{ duration: 0.24, ease: easeOutExpo }}
                             >
                                 <Card className="sheet-surface p-6 space-y-4 border-primary/20 bg-primary/5">
                                     <div className="text-center space-y-1">

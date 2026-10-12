@@ -80,12 +80,13 @@ export default function MapPage() {
                     ) : (
                         <div className="space-y-6">
                             {/* Toggleable Map View */}
-                            <AnimatePresence>
+                            <AnimatePresence initial={false}>
                                 {showMap && (
                                     <motion.div
                                         initial={{ height: 0, opacity: 0 }}
                                         animate={{ height: 'auto', opacity: 1 }}
                                         exit={{ height: 0, opacity: 0 }}
+                                        transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
                                         className="overflow-hidden"
                                     >
                                         <UKMap

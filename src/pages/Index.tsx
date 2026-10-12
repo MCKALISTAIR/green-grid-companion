@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useLayoutEffect } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { NotificationType } from '@capacitor/haptics';
@@ -33,7 +33,16 @@ import {
 import { IntensityDashboard } from '@/components/home/IntensityDashboard';
 import { IntensityHeroOverlay } from '@/components/home/IntensityHeroOverlay';
 import { useSceneGrowth } from '@/hooks/useSceneGrowth';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import {
+  createHorizontalStateVariants,
+  easeOutExpo,
+  stateTransition,
+} from '@/lib/motion';
+
 import { formatLondonTime } from '@/lib/londonTime';
+
+const DASHBOARD_VIEWS: DashboardViewMode[] = ['intensity', 'demand', 'footprint'];
 
 const Index = () => {
   const { postcode, setPostcode } = useAppLocation();
@@ -42,6 +51,21 @@ const Index = () => {
   const { selection } = useHaptics();
   // Renewables milestones are a nice-to-have: skipped under Reduce Motion or Haptics off.
   const { notification: decorativeNotification } = useHaptics({ decorative: true });
+  const shouldReduceMotion = useReducedMotion();
+  const prevViewModeRef = useRef(viewMode);
+  const viewDirectionRef = useRef<1 | -1 | 0>(0);
+
+  if (viewMode !== prevViewModeRef.current) {
+    const from = DASHBOARD_VIEWS.indexOf(prevViewModeRef.current);
+    const to = DASHBOARD_VIEWS.indexOf(viewMode);
+    viewDirectionRef.current = from === -1 || to === -1 ? 0 : to > from ? 1 : -1;
+  }
+
+  useLayoutEffect(() => {
+    prevViewModeRef.current = viewMode;
+  }, [viewMode]);
+
+  const viewStateVariants = createHorizontalStateVariants(shouldReduceMotion);
 
   const [sparkleTrigger, setSparkleTrigger] = useState(false);
 
@@ -151,22 +175,21 @@ const Index = () => {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    const tabs: DashboardViewMode[] = ['intensity', 'demand', 'footprint'];
-    const currentIndex = tabs.indexOf(viewMode);
+    const currentIndex = DASHBOARD_VIEWS.indexOf(viewMode);
     let nextIndex = currentIndex;
 
     if (e.key === 'ArrowRight') {
-      nextIndex = (currentIndex + 1) % tabs.length;
+      nextIndex = (currentIndex + 1) % DASHBOARD_VIEWS.length;
     } else if (e.key === 'ArrowLeft') {
-      nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+      nextIndex = (currentIndex - 1 + DASHBOARD_VIEWS.length) % DASHBOARD_VIEWS.length;
     } else if (e.key === 'Home') {
       nextIndex = 0;
     } else if (e.key === 'End') {
-      nextIndex = tabs.length - 1;
+      nextIndex = DASHBOARD_VIEWS.length - 1;
     }
 
     if (nextIndex !== currentIndex) {
-      setViewMode(tabs[nextIndex]);
+      setViewMode(DASHBOARD_VIEWS[nextIndex]);
       setTimeout(() => {
         const activeTabEl = document.querySelector(
           '[role="tab"][aria-selected="true"]',
@@ -254,14 +277,14 @@ const Index = () => {
                 />
               </div>
 
-              <AnimatePresence mode="wait">
+              <AnimatePresence mode="wait" initial={false}>
                 {isError ? (
                   <motion.div
                     key="error"
-                    initial={{ opacity: 0, y: 12 }}
+                    initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -12 }}
-                    transition={{ duration: 0.25 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={stateTransition}
                     className="py-8 bg-card rounded-2xl border border-border shadow-lg"
                   >
                     <ErrorState
@@ -277,17 +300,17 @@ const Index = () => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
+                    transition={stateTransition}
                   >
                     <DashboardSkeleton />
                   </motion.div>
                 ) : (
                   <motion.div
                     key="content"
-                    initial={{ opacity: 0, y: 15 }}
+                    initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -15 }}
-                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.28, ease: easeOutExpo }}
                     className="space-y-4"
                   >
                     <DashboardViewTabs
@@ -297,13 +320,15 @@ const Index = () => {
                       onKeyDown={handleKeyDown}
                     />
 
-                    <AnimatePresence mode="wait">
+                    <AnimatePresence mode="wait" initial={false} custom={viewDirectionRef.current}>
                       <motion.div
                         key={viewMode}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.3, ease: 'easeOut' as const }}
+                        custom={viewDirectionRef.current}
+                        variants={viewStateVariants}
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        transition={stateTransition}
                         className="w-full pb-10"
                       >
                         {viewMode === 'demand' ? (

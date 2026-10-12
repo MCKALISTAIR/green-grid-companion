@@ -13,6 +13,7 @@ import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useSmartPrefetch } from "@/hooks/useSmartPrefetch";
+import { useRoutePrefetch } from "@/hooks/useRoutePrefetch";
 import ScrollToTop from "@/components/ScrollToTop";
 import { logger } from "@/lib/logger";
 import { AchievementManager } from "@/components/AchievementManager";
@@ -103,6 +104,9 @@ function AppContent() {
   // Smart prefetch saved locations in the background
   useSmartPrefetch();
 
+  // Warm primary tab chunks so first nav rarely hits Suspense mid-slide
+  useRoutePrefetch();
+
   // Register service worker for offline support
   useEffect(() => {
     registerServiceWorker();
@@ -143,27 +147,28 @@ function AppContent() {
         <ScrollToTop />
         <Routes>
           <Route element={<AppLayout />}>
-            <Route path="/" element={<Suspense fallback={<PageLoader />}><Index /></Suspense>} />
-            <Route path="/planner" element={<Suspense fallback={<PageLoader />}><Planner /></Suspense>} />
-            <Route path="/map" element={<Suspense fallback={<PageLoader />}><MapPage /></Suspense>} />
-            <Route path="/settings" element={<Suspense fallback={<PageLoader />}><Settings /></Suspense>} />
-            <Route path="/privacy" element={<Suspense fallback={<PageLoader />}><PrivacyPolicy /></Suspense>} />
-            <Route path="/terms" element={<Suspense fallback={<PageLoader />}><Terms /></Suspense>} />
-            <Route path="/glossary" element={<Suspense fallback={<PageLoader />}><Glossary /></Suspense>} />
-            <Route path="/history" element={<Suspense fallback={<PageLoader />}><HistoryPage /></Suspense>} />
-            <Route path="/locations" element={<Suspense fallback={<PageLoader />}><ManageLocations /></Suspense>} />
-            <Route path="/changelog" element={<Suspense fallback={<PageLoader />}><Changelog /></Suspense>} />
-            <Route path="/help" element={<Suspense fallback={<PageLoader />}><Help /></Suspense>} />
-            <Route path="/feature-guides" element={<Suspense fallback={<PageLoader />}><FeatureGuides /></Suspense>} />
-            <Route path="/guides/:id" element={<Suspense fallback={<PageLoader />}><GuideDetail /></Suspense>} />
-            <Route path="/charging-history" element={<Suspense fallback={<PageLoader />}><ChargingHistory /></Suspense>} />
-            <Route path="/achievements" element={<Suspense fallback={<PageLoader />}><AchievementsPage /></Suspense>} />
-            {TurbineTest && <Route path="/__turbine-test" element={<Suspense fallback={<PageLoader />}><TurbineTest /></Suspense>} />}
-            {SceneTestPage && <Route path="/__scene-test" element={<Suspense fallback={<PageLoader />}><SceneTestPage /></Suspense>} />}
-            {DesignSystemPage && <Route path="/__design-system" element={<Suspense fallback={<PageLoader />}><DesignSystemPage /></Suspense>} />}
-            <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />
+            {/* Suspense fallback lives in AppLayout so loaders ride the page slide */}
+            <Route path="/" element={<Index />} />
+            <Route path="/planner" element={<Planner />} />
+            <Route path="/map" element={<MapPage />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/glossary" element={<Glossary />} />
+            <Route path="/history" element={<HistoryPage />} />
+            <Route path="/locations" element={<ManageLocations />} />
+            <Route path="/changelog" element={<Changelog />} />
+            <Route path="/help" element={<Help />} />
+            <Route path="/feature-guides" element={<FeatureGuides />} />
+            <Route path="/guides/:id" element={<GuideDetail />} />
+            <Route path="/charging-history" element={<ChargingHistory />} />
+            <Route path="/achievements" element={<AchievementsPage />} />
+            {TurbineTest && <Route path="/__turbine-test" element={<TurbineTest />} />}
+            {SceneTestPage && <Route path="/__scene-test" element={<SceneTestPage />} />}
+            {DesignSystemPage && <Route path="/__design-system" element={<DesignSystemPage />} />}
+            <Route path="*" element={<NotFound />} />
           </Route>
-          <Route path="/onboarding" element={<Suspense fallback={<PageLoader />}><Onboarding /></Suspense>} />
+          <Route path="/onboarding" element={<Suspense fallback={<PageLoader fullscreen={false} />}><Onboarding /></Suspense>} />
           <Route path="/auth/callback" element={<AuthCallback />} />
         </Routes>
         <CookieConsent />

@@ -1,56 +1,35 @@
 import { Outlet, useLocation } from 'react-router-dom';
+import { Suspense, useLayoutEffect, useRef } from 'react';
 import { BottomNav } from '@/components/BottomNav';
 import { SideNav } from './SideNav';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useEffect, useState } from 'react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-
-const TABS = ['/', '/planner', '/map', '/settings'];
+import { getNavSlideDirection, type NavSlideDirection } from '@/lib/navTabs';
+import { createPageSlideVariants, pageTransition } from '@/lib/motion';
+import { PageLoader } from '@/components/ui/PageLoader';
 
 export function AppLayout() {
   const location = useLocation();
   const shouldReduceMotion = useReducedMotion();
+  const prevPathRef = useRef(location.pathname);
+  const directionRef = useRef<NavSlideDirection>('fade');
 
-  const [lastPath, setLastPath] = useState(location.pathname);
-  const [direction, setDirection] = useState<'right' | 'left' | 'fade'>('fade');
+  // Compute slide direction from the previous path before we overwrite it.
+  // Must stay synchronous so AnimatePresence gets the correct `custom` on first paint.
+  if (location.pathname !== prevPathRef.current) {
+    directionRef.current = getNavSlideDirection(prevPathRef.current, location.pathname);
+  }
+
+  useLayoutEffect(() => {
+    prevPathRef.current = location.pathname;
+  }, [location.pathname]);
 
   const handleScrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: shouldReduceMotion ? 'auto' : 'smooth' });
   };
 
-  useEffect(() => {
-    if (location.pathname === lastPath) return;
-
-    const currentIndex = TABS.indexOf(location.pathname);
-    const lastIndex = TABS.indexOf(lastPath);
-
-    if (currentIndex !== -1 && lastIndex !== -1) {
-      setDirection(currentIndex > lastIndex ? 'right' : 'left');
-    } else {
-      setDirection('fade');
-    }
-    setLastPath(location.pathname);
-  }, [location.pathname, lastPath]);
-
-  const slideVariants = {
-    initial: (dir: 'right' | 'left' | 'fade') => {
-      if (shouldReduceMotion) return { opacity: 0 };
-      if (dir === 'right') return { x: '18%', opacity: 0 };
-      if (dir === 'left') return { x: '-18%', opacity: 0 };
-      return { opacity: 0, y: 10 };
-    },
-    animate: {
-      x: 0,
-      y: 0,
-      opacity: 1,
-    },
-    exit: (dir: 'right' | 'left' | 'fade') => {
-      if (shouldReduceMotion) return { opacity: 0 };
-      if (dir === 'right') return { x: '-18%', opacity: 0 };
-      if (dir === 'left') return { x: '18%', opacity: 0 };
-      return { opacity: 0, y: -10 };
-    },
-  };
+  const slideVariants = createPageSlideVariants(shouldReduceMotion);
+  const direction = directionRef.current;
 
   return (
     <div className="min-h-[100dvh] bg-background font-sans">
@@ -58,7 +37,7 @@ export function AppLayout() {
 
       <div className="lg:pl-64 flex flex-col min-h-[100dvh] overflow-x-hidden">
         <main className="flex-1 w-full max-w-7xl mx-auto pb-28 lg:pb-0 relative">
-          <AnimatePresence mode="popLayout" custom={direction}>
+          <AnimatePresence mode="wait" initial={false} custom={direction}>
             <motion.div
               key={location.pathname}
               custom={direction}
@@ -66,10 +45,12 @@ export function AppLayout() {
               initial="initial"
               animate="animate"
               exit="exit"
-              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              transition={pageTransition}
               className="w-full h-full"
             >
-              <Outlet />
+              <Suspense fallback={<PageLoader fullscreen={false} />}>
+                <Outlet />
+              </Suspense>
             </motion.div>
           </AnimatePresence>
         </main>
