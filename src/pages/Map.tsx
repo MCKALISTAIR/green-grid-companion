@@ -32,7 +32,7 @@ export default function MapPage() {
     if (isError) {
         const errorInfo = getErrorInfo(error);
         return (
-            <div className="page-shell">
+            <div className="page-shell page-shell--fit">
                 <div className="page-shell-inner">
                     <PageHeader title="Leaderboard" className="mb-4" />
                     <ErrorState
@@ -47,7 +47,7 @@ export default function MapPage() {
     }
 
     return (
-        <div className="page-shell">
+        <div className="page-shell page-shell--fit">
             <PullToRefresh onRefresh={async () => { await refetch(); }}>
                 <div className="page-shell-inner space-y-4">
                     <PageHeader

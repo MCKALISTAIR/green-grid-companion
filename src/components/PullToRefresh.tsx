@@ -71,7 +71,7 @@ export function PullToRefresh({ onRefresh, children, disabled = false }: PullToR
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
-            className="min-h-screen"
+            className="relative"
         >
             {/* Refresh Indicator */}
             <div

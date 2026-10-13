@@ -7,7 +7,7 @@ export default function PrivacyPolicy() {
     const navigate = useNavigate();
 
     return (
-        <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
+        <div className="page-shell page-shell--fit">
             {/* Header */}
             <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border/50 px-4 pb-4 pt-[calc(max(env(safe-area-inset-top),59px)+1rem)]">
                 <div className="flex items-center gap-2 max-w-2xl mx-auto">
@@ -18,7 +18,7 @@ export default function PrivacyPolicy() {
                 </div>
             </div>
 
-            <div className="p-4 max-w-2xl mx-auto space-y-6">
+            <div className="p-4 max-w-2xl mx-auto space-y-6 lg:pb-6">
                 <div className="space-y-2">
                     <p className="text-muted-foreground">
                         Last updated: 3 October 2026

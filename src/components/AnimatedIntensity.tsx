@@ -120,8 +120,8 @@ export function AnimatedIntensity({
           'font-bold tabular-nums tracking-tighter',
           size === 'hero'
             ? highContrast
-              ? 'text-[5.5rem] sm:text-8xl leading-none text-white drop-shadow-[0_4px_28px_rgba(0,0,0,0.65)] [text-shadow:0_2px_0_rgba(0,0,0,0.35),0_8px_24px_rgba(0,0,0,0.45)]'
-              : 'text-[5.5rem] sm:text-8xl leading-none text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.35)]'
+              ? 'text-[4.25rem] min-[380px]:text-[5.5rem] sm:text-8xl leading-none text-white drop-shadow-[0_4px_28px_rgba(0,0,0,0.65)] [text-shadow:0_2px_0_rgba(0,0,0,0.35),0_8px_24px_rgba(0,0,0,0.45)]'
+              : 'text-[4.25rem] min-[380px]:text-[5.5rem] sm:text-8xl leading-none text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.35)]'
             : 'text-6xl text-card drop-shadow-md',
         )}
         key={value}

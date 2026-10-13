@@ -50,9 +50,9 @@ export function DemandView() {
     // Only show full error if we have NO data at all (no mix)
     if (error && !mix.length) {
         return (
-            <div className="flex flex-col items-center justify-center p-8 space-y-4 animate-in fade-in text-center">
+            <div className="flex flex-col items-center justify-center px-6 py-10 space-y-4 animate-in fade-in text-center">
                 <AlertTriangle className="w-8 h-8 text-muted-foreground" />
-                <div className="space-y-1">
+                <div className="space-y-1 max-w-sm">
                     <p className="font-medium">Unable to load grid data</p>
                     <p className="text-sm text-muted-foreground">
                         Current grid data is temporarily unavailable.

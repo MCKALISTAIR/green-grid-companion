@@ -86,8 +86,8 @@ export default function ManageLocations() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
-      <div className="p-4 pt-[max(env(safe-area-inset-top),59px)] space-y-6">
+    <div className="page-shell page-shell--fit">
+      <div className="page-shell-inner space-y-6">
         {/* Header */}
         <div className="flex items-center gap-3">
           <Link to="/settings">
