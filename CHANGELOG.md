@@ -6,7 +6,7 @@ All notable changes to GridSense will be documented in this file.
 
 ### Fixed 🐛
 - **Empty scroll under the dock**: Secondary pages (Planner, Map, Locations, Changelog, Feature Guides, Privacy, 404) and `PullToRefresh` no longer stack `min-h-screen` / `page-shell` bottom padding on top of `AppLayout`'s nav reserve, which had left ~100px of dead scroll and parked CTAs under the floating dock.
-- **Hero HUD under the scallop**: The home intensity gauge is in-flow so short phones and large text grow the scene with the HUD; badge, band and meta stay above the sheet instead of sliding under the wave. On iPhone SE–class heights the secondary meta row hides so Intensity/Demand/Footprint tabs stay above the dock.
+- **Hero HUD under the scallop**: The home intensity gauge is in-flow so short phones and large text grow the scene with the HUD; badge, band and meta stay above the sheet instead of sliding under the wave. On iPhone SE–class heights the secondary meta row and energy-fact line hide so Intensity/Demand/Footprint tabs stay above the dock.
 - **Footprint tab clipped at 320px**: Dashboard view tabs drop the `min-w-[100px]` floor and truncate cleanly so all three labels stay readable on iPhone SE widths.
 - **Demand layout QA mock**: The layout mock's `grid-demand` payload now returns `status: 'ok'` so Demand-tab sweeps render mix cards instead of a false error state.
 
