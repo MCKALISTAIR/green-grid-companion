@@ -245,7 +245,7 @@ const Index = () => {
               hideGauge={viewMode === 'demand'}
             />
 
-            <div className="home-feed flex-1 px-4 pt-5 pb-6 lg:pb-6 space-y-4 -mt-8 relative z-10 bg-card rounded-t-none shadow-[0_-12px_40px_-20px_rgba(15,23,42,0.18)] lg:max-w-7xl lg:mx-auto w-full lg:shadow-xl lg:-mt-10 lg:pt-8 lg:space-y-6">
+            <div className="home-feed flex-1 px-4 pt-5 pb-4 lg:pb-6 space-y-4 -mt-8 relative z-10 bg-card rounded-t-none shadow-[0_-12px_40px_-20px_rgba(15,23,42,0.18)] lg:max-w-7xl lg:mx-auto w-full lg:shadow-xl lg:-mt-10 lg:pt-8 lg:space-y-6">
               {/* Scalloped top edge of the sheet. The sheet itself has square top corners so the
                   scallop meets both edges cleanly (no sliver or doubled half-circle). */}
               <div className="scene-wave-divider absolute -top-[79px] left-0 right-0 h-[80px] pointer-events-none overflow-hidden z-20" data-testid="scene-wave-divider">
@@ -269,7 +269,7 @@ const Index = () => {
                 </div>
               )}
 
-              <div className="px-1 pb-2 pt-0">
+              <div className="home-feed-fact px-1 pb-2 pt-0">
                 <EnergyFactBubble
                   intensity={intensity}
                   generationMix={generationMix}

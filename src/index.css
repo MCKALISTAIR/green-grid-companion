@@ -957,27 +957,36 @@ p, blockquote {
 
 @media (max-height: 640px) {
   .home-scene {
-    min-height: max(min(56dvh, 380px), 300px);
+    min-height: max(min(52dvh, 340px), 280px);
   }
 
   .home-scene-gauge {
-    padding-top: calc(max(env(safe-area-inset-top), 12px) + 2rem) !important;
-    /* -mt-8 sheet overlap (32px) + scallop crest (~22px) + 2px slack */
-    padding-bottom: 3.5rem;
+    padding-top: calc(max(env(safe-area-inset-top), 12px) + 1.75rem) !important;
+    /* -mt-8 sheet overlap (32px) + scallop crest (~22px) + slack */
+    padding-bottom: 3.75rem;
   }
 
   .home-scene-gauge [data-testid="hero-number"] {
-    min-height: 4.25rem;
+    min-height: 3.75rem;
   }
 
   .home-scene-gauge [data-testid="hero-band"] p {
-    font-size: 1.5rem;
+    font-size: 1.375rem;
     line-height: 1.15;
   }
 
+  /* Keep Intensity/Demand/Footprint above the dock on iPhone SE–class heights. */
   .home-scene-gauge [data-testid="hero-meta"] {
-    margin-top: 0.35rem;
-    gap: 0.25rem;
+    display: none;
+  }
+
+  .home-feed-fact {
+    display: none;
+  }
+
+  /* Tighter sheet chrome when the fact line is hidden. */
+  .home-feed {
+    padding-top: 0.75rem;
   }
 }
 

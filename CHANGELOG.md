@@ -4,6 +4,12 @@ All notable changes to GridSense will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed 🐛
+- **Empty scroll under the dock**: Secondary pages (Planner, Map, Locations, Changelog, Feature Guides, Privacy, 404) and `PullToRefresh` no longer stack `min-h-screen` / `page-shell` bottom padding on top of `AppLayout`'s nav reserve, which had left ~100px of dead scroll and parked CTAs under the floating dock.
+- **Hero HUD under the scallop**: The home intensity gauge is in-flow so short phones and large text grow the scene with the HUD; badge, band and meta stay above the sheet instead of sliding under the wave. On iPhone SE–class heights the secondary meta row hides so Intensity/Demand/Footprint tabs stay above the dock.
+- **Footprint tab clipped at 320px**: Dashboard view tabs drop the `min-w-[100px]` floor and truncate cleanly so all three labels stay readable on iPhone SE widths.
+- **Demand layout QA mock**: The layout mock's `grid-demand` payload now returns `status: 'ok'` so Demand-tab sweeps render mix cards instead of a false error state.
+
 ### Security 🔒
 - **Octopus API keys are server-side only**: keys are no longer cached in `localStorage` (web, iOS or Android). Existing cached keys are removed on first launch (uploaded once if they had never reached the server). Keys are stored AES-256-GCM encrypted at rest with a key held only by edge functions; clients can only see a "linked" flag and the last 4 characters.
 - **Corrected storage copy**: earlier copy (v1.4.6) said keys were "stored securely on your device, and synced via end-to-end encryption" / Keychain. That was never accurate: keys were stored in plain `localStorage` and in the database. Privacy policy and in-app copy now describe the real behaviour (not end-to-end encrypted; server-side functions can decrypt the key to call Octopus).
