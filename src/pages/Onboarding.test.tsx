@@ -4,7 +4,6 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { LocationProvider } from '@/contexts/LocationContext';
 import Onboarding from './Onboarding';
 
-vi.mock('@/components/IntensityScene', () => ({ IntensityScene: () => null }));
 vi.mock('@/lib/location', () => ({ resolvePostcode: vi.fn(async () => null) }));
 const geo = vi.hoisted(() => ({
   checkPermissions: vi.fn(),
