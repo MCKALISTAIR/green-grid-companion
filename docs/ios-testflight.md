@@ -1,8 +1,9 @@
-# GridSense iOS: build path (Codemagic → TestFlight)
+# GridSense iOS: local Mac → TestFlight
 
-No Mac is needed. Codemagic builds and signs the app on its own Macs and
-uploads it to App Store Connect, where it appears in TestFlight for internal
-testers. CI never submits for App Review or external beta review.
+Build and sign on a Mac with Xcode, then upload to App Store Connect for
+internal TestFlight. No Codemagic (or other CI Mac farm) is used.
+
+For day-to-day device runs without TestFlight, see `docs/ios_deployment_guide.md`.
 
 ## What's in the Xcode project
 
@@ -14,18 +15,16 @@ testers. CI never submits for App Review or external beta review.
 | App entitlements: Push (`aps-environment`), Sign in with Apple, App Group | `ios/App/App/App.entitlements` |
 | Widget entitlements: App Group | `ios/App/GridSenseWidget/GridSenseWidget.entitlements` |
 | Privacy manifests | `ios/App/App/PrivacyInfo.xcprivacy`, `ios/App/GridSenseWidget/PrivacyInfo.xcprivacy` |
-| Shared scheme `App` (CI needs a shared scheme) | `ios/App/App.xcodeproj/xcshareddata/xcschemes/App.xcscheme` |
-| CI pipeline | `codemagic.yaml` (workflow `ios-testflight`) |
+| Shared scheme `App` | `ios/App/App.xcodeproj/xcshareddata/xcschemes/App.xcscheme` |
 
-## Identifiers (placeholders until confirmed)
+## Identifiers (confirm before first upload)
 
 | Setting | Value now | Change in |
 |---|---|---|
-| Apple Team ID | `UW7848QP79` (already in the project; confirm it is your team) | `project.pbxproj` `DEVELOPMENT_TEAM` (Codemagic overrides from the profile) |
-| App bundle ID | `com.greengrid.companion` | `project.pbxproj` (App target) + `codemagic.yaml` `BUNDLE_ID` |
-| Widget bundle ID | `com.greengrid.companion.widget` | `project.pbxproj` (widget target) + `codemagic.yaml` `WIDGET_BUNDLE_ID` |
+| Apple Team ID | `UW7848QP79` (already in the project; confirm it is your team) | Xcode Signing & Capabilities, or `project.pbxproj` `DEVELOPMENT_TEAM` |
+| App bundle ID | `com.greengrid.companion` | `project.pbxproj` (App target) |
+| Widget bundle ID | `com.greengrid.companion.widget` | `project.pbxproj` (widget target) |
 | App Group | `group.com.greengrid.companion` | `project.pbxproj` project-level `GS_APP_GROUP_ID` (entitlements and both Info.plists read it) |
-| Codemagic API key name | `GridSense ASC key` | `codemagic.yaml` `integrations.app_store_connect` |
 
 Bundle IDs are permanent once the app is on the App Store, so decide before the
 first upload. `capacitor.config.ts` still defaults `appId` to the Lovable id
@@ -33,24 +32,56 @@ first upload. `capacitor.config.ts` still defaults `appId` to the Lovable id
 `PRODUCT_BUNDLE_IDENTIFIER` is), but it is used for the Sign in with Apple web
 Services ID (`<appId>.web`). Align it when the final ID is chosen.
 
-## One-time setup (Alistair, all in a browser)
+`Info.plist` sets `ITSAppUsesNonExemptEncryption = false` (HTTPS only). Confirm
+that remains true before App Store Connect export compliance questions.
+
+## One-time Apple setup (browser)
 
 1. **Apple Developer Program**: enrol (or sign in) at developer.apple.com, finish 2FA, accept the latest Program License Agreement. In App Store Connect > Business, accept the Free Apps agreement.
 2. **Identifiers** (developer.apple.com > Certificates, Identifiers & Profiles):
    - App Group `group.com.greengrid.companion`.
    - App ID `com.greengrid.companion` with **App Groups** (assign the group), **Push Notifications**, **Sign in with Apple**.
    - App ID `com.greengrid.companion.widget` with **App Groups** (same group).
-3. **APNs key** (Keys > +, Apple Push Notifications service) for the Supabase `push-subscriptions`/notification functions (`APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_BUNDLE_ID`, `APNS_PRIVATE_KEY`). Not needed for the build itself.
-4. **App Store Connect app record**: My Apps > + > New App, platform iOS, name GridSense, bundle ID `com.greengrid.companion`, SKU of your choice. Note the numeric Apple ID (App Information) for `APP_STORE_APPLE_ID`.
-5. **App Store Connect API key**: Users and Access > Integrations > App Store Connect API > +, access **App Manager**. Download the `.p8` (one chance only) and note the Key ID and Issuer ID.
-6. **Distribution certificate key**: create an RSA key on any computer (Windows PowerShell and Linux both have `ssh-keygen`):
-   `ssh-keygen -t rsa -b 2048 -m PEM -f ios_distribution_private_key -q -N ""`
-   Codemagic uses it to create the iOS Distribution certificate on the first build.
-7. **Codemagic**: sign up with GitHub, add the `green-grid-companion` repo, then:
-   - Team settings > Integrations > Developer Portal: add the API key from step 5 and name it `GridSense ASC key`.
-   - App > Environment variables: group `ios_signing` with `CERTIFICATE_PRIVATE_KEY` (secret, full contents of the key from step 6).
-   - Optional group `gridsense_web`: `VITE_SENTRY_DSN` (secret), `APP_STORE_APPLE_ID`.
-8. Start the `iOS → TestFlight (internal)` workflow manually. When the build finishes processing, add yourself as an internal tester in TestFlight.
+3. **APNs key** (Keys > +, Apple Push Notifications service) for the Supabase push functions (`APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_BUNDLE_ID`, `APNS_PRIVATE_KEY`). Not needed for the first archive/upload.
+4. **App Store Connect app record**: My Apps > + > New App, platform iOS, name GridSense, bundle ID `com.greengrid.companion`, SKU of your choice.
+
+Xcode's "Automatically manage signing" will create the Distribution certificate and
+provisioning profiles for the app + widget on first Archive when you are signed
+into the correct team.
+
+## Every release (on a Mac)
+
+Use Bun (same as CI): `package-lock.json` is stale; `npm ci` fails.
+
+```bash
+# From the repo root
+bun install --frozen-lockfile
+export VITE_APP_VERSION="$(node -p "require('./package.json').version")"
+bun run build
+bunx cap sync ios
+bunx cap open ios
+```
+
+In Xcode:
+
+1. Select the **App** scheme and **Any iOS Device (arm64)** (not a simulator).
+2. **Signing & Capabilities** on both **App** and **GridSenseWidgetExtension**:
+   - Team = your paid Apple Developer team.
+   - Automatically manage signing = on.
+   - Confirm bundle IDs and App Group match the table above.
+3. Bump **Build** (CFBundleVersion) so it is higher than any previous upload. Keep
+   the app and widget build numbers the same.
+4. **Product → Archive**. When the Organizer opens, **Distribute App → App Store Connect → Upload**.
+5. Leave "Submit for review" alone. After processing finishes in App Store Connect,
+   add yourself under TestFlight → Internal Testing and install via the TestFlight app.
+
+Optional check after the first archive: **Product → Generate Privacy Report** and
+compare with the privacy section below.
+
+## Device-only smoke test (no TestFlight)
+
+Same build/sync/open steps, then run on a connected iPhone with a Development
+profile. See `docs/ios_deployment_guide.md` for Trust / white-screen notes.
 
 ## Privacy manifest: what's declared and why
 
@@ -86,7 +117,9 @@ Why precise location is declared: Apple counts data as collected when it leaves
 the device and can be kept longer than needed to answer the request. The
 `weather` function logs `lat, lon` and Open-Meteo keeps request logs with
 coordinates, so "not collected" is not defensible today. It is not linked
-because the coordinates are not stored against a user ID.
+because the coordinates are not stored against a user ID. On-device coordinate
+rounding (2 decimal places) reduces precision before external requests; it does
+not remove the declaration.
 
 Open items:
 
@@ -102,9 +135,9 @@ Open items:
 - Lovable's hosted analytics script only runs on the hosted website, not in the
   bundled iOS app.
 
-## Not verified (needs a Mac / Codemagic run)
+## Not verified (needs a Mac)
 
-Nothing here has been compiled. The project file, plists, privacy manifests,
-storyboard and scheme were checked for structure on Linux, and the web build
-plus `cap sync ios` were run successfully. The first Codemagic run is the real
-compile and signing test.
+Nothing here has been compiled on Apple silicon. The project file, plists,
+privacy manifests, storyboard and scheme were checked for structure on Linux,
+and the web build plus `cap sync ios` were run successfully. The first Xcode
+Archive is the real compile and signing test.
