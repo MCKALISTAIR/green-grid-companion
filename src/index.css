@@ -919,40 +919,51 @@ p, blockquote {
  * Safari does not expose CSS Viewport Segments for the hinge — treat fold/unfold
  * as a resize. See docs/IPHONE_DUO.md.
  */
+/*
+ * Scene height follows the in-flow HUD (see .home-scene-gauge). The illustration
+ * is absolutely filled behind it, so large-text / Dynamic Type grow the scene
+ * instead of shoving the badge under the scalloped sheet.
+ */
 .home-scene {
   position: relative;
   width: 100%;
-  /* Rem floor grows with root font-size (Dynamic Type / large-text a11y). */
-  height: max(62dvh, 26rem);
-  min-height: max(420px, 24rem);
-  max-height: max(720px, 36rem);
+  height: auto;
+  min-height: 62dvh;
+  /* Keep a classic floor on normal phones; allow growth for a11y text. */
+  min-height: max(62dvh, 420px);
+  max-height: none;
+}
+
+.home-scene-gauge {
+  position: relative;
+  z-index: 10;
+  /* Bottom pad clears the sheet's -mt-8 overlap (32px) + scallop crest (~22px). */
+  padding-bottom: 3.75rem;
 }
 
 /* Short-wide poses (iPhone Duo ~1.42:1). Matches isShortWideViewport() —
    width/height >= 1/1.55 ≈ 0.645. max-width keeps desktop/ultrawide on classic floor. */
 @media (min-aspect-ratio: 10 / 15.5) and (max-width: 960px) {
   .home-scene {
-    /* Rem floor keeps large-text HUD above the scallop; dvh cap keeps short-wide poses tight. */
-    height: max(min(52dvh, 400px), 20rem);
-    min-height: max(280px, 18rem);
-    max-height: max(min(440px, 60dvh), 22rem);
+    min-height: min(52dvh, 400px);
+    min-height: max(min(52dvh, 400px), 280px);
   }
 
   .home-scene-gauge {
     padding-top: calc(max(env(safe-area-inset-top), 12px) + 2.25rem) !important;
+    padding-bottom: 2.75rem;
   }
 }
 
 @media (max-height: 640px) {
   .home-scene {
-    /* iPhone SE / short phones: give the HUD room so band + badge clear the sheet. */
-    height: max(min(56dvh, 380px), 20rem);
-    min-height: max(280px, 18rem);
-    max-height: max(min(400px, 62dvh), 22rem);
+    min-height: max(min(56dvh, 380px), 300px);
   }
 
   .home-scene-gauge {
     padding-top: calc(max(env(safe-area-inset-top), 12px) + 2rem) !important;
+    /* -mt-8 sheet overlap (32px) + scallop crest (~22px) + 2px slack */
+    padding-bottom: 3.5rem;
   }
 
   .home-scene-gauge [data-testid="hero-number"] {

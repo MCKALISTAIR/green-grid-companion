@@ -117,7 +117,7 @@ export function IntensityHeroOverlay({
           index={index}
           generationMix={generationMix}
           hasLiveReading={hasFreshReading}
-          className="h-full"
+          className="absolute inset-0 h-full"
           style={{ height: '100%' }}
         />
 
@@ -154,7 +154,9 @@ export function IntensityHeroOverlay({
       {!hideGauge && (
         <div
           className={cn(
-            'home-scene-gauge absolute inset-x-0 top-0 z-10 flex flex-col items-center pointer-events-none',
+            /* In-flow (not absolute): scene height grows with the HUD so large-text
+               and short phones keep badge/meta above the scalloped sheet. */
+            'home-scene-gauge relative z-10 flex flex-col items-center pointer-events-none',
             'pt-[calc(max(env(safe-area-inset-top),12px)+3.25rem)]',
           )}
           data-tour="intensity-gauge"
