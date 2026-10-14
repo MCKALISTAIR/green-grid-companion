@@ -13,13 +13,24 @@ export interface IntensityReading {
 
 const VALID_INDEXES = new Set(['very low', 'low', 'moderate', 'high', 'very high']);
 
-/** Returns a reading only if both the forecast number and index are real values. */
+/**
+ * Returns a reading only if a usable intensity number and index are present.
+ * Prefers NESO's published `actual` when the current half-hour has one;
+ * otherwise uses `forecast` (regional endpoints usually only publish forecast).
+ */
 export function toIntensityReading(raw: unknown): IntensityReading | null {
   if (!raw || typeof raw !== 'object') return null;
-  const { forecast, index } = raw as { forecast?: unknown; index?: unknown };
-  if (typeof forecast !== 'number' || !Number.isFinite(forecast) || forecast < 0) return null;
+  const { forecast, actual, index } = raw as {
+    forecast?: unknown;
+    actual?: unknown;
+    index?: unknown;
+  };
+  const value = [actual, forecast].find(
+    (v) => typeof v === 'number' && Number.isFinite(v) && v >= 0,
+  ) as number | undefined;
+  if (value === undefined) return null;
   if (typeof index !== 'string' || !VALID_INDEXES.has(index.toLowerCase())) return null;
-  return { intensity: Math.round(forecast), index: index.toLowerCase() };
+  return { intensity: Math.round(value), index: index.toLowerCase() };
 }
 
 /** Parse the body of GET https://api.carbonintensity.org.uk/intensity. */

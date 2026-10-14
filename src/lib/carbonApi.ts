@@ -62,6 +62,24 @@ export function actualSeriesLabel(items: Pick<ForecastData, 'intensity'>[]): 'Ac
   return items.some(isEstimatedActual) ? 'Estimate' : 'Actual';
 }
 
+/**
+ * Live "now" intensity for the home hero and alerts.
+ *
+ * Prefer NESO's published `actual` once it fills for the current half-hour;
+ * otherwise use `forecast`. Regional endpoints usually omit actuals, so this
+ * mostly improves the national view without changing regional behaviour.
+ */
+export function pickLiveIntensity(intensity: {
+  forecast?: number | null;
+  actual?: number | null;
+} | null | undefined): number | null {
+  if (!intensity) return null;
+  const { actual, forecast } = intensity;
+  if (typeof actual === 'number' && Number.isFinite(actual) && actual >= 0) return actual;
+  if (typeof forecast === 'number' && Number.isFinite(forecast) && forecast >= 0) return forecast;
+  return null;
+}
+
 export const REGION_IDS = {
   NATIONAL: 0,
   SCOTLAND: 16,
@@ -177,7 +195,7 @@ export async function getRegionalHistoryAndForecast(regionId: number, from: stri
     if (hasEnded && (item.intensity.actual === undefined || item.intensity.actual === null)) {
       const mix = item.generationmix;
       if (hasUsableMix(mix)) {
-        item.intensity.actual = calculateIntensityFromMix(mix);
+        item.intensity.actual = calculateIntensityFromMix(mix, regionId);
         item.intensity.actualEstimated = true;
       }
     }
@@ -292,14 +310,30 @@ export function getFuelColor(fuel: string): string {
  * - imports: NESO has no single import factor. It works one out per
  *   interconnected country each day from ENTSO-E data (defaults: French 53,
  *   Belgian 179, Irish 458, Dutch 474) and the mix doesn't say where imports
- *   came from. We use the French default, 53: France is the largest source
- *   by interconnector capacity, and checked against a week of NESO regional
- *   forecasts (4–11 Oct 2026) it was the closest single value for the
- *   regions with the most imports (South England, South East, London). It
- *   still overstates imports in a few regions and understates them in East
- *   England, so these are GridSense estimates, never NESO actuals.
+ *   came from. Default is the French figure (53). A few regions systematically
+ *   disagree with that default vs NESO's own regional forecasts — see
+ *   REGION_IMPORTS_FACTOR. Past regional values remain GridSense estimates,
+ *   never NESO actuals.
  */
 export const IMPORTS_FACTOR = 53;
+
+/**
+ * Region-specific imports factors (gCO₂/kWh) where the national default
+ * mis-tracks NESO regional forecasts by ≥ ~3 g MAE on average.
+ *
+ * Calibrated against NESO regional forecast vs mix over two windows
+ * (23 Sep–14 Oct 2026). Only stable overrides are listed:
+ * - 10 East England ≈ North Sea interconnectors (Irish/Dutch class)
+ * - 13 London ≈ mixed continental interconnectors
+ * - 4 North East England ≈ slightly cleaner than French default
+ *
+ * Re-check with `npm run audit:neso` after changing these.
+ */
+export const REGION_IMPORTS_FACTOR: Readonly<Record<number, number>> = {
+  4: 40,
+  10: 405,
+  13: 120,
+};
 
 export const CARBON_FACTORS: Record<string, number> = {
   biomass: 120,
@@ -313,12 +347,33 @@ export const CARBON_FACTORS: Record<string, number> = {
   wind: 0,
 };
 
-export function calculateIntensityFromMix(mix: GenerationMix[]): number {
+/** Imports factor for a NESO region id; falls back to the French default. */
+export function importsFactorForRegion(regionId?: number | null): number {
+  if (regionId == null) return IMPORTS_FACTOR;
+  return REGION_IMPORTS_FACTOR[regionId] ?? IMPORTS_FACTOR;
+}
+
+/** Full factor table for a region (only `imports` may differ from the default). */
+export function carbonFactorsForRegion(regionId?: number | null): Record<string, number> {
+  const imports = importsFactorForRegion(regionId);
+  if (imports === IMPORTS_FACTOR) return CARBON_FACTORS;
+  return { ...CARBON_FACTORS, imports };
+}
+
+/**
+ * Estimate gCO₂/kWh from a generation mix. Pass `regionId` for regional
+ * history backfill so high-import regions use a calibrated imports factor.
+ */
+export function calculateIntensityFromMix(
+  mix: GenerationMix[],
+  regionId?: number | null,
+): number {
   if (!mix || mix.length === 0) return 0;
 
+  const factors = carbonFactorsForRegion(regionId);
   let totalIntensity = 0;
   mix.forEach(source => {
-    const factor = CARBON_FACTORS[source.fuel] ?? 0;
+    const factor = factors[source.fuel] ?? 0;
     // perc is 0-100
     totalIntensity += (source.perc / 100) * factor;
   });
