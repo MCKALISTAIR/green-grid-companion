@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useIsRestoring } from '@tanstack/react-query';
 import { useMemo, useEffect, useRef, useCallback, useState } from 'react';
 import {
   getRegionalForecastById,
@@ -88,6 +88,10 @@ function useSmartRefetch(refetchFn: () => Promise<void>, enabled: boolean) {
 
 export function useCarbonData(postcode: string) {
   const queryClient = useQueryClient();
+  // PersistQueryClient rehydrates async: before restore finishes, queries look
+  // idle with no data (isLoading=false). Treat that window as loading so Index
+  // doesn't flash ErrorState and shift the feed (CLS).
+  const isRestoring = useIsRestoring();
 
   // Track previous intensity for animation
   const [previousIntensity, setPreviousIntensity] = useState<number | null>(null);
@@ -256,16 +260,26 @@ export function useCarbonData(postcode: string) {
   // Determine if this is an initial load (no data yet) vs background refetch
   const isInitialLoad = postcode ? (
     regionalListQuery.isLoading ||
-    (!!regionId && !regionalDataQuery.data && regionalDataQuery.isLoading)
-  ) : (!nationalQuery.data && nationalQuery.isLoading);
+    (!!regionId && !regionalDataQuery.data && (regionalDataQuery.isLoading || regionalDataQuery.isFetching))
+  ) : (!nationalQuery.data && (nationalQuery.isLoading || nationalQuery.isFetching));
 
   // isLoading should only be true on initial load, not during background refetches.
   // Also stay loading while there's no reading but a query is still on its way
-  // (e.g. postcode lookup or national fallback still pending).
+  // (e.g. postcode lookup or national fallback still pending), including the
+  // one-frame gap after regionId resolves before regionalData reports isLoading.
   const awaitingReading = !hasReading && (
-    nationalQuery.isLoading || regionalListQuery.isLoading || postcodeQuery.isLoading || regionalDataQuery.isLoading
+    isRestoring ||
+    nationalQuery.isLoading || nationalQuery.isFetching ||
+    regionalListQuery.isLoading || regionalListQuery.isFetching ||
+    postcodeQuery.isLoading || postcodeQuery.isFetching ||
+    regionalDataQuery.isLoading || regionalDataQuery.isFetching ||
+    (!!regionId && !regionalDataQuery.data && !regionalDataQuery.isError)
   );
-  const isLoading = isInitialLoad || awaitingReading;
+  const isLoading = isRestoring || isInitialLoad || awaitingReading;
+
+  // Only treat "no reading" as an error once the national (fallback) query has
+  // actually settled — not while the persist cache is still rehydrating.
+  const noReadingSettled = !hasReading && !isLoading && nationalQuery.isFetched && !nationalQuery.isFetching;
 
   return {
     // Current intensity
@@ -286,7 +300,7 @@ export function useCarbonData(postcode: string) {
     isLoading,
 
     // Flag for background fetching (data exists but refreshing)
-    isBackgroundFetching: !isInitialLoad && (
+    isBackgroundFetching: !isRestoring && !isInitialLoad && (
       nationalQuery.isFetching ||
       regionalDataQuery.isFetching ||
       forecastQuery.isFetching
@@ -297,7 +311,7 @@ export function useCarbonData(postcode: string) {
     // Also an error if everything has settled and there's still no reading to show.
     isError: (postcode
       ? ((regionalListQuery.isError || regionalDataQuery.isError) && nationalQuery.isError)
-      : nationalQuery.isError) || (!hasReading && !isLoading),
+      : nationalQuery.isError) || noReadingSettled,
 
     // Flag to explicitly identify graceful degradation so UI can warn the user
     isDegraded: !!postcode && (regionalDataQuery.isError || regionalListQuery.isError) && !nationalQuery.isError,

@@ -164,18 +164,23 @@ export function IntensityHeroOverlay({
           <div
             aria-hidden
             className={cn(
-              'absolute inset-x-0 top-0 pointer-events-none transition-[height,opacity] duration-700',
+              /* Fixed px height (not %) so loading→reading gauge growth doesn't
+                 reposition this scrim and register as CLS. */
+              'absolute inset-x-0 top-0 h-56 pointer-events-none transition-opacity duration-700',
               needsHardScrim
-                ? 'h-[62%] bg-gradient-to-b from-black/55 via-black/28 to-transparent'
-                : 'h-[55%] bg-gradient-to-b from-black/35 via-black/15 to-transparent',
+                ? 'bg-gradient-to-b from-black/55 via-black/28 to-transparent'
+                : 'bg-gradient-to-b from-black/35 via-black/15 to-transparent',
             )}
           />
-          {needsHardScrim && (
-            <div
-              aria-hidden
-              className="absolute inset-x-0 top-[18%] h-40 pointer-events-none bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.35)_0%,transparent_70%)]"
-            />
-          )}
+          {/* Always mounted; opacity only — conditional mount was a CLS source when
+              dirty/night bands appeared after the first reading. */}
+          <div
+            aria-hidden
+            className={cn(
+              'absolute inset-x-0 top-16 h-40 pointer-events-none bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.35)_0%,transparent_70%)] transition-opacity duration-700',
+              needsHardScrim ? 'opacity-100' : 'opacity-0',
+            )}
+          />
 
           <div className="relative flex flex-col items-center text-center w-full max-w-[22rem] min-[540px]:max-w-[40rem] px-4 pointer-events-auto">
             <div className="lg:hidden mb-2 sm:mb-3 max-w-[calc(100vw-8.5rem)]" data-testid="hero-location">
