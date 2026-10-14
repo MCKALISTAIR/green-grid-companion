@@ -230,10 +230,11 @@ export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolar
 
       <DialogContent className="max-w-md max-h-[85vh] flex flex-col overflow-hidden">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>Generation Mix Breakdown</span>
+          {/* pr-8 clears the absolute Dialog close (right-4) so the freq pill never kisses the X */}
+          <DialogTitle className="flex items-center justify-between gap-3 pr-8">
+            <span className="min-w-0">Generation Mix Breakdown</span>
             {typeof frequency === 'number' && !isNaN(frequency) && (
-              <div className="flex items-center gap-2 text-sm font-normal bg-muted/50 px-2 py-1 rounded-md">
+              <div className="flex shrink-0 items-center gap-2 text-sm font-normal bg-muted/50 px-2 py-1 rounded-md">
                 <span className="text-muted-foreground">Grid Freq:</span>
                 <div className="flex items-center gap-1.5">
                   <span className={`font-mono font-medium ${frequency < 49.8 || frequency > 50.2 ? 'text-destructive' : 'text-emerald-500'
