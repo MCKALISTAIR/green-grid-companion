@@ -772,7 +772,15 @@ p, blockquote {
 }
 
 .animate-page-enter {
-  animation: page-enter 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: page-enter 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-page-enter {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* Shared secondary-page chrome (art direction: one product feel) */

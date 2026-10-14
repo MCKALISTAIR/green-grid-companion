@@ -14,6 +14,7 @@ import { Map as MapIcon, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Skeleton } from '@/components/ui/skeleton';
+import { pageTransition, stateTransition } from '@/lib/motion';
 
 export default function MapPage() {
     const [showMap, setShowMap] = useState(true);
@@ -65,8 +66,16 @@ export default function MapPage() {
                         }
                     />
 
+                    <AnimatePresence mode="wait" initial={false}>
                     {isLoading ? (
-                        <div className="space-y-3">
+                        <motion.div
+                            key="loading"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={stateTransition}
+                            className="space-y-3"
+                        >
                             {[1, 2, 3, 4, 5, 6].map(i => (
                                 <Card key={i} className="sheet-surface p-4 flex items-center justify-between">
                                     <div className="space-y-1.5 flex-1">
@@ -76,9 +85,16 @@ export default function MapPage() {
                                     <Skeleton className="w-12 h-6 rounded-full" />
                                 </Card>
                             ))}
-                        </div>
+                        </motion.div>
                     ) : (
-                        <div className="space-y-6">
+                        <motion.div
+                            key="content"
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -6 }}
+                            transition={stateTransition}
+                            className="space-y-6"
+                        >
                             {/* Toggleable Map View */}
                             <AnimatePresence initial={false}>
                                 {showMap && (
@@ -86,7 +102,7 @@ export default function MapPage() {
                                         initial={{ height: 0, opacity: 0 }}
                                         animate={{ height: 'auto', opacity: 1 }}
                                         exit={{ height: 0, opacity: 0 }}
-                                        transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+                                        transition={pageTransition}
                                         className="overflow-hidden"
                                     >
                                         <UKMap
@@ -145,8 +161,9 @@ export default function MapPage() {
                                     </div>
                                 ))}
                             </div>
-                        </div>
+                        </motion.div>
                     )}
+                    </AnimatePresence>
                 </div>
             </PullToRefresh>
 

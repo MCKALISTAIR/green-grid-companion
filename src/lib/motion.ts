@@ -3,6 +3,12 @@ import type { Transition, Variants } from 'framer-motion';
 /** Shared easing — soft deceleration used across page and state transitions. */
 export const easeOutExpo: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
+/** CSS cubic-bezier string matching `easeOutExpo` (dialogs, sheets, Tailwind). */
+export const easeOutExpoCss = 'cubic-bezier(0.16, 1, 0.3, 1)';
+
+/** Overlay open/close duration in ms — aligned with `stateTransition`. */
+export const overlayDurationMs = 220;
+
 export const pageTransition: Transition = {
   duration: 0.28,
   ease: easeOutExpo,

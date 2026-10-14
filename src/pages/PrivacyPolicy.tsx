@@ -18,7 +18,7 @@ export default function PrivacyPolicy() {
                 </div>
             </div>
 
-            <div className="p-4 max-w-2xl mx-auto space-y-6 lg:pb-6">
+            <div className="p-4 max-w-2xl mx-auto space-y-6 lg:pb-6 animate-page-enter">
                 <div className="space-y-2">
                     <p className="text-muted-foreground">
                         Last updated: 3 October 2026

@@ -25,7 +25,7 @@ export default function Terms() {
         </div>
       </div>
 
-      <article className="p-4 max-w-2xl mx-auto space-y-4">
+      <article className="p-4 max-w-2xl mx-auto space-y-4 animate-page-enter">
         <MarkdownDocument source={termsSource} />
       </article>
     </div>

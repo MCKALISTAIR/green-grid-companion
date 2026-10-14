@@ -12,7 +12,8 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ensureAuthSession } from '@/lib/auth-utils';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
+import { stateTransition } from '@/lib/motion';
 
 interface ChargingSession {
   id: string;
@@ -104,9 +105,59 @@ function ChargingHistory() {
         </div>
       </motion.div>
 
+      <AnimatePresence mode="wait" initial={false}>
+      {isLoading ? (
+        <motion.div
+          key="loading"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={stateTransition}
+          className="space-y-3"
+        >
+          {[1, 2, 3].map(i => (
+            <Card key={i} className="p-4 bg-card border border-border shadow-sm flex items-center justify-between">
+              <div className="space-y-2 flex-1">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="w-4 h-4 rounded-full animate-shimmer" />
+                  <Skeleton className="h-4 w-24 animate-shimmer" />
+                </div>
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-3 w-16 animate-shimmer" />
+                  <Skeleton className="h-3 w-12 animate-shimmer" />
+                </div>
+              </div>
+              <div className="text-right space-y-2">
+                <Skeleton className="h-5 w-16 ml-auto animate-shimmer" />
+                <Skeleton className="h-3.5 w-12 ml-auto rounded-full animate-shimmer" />
+              </div>
+            </Card>
+          ))}
+        </motion.div>
+      ) : totalSessions === 0 ? (
+        <motion.div
+          key="empty"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+          transition={stateTransition}
+        >
+          <EmptyState
+            icon={BatteryCharging}
+            title="No charging sessions yet"
+            description="Once Octopus schedules and completes smart charging sessions, they'll appear here."
+          />
+        </motion.div>
+      ) : (
+        <motion.div
+          key="content"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+          transition={stateTransition}
+        >
       {/* Summary Cards */}
-      {!isLoading && totalSessions > 0 && (
-        <motion.div variants={itemVariants} className="grid grid-cols-3 gap-3 mb-4">
+        <div className="grid grid-cols-3 gap-3 mb-4">
           <motion.div whileHover={{ y: -2, scale: 1.02 }} transition={{ type: 'spring' as const, stiffness: 450, damping: 22 }}>
             <Card className="p-3 text-center h-full">
               <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
@@ -140,46 +191,10 @@ function ChargingHistory() {
               </span>
             </Card>
           </motion.div>
-        </motion.div>
-      )}
-
-      {/* Loading State */}
-      {isLoading && (
-        <div className="space-y-3">
-          {[1, 2, 3].map(i => (
-            <Card key={i} className="p-4 bg-card border border-border shadow-sm flex items-center justify-between">
-              <div className="space-y-2 flex-1">
-                <div className="flex items-center gap-2">
-                  <Skeleton className="w-4 h-4 rounded-full animate-shimmer" />
-                  <Skeleton className="h-4 w-24 animate-shimmer" />
-                </div>
-                <div className="flex items-center gap-3">
-                  <Skeleton className="h-3 w-16 animate-shimmer" />
-                  <Skeleton className="h-3 w-12 animate-shimmer" />
-                </div>
-              </div>
-              <div className="text-right space-y-2">
-                <Skeleton className="h-5 w-16 ml-auto animate-shimmer" />
-                <Skeleton className="h-3.5 w-12 ml-auto rounded-full animate-shimmer" />
-              </div>
-            </Card>
-          ))}
         </div>
-      )}
-
-      {/* Empty State */}
-      {!isLoading && totalSessions === 0 && (
-        <motion.div variants={itemVariants}>
-          <EmptyState
-            icon={BatteryCharging}
-            title="No charging sessions yet"
-            description="Once Octopus schedules and completes smart charging sessions, they'll appear here."
-          />
-        </motion.div>
-      )}
 
       {/* Grouped Session List */}
-      {!isLoading && Object.entries(groupedSessions).map(([dateKey, daySessions]) => (
+      {Object.entries(groupedSessions).map(([dateKey, daySessions]) => (
         <motion.div key={dateKey} variants={itemVariants} className="mb-5">
           <div className="flex items-center gap-2 mb-2">
             <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
@@ -262,11 +277,12 @@ function ChargingHistory() {
         </motion.div>
       ))}
 
-      {!isLoading && totalSessions > 0 && (
-        <motion.div variants={itemVariants} className="text-center text-xs text-muted-foreground mt-4">
+        <div className="text-center text-xs text-muted-foreground mt-4">
           Showing last {totalSessions} sessions
+        </div>
         </motion.div>
       )}
+      </AnimatePresence>
     </motion.div>
   );
 }
