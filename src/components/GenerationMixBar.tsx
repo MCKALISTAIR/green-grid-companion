@@ -13,6 +13,7 @@ import {
 import { DEFINITIONS } from '@/lib/definitions';
 import { ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { AnimatedNumber } from '@/components/AnimatedNumber';
 import { MixItem, getSortedMix, getRenewablesPercentage, getEmbeddedSolarPercentage, getTotalSolarMW } from '@/lib/generationUtils';
 
 export type { MixItem };
@@ -276,15 +277,19 @@ export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolar
                       <span className="font-semibold capitalize text-base">{item.fuel}</span>
                     </div>
                     <div className="text-right">
-                      <span className="block text-lg font-bold tabular-nums">
-                        {showMW && item.mw
-                          ? `${(item.mw / 1000).toFixed(2)} GW`
-                          : `${item.perc.toFixed(1)}%`}
+                      <span className="block text-lg font-bold">
+                        {showMW && item.mw != null ? (
+                          <AnimatedNumber value={item.mw / 1000} decimals={2} suffix=" GW" />
+                        ) : (
+                          <AnimatedNumber value={item.perc} decimals={1} suffix="%" />
+                        )}
                       </span>
-                      <span className="text-xs text-muted-foreground tabular-nums">
-                        {showMW
-                          ? `${item.perc.toFixed(1)}%`
-                          : (item.mw ? `${(item.mw / 1000).toFixed(2)} GW` : '')}
+                      <span className="text-xs text-muted-foreground">
+                        {showMW ? (
+                          <AnimatedNumber value={item.perc} decimals={1} suffix="%" />
+                        ) : item.mw != null ? (
+                          <AnimatedNumber value={item.mw / 1000} decimals={2} suffix=" GW" />
+                        ) : null}
                       </span>
                     </div>
                   </div>
