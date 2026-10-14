@@ -243,7 +243,7 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
               <span>{insight.vsNow}</span>
               {insight.inBestWindow && (
                 <span className="inline-flex items-center gap-1 text-intensity-very-low font-semibold">
-                  <Sparkles className="w-3 h-3" aria-hidden />
+                  <Clock3 className="w-3 h-3" aria-hidden />
                   Best window
                 </span>
               )}
