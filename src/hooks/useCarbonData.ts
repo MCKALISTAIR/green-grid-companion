@@ -9,6 +9,7 @@ import {
   getGenerationMix,
   getCurrentIntensity,
   getAllRegions,
+  pickLiveIntensity,
   UK_REGIONS,
   RegionalData,
   RegionListItem,
@@ -222,13 +223,14 @@ export function useCarbonData(postcode: string) {
   // Extract data from specific regional query or fallback to national
   const regionalData = regionalDataQuery.data?.data?.[0];
 
-  // Use regional data if available, otherwise national. `intensity` is only 0 when
-  // there is no reading yet (hasReading = false); isLoading/isError cover that case
+  // Prefer NESO actual when published for the open half-hour; else forecast.
+  // Regional endpoints usually have forecast only. `intensity` is 0 only when
+  // there is no reading yet (hasReading = false); isLoading/isError cover that
   // so the UI never shows 0 / 'moderate' as if it were real.
-  const liveForecast = regionalData?.intensity?.forecast
-    ?? nationalQuery.data?.intensity?.forecast;
-  const hasReading = typeof liveForecast === 'number' && Number.isFinite(liveForecast);
-  const intensity = hasReading ? liveForecast : 0;
+  const liveIntensity = pickLiveIntensity(regionalData?.intensity)
+    ?? pickLiveIntensity(nationalQuery.data?.intensity);
+  const hasReading = liveIntensity !== null;
+  const intensity = hasReading ? liveIntensity : 0;
   const index = regionalData?.intensity?.index
     ?? nationalQuery.data?.intensity?.index
     ?? 'moderate';

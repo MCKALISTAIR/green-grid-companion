@@ -4,6 +4,7 @@ import {
     IMPORTS_FACTOR,
     calculateIntensityFromMix,
     getIntensityColor,
+    pickLiveIntensity,
     REGION_IDS,
     UK_REGIONS,
     UK_REGIONS_CONFIG,
@@ -66,6 +67,23 @@ describe('carbonApi', () => {
                 { fuel: 'wind', perc: 100 }
             ];
             expect(calculateIntensityFromMix(mix)).toBe(0);
+        });
+    });
+
+    describe('pickLiveIntensity', () => {
+        it('prefers NESO actual when published for the open half-hour', () => {
+            expect(pickLiveIntensity({ forecast: 147, actual: 160 })).toBe(160);
+        });
+
+        it('falls back to forecast when actual is missing', () => {
+            expect(pickLiveIntensity({ forecast: 147, actual: null })).toBe(147);
+            expect(pickLiveIntensity({ forecast: 12 })).toBe(12);
+        });
+
+        it('allows a real zero reading and rejects unusable values', () => {
+            expect(pickLiveIntensity({ forecast: 0, actual: null })).toBe(0);
+            expect(pickLiveIntensity({ forecast: null, actual: null })).toBeNull();
+            expect(pickLiveIntensity(null)).toBeNull();
         });
     });
 

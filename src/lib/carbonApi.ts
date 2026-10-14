@@ -62,6 +62,24 @@ export function actualSeriesLabel(items: Pick<ForecastData, 'intensity'>[]): 'Ac
   return items.some(isEstimatedActual) ? 'Estimate' : 'Actual';
 }
 
+/**
+ * Live "now" intensity for the home hero and alerts.
+ *
+ * Prefer NESO's published `actual` once it fills for the current half-hour;
+ * otherwise use `forecast`. Regional endpoints usually omit actuals, so this
+ * mostly improves the national view without changing regional behaviour.
+ */
+export function pickLiveIntensity(intensity: {
+  forecast?: number | null;
+  actual?: number | null;
+} | null | undefined): number | null {
+  if (!intensity) return null;
+  const { actual, forecast } = intensity;
+  if (typeof actual === 'number' && Number.isFinite(actual) && actual >= 0) return actual;
+  if (typeof forecast === 'number' && Number.isFinite(forecast) && forecast >= 0) return forecast;
+  return null;
+}
+
 export const REGION_IDS = {
   NATIONAL: 0,
   SCOTLAND: 16,

@@ -49,6 +49,17 @@ describe('useCarbonData: no fake 0 / moderate before a reading', () => {
     expect(result.current.isError).toBe(false);
   });
 
+  it('prefers NESO actual over forecast for the national live reading', async () => {
+    api.getCurrentIntensity.mockResolvedValue({
+      from: 'a',
+      to: 'b',
+      intensity: { forecast: 147, actual: 160, index: 'moderate' },
+    });
+    const { result } = renderHook(() => useCarbonData(''), { wrapper: wrapper() });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.intensity).toBe(160);
+  });
+
   it('is an error (not 0) when the fetch fails', async () => {
     api.getCurrentIntensity.mockRejectedValue(new Error('down'));
     const { result } = renderHook(() => useCarbonData(''), { wrapper: wrapper() });
