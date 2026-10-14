@@ -144,12 +144,6 @@ export default function Settings() {
 
         <SettingsSupportSection />
 
-        <SettingsFooter
-          isLinked={isLinked}
-          unlocked={unlocked}
-          onVersionClick={handleVersionTap}
-        />
-
         <SettingsDataSyncSection
           gridLastUpdated={gridLastUpdated}
           refetchGrid={refetchGrid}
@@ -159,6 +153,13 @@ export default function Settings() {
 
         {/* "Trigger Error" test tools: dev builds, or after unlocking Director Mode. */}
         {(import.meta.env.DEV || unlocked) && <SettingsDebugSection />}
+
+        {/* Attributions / credits stay last so the page closes on sources, not sync controls. */}
+        <SettingsFooter
+          isLinked={isLinked}
+          unlocked={unlocked}
+          onVersionClick={handleVersionTap}
+        />
       </motion.div>
 
       <YearWrapped
