@@ -7,7 +7,10 @@
 /* GridSense — Plus Jakarta Sans craft type (see docs/TYPOGRAPHY.md) */
 
 @layer base {
+  /* Lock native form controls / scrollbars to the app theme so an OS-forced
+     appearance can't paint dark widgets on a light GridSense chrome (or vice versa). */
   :root {
+    color-scheme: light;
     /* Soft sky-paper surfaces — calm, not clinical */
     --background: 198 42% 96%;
     --foreground: 210 28% 14%;
@@ -104,6 +107,7 @@
   }
 
   .dark {
+    color-scheme: dark;
     --background: 220 25% 10%;
     --foreground: 0 0% 95%;
 

@@ -13,7 +13,7 @@ import { logger } from '@/lib/logger';
 
 export function StatusBarManager() {
     const location = useLocation();
-    const { theme } = useTheme();
+    const { resolvedTheme } = useTheme();
     const { intensity: realIntensity } = useCarbonData('');
     const { timeOfDay: realTimeOfDay, isNight: realIsNight } = useTimeOfDay();
     const { weather: realWeather } = useWeatherData();
@@ -50,11 +50,11 @@ export function StatusBarManager() {
                     await StatusBar.setBackgroundColor({ color: skyColor });
                     await StatusBar.setStyle({ style: isNight ? Style.Dark : Style.Light });
                 } else {
-                    const isDark =
-                        theme === 'dark' ||
-                        (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                    // resolvedTheme already tracks OS-forced light/dark when preference is system
+                    const isDark = resolvedTheme === 'dark';
                     const bgColor = isDark ? '#131820' : '#f1f7f9';
                     await StatusBar.setBackgroundColor({ color: bgColor });
+                    // Style.Dark = light content (for dark backgrounds); Style.Light = dark content
                     await StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light });
                 }
             } catch (e) {
@@ -63,7 +63,7 @@ export function StatusBarManager() {
         };
 
         applyStatusBar();
-    }, [location.pathname, skyColor, isNight, theme]);
+    }, [location.pathname, skyColor, isNight, resolvedTheme]);
 
     return null;
 }
