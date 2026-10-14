@@ -288,7 +288,7 @@ function ComponentInventory() {
       rows: [
         { name: "Button", purpose: "All clickable affordances. Variants: default, secondary, outline, ghost, destructive.", path: "src/components/ui/button.tsx" },
         { name: "Card", purpose: "Default surface for grouped content.", path: "src/components/ui/card.tsx" },
-        { name: "Dialog / Drawer", purpose: "Modal interactions. Drawer for mobile sheets.", path: "src/components/ui/dialog.tsx" },
+        { name: "Dialog", purpose: "Modal interactions.", path: "src/components/ui/dialog.tsx" },
         { name: "Tabs", purpose: "Sectioning within a single screen.", path: "src/components/ui/tabs.tsx" },
         { name: "Tooltip", purpose: "Definition + clarification on hover/focus.", path: "src/components/ui/tooltip.tsx" },
         { name: "Sonner Toast", purpose: "Top-centre transient feedback.", path: "src/components/ui/sonner.tsx" },
@@ -298,7 +298,7 @@ function ComponentInventory() {
     {
       group: "App components",
       rows: [
-        { name: "IntensityGauge", purpose: "The hero number on Home — current carbon intensity.", path: "src/components/IntensityGauge.tsx" },
+        { name: "AnimatedIntensity", purpose: "The hero number on Home — current carbon intensity.", path: "src/components/AnimatedIntensity.tsx" },
         { name: "GenerationMixBar", purpose: "Stacked horizontal bar of fuel mix.", path: "src/components/GenerationMixBar.tsx" },
         { name: "ForecastChart", purpose: "24h forecast with cross-linked hour picker + BEST ribbon.", path: "src/components/ForecastChart.tsx" },
         { name: "StaleDataBadge", purpose: "Marks data older than 35m.", path: "src/components/StaleDataBadge.tsx" },
