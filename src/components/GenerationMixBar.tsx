@@ -53,11 +53,25 @@ interface GenerationMixBarProps {
   showMW?: boolean;
   frequency?: number | null;
   embeddedSolarMW?: number | null;
+  /**
+   * Where this mix applies — Intensity is regional (NESO), Demand is national
+   * (Elexon). Shown so the two tabs don’t look like contradictory numbers.
+   */
+  scopeLabel?: string;
+  /** Hide the in-bar heading when a parent section already titles the block. */
+  hideHeading?: boolean;
 }
 
 
 
-export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolarMW }: GenerationMixBarProps) {
+export function GenerationMixBar({
+  mix,
+  showMW = false,
+  frequency,
+  embeddedSolarMW,
+  scopeLabel,
+  hideHeading = false,
+}: GenerationMixBarProps) {
   const sortedMix = getSortedMix(mix);
   const renewables = getRenewablesPercentage(mix);
   const embeddedSolarPerc = getEmbeddedSolarPercentage(mix, embeddedSolarMW);
@@ -66,24 +80,41 @@ export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolar
 
   // The leading fuel source breathes very gently (only if > 10% share)
   const dominantFuel = sortedMix[0]?.fuel ?? null;
+  const breakdownTitle = scopeLabel
+    ? `Generation Mix Breakdown · ${scopeLabel}`
+    : 'Generation Mix Breakdown';
+  const triggerLabel = scopeLabel
+    ? `View ${scopeLabel} generation mix details`
+    : 'View generation mix details';
 
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <button type="button" className="w-full text-left space-y-4 cursor-pointer group transition-transform active:scale-[0.985] generation-mix-container" aria-label="View generation mix details">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
-              Generation Mix
-              <motion.span
-                className="inline-flex"
-                initial={false}
-                whileHover={{ x: 3 }}
-                transition={{ type: 'spring' as const, stiffness: 400, damping: 25 }}
-              >
-                <ChevronRight className="w-4 h-4 text-muted-foreground" />
-              </motion.span>
-            </h3>
-            <span className="text-xs text-primary font-medium">
+        <button type="button" className="w-full text-left space-y-4 cursor-pointer group transition-transform active:scale-[0.985] generation-mix-container" aria-label={triggerLabel}>
+          <div className="flex items-center justify-between gap-3">
+            {!hideHeading ? (
+              <div className="min-w-0">
+                <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
+                  Generation Mix
+                  <motion.span
+                    className="inline-flex"
+                    initial={false}
+                    whileHover={{ x: 3 }}
+                    transition={{ type: 'spring' as const, stiffness: 400, damping: 25 }}
+                  >
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                  </motion.span>
+                </h3>
+                {scopeLabel && (
+                  <p className="text-[11px] text-muted-foreground mt-0.5 truncate" data-testid="mix-scope-label">
+                    {scopeLabel}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <span className="sr-only">{triggerLabel}</span>
+            )}
+            <span className={hideHeading ? 'text-xs text-primary font-medium ml-auto shrink-0' : 'text-xs text-primary font-medium shrink-0'}>
               {showMW ? `Total ${(mix.reduce((a, b) => a + (b.mw || 0), 0) / 1000).toFixed(1)} GW` : `${renewables.toFixed(0)}% Renewable`}
             </span>
           </div>
@@ -230,8 +261,8 @@ export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolar
 
       <DialogContent className="max-w-md max-h-[85vh] flex flex-col overflow-hidden">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>Generation Mix Breakdown</span>
+          <DialogTitle className="flex items-center justify-between gap-3 pr-8">
+            <span className="min-w-0">{breakdownTitle}</span>
             {typeof frequency === 'number' && !isNaN(frequency) && (
               <div className="flex items-center gap-2 text-sm font-normal bg-muted/50 px-2 py-1 rounded-md">
                 <span className="text-muted-foreground">Grid Freq:</span>

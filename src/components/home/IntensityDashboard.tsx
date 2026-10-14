@@ -67,13 +67,25 @@ export function IntensityDashboard({
         data-tour="generation-mix"
       >
         <ComponentErrorBoundary name="Generation Mix">
-          <div className="flex items-center justify-between mb-1.5 px-1">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Generation mix
-            </h3>
+          <div className="flex items-center justify-between mb-1.5 px-1 gap-2">
+            <div className="min-w-0">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Generation mix
+              </h3>
+              {/* Regional NESO mix — Demand tab uses national Elexon meters instead */}
+              <p className="text-[11px] font-medium normal-case tracking-normal text-muted-foreground/90 truncate mt-0.5" data-testid="intensity-mix-scope">
+                {regionName && regionName !== 'National' ? regionName : 'Great Britain'}
+                <span className="text-muted-foreground/70"> · regional · NESO</span>
+              </p>
+            </div>
             <StaleDataBadge lastUpdated={lastUpdated} />
           </div>
-          <GenerationMixBar mix={generationMix} frequency={gridFrequency} />
+          <GenerationMixBar
+            mix={generationMix}
+            frequency={gridFrequency}
+            scopeLabel={regionName && regionName !== 'National' ? regionName : 'Great Britain'}
+            hideHeading
+          />
         </ComponentErrorBoundary>
       </section>
 
