@@ -123,6 +123,27 @@ export default function Help() {
                     </motion.div>
 
                     <motion.div variants={itemVariants}>
+                        <AccordionItem value="data-accuracy" className="border rounded-lg px-3 bg-card/40 hover:bg-card/70 transition-colors duration-200">
+                            <AccordionTrigger>Where the numbers come from</AccordionTrigger>
+                            <AccordionContent>
+                                <div className="space-y-3 text-sm">
+                                    <p><strong>Live readings</strong></p>
+                                    <p>Carbon intensity comes from NESO. We show NESO's measured figure when it has published one, otherwise its forecast. Forecasts can change.</p>
+
+                                    <p className="pt-2"><strong>What does "Estimate" mean?</strong></p>
+                                    <p>NESO doesn't publish measured figures for regions, so past regional readings are worked out by GridSense from the fuel mix. They're marked "Estimate" and aren't NESO figures.</p>
+
+                                    <p className="pt-2"><strong>Northern Ireland</strong></p>
+                                    <p>Northern Ireland has its own grid, which NESO doesn't cover. For BT postcodes we show the Great Britain average instead.</p>
+
+                                    <p className="pt-2"><strong>Footprint and Green Score</strong></p>
+                                    <p>Without a linked smart meter, your footprint is a rough benchmark from Ofgem typical usage for your home size. Your Green Score needs a linked Octopus meter, because it uses your real half-hourly usage. Both are guides only, not exact measurements.</p>
+                                </div>
+                            </AccordionContent>
+                        </AccordionItem>
+                    </motion.div>
+
+                    <motion.div variants={itemVariants}>
                         <AccordionItem value="power-planner" className="border rounded-lg px-3 bg-card/40 hover:bg-card/70 transition-colors duration-200">
                             <AccordionTrigger>Power Planner</AccordionTrigger>
                             <AccordionContent>

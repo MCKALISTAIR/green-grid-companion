@@ -19,7 +19,7 @@ export const FEATURE_GUIDES = [
                 <ul className="list-disc pl-5 space-y-2">
                     <li><strong>Clean Energy (Green/Blue Sky):</strong> When the carbon intensity is low (lots of wind/solar), the scene is bright, clean, and vibrant.</li>
                     <li><strong>Dirty Energy (Orange/Grey):</strong> When fossil fuels are dominating, the scene becomes hazier or darker to reflect the higher pollution levels.</li>
-                    <li><strong>Wind Turbines:</strong> Their rotation speed matches real-time utilization. Fast spinning means wind is generating a lot of power!</li>
+                    <li><strong>Wind Turbines:</strong> Their speed reflects how much of the current mix comes from wind. Fast spinning means wind is supplying a lot of power!</li>
                 </ul>
 
                 <h3 className="text-lg font-semibold pt-2">Reading the Numbers</h3>
