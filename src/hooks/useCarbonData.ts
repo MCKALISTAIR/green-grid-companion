@@ -267,6 +267,15 @@ export function useCarbonData(postcode: string) {
   );
   const isLoading = isInitialLoad || awaitingReading;
 
+  // Client fetch time (not the API half-hour `from`) — used by Settings "Last checked".
+  const lastCheckedMs = Math.max(
+    nationalQuery.dataUpdatedAt,
+    regionalListQuery.dataUpdatedAt,
+    regionalDataQuery.dataUpdatedAt,
+    forecastQuery.dataUpdatedAt,
+    generationQuery.dataUpdatedAt,
+  );
+
   return {
     // Current intensity
     intensity,
@@ -274,7 +283,12 @@ export function useCarbonData(postcode: string) {
     index,
     region,
     regionId, // Export regionId for use in other hooks/pages
+    // Half-hour period start from the API reading (for staleness / next update).
     lastUpdated: regionalData?.from || nationalQuery.data?.from,
+
+    // When the client last successfully fetched grid data (updates on Force Refresh
+    // even if the half-hour reading itself has not changed yet).
+    lastCheckedAt: lastCheckedMs > 0 ? new Date(lastCheckedMs).toISOString() : undefined,
 
     // Generation mix
     generationMix,
