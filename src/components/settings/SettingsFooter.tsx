@@ -21,7 +21,7 @@ export function SettingsFooter({
       <p>
         Developed by{' '}
         <a
-          href="https://alistair-mckay.lovable.app"
+          href="https://alistairmckay.com"
           target="_blank"
           rel="noopener noreferrer"
           className="underline hover:text-foreground transition-colors"
