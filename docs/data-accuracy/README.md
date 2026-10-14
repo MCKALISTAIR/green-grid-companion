@@ -15,6 +15,16 @@ How we keep carbon figures grounded in NESO (and related) reality — and where 
 
 Emission factors live in `src/lib/carbonApi.ts` (`CARBON_FACTORS`) and match `/intensity/factors` (gas = CCGT 394; imports = French default 53).
 
+Where the French default systematically mis-tracks NESO’s **regional** forecasts, `REGION_IMPORTS_FACTOR` overrides imports for history backfill only:
+
+| Region id | Region | Imports factor | Why |
+|-----------|--------|----------------|-----|
+| 10 | East England | 405 | North Sea interconnectors (Irish/Dutch class) |
+| 13 | London | 120 | Mixed continental interconnectors |
+| 4 | North East England | 40 | Slightly cleaner than French default in calibration |
+
+These are GridSense calibrations against NESO regional forecasts (stable across two windows in Sep–Oct 2026), not NESO-published per-region factors.
+
 ## Live audit
 
 ```bash
@@ -34,7 +44,7 @@ Unit tests in `src/lib/carbonApi.test.ts` pin factors and fixture weeks (South S
 
 ## Known limitations (by design)
 
-1. **Imports factor is a single national default (53).** High-import regions (especially East England, sometimes London) systematically understate vs NESO’s regional forecast because interconnectors vary (Irish/Dutch factors are much higher). Past regional bars are estimates, not NESO actuals.
+1. **Imports still approximate interconnectors.** Region overrides cover the worst mismatches; other regions keep the French default. Past regional bars remain estimates, not NESO actuals — and NESO’s own daily ENTSO-E import mix can still move.
 2. **NESO forecasts can be revised or late.** Terms of use state figures are forecasts/estimates.
 3. **Green Score bands** follow NESO’s published index on each half-hour, not a custom threshold.
 4. **NI / BT postcodes** cannot be regionalised against this API.

@@ -14,7 +14,7 @@
 
 const BASE = 'https://api.carbonintensity.org.uk';
 
-/** Keep in sync with src/lib/carbonApi.ts CARBON_FACTORS / IMPORTS_FACTOR. */
+/** Keep in sync with src/lib/carbonApi.ts CARBON_FACTORS / REGION_IMPORTS_FACTOR. */
 const CARBON_FACTORS = {
   biomass: 120,
   coal: 937,
@@ -27,14 +27,27 @@ const CARBON_FACTORS = {
   wind: 0,
 };
 
+const REGION_IMPORTS_FACTOR = {
+  4: 40,
+  10: 405,
+  13: 120,
+};
+
 const REGIONS = [
   { id: 1, name: 'North Scotland' },
   { id: 2, name: 'South Scotland' },
+  { id: 4, name: 'North East England' },
   { id: 10, name: 'East England' },
   { id: 12, name: 'South England' },
   { id: 13, name: 'London' },
   { id: 14, name: 'South East' },
 ];
+
+function factorsForRegion(regionId) {
+  const imports = REGION_IMPORTS_FACTOR[regionId] ?? CARBON_FACTORS.imports;
+  if (imports === CARBON_FACTORS.imports) return CARBON_FACTORS;
+  return { ...CARBON_FACTORS, imports };
+}
 
 function parseArgs(argv) {
   const out = { days: 14, gateMae: 12, jsonPath: null };
@@ -127,7 +140,12 @@ async function main() {
 
   console.log(`GridSense NESO accuracy audit`);
   console.log(`Window: ${from} → ${to} (${args.days}d)`);
-  console.log(`Factors: imports=${CARBON_FACTORS.imports}, gas=${CARBON_FACTORS.gas} (CCGT)`);
+  console.log(`Factors: imports default=${CARBON_FACTORS.imports}, gas=${CARBON_FACTORS.gas} (CCGT)`);
+  console.log(
+    `Region imports overrides: ${Object.entries(REGION_IMPORTS_FACTOR)
+      .map(([id, f]) => `${id}→${f}`)
+      .join(', ')}`,
+  );
   console.log('');
 
   const [natBody, genBody, factorsBody, currentBody] = await Promise.all([
@@ -174,21 +192,33 @@ async function main() {
   for (const region of REGIONS) {
     const body = await getJson(`/regional/intensity/${from}/${to}/regionid/${region.id}`);
     const slots = body.data?.data || [];
+    const factors = factorsForRegion(region.id);
     const errors = [];
+    const defaultErrors = [];
     let maxImport = 0;
     for (const s of slots) {
       if (!s.generationmix || typeof s.intensity?.forecast !== 'number') continue;
-      const est = calcFromMix(s.generationmix);
-      if (est === null) continue;
+      const est = calcFromMix(s.generationmix, factors);
+      const defaultEst = calcFromMix(s.generationmix, CARBON_FACTORS);
+      if (est === null || defaultEst === null) continue;
       errors.push(est - s.intensity.forecast);
+      defaultErrors.push(defaultEst - s.intensity.forecast);
       const imp = s.generationmix.find((m) => m.fuel === 'imports')?.perc ?? 0;
       if (imp > maxImport) maxImport = imp;
     }
+    const vsForecast = summarize(errors);
+    const vsForecastDefault = summarize(defaultErrors);
     regional.push({
       region: region.name,
       regionId: region.id,
+      importsFactor: factors.imports,
       maxImportPct: round1(maxImport),
-      vsForecast: summarize(errors),
+      vsForecast,
+      vsForecastDefaultFrench53: vsForecastDefault,
+      maeImprovementVsDefault:
+        vsForecast && vsForecastDefault
+          ? round2(vsForecastDefault.mae - vsForecast.mae)
+          : null,
     });
   }
 
@@ -252,8 +282,12 @@ async function main() {
   for (const r of regional) {
     const s = r.vsForecast;
     if (!s) continue;
+    const improved =
+      r.maeImprovementVsDefault != null && r.maeImprovementVsDefault > 0
+        ? `  ΔMAE=${r.maeImprovementVsDefault > 0 ? '−' : '+'}${Math.abs(r.maeImprovementVsDefault)} vs default`
+        : '';
     console.log(
-      `  ${r.region.padEnd(16)} MAE=${String(s.mae).padStart(5)} bias=${String(s.bias).padStart(7)} maxImport=${String(r.maxImportPct).padStart(5)}% n=${s.n}`,
+      `  ${r.region.padEnd(18)} impF=${String(r.importsFactor).padStart(3)} MAE=${String(s.mae).padStart(5)} bias=${String(s.bias).padStart(7)} maxImport=${String(r.maxImportPct).padStart(5)}%${improved}`,
     );
   }
   console.log('');

@@ -86,7 +86,7 @@ export function onsPostcodeStatements(year: number = new Date().getFullYear()): 
 
 /** Shown wherever GridSense derives or fills in values itself. */
 export const DERIVED_DATA_NOTE =
-  'GridSense adapts this data: some values, such as past regional readings marked "estimate", are calculated by the app from the fuel mix and are not NESO figures.';
+  'GridSense adapts this data: some values, such as past regional readings marked "estimate", are calculated by the app from the fuel mix (with region-tuned import factors where needed) and are not NESO figures.';
 
 /** Short "estimates, not advice" line for footprint / savings figures. */
 export const ESTIMATE_DISCLAIMER =
