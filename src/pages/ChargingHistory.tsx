@@ -95,8 +95,8 @@ function ChargingHistory() {
     >
       {/* Header */}
       <motion.div variants={itemVariants} className="flex items-center gap-3 py-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="hover:scale-105 transition-transform duration-200">
-          <ArrowLeft className="w-5 h-5" />
+        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="hover:scale-105 transition-transform duration-200" aria-label="Go back">
+          <ArrowLeft className="w-5 h-5" aria-hidden="true" />
         </Button>
         <div>
           <h1 className="text-xl font-bold">Charging History</h1>

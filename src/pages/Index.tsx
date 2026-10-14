@@ -324,6 +324,15 @@ const Index = () => {
                     <AnimatePresence mode="wait" initial={false} custom={viewDirectionRef.current}>
                       <motion.div
                         key={viewMode}
+                        id="dashboard-tabpanel"
+                        role="tabpanel"
+                        aria-label={
+                          viewMode === 'demand'
+                            ? 'Demand'
+                            : viewMode === 'footprint'
+                              ? 'Footprint'
+                              : 'Intensity'
+                        }
                         custom={viewDirectionRef.current}
                         variants={viewStateVariants}
                         initial="initial"

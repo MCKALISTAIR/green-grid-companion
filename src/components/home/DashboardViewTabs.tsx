@@ -32,7 +32,7 @@ function TabButton({
       role="tab"
       tabIndex={isActive ? 0 : -1}
       aria-selected={isActive}
-      aria-controls="dashboard-tab-content"
+      aria-controls="dashboard-tabpanel"
       className={`relative flex-1 min-w-0 h-9 rounded-xl text-[11px] sm:text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 z-10 ${
         isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
       }`}

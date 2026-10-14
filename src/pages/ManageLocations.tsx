@@ -91,8 +91,8 @@ export default function ManageLocations() {
         {/* Header */}
         <div className="flex items-center gap-3">
           <Link to="/settings">
-            <Button variant="ghost" size="icon" className="shrink-0">
-              <ArrowLeft className="w-5 h-5" />
+            <Button variant="ghost" size="icon" className="shrink-0" aria-label="Back to settings">
+              <ArrowLeft className="w-5 h-5" aria-hidden="true" />
             </Button>
           </Link>
           <div>
@@ -154,11 +154,11 @@ export default function ManageLocations() {
                             if (e.key === 'Escape') cancelEdit();
                           }}
                         />
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={saveEdit}>
-                          <Check className="w-4 h-4 text-primary" />
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={saveEdit} aria-label="Save name">
+                          <Check className="w-4 h-4 text-primary" aria-hidden="true" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={cancelEdit}>
-                          <X className="w-4 h-4 text-destructive" />
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={cancelEdit} aria-label="Cancel editing">
+                          <X className="w-4 h-4 text-destructive" aria-hidden="true" />
                         </Button>
                       </div>
                     ) : (
@@ -172,8 +172,9 @@ export default function ManageLocations() {
                           size="icon"
                           className="h-8 w-8 shrink-0"
                           onClick={() => startEditing(location)}
+                          aria-label={`Edit ${location.name}`}
                         >
-                          <Pencil className="w-4 h-4" />
+                          <Pencil className="w-4 h-4" aria-hidden="true" />
                         </Button>
                       </>
                     )}

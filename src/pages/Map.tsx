@@ -59,8 +59,10 @@ export default function MapPage() {
                                 size="icon"
                                 onClick={() => setShowMap(!showMap)}
                                 className="rounded-full w-10 h-10 shadow-sm"
+                                aria-label={showMap ? 'Hide map' : 'Show map'}
+                                aria-pressed={showMap}
                             >
-                                {showMap ? <X className="w-5 h-5" /> : <MapIcon className="w-5 h-5" />}
+                                {showMap ? <X className="w-5 h-5" aria-hidden="true" /> : <MapIcon className="w-5 h-5" aria-hidden="true" />}
                             </Button>
                         }
                     />

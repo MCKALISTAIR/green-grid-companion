@@ -246,8 +246,9 @@ export default function HistoryPage() {
                                         size="icon"
                                         onClick={() => setDate(undefined)}
                                         title="Return to Present"
+                                        aria-label="Return to present"
                                     >
-                                        <RotateCcw className="h-4 w-4" />
+                                        <RotateCcw className="h-4 w-4" aria-hidden="true" />
                                     </Button>
                                 )}
                             </div>

@@ -11,8 +11,8 @@ export default function PrivacyPolicy() {
             {/* Header */}
             <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border/50 px-4 pb-4 pt-[calc(max(env(safe-area-inset-top),59px)+1rem)]">
                 <div className="flex items-center gap-2 max-w-2xl mx-auto">
-                    <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="-ml-2">
-                        <ArrowLeft className="w-5 h-5" />
+                    <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="-ml-2" aria-label="Go back">
+                        <ArrowLeft className="w-5 h-5" aria-hidden="true" />
                     </Button>
                     <h1 className="text-xl font-semibold">Privacy Policy</h1>
                 </div>
