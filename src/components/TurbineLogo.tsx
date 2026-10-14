@@ -46,7 +46,13 @@ export function TurbineLogo({ className = "" }: TurbineLogoProps) {
             <g
                 data-turbine-rotor=""
                 className="animate-[spin_4s_linear_infinite] motion-reduce:animate-none"
-                style={{ transformBox: 'view-box', transformOrigin: `${TURBINE_HUB.x}px ${TURBINE_HUB.y}px` }}
+                style={{
+                    transformBox: 'view-box',
+                    transformOrigin: `${TURBINE_HUB.x}px ${TURBINE_HUB.y}px`,
+                    // Promote the rotor to its own layer so spin stays smooth when
+                    // the page also has blur / other paint (e.g. onboarding card).
+                    willChange: 'transform',
+                }}
             >
                 {TURBINE_BLADE_ANGLES.map((angle) => (
                     <path

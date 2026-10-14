@@ -37,6 +37,7 @@ describe('TurbineLogo rotor', () => {
     expect(rotor.querySelector('circle')?.getAttribute('cx')).toBe('256');
     expect(rotor.style.transformOrigin).toBe('256px 256px');
     expect(rotor.style.transformBox).toBe('view-box');
+    expect(rotor.style.willChange).toBe('transform');
     expect(rotor.getAttribute('class')).toContain('animate-[spin_4s_linear_infinite]');
     expect(rotor.getAttribute('class')).toContain('motion-reduce:animate-none');
   });

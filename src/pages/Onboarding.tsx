@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { logger } from '@/lib/logger';
 import { TurbineSpinner } from '@/components/ui/turbine-spinner';
-import { IntensityScene } from '@/components/IntensityScene';
+import { OnboardingBackdrop } from '@/components/OnboardingBackdrop';
 import { TurbineLogo } from '@/components/TurbineLogo';
 import { postcodesIoReverseUrl } from '@/lib/coords';
 import { useAppLocation } from '@/contexts/LocationContext';
@@ -23,15 +23,6 @@ import {
 import { ONBOARDING_COPY } from '@/lib/voice/onboardingCopy';
 
 type Notice = { kind: 'denied' | 'deniedForever' | 'failed' | 'invalid' | 'northernIreland' } | null;
-
-// Neutral scene while we don't know the grid yet: no band, no celebrations.
-const NEUTRAL_SCENE = {
-    intensity: 150,
-    index: 'moderate' as const,
-    sceneTypeOverride: 'countryside' as const,
-    timeOfDayOverride: 'dusk' as const,
-    weatherOverride: { condition: 'clear' as const, windSpeed: 6 },
-};
 
 const Onboarding = () => {
     const navigate = useNavigate();
@@ -139,19 +130,8 @@ const Onboarding = () => {
 
     return (
         <div className="dark relative min-h-screen min-h-[100dvh] w-full flex items-center justify-center px-4 py-[max(env(safe-area-inset-top),1rem)] overflow-hidden bg-slate-950">
-            <div className="absolute inset-0 w-full h-full -z-10 opacity-70 pointer-events-none select-none" aria-hidden="true">
-                <IntensityScene
-                    intensity={NEUTRAL_SCENE.intensity}
-                    index={NEUTRAL_SCENE.index}
-                    sceneTypeOverride={NEUTRAL_SCENE.sceneTypeOverride}
-                    timeOfDayOverride={NEUTRAL_SCENE.timeOfDayOverride}
-                    weatherOverride={NEUTRAL_SCENE.weatherOverride}
-                    hasLiveReading={false}
-                    className="w-full h-full scale-105"
-                    style={{ height: '100%' }}
-                />
-            </div>
-            <Card className="w-full max-w-md shadow-2xl border-white/10 bg-slate-900/70 dark:bg-slate-950/70 backdrop-blur-xl text-white overflow-hidden">
+            <OnboardingBackdrop />
+            <Card className="w-full max-w-md shadow-2xl border-white/10 bg-slate-900/75 dark:bg-slate-950/75 backdrop-blur-md text-white overflow-hidden">
                 <CardContent className="p-5 sm:p-6 space-y-4">
                     <div className="text-center space-y-2">
                         <div className="mx-auto w-12 h-12 text-emerald-400" aria-hidden="true">
