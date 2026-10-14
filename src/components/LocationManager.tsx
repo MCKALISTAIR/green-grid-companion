@@ -1,5 +1,15 @@
 import * as React from 'react';
-import { Check, ChevronsUpDown, MapPin, Navigation, Star, Plus, Trash2, Clock, Search } from 'lucide-react';
+import {
+  Check,
+  ChevronsUpDown,
+  MapPin,
+  Navigation,
+  Star,
+  Plus,
+  Trash2,
+  Clock,
+  Search,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,11 +21,7 @@ import {
   CommandList,
   CommandSeparator,
 } from '@/components/ui/command';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Dialog,
   DialogContent,
@@ -42,7 +48,12 @@ interface LocationManagerProps {
   trigger?: React.ReactNode;
 }
 
-export function LocationManager({ value, onChange, showPostcode = true, trigger }: LocationManagerProps) {
+export function LocationManager({
+  value,
+  onChange,
+  showPostcode = true,
+  trigger,
+}: LocationManagerProps) {
   const [open, setOpen] = React.useState(false);
   const [loadingLocation, setLoadingLocation] = React.useState(false);
   const [isSearching, setIsSearching] = React.useState(false);
@@ -73,7 +84,7 @@ export function LocationManager({ value, onChange, showPostcode = true, trigger 
     // Let's find the region from the postcode or just pass the postcode if the widget supports it?
     // The widget logic I wrote expects "regionId" (Int) for URL construction.
     // I need to map postcode -> regionId here.
-    const region = UK_REGIONS.find(r => r.postcode === postcode);
+    const region = UK_REGIONS.find((r) => r.postcode === postcode);
     if (region) {
       // region.activeRegionId (or similar?)
       // UK_REGIONS has `id`? Let's check `carbonApi.ts`.
@@ -178,21 +189,25 @@ export function LocationManager({ value, onChange, showPostcode = true, trigger 
 
   // Filter recent locations to only show valid ones not already saved
   const recentToShow = recentLocations
-    .filter(pc => !savedLocations.some(sl => sl.postcode === pc))
+    .filter((pc) => !savedLocations.some((sl) => sl.postcode === pc))
     .slice(0, 3);
 
   // Filter regions based on search for the standard list
-  const filteredRegions = UK_REGIONS.filter(region =>
-    region.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    region.postcode.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredRegions = UK_REGIONS.filter(
+    (region) =>
+      region.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      region.postcode.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
     <>
-      <Popover open={open} onOpenChange={(isOpen) => {
-        setOpen(isOpen);
-        if (!isOpen) setSearchQuery(''); // Reset search on close
-      }}>
+      <Popover
+        open={open}
+        onOpenChange={(isOpen) => {
+          setOpen(isOpen);
+          if (!isOpen) setSearchQuery(''); // Reset search on close
+        }}
+      >
         <PopoverTrigger asChild>
           {trigger ? (
             trigger
@@ -246,7 +261,9 @@ export function LocationManager({ value, onChange, showPostcode = true, trigger 
                   </span>
                 ) : searchQuery ? (
                   <div className="flex flex-col gap-2">
-                    <p className="text-muted-foreground text-center pb-2">No direct region match.</p>
+                    <p className="text-muted-foreground text-center pb-2">
+                      No direct region match.
+                    </p>
                     <Button
                       variant="outline"
                       className="w-full justify-start"
@@ -257,30 +274,40 @@ export function LocationManager({ value, onChange, showPostcode = true, trigger 
                     </Button>
                   </div>
                 ) : (
-                  "No location found."
+                  'No location found.'
                 )}
               </CommandEmpty>
 
               {/* Current Location */}
               {!searchQuery && (
                 <CommandGroup>
-                  <CommandItem onSelect={handleMyLocation} className="cursor-pointer text-primary font-medium">
-                    <Navigation className={cn("mr-2 h-4 w-4", loadingLocation && "animate-spin")} />
+                  <CommandItem
+                    onSelect={handleMyLocation}
+                    className="cursor-pointer text-primary font-medium"
+                  >
+                    <Navigation className={cn('mr-2 h-4 w-4', loadingLocation && 'animate-spin')} />
                     {loadingLocation ? 'Detecting location...' : 'Use my current location'}
                   </CommandItem>
                 </CommandGroup>
               )}
 
               {/* Saved Locations - Filtered if searching */}
-              {savedLocations.length > 0 && (
-                (!searchQuery || savedLocations.some(l => l.name.toLowerCase().includes(searchQuery.toLowerCase()))) && (
+              {savedLocations.length > 0 &&
+                (!searchQuery ||
+                  savedLocations.some((l) =>
+                    l.name.toLowerCase().includes(searchQuery.toLowerCase()),
+                  )) && (
                   <>
                     <CommandSeparator />
                     <CommandGroup heading="Saved Locations">
                       {savedLocations
-                        .filter(l => !searchQuery || l.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                        .filter(
+                          (l) =>
+                            !searchQuery ||
+                            l.name.toLowerCase().includes(searchQuery.toLowerCase()),
+                        )
                         .map((loc) => {
-                          const region = UK_REGIONS.find(r => r.postcode === loc.postcode);
+                          const region = UK_REGIONS.find((r) => r.postcode === loc.postcode);
                           return (
                             <CommandItem
                               key={loc.id}
@@ -288,10 +315,12 @@ export function LocationManager({ value, onChange, showPostcode = true, trigger 
                               onSelect={() => handleSelectLocation(loc.postcode)}
                               className="cursor-pointer group"
                             >
-                              <Star className={cn(
-                                'mr-2 h-4 w-4 text-primary',
-                                value === loc.postcode ? 'fill-primary' : ''
-                              )} />
+                              <Star
+                                className={cn(
+                                  'mr-2 h-4 w-4 text-primary',
+                                  value === loc.postcode ? 'fill-primary' : '',
+                                )}
+                              />
                               <div className="flex flex-col flex-1">
                                 <span className="font-medium">{loc.name}</span>
                                 <span className="text-xs text-muted-foreground">
@@ -311,8 +340,7 @@ export function LocationManager({ value, onChange, showPostcode = true, trigger 
                         })}
                     </CommandGroup>
                   </>
-                )
-              )}
+                )}
 
               {/* Recent Locations */}
               {!searchQuery && recentToShow.length > 0 && (
@@ -320,7 +348,7 @@ export function LocationManager({ value, onChange, showPostcode = true, trigger 
                   <CommandSeparator />
                   <CommandGroup heading="Recent">
                     {recentToShow.map((postcode) => {
-                      const region = UK_REGIONS.find(r => r.postcode === postcode);
+                      const region = UK_REGIONS.find((r) => r.postcode === postcode);
                       if (!region) return null;
                       return (
                         <CommandItem
@@ -372,7 +400,7 @@ export function LocationManager({ value, onChange, showPostcode = true, trigger 
                     <Check
                       className={cn(
                         'mr-2 h-4 w-4',
-                        value === region.postcode ? 'opacity-100' : 'opacity-0'
+                        value === region.postcode ? 'opacity-100' : 'opacity-0',
                       )}
                     />
                     <div className="flex flex-col">

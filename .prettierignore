@@ -1,0 +1,12 @@
+dist
+coverage
+node_modules
+bun.lock
+bun.lockb
+package-lock.json
+ios
+android
+supabase/functions/**/deno.lock
+*.min.js
+*.min.css
+public

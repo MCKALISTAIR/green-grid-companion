@@ -1,63 +1,62 @@
-import { ThemeProvider } from "@/components/ThemeProvider";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient } from "@tanstack/react-query";
-import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
-import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useCapacitor } from "@/hooks/useCapacitor";
-import { useEffect, Suspense, lazy, useState } from "react";
-import { App as CapacitorApp } from "@capacitor/app";
-import { registerServiceWorker } from "@/hooks/useOffline";
-import { OfflineIndicator } from "@/components/OfflineIndicator";
-import { AppLayout } from "@/components/layout/AppLayout";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { useSmartPrefetch } from "@/hooks/useSmartPrefetch";
-import ScrollToTop from "@/components/ScrollToTop";
-import { logger } from "@/lib/logger";
-import { AchievementManager } from "@/components/AchievementManager";
-import { DirectorPanel } from "@/components/DirectorPanel";
-import { StatusBarManager } from "@/components/StatusBarManager";
-import { ComponentErrorBoundary } from "@/components/ComponentErrorBoundary";
-import { SplashScreen } from "@/components/SplashScreen";
-import { DeepLinkHandler } from "@/components/DeepLinkHandler";
-import { CookieConsent } from "@/components/CookieConsent";
-import { LocationProvider } from "@/contexts/LocationContext";
+import { ThemeProvider } from '@/components/ThemeProvider';
+import { Toaster as Sonner } from '@/components/ui/sonner';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { QueryClient } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useCapacitor } from '@/hooks/useCapacitor';
+import { useEffect, Suspense, lazy, useState } from 'react';
+import { App as CapacitorApp } from '@capacitor/app';
+import { registerServiceWorker } from '@/hooks/useOffline';
+import { OfflineIndicator } from '@/components/OfflineIndicator';
+import { AppLayout } from '@/components/layout/AppLayout';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { useSmartPrefetch } from '@/hooks/useSmartPrefetch';
+import ScrollToTop from '@/components/ScrollToTop';
+import { logger } from '@/lib/logger';
+import { AchievementManager } from '@/components/AchievementManager';
+import { DirectorPanel } from '@/components/DirectorPanel';
+import { StatusBarManager } from '@/components/StatusBarManager';
+import { ComponentErrorBoundary } from '@/components/ComponentErrorBoundary';
+import { SplashScreen } from '@/components/SplashScreen';
+import { DeepLinkHandler } from '@/components/DeepLinkHandler';
+import { CookieConsent } from '@/components/CookieConsent';
+import { LocationProvider } from '@/contexts/LocationContext';
 
 // Primary tabs are eager so dock/side-nav switches never suspend mid-slide.
-import Index from "./pages/Index";
-import Planner from "./pages/Planner";
-import MapPage from "./pages/Map";
-import Settings from "./pages/Settings";
-import HistoryPage from "./pages/History";
+import Index from './pages/Index';
+import Planner from './pages/Planner';
+import MapPage from './pages/Map';
+import Settings from './pages/Settings';
+import HistoryPage from './pages/History';
 
 // Secondary pages stay lazy
-const Onboarding = lazy(() => import("./pages/Onboarding"));
-const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
-const Terms = lazy(() => import("./pages/Terms"));
-const Glossary = lazy(() => import("./pages/Glossary"));
-const ManageLocations = lazy(() => import("./pages/ManageLocations"));
-const Changelog = lazy(() => import("./pages/Changelog"));
-const Help = lazy(() => import("./pages/Help"));
-const FeatureGuides = lazy(() => import("./pages/FeatureGuides"));
-const GuideDetail = lazy(() => import("./pages/GuideDetail"));
-const NotFound = lazy(() => import("./pages/NotFound"));
+const Onboarding = lazy(() => import('./pages/Onboarding'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const Terms = lazy(() => import('./pages/Terms'));
+const Glossary = lazy(() => import('./pages/Glossary'));
+const ManageLocations = lazy(() => import('./pages/ManageLocations'));
+const Changelog = lazy(() => import('./pages/Changelog'));
+const Help = lazy(() => import('./pages/Help'));
+const FeatureGuides = lazy(() => import('./pages/FeatureGuides'));
+const GuideDetail = lazy(() => import('./pages/GuideDetail'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 // Dev/QA pages (/__turbine-test, /__scene-test, /__design-system) exist only in
 // dev builds (`vite` / `vite build --mode development`), or when a build sets
 // VITE_ENABLE_DEV_ROUTES=true (the CI a11y audit does, to keep auditing
 // /__design-system). In the Lovable production build neither is true, so the
 // routes are not registered, the page chunks are dropped from the bundle, and
 // those URLs fall through to NotFound.
-const DEV_ROUTES_ENABLED =
-  import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEV_ROUTES === "true";
-const TurbineTest = DEV_ROUTES_ENABLED ? lazy(() => import("./pages/TurbineTest")) : null;
-const SceneTestPage = DEV_ROUTES_ENABLED ? lazy(() => import("./pages/SceneTest")) : null;
-const DesignSystemPage = DEV_ROUTES_ENABLED ? lazy(() => import("./pages/DesignSystem")) : null;
-const ChargingHistory = lazy(() => import("./pages/ChargingHistory"));
+const DEV_ROUTES_ENABLED = import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEV_ROUTES === 'true';
+const TurbineTest = DEV_ROUTES_ENABLED ? lazy(() => import('./pages/TurbineTest')) : null;
+const SceneTestPage = DEV_ROUTES_ENABLED ? lazy(() => import('./pages/SceneTest')) : null;
+const DesignSystemPage = DEV_ROUTES_ENABLED ? lazy(() => import('./pages/DesignSystem')) : null;
+const ChargingHistory = lazy(() => import('./pages/ChargingHistory'));
 const AchievementsPage = lazy(() => import('./pages/Achievements'));
-import AuthCallback from "./pages/AuthCallback";
+import AuthCallback from './pages/AuthCallback';
 
-import { PageLoader } from "@/components/ui/PageLoader";
+import { PageLoader } from '@/components/ui/PageLoader';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -128,7 +127,7 @@ function AppContent() {
     const subscription = CapacitorApp.addListener('appStateChange', handleAppStateChange);
 
     return () => {
-      subscription.then(handle => handle.remove());
+      subscription.then((handle) => handle.remove());
     };
   }, []);
 
@@ -166,7 +165,14 @@ function AppContent() {
             {DesignSystemPage && <Route path="/__design-system" element={<DesignSystemPage />} />}
             <Route path="*" element={<NotFound />} />
           </Route>
-          <Route path="/onboarding" element={<Suspense fallback={<PageLoader fullscreen={false} />}><Onboarding /></Suspense>} />
+          <Route
+            path="/onboarding"
+            element={
+              <Suspense fallback={<PageLoader fullscreen={false} />}>
+                <Onboarding />
+              </Suspense>
+            }
+          />
           <Route path="/auth/callback" element={<AuthCallback />} />
         </Routes>
         <CookieConsent />
@@ -176,7 +182,10 @@ function AppContent() {
 }
 
 const App = () => (
-  <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, maxAge: 1000 * 60 * 60 * 24 }}>
+  <PersistQueryClientProvider
+    client={queryClient}
+    persistOptions={{ persister, maxAge: 1000 * 60 * 60 * 24 }}
+  >
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <TooltipProvider>
         <ErrorBoundary>

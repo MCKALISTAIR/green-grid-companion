@@ -163,10 +163,7 @@ export function getForecastHourInsight(
 }
 
 /** Prefer the live half-hour slot; otherwise the next future slot; else 0. */
-export function findDefaultForecastIndex(
-  forecast: ForecastData[],
-  now: Date = new Date(),
-): number {
+export function findDefaultForecastIndex(forecast: ForecastData[], now: Date = new Date()): number {
   if (!forecast.length) return 0;
   const currentIdx = forecast.findIndex((item) => {
     const from = parseISO(item.from);

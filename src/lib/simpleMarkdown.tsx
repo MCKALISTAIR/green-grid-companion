@@ -48,7 +48,8 @@ export function parseMarkdown(src: string): MdBlock[] {
   return blocks;
 }
 
-const INLINE = /(\*\*[^*]+\*\*|\*[^*\s][^*]*\*|`[^`]+`|\[CONFIRM[^\]]*\]|\[[^\]]+\]\([^)\s]+\)|https?:\/\/[^\s)]+[^\s).,;])/g;
+const INLINE =
+  /(\*\*[^*]+\*\*|\*[^*\s][^*]*\*|`[^`]+`|\[CONFIRM[^\]]*\]|\[[^\]]+\]\([^)\s]+\)|https?:\/\/[^\s)]+[^\s).,;])/g;
 
 function safeHref(href: string): string | null {
   return /^(https?:\/\/|mailto:|\/)/.test(href) ? href : null;
@@ -64,23 +65,56 @@ export function renderInline(text: string, keyPrefix = 'i'): ReactNode[] {
     if (start > last) out.push(text.slice(last, start));
     const key = `${keyPrefix}-${n++}`;
     if (tok.startsWith('**')) {
-      out.push(<strong key={key} className="text-foreground">{renderInline(tok.slice(2, -2), key)}</strong>);
+      out.push(
+        <strong key={key} className="text-foreground">
+          {renderInline(tok.slice(2, -2), key)}
+        </strong>,
+      );
     } else if (tok.startsWith('`')) {
-      out.push(<code key={key} className="rounded bg-muted px-1 text-xs">{tok.slice(1, -1)}</code>);
+      out.push(
+        <code key={key} className="rounded bg-muted px-1 text-xs">
+          {tok.slice(1, -1)}
+        </code>,
+      );
     } else if (tok.startsWith('[CONFIRM')) {
       out.push(
-        <mark key={key} data-testid="confirm-marker" className="rounded bg-amber-200/80 px-1 text-amber-950 dark:bg-amber-400/30 dark:text-amber-100">
+        <mark
+          key={key}
+          data-testid="confirm-marker"
+          className="rounded bg-amber-200/80 px-1 text-amber-950 dark:bg-amber-400/30 dark:text-amber-100"
+        >
           [{renderInline(tok.slice(1, -1), `${key}c`)}]
         </mark>,
       );
     } else if (tok.startsWith('[')) {
       const link = /^\[([^\]]+)\]\(([^)\s]+)\)$/.exec(tok);
       const href = link ? safeHref(link[2]) : null;
-      out.push(href
-        ? <a key={key} href={href} className="underline text-primary" {...(href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>{link![1]}</a>
-        : tok);
+      out.push(
+        href ? (
+          <a
+            key={key}
+            href={href}
+            className="underline text-primary"
+            {...(href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+          >
+            {link![1]}
+          </a>
+        ) : (
+          tok
+        ),
+      );
     } else if (tok.startsWith('http')) {
-      out.push(<a key={key} href={tok} target="_blank" rel="noopener noreferrer" className="underline text-primary break-all">{tok}</a>);
+      out.push(
+        <a
+          key={key}
+          href={tok}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline text-primary break-all"
+        >
+          {tok}
+        </a>,
+      );
     } else {
       out.push(<em key={key}>{renderInline(tok.slice(1, -1), key)}</em>);
     }

@@ -69,10 +69,15 @@ export function actualSeriesLabel(items: Pick<ForecastData, 'intensity'>[]): 'Ac
  * otherwise use `forecast`. Regional endpoints usually omit actuals, so this
  * mostly improves the national view without changing regional behaviour.
  */
-export function pickLiveIntensity(intensity: {
-  forecast?: number | null;
-  actual?: number | null;
-} | null | undefined): number | null {
+export function pickLiveIntensity(
+  intensity:
+    | {
+        forecast?: number | null;
+        actual?: number | null;
+      }
+    | null
+    | undefined,
+): number | null {
   if (!intensity) return null;
   const { actual, forecast } = intensity;
   if (typeof actual === 'number' && Number.isFinite(actual) && actual >= 0) return actual;
@@ -99,7 +104,11 @@ export const UK_REGIONS_CONFIG: RegionConfig[] = [
   { id: REGION_IDS.ENGLAND, name: 'England', postcodes: ['England'] },
   { id: REGION_IDS.WALES, name: 'Wales', postcodes: ['Wales'] },
   { id: 1, name: 'North Scotland', postcodes: ['AB', 'IV', 'KW', 'PH', 'ZE', 'HS'] },
-  { id: 2, name: 'South Scotland', postcodes: ['EH', 'FK', 'G', 'KA', 'KY', 'ML', 'PA', 'TD', 'DG'] },
+  {
+    id: 2,
+    name: 'South Scotland',
+    postcodes: ['EH', 'FK', 'G', 'KA', 'KY', 'ML', 'PA', 'TD', 'DG'],
+  },
   { id: 3, name: 'North West England', postcodes: ['M'] },
   { id: 4, name: 'North East England', postcodes: ['NE'] },
   { id: 5, name: 'Yorkshire', postcodes: ['LS'] },
@@ -119,7 +128,7 @@ export const UK_REGIONS = UK_REGIONS_CONFIG.flatMap((region) =>
     id: region.id,
     name: region.name,
     postcode,
-  }))
+  })),
 );
 
 // Helper for fetch with optional AbortSignal
@@ -136,7 +145,10 @@ export async function getCurrentIntensity(signal?: AbortSignal): Promise<Intensi
 }
 
 // Get intensity for a specific postcode
-export async function getRegionalIntensity(postcode: string, signal?: AbortSignal): Promise<RegionalData> {
+export async function getRegionalIntensity(
+  postcode: string,
+  signal?: AbortSignal,
+): Promise<RegionalData> {
   const cleanPostcode = toOutwardCode(postcode).toUpperCase();
   const response = await fetchWithNoCache(`${BASE_URL}/regional/postcode/${cleanPostcode}`, signal);
   if (!response.ok) {
@@ -147,11 +159,17 @@ export async function getRegionalIntensity(postcode: string, signal?: AbortSigna
   return data.data[0];
 }
 
-// Get 48hr forecast for a postcode  
-export async function getRegionalForecast(postcode: string, signal?: AbortSignal): Promise<ForecastData[]> {
+// Get 48hr forecast for a postcode
+export async function getRegionalForecast(
+  postcode: string,
+  signal?: AbortSignal,
+): Promise<ForecastData[]> {
   const cleanPostcode = toOutwardCode(postcode).toUpperCase();
   const now = new Date().toISOString();
-  const response = await fetchWithNoCache(`${BASE_URL}/regional/intensity/${now}/fw48h/postcode/${cleanPostcode}`, signal);
+  const response = await fetchWithNoCache(
+    `${BASE_URL}/regional/intensity/${now}/fw48h/postcode/${cleanPostcode}`,
+    signal,
+  );
   if (!response.ok) {
     throw new Error(`Failed to fetch forecast: ${response.status}`);
   }
@@ -161,10 +179,16 @@ export async function getRegionalForecast(postcode: string, signal?: AbortSignal
 }
 
 // Get 48hr forecast for a region ID
-export async function getRegionalForecastById(regionId: number, signal?: AbortSignal): Promise<ForecastData[]> {
+export async function getRegionalForecastById(
+  regionId: number,
+  signal?: AbortSignal,
+): Promise<ForecastData[]> {
   const now = new Date().toISOString();
   // Valid endpoint format: /regional/intensity/{from}/fw48h/regionid/{regionid}
-  const response = await fetchWithNoCache(`${BASE_URL}/regional/intensity/${now}/fw48h/regionid/${regionId}`, signal);
+  const response = await fetchWithNoCache(
+    `${BASE_URL}/regional/intensity/${now}/fw48h/regionid/${regionId}`,
+    signal,
+  );
   if (!response.ok) {
     throw new Error(`Failed to fetch forecast: ${response.status}`);
   }
@@ -174,9 +198,17 @@ export async function getRegionalForecastById(regionId: number, signal?: AbortSi
 }
 
 // Get 48hr forecast + history for a region ID
-export async function getRegionalHistoryAndForecast(regionId: number, from: string, to: string, signal?: AbortSignal): Promise<ForecastData[]> {
+export async function getRegionalHistoryAndForecast(
+  regionId: number,
+  from: string,
+  to: string,
+  signal?: AbortSignal,
+): Promise<ForecastData[]> {
   // Endpoint: /regional/intensity/{from}/{to}/regionid/{regionid}
-  const response = await fetchWithNoCache(`${BASE_URL}/regional/intensity/${from}/${to}/regionid/${regionId}`, signal);
+  const response = await fetchWithNoCache(
+    `${BASE_URL}/regional/intensity/${from}/${to}/regionid/${regionId}`,
+    signal,
+  );
   if (!response.ok) {
     throw new Error(`Failed to fetch history/forecast: ${response.status}`);
   }
@@ -189,7 +221,7 @@ export async function getRegionalHistoryAndForecast(regionId: number, from: stri
   // Only when there is a real mix to work from: an empty or missing mix stays
   // null (never a fake 0).
   const nowMs = Date.now();
-  return data.map(item => {
+  return data.map((item) => {
     const endMs = Date.parse(item.to);
     const hasEnded = Number.isFinite(endMs) ? endMs <= nowMs : false;
     if (hasEnded && (item.intensity.actual === undefined || item.intensity.actual === null)) {
@@ -210,7 +242,11 @@ function hasUsableMix(mix: GenerationMix[] | undefined): mix is GenerationMix[] 
 }
 
 // Get National history + forecast
-export async function getNationalHistoryAndForecast(from: string, to: string, signal?: AbortSignal): Promise<ForecastData[]> {
+export async function getNationalHistoryAndForecast(
+  from: string,
+  to: string,
+  signal?: AbortSignal,
+): Promise<ForecastData[]> {
   // Endpoint: /intensity/{from}/{to}
   const response = await fetchWithNoCache(`${BASE_URL}/intensity/${from}/${to}`, signal);
   if (!response.ok) {
@@ -222,7 +258,10 @@ export async function getNationalHistoryAndForecast(from: string, to: string, si
 }
 
 // Get intensity for a specific region ID
-export async function getRegionalIntensityById(regionId: number, signal?: AbortSignal): Promise<RegionalData> {
+export async function getRegionalIntensityById(
+  regionId: number,
+  signal?: AbortSignal,
+): Promise<RegionalData> {
   const response = await fetchWithNoCache(`${BASE_URL}/regional/regionid/${regionId}`, signal);
   if (!response.ok) {
     throw new Error(`Failed to fetch regional data: ${response.status}`);
@@ -261,9 +300,9 @@ export async function getAllRegions(signal?: AbortSignal): Promise<RegionListIte
 export function getIntensityColor(index: string): string {
   const colors: Record<string, string> = {
     'very low': 'bg-intensity-very-low',
-    'low': 'bg-intensity-low',
-    'moderate': 'bg-intensity-moderate',
-    'high': 'bg-intensity-high',
+    low: 'bg-intensity-low',
+    moderate: 'bg-intensity-moderate',
+    high: 'bg-intensity-high',
     'very high': 'bg-intensity-very-high',
   };
   return colors[index] || 'bg-muted';
@@ -272,9 +311,9 @@ export function getIntensityColor(index: string): string {
 export function getIntensityTextColor(index: string): string {
   const colors: Record<string, string> = {
     'very low': 'text-intensity-very-low',
-    'low': 'text-intensity-low',
-    'moderate': 'text-intensity-moderate',
-    'high': 'text-intensity-high',
+    low: 'text-intensity-low',
+    moderate: 'text-intensity-moderate',
+    high: 'text-intensity-high',
     'very high': 'text-intensity-very-high',
   };
   return colors[index] || 'text-muted-foreground';
@@ -283,15 +322,15 @@ export function getIntensityTextColor(index: string): string {
 // Get fuel color
 export function getFuelColor(fuel: string): string {
   const colors: Record<string, string> = {
-    'wind': 'bg-gen-wind',
-    'solar': 'bg-gen-solar',
-    'nuclear': 'bg-gen-nuclear',
-    'gas': 'bg-gen-gas',
-    'coal': 'bg-gen-coal',
-    'hydro': 'bg-gen-hydro',
-    'biomass': 'bg-gen-biomass',
-    'imports': 'bg-gen-imports',
-    'other': 'bg-gen-other',
+    wind: 'bg-gen-wind',
+    solar: 'bg-gen-solar',
+    nuclear: 'bg-gen-nuclear',
+    gas: 'bg-gen-gas',
+    coal: 'bg-gen-coal',
+    hydro: 'bg-gen-hydro',
+    biomass: 'bg-gen-biomass',
+    imports: 'bg-gen-imports',
+    other: 'bg-gen-other',
   };
   return colors[fuel.toLowerCase()] || 'bg-muted';
 }
@@ -364,15 +403,12 @@ export function carbonFactorsForRegion(regionId?: number | null): Record<string,
  * Estimate gCO₂/kWh from a generation mix. Pass `regionId` for regional
  * history backfill so high-import regions use a calibrated imports factor.
  */
-export function calculateIntensityFromMix(
-  mix: GenerationMix[],
-  regionId?: number | null,
-): number {
+export function calculateIntensityFromMix(mix: GenerationMix[], regionId?: number | null): number {
   if (!mix || mix.length === 0) return 0;
 
   const factors = carbonFactorsForRegion(regionId);
   let totalIntensity = 0;
-  mix.forEach(source => {
+  mix.forEach((source) => {
     const factor = factors[source.fuel] ?? 0;
     // perc is 0-100
     totalIntensity += (source.perc / 100) * factor;

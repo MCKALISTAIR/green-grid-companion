@@ -8,7 +8,7 @@ export type AnySupabaseClient = SupabaseClient<any, any, any>;
 export async function syncTeslaProducts(
   serviceClient: AnySupabaseClient,
   userId: string,
-  accessToken: string
+  accessToken: string,
 ) {
   try {
     // Fetch vehicles
@@ -30,7 +30,9 @@ export async function syncTeslaProducts(
           // Battery capacity will be fetched when we get vehicle data
         }));
 
-        await serviceClient.from('tesla_vehicles').upsert(vehiclesToUpsert, { onConflict: 'user_id,vehicle_id' });
+        await serviceClient
+          .from('tesla_vehicles')
+          .upsert(vehiclesToUpsert, { onConflict: 'user_id,vehicle_id' });
       }
 
       console.log(`Synced ${vehicles.length} vehicles for user: ${userId}`);
@@ -53,12 +55,15 @@ export async function syncTeslaProducts(
           site_id: String(product.energy_site_id),
           site_name: product.site_name || 'Energy Site',
           solar_capacity_kw: product.solar_power || null,
-          battery_capacity_kwh: product.backup_reserve_percent ?
-            (product.total_pack_energy || null) : null,
+          battery_capacity_kwh: product.backup_reserve_percent
+            ? product.total_pack_energy || null
+            : null,
         }));
 
       if (sitesToUpsert.length > 0) {
-        await serviceClient.from('tesla_energy_sites').upsert(sitesToUpsert, { onConflict: 'user_id,site_id' });
+        await serviceClient
+          .from('tesla_energy_sites')
+          .upsert(sitesToUpsert, { onConflict: 'user_id,site_id' });
       }
 
       console.log(`Synced energy sites for user: ${userId}`);

@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { getSkyGradient, getSkyTopColor, getCarbonIndex, TIME_SKY_COLORS, shouldCelebrateZeroCarbon } from './sceneUtils';
+import {
+  getSkyGradient,
+  getSkyTopColor,
+  getCarbonIndex,
+  TIME_SKY_COLORS,
+  shouldCelebrateZeroCarbon,
+} from './sceneUtils';
 import { TimeOfDay } from '../hooks/useTimeOfDay';
 import { WeatherData } from '../hooks/useWeatherData';
 
@@ -34,7 +40,9 @@ describe('sceneUtils', () => {
       const expectedMid = TIME_SKY_COLORS[timeOfDay].mid;
       const expectedEnd = TIME_SKY_COLORS[timeOfDay].end;
 
-      expect(gradient).toContain(`linear-gradient(180deg, ${expectedStart} 0%, ${expectedMid} 40%, ${expectedEnd} 100%)`);
+      expect(gradient).toContain(
+        `linear-gradient(180deg, ${expectedStart} 0%, ${expectedMid} 40%, ${expectedEnd} 100%)`,
+      );
     });
 
     it('returns weather modified gradient for overcast', () => {
@@ -48,7 +56,7 @@ describe('sceneUtils', () => {
         isSnowing: false,
         isFoggy: false,
         isThunderstorm: false,
-        precipitationIntensity: 0
+        precipitationIntensity: 0,
       };
       const gradient = getSkyGradient('low', 'midday', 100, weather);
       // expect it to be modified (grayish)
@@ -77,7 +85,7 @@ describe('sceneUtils', () => {
         isSnowing: false,
         isFoggy: false,
         isThunderstorm: false,
-        precipitationIntensity: 0
+        precipitationIntensity: 0,
       };
       const color = getSkyTopColor('low', 'midday', 100, weather);
       // expect it to be modified (grayish)

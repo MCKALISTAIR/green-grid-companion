@@ -2,8 +2,11 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { resolvePostcode, clearPostcodeLookupCache } from './location';
 
 const ok = (lat: number, lon: number) =>
-  new Response(JSON.stringify({ status: 200, result: { latitude: lat, longitude: lon } }), { status: 200 });
-const notFound = () => new Response(JSON.stringify({ status: 404, error: 'Invalid postcode' }), { status: 404 });
+  new Response(JSON.stringify({ status: 200, result: { latitude: lat, longitude: lon } }), {
+    status: 200,
+  });
+const notFound = () =>
+  new Response(JSON.stringify({ status: 404, error: 'Invalid postcode' }), { status: 404 });
 
 describe('resolvePostcode', () => {
   let fetchMock: ReturnType<typeof vi.fn>;
@@ -38,7 +41,9 @@ describe('resolvePostcode', () => {
     expect(await resolvePostcode('EH')).toEqual({ lat: 55.95, lon: -3.19 });
     expect(fetchMock.mock.calls[0][0]).toBe('https://api.postcodes.io/outcodes/EH1');
     await resolvePostcode('Scotland');
-    expect(fetchMock.mock.calls.map((c) => c[0])).not.toContain('https://api.postcodes.io/postcodes/EH');
+    expect(fetchMock.mock.calls.map((c) => c[0])).not.toContain(
+      'https://api.postcodes.io/postcodes/EH',
+    );
   });
 
   it('de-duplicates concurrent lookups for the same postcode', async () => {

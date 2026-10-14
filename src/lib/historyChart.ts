@@ -46,6 +46,8 @@ export function averageForecast(items: ForecastData[]): number | null {
 
 /** True when the whole range stays under `threshold` gCO₂/kWh (a near-zero week). */
 export function isNearZeroRange(points: HistoryPoint[], threshold = 20): boolean {
-  const values = points.flatMap((p) => [p.forecast, p.actual]).filter((v): v is number => v !== null);
+  const values = points
+    .flatMap((p) => [p.forecast, p.actual])
+    .filter((v): v is number => v !== null);
   return values.length > 0 && values.every((v) => v < threshold);
 }

@@ -1,34 +1,37 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 import { corsHeaders } from '../_shared/cors.ts';
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    const authHeader = req.headers.get("Authorization");
+    const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Missing authorization" }), {
+      return new Response(JSON.stringify({ error: 'Missing authorization' }), {
         status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
     const userClient = createClient(supabaseUrl, supabaseServiceKey, {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const { data: { user }, error: authError } = await userClient.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await userClient.auth.getUser();
 
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
@@ -39,9 +42,9 @@ Deno.serve(async (req) => {
 
     // Get user's MPANs for consumption/footprint queries
     const { data: meters } = await adminClient
-      .from("octopus_meters")
-      .select("*")
-      .eq("user_id", userId);
+      .from('octopus_meters')
+      .select('*')
+      .eq('user_id', userId);
 
     const mpans = meters?.map((m) => m.mpan) || [];
 
@@ -59,22 +62,52 @@ Deno.serve(async (req) => {
       preferencesResult,
       pushSubscriptionsResult,
     ] = await Promise.all([
-      adminClient.from("octopus_credentials").select("account_number, created_at, updated_at").eq("user_id", userId),
+      adminClient
+        .from('octopus_credentials')
+        .select('account_number, created_at, updated_at')
+        .eq('user_id', userId),
       mpans.length > 0
-        ? adminClient.from("octopus_consumption").select("*").in("mpan", mpans).order("interval_start", { ascending: false })
+        ? adminClient
+            .from('octopus_consumption')
+            .select('*')
+            .in('mpan', mpans)
+            .order('interval_start', { ascending: false })
         : Promise.resolve({ data: [] }),
       mpans.length > 0
-        ? adminClient.from("carbon_footprint").select("*").in("mpan", mpans).order("interval_start", { ascending: false })
+        ? adminClient
+            .from('carbon_footprint')
+            .select('*')
+            .in('mpan', mpans)
+            .order('interval_start', { ascending: false })
         : Promise.resolve({ data: [] }),
-      adminClient.from("octopus_intelligent_dispatches").select("*").eq("user_id", userId).order("start_time", { ascending: false }),
+      adminClient
+        .from('octopus_intelligent_dispatches')
+        .select('*')
+        .eq('user_id', userId)
+        .order('start_time', { ascending: false }),
       // Exclude sensitive tokens - only export metadata
-      adminClient.from("tesla_credentials").select("created_at, updated_at, token_expires_at").eq("user_id", userId),
-      adminClient.from("tesla_vehicles").select("*").eq("user_id", userId),
-      adminClient.from("tesla_charging_sessions").select("*").eq("user_id", userId).order("started_at", { ascending: false }),
-      adminClient.from("tesla_energy_data").select("*").eq("user_id", userId).order("timestamp", { ascending: false }),
-      adminClient.from("tesla_energy_sites").select("*").eq("user_id", userId),
-      adminClient.from("user_preferences").select("*").eq("user_id", userId),
-      adminClient.from("push_subscriptions").select("*").eq("user_id", userId).order("created_at", { ascending: true }),
+      adminClient
+        .from('tesla_credentials')
+        .select('created_at, updated_at, token_expires_at')
+        .eq('user_id', userId),
+      adminClient.from('tesla_vehicles').select('*').eq('user_id', userId),
+      adminClient
+        .from('tesla_charging_sessions')
+        .select('*')
+        .eq('user_id', userId)
+        .order('started_at', { ascending: false }),
+      adminClient
+        .from('tesla_energy_data')
+        .select('*')
+        .eq('user_id', userId)
+        .order('timestamp', { ascending: false }),
+      adminClient.from('tesla_energy_sites').select('*').eq('user_id', userId),
+      adminClient.from('user_preferences').select('*').eq('user_id', userId),
+      adminClient
+        .from('push_subscriptions')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: true }),
     ]);
 
     const exportData = {
@@ -82,8 +115,9 @@ Deno.serve(async (req) => {
         exported_at: new Date().toISOString(),
         user_id: userId,
         email: user.email,
-        format_version: "1.0",
-        description: "Copy of your personal data under the UK GDPR (Articles 15 and 20: right of access and right to data portability) and the Data Protection Act 2018",
+        format_version: '1.0',
+        description:
+          'Copy of your personal data under the UK GDPR (Articles 15 and 20: right of access and right to data portability) and the Data Protection Act 2018',
       },
       account: {
         email: user.email,
@@ -92,22 +126,24 @@ Deno.serve(async (req) => {
         providers: user.app_metadata?.providers || [],
       },
       octopus_energy: {
-        credentials: credentialsResult.data?.map((c) => ({
-          account_number: c.account_number,
-          created_at: c.created_at,
-          updated_at: c.updated_at,
-        })) || [],
+        credentials:
+          credentialsResult.data?.map((c) => ({
+            account_number: c.account_number,
+            created_at: c.created_at,
+            updated_at: c.updated_at,
+          })) || [],
         meters: meters || [],
         consumption_records: consumptionResult.data || [],
         carbon_footprint: footprintResult.data || [],
         intelligent_dispatches: dispatchesResult.data || [],
       },
       tesla: {
-        credentials: teslaCredentialsResult.data?.map((c) => ({
-          created_at: c.created_at,
-          updated_at: c.updated_at,
-          token_expires_at: c.token_expires_at,
-        })) || [],
+        credentials:
+          teslaCredentialsResult.data?.map((c) => ({
+            created_at: c.created_at,
+            updated_at: c.updated_at,
+            token_expires_at: c.token_expires_at,
+          })) || [],
         vehicles: teslaVehiclesResult.data || [],
         charging_sessions: teslaChargingResult.data || [],
         energy_data: teslaEnergyDataResult.data || [],
@@ -136,24 +172,26 @@ Deno.serve(async (req) => {
       (teslaEnergySitesResult.data?.length || 0) +
       (pushSubscriptionsResult.data?.length || 0);
 
-    console.log(`Data export complete: ${totalRecords} records for user ${userId.substring(0, 8)}...`);
+    console.log(
+      `Data export complete: ${totalRecords} records for user ${userId.substring(0, 8)}...`,
+    );
 
     return new Response(JSON.stringify(exportData, null, 2), {
       status: 200,
       headers: {
         ...corsHeaders,
-        "Content-Type": "application/json",
-        "Content-Disposition": `attachment; filename="gridsense-data-export-${new Date().toISOString().split('T')[0]}.json"`,
+        'Content-Type': 'application/json',
+        'Content-Disposition': `attachment; filename="gridsense-data-export-${new Date().toISOString().split('T')[0]}.json"`,
       },
     });
   } catch (error) {
-    console.error("Data export error:", error);
+    console.error('Data export error:', error);
     return new Response(
-      JSON.stringify({ error: "An unexpected error occurred during data export." }),
+      JSON.stringify({ error: 'An unexpected error occurred during data export.' }),
       {
         status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      },
     );
   }
 });

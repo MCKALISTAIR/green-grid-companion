@@ -49,7 +49,7 @@ async function getJson(label: string, url: string): Promise<unknown | null> {
 Deno.serve(async (req: Request) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders });
   }
 
   const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
@@ -66,7 +66,7 @@ Deno.serve(async (req: Request) => {
           'Content-Type': 'application/json',
           'Retry-After': String(rateLimit.retryAfter),
         },
-      }
+      },
     );
   }
 
@@ -80,23 +80,22 @@ Deno.serve(async (req: Request) => {
 
     const body = buildGridDemand({ now, fuelinst, embedded, frequency });
     if (body.status === 'unavailable') {
-      console.warn(`[grid-demand] unavailable: ${body.reason} (newest data ${body.dataTime ?? 'none'})`);
+      console.warn(
+        `[grid-demand] unavailable: ${body.reason} (newest data ${body.dataTime ?? 'none'})`,
+      );
     }
 
     // 200 either way so the client still gets frequency and the reason;
     // the app shows its "unavailable" state when status !== 'ok'.
     return new Response(JSON.stringify(body), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
-    })
+    });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error:', message);
-    return new Response(
-      JSON.stringify({ error: message }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    )
+    return new Response(JSON.stringify({ error: message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
-})
+});

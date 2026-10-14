@@ -94,11 +94,15 @@ export function AnimatedIntensity({
     transition?.direction === 'cleaner'
       ? 'hsl(var(--primary) / 0.55)'
       : transition?.direction === 'dirtier'
-      ? 'hsl(var(--destructive) / 0.55)'
-      : 'transparent';
+        ? 'hsl(var(--destructive) / 0.55)'
+        : 'transparent';
 
   return (
-    <div className={cn('relative flex items-center gap-1', className)} aria-live="polite" aria-atomic="true">
+    <div
+      className={cn('relative flex items-center gap-1', className)}
+      aria-live="polite"
+      aria-atomic="true"
+    >
       {/* Band-change halo — fires once per transition, ignored under reduced motion */}
       <AnimatePresence>
         {transition && !shouldReduceMotion && (
@@ -145,7 +149,6 @@ export function AnimatedIntensity({
       >
         {displayNumber}
       </motion.span>
-
 
       <AnimatePresence>
         {showArrow && direction && (

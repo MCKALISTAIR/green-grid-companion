@@ -63,12 +63,7 @@ export function WeeklyDigestPreview() {
 
   if (!stats && !loading && !error) {
     return (
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={fetchPreview}
-        className="w-full gap-2 mt-2"
-      >
+      <Button variant="outline" size="sm" onClick={fetchPreview} className="w-full gap-2 mt-2">
         <Eye className="w-4 h-4" />
         Preview Digest
       </Button>
@@ -141,9 +136,7 @@ export function WeeklyDigestPreview() {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Green Energy</p>
-              <p className="text-sm font-semibold text-foreground">
-                {stats.green_percentage}%
-              </p>
+              <p className="text-sm font-semibold text-foreground">{stats.green_percentage}%</p>
             </div>
           </div>
 
@@ -154,16 +147,15 @@ export function WeeklyDigestPreview() {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Best Time</p>
-              <p className="text-sm font-semibold text-foreground">
-                {stats.best_hour}
-              </p>
+              <p className="text-sm font-semibold text-foreground">{stats.best_hour}</p>
             </div>
           </div>
         </div>
       ) : (
         <div className="text-center py-2">
           <p className="text-sm text-muted-foreground">
-            💡 Best time to use energy today: <span className="font-medium">{stats.best_time_today}</span>
+            💡 Best time to use energy today:{' '}
+            <span className="font-medium">{stats.best_time_today}</span>
           </p>
           <p className="text-xs text-muted-foreground mt-1">
             Link your smart meter for personalised insights!

@@ -46,7 +46,9 @@ export function useSavedLocations() {
       setUserId(session?.user?.id ?? null);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_, session) => {
       setUserId(session?.user?.id ?? null);
     });
 
@@ -54,31 +56,35 @@ export function useSavedLocations() {
   }, []);
 
   // Sync to database when data changes (if authenticated)
-  const syncToDatabase = useCallback(async (locations: SavedLocation[], recent: string[]) => {
-    if (!userId || isSyncingRef.current) return;
+  const syncToDatabase = useCallback(
+    async (locations: SavedLocation[], recent: string[]) => {
+      if (!userId || isSyncingRef.current) return;
 
-    isSyncingRef.current = true;
-    lastWriteRef.current = Date.now();
-    try {
-      const { error } = await supabase
-        .from('user_preferences')
-        .upsert({
-          user_id: userId,
-          saved_locations: locations as unknown as Record<string, unknown>[],
-          recent_locations: recent,
-          updated_at: new Date().toISOString(),
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } as any, { onConflict: 'user_id' });
+      isSyncingRef.current = true;
+      lastWriteRef.current = Date.now();
+      try {
+        const { error } = await supabase.from('user_preferences').upsert(
+          {
+            user_id: userId,
+            saved_locations: locations as unknown as Record<string, unknown>[],
+            recent_locations: recent,
+            updated_at: new Date().toISOString(),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          } as any,
+          { onConflict: 'user_id' },
+        );
 
-      if (error) {
-        logger.error('Failed to sync preferences', { error });
+        if (error) {
+          logger.error('Failed to sync preferences', { error });
+        }
+      } catch (err) {
+        logger.error('Error syncing preferences', { error: err });
+      } finally {
+        isSyncingRef.current = false;
       }
-    } catch (err) {
-      logger.error('Error syncing preferences', { error: err });
-    } finally {
-      isSyncingRef.current = false;
-    }
-  }, [userId]);
+    },
+    [userId],
+  );
 
   // Load from database when authenticated
   useEffect(() => {
@@ -162,7 +168,10 @@ export function useSavedLocations() {
           logger.debug('Realtime preferences update', { event: payload.eventType });
 
           if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
-            const newData = payload.new as { saved_locations?: SavedLocation[]; recent_locations?: string[] };
+            const newData = payload.new as {
+              saved_locations?: SavedLocation[];
+              recent_locations?: string[];
+            };
             if (newData.saved_locations) {
               setSavedLocations(newData.saved_locations);
             }
@@ -170,7 +179,7 @@ export function useSavedLocations() {
               setRecentLocations(newData.recent_locations);
             }
           }
-        }
+        },
       )
       .subscribe();
 
@@ -189,9 +198,6 @@ export function useSavedLocations() {
   useEffect(() => {
     localStorage.setItem(LOCAL_RECENT_KEY, JSON.stringify(recentLocations));
   }, [recentLocations]);
-
-
-
 
   // Debounced sync on data changes
   useEffect(() => {
@@ -234,9 +240,7 @@ export function useSavedLocations() {
 
   const updateLocationName = useCallback((id: string, newName: string) => {
     setSavedLocations((prev) =>
-      prev.map((loc) =>
-        loc.id === id ? { ...loc, name: newName.trim() } : loc
-      )
+      prev.map((loc) => (loc.id === id ? { ...loc, name: newName.trim() } : loc)),
     );
   }, []);
 
@@ -253,12 +257,12 @@ export function useSavedLocations() {
 
   const isLocationSaved = useCallback(
     (postcode: string) => savedLocations.some((loc) => loc.postcode === postcode),
-    [savedLocations]
+    [savedLocations],
   );
 
   const getSavedLocationByPostcode = useCallback(
     (postcode: string) => savedLocations.find((loc) => loc.postcode === postcode),
-    [savedLocations]
+    [savedLocations],
   );
 
   return {

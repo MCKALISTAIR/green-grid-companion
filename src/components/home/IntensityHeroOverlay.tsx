@@ -121,14 +121,22 @@ export function IntensityHeroOverlay({
           style={{ height: '100%' }}
         />
 
-        <div className="absolute top-6 left-6 z-30 hidden lg:block max-w-[calc(50%-13rem)]" data-testid="hero-location-desktop">
+        <div
+          className="absolute top-6 left-6 z-30 hidden lg:block max-w-[calc(50%-13rem)]"
+          data-testid="hero-location-desktop"
+        >
           <LocationManager
             value={postcode}
             onChange={setPostcode}
             trigger={
-              <button className="flex max-w-full items-center gap-2 text-white/90 text-sm font-semibold tracking-wide transition-all cursor-pointer bg-black/25 hover:bg-black/35 backdrop-blur-md px-4 py-2 rounded-full border border-white/15 hover:border-white/25 shadow-sm group" title={region || undefined}>
+              <button
+                className="flex max-w-full items-center gap-2 text-white/90 text-sm font-semibold tracking-wide transition-all cursor-pointer bg-black/25 hover:bg-black/35 backdrop-blur-md px-4 py-2 rounded-full border border-white/15 hover:border-white/25 shadow-sm group"
+                title={region || undefined}
+              >
                 <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
-                <span className="truncate">{isLoading ? 'Loading...' : region || 'Select location'}</span>
+                <span className="truncate">
+                  {isLoading ? 'Loading...' : region || 'Select location'}
+                </span>
                 {isBackgroundFetching ? (
                   <RefreshCw className="w-3 h-3 animate-spin opacity-70" />
                 ) : (
@@ -178,7 +186,10 @@ export function IntensityHeroOverlay({
           )}
 
           <div className="relative flex flex-col items-center text-center w-full max-w-[22rem] min-[540px]:max-w-[40rem] px-4 pointer-events-auto">
-            <div className="lg:hidden mb-2 sm:mb-3 max-w-[calc(100vw-8.5rem)]" data-testid="hero-location">
+            <div
+              className="lg:hidden mb-2 sm:mb-3 max-w-[calc(100vw-8.5rem)]"
+              data-testid="hero-location"
+            >
               <LocationManager
                 value={postcode}
                 onChange={setPostcode}
@@ -189,7 +200,9 @@ export function IntensityHeroOverlay({
                     title={region || undefined}
                   >
                     <MapPin className="w-3.5 h-3.5 opacity-90 flex-shrink-0" />
-                    <span className="truncate">{isLoading ? 'Loading…' : region || 'Select location'}</span>
+                    <span className="truncate">
+                      {isLoading ? 'Loading…' : region || 'Select location'}
+                    </span>
                     {isBackgroundFetching ? (
                       <RefreshCw className="w-3 h-3 animate-spin opacity-70" />
                     ) : (
@@ -200,9 +213,15 @@ export function IntensityHeroOverlay({
               />
             </div>
 
-            <div className="flex items-end justify-center gap-1.5 sm:gap-2 min-h-[4.5rem] sm:min-h-[5.5rem]" data-testid="hero-number">
+            <div
+              className="flex items-end justify-center gap-1.5 sm:gap-2 min-h-[4.5rem] sm:min-h-[5.5rem]"
+              data-testid="hero-number"
+            >
               {isLoading ? (
-                <RefreshCw className="w-12 h-12 text-white animate-spin drop-shadow-lg" aria-label="Loading data" />
+                <RefreshCw
+                  className="w-12 h-12 text-white animate-spin drop-shadow-lg"
+                  aria-label="Loading data"
+                />
               ) : isError ? (
                 <div className="flex flex-col items-center py-1">
                   <AlertTriangle className="w-10 h-10 text-white animate-pulse mb-1 drop-shadow-md" />
@@ -234,7 +253,10 @@ export function IntensityHeroOverlay({
             {/* Band label + zero-carbon badge share a wrapping row: side by side where
                 there's room (tablet/desktop, where the hero is short), badge on its own
                 line below the band on phones. Never above, so it can't reach the header. */}
-            <div className="flex flex-wrap items-center justify-center gap-x-3" data-testid="hero-band-row">
+            <div
+              className="flex flex-wrap items-center justify-center gap-x-3"
+              data-testid="hero-band-row"
+            >
               {!isLoading && !isError && conditionLabel && (
                 <motion.div
                   key={conditionLabel}
@@ -283,8 +305,8 @@ export function IntensityHeroOverlay({
                         </p>
                       )}
                       <p className="text-muted-foreground">
-                        This is NESO&apos;s forecast for your region for this half hour. It updates every{' '}
-                        <span className="font-semibold text-foreground">30 minutes</span>.
+                        This is NESO&apos;s forecast for your region for this half hour. It updates
+                        every <span className="font-semibold text-foreground">30 minutes</span>.
                       </p>
                       <CompactDataAttribution />
                     </PopoverContent>
@@ -318,7 +340,9 @@ export function IntensityHeroOverlay({
                       <span
                         className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-60 ${freshnessColor}`}
                       />
-                      <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${freshnessColor}`} />
+                      <span
+                        className={`relative inline-flex h-1.5 w-1.5 rounded-full ${freshnessColor}`}
+                      />
                     </span>
                     {isBackgroundFetching ? (
                       <span>Updating…</span>

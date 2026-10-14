@@ -1,9 +1,9 @@
-import { motion } from "framer-motion";
-import { readTone } from "@/lib/tone";
-import { TurbineSpinner } from "./turbine-spinner";
-import { useReducedMotion } from "@/hooks/useReducedMotion";
-import { quickFade } from "@/lib/motion";
-import { cn } from "@/lib/utils";
+import { motion } from 'framer-motion';
+import { readTone } from '@/lib/tone';
+import { TurbineSpinner } from './turbine-spinner';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { quickFade } from '@/lib/motion';
+import { cn } from '@/lib/utils';
 
 // Loading tips were removed (11 Oct 2026): their stats had no sources.
 // Add them back only with a cited source per line.
@@ -23,8 +23,8 @@ export function PageLoader({ message, fullscreen = false }: PageLoaderProps) {
   const shouldReduceMotion = useReducedMotion();
 
   const containerClasses = fullscreen
-    ? "fixed inset-0 z-50 flex flex-col items-center justify-center p-6 bg-background/80 backdrop-blur-md"
-    : "flex flex-col items-center justify-center p-8 w-full min-h-[min(60dvh,420px)]";
+    ? 'fixed inset-0 z-50 flex flex-col items-center justify-center p-6 bg-background/80 backdrop-blur-md'
+    : 'flex flex-col items-center justify-center p-8 w-full min-h-[min(60dvh,420px)]';
 
   return (
     <motion.div
@@ -49,7 +49,7 @@ export function PageLoader({ message, fullscreen = false }: PageLoaderProps) {
                 transition={{
                   duration: 3,
                   repeat: Infinity,
-                  ease: "easeInOut",
+                  ease: 'easeInOut',
                 }}
               />
               <motion.div
@@ -61,7 +61,7 @@ export function PageLoader({ message, fullscreen = false }: PageLoaderProps) {
                 transition={{
                   duration: 3,
                   repeat: Infinity,
-                  ease: "easeInOut",
+                  ease: 'easeInOut',
                 }}
               />
             </>
@@ -70,8 +70,8 @@ export function PageLoader({ message, fullscreen = false }: PageLoaderProps) {
           <TurbineSpinner
             size="lg"
             className={cn(
-              "z-10 text-primary relative",
-              !shouldReduceMotion && "filter drop-shadow-[0_0_8px_rgba(34,197,94,0.3)]",
+              'z-10 text-primary relative',
+              !shouldReduceMotion && 'filter drop-shadow-[0_0_8px_rgba(34,197,94,0.3)]',
             )}
           />
         </div>
@@ -80,7 +80,9 @@ export function PageLoader({ message, fullscreen = false }: PageLoaderProps) {
           <h3 className="text-base font-semibold tracking-tight text-foreground">
             {message || copy.title}
           </h3>
-          <p className={cn("text-xs text-muted-foreground", !shouldReduceMotion && "animate-pulse")}>
+          <p
+            className={cn('text-xs text-muted-foreground', !shouldReduceMotion && 'animate-pulse')}
+          >
             {copy.detail}
           </p>
         </div>

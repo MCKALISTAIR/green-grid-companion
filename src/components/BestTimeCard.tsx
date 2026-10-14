@@ -22,10 +22,7 @@ export function BestTimeSlot({ forecast }: BestTimeCardProps) {
   if (!data) return null;
 
   return (
-    <motion.div
-      whileHover={{ scale: 1.025, y: -2 }}
-      transition={{ duration: 0.2 }}
-    >
+    <motion.div whileHover={{ scale: 1.025, y: -2 }} transition={{ duration: 0.2 }}>
       <Card className="p-4 bg-intensity-very-low/[0.08] border-intensity-very-low/20 cursor-pointer shadow-none hover:bg-intensity-very-low/[0.12] transition-colors rounded-2xl">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl bg-intensity-very-low/15 flex items-center justify-center shrink-0">
@@ -81,13 +78,11 @@ export function WorstTimeSlot({ forecast, intensity }: BestTimeCardProps) {
     isNow && intensity && intensity > 0
       ? getNowOrWaitDecision(intensity, forecast, now).action
       : null;
-  const title = isNow && nowAction === 'use_now' ? 'Dirtiest stretch of the forecast' : 'Avoid high usage';
+  const title =
+    isNow && nowAction === 'use_now' ? 'Dirtiest stretch of the forecast' : 'Avoid high usage';
 
   return (
-    <motion.div
-      whileHover={{ scale: 1.025, y: -2 }}
-      transition={{ duration: 0.2 }}
-    >
+    <motion.div whileHover={{ scale: 1.025, y: -2 }} transition={{ duration: 0.2 }}>
       <Card className="p-4 bg-intensity-high/[0.08] border-intensity-high/20 cursor-pointer shadow-none hover:bg-intensity-high/[0.12] transition-colors rounded-2xl">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl bg-intensity-high/15 flex items-center justify-center shrink-0">

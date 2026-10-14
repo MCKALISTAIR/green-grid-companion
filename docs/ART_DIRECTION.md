@@ -35,19 +35,19 @@ One sentence:
 
 ### Allowed visual registers (only these)
 
-| Register | Where | Examples |
-|---|---|---|
-| **Landscape props** | Scene | Turbines, Eye, BESS, stacks, boats, hills — consistent “chibi-realistic” scale |
-| **Diegetic wildlife** | Scene (countryside/coast) | Sheep, birds, bees, fox — grid-mood only, low frequency |
-| **Paper UI** | Sheet, dock, dialogs | Soft surfaces, quiet borders, Plus Jakarta Sans throughout, Inconsolata for dense data |
+| Register              | Where                     | Examples                                                                               |
+| --------------------- | ------------------------- | -------------------------------------------------------------------------------------- |
+| **Landscape props**   | Scene                     | Turbines, Eye, BESS, stacks, boats, hills — consistent “chibi-realistic” scale         |
+| **Diegetic wildlife** | Scene (countryside/coast) | Sheep, birds, bees, fox — grid-mood only, low frequency                                |
+| **Paper UI**          | Sheet, dock, dialogs      | Soft surfaces, quiet borders, Plus Jakarta Sans throughout, Inconsolata for dense data |
 
 ### Paper UI / typography
 
-| Role | Face | Where |
-|---|---|---|
-| **UI + HUD** | Plus Jakarta Sans | Nav, sheet, band labels (High / Moderate), page titles, now-or-wait |
-| **Personality** | Same family, italic | Energy fact line — distinct voice without a second face |
-| **Data** | Inconsolata | Dense figures in charts, tables, codes — not the hero intensity number |
+| Role            | Face                | Where                                                                  |
+| --------------- | ------------------- | ---------------------------------------------------------------------- |
+| **UI + HUD**    | Plus Jakarta Sans   | Nav, sheet, band labels (High / Moderate), page titles, now-or-wait    |
+| **Personality** | Same family, italic | Energy fact line — distinct voice without a second face                |
+| **Data**        | Inconsolata         | Dense figures in charts, tables, codes — not the hero intensity number |
 
 Hero intensity uses **Plus Jakarta Sans + tabular-nums** (Carrot craft: one sans for the readout). Full review: [`TYPOGRAPHY.md`](./TYPOGRAPHY.md).
 
@@ -55,14 +55,14 @@ Retired: Nunito, Fraunces, Work Sans (interim), Lora-as-second-dialect.
 
 ### Disallowed / gated registers
 
-| Pattern | Rule |
-|---|---|
+| Pattern                                          | Rule                                                                                                                               |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
 | Sci-fi gags (UFO, synthwave as default identity) | Not part of brand. UFO only as ultra-rare easter egg (stage 4+ night) or kill. Synthwave stays opt-in double-tap, never marketing. |
-| Rainbow Lucide accent docks | One active accent: **primary green**. No per-tab candy colours. |
-| Glassmorphism card stacks | Prefer **paper sheet** surfaces (`sheet-surface` / Card primitive). Cards only when they hold an interaction. |
-| Purple / indigo eco-SaaS accents | Use **primary** (and accent sparingly). Partner logos may keep brand colour in the mark only. |
-| Random delight unrelated to grid state | Prefer **streak/garden growth** and state-transition juice over roulette gags. |
-| Generic “eco SaaS” cream+terracotta AI defaults | Stay on sky-paper + grid green; don’t drift. |
+| Rainbow Lucide accent docks                      | One active accent: **primary green**. No per-tab candy colours.                                                                    |
+| Glassmorphism card stacks                        | Prefer **paper sheet** surfaces (`sheet-surface` / Card primitive). Cards only when they hold an interaction.                      |
+| Purple / indigo eco-SaaS accents                 | Use **primary** (and accent sparingly). Partner logos may keep brand colour in the mark only.                                      |
+| Random delight unrelated to grid state           | Prefer **streak/garden growth** and state-transition juice over roulette gags.                                                     |
+| Generic “eco SaaS” cream+terracotta AI defaults  | Stay on sky-paper + grid green; don’t drift.                                                                                       |
 
 ---
 
@@ -107,7 +107,7 @@ Do not reintroduce competing numeric overlays on the scene. Do not put marketing
 
 ## Carrot baseline (enjoyment)
 
-Carrot Weather is the interaction-craft bar — not a mascot to copy. GridSense should feel as authored to *touch*:
+Carrot Weather is the interaction-craft bar — not a mascot to copy. GridSense should feel as authored to _touch_:
 
 1. **Scene-as-HUD** — one number, one condition line (shipped).
 2. **World over time** — garden stages from clean streaks (shipped).

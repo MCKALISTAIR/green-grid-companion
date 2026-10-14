@@ -42,7 +42,8 @@ export const ATTRIBUTION = {
     name: 'Elexon BMRS',
     url: 'https://bmrs.elexon.co.uk/',
     licenceLabel: 'BMRS Data Licence',
-    licenceUrl: 'https://www.elexon.co.uk/bsc/data/balancing-mechanism-reporting-agent/copyright-licence-bmrs-data/',
+    licenceUrl:
+      'https://www.elexon.co.uk/bsc/data/balancing-mechanism-reporting-agent/copyright-licence-bmrs-data/',
   },
   nesoDataPortal: {
     name: 'NESO Data Portal',

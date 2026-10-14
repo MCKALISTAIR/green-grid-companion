@@ -10,29 +10,29 @@ interface WindTurbineProps {
 }
 
 const TurbinePhrases = [
-  "Turbine go brrrr!",
-  "Spinning up a storm!",
-  "Generating clean electrons!",
-  "100% green energy!",
-  "Sensing a light breeze!",
-  "Harvesting the sky!"
+  'Turbine go brrrr!',
+  'Spinning up a storm!',
+  'Generating clean electrons!',
+  '100% green energy!',
+  'Sensing a light breeze!',
+  'Harvesting the sky!',
 ];
 
 export function WindTurbine({ scale = 1, speed = 4, onClick }: WindTurbineProps) {
   const id = useId();
   const { impactLight } = useHaptics({ decorative: true });
   const shouldReduceMotion = useReducedMotion();
-  
+
   const [bubbleText, setBubbleText] = useState<string | null>(null);
   const [showSparks, setShowSparks] = useState(false);
 
   const handleClick = () => {
     impactLight();
-    
+
     // Pick random phrase
     const randomPhrase = TurbinePhrases[Math.floor(Math.random() * TurbinePhrases.length)];
     setBubbleText(randomPhrase);
-    
+
     // Trigger sparks
     if (!shouldReduceMotion) {
       setShowSparks(true);
@@ -59,7 +59,7 @@ export function WindTurbine({ scale = 1, speed = 4, onClick }: WindTurbineProps)
     { x: -20, y: 5, delay: 0.05 },
     { x: 20, y: 5, delay: 0.15 },
     { x: -10, y: 25, delay: 0.2 },
-    { x: 10, y: 25, delay: 0.1 }
+    { x: 10, y: 25, delay: 0.1 },
   ];
 
   return (
@@ -175,9 +175,20 @@ export function WindTurbine({ scale = 1, speed = 4, onClick }: WindTurbineProps)
 
           {/* Three blades */}
           <g>
-            <path d="M24,20 L22.5,18 L22,5 Q24,-5 26,5 L25.5,18 Z" fill={`url(#${id}-bladeGradient)`} />
-            <path d="M24,20 L22.5,18 L22,5 Q24,-5 26,5 L25.5,18 Z" fill={`url(#${id}-bladeGradient)`} transform="rotate(120 24 20)" />
-            <path d="M24,20 L22.5,18 L22,5 Q24,-5 26,5 L25.5,18 Z" fill={`url(#${id}-bladeGradient)`} transform="rotate(240 24 20)" />
+            <path
+              d="M24,20 L22.5,18 L22,5 Q24,-5 26,5 L25.5,18 Z"
+              fill={`url(#${id}-bladeGradient)`}
+            />
+            <path
+              d="M24,20 L22.5,18 L22,5 Q24,-5 26,5 L25.5,18 Z"
+              fill={`url(#${id}-bladeGradient)`}
+              transform="rotate(120 24 20)"
+            />
+            <path
+              d="M24,20 L22.5,18 L22,5 Q24,-5 26,5 L25.5,18 Z"
+              fill={`url(#${id}-bladeGradient)`}
+              transform="rotate(240 24 20)"
+            />
           </g>
 
           {/* Hub */}
@@ -199,12 +210,12 @@ export function WindTurbine({ scale = 1, speed = 4, onClick }: WindTurbineProps)
                   cx: [24, 24 + p.x],
                   cy: [20, 20 + p.y],
                   scale: [1, 1.5, 0],
-                  opacity: [1, 0.8, 0]
+                  opacity: [1, 0.8, 0],
                 }}
                 transition={{
                   duration: 0.8,
                   delay: p.delay,
-                  ease: 'easeOut'
+                  ease: 'easeOut',
                 }}
               />
             ))}

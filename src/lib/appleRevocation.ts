@@ -12,25 +12,33 @@ export interface AppleDeletionAuth {
   apple_client: 'native' | 'web';
 }
 
-type AuthorizeFn = (options: { clientId: string; redirectURI: string; scopes?: string }) =>
-  Promise<{ response: { authorizationCode?: string | null } }>;
+type AuthorizeFn = (options: {
+  clientId: string;
+  redirectURI: string;
+  scopes?: string;
+}) => Promise<{ response: { authorizationCode?: string | null } }>;
 
-export async function getAppleAuthorizationForDeletion(deps: {
-  platform?: string;
-  webServicesId?: string;
-  origin?: string;
-  authorize?: AuthorizeFn;
-} = {}): Promise<AppleDeletionAuth | null> {
+export async function getAppleAuthorizationForDeletion(
+  deps: {
+    platform?: string;
+    webServicesId?: string;
+    origin?: string;
+    authorize?: AuthorizeFn;
+  } = {},
+): Promise<AppleDeletionAuth | null> {
   const platform = deps.platform ?? Capacitor.getPlatform();
   const webServicesId = deps.webServicesId ?? import.meta.env.VITE_APPLE_SERVICES_ID;
-  const kind: 'native' | 'web' | null = platform === 'ios' ? 'native' : platform === 'web' && webServicesId ? 'web' : null;
+  const kind: 'native' | 'web' | null =
+    platform === 'ios' ? 'native' : platform === 'web' && webServicesId ? 'web' : null;
   if (!kind) return null;
 
   try {
-    const authorize: AuthorizeFn = deps.authorize ?? (async (options) => {
-      const { SignInWithApple } = await import('@capacitor-community/apple-sign-in');
-      return SignInWithApple.authorize(options);
-    });
+    const authorize: AuthorizeFn =
+      deps.authorize ??
+      (async (options) => {
+        const { SignInWithApple } = await import('@capacitor-community/apple-sign-in');
+        return SignInWithApple.authorize(options);
+      });
     const origin = deps.origin ?? window.location.origin;
     // On iOS the native prompt uses the app's bundle ID; clientId/redirectURI only matter on the web.
     const res = await authorize({ clientId: webServicesId ?? '', redirectURI: origin, scopes: '' });

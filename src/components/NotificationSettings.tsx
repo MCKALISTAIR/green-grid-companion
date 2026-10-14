@@ -1,6 +1,15 @@
 import { SettingsSectionHeading } from '@/components/settings/SettingsSectionHeading';
 import { useState, useEffect } from 'react';
-import { Bell, BellOff, Clock, Zap, Smartphone, CalendarDays, FileText, Activity } from 'lucide-react';
+import {
+  Bell,
+  BellOff,
+  Clock,
+  Zap,
+  Smartphone,
+  CalendarDays,
+  FileText,
+  Activity,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
@@ -27,16 +36,18 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
   } = useNotifications();
 
   // Reusable toggle handler with permission check - type-safe for boolean preferences
-  const createToggleHandler = <K extends keyof typeof prefs>(
-    prefKey: K extends string ? (typeof prefs[K] extends boolean ? K : never) : never
-  ) => async (enabled: boolean) => {
-    if (enabled) {
-      // Always re-verify permission to catch edge cases where user revoked it in OS settings
-      const granted = await requestPermission();
-      if (!granted) return;
-    }
-    updatePreference(prefKey, enabled);
-  };
+  const createToggleHandler =
+    <K extends keyof typeof prefs>(
+      prefKey: K extends string ? ((typeof prefs)[K] extends boolean ? K : never) : never,
+    ) =>
+    async (enabled: boolean) => {
+      if (enabled) {
+        // Always re-verify permission to catch edge cases where user revoked it in OS settings
+        const granted = await requestPermission();
+        if (!granted) return;
+      }
+      updatePreference(prefKey, enabled);
+    };
 
   const handleLowIntensityToggle = createToggleHandler('lowIntensityEnabled');
   const handleHighIntensityToggle = createToggleHandler('highIntensityEnabled');
@@ -139,9 +150,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
               <Bell className="w-5 h-5 text-muted-foreground" />
               <div>
                 <p className="text-sm font-medium text-foreground">Test Notification</p>
-                <p className="text-xs text-muted-foreground">
-                  Verify notifications are working
-                </p>
+                <p className="text-xs text-muted-foreground">Verify notifications are working</p>
               </div>
             </div>
             <Button
@@ -151,12 +160,14 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
                 const { LocalNotifications } = await import('@capacitor/local-notifications');
                 try {
                   await LocalNotifications.schedule({
-                    notifications: [{
-                      title: TEST_NOTIFICATION.title,
-                      body: TEST_NOTIFICATION.body,
-                      id: Date.now(),
-                      schedule: { at: new Date(Date.now() + 1000) },
-                    }]
+                    notifications: [
+                      {
+                        title: TEST_NOTIFICATION.title,
+                        body: TEST_NOTIFICATION.body,
+                        id: Date.now(),
+                        schedule: { at: new Date(Date.now() + 1000) },
+                      },
+                    ],
                   });
                 } catch (error) {
                   logger.debug('Test notification failed', { error });
@@ -194,12 +205,8 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
         {prefs.lowIntensityEnabled && (
           <div className="space-y-3 pt-2 border-t border-border">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
-                Alert when below:
-              </span>
-              <span className="font-medium text-primary">
-                {localThreshold} gCO₂/kWh
-              </span>
+              <span className="text-sm text-muted-foreground">Alert when below:</span>
+              <span className="font-medium text-primary">{localThreshold} gCO₂/kWh</span>
             </div>
             <Slider
               value={[localThreshold]}
@@ -211,7 +218,10 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
               className="w-full"
             />
             <p className="text-[11px] text-muted-foreground leading-relaxed">
-              You'll be notified <span className="font-medium text-foreground">once</span> when intensity drops below {localThreshold} gCO₂/kWh, and <span className="font-medium text-foreground">once</span> when it rises back above. Not on every change.
+              You'll be notified <span className="font-medium text-foreground">once</span> when
+              intensity drops below {localThreshold} gCO₂/kWh, and{' '}
+              <span className="font-medium text-foreground">once</span> when it rises back above.
+              Not on every change.
             </p>
             <div className="pt-4 mt-4 border-t border-border/50">
               <div className="flex items-center justify-between">
@@ -219,8 +229,10 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
                   <div className="text-sm font-medium">Live Accuracy Mode</div>
                   <p className="text-[10px] text-muted-foreground">
                     Uses live checks instead of pre-scheduling green windows.
-                    {isNative ? ' (Background Fetch, which may use slightly more battery.)' : ' (Tab must remain open.)'}
-                    {' '}Planner reminders still work.
+                    {isNative
+                      ? ' (Background Fetch, which may use slightly more battery.)'
+                      : ' (Tab must remain open.)'}{' '}
+                    Planner reminders still work.
                   </p>
                 </div>
                 <Switch
@@ -232,14 +244,15 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
             </div>
             {prefs.useBackgroundFetch && (
               <p className="text-[10px] text-amber-500/80 pt-2 flex items-center gap-1">
-                <Zap className="w-3 h-3" /> {isNative ? 'May use slightly more battery.' : 'Only works while this tab is active.'}
+                <Zap className="w-3 h-3" />{' '}
+                {isNative
+                  ? 'May use slightly more battery.'
+                  : 'Only works while this tab is active.'}
               </p>
             )}
           </div>
-        )
-        }
-      </Card >
-
+        )}
+      </Card>
 
       {/* High Intensity Alert */}
       <Card className="p-4 space-y-4">
@@ -266,12 +279,8 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
         {prefs.highIntensityEnabled && (
           <div className="space-y-3 pt-2 border-t border-border">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
-                Alert when above:
-              </span>
-              <span className="font-medium text-destructive">
-                {localHighThreshold} gCO₂/kWh
-              </span>
+              <span className="text-sm text-muted-foreground">Alert when above:</span>
+              <span className="font-medium text-destructive">{localHighThreshold} gCO₂/kWh</span>
             </div>
             <Slider
               value={[localHighThreshold]}
@@ -283,7 +292,10 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
               className="w-full"
             />
             <p className="text-[11px] text-muted-foreground leading-relaxed">
-              You'll be notified <span className="font-medium text-foreground">once</span> when intensity rises above {localHighThreshold} gCO₂/kWh, and <span className="font-medium text-foreground">once</span> when it drops back below. Not on every change.
+              You'll be notified <span className="font-medium text-foreground">once</span> when
+              intensity rises above {localHighThreshold} gCO₂/kWh, and{' '}
+              <span className="font-medium text-foreground">once</span> when it drops back below.
+              Not on every change.
             </p>
           </div>
         )}
@@ -311,24 +323,20 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
           />
         </div>
 
-        {
-          prefs.dailyForecastEnabled && (
-            <div className="space-y-3 pt-2 border-t border-border">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
-                  Send at:
-                </span>
-                <input
-                  type="time"
-                  value={prefs.dailyForecastTime}
-                  onChange={(e) => updatePreference('dailyForecastTime', e.target.value)}
-                  className="px-3 py-1.5 rounded-md border border-input bg-background text-foreground text-sm"
-                />
-              </div>
+        {prefs.dailyForecastEnabled && (
+          <div className="space-y-3 pt-2 border-t border-border">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Send at:</span>
+              <input
+                type="time"
+                value={prefs.dailyForecastTime}
+                onChange={(e) => updatePreference('dailyForecastTime', e.target.value)}
+                className="px-3 py-1.5 rounded-md border border-input bg-background text-foreground text-sm"
+              />
             </div>
-          )
-        }
-      </Card >
+          </div>
+        )}
+      </Card>
 
       {/* Weekly Digest — server push not wired from Settings yet */}
       <Card className="p-4 space-y-4 opacity-90">
@@ -340,22 +348,21 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-medium text-foreground">Weekly Digest</h3>
-                <Badge variant="secondary" className="text-[10px]">Coming soon</Badge>
+                <Badge variant="secondary" className="text-[10px]">
+                  Coming soon
+                </Badge>
               </div>
               <p className="text-sm text-muted-foreground">
                 Summary of your carbon footprint &amp; best times
               </p>
             </div>
           </div>
-          <Switch
-            checked={false}
-            disabled
-            aria-label="Weekly digest coming soon"
-          />
+          <Switch checked={false} disabled aria-label="Weekly digest coming soon" />
         </div>
         {!DIGEST_DELIVERY_AVAILABLE && (
           <p className="text-xs text-muted-foreground border-t border-border pt-3">
-            Digests need reliable server push registration. We&apos;ve disabled this toggle so it can&apos;t look enabled without delivering.
+            Digests need reliable server push registration. We&apos;ve disabled this toggle so it
+            can&apos;t look enabled without delivering.
           </p>
         )}
       </Card>
@@ -370,18 +377,14 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-medium text-foreground">Monthly Report</h3>
-                <Badge variant="secondary" className="text-[10px]">Coming soon</Badge>
+                <Badge variant="secondary" className="text-[10px]">
+                  Coming soon
+                </Badge>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Detailed carbon analysis with trends
-              </p>
+              <p className="text-sm text-muted-foreground">Detailed carbon analysis with trends</p>
             </div>
           </div>
-          <Switch
-            checked={false}
-            disabled
-            aria-label="Monthly report coming soon"
-          />
+          <Switch checked={false} disabled aria-label="Monthly report coming soon" />
         </div>
         {!DIGEST_DELIVERY_AVAILABLE && (
           <p className="text-xs text-muted-foreground border-t border-border pt-3">
@@ -393,13 +396,11 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
         </div>
       </Card>
 
-      {
-        !isSupported && (
-          <p className="text-xs text-center text-muted-foreground">
-            Notifications are not supported in this browser.
-          </p>
-        )
-      }
+      {!isSupported && (
+        <p className="text-xs text-center text-muted-foreground">
+          Notifications are not supported in this browser.
+        </p>
+      )}
 
       {/* Display Preferences */}
       <div className="pt-4 border-t border-border">
@@ -413,9 +414,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
               </div>
               <div>
                 <h3 className="font-medium text-foreground">Weather in Energy Insights</h3>
-                <p className="text-sm text-muted-foreground">
-                  Show local weather conditions
-                </p>
+                <p className="text-sm text-muted-foreground">Show local weather conditions</p>
               </div>
             </div>
             <Switch
@@ -426,6 +425,6 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
           </div>
         </Card>
       </div>
-    </div >
+    </div>
   );
 }

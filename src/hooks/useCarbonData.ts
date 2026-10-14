@@ -16,7 +16,7 @@ import {
   ForecastData,
   GenerationMix,
   IntensityData,
-  REGION_IDS
+  REGION_IDS,
 } from '@/lib/carbonApi';
 import { logger } from '@/lib/logger';
 
@@ -29,9 +29,9 @@ const getMsUntilNextHalfHour = (): number => {
   const ms = now.getMilliseconds();
 
   // Calculate minutes until next :00 or :30
-  const minutesToNext = minutes < 30 ? (30 - minutes) : (60 - minutes);
+  const minutesToNext = minutes < 30 ? 30 - minutes : 60 - minutes;
   // Convert to ms, add 90 second buffer for API processing delay
-  return ((minutesToNext * 60) - seconds) * 1000 - ms + 90000;
+  return (minutesToNext * 60 - seconds) * 1000 - ms + 90000;
 };
 
 // Global singleton for smart refetch — ensures only one timer exists
@@ -111,16 +111,19 @@ export function useCarbonData(postcode: string) {
 
   // Find matching region in API data first
   // Normalize strings to handle potential differences (e.g. & vs and)
-  const normalize = (s?: string) => (s || '').toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '');
+  const normalize = (s?: string) =>
+    (s || '')
+      .toLowerCase()
+      .replace(/&/g, 'and')
+      .replace(/[^a-z0-9]/g, '');
 
   // Find region by matching postcode prefix (e.g. "EH1..." matches "EH")
   // We sort by length descending to ensure "BS" matches "BS" before "B" matches "B" (if both existed and overlapped)
-  const targetRegionName = UK_REGIONS
-    .filter(r => postcode.toUpperCase().startsWith(r.postcode))
-    .sort((a, b) => b.postcode.length - a.postcode.length)[0]?.name;
+  const targetRegionName = UK_REGIONS.filter((r) =>
+    postcode.toUpperCase().startsWith(r.postcode),
+  ).sort((a, b) => b.postcode.length - a.postcode.length)[0]?.name;
 
-
-  const foundRegion = regionalListQuery.data?.find(r => {
+  const foundRegion = regionalListQuery.data?.find((r) => {
     if (!targetRegionName) return false;
     const target = normalize(targetRegionName);
     return normalize(r.shortname) === target || normalize(r.dnoregion) === target;
@@ -139,13 +142,14 @@ export function useCarbonData(postcode: string) {
     postcode,
     targetRegionName,
     foundRegionShortname: foundRegion?.shortname,
-    regionId
+    regionId,
   });
 
   // Fetch detailed regional data by ID (avoids CORS issues with postcode endpoint)
   const regionalDataQuery = useQuery<RegionalData | null>({
     queryKey: ['regional', regionId],
-    queryFn: ({ signal }) => regionId ? getRegionalIntensityById(regionId, signal) : Promise.resolve(null),
+    queryFn: ({ signal }) =>
+      regionId ? getRegionalIntensityById(regionId, signal) : Promise.resolve(null),
     enabled: !!regionId,
     staleTime: 1000 * 60 * 10, // 10 minutes
     gcTime: 1000 * 60 * 60, // 1 hour
@@ -153,7 +157,12 @@ export function useCarbonData(postcode: string) {
     // No refetchInterval - we use smart setTimeout instead
   });
 
-  const isLocalRegionResolvable = postcode === 'GB' || postcode === 'Scotland' || postcode === 'England' || postcode === 'Wales' || !!targetRegionName;
+  const isLocalRegionResolvable =
+    postcode === 'GB' ||
+    postcode === 'Scotland' ||
+    postcode === 'England' ||
+    postcode === 'Wales' ||
+    !!targetRegionName;
 
   // START FALLBACK: If we couldn't resolve regionId locally, maybe we can get it from the API directly?
   // We can try to fetch the specific postcode data which INCLUDES the regionid.
@@ -169,7 +178,11 @@ export function useCarbonData(postcode: string) {
     regionId = postcodeQuery.data.regionid;
   }
 
-  const isPostcodeResolved = isLocalRegionResolvable || !!regionId || postcodeQuery.isError || (!postcodeQuery.isLoading && postcodeQuery.isFetched);
+  const isPostcodeResolved =
+    isLocalRegionResolvable ||
+    !!regionId ||
+    postcodeQuery.isError ||
+    (!postcodeQuery.isLoading && postcodeQuery.isFetched);
 
   const forecastQuery = useQuery<ForecastData[]>({
     queryKey: ['forecast', regionId, postcode],
@@ -215,7 +228,13 @@ export function useCarbonData(postcode: string) {
       forecastRefetch(),
       generationRefetch(),
     ]);
-  }, [nationalRefetch, regionalListRefetch, regionalDataRefetch, forecastRefetch, generationRefetch]);
+  }, [
+    nationalRefetch,
+    regionalListRefetch,
+    regionalDataRefetch,
+    forecastRefetch,
+    generationRefetch,
+  ]);
 
   // Use smart refetch aligned to grid schedule
   useSmartRefetch(refetch, !!postcode);
@@ -227,13 +246,12 @@ export function useCarbonData(postcode: string) {
   // Regional endpoints usually have forecast only. `intensity` is 0 only when
   // there is no reading yet (hasReading = false); isLoading/isError cover that
   // so the UI never shows 0 / 'moderate' as if it were real.
-  const liveIntensity = pickLiveIntensity(regionalData?.intensity)
-    ?? pickLiveIntensity(nationalQuery.data?.intensity);
+  const liveIntensity =
+    pickLiveIntensity(regionalData?.intensity) ?? pickLiveIntensity(nationalQuery.data?.intensity);
   const hasReading = liveIntensity !== null;
   const intensity = hasReading ? liveIntensity : 0;
-  const index = regionalData?.intensity?.index
-    ?? nationalQuery.data?.intensity?.index
-    ?? 'moderate';
+  const index =
+    regionalData?.intensity?.index ?? nationalQuery.data?.intensity?.index ?? 'moderate';
 
   // Track intensity changes for animation
   useEffect(() => {
@@ -245,26 +263,30 @@ export function useCarbonData(postcode: string) {
 
   // Use the name from the found region metadata (from list) or fallback
   // If regional data failed to load, explicit fallback to "National"
-  const region = regionalDataQuery.data?.shortname
-    ?? postcodeQuery.data?.shortname
-    ?? foundRegion?.shortname
-    ?? (nationalQuery.data ? 'National' : '');
+  const region =
+    regionalDataQuery.data?.shortname ??
+    postcodeQuery.data?.shortname ??
+    foundRegion?.shortname ??
+    (nationalQuery.data ? 'National' : '');
 
   // Generation mix from regional or national
   const generationMix = regionalData?.generationmix ?? generationQuery.data ?? [];
 
   // Determine if this is an initial load (no data yet) vs background refetch
-  const isInitialLoad = postcode ? (
-    regionalListQuery.isLoading ||
-    (!!regionId && !regionalDataQuery.data && regionalDataQuery.isLoading)
-  ) : (!nationalQuery.data && nationalQuery.isLoading);
+  const isInitialLoad = postcode
+    ? regionalListQuery.isLoading ||
+      (!!regionId && !regionalDataQuery.data && regionalDataQuery.isLoading)
+    : !nationalQuery.data && nationalQuery.isLoading;
 
   // isLoading should only be true on initial load, not during background refetches.
   // Also stay loading while there's no reading but a query is still on its way
   // (e.g. postcode lookup or national fallback still pending).
-  const awaitingReading = !hasReading && (
-    nationalQuery.isLoading || regionalListQuery.isLoading || postcodeQuery.isLoading || regionalDataQuery.isLoading
-  );
+  const awaitingReading =
+    !hasReading &&
+    (nationalQuery.isLoading ||
+      regionalListQuery.isLoading ||
+      postcodeQuery.isLoading ||
+      regionalDataQuery.isLoading);
   const isLoading = isInitialLoad || awaitingReading;
 
   return {
@@ -286,23 +308,29 @@ export function useCarbonData(postcode: string) {
     isLoading,
 
     // Flag for background fetching (data exists but refreshing)
-    isBackgroundFetching: !isInitialLoad && (
-      nationalQuery.isFetching ||
-      regionalDataQuery.isFetching ||
-      forecastQuery.isFetching
-    ),
+    isBackgroundFetching:
+      !isInitialLoad &&
+      (nationalQuery.isFetching || regionalDataQuery.isFetching || forecastQuery.isFetching),
 
     // Robustness: Only report error if we have NO data to show.
     // If Regional fails but National is okay, we show National (graceful degradation).
     // Also an error if everything has settled and there's still no reading to show.
-    isError: (postcode
-      ? ((regionalListQuery.isError || regionalDataQuery.isError) && nationalQuery.isError)
-      : nationalQuery.isError) || (!hasReading && !isLoading),
+    isError:
+      (postcode
+        ? (regionalListQuery.isError || regionalDataQuery.isError) && nationalQuery.isError
+        : nationalQuery.isError) ||
+      (!hasReading && !isLoading),
 
     // Flag to explicitly identify graceful degradation so UI can warn the user
-    isDegraded: !!postcode && (regionalDataQuery.isError || regionalListQuery.isError) && !nationalQuery.isError,
+    isDegraded:
+      !!postcode &&
+      (regionalDataQuery.isError || regionalListQuery.isError) &&
+      !nationalQuery.isError,
 
-    error: (postcode && nationalQuery.isError) ? (regionalDataQuery.error || nationalQuery.error) : nationalQuery.error,
+    error:
+      postcode && nationalQuery.isError
+        ? regionalDataQuery.error || nationalQuery.error
+        : nationalQuery.error,
 
     // Next expected update from API data (valid until)
     nextUpdate: regionalData?.to || nationalQuery.data?.to,
@@ -318,6 +346,6 @@ export function useCarbonData(postcode: string) {
       // Add 30 minutes to the 'from' time of the current period
       const next = new Date(last.getTime() + 30 * 60000);
       return next;
-    }
+    },
   };
 }

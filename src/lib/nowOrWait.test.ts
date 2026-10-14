@@ -112,10 +112,7 @@ describe('planLoad', () => {
   });
 
   it('ignores cleaner windows beyond the decision horizon', () => {
-    const fc = forecastFrom([
-      ...flat(DECISION_HORIZON_HOURS * 2 + 12, 200),
-      ...flat(12, 40),
-    ]);
+    const fc = forecastFrom([...flat(DECISION_HORIZON_HOURS * 2 + 12, 200), ...flat(12, 40)]);
     const plan = planLoad({ forecast: fc, liveIntensity: 200, now: NOW });
     expect(plan.action).toBe('use_now');
   });
@@ -185,9 +182,7 @@ describe('getNowOrWaitDecision copy', () => {
     expect(d.action).toBe('wait');
     expect(d.headline).toBe('Wait about 3 hours');
     // 16:00Z is 17:00 BST
-    expect(d.detail).toBe(
-      "It'll be around 40% cleaner (210 to 126 gCO₂/kWh) from 17:00 to 20:00.",
-    );
+    expect(d.detail).toBe("It'll be around 40% cleaner (210 to 126 gCO₂/kWh) from 17:00 to 20:00.");
     expect(d.countdownTarget?.toISOString()).toBe('2026-10-10T16:00:00.000Z');
   });
 
@@ -211,7 +206,9 @@ describe('getNowOrWaitDecision copy', () => {
     const fc = forecastFrom([...flat(6, 60), ...flat(42, 180)]);
     const d = getNowOrWaitDecision(60, fc, NOW);
     expect(d.headline).toBe("Now's good");
-    expect(d.detail).toBe("It won't get any cleaner in the next 18 hours. Starting now averages around 60 gCO₂/kWh.");
+    expect(d.detail).toBe(
+      "It won't get any cleaner in the next 18 hours. Starting now averages around 60 gCO₂/kWh.",
+    );
   });
 
   it('is honest when there is no forecast', () => {

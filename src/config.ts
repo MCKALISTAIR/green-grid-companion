@@ -1,4 +1,3 @@
-
 // App-wide configuration constants
 
 // The custom URL scheme for the app (used for deep linking and OAuth redirects)
@@ -12,4 +11,4 @@ export const APP_SCHEME = 'GridSense';
 export const FEATURES = {
   /** Tesla Fleet API / vehicle planner — parked; not offered in product. */
   tesla: false,
-} as const; 
+} as const;

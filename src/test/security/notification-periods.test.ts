@@ -37,7 +37,11 @@ function mockClient(result: { data: Array<{ subscription_id: string }> | null; e
 describe('claimSubscriptionsForPeriod (already-sent guard)', () => {
   it('only returns subscriptions newly claimed for this period', async () => {
     const { client, from, upsert } = mockClient({ data: [{ subscription_id: 'b' }], error: null });
-    const claimed = await claimSubscriptionsForPeriod(client, 'weekly-digest', '2026-W40', ['a', 'b', 'b']);
+    const claimed = await claimSubscriptionsForPeriod(client, 'weekly-digest', '2026-W40', [
+      'a',
+      'b',
+      'b',
+    ]);
     expect(from).toHaveBeenCalledWith('scheduled_notification_log');
     expect(upsert).toHaveBeenCalledWith(
       [
@@ -52,14 +56,18 @@ describe('claimSubscriptionsForPeriod (already-sent guard)', () => {
   it('fails closed (sends nothing) if the log cannot be written', async () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const { client } = mockClient({ data: null, error: { message: 'boom' } });
-    const claimed = await claimSubscriptionsForPeriod(client, 'daily-forecast', '2026-10-03', ['a']);
+    const claimed = await claimSubscriptionsForPeriod(client, 'daily-forecast', '2026-10-03', [
+      'a',
+    ]);
     expect(claimed.size).toBe(0);
     spy.mockRestore();
   });
 
   it('does not hit the database when there is nothing to claim', async () => {
     const { client, from } = mockClient({ data: [], error: null });
-    expect((await claimSubscriptionsForPeriod(client, 'monthly-report', '2026-09', [])).size).toBe(0);
+    expect((await claimSubscriptionsForPeriod(client, 'monthly-report', '2026-09', [])).size).toBe(
+      0,
+    );
     expect(from).not.toHaveBeenCalled();
   });
 });

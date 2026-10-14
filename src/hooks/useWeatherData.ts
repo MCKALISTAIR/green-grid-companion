@@ -82,7 +82,9 @@ function parseWeatherResponse(data: WeatherApiResponse): WeatherData {
     humidity: current.relative_humidity_2m,
     windSpeed: current.wind_speed_10m,
     cloudCover: current.cloud_cover,
-    isRaining: [51, 52, 53, 54, 55, 56, 57, 61, 62, 63, 64, 65, 66, 67, 80, 81, 82, 95, 96, 99].includes(code),
+    isRaining: [
+      51, 52, 53, 54, 55, 56, 57, 61, 62, 63, 64, 65, 66, 67, 80, 81, 82, 95, 96, 99,
+    ].includes(code),
     isSnowing: [71, 72, 73, 74, 75, 77, 85, 86].includes(code),
     isFoggy: [45, 48].includes(code),
     isThunderstorm: code >= 95 && code <= 99,
@@ -106,14 +108,12 @@ async function fetchWeather(lat: number, lon: number): Promise<WeatherData> {
     throw new Error('Failed to fetch weather data');
   }
 
-  const data = await response.json() as WeatherApiResponse;
+  const data = (await response.json()) as WeatherApiResponse;
   return parseWeatherResponse(data);
 }
 
 // Default UK coordinates (London) as fallback
 const DEFAULT_COORDS = { lat: 51.5074, lon: -0.1278 };
-
-
 
 export function useWeatherData(postcode?: string) {
   const [coords, setCoords] = useState<{ lat: number; lon: number } | null>(null);

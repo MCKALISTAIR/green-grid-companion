@@ -51,14 +51,21 @@ export function SceneEcosystemLayer({
       <AnimatePresence>
         {!isCity && !isCoastal && sceneConfig.cleanliness > flowerGate && sceneConfig.isDaytime && (
           <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-12">
-            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio={SCENE_SILHOUETTE_ASPECT} aria-hidden="true">
-              <Flowers positions={[
-                { x: 50, y: 120 },
-                { x: 120, y: 115 },
-                { x: 200, y: 118 },
-                { x: 280, y: 120 },
-                { x: 350, y: 117 },
-              ]} />
+            <svg
+              viewBox="0 30 400 120"
+              className="w-full h-full"
+              preserveAspectRatio={SCENE_SILHOUETTE_ASPECT}
+              aria-hidden="true"
+            >
+              <Flowers
+                positions={[
+                  { x: 50, y: 120 },
+                  { x: 120, y: 115 },
+                  { x: 200, y: 118 },
+                  { x: 280, y: 120 },
+                  { x: 350, y: 117 },
+                ]}
+              />
             </svg>
           </div>
         )}
@@ -78,7 +85,9 @@ export function SceneEcosystemLayer({
 
       {/* Rabbit hopping at dawn/dusk */}
       <AnimatePresence>
-        {!isCity && !isCoastal && isDawnOrDusk && sceneConfig.cleanliness > rabbitGate && <Rabbit delay={0} />}
+        {!isCity && !isCoastal && isDawnOrDusk && sceneConfig.cleanliness > rabbitGate && (
+          <Rabbit delay={0} />
+        )}
       </AnimatePresence>
 
       {/* Owls perched on trees at night */}
@@ -90,7 +99,12 @@ export function SceneEcosystemLayer({
               style={{ y: shouldReduceMotion ? 0 : backY }}
               className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-12"
             >
-              <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio={SCENE_SILHOUETTE_ASPECT} aria-hidden="true">
+              <svg
+                viewBox="0 30 400 120"
+                className="w-full h-full"
+                preserveAspectRatio={SCENE_SILHOUETTE_ASPECT}
+                aria-hidden="true"
+              >
                 <Owl treeX={80} treeY={85} scale={0.25} />
               </svg>
             </motion.div>
@@ -100,7 +114,12 @@ export function SceneEcosystemLayer({
               style={{ y: shouldReduceMotion ? 0 : midY }}
               className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-12"
             >
-              <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio={SCENE_SILHOUETTE_ASPECT} aria-hidden="true">
+              <svg
+                viewBox="0 30 400 120"
+                className="w-full h-full"
+                preserveAspectRatio={SCENE_SILHOUETTE_ASPECT}
+                aria-hidden="true"
+              >
                 <Owl treeX={320} treeY={95} scale={0.4} />
               </svg>
             </motion.div>
@@ -109,11 +128,7 @@ export function SceneEcosystemLayer({
       </AnimatePresence>
 
       {/* Fox - Rare event at dusk */}
-      <AnimatePresence>
-        {showFox && (
-          <Fox onClick={onFoxClick} />
-        )}
-      </AnimatePresence>
+      <AnimatePresence>{showFox && <Fox onClick={onFoxClick} />}</AnimatePresence>
     </>
   );
 }

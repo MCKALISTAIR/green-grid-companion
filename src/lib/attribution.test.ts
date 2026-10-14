@@ -29,8 +29,17 @@ describe('attribution', () => {
         JSON.stringify({
           data: {
             data: [
-              { from: '2026-01-01T00:00Z', to: '2026-01-01T00:30Z', intensity: { forecast: 100, index: 'low' }, generationmix: [{ fuel: 'gas', perc: 50 }] },
-              { from: '2026-01-01T00:30Z', to: '2026-01-01T01:00Z', intensity: { forecast: 100, actual: 90, index: 'low' } },
+              {
+                from: '2026-01-01T00:00Z',
+                to: '2026-01-01T00:30Z',
+                intensity: { forecast: 100, index: 'low' },
+                generationmix: [{ fuel: 'gas', perc: 50 }],
+              },
+              {
+                from: '2026-01-01T00:30Z',
+                to: '2026-01-01T01:00Z',
+                intensity: { forecast: 100, actual: 90, index: 'low' },
+              },
             ],
           },
         }),

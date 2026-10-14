@@ -78,7 +78,11 @@ export function londonDayTicks(dateKey: string, hours: number[] = [0, 6, 12, 18]
 }
 
 const weekdayFmt = new Intl.DateTimeFormat('en-GB', { timeZone: LONDON_TZ, weekday: 'long' });
-const dayMonthFmt = new Intl.DateTimeFormat('en-GB', { timeZone: LONDON_TZ, day: 'numeric', month: 'short' });
+const dayMonthFmt = new Intl.DateTimeFormat('en-GB', {
+  timeZone: LONDON_TZ,
+  day: 'numeric',
+  month: 'short',
+});
 
 /** "Sunday 11 Oct" for a London date key. */
 export function formatDayTitle(dateKey: string): string {

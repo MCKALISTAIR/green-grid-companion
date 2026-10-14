@@ -128,18 +128,22 @@ export function buildSceneConfig({
       (timeOfDay === 'morning' || timeOfDay === 'midday' || timeOfDay === 'afternoon') &&
       weather.cloudCover < 60 &&
       !weather.isRaining,
-    showStars: (isDarkPeriod || timeOfDay === 'dawn') && cleanliness > 0.3 && weather.cloudCover < 70,
+    showStars:
+      (isDarkPeriod || timeOfDay === 'dawn') && cleanliness > 0.3 && weather.cloudCover < 70,
     showMoon: isDarkPeriod && weather.cloudCover < 80,
     showSun,
     showButterflies: cleanliness > 0.9 && isDaytime && !weatherReducesButterflies,
-    showFireflies: (isDarkPeriod || timeOfDay === 'sunset') && cleanliness > 0.8 && !weather.isRaining,
+    showFireflies:
+      (isDarkPeriod || timeOfDay === 'sunset') && cleanliness > 0.8 && !weather.isRaining,
     isGoldenHour,
     isDaytime,
     isDarkPeriod,
     turbineCount: Math.max(1, Math.floor(cleanliness * 4)),
     factoryOpacity: Math.max(0, 1 - cleanliness),
     solarBrightness:
-      cleanliness * (weather.cloudCover < 50 ? 1 : 0.6) * (isDaytime ? 1 : isGoldenHour ? 0.6 : 0.2),
+      cleanliness *
+      (weather.cloudCover < 50 ? 1 : 0.6) *
+      (isDaytime ? 1 : isGoldenHour ? 0.6 : 0.2),
     birdCount: Math.floor(cleanliness * 4) + 1,
     starVisibility:
       cleanliness *

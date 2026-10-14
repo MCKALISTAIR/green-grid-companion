@@ -26,19 +26,12 @@ import { useIndexPageEffects } from '@/hooks/useIndexPageEffects';
 import { useThrottledRefetch } from '@/hooks/useThrottledRefetch';
 import { useRelativeTime } from '@/hooks/useRelativeTime';
 import { DashboardSkeleton } from '@/components/home/DashboardSkeleton';
-import {
-  DashboardViewTabs,
-  type DashboardViewMode,
-} from '@/components/home/DashboardViewTabs';
+import { DashboardViewTabs, type DashboardViewMode } from '@/components/home/DashboardViewTabs';
 import { IntensityDashboard } from '@/components/home/IntensityDashboard';
 import { IntensityHeroOverlay } from '@/components/home/IntensityHeroOverlay';
 import { useSceneGrowth } from '@/hooks/useSceneGrowth';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import {
-  createHorizontalStateVariants,
-  easeOutExpo,
-  stateTransition,
-} from '@/lib/motion';
+import { createHorizontalStateVariants, easeOutExpo, stateTransition } from '@/lib/motion';
 
 import { formatLondonTime } from '@/lib/londonTime';
 
@@ -248,7 +241,10 @@ const Index = () => {
             <div className="home-feed flex-1 px-4 pt-5 pb-4 lg:pb-6 space-y-4 -mt-8 relative z-10 bg-card rounded-t-none shadow-[0_-12px_40px_-20px_rgba(15,23,42,0.18)] lg:max-w-7xl lg:mx-auto w-full lg:shadow-xl lg:-mt-10 lg:pt-8 lg:space-y-6">
               {/* Scalloped top edge of the sheet. The sheet itself has square top corners so the
                   scallop meets both edges cleanly (no sliver or doubled half-circle). */}
-              <div className="scene-wave-divider absolute -top-[79px] left-0 right-0 h-[80px] pointer-events-none overflow-hidden z-20" data-testid="scene-wave-divider">
+              <div
+                className="scene-wave-divider absolute -top-[79px] left-0 right-0 h-[80px] pointer-events-none overflow-hidden z-20"
+                data-testid="scene-wave-divider"
+              >
                 <SceneWaveDivider cleanliness={cleanliness} />
               </div>
 
@@ -368,11 +364,7 @@ const Index = () => {
           }}
         />
 
-        <YearWrapped
-          open={showYearWrapped}
-          onOpenChange={setShowYearWrapped}
-          year={wrappedYear}
-        />
+        <YearWrapped open={showYearWrapped} onOpenChange={setShowYearWrapped} year={wrappedYear} />
       </div>
     </TooltipProvider>
   );

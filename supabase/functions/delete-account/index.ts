@@ -1,25 +1,30 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
 import { deleteOctopusUsageData, type UserDataClient } from '../_shared/user-data.ts';
-import { isAppleUser, loadAppleSigninConfig, revokeAppleSignin, type AppleRevocationStatus } from '../_shared/apple-auth.ts';
+import {
+  isAppleUser,
+  loadAppleSigninConfig,
+  revokeAppleSignin,
+  type AppleRevocationStatus,
+} from '../_shared/apple-auth.ts';
 
 Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
     // Authenticate the user
-    const authHeader = req.headers.get("Authorization");
+    const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Missing authorization" }), {
+      return new Response(JSON.stringify({ error: 'Missing authorization' }), {
         status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
     // Create a client with the user's token to get their ID
     const userClient = createClient(supabaseUrl, supabaseServiceKey, {
@@ -32,10 +37,10 @@ Deno.serve(async (req: Request) => {
     } = await userClient.auth.getUser();
 
     if (authError || !user) {
-      console.error("Auth error:", authError?.message);
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      console.error('Auth error:', authError?.message);
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
@@ -57,7 +62,8 @@ Deno.serve(async (req: Request) => {
     if (isAppleUser(user)) {
       appleRevocation = await revokeAppleSignin({
         config: loadAppleSigninConfig((name) => Deno.env.get(name)),
-        authorizationCode: typeof body.apple_authorization_code === 'string' ? body.apple_authorization_code : null,
+        authorizationCode:
+          typeof body.apple_authorization_code === 'string' ? body.apple_authorization_code : null,
         clientKind: body.apple_client === 'web' ? 'web' : 'native',
       });
       console.log(`Apple token revocation: ${appleRevocation}`);
@@ -70,32 +76,34 @@ Deno.serve(async (req: Request) => {
     //    then dispatches and meters.
     const octopus = await deleteOctopusUsageData(adminClient as unknown as UserDataClient, userId);
     if (octopus.errors.length > 0) {
-      console.error("Some Octopus deletions failed:", octopus.errors);
+      console.error('Some Octopus deletions failed:', octopus.errors);
     }
 
     // 3. Everything else keyed by user_id
     const deletions = [
-      adminClient.from("octopus_credentials").delete().eq("user_id", userId),
+      adminClient.from('octopus_credentials').delete().eq('user_id', userId),
       // Tesla data
-      adminClient.from("tesla_charging_sessions").delete().eq("user_id", userId),
-      adminClient.from("tesla_energy_data").delete().eq("user_id", userId),
-      adminClient.from("tesla_energy_sites").delete().eq("user_id", userId),
-      adminClient.from("tesla_vehicles").delete().eq("user_id", userId),
-      adminClient.from("tesla_credentials").delete().eq("user_id", userId),
+      adminClient.from('tesla_charging_sessions').delete().eq('user_id', userId),
+      adminClient.from('tesla_energy_data').delete().eq('user_id', userId),
+      adminClient.from('tesla_energy_sites').delete().eq('user_id', userId),
+      adminClient.from('tesla_vehicles').delete().eq('user_id', userId),
+      adminClient.from('tesla_credentials').delete().eq('user_id', userId),
       // Push notification subscriptions (also cascade from auth.users, but be explicit)
-      adminClient.from("push_subscriptions").delete().eq("user_id", userId),
+      adminClient.from('push_subscriptions').delete().eq('user_id', userId),
       // User preferences
-      adminClient.from("user_preferences").delete().eq("user_id", userId),
+      adminClient.from('user_preferences').delete().eq('user_id', userId),
     ];
 
     const results = await Promise.allSettled(deletions);
 
     // Log any failures but continue
     const failures = results.filter(
-      (r) => r.status === "rejected" || (r.status === "fulfilled" && (r.value as { error?: unknown }).error),
+      (r) =>
+        r.status === 'rejected' ||
+        (r.status === 'fulfilled' && (r.value as { error?: unknown }).error),
     );
     if (failures.length > 0) {
-      console.error("Some deletions failed:", failures);
+      console.error('Some deletions failed:', failures);
     }
 
     console.log(`Deleted data across ${results.length + 4} tables (${octopus.mpans} meters)`);
@@ -104,15 +112,15 @@ Deno.serve(async (req: Request) => {
     const { error: deleteUserError } = await adminClient.auth.admin.deleteUser(userId);
 
     if (deleteUserError) {
-      console.error("Failed to delete auth user:", deleteUserError.message);
+      console.error('Failed to delete auth user:', deleteUserError.message);
       return new Response(
         JSON.stringify({
-          error: "Data deleted but failed to remove auth account. Please contact support.",
+          error: 'Data deleted but failed to remove auth account. Please contact support.',
         }),
         {
           status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
       );
     }
 
@@ -121,22 +129,22 @@ Deno.serve(async (req: Request) => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: "Account and all associated data have been permanently deleted.",
+        message: 'Account and all associated data have been permanently deleted.',
         apple_revocation: appleRevocation,
       }),
       {
         status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      },
     );
   } catch (error) {
-    console.error("Account deletion error:", error);
+    console.error('Account deletion error:', error);
     return new Response(
-      JSON.stringify({ error: "An unexpected error occurred during account deletion." }),
+      JSON.stringify({ error: 'An unexpected error occurred during account deletion.' }),
       {
         status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      },
     );
   }
 });

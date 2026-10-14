@@ -8,10 +8,7 @@ export interface SceneWinterLayerProps {
   sceneConfig: SceneVisualConfig;
 }
 
-export function SceneWinterLayer({
-  weather,
-  sceneConfig,
-}: SceneWinterLayerProps) {
+export function SceneWinterLayer({ weather, sceneConfig }: SceneWinterLayerProps) {
   return (
     <>
       {/* ===== WINTER ELEMENTS ===== */}

@@ -3,13 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { VERSION_STRING, BUILD_DATE } from '@/lib/version';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
-import {
-  Sparkles,
-  Zap,
-  Bug,
-  Wrench,
-  ChevronLeft,
-} from 'lucide-react';
+import { Sparkles, Zap, Bug, Wrench, ChevronLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
@@ -18,13 +12,13 @@ const containerVariants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
-    transition: { staggerChildren: 0.05 }
-  }
+    transition: { staggerChildren: 0.05 },
+  },
 };
 
 const itemVariants = {
   hidden: { opacity: 0, y: 15 },
-  show: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 350, damping: 25 } }
+  show: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 350, damping: 25 } },
 };
 
 interface ChangelogEntry {
@@ -43,13 +37,37 @@ const changelog: ChangelogEntry[] = [
     date: new Date().toISOString().split('T')[0],
     title: 'Performance & Playful Motion',
     changes: [
-      { type: 'feature', description: 'Playful motion: Spring animations and morphing layout for fact bubbles' },
-      { type: 'feature', description: 'Dynamic Onboarding: Ambient background scenes morphing in sync with setup steps' },
-      { type: 'improvement', description: 'Fluid page loading: Smooth spring exit-and-entry transitions between loading skeletons and page content' },
-      { type: 'improvement', description: 'Smart caching: Native geocoding caching layer to prevent API limits' },
-      { type: 'improvement', description: 'Smart sequencing: Energy facts are filtered to never repeat consecutively' },
-      { type: 'technical', description: 'Optimized build: Rollup code-splitting reduces vendor bundle size by 38%' },
-      { type: 'technical', description: 'Asset compression: Favicon and PWA icons compressed, saving 855KB of load footprint' },
+      {
+        type: 'feature',
+        description: 'Playful motion: Spring animations and morphing layout for fact bubbles',
+      },
+      {
+        type: 'feature',
+        description:
+          'Dynamic Onboarding: Ambient background scenes morphing in sync with setup steps',
+      },
+      {
+        type: 'improvement',
+        description:
+          'Fluid page loading: Smooth spring exit-and-entry transitions between loading skeletons and page content',
+      },
+      {
+        type: 'improvement',
+        description: 'Smart caching: Native geocoding caching layer to prevent API limits',
+      },
+      {
+        type: 'improvement',
+        description: 'Smart sequencing: Energy facts are filtered to never repeat consecutively',
+      },
+      {
+        type: 'technical',
+        description: 'Optimized build: Rollup code-splitting reduces vendor bundle size by 38%',
+      },
+      {
+        type: 'technical',
+        description:
+          'Asset compression: Favicon and PWA icons compressed, saving 855KB of load footprint',
+      },
     ],
   },
   {
@@ -81,7 +99,10 @@ const changelog: ChangelogEntry[] = [
     title: 'Gamification & Time Travel',
     changes: [
       { type: 'feature', description: 'Grid Time Machine: Explore historical carbon data' },
-      { type: 'feature', description: 'Grid Guardian Achievements: Unlock badges for green habits' },
+      {
+        type: 'feature',
+        description: 'Grid Guardian Achievements: Unlock badges for green habits',
+      },
       { type: 'feature', description: 'Secret Builder Mode: Customize your dashboard scene' },
       { type: 'feature', description: 'Vintage filter for historical data visualization' },
       { type: 'improvement', description: 'New "Badges" section in Settings' },
@@ -105,7 +126,10 @@ const changelog: ChangelogEntry[] = [
     changes: [
       { type: 'feature', description: 'Smart background refresh synced to NESO update schedule' },
       { type: 'feature', description: 'Animated intensity counter with directional indicators' },
-      { type: 'improvement', description: 'Removed "Waiting..." label - data now updates silently' },
+      {
+        type: 'improvement',
+        description: 'Removed "Waiting..." label - data now updates silently',
+      },
       { type: 'improvement', description: 'Haptic feedback on intensity changes (iOS)' },
       { type: 'fix', description: 'Fixed 401 errors when not logged in' },
     ],
@@ -179,9 +203,21 @@ const typeConfig = {
   feature: { icon: Sparkles, label: 'New', color: 'bg-primary/10 text-primary border-primary/20' },
   track: { icon: Sparkles, label: 'New', color: 'bg-primary/10 text-primary border-primary/20' },
   location: { icon: Sparkles, label: 'New', color: 'bg-primary/10 text-primary border-primary/20' },
-  improvement: { icon: Zap, label: 'Improved', color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20' },
-  fix: { icon: Bug, label: 'Fixed', color: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20' },
-  technical: { icon: Wrench, label: 'Technical', color: 'bg-muted text-muted-foreground border-border' },
+  improvement: {
+    icon: Zap,
+    label: 'Improved',
+    color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+  },
+  fix: {
+    icon: Bug,
+    label: 'Fixed',
+    color: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20',
+  },
+  technical: {
+    icon: Wrench,
+    label: 'Technical',
+    color: 'bg-muted text-muted-foreground border-border',
+  },
 };
 
 export default function Changelog() {
@@ -204,14 +240,12 @@ export default function Changelog() {
           </Link>
           <div>
             <h1 className="text-2xl font-bold">Changelog</h1>
-            <p className="text-sm text-muted-foreground">
-              Current: {VERSION_STRING}
-            </p>
+            <p className="text-sm text-muted-foreground">Current: {VERSION_STRING}</p>
           </div>
         </div>
 
         {/* Changelog entries */}
-        <motion.div 
+        <motion.div
           className="space-y-4"
           variants={containerVariants}
           initial="hidden"
@@ -230,7 +264,10 @@ export default function Changelog() {
                     <div className="flex items-center gap-2">
                       <h2 className="font-semibold text-foreground">{entry.version}</h2>
                       {index === 0 && (
-                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-[10px]">
+                        <Badge
+                          variant="outline"
+                          className="bg-primary/10 text-primary border-primary/20 text-[10px]"
+                        >
                           Latest
                         </Badge>
                       )}

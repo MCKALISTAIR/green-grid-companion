@@ -2,8 +2,16 @@ import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 
 // 🐦 Seagull — soaring flight pattern
-export function Seagull({ startX = 50, startY = 25, delay = 0, scale = 1 }: {
-  startX?: number; startY?: number; delay?: number; scale?: number;
+export function Seagull({
+  startX = 50,
+  startY = 25,
+  delay = 0,
+  scale = 1,
+}: {
+  startX?: number;
+  startY?: number;
+  delay?: number;
+  scale?: number;
 }) {
   return (
     <motion.g
@@ -13,7 +21,13 @@ export function Seagull({ startX = 50, startY = 25, delay = 0, scale = 1 }: {
         y: [startY, startY - 8, startY + 5, startY - 3],
         opacity: [0, 1, 1, 0],
       }}
-      transition={{ duration: 14, delay, repeat: Infinity, repeatDelay: delay + 6, ease: 'linear' as const }}
+      transition={{
+        duration: 14,
+        delay,
+        repeat: Infinity,
+        repeatDelay: delay + 6,
+        ease: 'linear' as const,
+      }}
     >
       <g transform={`scale(${scale})`}>
         {/* Wing flap animation */}
@@ -23,11 +37,7 @@ export function Seagull({ startX = 50, startY = 25, delay = 0, scale = 1 }: {
           stroke="#e2e8f0"
           strokeWidth="1.2"
           fill="none"
-          animate={{ d: [
-            "M0,0 L-6,-3 L-10,0",
-            "M0,0 L-6,-1 L-10,1",
-            "M0,0 L-6,-3 L-10,0",
-          ] }}
+          animate={{ d: ['M0,0 L-6,-3 L-10,0', 'M0,0 L-6,-1 L-10,1', 'M0,0 L-6,-3 L-10,0'] }}
           transition={{ duration: 0.8, repeat: Infinity, ease: 'easeInOut' as const }}
         />
         <motion.path
@@ -36,11 +46,7 @@ export function Seagull({ startX = 50, startY = 25, delay = 0, scale = 1 }: {
           stroke="#e2e8f0"
           strokeWidth="1.2"
           fill="none"
-          animate={{ d: [
-            "M0,0 L6,-3 L10,0",
-            "M0,0 L6,-1 L10,1",
-            "M0,0 L6,-3 L10,0",
-          ] }}
+          animate={{ d: ['M0,0 L6,-3 L10,0', 'M0,0 L6,-1 L10,1', 'M0,0 L6,-3 L10,0'] }}
           transition={{ duration: 0.8, repeat: Infinity, ease: 'easeInOut' as const }}
         />
         {/* Body */}
@@ -51,8 +57,14 @@ export function Seagull({ startX = 50, startY = 25, delay = 0, scale = 1 }: {
 }
 
 // ⛵ Sailing boat
-export function SailingBoat({ x = 150, delay = 0, isNight = false }: {
-  x?: number; delay?: number; isNight?: boolean;
+export function SailingBoat({
+  x = 150,
+  delay = 0,
+  isNight = false,
+}: {
+  x?: number;
+  delay?: number;
+  isNight?: boolean;
 }) {
   const hullColor = isNight ? '#334155' : '#1e3a5f';
   const sailColor = isNight ? '#94a3b8' : '#f1f5f9';
@@ -61,7 +73,13 @@ export function SailingBoat({ x = 150, delay = 0, isNight = false }: {
     <motion.g
       initial={{ x: x - 50, opacity: 0 }}
       animate={{ x: [x - 50, x + 100], opacity: [0, 1, 1, 0] }}
-      transition={{ duration: 25, delay, repeat: Infinity, repeatDelay: delay + 10, ease: 'linear' as const }}
+      transition={{
+        duration: 25,
+        delay,
+        repeat: Infinity,
+        repeatDelay: delay + 10,
+        ease: 'linear' as const,
+      }}
     >
       {/* Gentle bobbing */}
       <motion.g
@@ -82,8 +100,14 @@ export function SailingBoat({ x = 150, delay = 0, isNight = false }: {
 }
 
 // 🚢 Fishing boat (larger, more detailed)
-export function FishingBoat({ x = 250, delay = 0, isNight = false }: {
-  x?: number; delay?: number; isNight?: boolean;
+export function FishingBoat({
+  x = 250,
+  delay = 0,
+  isNight = false,
+}: {
+  x?: number;
+  delay?: number;
+  isNight?: boolean;
 }) {
   const hullColor = isNight ? '#1e293b' : '#1e40af';
   const cabinColor = isNight ? '#334155' : '#f1f5f9';
@@ -103,7 +127,15 @@ export function FishingBoat({ x = 250, delay = 0, isNight = false }: {
         {/* Cabin */}
         <rect x={-4} y={89} width={10} height={4} rx={1} fill={cabinColor} />
         {/* Cabin window */}
-        <rect x={-1} y={90} width={3} height={2} rx={0.5} fill={isNight ? '#fbbf24' : '#93c5fd'} opacity={isNight ? 0.7 : 0.5} />
+        <rect
+          x={-1}
+          y={90}
+          width={3}
+          height={2}
+          rx={0.5}
+          fill={isNight ? '#fbbf24' : '#93c5fd'}
+          opacity={isNight ? 0.7 : 0.5}
+        />
         {/* Mast */}
         <line x1={3} y1={89} x2={3} y2={82} stroke="#6b7280" strokeWidth="0.6" />
         {/* Rigging */}
@@ -111,7 +143,12 @@ export function FishingBoat({ x = 250, delay = 0, isNight = false }: {
         <line x1={14} y1={93} x2={3} y2={82} stroke="#9ca3af" strokeWidth="0.3" opacity={0.5} />
         {/* Navigation light at night */}
         {isNight && (
-          <motion.circle cx={3} cy={82} r={1} fill="#22c55e" opacity={0.7}
+          <motion.circle
+            cx={3}
+            cy={82}
+            r={1}
+            fill="#22c55e"
+            opacity={0.7}
             animate={{ opacity: [0.7, 0.3, 0.7] }}
             transition={{ duration: 2, repeat: Infinity }}
           />
@@ -122,10 +159,14 @@ export function FishingBoat({ x = 250, delay = 0, isNight = false }: {
 }
 
 // 🌊 Coastal offshore wind turbines (closer, bigger than existing OffshoreWind)
-export function CoastalOffshoreWind({ count = 3, windSpeed = 10 }: {
-  count?: number; windSpeed?: number;
+export function CoastalOffshoreWind({
+  count = 3,
+  windSpeed = 10,
+}: {
+  count?: number;
+  windSpeed?: number;
 }) {
-  const rotationSpeed = Math.max(4, 10 - (windSpeed / 4));
+  const rotationSpeed = Math.max(4, 10 - windSpeed / 4);
 
   return (
     <g>
@@ -152,11 +193,13 @@ export function CoastalOffshoreWind({ count = 3, windSpeed = 10 }: {
                 dur={`${rotationSpeed + i}s`}
                 repeatCount="indefinite"
               />
-              {[0, 120, 240].map(angle => (
+              {[0, 120, 240].map((angle) => (
                 <line
                   key={angle}
-                  x1={0} y1={-40}
-                  x2={0} y2={-60}
+                  x1={0}
+                  y1={-40}
+                  x2={0}
+                  y2={-60}
                   stroke="#e2e8f0"
                   strokeWidth="1.5"
                   opacity={0.7}
@@ -172,8 +215,14 @@ export function CoastalOffshoreWind({ count = 3, windSpeed = 10 }: {
 }
 
 // 🪨 Rock pool with water and starfish/anemones
-export function RockPool({ x = 260, y = 116, isNight = false }: {
-  x?: number; y?: number; isNight?: boolean;
+export function RockPool({
+  x = 260,
+  y = 116,
+  isNight = false,
+}: {
+  x?: number;
+  y?: number;
+  isNight?: boolean;
 }) {
   const rockColor = isNight ? '#334155' : '#78716c';
   const poolColor = isNight ? '#1e3a5f' : '#7dd3fc';
@@ -188,26 +237,49 @@ export function RockPool({ x = 260, y = 116, isNight = false }: {
       {/* Pool water */}
       <motion.ellipse
         initial={false}
-        cx={x} cy={y - 0.5} rx={8} ry={3}
-        fill={poolColor} opacity={0.6}
+        cx={x}
+        cy={y - 0.5}
+        rx={8}
+        ry={3}
+        fill={poolColor}
+        opacity={0.6}
         animate={{ rx: [8, 8.3, 8], ry: [3, 3.2, 3] }}
         transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' as const }}
       />
       {/* Starfish */}
       <g transform={`translate(${x - 3}, ${y - 1}) scale(0.4)`}>
-        <motion.g animate={{ rotate: [0, 5, -5, 0] }} transition={{ duration: 8, repeat: Infinity }}>
-          {[0, 72, 144, 216, 288].map(angle => (
-            <line key={angle} x1={0} y1={0} x2={0} y2={-4} stroke="#f97316" strokeWidth="1.5" strokeLinecap="round"
-              transform={`rotate(${angle})`} />
+        <motion.g
+          animate={{ rotate: [0, 5, -5, 0] }}
+          transition={{ duration: 8, repeat: Infinity }}
+        >
+          {[0, 72, 144, 216, 288].map((angle) => (
+            <line
+              key={angle}
+              x1={0}
+              y1={0}
+              x2={0}
+              y2={-4}
+              stroke="#f97316"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              transform={`rotate(${angle})`}
+            />
           ))}
         </motion.g>
       </g>
       {/* Anemone */}
       <g transform={`translate(${x + 4}, ${y - 1})`}>
-        {[-2, -1, 0, 1, 2].map(i => (
-          <motion.line key={i} x1={i * 0.8} y1={0} x2={i * 1.2} y2={-2.5}
+        {[-2, -1, 0, 1, 2].map((i) => (
+          <motion.line
+            key={i}
+            x1={i * 0.8}
+            y1={0}
+            x2={i * 1.2}
+            y2={-2.5}
             initial={false}
-            stroke="#c084fc" strokeWidth="0.6" strokeLinecap="round"
+            stroke="#c084fc"
+            strokeWidth="0.6"
+            strokeLinecap="round"
             animate={{ x2: [i * 1.2, i * 1.5, i * 1.2] }}
             transition={{ duration: 2, repeat: Infinity, delay: i * 0.15 }}
           />
@@ -217,12 +289,17 @@ export function RockPool({ x = 260, y = 116, isNight = false }: {
       <motion.path
         initial={false}
         d={`M${x + 9},${y} Q${x + 11},${y - 3} ${x + 10},${y - 5}`}
-        stroke="#22c55e" strokeWidth="0.8" fill="none" opacity={0.5}
-        animate={{ d: [
-          `M${x + 9},${y} Q${x + 11},${y - 3} ${x + 10},${y - 5}`,
-          `M${x + 9},${y} Q${x + 12},${y - 2} ${x + 11},${y - 5}`,
-          `M${x + 9},${y} Q${x + 11},${y - 3} ${x + 10},${y - 5}`,
-        ] }}
+        stroke="#22c55e"
+        strokeWidth="0.8"
+        fill="none"
+        opacity={0.5}
+        animate={{
+          d: [
+            `M${x + 9},${y} Q${x + 11},${y - 3} ${x + 10},${y - 5}`,
+            `M${x + 9},${y} Q${x + 12},${y - 2} ${x + 11},${y - 5}`,
+            `M${x + 9},${y} Q${x + 11},${y - 3} ${x + 10},${y - 5}`,
+          ],
+        }}
         transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' as const }}
       />
     </g>
@@ -230,14 +307,18 @@ export function RockPool({ x = 260, y = 116, isNight = false }: {
 }
 
 // 🦀 Crab — scuttles sideways
-export function Crab({ x = 280, y = 118, delay = 0 }: {
-  x?: number; y?: number; delay?: number;
-}) {
+export function Crab({ x = 280, y = 118, delay = 0 }: { x?: number; y?: number; delay?: number }) {
   return (
     <motion.g
       initial={{ opacity: 0 }}
       animate={{ opacity: 1, x: [x, x + 8, x + 12, x + 8, x] }}
-      transition={{ duration: 6, delay, repeat: Infinity, repeatDelay: 4, ease: 'easeInOut' as const }}
+      transition={{
+        duration: 6,
+        delay,
+        repeat: Infinity,
+        repeatDelay: 4,
+        ease: 'easeInOut' as const,
+      }}
     >
       <motion.g
         animate={{ y: [y, y - 0.5, y] }}
@@ -251,14 +332,20 @@ export function Crab({ x = 280, y = 118, delay = 0 }: {
         <line x1={-1.5} y1={-2} x2={-1.8} y2={-3} stroke="#dc2626" strokeWidth="0.4" />
         <line x1={1.5} y1={-2} x2={1.8} y2={-3} stroke="#dc2626" strokeWidth="0.4" />
         {/* Claws */}
-        <motion.g animate={{ rotate: [0, -10, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
+        <motion.g
+          animate={{ rotate: [0, -10, 0] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+        >
           <path d="M-3,0 L-5,-1 L-6,0.5 L-5,0" fill="#ef4444" />
         </motion.g>
-        <motion.g animate={{ rotate: [0, 10, 0] }} transition={{ duration: 1.5, repeat: Infinity, delay: 0.3 }}>
+        <motion.g
+          animate={{ rotate: [0, 10, 0] }}
+          transition={{ duration: 1.5, repeat: Infinity, delay: 0.3 }}
+        >
           <path d="M3,0 L5,-1 L6,0.5 L5,0" fill="#ef4444" />
         </motion.g>
         {/* Legs */}
-        {[-1, 0, 1].map(i => (
+        {[-1, 0, 1].map((i) => (
           <g key={i}>
             <line x1={-2.5} y1={i * 1} x2={-4} y2={i * 1 + 1} stroke="#dc2626" strokeWidth="0.3" />
             <line x1={2.5} y1={i * 1} x2={4} y2={i * 1 + 1} stroke="#dc2626" strokeWidth="0.3" />
@@ -270,8 +357,14 @@ export function Crab({ x = 280, y = 118, delay = 0 }: {
 }
 
 // 🦭 Harbour seal — pops up from the water, looks around, dives back
-export function HarbourSeal({ x = 170, y = 96, delay = 0 }: {
-  x?: number; y?: number; delay?: number;
+export function HarbourSeal({
+  x = 170,
+  y = 96,
+  delay = 0,
+}: {
+  x?: number;
+  y?: number;
+  delay?: number;
 }) {
   return (
     <motion.g
@@ -292,8 +385,13 @@ export function HarbourSeal({ x = 170, y = 96, delay = 0 }: {
       {/* Water splash ring */}
       <motion.ellipse
         initial={false}
-        cx={x} cy={y + 4} rx={6} ry={1.5}
-        fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.5"
+        cx={x}
+        cy={y + 4}
+        rx={6}
+        ry={1.5}
+        fill="none"
+        stroke="rgba(255,255,255,0.3)"
+        strokeWidth="0.5"
         animate={{ rx: [4, 8, 4], opacity: [0.4, 0.1, 0.4] }}
         transition={{ duration: 3, repeat: Infinity }}
       />
@@ -318,10 +416,24 @@ export function HarbourSeal({ x = 170, y = 96, delay = 0 }: {
       {/* Nose */}
       <ellipse cx={x} cy={y + 0.5} rx={1} ry={0.6} fill="#57534e" />
       {/* Whiskers */}
-      {[-1, 1].map(side => (
+      {[-1, 1].map((side) => (
         <g key={side}>
-          <line x1={x + side * 1.5} y1={y + 0.3} x2={x + side * 5} y2={y - 0.5} stroke="#9ca3af" strokeWidth="0.25" />
-          <line x1={x + side * 1.5} y1={y + 0.7} x2={x + side * 5} y2={y + 0.8} stroke="#9ca3af" strokeWidth="0.25" />
+          <line
+            x1={x + side * 1.5}
+            y1={y + 0.3}
+            x2={x + side * 5}
+            y2={y - 0.5}
+            stroke="#9ca3af"
+            strokeWidth="0.25"
+          />
+          <line
+            x1={x + side * 1.5}
+            y1={y + 0.7}
+            x2={x + side * 5}
+            y2={y + 0.8}
+            stroke="#9ca3af"
+            strokeWidth="0.25"
+          />
         </g>
       ))}
       {/* Head turn animation */}
@@ -349,15 +461,24 @@ export function RockPoolGroup({ cleanliness, isNight }: { cleanliness: number; i
 }
 
 // Collection: Seagull flock
-export function SeagullFlock({ count = 4, isNight = false }: { count?: number; isNight?: boolean }) {
-  const gulls = useMemo(() =>
-    Array.from({ length: count }).map((_, i) => ({
-      id: i,
-      startX: 20 + i * 70 + Math.random() * 20,
-      startY: 18 + Math.random() * 25,
-      delay: i * 2.5 + Math.random(),
-      scale: 0.7 + Math.random() * 0.4,
-    })), [count]);
+export function SeagullFlock({
+  count = 4,
+  isNight = false,
+}: {
+  count?: number;
+  isNight?: boolean;
+}) {
+  const gulls = useMemo(
+    () =>
+      Array.from({ length: count }).map((_, i) => ({
+        id: i,
+        startX: 20 + i * 70 + Math.random() * 20,
+        startY: 18 + Math.random() * 25,
+        delay: i * 2.5 + Math.random(),
+        scale: 0.7 + Math.random() * 0.4,
+      })),
+    [count],
+  );
 
   if (isNight) return null;
 
@@ -371,7 +492,13 @@ export function SeagullFlock({ count = 4, isNight = false }: { count?: number; i
 }
 
 /** Horizon pollution for dirty coastal — distant stack + oil sheen (silhouette test). */
-export function CoastalHorizonPollution({ cleanliness, isNight }: { cleanliness: number; isNight: boolean }) {
+export function CoastalHorizonPollution({
+  cleanliness,
+  isNight,
+}: {
+  cleanliness: number;
+  isNight: boolean;
+}) {
   if (cleanliness >= 0.45) return null;
   const intensity = Math.min(1, (0.45 - cleanliness) / 0.45);
   const stackColor = isNight ? 'rgba(210,190,150,0.9)' : 'rgba(55,45,35,0.92)';
@@ -382,7 +509,10 @@ export function CoastalHorizonPollution({ cleanliness, isNight }: { cleanliness:
     <g aria-hidden="true">
       {/* Ochre horizon haze — painted above the sea fill */}
       <rect
-        x={0} y={68} width={400} height={22}
+        x={0}
+        y={68}
+        width={400}
+        height={22}
         fill={`rgba(${isNight ? '90,55,25' : '160,110,45'},${0.22 + intensity * 0.4})`}
       />
       {/* Distant industrial stacks — sit over open water, not under the right beach/cliff */}
@@ -391,8 +521,10 @@ export function CoastalHorizonPollution({ cleanliness, isNight }: { cleanliness:
         <rect x={216} y={66} width={8} height={3} fill={stackColor} />
         <motion.ellipse
           initial={false}
-          cx={221} cy={62}
-          rx={6} ry={3.5}
+          cx={221}
+          cy={62}
+          rx={6}
+          ry={3.5}
           fill={isNight ? 'rgba(180,180,180,0.4)' : 'rgba(120,120,120,0.55)'}
           animate={{ cy: [62, 54, 62], opacity: [0.55, 0.25, 0.55] }}
           transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' as const }}
@@ -403,8 +535,10 @@ export function CoastalHorizonPollution({ cleanliness, isNight }: { cleanliness:
             <rect x={230} y={72} width={7.5} height={2.5} fill={stackColor} />
             <motion.ellipse
               initial={false}
-              cx={234} cy={68}
-              rx={4} ry={2.5}
+              cx={234}
+              cy={68}
+              rx={4}
+              ry={2.5}
               fill={isNight ? 'rgba(160,160,160,0.35)' : 'rgba(130,130,130,0.45)'}
               animate={{ cy: [68, 61, 68], opacity: [0.45, 0.2, 0.45] }}
               transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' as const, delay: 0.8 }}
@@ -415,16 +549,20 @@ export function CoastalHorizonPollution({ cleanliness, isNight }: { cleanliness:
       {/* Iridescent oil sheen on the water surface */}
       <motion.ellipse
         initial={false}
-        cx={160} cy={98}
-        rx={70} ry={5}
+        cx={160}
+        cy={98}
+        rx={70}
+        ry={5}
         fill={sheenA}
         animate={{ rx: [65, 75, 65], opacity: [0.35, 0.55, 0.35] }}
         transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' as const }}
       />
       <motion.ellipse
         initial={false}
-        cx={185} cy={102}
-        rx={35} ry={2.5}
+        cx={185}
+        cy={102}
+        rx={35}
+        ry={2.5}
         fill={sheenB}
         animate={{ rx: [30, 40, 30], opacity: [0.3, 0.5, 0.3] }}
         transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' as const, delay: 1 }}
@@ -434,7 +572,14 @@ export function CoastalHorizonPollution({ cleanliness, isNight }: { cleanliness:
         <g transform="translate(155, 93)" opacity={0.92}>
           <path d="M-22,5 L-18,0 L26,0 L22,5 Z" fill={isNight ? '#0a0f18' : '#0f172a'} />
           <rect x={-6} y={-6} width={14} height={6} rx={0.5} fill="#1e293b" />
-          <rect x={0} y={-4} width={4} height={2.5} fill={isNight ? '#fbbf24' : '#475569'} opacity={0.7} />
+          <rect
+            x={0}
+            y={-4}
+            width={4}
+            height={2.5}
+            fill={isNight ? '#fbbf24' : '#475569'}
+            opacity={0.7}
+          />
           <rect x={12} y={-2} width={2} height={2} fill="#64748b" opacity={0.6} />
         </g>
       )}

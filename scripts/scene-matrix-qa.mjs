@@ -74,7 +74,9 @@ for (const label of ['Desktop', 'Ultrawide']) {
   await page2.waitForTimeout(700);
   const card = page2.getByLabel(`${label} viewport preview`);
   await card.scrollIntoViewIfNeeded();
-  await card.screenshot({ path: path.join(out, `aspect-${label.toLowerCase()}-city-very-clean.png`) });
+  await card.screenshot({
+    path: path.join(out, `aspect-${label.toLowerCase()}-city-very-clean.png`),
+  });
   console.log('aspect', label);
 }
 

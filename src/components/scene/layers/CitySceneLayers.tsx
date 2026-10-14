@@ -48,7 +48,8 @@ export function CitySceneLayers({
   intensity,
 }: CitySceneLayersProps) {
   const hero = getCityHeroEmphasis(cleanlinessBand);
-  const showStack = sceneConfig.cleanliness < 0.2 || hero.hero === 'distant-stack' || hero.hero === 'smog';
+  const showStack =
+    sceneConfig.cleanliness < 0.2 || hero.hero === 'distant-stack' || hero.hero === 'smog';
 
   return (
     <>
@@ -59,7 +60,12 @@ export function CitySceneLayers({
         transition={{ duration: 1.2, ease: 'easeInOut' as const }}
         className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-0 overflow-hidden"
       >
-        <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio={SCENE_SILHOUETTE_ASPECT} aria-hidden="true">
+        <svg
+          viewBox="0 0 400 150"
+          className="w-full h-full"
+          preserveAspectRatio={SCENE_SILHOUETTE_ASPECT}
+          aria-hidden="true"
+        >
           <SmogBand cleanliness={sceneConfig.cleanliness} isNight={isNight} />
           {showStack && <DistantStack isNight={isNight} />}
           <CityLandscapeBack
@@ -82,7 +88,12 @@ export function CitySceneLayers({
         transition={{ duration: 1.2, ease: 'easeInOut' as const }}
         className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-10 overflow-hidden"
       >
-        <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio={SCENE_SILHOUETTE_ASPECT} aria-hidden="true">
+        <svg
+          viewBox="0 0 400 150"
+          className="w-full h-full"
+          preserveAspectRatio={SCENE_SILHOUETTE_ASPECT}
+          aria-hidden="true"
+        >
           <CityLandscapeMid
             cleanliness={sceneConfig.cleanliness}
             isNight={isNight}
@@ -100,7 +111,12 @@ export function CitySceneLayers({
 
       {/* City: Foreground buildings + road + London Eye + BESS */}
       <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-20 overflow-hidden">
-        <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio={SCENE_SILHOUETTE_ASPECT} aria-hidden="true">
+        <svg
+          viewBox="0 0 400 150"
+          className="w-full h-full"
+          preserveAspectRatio={SCENE_SILHOUETTE_ASPECT}
+          aria-hidden="true"
+        >
           <g opacity={hero.frontOpacity} style={{ transition: 'opacity 1.2s ease' }}>
             <CityLandscapeFront
               cleanliness={sceneConfig.cleanliness}
@@ -138,7 +154,12 @@ export function CitySceneLayers({
 
       {/* City: sparse traffic + Tube flash — alive at low density */}
       <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-[22] overflow-hidden">
-        <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio={SCENE_SILHOUETTE_ASPECT} aria-hidden="true">
+        <svg
+          viewBox="0 0 400 150"
+          className="w-full h-full"
+          preserveAspectRatio={SCENE_SILHOUETTE_ASPECT}
+          aria-hidden="true"
+        >
           {hero.trafficCount > 0 && (
             <CityTraffic
               cleanliness={sceneConfig.cleanliness}
@@ -154,7 +175,12 @@ export function CitySceneLayers({
       <AnimatePresence>
         {hero.pigeonCount > 0 && sceneConfig.isDaytime && sceneConfig.cleanliness > 0.4 && (
           <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-[23] overflow-hidden">
-            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio={SCENE_SILHOUETTE_ASPECT} aria-hidden="true">
+            <svg
+              viewBox="0 0 400 150"
+              className="w-full h-full"
+              preserveAspectRatio={SCENE_SILHOUETTE_ASPECT}
+              aria-hidden="true"
+            >
               <Pigeon x={180} y={136} delay={0} />
               {hero.pigeonCount > 1 && <Pigeon x={60} y={135} delay={1.5} />}
             </svg>
@@ -165,7 +191,12 @@ export function CitySceneLayers({
       <AnimatePresence>
         {hero.showCrane && sceneConfig.cleanliness < 0.4 && (
           <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-5 overflow-hidden">
-            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio={SCENE_SILHOUETTE_ASPECT} aria-hidden="true">
+            <svg
+              viewBox="0 0 400 150"
+              className="w-full h-full"
+              preserveAspectRatio={SCENE_SILHOUETTE_ASPECT}
+              aria-hidden="true"
+            >
               <ConstructionCrane x={350} isNight={isNight} />
             </svg>
           </div>
@@ -173,43 +204,51 @@ export function CitySceneLayers({
       </AnimatePresence>
 
       <SceneHotspots
-        hotspots={[
-          {
-            id: 'london-eye',
-            label: 'London Eye',
-            x: 18.75, y: 56.7,
-            visible: isCityHotspotActive(hero.hero, 'london-eye', hero),
-            fact: cleanlinessBand === 'very-clean'
-              ? "London's landmarks are riding 100% renewable right now — the grid is squeaky clean."
-              : 'The London Eye has run on 100% certified renewable electricity since 2018.',
-          },
-          {
-            id: 'bess',
-            label: 'Battery Storage',
-            x: 82, y: 78,
-            visible: isCityHotspotActive(hero.hero, 'bess', hero),
-            fact: sceneConfig.cleanliness > 0.6
-              ? 'Grid batteries are discharging cheap, clean overnight wind back into the system.'
-              : 'Battery storage smooths spikes — charging when wind is plentiful, dispatching when demand peaks.',
-          },
-          {
-            id: 'ev-charger',
-            label: 'EV Charging',
-            x: 50, y: 80,
-            visible:
-              isNight &&
-              sceneConfig.cleanliness > 0.7 &&
-              isCityHotspotActive(hero.hero, 'ev-charger', hero),
-            fact: `Charging now adds roughly ${Math.round(intensity)} g CO₂ per kWh — among the cleanest windows of the day.`,
-          },
-          {
-            id: 'distant-stack',
-            label: 'Gas Peaker',
-            x: 91, y: 50,
-            visible: showStack && isCityHotspotActive(hero.hero, 'distant-stack', hero),
-            fact: 'Gas peaker plants kick in when demand spikes faster than renewables can ramp — the biggest driver of dirty grid hours.',
-          },
-        ] satisfies HotspotDef[]}
+        hotspots={
+          [
+            {
+              id: 'london-eye',
+              label: 'London Eye',
+              x: 18.75,
+              y: 56.7,
+              visible: isCityHotspotActive(hero.hero, 'london-eye', hero),
+              fact:
+                cleanlinessBand === 'very-clean'
+                  ? "London's landmarks are riding 100% renewable right now — the grid is squeaky clean."
+                  : 'The London Eye has run on 100% certified renewable electricity since 2018.',
+            },
+            {
+              id: 'bess',
+              label: 'Battery Storage',
+              x: 82,
+              y: 78,
+              visible: isCityHotspotActive(hero.hero, 'bess', hero),
+              fact:
+                sceneConfig.cleanliness > 0.6
+                  ? 'Grid batteries are discharging cheap, clean overnight wind back into the system.'
+                  : 'Battery storage smooths spikes — charging when wind is plentiful, dispatching when demand peaks.',
+            },
+            {
+              id: 'ev-charger',
+              label: 'EV Charging',
+              x: 50,
+              y: 80,
+              visible:
+                isNight &&
+                sceneConfig.cleanliness > 0.7 &&
+                isCityHotspotActive(hero.hero, 'ev-charger', hero),
+              fact: `Charging now adds roughly ${Math.round(intensity)} g CO₂ per kWh — among the cleanest windows of the day.`,
+            },
+            {
+              id: 'distant-stack',
+              label: 'Gas Peaker',
+              x: 91,
+              y: 50,
+              visible: showStack && isCityHotspotActive(hero.hero, 'distant-stack', hero),
+              fact: 'Gas peaker plants kick in when demand spikes faster than renewables can ramp — the biggest driver of dirty grid hours.',
+            },
+          ] satisfies HotspotDef[]
+        }
       />
     </>
   );

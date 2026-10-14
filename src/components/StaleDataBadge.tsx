@@ -50,4 +50,3 @@ export function StaleDataBadge({ lastUpdated, thresholdMinutes = 35 }: StaleData
     </AnimatePresence>
   );
 }
-

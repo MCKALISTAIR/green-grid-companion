@@ -11,11 +11,7 @@ import {
   CommandList,
   CommandSeparator,
 } from '@/components/ui/command';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { UK_REGIONS } from '@/lib/carbonApi';
 import { useToast } from '@/hooks/use-toast';
 import { searchLocation, getRegionFromCoordinates } from '@/lib/location';
@@ -118,16 +114,20 @@ export function RegionSelector({ value, onChange }: RegionSelectorProps) {
     }
   };
 
-  const filteredRegions = UK_REGIONS.filter(region =>
-    region.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    region.postcode.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredRegions = UK_REGIONS.filter(
+    (region) =>
+      region.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      region.postcode.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
-    <Popover open={open} onOpenChange={(isOpen) => {
-      setOpen(isOpen);
-      if (!isOpen) setSearchQuery('');
-    }}>
+    <Popover
+      open={open}
+      onOpenChange={(isOpen) => {
+        setOpen(isOpen);
+        if (!isOpen) setSearchQuery('');
+      }}
+    >
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -138,9 +138,7 @@ export function RegionSelector({ value, onChange }: RegionSelectorProps) {
         >
           <div className="flex items-center gap-2 truncate">
             <MapPin className="w-4 h-4 text-primary shrink-0" aria-hidden="true" />
-            <span className="truncate">
-              {selectedRegion?.name || 'Select region'}
-            </span>
+            <span className="truncate">{selectedRegion?.name || 'Select region'}</span>
           </div>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" aria-hidden="true" />
         </Button>
@@ -167,25 +165,24 @@ export function RegionSelector({ value, onChange }: RegionSelectorProps) {
               ) : searchQuery ? (
                 <div className="flex flex-col gap-2">
                   <p className="text-muted-foreground text-center pb-2">No direct region match.</p>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start"
-                    onClick={handleSearch}
-                  >
+                  <Button variant="outline" className="w-full justify-start" onClick={handleSearch}>
                     <Search className="mr-2 h-4 w-4" />
                     Search for "{searchQuery}"
                   </Button>
                 </div>
               ) : (
-                "No region found."
+                'No region found.'
               )}
             </CommandEmpty>
 
             {!searchQuery && (
               <>
                 <CommandGroup>
-                  <CommandItem onSelect={handleMyLocation} className="cursor-pointer text-primary font-medium">
-                    <Navigation className={cn("mr-2 h-4 w-4", loadingLocation && "animate-spin")} />
+                  <CommandItem
+                    onSelect={handleMyLocation}
+                    className="cursor-pointer text-primary font-medium"
+                  >
+                    <Navigation className={cn('mr-2 h-4 w-4', loadingLocation && 'animate-spin')} />
                     {loadingLocation ? 'Detecting location...' : 'Use my current location'}
                   </CommandItem>
                 </CommandGroup>
@@ -207,7 +204,7 @@ export function RegionSelector({ value, onChange }: RegionSelectorProps) {
                   <Check
                     className={cn(
                       'mr-2 h-4 w-4',
-                      value === region.postcode ? 'opacity-100' : 'opacity-0'
+                      value === region.postcode ? 'opacity-100' : 'opacity-0',
                     )}
                   />
                   <div className="flex flex-col">

@@ -12,17 +12,13 @@ import {
   Check,
   AlertCircle,
   Zap,
-  Leaf
+  Leaf,
 } from 'lucide-react';
 import { useTeslaEnergy, TeslaVehicleState } from '@/hooks/useTeslaEnergy';
 import { TurbineSpinner } from '@/components/ui/turbine-spinner';
 
 const TeslaLogo = ({ className }: { className?: string }) => (
-  <img
-    src="/tesla_logo.png"
-    alt="Tesla Logo"
-    className={`${className} object-contain`}
-  />
+  <img src="/tesla_logo.png" alt="Tesla Logo" className={`${className} object-contain`} />
 );
 
 export function TeslaIntegration() {
@@ -68,7 +64,7 @@ export function TeslaIntegration() {
     setLoadingVehicle(vehicleId);
     try {
       const state = await fetchVehicleState(vehicleId);
-      setVehicleStates(prev => ({ ...prev, [vehicleId]: state }));
+      setVehicleStates((prev) => ({ ...prev, [vehicleId]: state }));
     } finally {
       setLoadingVehicle(null);
     }
@@ -101,7 +97,9 @@ export function TeslaIntegration() {
           <div>
             <div className="flex items-center gap-2">
               <h3 className="font-medium text-foreground">Tesla</h3>
-              <Badge variant="outline" className="text-xs">Setup Required</Badge>
+              <Badge variant="outline" className="text-xs">
+                Setup Required
+              </Badge>
             </div>
             <p className="text-xs text-muted-foreground max-w-[200px]">
               Tesla API credentials need to be configured.
@@ -135,7 +133,8 @@ export function TeslaIntegration() {
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {vehicles.length} vehicle{vehicles.length !== 1 ? 's' : ''}, {energySites.length} energy site{energySites.length !== 1 ? 's' : ''}
+                  {vehicles.length} vehicle{vehicles.length !== 1 ? 's' : ''}, {energySites.length}{' '}
+                  energy site{energySites.length !== 1 ? 's' : ''}
                 </p>
               </div>
             </div>
@@ -166,7 +165,7 @@ export function TeslaIntegration() {
         </Card>
 
         {/* Vehicles */}
-        {vehicles.map(vehicle => {
+        {vehicles.map((vehicle) => {
           const state = vehicleStates[vehicle.vehicle_id];
           const isLoading = loadingVehicle === vehicle.vehicle_id;
 
@@ -220,12 +219,12 @@ export function TeslaIntegration() {
                         <p className="text-xs text-muted-foreground">Current</p>
                       </div>
                       <div aria-label={`Charge Limit: ${state.chargeLimit}%`}>
-                        <div className="text-lg font-semibold">
-                          {state.chargeLimit}%
-                        </div>
+                        <div className="text-lg font-semibold">{state.chargeLimit}%</div>
                         <p className="text-xs text-muted-foreground">Limit</p>
                       </div>
-                      <div aria-label={`Charging Status: ${state.chargingState === 'Charging' ? `Charging at ${state.chargeRate} miles per hour` : (state.chargingState || 'Idle')}`}>
+                      <div
+                        aria-label={`Charging Status: ${state.chargingState === 'Charging' ? `Charging at ${state.chargeRate} miles per hour` : state.chargingState || 'Idle'}`}
+                      >
                         <div className="text-lg font-semibold flex items-center justify-center gap-1">
                           {state.chargingState === 'Charging' ? (
                             <>
@@ -247,7 +246,7 @@ export function TeslaIntegration() {
         })}
 
         {/* Energy Sites */}
-        {energySites.map(site => (
+        {energySites.map((site) => (
           <Card key={site.id} className="p-4 border-border/50">
             <div className="flex items-center gap-3">
               <div className="flex gap-1">
@@ -255,9 +254,7 @@ export function TeslaIntegration() {
                 <Battery className="w-6 h-6 text-green-500" />
               </div>
               <div>
-                <h4 className="font-medium text-sm">
-                  {site.site_name || 'Energy Site'}
-                </h4>
+                <h4 className="font-medium text-sm">{site.site_name || 'Energy Site'}</h4>
                 <p className="text-xs text-muted-foreground">
                   {site.solar_capacity_kw && `${site.solar_capacity_kw}kW Solar`}
                   {site.solar_capacity_kw && site.battery_capacity_kwh && ' • '}
@@ -289,9 +286,7 @@ export function TeslaIntegration() {
                 <p className="text-xs text-muted-foreground">Total Charged</p>
               </div>
               <div>
-                <div className="text-lg font-semibold">
-                  {chargingStats.stats.sessionCount}
-                </div>
+                <div className="text-lg font-semibold">{chargingStats.stats.sessionCount}</div>
                 <p className="text-xs text-muted-foreground">Sessions</p>
               </div>
             </div>

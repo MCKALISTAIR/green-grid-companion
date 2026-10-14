@@ -91,7 +91,9 @@ export function useTeslaEnergy() {
 
   // All useState hooks first
   const [isLinking, setIsLinking] = useState(false);
-  const [cachedIsLinked] = useState(() => localStorage.getItem(LOCAL_STORAGE_KEYS.isLinked) === 'true');
+  const [cachedIsLinked] = useState(
+    () => localStorage.getItem(LOCAL_STORAGE_KEYS.isLinked) === 'true',
+  );
 
   // Fetch status if user might be linked
   const shouldFetchStatus = cachedIsLinked;
@@ -107,7 +109,7 @@ export function useTeslaEnergy() {
     queryFn: async () => {
       // Check if we can get a session
       const session = await ensureAuthSession();
-      
+
       if (!session) {
         return {
           configured: false,
@@ -117,7 +119,7 @@ export function useTeslaEnergy() {
           lastSync: null,
         } as TeslaStatus;
       }
-      
+
       return callTeslaFunction<TeslaStatus>('get-status');
     },
     enabled: shouldFetchStatus,
@@ -143,10 +145,7 @@ export function useTeslaEnergy() {
   }, []);
 
   // Fetch charging stats
-  const {
-    data: chargingStats,
-    isLoading: isChargingStatsLoading,
-  } = useQuery({
+  const { data: chargingStats, isLoading: isChargingStatsLoading } = useQuery({
     queryKey: ['tesla-charging-stats'],
     queryFn: () => callTeslaFunction<TeslaChargingStats>('get-charging-stats'),
     enabled: status?.linked ?? cachedIsLinked,
@@ -159,7 +158,7 @@ export function useTeslaEnergy() {
     try {
       // Ensure we have a session - Tesla OAuth requires it
       const session = await ensureAuthSession();
-      
+
       if (!session) {
         // For Tesla, we need auth because OAuth tokens must be stored server-side
         toast.error('Please sign in first to connect your Tesla account');
@@ -171,7 +170,7 @@ export function useTeslaEnergy() {
 
       const { authUrl, state } = await callTeslaFunction<{ authUrl: string; state: string }>(
         'get-auth-url',
-        { redirectUri }
+        { redirectUri },
       );
 
       // Store state for CSRF validation

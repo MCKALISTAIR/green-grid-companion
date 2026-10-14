@@ -9,16 +9,24 @@ import { parseIntensityPoint, type IntensityPoint } from './intensity-point.ts';
 
 /** National (/intensity/...) and regional (/regional/intensity/.../regionid/N) bodies differ in shape. */
 export function extractIntensityList(json: unknown, isRegional: boolean): unknown[] {
-  // deno-lint-ignore no-explicit-any
-  const data = (json as any)?.data;
+  const root = json as { data?: unknown } | null | undefined;
+  const data = root?.data;
   if (isRegional) {
-    const list = Array.isArray(data) ? data[0]?.data : data?.data;
+    const regional = data as { data?: unknown } | unknown[] | null | undefined;
+    const list = Array.isArray(regional)
+      ? (regional[0] as { data?: unknown } | undefined)?.data
+      : regional && typeof regional === 'object'
+        ? (regional as { data?: unknown }).data
+        : undefined;
     return Array.isArray(list) ? list : [];
   }
   return Array.isArray(data) ? data : [];
 }
 
-export function buildIntensityMap(json: unknown, isRegional: boolean): { map: Map<string, IntensityPoint>; skipped: number } {
+export function buildIntensityMap(
+  json: unknown,
+  isRegional: boolean,
+): { map: Map<string, IntensityPoint>; skipped: number } {
   const map = new Map<string, IntensityPoint>();
   let skipped = 0;
   for (const item of extractIntensityList(json, isRegional)) {

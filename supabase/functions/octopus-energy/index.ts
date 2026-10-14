@@ -37,30 +37,43 @@ const resolveApiKey = (supabase: any, row: StoredCredentialRow | null | undefine
 // Scheduler secret lives in the database (see 20261003120000 migration).
 const getSchedulerSecret = createSchedulerSecretProvider(() =>
   fetchSchedulerSecret(
-    createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!) as unknown as SchedulerSecretRpcClient,
-  ));
+    createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    ) as unknown as SchedulerSecretRpcClient,
+  ),
+);
 
 // Actions that may only be triggered by the scheduler (pg_cron) and must carry
 // the database-held scheduler secret in the x-cron-secret header.
-const SCHEDULER_ACTIONS = new Set(['sync-all-users', 'calculate-all-footprints', 'encrypt-legacy-credentials']);
+const SCHEDULER_ACTIONS = new Set([
+  'sync-all-users',
+  'calculate-all-footprints',
+  'encrypt-legacy-credentials',
+]);
 
 // --- RATE LIMITING ---
 // Persistent rate limiter for credential operations
 const RATE_LIMIT_CONFIG = {
-  maxAttempts: 5,        // Max attempts per window
-  windowMs: 60 * 1000,   // 1 minute window
+  maxAttempts: 5, // Max attempts per window
+  windowMs: 60 * 1000, // 1 minute window
   blockDurationMs: 5 * 60 * 1000, // 5 minute block after exceeding limit
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function checkRateLimit(supabase: any, userId: string, action: string): Promise<{ allowed: boolean; retryAfter?: number }> {
+async function checkRateLimit(
+  // Deno edge handlers pass the service-role client; keep this loose on purpose.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any,
+  userId: string,
+  action: string,
+): Promise<{ allowed: boolean; retryAfter?: number }> {
   const key = `${userId}:${action}`;
 
   const { data, error } = await supabase.rpc('fn_check_rate_limit', {
     p_key: key,
     p_max_attempts: RATE_LIMIT_CONFIG.maxAttempts,
     p_window_ms: RATE_LIMIT_CONFIG.windowMs,
-    p_block_duration_ms: RATE_LIMIT_CONFIG.blockDurationMs
+    p_block_duration_ms: RATE_LIMIT_CONFIG.blockDurationMs,
   });
 
   if (error) {
@@ -74,7 +87,7 @@ async function checkRateLimit(supabase: any, userId: string, action: string): Pr
   const result = data as any;
   return {
     allowed: result.allowed,
-    retryAfter: result.retry_after
+    retryAfter: result.retry_after,
   };
 }
 
@@ -117,13 +130,13 @@ function trackAuthFailure(ip: string, reason: string, userAgent: string | null) 
   const now = Date.now();
   const existing = authFailureTracker.get(ip);
 
-  if (existing && (now - existing.firstFailure) < AUTH_FAILURE_WINDOW_MS) {
+  if (existing && now - existing.firstFailure < AUTH_FAILURE_WINDOW_MS) {
     existing.count++;
     authFailureTracker.set(ip, existing);
 
     // Escalate severity based on failure count
-    const severity = existing.count >= AUTH_FAILURE_THRESHOLD ? 'HIGH' :
-      existing.count >= 5 ? 'MEDIUM' : 'LOW';
+    const severity =
+      existing.count >= AUTH_FAILURE_THRESHOLD ? 'HIGH' : existing.count >= 5 ? 'MEDIUM' : 'LOW';
 
     logSecurityEvent({
       type: existing.count >= AUTH_FAILURE_THRESHOLD ? 'SUSPICIOUS_ACTIVITY' : 'AUTH_FAILURE',
@@ -134,9 +147,10 @@ function trackAuthFailure(ip: string, reason: string, userAgent: string | null) 
         user_agent: userAgent,
         failure_count: existing.count,
         window_minutes: 15,
-        message: existing.count >= AUTH_FAILURE_THRESHOLD
-          ? `Potential brute force attack: ${existing.count} failures from IP ${ip}`
-          : `Auth failure from ${ip}`,
+        message:
+          existing.count >= AUTH_FAILURE_THRESHOLD
+            ? `Potential brute force attack: ${existing.count} failures from IP ${ip}`
+            : `Auth failure from ${ip}`,
       },
       timestamp: new Date().toISOString(),
     });
@@ -162,12 +176,11 @@ function trackAuthFailure(ip: string, reason: string, userAgent: string | null) 
 function cleanupAuthFailureTracker() {
   const now = Date.now();
   for (const [ip, data] of authFailureTracker.entries()) {
-    if ((now - data.firstFailure) > AUTH_FAILURE_WINDOW_MS) {
+    if (now - data.firstFailure > AUTH_FAILURE_WINDOW_MS) {
       authFailureTracker.delete(ip);
     }
   }
 }
-
 
 interface OctopusConsumption {
   consumption: number;
@@ -201,8 +214,20 @@ function getRegionIdFromMpanStatic(mpan: string): number | null {
   if (!mpan || mpan.length < 2) return null;
   const areaCode = mpan.substring(0, 2);
   const mapping: Record<string, number> = {
-    '10': 10, '11': 9, '12': 13, '13': 6, '14': 8, '15': 4, '16': 3,
-    '17': 2, '18': 1, '19': 12, '20': 11, '21': 7, '22': 14, '23': 5,
+    '10': 10,
+    '11': 9,
+    '12': 13,
+    '13': 6,
+    '14': 8,
+    '15': 4,
+    '16': 3,
+    '17': 2,
+    '18': 1,
+    '19': 12,
+    '20': 11,
+    '21': 7,
+    '22': 14,
+    '23': 5,
   };
   return mapping[areaCode] || null;
 }
@@ -214,7 +239,8 @@ Deno.serve(async (req: Request) => {
   }
 
   // Extract request metadata for logging
-  const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+  const clientIP =
+    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
     req.headers.get('x-real-ip') ||
     'unknown';
   const userAgent = req.headers.get('user-agent');
@@ -242,10 +268,10 @@ Deno.serve(async (req: Request) => {
     if (cronAction === 'encrypt-legacy-credentials') {
       const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
       const result = await backfillLegacyCredentials(supabase, getCredentialKey);
-      return new Response(
-        JSON.stringify(result),
-        { status: result.status === 'done' ? 200 : 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify(result), {
+        status: result.status === 'done' ? 200 : 503,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     if (cronAction === 'sync-all-users' || cronAction === 'calculate-all-footprints') {
@@ -262,13 +288,15 @@ Deno.serve(async (req: Request) => {
         console.log('No active meters found for cron sync');
         return new Response(
           JSON.stringify({ success: true, users_synced: 0, message: 'No active meters' }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
         );
       }
 
       // De-duplicate by user_id
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const userIds = [...new Set(allMeters.map((m: any) => m.user_id))].filter(Boolean) as string[];
+      const userIds = [...new Set(allMeters.map((m: any) => m.user_id))].filter(
+        Boolean,
+      ) as string[];
       console.log(`Found ${userIds.length} users with active meters`);
 
       // Optimize: Fetch all credentials at once if needed to avoid N+1 queries
@@ -291,79 +319,191 @@ Deno.serve(async (req: Request) => {
       for (let i = 0; i < userIds.length; i += BATCH_SIZE) {
         const batch = userIds.slice(i, i + BATCH_SIZE);
 
-        await Promise.all(batch.map(async (uid) => {
-          try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const userMeters = allMeters.filter((m: any) => m.user_id === uid);
+        await Promise.all(
+          batch.map(async (uid) => {
+            try {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const userMeters = allMeters.filter((m: any) => m.user_id === uid);
 
-            if (cronAction === 'sync-all-users') {
-              // Get credentials for this user from pre-fetched map
-              const creds = credsMap.get(uid);
+              if (cronAction === 'sync-all-users') {
+                // Get credentials for this user from pre-fetched map
+                const creds = credsMap.get(uid);
 
-              if (!creds) {
-                console.log(`No credentials for user ${uid.substring(0, 8)}..., skipping`);
-                return; // Replaces continue in map
-              }
-
-              const cronApiKey = await resolveApiKey(supabase, creds);
-              if (!cronApiKey) {
-                console.log(`Credentials for user ${uid.substring(0, 8)}... unavailable, skipping`);
-                return;
-              }
-              const authHeaderOctopus = 'Basic ' + btoa(cronApiKey + ':');
-
-              for (const meter of userMeters) {
-                const daysBack = 3;
-                const periodTo = new Date();
-                const periodFrom = new Date();
-                periodFrom.setDate(periodFrom.getDate() - daysBack);
-
-                const consumptionUrl = `https://api.octopus.energy/v1/electricity-meter-points/${meter.mpan}/meters/${meter.serial_number}/consumption/?period_from=${periodFrom.toISOString()}&period_to=${periodTo.toISOString()}&page_size=25000`;
-
-                const response = await fetch(consumptionUrl, {
-                  headers: { 'Authorization': authHeaderOctopus }
-                });
-                if (!response.ok) {
-                  console.error(`Octopus API error for meter ${meter.mpan}: ${response.status}`);
-                  errorCount++;
-                  continue;
+                if (!creds) {
+                  console.log(`No credentials for user ${uid.substring(0, 8)}..., skipping`);
+                  return; // Replaces continue in map
                 }
 
-                const consumptionData = await response.json();
-                const consumption: OctopusConsumption[] = consumptionData.results || [];
-
-                if (!consumption?.length) continue;
-
-                const firstRecord = consumption[consumption.length - 1];
-                const lastRecord = consumption[0];
-                const minTime = new Date(firstRecord.interval_start);
-                const maxTime = new Date(lastRecord.interval_end);
-
-                const mpan = meter.mpan;
-                const regionId = getRegionIdFromMpanStatic(mpan);
-
-                let intensityUrl = `https://api.carbonintensity.org.uk/intensity/${minTime.toISOString()}/${maxTime.toISOString()}`;
-                let isRegional = false;
-
-                if (regionId) {
-                  intensityUrl = `https://api.carbonintensity.org.uk/regional/intensity/${minTime.toISOString()}/${maxTime.toISOString()}/regionid/${regionId}`;
-                  isRegional = true;
+                const cronApiKey = await resolveApiKey(supabase, creds);
+                if (!cronApiKey) {
+                  console.log(
+                    `Credentials for user ${uid.substring(0, 8)}... unavailable, skipping`,
+                  );
+                  return;
                 }
+                const authHeaderOctopus = 'Basic ' + btoa(cronApiKey + ':');
 
-                const intensityResponse = await fetch(intensityUrl);
-                if (!intensityResponse.ok) {
-                  console.error(`Carbon intensity API error for ${mpan}: ${intensityResponse.status}`);
-                  // Still store consumption even if intensity fetch fails
-                } else {
+                for (const meter of userMeters) {
+                  const daysBack = 3;
+                  const periodTo = new Date();
+                  const periodFrom = new Date();
+                  periodFrom.setDate(periodFrom.getDate() - daysBack);
+
+                  const consumptionUrl = `https://api.octopus.energy/v1/electricity-meter-points/${meter.mpan}/meters/${meter.serial_number}/consumption/?period_from=${periodFrom.toISOString()}&period_to=${periodTo.toISOString()}&page_size=25000`;
+
+                  const response = await fetch(consumptionUrl, {
+                    headers: { Authorization: authHeaderOctopus },
+                  });
+                  if (!response.ok) {
+                    console.error(`Octopus API error for meter ${meter.mpan}: ${response.status}`);
+                    errorCount++;
+                    continue;
+                  }
+
+                  const consumptionData = await response.json();
+                  const consumption: OctopusConsumption[] = consumptionData.results || [];
+
+                  if (!consumption?.length) continue;
+
+                  const firstRecord = consumption[consumption.length - 1];
+                  const lastRecord = consumption[0];
+                  const minTime = new Date(firstRecord.interval_start);
+                  const maxTime = new Date(lastRecord.interval_end);
+
+                  const mpan = meter.mpan;
+                  const regionId = getRegionIdFromMpanStatic(mpan);
+
+                  let intensityUrl = `https://api.carbonintensity.org.uk/intensity/${minTime.toISOString()}/${maxTime.toISOString()}`;
+                  let isRegional = false;
+
+                  if (regionId) {
+                    intensityUrl = `https://api.carbonintensity.org.uk/regional/intensity/${minTime.toISOString()}/${maxTime.toISOString()}/regionid/${regionId}`;
+                    isRegional = true;
+                  }
+
+                  const intensityResponse = await fetch(intensityUrl);
+                  if (!intensityResponse.ok) {
+                    console.error(
+                      `Carbon intensity API error for ${mpan}: ${intensityResponse.status}`,
+                    );
+                    // Still store consumption even if intensity fetch fails
+                  } else {
+                    const intensityJson = await intensityResponse.json();
+                    const intensityMap = new Map<string, { intensity: number; index: string }>();
+
+                    // Shared rules (actual → forecast, skip unusable half-hours): _shared/footprint-records.ts
+                    const built = buildIntensityMap(intensityJson, isRegional);
+                    for (const [k, v] of built.map) intensityMap.set(k, v);
+                    if (built.skipped > 0)
+                      console.warn(
+                        `[FOOTPRINT] Skipped ${built.skipped} half-hour(s) with no usable intensity data`,
+                      );
+
+                    // Store footprint records if intensity was found
+                    const footprintRecords: FootprintRecord[] = [];
+                    for (const record of consumption) {
+                      const data = intensityMap.get(record.interval_start);
+                      if (data) {
+                        footprintRecords.push({
+                          interval_start: record.interval_start,
+                          interval_end: record.interval_end,
+                          consumption_kwh: record.consumption,
+                          intensity_gco2_kwh: data.intensity,
+                          carbon_g: record.consumption * data.intensity,
+                          intensity_index: data.index,
+                          mpan: mpan,
+                        });
+                      }
+                    }
+
+                    if (footprintRecords.length > 0) {
+                      await supabase
+                        .from('carbon_footprint')
+                        .upsert(footprintRecords, { onConflict: 'mpan,interval_start' });
+                    }
+                  }
+
+                  let insertedCount = 0;
+                  const records = consumption.map((reading) => ({
+                    interval_start: reading.interval_start,
+                    interval_end: reading.interval_end,
+                    consumption_kwh: reading.consumption,
+                    mpan: meter.mpan,
+                    serial_number: meter.serial_number,
+                  }));
+
+                  // Process in chunks of 1000 to avoid request size limits
+                  const CHUNK_SIZE = 1000;
+                  for (let j = 0; j < records.length; j += CHUNK_SIZE) {
+                    const chunk = records.slice(j, j + CHUNK_SIZE);
+                    const { error } = await supabase
+                      .from('octopus_consumption')
+                      .upsert(chunk, { onConflict: 'mpan,interval_start' });
+
+                    if (!error) {
+                      insertedCount += chunk.length;
+                    } else {
+                      console.error(`Error upserting chunk ${j / CHUNK_SIZE}:`, error);
+                    }
+                  }
+
+                  // Update last sync time
+                  await supabase
+                    .from('octopus_meters')
+                    .update({ last_sync_at: new Date().toISOString() })
+                    .eq('mpan', meter.mpan)
+                    .eq('user_id', uid);
+
+                  console.log(`Synced ${insertedCount} readings for meter ${meter.mpan}`);
+                }
+              } else {
+                // calculate-all-footprints
+                for (const meter of userMeters) {
+                  const { data: consumption } = await supabase
+                    .from('octopus_consumption')
+                    .select('*')
+                    .eq('mpan', meter.mpan)
+                    .order('interval_start', { ascending: false })
+                    .limit(500);
+
+                  if (!consumption?.length) continue;
+
+                  const firstRecord = consumption[consumption.length - 1];
+                  const lastRecord = consumption[0];
+                  const minTime = new Date(firstRecord.interval_start);
+                  const maxTime = new Date(lastRecord.interval_end);
+
+                  const mpan = meter.mpan;
+                  const regionId = getRegionIdFromMpanStatic(mpan);
+
+                  let intensityUrl = `https://api.carbonintensity.org.uk/intensity/${minTime.toISOString()}/${maxTime.toISOString()}`;
+                  let isRegional = false;
+
+                  if (regionId) {
+                    intensityUrl = `https://api.carbonintensity.org.uk/regional/intensity/${minTime.toISOString()}/${maxTime.toISOString()}/regionid/${regionId}`;
+                    isRegional = true;
+                  }
+
+                  const intensityResponse = await fetch(intensityUrl);
+                  if (!intensityResponse.ok) {
+                    console.error(
+                      `Carbon intensity API error for ${mpan}: ${intensityResponse.status}`,
+                    );
+                    errorCount++;
+                    continue;
+                  }
+
                   const intensityJson = await intensityResponse.json();
-                  const intensityMap = new Map<string, { intensity: number, index: string }>();
+                  const intensityMap = new Map<string, { intensity: number; index: string }>();
 
                   // Shared rules (actual → forecast, skip unusable half-hours): _shared/footprint-records.ts
                   const built = buildIntensityMap(intensityJson, isRegional);
                   for (const [k, v] of built.map) intensityMap.set(k, v);
-                  if (built.skipped > 0) console.warn(`[FOOTPRINT] Skipped ${built.skipped} half-hour(s) with no usable intensity data`);
+                  if (built.skipped > 0)
+                    console.warn(
+                      `[FOOTPRINT] Skipped ${built.skipped} half-hour(s) with no usable intensity data`,
+                    );
 
-                  // Store footprint records if intensity was found
                   const footprintRecords: FootprintRecord[] = [];
                   for (const record of consumption) {
                     const data = intensityMap.get(record.interval_start);
@@ -371,11 +511,11 @@ Deno.serve(async (req: Request) => {
                       footprintRecords.push({
                         interval_start: record.interval_start,
                         interval_end: record.interval_end,
-                        consumption_kwh: record.consumption,
+                        consumption_kwh: record.consumption_kwh,
                         intensity_gco2_kwh: data.intensity,
-                        carbon_g: record.consumption * data.intensity,
+                        carbon_g: record.consumption_kwh * data.intensity,
                         intensity_index: data.index,
-                        mpan: mpan
+                        mpan: record.mpan,
                       });
                     }
                   }
@@ -385,121 +525,25 @@ Deno.serve(async (req: Request) => {
                       .from('carbon_footprint')
                       .upsert(footprintRecords, { onConflict: 'mpan,interval_start' });
                   }
+
+                  console.log(
+                    `Calculated ${footprintRecords.length} footprint records for meter ${mpan}`,
+                  );
                 }
-
-                let insertedCount = 0;
-                const records = consumption.map(reading => ({
-                  interval_start: reading.interval_start,
-                  interval_end: reading.interval_end,
-                  consumption_kwh: reading.consumption,
-                  mpan: meter.mpan,
-                  serial_number: meter.serial_number
-                }));
-
-                // Process in chunks of 1000 to avoid request size limits
-                const CHUNK_SIZE = 1000;
-                for (let j = 0; j < records.length; j += CHUNK_SIZE) {
-                  const chunk = records.slice(j, j + CHUNK_SIZE);
-                  const { error } = await supabase
-                    .from('octopus_consumption')
-                    .upsert(chunk, { onConflict: 'mpan,interval_start' });
-
-                  if (!error) {
-                    insertedCount += chunk.length;
-                  } else {
-                    console.error(`Error upserting chunk ${j / CHUNK_SIZE}:`, error);
-                  }
-                }
-
-                // Update last sync time
-                await supabase
-                  .from('octopus_meters')
-                  .update({ last_sync_at: new Date().toISOString() })
-                  .eq('mpan', meter.mpan)
-                  .eq('user_id', uid);
-
-                console.log(`Synced ${insertedCount} readings for meter ${meter.mpan}`);
               }
-            } else {
-              // calculate-all-footprints
-              for (const meter of userMeters) {
-                const { data: consumption } = await supabase
-                  .from('octopus_consumption')
-                  .select('*')
-                  .eq('mpan', meter.mpan)
-                  .order('interval_start', { ascending: false })
-                  .limit(500);
 
-                if (!consumption?.length) continue;
-
-                const firstRecord = consumption[consumption.length - 1];
-                const lastRecord = consumption[0];
-                const minTime = new Date(firstRecord.interval_start);
-                const maxTime = new Date(lastRecord.interval_end);
-
-                const mpan = meter.mpan;
-                const regionId = getRegionIdFromMpanStatic(mpan);
-
-                let intensityUrl = `https://api.carbonintensity.org.uk/intensity/${minTime.toISOString()}/${maxTime.toISOString()}`;
-                let isRegional = false;
-
-                if (regionId) {
-                  intensityUrl = `https://api.carbonintensity.org.uk/regional/intensity/${minTime.toISOString()}/${maxTime.toISOString()}/regionid/${regionId}`;
-                  isRegional = true;
-                }
-
-                const intensityResponse = await fetch(intensityUrl);
-                if (!intensityResponse.ok) {
-                  console.error(`Carbon intensity API error for ${mpan}: ${intensityResponse.status}`);
-                  errorCount++;
-                  continue;
-                }
-
-                const intensityJson = await intensityResponse.json();
-                const intensityMap = new Map<string, { intensity: number, index: string }>();
-
-                // Shared rules (actual → forecast, skip unusable half-hours): _shared/footprint-records.ts
-                const built = buildIntensityMap(intensityJson, isRegional);
-                for (const [k, v] of built.map) intensityMap.set(k, v);
-                if (built.skipped > 0) console.warn(`[FOOTPRINT] Skipped ${built.skipped} half-hour(s) with no usable intensity data`);
-
-                const footprintRecords: FootprintRecord[] = [];
-                for (const record of consumption) {
-                  const data = intensityMap.get(record.interval_start);
-                  if (data) {
-                    footprintRecords.push({
-                      interval_start: record.interval_start,
-                      interval_end: record.interval_end,
-                      consumption_kwh: record.consumption_kwh,
-                      intensity_gco2_kwh: data.intensity,
-                      carbon_g: record.consumption_kwh * data.intensity,
-                      intensity_index: data.index,
-                      mpan: record.mpan
-                    });
-                  }
-                }
-
-                if (footprintRecords.length > 0) {
-                  await supabase
-                    .from('carbon_footprint')
-                    .upsert(footprintRecords, { onConflict: 'mpan,interval_start' });
-                }
-
-                console.log(`Calculated ${footprintRecords.length} footprint records for meter ${mpan}`);
-              }
+              successCount++;
+            } catch (err) {
+              console.error(`Error processing user ${uid.substring(0, 8)}...:`, err);
+              errorCount++;
             }
-
-            successCount++;
-          } catch (err) {
-            console.error(`Error processing user ${uid.substring(0, 8)}...:`, err);
-            errorCount++;
-          }
-        }));
+          }),
+        );
       }
 
       return new Response(
         JSON.stringify({ success: true, users_synced: successCount, errors: errorCount }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
 
@@ -507,19 +551,19 @@ Deno.serve(async (req: Request) => {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       trackAuthFailure(clientIP, 'missing_auth_header', userAgent);
-      return new Response(
-        JSON.stringify({ error: 'Missing Authorization header' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'Missing Authorization header' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // Check for malformed auth header
     if (!authHeader.startsWith('Bearer ') || authHeader.length < 20) {
       trackAuthFailure(clientIP, 'malformed_auth_header', userAgent);
-      return new Response(
-        JSON.stringify({ error: 'Invalid Authorization header format' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'Invalid Authorization header format' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // Use service role but validate the user first
@@ -527,14 +571,17 @@ Deno.serve(async (req: Request) => {
 
     // Validate User
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser(token);
 
     if (userError || !user) {
       trackAuthFailure(clientIP, userError?.message || 'invalid_token', userAgent);
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const userId = user.id;
@@ -556,7 +603,9 @@ Deno.serve(async (req: Request) => {
       days = parseInt(url.searchParams.get('days') || '7');
     }
 
-    console.log(`[${requestId}] Octopus Energy API - Action: ${action}, Days: ${days}, User: ${userId.substring(0, 8)}...`);
+    console.log(
+      `[${requestId}] Octopus Energy API - Action: ${action}, Days: ${days}, User: ${userId.substring(0, 8)}...`,
+    );
 
     // Cleanup old entries periodically
     cleanupAuthFailureTracker();
@@ -564,7 +613,10 @@ Deno.serve(async (req: Request) => {
     // --- CREDENTIALS VALIDATION ---
 
     // Server-side validation for credentials format
-    function validateCredentials(apiKey: string, accountNumber: string): { valid: boolean; errors: string[] } {
+    function validateCredentials(
+      apiKey: string,
+      accountNumber: string,
+    ): { valid: boolean; errors: string[] } {
       const errors: string[] = [];
 
       // Account number validation: A-XXXXXXXX format (letter A, dash, 8 alphanumeric)
@@ -584,7 +636,9 @@ Deno.serve(async (req: Request) => {
       if (!sanitizedApiKey) {
         errors.push('API key is required');
       } else if (!apiKeyPattern.test(sanitizedApiKey)) {
-        errors.push('API key must start with sk_live_ followed by at least 20 alphanumeric characters');
+        errors.push(
+          'API key must start with sk_live_ followed by at least 20 alphanumeric characters',
+        );
       }
 
       // Additional security checks
@@ -628,16 +682,16 @@ Deno.serve(async (req: Request) => {
         return new Response(
           JSON.stringify({
             error: 'Too many attempts. Please try again later.',
-            retry_after: rateLimit.retryAfter
+            retry_after: rateLimit.retryAfter,
           }),
           {
             status: 429,
             headers: {
               ...corsHeaders,
               'Content-Type': 'application/json',
-              'Retry-After': String(rateLimit.retryAfter)
-            }
-          }
+              'Retry-After': String(rateLimit.retryAfter),
+            },
+          },
         );
       }
 
@@ -648,12 +702,14 @@ Deno.serve(async (req: Request) => {
       if (!validation.valid) {
         logSecurityEvent({
           type: 'VALIDATION_FAILURE',
-          severity: validation.errors.some(e => e.includes('Invalid characters')) ? 'HIGH' : 'LOW',
+          severity: validation.errors.some((e) => e.includes('Invalid characters'))
+            ? 'HIGH'
+            : 'LOW',
           details: {
             user_id: userId.substring(0, 8) + '...',
             ip: clientIP,
             errors: validation.errors,
-            message: validation.errors.some(e => e.includes('Invalid characters'))
+            message: validation.errors.some((e) => e.includes('Invalid characters'))
               ? 'Potential injection attempt detected'
               : 'Credential format validation failed',
           },
@@ -661,7 +717,7 @@ Deno.serve(async (req: Request) => {
         });
         return new Response(
           JSON.stringify({ error: 'Invalid credentials format', details: validation.errors }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
         );
       }
 
@@ -677,16 +733,15 @@ Deno.serve(async (req: Request) => {
       });
 
       if (!stored.ok) {
-        return new Response(
-          JSON.stringify({ error: stored.error }),
-          { status: stored.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return new Response(JSON.stringify({ error: stored.error }), {
+          status: stored.status,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
 
-      return new Response(
-        JSON.stringify({ success: true }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // --- DATA MIGRATION (after sign-in) ---
@@ -695,22 +750,27 @@ Deno.serve(async (req: Request) => {
       const { previousUserId } = payload;
 
       if (!previousUserId) {
-        return new Response(
-          JSON.stringify({ error: 'Previous user ID required for migration' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return new Response(JSON.stringify({ error: 'Previous user ID required for migration' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
 
       // Only allow claiming data from an *anonymous* account. Without this check
       // any signed-in user who learned another user's id could take over that
       // user's Octopus credentials and meters.
-      if (typeof previousUserId !== 'string' || !/^[0-9a-f-]{36}$/i.test(previousUserId) || previousUserId === userId) {
-        return new Response(
-          JSON.stringify({ error: 'Invalid previous user ID' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+      if (
+        typeof previousUserId !== 'string' ||
+        !/^[0-9a-f-]{36}$/i.test(previousUserId) ||
+        previousUserId === userId
+      ) {
+        return new Response(JSON.stringify({ error: 'Invalid previous user ID' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
-      const { data: prevUserData, error: prevUserErr } = await supabase.auth.admin.getUserById(previousUserId);
+      const { data: prevUserData, error: prevUserErr } =
+        await supabase.auth.admin.getUserById(previousUserId);
       if (prevUserErr || !prevUserData?.user || prevUserData.user.is_anonymous !== true) {
         logSecurityEvent({
           type: 'SUSPICIOUS_ACTIVITY',
@@ -723,12 +783,22 @@ Deno.serve(async (req: Request) => {
           timestamp: new Date().toISOString(),
         });
         return new Response(
-          JSON.stringify({ success: true, migrated: { credentials: false, meters: 0, consumption_records: 0, footprint_records: 0 } }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify({
+            success: true,
+            migrated: {
+              credentials: false,
+              meters: 0,
+              consumption_records: 0,
+              footprint_records: 0,
+            },
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
         );
       }
 
-      console.log(`[${requestId}] Migrating Octopus data from ${previousUserId.substring(0, 8)}... to ${userId.substring(0, 8)}...`);
+      console.log(
+        `[${requestId}] Migrating Octopus data from ${previousUserId.substring(0, 8)}... to ${userId.substring(0, 8)}...`,
+      );
 
       let migratedCredentials = false;
       let migratedMeters = 0;
@@ -744,28 +814,33 @@ Deno.serve(async (req: Request) => {
 
       if (!existingCreds) {
         // Migrate credentials from previous user
-        const { rows: oldRows, error: oldCredsError } = await selectCredentialRows(supabase, { userId: previousUserId });
+        const { rows: oldRows, error: oldCredsError } = await selectCredentialRows(supabase, {
+          userId: previousUserId,
+        });
         const oldCreds = oldRows[0];
 
         // Ciphertext is bound to the owning user id, so re-encrypt for the new owner
-        const oldApiKey = oldCreds && !oldCredsError ? await resolveApiKey(supabase, oldCreds) : null;
+        const oldApiKey =
+          oldCreds && !oldCredsError ? await resolveApiKey(supabase, oldCreds) : null;
 
         if (oldCreds && oldApiKey) {
-          const stored = await storeCredentials(supabase, getCredentialKey, {
-            userId,
-            apiKey: oldApiKey,
-            accountNumber: oldCreds.account_number ?? '',
-            createdAt: oldCreds.created_at,
-          }, { insertOnly: true });
+          const stored = await storeCredentials(
+            supabase,
+            getCredentialKey,
+            {
+              userId,
+              apiKey: oldApiKey,
+              accountNumber: oldCreds.account_number ?? '',
+              createdAt: oldCreds.created_at,
+            },
+            { insertOnly: true },
+          );
           const insertError = stored.ok ? null : stored.error;
 
           if (!insertError) {
             migratedCredentials = true;
             // Delete old credentials
-            await supabase
-              .from('octopus_credentials')
-              .delete()
-              .eq('user_id', previousUserId);
+            await supabase.from('octopus_credentials').delete().eq('user_id', previousUserId);
           }
         }
       }
@@ -814,7 +889,9 @@ Deno.serve(async (req: Request) => {
         }
       }
 
-      console.log(`[${requestId}] Migration complete: creds=${migratedCredentials}, meters=${migratedMeters}, consumption=${consumptionRecords}, footprint=${footprintRecords}`);
+      console.log(
+        `[${requestId}] Migration complete: creds=${migratedCredentials}, meters=${migratedMeters}, consumption=${consumptionRecords}, footprint=${footprintRecords}`,
+      );
 
       return new Response(
         JSON.stringify({
@@ -823,10 +900,10 @@ Deno.serve(async (req: Request) => {
             credentials: migratedCredentials,
             meters: migratedMeters,
             consumption_records: consumptionRecords,
-            footprint_records: footprintRecords
-          }
+            footprint_records: footprintRecords,
+          },
         }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
 
@@ -837,10 +914,10 @@ Deno.serve(async (req: Request) => {
         .eq('user_id', userId);
 
       if (credsError) {
-        return new Response(
-          JSON.stringify({ error: 'Failed to delete credentials' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return new Response(JSON.stringify({ error: 'Failed to delete credentials' }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
 
       // Remove the readings, footprint and dispatches too (not just the meters),
@@ -849,19 +926,24 @@ Deno.serve(async (req: Request) => {
       if (removed.errors.length > 0) {
         console.error('[DISCONNECT] Some Octopus data could not be deleted:', removed.errors);
         return new Response(
-          JSON.stringify({ error: 'Disconnected, but some stored data could not be deleted. Please try again.' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify({
+            error: 'Disconnected, but some stored data could not be deleted. Please try again.',
+          }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
         );
       }
 
-      return new Response(
-        JSON.stringify({ success: true }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // Helper to get credentials (decrypted server-side only; never returned to the client)
-    async function getUserCredentials(): Promise<{ api_key: string; account_number: string; api_key_hint: string | null } | null> {
+    async function getUserCredentials(): Promise<{
+      api_key: string;
+      account_number: string;
+      api_key_hint: string | null;
+    } | null> {
       const { rows, error } = await selectCredentialRows(supabase, { userId });
       const data = rows[0];
       if (error || !data) {
@@ -869,15 +951,18 @@ Deno.serve(async (req: Request) => {
       }
       const apiKey = await resolveApiKey(supabase, data);
       if (!apiKey) return null;
-      return { api_key: apiKey, account_number: data.account_number ?? '', api_key_hint: data.api_key_hint ?? apiKeyHint(apiKey) };
+      return {
+        api_key: apiKey,
+        account_number: data.account_number ?? '',
+        api_key_hint: data.api_key_hint ?? apiKeyHint(apiKey),
+      };
     }
 
     if (action === 'check-credentials') {
       const creds = await getUserCredentials();
-      return new Response(
-        JSON.stringify({ has_credentials: !!creds }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ has_credentials: !!creds }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // --- REQUIRES CREDENTIALS ---
@@ -890,15 +975,14 @@ Deno.serve(async (req: Request) => {
     if (!credentials && action !== 'get-status') {
       // For greenness-forecast without creds, return empty gracefully
       if (action === 'get-greenness-forecast') {
-        return new Response(
-          JSON.stringify({ forecast: [] }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return new Response(JSON.stringify({ forecast: [] }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
-      return new Response(
-        JSON.stringify({ error: 'Octopus Energy credentials not configured' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'Octopus Energy credentials not configured' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const { api_key: OCTOPUS_API_KEY, account_number: OCTOPUS_ACCOUNT_NUMBER } = credentials || {};
@@ -912,21 +996,22 @@ Deno.serve(async (req: Request) => {
       console.log(`Fetching account from: ${accountUrl}`);
 
       const response = await fetch(accountUrl, {
-        headers: { 'Authorization': authHeaderOctopus }
+        headers: { Authorization: authHeaderOctopus },
       });
 
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`Octopus API error: ${response.status} - ${errorText}`);
-        const userMessage = response.status === 404
-          ? 'Account not found. Please check your account number is correct (e.g. A-12345678).'
-          : response.status === 401
-            ? 'Invalid API key. Please check your Octopus Energy API key.'
-            : `Octopus API error (${response.status}). Please try again later.`;
-        return new Response(
-          JSON.stringify({ error: userMessage, meters: [] }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        const userMessage =
+          response.status === 404
+            ? 'Account not found. Please check your account number is correct (e.g. A-12345678).'
+            : response.status === 401
+              ? 'Invalid API key. Please check your Octopus Energy API key.'
+              : `Octopus API error (${response.status}). Please try again later.`;
+        return new Response(JSON.stringify({ error: userMessage, meters: [] }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
 
       const accountData = await response.json();
@@ -938,7 +1023,8 @@ Deno.serve(async (req: Request) => {
         for (const meterPoint of property.electricity_meter_points || []) {
           // Detect export meters: Octopus API uses is_export flag or profile_class
           // Export MPANs typically have profile_class '00' or is_export=true
-          const isExport = meterPoint.is_export === true ||
+          const isExport =
+            meterPoint.is_export === true ||
             meterPoint.profile_class === 0 ||
             meterPoint.profile_class === '00';
 
@@ -947,40 +1033,39 @@ Deno.serve(async (req: Request) => {
               meters.push({
                 mpan: meterPoint.mpan,
                 serial_number: meter.serial_number,
-                meter_type: isExport ? 'export' : 'import'
+                meter_type: isExport ? 'export' : 'import',
               });
             }
           }
         }
       }
 
-      console.log(`Found ${meters.length} electricity meters for user ${userId} (${meters.filter(m => m.meter_type === 'export').length} export)`);
+      console.log(
+        `Found ${meters.length} electricity meters for user ${userId} (${meters.filter((m) => m.meter_type === 'export').length} export)`,
+      );
 
       // Store meters in database linked to user
       if (meters.length > 0) {
-        const { error } = await supabase
-          .from('octopus_meters')
-          .upsert(
-            meters.map(meter => ({
-              user_id: userId,
-              mpan: meter.mpan,
-              serial_number: meter.serial_number,
-              meter_type: meter.meter_type,
-              is_active: true,
-              updated_at: new Date().toISOString()
-            })),
-            { onConflict: 'mpan' }
-          );
+        const { error } = await supabase.from('octopus_meters').upsert(
+          meters.map((meter) => ({
+            user_id: userId,
+            mpan: meter.mpan,
+            serial_number: meter.serial_number,
+            meter_type: meter.meter_type,
+            is_active: true,
+            updated_at: new Date().toISOString(),
+          })),
+          { onConflict: 'mpan' },
+        );
 
         if (error) {
           console.error(`Error storing meters for user ${userId}:`, error);
         }
       }
 
-      return new Response(
-        JSON.stringify({ meters }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ meters }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     async function performSyncConsumption(userId: string, authHeaderOctopus: string, days: number) {
@@ -1013,7 +1098,7 @@ Deno.serve(async (req: Request) => {
         console.log(`Fetching consumption for meter ${mpan}`);
 
         const response = await fetch(consumptionUrl, {
-          headers: { 'Authorization': authHeaderOctopus }
+          headers: { Authorization: authHeaderOctopus },
         });
 
         if (!response.ok) {
@@ -1027,12 +1112,12 @@ Deno.serve(async (req: Request) => {
         console.log(`Received ${readings.length} readings for meter ${mpan}`);
 
         let insertedCount = 0;
-        const records = readings.map(reading => ({
+        const records = readings.map((reading) => ({
           interval_start: reading.interval_start,
           interval_end: reading.interval_end,
           consumption_kwh: reading.consumption,
           mpan,
-          serial_number
+          serial_number,
         }));
 
         // Process in chunks of 1000 to avoid request size limits
@@ -1066,7 +1151,7 @@ Deno.serve(async (req: Request) => {
         readings_synced: totalInserted,
         meters_synced: allMeterData.length,
         period_from: periodFrom.toISOString(),
-        period_to: periodTo.toISOString()
+        period_to: periodTo.toISOString(),
       };
     }
 
@@ -1116,17 +1201,21 @@ Deno.serve(async (req: Request) => {
           isRegional = true;
         }
 
-        const intensityMap = new Map<string, { intensity: number, index: string }>();
+        const intensityMap = new Map<string, { intensity: number; index: string }>();
 
         try {
           const intensityResponse = await fetch(intensityUrl);
-          if (!intensityResponse.ok) throw new Error(`Failed to fetch batch intensity: ${intensityResponse.status}`);
+          if (!intensityResponse.ok)
+            throw new Error(`Failed to fetch batch intensity: ${intensityResponse.status}`);
 
           const intensityJson = await intensityResponse.json();
           // Shared rules (actual → forecast, skip unusable half-hours): _shared/footprint-records.ts
           const built = buildIntensityMap(intensityJson, isRegional);
           for (const [k, v] of built.map) intensityMap.set(k, v);
-          if (built.skipped > 0) console.warn(`[FOOTPRINT] Skipped ${built.skipped} half-hour(s) with no usable intensity data`);
+          if (built.skipped > 0)
+            console.warn(
+              `[FOOTPRINT] Skipped ${built.skipped} half-hour(s) with no usable intensity data`,
+            );
         } catch (error) {
           console.error(`Batch fetch failed for meter ${mpan}:`, error);
           continue;
@@ -1146,7 +1235,7 @@ Deno.serve(async (req: Request) => {
               intensity_gco2_kwh: data.intensity,
               carbon_g: carbonG,
               intensity_index: data.index,
-              mpan: record.mpan
+              mpan: record.mpan,
             });
           }
         }
@@ -1158,54 +1247,54 @@ Deno.serve(async (req: Request) => {
           if (!error) totalCalculated += footprintRecords.length;
         }
 
-        console.log(`Calculated ${footprintRecords.length} footprint records for meter ${mpan} (${meter.meter_type})`);
+        console.log(
+          `Calculated ${footprintRecords.length} footprint records for meter ${mpan} (${meter.meter_type})`,
+        );
       }
 
       return {
         success: true,
         records_calculated: totalCalculated,
-        meters_processed: userMeters.length
+        meters_processed: userMeters.length,
       };
     }
 
     if (action === 'sync-consumption') {
       try {
         const result = await performSyncConsumption(userId, authHeaderOctopus!, days);
-        return new Response(
-          JSON.stringify(result),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return new Response(JSON.stringify(result), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
-        return new Response(
-          JSON.stringify({ error: message }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return new Response(JSON.stringify({ error: message }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
     }
 
     if (action === 'calculate-footprint') {
       try {
         const result = await performCalculateFootprint(userId);
-        return new Response(
-          JSON.stringify(result),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return new Response(JSON.stringify(result), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
-        return new Response(
-           JSON.stringify({ error: message }),
-           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return new Response(JSON.stringify({ error: message }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
     }
 
     if (action === 'full-sync') {
       if (!authHeaderOctopus) {
-        return new Response(
-          JSON.stringify({ error: 'Missing credentials' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return new Response(JSON.stringify({ error: 'Missing credentials' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
 
       try {
@@ -1216,16 +1305,16 @@ Deno.serve(async (req: Request) => {
           JSON.stringify({
             success: true,
             sync: syncResult,
-            calculation: calcResult
+            calculation: calcResult,
           }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
         );
       } catch (error: unknown) {
-         const message = error instanceof Error ? error.message : 'Unknown error';
-         return new Response(
-          JSON.stringify({ error: message }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        return new Response(JSON.stringify({ error: message }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
     }
 
@@ -1238,16 +1327,17 @@ Deno.serve(async (req: Request) => {
         .eq('is_active', true);
 
       if (!userMeters?.length) {
-        return new Response(
-          JSON.stringify({ records: [], summary: {} }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return new Response(JSON.stringify({ records: [], summary: {} }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const mpans = userMeters.map((m: any) => m.mpan);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const exportMpans = new Set(userMeters.filter((m: any) => m.meter_type === 'export').map((m: any) => m.mpan));
+      const mpans = userMeters.map((m: { mpan: string }) => m.mpan);
+      const exportMpans = new Set(
+        userMeters
+          .filter((m: { meter_type?: string; mpan: string }) => m.meter_type === 'export')
+          .map((m: { mpan: string }) => m.mpan),
+      );
 
       const periodFrom = new Date();
       periodFrom.setDate(periodFrom.getDate() - days);
@@ -1260,10 +1350,10 @@ Deno.serve(async (req: Request) => {
         .order('interval_start', { ascending: true });
 
       if (error) {
-        return new Response(
-          JSON.stringify({ error: 'Failed to fetch footprint data' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return new Response(JSON.stringify({ error: 'Failed to fetch footprint data' }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
 
       // Separate import and export records
@@ -1273,15 +1363,28 @@ Deno.serve(async (req: Request) => {
       const exportRecords = (footprint || []).filter((r: any) => exportMpans.has(r.mpan));
 
       // Calculate import summary stats
-      const importCarbonG = importRecords.reduce((sum: number, r: FootprintRecord) => sum + Number(r.carbon_g), 0);
-      const importKwh = importRecords.reduce((sum: number, r: FootprintRecord) => sum + Number(r.consumption_kwh), 0);
+      const importCarbonG = importRecords.reduce(
+        (sum: number, r: FootprintRecord) => sum + Number(r.carbon_g),
+        0,
+      );
+      const importKwh = importRecords.reduce(
+        (sum: number, r: FootprintRecord) => sum + Number(r.consumption_kwh),
+        0,
+      );
       const avgIntensity = importRecords.length
-        ? importRecords.reduce((sum: number, r: FootprintRecord) => sum + r.intensity_gco2_kwh, 0) / importRecords.length
+        ? importRecords.reduce((sum: number, r: FootprintRecord) => sum + r.intensity_gco2_kwh, 0) /
+          importRecords.length
         : 0;
 
       // Calculate export summary (carbon offset from solar export)
-      const exportCarbonG = exportRecords.reduce((sum: number, r: FootprintRecord) => sum + Number(r.carbon_g), 0);
-      const exportKwh = exportRecords.reduce((sum: number, r: FootprintRecord) => sum + Number(r.consumption_kwh), 0);
+      const exportCarbonG = exportRecords.reduce(
+        (sum: number, r: FootprintRecord) => sum + Number(r.carbon_g),
+        0,
+      );
+      const exportKwh = exportRecords.reduce(
+        (sum: number, r: FootprintRecord) => sum + Number(r.consumption_kwh),
+        0,
+      );
 
       // Net carbon = import carbon - export offset
       const netCarbonG = importCarbonG - exportCarbonG;
@@ -1311,9 +1414,9 @@ Deno.serve(async (req: Request) => {
             export_carbon_kg: exportCarbonG / 1000,
             net_carbon_kg: netCarbonG / 1000,
             has_export_meter: exportMpans.size > 0,
-          }
+          },
         }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
 
@@ -1322,7 +1425,7 @@ Deno.serve(async (req: Request) => {
       if (!authHeaderOctopus) {
         return new Response(
           JSON.stringify({ forecast: [], error: 'Octopus credentials required' }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
         );
       }
 
@@ -1343,41 +1446,37 @@ Deno.serve(async (req: Request) => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': authHeaderOctopus
+            Authorization: authHeaderOctopus,
           },
-          body: JSON.stringify({ query, operationName: 'GreennessForecast' })
+          body: JSON.stringify({ query, operationName: 'GreennessForecast' }),
         });
 
         if (!response.ok) {
           console.error(`Greenness forecast API error: ${response.status}`);
           // Return empty forecast instead of failing - this is non-critical data
-          return new Response(
-            JSON.stringify({ forecast: [] }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
+          return new Response(JSON.stringify({ forecast: [] }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
         }
 
         const result = await response.json();
         if (result.errors) {
           console.error('GraphQL errors:', result.errors);
-          return new Response(
-            JSON.stringify({ forecast: [] }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
+          return new Response(JSON.stringify({ forecast: [] }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
         }
 
-        return new Response(
-          JSON.stringify({ forecast: result.data?.greennessForecast || [] }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return new Response(JSON.stringify({ forecast: result.data?.greennessForecast || [] }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         console.error('Greenness forecast error:', message);
         // Return empty array for graceful degradation
-        return new Response(
-          JSON.stringify({ forecast: [] }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return new Response(JSON.stringify({ forecast: [] }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
     }
 
@@ -1387,7 +1486,7 @@ Deno.serve(async (req: Request) => {
       if (!authHeaderOctopus || !OCTOPUS_ACCOUNT_NUMBER) {
         return new Response(
           JSON.stringify({ planned: [], completed: [], error: 'Octopus credentials required' }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
         );
       }
 
@@ -1402,18 +1501,20 @@ Deno.serve(async (req: Request) => {
       if (!userMeter) {
         return new Response(
           JSON.stringify({ planned: [], completed: [], error: 'No meter linked' }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
         );
       }
 
       const mpan = userMeter.mpan;
       const dispatchUrl = `https://api.octopus.energy/v1/accounts/${OCTOPUS_ACCOUNT_NUMBER}/electricity-meter-points/${mpan}/intelligent-dispatches/`;
 
-      console.log(`[${requestId}] Fetching Intelligent dispatches for MPAN ${mpan.substring(0, 4)}...`);
+      console.log(
+        `[${requestId}] Fetching Intelligent dispatches for MPAN ${mpan.substring(0, 4)}...`,
+      );
 
       try {
         const response = await fetch(dispatchUrl, {
-          headers: { 'Authorization': authHeaderOctopus }
+          headers: { Authorization: authHeaderOctopus },
         });
 
         if (!response.ok) {
@@ -1421,14 +1522,18 @@ Deno.serve(async (req: Request) => {
           if (response.status === 404) {
             console.log(`[${requestId}] No Intelligent tariff found for account`);
             return new Response(
-              JSON.stringify({ planned: [], completed: [], message: 'Intelligent tariff not detected' }),
-              { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+              JSON.stringify({
+                planned: [],
+                completed: [],
+                message: 'Intelligent tariff not detected',
+              }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
             );
           }
           console.error(`Intelligent dispatch API error: ${response.status}`);
           return new Response(
             JSON.stringify({ planned: [], completed: [], error: `API error: ${response.status}` }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
           );
         }
 
@@ -1437,7 +1542,9 @@ Deno.serve(async (req: Request) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const completedDispatches: any[] = data.completedDispatches || [];
 
-        console.log(`[${requestId}] Found ${plannedDispatches.length} planned, ${completedDispatches.length} completed dispatches`);
+        console.log(
+          `[${requestId}] Found ${plannedDispatches.length} planned, ${completedDispatches.length} completed dispatches`,
+        );
 
         // Store dispatches in database for history and notifications
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1457,7 +1564,7 @@ Deno.serve(async (req: Request) => {
             charge_kwh: dispatch.chargeKwh || null,
             source: dispatch.source || null,
             location: dispatch.location || null,
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
           });
         }
 
@@ -1474,7 +1581,10 @@ Deno.serve(async (req: Request) => {
           .eq('dispatch_type', 'completed')
           .in('start_time', existingStartTimes);
 
-        const existingCarbonMap = new Map<string, { avg: number | null; used: number | null; saved: number | null }>();
+        const existingCarbonMap = new Map<
+          string,
+          { avg: number | null; used: number | null; saved: number | null }
+        >();
         for (const ed of existingDispatches || []) {
           if (ed.carbon_saved_g != null) {
             existingCarbonMap.set(ed.start_time, {
@@ -1514,12 +1624,17 @@ Deno.serve(async (req: Request) => {
                 const intervals = intensityJson.data || [];
 
                 if (intervals.length > 0) {
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  const totalIntensity = intervals.reduce((sum: number, i: any) =>
-                    sum + (i.intensity?.actual ?? i.intensity?.forecast ?? 0), 0);
+                  const totalIntensity = intervals.reduce(
+                    (
+                      sum: number,
+                      i: { intensity?: { actual?: number | null; forecast?: number | null } },
+                    ) => sum + (i.intensity?.actual ?? i.intensity?.forecast ?? 0),
+                    0,
+                  );
                   avgIntensity = Math.round(totalIntensity / intervals.length);
                   carbonUsedG = Math.round(chargeKwh * avgIntensity * 100) / 100;
-                  carbonSavedG = Math.round((chargeKwh * UK_AVG_INTENSITY - carbonUsedG) * 100) / 100;
+                  carbonSavedG =
+                    Math.round((chargeKwh * UK_AVG_INTENSITY - carbonUsedG) * 100) / 100;
                 }
               }
             } catch (err) {
@@ -1539,7 +1654,7 @@ Deno.serve(async (req: Request) => {
             avg_intensity_gco2: avgIntensity,
             carbon_used_g: carbonUsedG,
             carbon_saved_g: carbonSavedG,
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
           });
 
           // Track if this is a recently started dispatch (within last 10 mins)
@@ -1555,7 +1670,7 @@ Deno.serve(async (req: Request) => {
             .from('octopus_intelligent_dispatches')
             .upsert(dispatchesToUpsert, {
               onConflict: 'user_id,mpan,dispatch_type,start_time',
-              ignoreDuplicates: false
+              ignoreDuplicates: false,
             });
 
           if (upsertError) {
@@ -1596,22 +1711,22 @@ Deno.serve(async (req: Request) => {
             planned: plannedDispatches,
             completed: completedDispatches,
             chargingStarted,
-            chargingStartDispatch: chargingStartDispatch ? {
-              startTime: chargingStartDispatch.start_time,
-              endTime: chargingStartDispatch.end_time,
-              source: chargingStartDispatch.source
-            } : null
+            chargingStartDispatch: chargingStartDispatch
+              ? {
+                  startTime: chargingStartDispatch.start_time,
+                  endTime: chargingStartDispatch.end_time,
+                  source: chargingStartDispatch.source,
+                }
+              : null,
           }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
         );
-
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         console.error('Intelligent dispatch error:', message);
-        return new Response(
-          JSON.stringify({ planned: [], completed: [], error: message }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return new Response(JSON.stringify({ planned: [], completed: [], error: message }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
     }
 
@@ -1624,10 +1739,9 @@ Deno.serve(async (req: Request) => {
         .eq('is_active', true);
 
       if (!userMeters?.length) {
-        return new Response(
-          JSON.stringify({ minDate: null, maxDate: null, dates: [] }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return new Response(JSON.stringify({ minDate: null, maxDate: null, dates: [] }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1662,7 +1776,7 @@ Deno.serve(async (req: Request) => {
           maxDate,
           // Future: could add dates: [...] array of all dates with data
         }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
 
@@ -1708,23 +1822,22 @@ Deno.serve(async (req: Request) => {
           api_key_hint: credentials?.api_key_hint ?? null,
           meters: meters || [],
           latest_consumption: latestConsumption,
-          footprint_records: footprintCount
+          footprint_records: footprintCount,
         }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
 
-    return new Response(
-      JSON.stringify({ error: 'Invalid action' }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-
+    return new Response(JSON.stringify({ error: 'Invalid action' }), {
+      status: 400,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   } catch (error: unknown) {
     console.error('Octopus Energy function error:', error);
     const message = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(
-      JSON.stringify({ error: message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ error: message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });

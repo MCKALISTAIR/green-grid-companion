@@ -4,13 +4,13 @@ GridSense is a Capacitor WKWebView app. On iPhone Duo, Safari does **not** expos
 CSS Viewport Segments / hinge APIs — fold and unfold arrive as ordinary resizes
 between two logical viewports (approx, 3×):
 
-| Pose | CSS size | Notes |
-|------|----------|--------|
-| Cover (folded) | 466 × 678 | Wider/shorter than classic iPhones (~1.42:1) |
-| Cover landscape | 678 × 466 | Rare; still treat as resize |
-| Inner (unfolded) | 890 × 626 | Landscape book; height feels laptop-short |
-| Inner portrait | 626 × 890 | Rotated open |
-| Split View pane | ~445 × 626 | Half of inner with another app |
+| Pose             | CSS size   | Notes                                        |
+| ---------------- | ---------- | -------------------------------------------- |
+| Cover (folded)   | 466 × 678  | Wider/shorter than classic iPhones (~1.42:1) |
+| Cover landscape  | 678 × 466  | Rare; still treat as resize                  |
+| Inner (unfolded) | 890 × 626  | Landscape book; height feels laptop-short    |
+| Inner portrait   | 626 × 890  | Rotated open                                 |
+| Split View pane  | ~445 × 626 | Half of inner with another app               |
 
 Pre-order / ship window: mid–late October 2026. Build against iOS 27.1+ / Xcode 27.1
 when packaging the native shell; the web UI itself must already flex across these sizes.
@@ -31,19 +31,19 @@ when packaging the native shell; the web UI itself must already flex across thes
 
 Walk Home → Planner → Map → Settings (and a half-filled Settings field) at:
 
-- [ ] 466 × 678 — cover portrait  
-- [ ] 890 × 626 — inner unfolded (side-by-side home expected)  
-- [ ] 626 × 890 — inner portrait  
-- [ ] ~445 × 626 — Split View half pane  
+- [ ] 466 × 678 — cover portrait
+- [ ] 890 × 626 — inner unfolded (side-by-side home expected)
+- [ ] 626 × 890 — inner portrait
+- [ ] ~445 × 626 — Split View half pane
 - [ ] Continuous drag 400 → 900 wide with scroll mid-page (no state loss, no remount wipe)
 
 Checks:
 
-- [ ] No horizontal overflow  
-- [ ] Bottom nav remains tappable; not covered by home indicator  
-- [ ] Intensity gauge clear of Dynamic Island / safe area  
-- [ ] Fold/unfold mid-session keeps view mode, location, and form state  
-- [ ] Product tour anchors stay on the visible nav if started across a resize  
+- [ ] No horizontal overflow
+- [ ] Bottom nav remains tappable; not covered by home indicator
+- [ ] Intensity gauge clear of Dynamic Island / safe area
+- [ ] Fold/unfold mid-session keeps view mode, location, and form state
+- [ ] Product tour anchors stay on the visible nav if started across a resize
 
 Dev helpers: `/__scene-test`, `docs/SCENE_VISUAL_QA.md`.
 
@@ -62,13 +62,13 @@ Xcode iPhone Duo Simulator.
 
 ## Native packaging notes
 
-- Sync web assets: `npm run build:mobile`  
-- Test in the **iPhone Duo Simulator** (Xcode 27.1+) once available on the build Mac  
-- Re-verify status bar / splash (`StatusBar`, `SplashScreen` Capacitor plugins) on both displays  
-- Widget (`GridSenseWidget`) is a separate extension — confirm Duo simulator limitations for extensions in Apple’s 27.1 release notes  
+- Sync web assets: `npm run build:mobile`
+- Test in the **iPhone Duo Simulator** (Xcode 27.1+) once available on the build Mac
+- Re-verify status bar / splash (`StatusBar`, `SplashScreen` Capacitor plugins) on both displays
+- Widget (`GridSenseWidget`) is a separate extension — confirm Duo simulator limitations for extensions in Apple’s 27.1 release notes
 
 ## Non-goals (for now)
 
-- Detecting fold state or hinge angle from JS (unsupported in Safari)  
-- Dual-window / multi-scene Capacitor APIs (native follow-up when SDK stabilizes)  
+- Detecting fold state or hinge angle from JS (unsupported in Safari)
+- Dual-window / multi-scene Capacitor APIs (native follow-up when SDK stabilizes)
 - Hard-coded user-agent sniffs for “Duo”

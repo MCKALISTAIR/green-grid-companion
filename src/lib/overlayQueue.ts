@@ -74,9 +74,7 @@ export function createOverlayQueue() {
 
   function advance() {
     if (!active) {
-      const next = waiting
-        .filter(canStart)
-        .sort((a, b) => rank(b) - rank(a) || a.seq - b.seq)[0];
+      const next = waiting.filter(canStart).sort((a, b) => rank(b) - rank(a) || a.seq - b.seq)[0];
       if (next) {
         waiting = waiting.filter((e) => e !== next);
         active = next;

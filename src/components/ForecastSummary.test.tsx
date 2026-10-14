@@ -9,7 +9,7 @@ afterEach(() => vi.useRealTimers());
 const SS = southScotland.data.data as unknown as ForecastData[];
 
 describe('ForecastSummary (48-Hour Overview)', () => {
-  it('shows South Scotland\'s real zeros with an explanation of why they are zero', () => {
+  it("shows South Scotland's real zeros with an explanation of why they are zero", () => {
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date('2026-10-11T10:10:00Z'));
     render(<ForecastSummary forecast={SS} regionId={2} regionName="South Scotland" />);
@@ -23,7 +23,11 @@ describe('ForecastSummary (48-Hour Overview)', () => {
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date('2026-10-11T10:10:00Z'));
     const missing = [
-      { from: '2026-10-12T10:00:00Z', to: '2026-10-12T10:30:00Z', intensity: { forecast: null, index: 'moderate' } },
+      {
+        from: '2026-10-12T10:00:00Z',
+        to: '2026-10-12T10:30:00Z',
+        intensity: { forecast: null, index: 'moderate' },
+      },
     ] as unknown as ForecastData[];
     render(<ForecastSummary forecast={missing} />);
     expect(screen.getByTestId('forecast-day-empty')).toHaveTextContent('No data yet');

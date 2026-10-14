@@ -16,7 +16,9 @@ export function roundCoord(value: number): number {
   return Object.is(r, -0) ? 0 : r;
 }
 
-export function roundCoords<T extends { lat: number; lon: number }>(c: T): { lat: number; lon: number } {
+export function roundCoords<T extends { lat: number; lon: number }>(
+  c: T,
+): { lat: number; lon: number } {
   return { lat: roundCoord(c.lat), lon: roundCoord(c.lon) };
 }
 

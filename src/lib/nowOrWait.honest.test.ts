@@ -31,7 +31,8 @@ function forecastFrom(values: Array<number | null>, startMs = SLOT_START): Forec
   });
 }
 const flat = (n: number, v: number) => Array.from({ length: n }, () => v);
-const allText = (d: ReturnType<typeof getNowOrWaitDecision>) => `${d.headline} ${d.detail} ${d.tip}`;
+const allText = (d: ReturnType<typeof getNowOrWaitDecision>) =>
+  `${d.headline} ${d.detail} ${d.tip}`;
 
 describe('classifySpread', () => {
   it('classifies near zero, flat and varied, and ignores nothing (callers drop missing)', () => {
@@ -44,7 +45,12 @@ describe('classifySpread', () => {
 
 describe('planner and home card: genuine zeros', () => {
   it('says any time works for an all-zero window instead of implying now is best', () => {
-    const plan = planLoad({ forecast: forecastFrom(flat(96, 0)), now: NOW, slots: 4, horizonHours: null });
+    const plan = planLoad({
+      forecast: forecastFrom(flat(96, 0)),
+      now: NOW,
+      slots: 4,
+      horizonHours: null,
+    });
     expect(plan.action).toBe('use_now'); // same card style; wording changes
     expect(plan.reason).toBe('near_zero');
     expect(isAnyTimePlan(plan)).toBe(true);
@@ -65,7 +71,11 @@ describe('planner and home card: genuine zeros', () => {
   });
 
   it('a near-zero window with one dirtier later stretch is not "any time"', () => {
-    const plan = planLoad({ forecast: forecastFrom([...flat(12, 0), ...flat(36, 120)]), liveIntensity: 0, now: NOW });
+    const plan = planLoad({
+      forecast: forecastFrom([...flat(12, 0), ...flat(36, 120)]),
+      liveIntensity: 0,
+      now: NOW,
+    });
     expect(plan.reason).toBe('now_is_best');
   });
 
@@ -73,7 +83,9 @@ describe('planner and home card: genuine zeros', () => {
     vi.useFakeTimers({ toFake: ['Date'] });
     const now = new Date('2026-10-11T10:10:00Z');
     vi.setSystemTime(now);
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify(southScotland), { status: 200 }));
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify(southScotland), { status: 200 }),
+    );
     const fc = await getRegionalHistoryAndForecast(2, 'x', 'y');
     const planner = planLoad({ forecast: fc, now, slots: 4, horizonHours: null });
     const home = getNowOrWaitDecision(0, fc, now);
@@ -96,7 +108,9 @@ describe('planner and home card: missing data', () => {
   });
 
   it('does not recommend now from a start-now window with a gap (no fallback to one slot or 0)', () => {
-    const fc = forecastFrom([200, 200, null, 200, ...flat(44, 200)]).filter((s) => s.intensity.forecast !== null);
+    const fc = forecastFrom([200, 200, null, 200, ...flat(44, 200)]).filter(
+      (s) => s.intensity.forecast !== null,
+    );
     const plan = planLoad({ forecast: fc, liveIntensity: 200, now: NOW });
     expect(plan.reason).toBe('missing_data');
     expect(plan.action).toBe('check_forecast');

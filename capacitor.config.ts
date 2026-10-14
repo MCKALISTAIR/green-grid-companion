@@ -9,7 +9,7 @@ const config: CapacitorConfig = {
   appName: 'GridSense',
   webDir: 'dist',
   server: {
-    allowNavigation: [appHost]
+    allowNavigation: [appHost],
   },
   /* 
   // Server configuration removed for local bundled mode
@@ -17,22 +17,22 @@ const config: CapacitorConfig = {
   ios: {
     contentInset: 'never',
     preferredContentMode: 'mobile',
-    scheme: 'GridSense'
+    scheme: 'GridSense',
   },
   plugins: {
     SplashScreen: {
       launchAutoHide: true,
       backgroundColor: '#0f172a',
       androidScaleType: 'CENTER_CROP',
-      showSpinner: false
+      showSpinner: false,
     },
     StatusBar: {},
     SignInWithApple: {
       clientId: `${appId}.web`,
       redirectURI: `${appUrl}/auth/callback`,
-      scopes: 'email name'
-    }
-  }
+      scopes: 'email name',
+    },
+  },
 };
 
 export default config;

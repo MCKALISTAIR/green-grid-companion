@@ -11,13 +11,12 @@ interface SettingsFooterProps {
   onVersionClick: () => void;
 }
 
-export function SettingsFooter({
-  isLinked,
-  unlocked,
-  onVersionClick,
-}: SettingsFooterProps) {
+export function SettingsFooter({ isLinked, unlocked, onVersionClick }: SettingsFooterProps) {
   return (
-    <motion.div variants={settingsItemVariants} className="text-xs text-muted-foreground text-center space-y-2 pt-8 pb-4">
+    <motion.div
+      variants={settingsItemVariants}
+      className="text-xs text-muted-foreground text-center space-y-2 pt-8 pb-4"
+    >
       <p>
         Developed by{' '}
         <a
@@ -63,7 +62,10 @@ export function SettingsFooter({
           {VERSION_STRING}
         </span>
         {unlocked && (
-          <Badge variant="outline" className="text-[10px] border-amber-500 text-amber-500 gap-1 mt-1 animate-in fade-in zoom-in">
+          <Badge
+            variant="outline"
+            className="text-[10px] border-amber-500 text-amber-500 gap-1 mt-1 animate-in fade-in zoom-in"
+          >
             <Construction className="w-3 h-3" />
             Director Mode Unlocked
           </Badge>

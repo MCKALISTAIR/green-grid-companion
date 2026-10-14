@@ -12,7 +12,12 @@
 //
 // Runtime-agnostic (no Deno / esm.sh imports) so it can be unit tested.
 
-import { importCredentialKey, encryptCredential, decryptCredential, apiKeyHint } from './credential-crypto.ts';
+import {
+  importCredentialKey,
+  encryptCredential,
+  decryptCredential,
+  apiKeyHint,
+} from './credential-crypto.ts';
 
 export interface StoredCredentialRow {
   user_id: string;
@@ -30,11 +35,19 @@ export type Db = any;
 export type KeyLoader = () => Promise<CryptoKey>;
 
 const TABLE = 'octopus_credentials';
-export const CREDENTIAL_COLUMNS = 'user_id, account_number, api_key, api_key_encrypted, api_key_hint, created_at';
+export const CREDENTIAL_COLUMNS =
+  'user_id, account_number, api_key, api_key_encrypted, api_key_hint, created_at';
 export const LEGACY_CREDENTIAL_COLUMNS = 'user_id, account_number, api_key, created_at';
 
 // Postgres / PostgREST codes meaning "the column/table/function isn't there (yet)".
-const SCHEMA_NOT_READY_CODES = new Set(['42703', '42P01', '42883', 'PGRST202', 'PGRST204', 'PGRST205']);
+const SCHEMA_NOT_READY_CODES = new Set([
+  '42703',
+  '42P01',
+  '42883',
+  'PGRST202',
+  'PGRST204',
+  'PGRST205',
+]);
 
 /** True if a Supabase/PostgREST error means the schema (migration) isn't in place yet. */
 export function isSchemaNotReadyError(err: unknown): boolean {
@@ -42,7 +55,9 @@ export function isSchemaNotReadyError(err: unknown): boolean {
   const e = err as { code?: unknown; message?: unknown };
   if (typeof e.code === 'string' && SCHEMA_NOT_READY_CODES.has(e.code)) return true;
   const msg = typeof e.message === 'string' ? e.message : '';
-  return /column .* does not exist|could not find the .* in the schema cache|relation .* does not exist/i.test(msg);
+  return /column .* does not exist|could not find the .* in the schema cache|relation .* does not exist/i.test(
+    msg,
+  );
 }
 
 /** Lazily import the encryption key from a secret getter; failures are not cached. */
@@ -78,7 +93,11 @@ export async function selectCredentialRows(
 }
 
 /** Encrypt one legacy plaintext row in place. Idempotent and race-safe. */
-export async function encryptLegacyRow(db: Db, getKey: KeyLoader, row: StoredCredentialRow): Promise<boolean> {
+export async function encryptLegacyRow(
+  db: Db,
+  getKey: KeyLoader,
+  row: StoredCredentialRow,
+): Promise<boolean> {
   if (!row.api_key || row.api_key_encrypted) return false;
   const key = await getKey();
   const encrypted = await encryptCredential(row.api_key, key, row.user_id);
@@ -90,7 +109,10 @@ export async function encryptLegacyRow(db: Db, getKey: KeyLoader, row: StoredCre
     .is('api_key_encrypted', null); // and nobody encrypted it concurrently
   if (error) {
     if (!isSchemaNotReadyError(error)) {
-      console.error(`Failed to encrypt legacy credentials for ${row.user_id.substring(0, 8)}...`, error);
+      console.error(
+        `Failed to encrypt legacy credentials for ${row.user_id.substring(0, 8)}...`,
+        error,
+      );
     }
     return false;
   }
@@ -101,7 +123,11 @@ export async function encryptLegacyRow(db: Db, getKey: KeyLoader, row: StoredCre
  * Plaintext API key for a stored row (server-side only). Legacy plaintext rows
  * are transparently encrypted in place on first use. Never throws.
  */
-export async function resolveApiKey(db: Db, getKey: KeyLoader, row: StoredCredentialRow | null | undefined): Promise<string | null> {
+export async function resolveApiKey(
+  db: Db,
+  getKey: KeyLoader,
+  row: StoredCredentialRow | null | undefined,
+): Promise<string | null> {
   if (!row) return null;
   if (row.api_key_encrypted) {
     try {
@@ -115,7 +141,10 @@ export async function resolveApiKey(db: Db, getKey: KeyLoader, row: StoredCreden
     try {
       await encryptLegacyRow(db, getKey, row);
     } catch (err) {
-      console.warn('Lazy encryption of legacy credentials skipped (OCTOPUS_CREDENTIALS_KEY not set?)', err);
+      console.warn(
+        'Lazy encryption of legacy credentials skipped (OCTOPUS_CREDENTIALS_KEY not set?)',
+        err,
+      );
     }
     return row.api_key;
   }
@@ -158,11 +187,18 @@ export async function storeCredentials(
       : db.from(TABLE).upsert(record, { onConflict: 'user_id' });
 
   const encrypted = await encryptCredential(input.apiKey, key, input.userId);
-  let { error } = await write({ ...base, api_key: null, api_key_encrypted: encrypted, api_key_hint: apiKeyHint(input.apiKey) });
+  let { error } = await write({
+    ...base,
+    api_key: null,
+    api_key_encrypted: encrypted,
+    api_key_hint: apiKeyHint(input.apiKey),
+  });
   if (!error) return { ok: true, encrypted: true };
 
   if (isSchemaNotReadyError(error)) {
-    console.warn('Security migration not applied yet; storing credentials in the legacy column (will be encrypted by the backfill)');
+    console.warn(
+      'Security migration not applied yet; storing credentials in the legacy column (will be encrypted by the backfill)',
+    );
     ({ error } = await write({ ...base, api_key: input.apiKey }));
     if (!error) return { ok: true, encrypted: false };
   }

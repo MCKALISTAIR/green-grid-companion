@@ -7,24 +7,24 @@ For day-to-day device runs without TestFlight, see `docs/ios_deployment_guide.md
 
 ## What's in the Xcode project
 
-| Item | Where |
-|---|---|
-| App target `App` | `ios/App/App.xcodeproj` (Capacitor 7, Swift Package Manager) |
-| Widget target `GridSenseWidgetExtension` (WidgetKit, small + medium) | `ios/App/GridSenseWidget/` embedded in the app |
-| Widget region bridge (`SharedPrefs` JS plugin) | `ios/App/App/SharedPrefsPlugin.swift`, registered in `MainViewController.swift` |
-| App entitlements: Push (`aps-environment`), Sign in with Apple, App Group | `ios/App/App/App.entitlements` |
-| Widget entitlements: App Group | `ios/App/GridSenseWidget/GridSenseWidget.entitlements` |
-| Privacy manifests | `ios/App/App/PrivacyInfo.xcprivacy`, `ios/App/GridSenseWidget/PrivacyInfo.xcprivacy` |
-| Shared scheme `App` | `ios/App/App.xcodeproj/xcshareddata/xcschemes/App.xcscheme` |
+| Item                                                                      | Where                                                                                |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| App target `App`                                                          | `ios/App/App.xcodeproj` (Capacitor 7, Swift Package Manager)                         |
+| Widget target `GridSenseWidgetExtension` (WidgetKit, small + medium)      | `ios/App/GridSenseWidget/` embedded in the app                                       |
+| Widget region bridge (`SharedPrefs` JS plugin)                            | `ios/App/App/SharedPrefsPlugin.swift`, registered in `MainViewController.swift`      |
+| App entitlements: Push (`aps-environment`), Sign in with Apple, App Group | `ios/App/App/App.entitlements`                                                       |
+| Widget entitlements: App Group                                            | `ios/App/GridSenseWidget/GridSenseWidget.entitlements`                               |
+| Privacy manifests                                                         | `ios/App/App/PrivacyInfo.xcprivacy`, `ios/App/GridSenseWidget/PrivacyInfo.xcprivacy` |
+| Shared scheme `App`                                                       | `ios/App/App.xcodeproj/xcshareddata/xcschemes/App.xcscheme`                          |
 
 ## Identifiers (confirm before first upload)
 
-| Setting | Value now | Change in |
-|---|---|---|
-| Apple Team ID | `UW7848QP79` (already in the project; confirm it is your team) | Xcode Signing & Capabilities, or `project.pbxproj` `DEVELOPMENT_TEAM` |
-| App bundle ID | `com.greengrid.companion` | `project.pbxproj` (App target) |
-| Widget bundle ID | `com.greengrid.companion.widget` | `project.pbxproj` (widget target) |
-| App Group | `group.com.greengrid.companion` | `project.pbxproj` project-level `GS_APP_GROUP_ID` (entitlements and both Info.plists read it) |
+| Setting          | Value now                                                      | Change in                                                                                     |
+| ---------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Apple Team ID    | `UW7848QP79` (already in the project; confirm it is your team) | Xcode Signing & Capabilities, or `project.pbxproj` `DEVELOPMENT_TEAM`                         |
+| App bundle ID    | `com.greengrid.companion`                                      | `project.pbxproj` (App target)                                                                |
+| Widget bundle ID | `com.greengrid.companion.widget`                               | `project.pbxproj` (widget target)                                                             |
+| App Group        | `group.com.greengrid.companion`                                | `project.pbxproj` project-level `GS_APP_GROUP_ID` (entitlements and both Info.plists read it) |
 
 Bundle IDs are permanent once the app is on the App Store, so decide before the
 first upload. `capacitor.config.ts` still defaults `appId` to the Lovable id
@@ -91,7 +91,7 @@ Reconciled with the App Store privacy label draft
 Tracking: **No**. No tracking domains.
 
 Required-reason APIs (our own code only; Capacitor, Sentry and the plugins ship
-their own manifests). Re-check with Xcode's *Generate Privacy Report* after the
+their own manifests). Re-check with Xcode's _Generate Privacy Report_ after the
 first archive:
 
 - `UserDefaults` → `1C8F.1` (App Group shared between app and widget). App and widget.
@@ -99,19 +99,19 @@ first archive:
 Collected data (app manifest; the widget collects nothing; it only sends a
 public region number to the Carbon Intensity API):
 
-| Data type | Linked | Purposes | Source in code |
-|---|---|---|---|
-| Email address | Yes | App functionality | Google / Apple sign-in (Supabase auth) |
-| Name | Yes | App functionality | Apple `name` scope / Google profile; Supabase auth keeps provider metadata |
-| User ID | Yes | App functionality | Supabase user id (anonymous sessions too) |
-| Coarse location | Yes | App functionality | postcode in `push_subscriptions`, saved locations in `user_preferences` |
-| Precise location | No | App functionality | device coordinates sent to postcodes.io, Nominatim, Open-Meteo and the `weather` edge function (which logs them) |
-| Other user content | Yes | App functionality | saved location names, custom appliance/event names |
-| Other data types | Yes | App functionality | Octopus account, meter, consumption, dispatch data; household profile |
-| Crash data | No | App functionality | Sentry error reports (when DSN set) |
-| Performance data | No | Analytics, App functionality | Sentry tracing, 10% sample |
-| Other diagnostic data | No | App functionality | Sentry breadcrumbs / logger |
-| Product interaction | No | Analytics, App functionality | Sentry Session Replay (10% of sessions, 100% on error) |
+| Data type             | Linked | Purposes                     | Source in code                                                                                                   |
+| --------------------- | ------ | ---------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Email address         | Yes    | App functionality            | Google / Apple sign-in (Supabase auth)                                                                           |
+| Name                  | Yes    | App functionality            | Apple `name` scope / Google profile; Supabase auth keeps provider metadata                                       |
+| User ID               | Yes    | App functionality            | Supabase user id (anonymous sessions too)                                                                        |
+| Coarse location       | Yes    | App functionality            | postcode in `push_subscriptions`, saved locations in `user_preferences`                                          |
+| Precise location      | No     | App functionality            | device coordinates sent to postcodes.io, Nominatim, Open-Meteo and the `weather` edge function (which logs them) |
+| Other user content    | Yes    | App functionality            | saved location names, custom appliance/event names                                                               |
+| Other data types      | Yes    | App functionality            | Octopus account, meter, consumption, dispatch data; household profile                                            |
+| Crash data            | No     | App functionality            | Sentry error reports (when DSN set)                                                                              |
+| Performance data      | No     | Analytics, App functionality | Sentry tracing, 10% sample                                                                                       |
+| Other diagnostic data | No     | App functionality            | Sentry breadcrumbs / logger                                                                                      |
+| Product interaction   | No     | Analytics, App functionality | Sentry Session Replay (10% of sessions, 100% on error)                                                           |
 
 Why precise location is declared: Apple counts data as collected when it leaves
 the device and can be kept longer than needed to answer the request. The

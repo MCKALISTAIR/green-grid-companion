@@ -5,7 +5,11 @@ import { CONSENT_STORAGE_KEY, CONSENT_VERSION_KEY, getConsent } from '@/lib/cons
 import { overlayQueue } from '@/lib/overlayQueue';
 import { CONSENT_COPY } from '@/lib/voice/consentCopy';
 
-class RO { observe() {} disconnect() {} unobserve() {} }
+class RO {
+  observe() {}
+  disconnect() {}
+  unobserve() {}
+}
 
 describe('CookieConsent (privacy choice sheet)', () => {
   beforeEach(() => {
@@ -36,7 +40,9 @@ describe('CookieConsent (privacy choice sheet)', () => {
     expect(region.querySelector('h2')?.textContent).toBe(CONSENT_COPY.title.cheeky);
     expect(region.textContent).toContain(CONSENT_COPY.crashClause);
     expect(region.textContent).toContain(CONSENT_COPY.body);
-    const buttons = screen.getAllByRole('button').filter((b) => b.textContent === 'Decline' || b.textContent === 'Accept');
+    const buttons = screen
+      .getAllByRole('button')
+      .filter((b) => b.textContent === 'Decline' || b.textContent === 'Accept');
     expect(buttons.map((b) => b.textContent)).toEqual(['Decline', 'Accept']);
     expect(buttons[0].className).toBe(buttons[1].className);
     expect(screen.queryByRole('button', { name: /close/i })).toBeNull();
@@ -85,7 +91,11 @@ describe('privacy copy', () => {
   it('never calls crash reports anonymous', async () => {
     const copy = await import('@/lib/voice/consentCopy');
     const { DIAGNOSTICS_DISCLOSURE } = await import('@/lib/monitoring');
-    const all = JSON.stringify([copy.CONSENT_COPY, copy.CONSENT_SETTINGS_COPY, DIAGNOSTICS_DISCLOSURE]);
+    const all = JSON.stringify([
+      copy.CONSENT_COPY,
+      copy.CONSENT_SETTINGS_COPY,
+      DIAGNOSTICS_DISCLOSURE,
+    ]);
     expect(all).not.toMatch(/anonym/i);
   });
 });

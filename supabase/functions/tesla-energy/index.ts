@@ -33,7 +33,11 @@ function checkRateLimit(key: string): { allowed: boolean; retryAfter?: number } 
 }
 
 // Security event logging
-function logSecurityEvent(event: { type: string; severity: string; details: Record<string, unknown> }) {
+function logSecurityEvent(event: {
+  type: string;
+  severity: string;
+  details: Record<string, unknown>;
+}) {
   const logMessage = `[SECURITY] ${event.type}: ${JSON.stringify({
     security_event: true,
     ...event,
@@ -90,7 +94,11 @@ Deno.serve(async (req) => {
       logSecurityEvent({
         type: 'AUTH_FAILURE',
         severity: 'LOW',
-        details: { ip: clientIP, reason: claimsError?.message || 'invalid token', user_agent: userAgent },
+        details: {
+          ip: clientIP,
+          reason: claimsError?.message || 'invalid token',
+          user_agent: userAgent,
+        },
       });
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
@@ -111,7 +119,11 @@ Deno.serve(async (req) => {
       });
       return new Response(JSON.stringify({ error: 'Too many requests' }), {
         status: 429,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': String(rateCheck.retryAfter) },
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+          'Retry-After': String(rateCheck.retryAfter),
+        },
       });
     }
 
@@ -142,26 +154,32 @@ Deno.serve(async (req) => {
 
         const isLinked = credentials && new Date(credentials.token_expires_at) > new Date();
 
-        return new Response(JSON.stringify({
-          configured: teslaConfigured,
-          linked: isLinked,
-          vehicles: vehicles || [],
-          energySites: energySites || [],
-          lastSync: credentials?.updated_at || null,
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return new Response(
+          JSON.stringify({
+            configured: teslaConfigured,
+            linked: isLinked,
+            vehicles: vehicles || [],
+            energySites: energySites || [],
+            lastSync: credentials?.updated_at || null,
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          },
+        );
       }
 
       case 'get-auth-url': {
         if (!teslaConfigured) {
-          return new Response(JSON.stringify({
-            error: 'Tesla integration not configured',
-            message: 'Tesla API credentials have not been set up yet.'
-          }), {
-            status: 503,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
+          return new Response(
+            JSON.stringify({
+              error: 'Tesla integration not configured',
+              message: 'Tesla API credentials have not been set up yet.',
+            }),
+            {
+              status: 503,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            },
+          );
         }
 
         const redirectUri = body.redirectUri;
@@ -179,15 +197,21 @@ Deno.serve(async (req) => {
         authUrl.searchParams.set('client_id', teslaClientId!);
         authUrl.searchParams.set('redirect_uri', redirectUri);
         authUrl.searchParams.set('response_type', 'code');
-        authUrl.searchParams.set('scope', 'openid offline_access vehicle_device_data vehicle_charging_cmds energy_device_data');
+        authUrl.searchParams.set(
+          'scope',
+          'openid offline_access vehicle_device_data vehicle_charging_cmds energy_device_data',
+        );
         authUrl.searchParams.set('state', state);
 
-        return new Response(JSON.stringify({
-          authUrl: authUrl.toString(),
-          state,
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return new Response(
+          JSON.stringify({
+            authUrl: authUrl.toString(),
+            state,
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          },
+        );
       }
 
       case 'exchange-code': {
@@ -237,14 +261,15 @@ Deno.serve(async (req) => {
         const expiresAt = new Date(Date.now() + tokens.expires_in * 1000);
 
         // Store credentials
-        const { error: upsertError } = await serviceClient
-          .from('tesla_credentials')
-          .upsert({
+        const { error: upsertError } = await serviceClient.from('tesla_credentials').upsert(
+          {
             user_id: userId,
             access_token: tokens.access_token,
             refresh_token: tokens.refresh_token,
             token_expires_at: expiresAt.toISOString(),
-          }, { onConflict: 'user_id' });
+          },
+          { onConflict: 'user_id' },
+        );
 
         if (upsertError) {
           console.error('Failed to store Tesla credentials:', upsertError);
@@ -265,7 +290,12 @@ Deno.serve(async (req) => {
       }
 
       case 'sync-products': {
-        const accessToken = await getValidAccessToken(serviceClient, userId, teslaClientId!, teslaClientSecret!);
+        const accessToken = await getValidAccessToken(
+          serviceClient,
+          userId,
+          teslaClientId!,
+          teslaClientSecret!,
+        );
         if (!accessToken) {
           return new Response(JSON.stringify({ error: 'Tesla not linked or token expired' }), {
             status: 401,
@@ -289,7 +319,12 @@ Deno.serve(async (req) => {
           });
         }
 
-        const accessToken = await getValidAccessToken(serviceClient, userId, teslaClientId!, teslaClientSecret!);
+        const accessToken = await getValidAccessToken(
+          serviceClient,
+          userId,
+          teslaClientId!,
+          teslaClientSecret!,
+        );
         if (!accessToken) {
           return new Response(JSON.stringify({ error: 'Tesla not linked' }), {
             status: 401,
@@ -313,7 +348,12 @@ Deno.serve(async (req) => {
           });
         }
 
-        const accessToken = await getValidAccessToken(serviceClient, userId, teslaClientId!, teslaClientSecret!);
+        const accessToken = await getValidAccessToken(
+          serviceClient,
+          userId,
+          teslaClientId!,
+          teslaClientSecret!,
+        );
         if (!accessToken) {
           return new Response(JSON.stringify({ error: 'Tesla not linked' }), {
             status: 401,
@@ -337,21 +377,27 @@ Deno.serve(async (req) => {
           .order('started_at', { ascending: false })
           .limit(100);
 
-        const totalEnergy = sessions?.reduce((sum, s) => sum + Number(s.energy_added_kwh || 0), 0) || 0;
-        const totalCarbonUsed = sessions?.reduce((sum, s) => sum + Number(s.carbon_used_g || 0), 0) || 0;
-        const totalCarbonSaved = sessions?.reduce((sum, s) => sum + Number(s.carbon_saved_vs_avg_g || 0), 0) || 0;
+        const totalEnergy =
+          sessions?.reduce((sum, s) => sum + Number(s.energy_added_kwh || 0), 0) || 0;
+        const totalCarbonUsed =
+          sessions?.reduce((sum, s) => sum + Number(s.carbon_used_g || 0), 0) || 0;
+        const totalCarbonSaved =
+          sessions?.reduce((sum, s) => sum + Number(s.carbon_saved_vs_avg_g || 0), 0) || 0;
 
-        return new Response(JSON.stringify({
-          sessions: sessions || [],
-          stats: {
-            totalEnergy,
-            totalCarbonUsed,
-            totalCarbonSaved,
-            sessionCount: sessions?.length || 0,
+        return new Response(
+          JSON.stringify({
+            sessions: sessions || [],
+            stats: {
+              totalEnergy,
+              totalCarbonUsed,
+              totalCarbonSaved,
+              sessionCount: sessions?.length || 0,
+            },
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           },
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        );
       }
 
       case 'unlink': {
@@ -389,7 +435,7 @@ async function getValidAccessToken(
   serviceClient: AnySupabaseClient,
   userId: string,
   clientId: string,
-  clientSecret: string
+  clientSecret: string,
 ): Promise<string | null> {
   const { data: credentials } = await serviceClient
     .from('tesla_credentials')
@@ -479,11 +525,16 @@ function estimateBatteryCapacity(vehicle: Record<string, unknown>): number {
   // Estimate based on model (rough estimates)
   const modelCode = (vehicle.vin as string)?.charAt(3);
   switch (modelCode) {
-    case 'S': return 100; // Model S
-    case '3': return 75;  // Model 3
-    case 'X': return 100; // Model X
-    case 'Y': return 75;  // Model Y
-    default: return 75;
+    case 'S':
+      return 100; // Model S
+    case '3':
+      return 75; // Model 3
+    case 'X':
+      return 100; // Model X
+    case 'Y':
+      return 75; // Model Y
+    default:
+      return 75;
   }
 }
 
@@ -491,7 +542,7 @@ async function fetchEnergyData(accessToken: string, siteId: string, period: stri
   try {
     const response = await fetch(
       `${TESLA_API_URL}/api/1/energy_sites/${siteId}/calendar_history?kind=energy&period=${period}`,
-      { headers: { Authorization: `Bearer ${accessToken}` } }
+      { headers: { Authorization: `Bearer ${accessToken}` } },
     );
 
     if (!response.ok) {

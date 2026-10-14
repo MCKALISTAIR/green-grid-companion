@@ -23,7 +23,9 @@ describe('Scene theme integrity (stress-test guards)', () => {
     // Flames block must be gated
     expect(src).toMatch(/!isCity && !isCoastal && sceneConfig\.cleanliness < 0\.2/);
     // Solar panels countryside-only
-    expect(src).toMatch(/!isCity && !isCoastal && sceneConfig\.showRenewables && sceneConfig\.showSun/);
+    expect(src).toMatch(
+      /!isCity && !isCoastal && sceneConfig\.showRenewables && sceneConfig\.showSun/,
+    );
     // Factories already gated
     expect(src).toMatch(/showFactories && !isCity && !isCoastal/);
     // Nuclear countryside-only
@@ -51,7 +53,10 @@ describe('Scene theme integrity (stress-test guards)', () => {
     expect(bessIdx).toBeGreaterThan(-1);
     expect(eyeIdx).toBeLessThan(bessIdx);
     // Must not still be nested only beside CityLandscapeBack
-    const backBlock = src.slice(src.indexOf('<CityLandscapeBack'), src.indexOf('<CityLandscapeMid'));
+    const backBlock = src.slice(
+      src.indexOf('<CityLandscapeBack'),
+      src.indexOf('<CityLandscapeMid'),
+    );
     expect(backBlock).not.toContain('<LondonEye');
   });
 
@@ -62,7 +67,7 @@ describe('Scene theme integrity (stress-test guards)', () => {
     expect(coastal).toMatch(/cleanliness > 0\.25/);
     const elements = fs.readFileSync(
       path.resolve(__dirname, '../components/scene/CoastalElements.tsx'),
-      'utf-8'
+      'utf-8',
     );
     expect(elements).toContain('export function CoastalHorizonPollution');
   });

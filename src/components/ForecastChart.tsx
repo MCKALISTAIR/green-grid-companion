@@ -1,4 +1,9 @@
-import { ForecastData, getIntensityColor, getIntensityTextColor, isEstimatedActual } from '@/lib/carbonApi';
+import {
+  ForecastData,
+  getIntensityColor,
+  getIntensityTextColor,
+  isEstimatedActual,
+} from '@/lib/carbonApi';
 import { format, parseISO } from 'date-fns';
 import { useRef, useLayoutEffect, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -6,16 +11,8 @@ import { getForecastMax, getForecastDifferences, getSlotDisplayValue } from '@/l
 import { createPortal } from 'react-dom';
 import { Target, ArrowUp, ArrowDown, Clock3, Leaf, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import {
-  findDefaultForecastIndex,
-  getForecastHourInsight,
-} from '@/lib/forecastHourInsight';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { findDefaultForecastIndex, getForecastHourInsight } from '@/lib/forecastHourInsight';
 import { getNowOrWaitDecision } from '@/lib/nowOrWait';
 import { useEnergyFacts } from '@/hooks/useEnergyFacts';
 import { cn } from '@/lib/utils';
@@ -59,8 +56,7 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
     if (scrollContainerRef.current && currentHourRef.current) {
       const container = scrollContainerRef.current;
       const element = currentHourRef.current;
-      const scrollLeft =
-        element.offsetLeft - container.clientWidth / 2 + element.clientWidth / 2;
+      const scrollLeft = element.offsetLeft - container.clientWidth / 2 + element.clientWidth / 2;
       container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
     }
     const nowIdx = findDefaultForecastIndex(forecast);
@@ -150,9 +146,8 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
   });
 
   // Same engine as the now-or-wait card, so the current-hour line agrees with it.
-  const nowAction = currentIntensity > 0
-    ? getNowOrWaitDecision(currentIntensity, forecast, now).action
-    : undefined;
+  const nowAction =
+    currentIntensity > 0 ? getNowOrWaitDecision(currentIntensity, forecast, now).action : undefined;
 
   const insight = getForecastHourInsight(
     forecast,
@@ -165,8 +160,7 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
   );
 
   const isToday = visibleDate.getDate() === now.getDate();
-  const isTomorrow =
-    visibleDate.getDate() === new Date(now.getTime() + 86400000).getDate();
+  const isTomorrow = visibleDate.getDate() === new Date(now.getTime() + 86400000).getDate();
   const headerDateLabel = isToday
     ? 'Today'
     : isTomorrow
@@ -211,10 +205,7 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className={cn(
-              'rounded-2xl border px-3.5 py-3 space-y-1',
-              insight.washClass,
-            )}
+            className={cn('rounded-2xl border px-3.5 py-3 space-y-1', insight.washClass)}
             aria-live="polite"
             data-testid="forecast-hour-insight"
           >
@@ -275,7 +266,9 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
                 <td>{item.intensity.forecast}</td>
                 <td>
                   {item.intensity.actual ?? 'N/A'}
-                  {item.intensity.actual != null && isEstimatedActual(item) ? ' (GridSense estimate)' : ''}
+                  {item.intensity.actual != null && isEstimatedActual(item)
+                    ? ' (GridSense estimate)'
+                    : ''}
                 </td>
               </tr>
             ))}
@@ -293,9 +286,7 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
           )}
           role="listbox"
           aria-label="Select a forecast hour"
-          aria-activedescendant={
-            selectedIndex >= 0 ? `forecast-hour-${selectedIndex}` : undefined
-          }
+          aria-activedescendant={selectedIndex >= 0 ? `forecast-hour-${selectedIndex}` : undefined}
         >
           <div className="flex gap-2 min-w-max px-4 relative">
             {bestBlocks.map((block, idx) => {
@@ -307,8 +298,7 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
                 .filter(Boolean).length;
 
               const leftRem = 1.0 + block.start * 3.5 + sepsBeforeStart * 2.0;
-              const widthRem =
-                (block.end - block.start) * 3.5 + sepsInBlock * 2.0 + 3.0;
+              const widthRem = (block.end - block.start) * 3.5 + sepsInBlock * 2.0 + 3.0;
 
               const startTime = format(parseISO(forecast[block.start].from), 'HH:mm');
               const endTime = format(parseISO(forecast[block.end].to), 'HH:mm');
@@ -436,12 +426,7 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
                             )}
                             initial={{ height: 0, opacity: 0 }}
                             animate={{
-                              height: `${Math.max(
-                                ((displayValue ?? 0) /
-                                  maxForecast) *
-                                  100,
-                                10,
-                              )}%`,
+                              height: `${Math.max(((displayValue ?? 0) / maxForecast) * 100, 10)}%`,
                               opacity: 1,
                             }}
                             transition={{
@@ -505,7 +490,9 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
                         <span className="font-semibold capitalize">{item.intensity.index}</span>
                         <div className="flex items-center gap-2">
                           <span className="text-muted-foreground">Forecast:</span>
-                          <span className="font-medium">{isUnknown ? 'No data' : `${item.intensity.forecast}g`}</span>
+                          <span className="font-medium">
+                            {isUnknown ? 'No data' : `${item.intensity.forecast}g`}
+                          </span>
                         </div>
                         {hasActual && (
                           <div className="flex items-center gap-2">

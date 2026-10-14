@@ -41,11 +41,17 @@ await page.waitForTimeout(2500);
 await page.screenshot({ path: path.join(out, 'history_with_tip.png'), fullPage: false });
 const tip = page.locator('text=Understanding the Graph').first();
 if (await tip.count()) {
-  await page.locator('text=Understanding the Graph').locator('xpath=ancestor::div[contains(@class,\"sheet-surface\") or contains(@class,\"Card\") or contains(@class,\"rounded\")][1]').screenshot({
-    path: path.join(out, 'history_chart_tip.png'),
-  }).catch(async () => {
-    await page.screenshot({ path: path.join(out, 'history_chart_tip.png') });
-  });
+  await page
+    .locator('text=Understanding the Graph')
+    .locator(
+      'xpath=ancestor::div[contains(@class,\"sheet-surface\") or contains(@class,\"Card\") or contains(@class,\"rounded\")][1]',
+    )
+    .screenshot({
+      path: path.join(out, 'history_chart_tip.png'),
+    })
+    .catch(async () => {
+      await page.screenshot({ path: path.join(out, 'history_chart_tip.png') });
+    });
   console.log('history tip ok');
 } else {
   console.log('history tip missing');

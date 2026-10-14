@@ -19,7 +19,11 @@ describe('voiceNowOrWait', () => {
   it('only adds a tail in Cheeky and never changes the headline or detail', () => {
     for (const reason of ['cleaner_later', 'now_is_best', 'small_gain'] as const) {
       const fake = { ...noForecast, reason, headline: 'H', detail: 'D' };
-      expect(voiceNowOrWait(fake, 'cheeky')).toEqual({ headline: 'H', detail: 'D', tail: CHEEKY_TAILS[reason] });
+      expect(voiceNowOrWait(fake, 'cheeky')).toEqual({
+        headline: 'H',
+        detail: 'D',
+        tail: CHEEKY_TAILS[reason],
+      });
     }
   });
 

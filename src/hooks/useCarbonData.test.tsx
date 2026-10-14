@@ -6,16 +6,16 @@ import { ReactNode } from 'react';
 
 // Setup Wrapper
 const createWrapper = () => {
-    const queryClient = new QueryClient({
-        defaultOptions: {
-            queries: {
-                retry: false,
-            },
-        },
-    });
-    return ({ children }: { children: ReactNode }) => (
-        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    );
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+  return ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
 };
 
 // Mock fetch with all required properties
@@ -23,12 +23,12 @@ const mockFetch = vi.fn() as unknown as typeof fetch;
 global.fetch = mockFetch;
 
 describe('useCarbonData', () => {
-    it('returns loading state initially', async () => {
-        const { result } = renderHook(() => useCarbonData(''), {
-            wrapper: createWrapper(),
-        });
-
-        // Should start loading national data defaults
-        expect(result.current.isLoading).toBe(true);
+  it('returns loading state initially', async () => {
+    const { result } = renderHook(() => useCarbonData(''), {
+      wrapper: createWrapper(),
     });
+
+    // Should start loading national data defaults
+    expect(result.current.isLoading).toBe(true);
+  });
 });

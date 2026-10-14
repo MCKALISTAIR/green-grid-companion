@@ -23,6 +23,6 @@ export function useTransitionNavigate() {
         navigate(to, options);
       }
     },
-    [navigate]
+    [navigate],
   );
 }

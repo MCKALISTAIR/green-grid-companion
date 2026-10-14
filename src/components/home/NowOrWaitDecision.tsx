@@ -33,9 +33,7 @@ export function NowOrWaitDecision({ intensity, forecast }: NowOrWaitDecisionProp
       transition={{ type: 'spring', stiffness: 260, damping: 24 }}
       className={cn(
         'sheet-surface px-4 py-4',
-        isUseNow
-          ? 'bg-intensity-very-low/[0.1] border-intensity-very-low/25'
-          : 'border-border/60',
+        isUseNow ? 'bg-intensity-very-low/[0.1] border-intensity-very-low/25' : 'border-border/60',
       )}
       aria-label="Now or wait decision"
       data-tour="now-or-wait"
@@ -81,7 +79,9 @@ export function NowOrWaitDecision({ intensity, forecast }: NowOrWaitDecisionProp
             {voiced.detail}
             {voiced.tail && <span className="text-foreground/80"> {voiced.tail}</span>}
           </p>
-          <p className="text-xs text-muted-foreground/90 leading-snug line-clamp-2">{decision.tip}</p>
+          <p className="text-xs text-muted-foreground/90 leading-snug line-clamp-2">
+            {decision.tip}
+          </p>
 
           <Link
             to="/planner"

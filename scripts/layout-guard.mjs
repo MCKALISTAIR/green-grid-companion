@@ -26,21 +26,47 @@ const HERO_STATES = [
   { scenario: 'stale', expectBadge: false },
   { scenario: 'long-region', expectBadge: true },
 ];
-const SCROLL_ROUTES = ['/history', '/settings', '/achievements', '/help', '/glossary', '/terms', '/planner', '/map', '/locations'];
+const SCROLL_ROUTES = [
+  '/history',
+  '/settings',
+  '/achievements',
+  '/help',
+  '/glossary',
+  '/terms',
+  '/planner',
+  '/map',
+  '/locations',
+];
 
 async function startPreview() {
   // Run vite's own bin with node (not `npx`): killing an npx wrapper left the vite
   // grandchild alive holding our pipes, so the script never exited in CI. Own
   // process group so we can kill the whole tree.
   const viteBin = fileURLToPath(new URL('../node_modules/vite/bin/vite.js', import.meta.url));
-  const proc = spawn(process.execPath, [viteBin, 'preview', '--port', String(PORT), '--strictPort'], {
-    stdio: ['ignore', 'ignore', 'pipe'], env: process.env, detached: true,
-  });
+  const proc = spawn(
+    process.execPath,
+    [viteBin, 'preview', '--port', String(PORT), '--strictPort'],
+    {
+      stdio: ['ignore', 'ignore', 'pipe'],
+      env: process.env,
+      detached: true,
+    },
+  );
   proc.stderr.on('data', (d) => process.stderr.write(`[preview] ${d}`));
-  const stop = () => { try { process.kill(-proc.pid, 'SIGTERM'); } catch { /* already gone */ } };
+  const stop = () => {
+    try {
+      process.kill(-proc.pid, 'SIGTERM');
+    } catch {
+      /* already gone */
+    }
+  };
   const url = `http://localhost:${PORT}`;
   for (let i = 0; i < 60; i++) {
-    try { if ((await fetch(url)).ok) return { stop, url }; } catch { /* not up yet */ }
+    try {
+      if ((await fetch(url)).ok) return { stop, url };
+    } catch {
+      /* not up yet */
+    }
     await new Promise((r) => setTimeout(r, 500));
   }
   stop();
@@ -48,7 +74,11 @@ async function startPreview() {
 }
 
 async function openPage(browser, base, { viewport, scenario, route = '/' }) {
-  const context = await browser.newContext({ viewport, serviceWorkers: 'block', reducedMotion: 'reduce' });
+  const context = await browser.newContext({
+    viewport,
+    serviceWorkers: 'block',
+    reducedMotion: 'reduce',
+  });
   await installMocks(context, SCENARIOS[scenario]);
   await context.addInitScript(seedStorage());
   const page = await context.newPage();
@@ -57,7 +87,16 @@ async function openPage(browser, base, { viewport, scenario, route = '/' }) {
 }
 
 async function waitForHero(page) {
-  await page.waitForFunction(() => /gCO₂|Very Low|Very High/.test(document.querySelector('.home-scene-gauge')?.textContent || ''), null, { timeout: 15000 }).catch(() => {});
+  await page
+    .waitForFunction(
+      () =>
+        /gCO₂|Very Low|Very High/.test(
+          document.querySelector('.home-scene-gauge')?.textContent || '',
+        ),
+      null,
+      { timeout: 15000 },
+    )
+    .catch(() => {});
   await page.waitForTimeout(1500); // badge entrance + band typewriter
 }
 
@@ -65,21 +104,37 @@ async function main() {
   const external = process.env.BASE_URL;
   const server = external ? null : await startPreview();
   const base = external || server.url;
-  const browser = await chromium.launch(process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : {});
+  const browser = await chromium.launch(
+    process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : {},
+  );
   const failures = [];
   let checks = 0;
   try {
     for (const viewport of GUARD_VIEWPORTS) {
       for (const st of HERO_STATES) {
-        const { context, page } = await openPage(browser, base, { viewport, scenario: st.scenario });
+        const { context, page } = await openPage(browser, base, {
+          viewport,
+          scenario: st.scenario,
+        });
         await waitForHero(page);
-        failures.push(...(await checkHero(page, { ...st, viewport, region: SCENARIOS[st.scenario].regionName ?? 'South Scotland' })));
-        if (st.scenario === 'zero-carbon') failures.push(...(await checkSheetEdge(page, { viewport })));
+        failures.push(
+          ...(await checkHero(page, {
+            ...st,
+            viewport,
+            region: SCENARIOS[st.scenario].regionName ?? 'South Scotland',
+          })),
+        );
+        if (st.scenario === 'zero-carbon')
+          failures.push(...(await checkSheetEdge(page, { viewport })));
         checks++;
         await context.close();
       }
       for (const route of SCROLL_ROUTES) {
-        const { context, page } = await openPage(browser, base, { viewport, scenario: 'zero-carbon', route });
+        const { context, page } = await openPage(browser, base, {
+          viewport,
+          scenario: 'zero-carbon',
+          route,
+        });
         await page.waitForLoadState('networkidle').catch(() => {});
         await page.waitForTimeout(1500);
         failures.push(...(await checkScrollSpace(page, { route, viewport })));
@@ -92,11 +147,17 @@ async function main() {
     server?.stop();
   }
   if (failures.length) {
-    console.error(`\nLayout guard: ${failures.length} failure(s) in ${checks} page checks:\n` + failures.map((f) => `  ✗ ${f}`).join('\n'));
+    console.error(
+      `\nLayout guard: ${failures.length} failure(s) in ${checks} page checks:\n` +
+        failures.map((f) => `  ✗ ${f}`).join('\n'),
+    );
     process.exit(1);
   }
   console.log(`Layout guard: ${checks} page checks passed.`);
   process.exit(0); // don't let a stray handle keep CI waiting
 }
 
-main().catch((e) => { console.error(e); process.exit(1); });
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

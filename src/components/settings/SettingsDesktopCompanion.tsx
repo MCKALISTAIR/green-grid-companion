@@ -18,7 +18,8 @@ export function SettingsDesktopCompanion() {
           <div className="space-y-1">
             <h3 className="font-medium text-base">GridSense Menu Bar</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Keep an eye on the grid from your desktop. Our native menu bar app shows live intensity and upcoming forecasts at a glance.
+              Keep an eye on the grid from your desktop. Our native menu bar app shows live
+              intensity and upcoming forecasts at a glance.
             </p>
           </div>
         </div>
@@ -26,7 +27,9 @@ export function SettingsDesktopCompanion() {
         <div className="pt-2 relative z-10">
           <Button
             className="w-full sm:w-auto gap-2 shadow-sm"
-            onClick={() => window.open('https://github.com/MCKALISTAIR/green-grid-companion/releases', '_blank')}
+            onClick={() =>
+              window.open('https://github.com/MCKALISTAIR/green-grid-companion/releases', '_blank')
+            }
           >
             <Download className="w-4 h-4" />
             Download for macOS
@@ -35,7 +38,9 @@ export function SettingsDesktopCompanion() {
             Requires macOS 11.0 or later.
           </p>
           <p className="text-[10px] text-muted-foreground/80 mt-1 bg-accent/20 p-2 rounded border border-accent/10 max-w-md text-center sm:text-left">
-            💡 <strong>Tip:</strong> To show your local region in the menu bar app, create a file at <code>~/.gridsense</code> containing your postcode prefix (e.g., <code>EH1</code> or <code>SW1</code>).
+            💡 <strong>Tip:</strong> To show your local region in the menu bar app, create a file at{' '}
+            <code>~/.gridsense</code> containing your postcode prefix (e.g., <code>EH1</code> or{' '}
+            <code>SW1</code>).
           </p>
         </div>
       </div>

@@ -40,7 +40,9 @@ export interface NotificationLogClient {
       rows: Array<Record<string, unknown>>,
       options: { onConflict: string; ignoreDuplicates: boolean },
     ): {
-      select(columns: string): PromiseLike<{ data: Array<{ subscription_id: string }> | null; error: unknown }>;
+      select(
+        columns: string,
+      ): PromiseLike<{ data: Array<{ subscription_id: string }> | null; error: unknown }>;
     };
   };
 }
@@ -69,7 +71,10 @@ export async function claimSubscriptionsForPeriod(
     .select('subscription_id');
 
   if (error) {
-    console.error(`[IDEMPOTENCY] Failed to claim ${job} ${periodKey}; skipping sends to avoid duplicates`, error);
+    console.error(
+      `[IDEMPOTENCY] Failed to claim ${job} ${periodKey}; skipping sends to avoid duplicates`,
+      error,
+    );
     return new Set();
   }
 

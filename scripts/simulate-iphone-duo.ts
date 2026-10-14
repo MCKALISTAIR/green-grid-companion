@@ -44,7 +44,11 @@ async function seedStorage(page: Page) {
 
 async function dismissChrome(page: Page) {
   const accept = page.getByRole('button', { name: /accept/i });
-  if (await accept.count()) await accept.first().click({ timeout: 1500 }).catch(() => {});
+  if (await accept.count())
+    await accept
+      .first()
+      .click({ timeout: 1500 })
+      .catch(() => {});
 }
 
 async function probe(page: Page): Promise<LayoutProbe> {
@@ -213,7 +217,7 @@ async function main() {
     }
 
     const footprintOk = samples.every((s) =>
-      (s.viewModeSelected || '').toLowerCase().includes('footprint')
+      (s.viewModeSelected || '').toLowerCase().includes('footprint'),
     );
     const overflowOk = samples.every((s) => !s.hasHorizontalOverflow);
     if (!footprintOk) {

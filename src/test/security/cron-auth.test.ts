@@ -12,7 +12,10 @@ import {
 const SECRET = 'a'.repeat(16) + '0123456789abcdef0123456789abcdef';
 
 function req(headers: Record<string, string> = {}) {
-  return new Request('https://example.supabase.co/functions/v1/daily-forecast', { method: 'POST', headers });
+  return new Request('https://example.supabase.co/functions/v1/daily-forecast', {
+    method: 'POST',
+    headers,
+  });
 }
 
 describe('verifyCronRequest', () => {
@@ -65,7 +68,10 @@ describe('timingSafeEqual', () => {
 
 describe('cronAuthErrorResponse', () => {
   it('returns a JSON response with the right status and no secret material', async () => {
-    const res = cronAuthErrorResponse({ ok: false, status: 401, error: 'Unauthorized' }, { 'X-Test': '1' });
+    const res = cronAuthErrorResponse(
+      { ok: false, status: 401, error: 'Unauthorized' },
+      { 'X-Test': '1' },
+    );
     expect(res.status).toBe(401);
     expect(res.headers.get('Content-Type')).toBe('application/json');
     expect(res.headers.get('X-Test')).toBe('1');
@@ -76,22 +82,36 @@ describe('cronAuthErrorResponse', () => {
 describe('verifySchedulerRequest (secret loaded from the database)', () => {
   it('rejects a request without the header without touching the database', async () => {
     const getSecret = vi.fn();
-    expect(await verifySchedulerRequest(req({ apikey: 'anon' }), getSecret)).toEqual({ ok: false, status: 401, error: 'Unauthorized' });
+    expect(await verifySchedulerRequest(req({ apikey: 'anon' }), getSecret)).toEqual({
+      ok: false,
+      status: 401,
+      error: 'Unauthorized',
+    });
     expect(getSecret).not.toHaveBeenCalled();
   });
 
   it('fails closed with 503 (no throw) when the secret cannot be loaded, e.g. before the migration', async () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const missingRpc = vi.fn().mockRejectedValue({ code: 'PGRST202', message: 'function not found' });
-    expect(await verifySchedulerRequest(req({ [CRON_SECRET_HEADER]: SECRET }), missingRpc)).toEqual({ ok: false, status: 503, error: expect.any(String) });
-    expect(await verifySchedulerRequest(req({ [CRON_SECRET_HEADER]: SECRET }), async () => null)).toMatchObject({ ok: false, status: 503 });
+    const missingRpc = vi
+      .fn()
+      .mockRejectedValue({ code: 'PGRST202', message: 'function not found' });
+    expect(await verifySchedulerRequest(req({ [CRON_SECRET_HEADER]: SECRET }), missingRpc)).toEqual(
+      { ok: false, status: 503, error: expect.any(String) },
+    );
+    expect(
+      await verifySchedulerRequest(req({ [CRON_SECRET_HEADER]: SECRET }), async () => null),
+    ).toMatchObject({ ok: false, status: 503 });
     spy.mockRestore();
   });
 
   it('accepts the right secret and rejects a wrong one', async () => {
     const getSecret = async () => SECRET;
-    expect(await verifySchedulerRequest(req({ [CRON_SECRET_HEADER]: SECRET }), getSecret)).toEqual({ ok: true });
-    expect(await verifySchedulerRequest(req({ [CRON_SECRET_HEADER]: 'x'.repeat(64) }), getSecret)).toMatchObject({ ok: false, status: 401 });
+    expect(await verifySchedulerRequest(req({ [CRON_SECRET_HEADER]: SECRET }), getSecret)).toEqual({
+      ok: true,
+    });
+    expect(
+      await verifySchedulerRequest(req({ [CRON_SECRET_HEADER]: 'x'.repeat(64) }), getSecret),
+    ).toMatchObject({ ok: false, status: 401 });
   });
 });
 
@@ -100,13 +120,20 @@ describe('fetchSchedulerSecret / createSchedulerSecretProvider', () => {
     const rpc = vi.fn().mockResolvedValue({ data: SECRET, error: null });
     expect(await fetchSchedulerSecret({ rpc })).toBe(SECRET);
     expect(rpc).toHaveBeenCalledWith('get_scheduler_secret');
-    await expect(fetchSchedulerSecret({ rpc: vi.fn().mockResolvedValue({ data: null, error: { code: 'PGRST202' } }) })).rejects.toEqual({ code: 'PGRST202' });
-    expect(await fetchSchedulerSecret({ rpc: vi.fn().mockResolvedValue({ data: '', error: null }) })).toBeNull();
+    await expect(
+      fetchSchedulerSecret({
+        rpc: vi.fn().mockResolvedValue({ data: null, error: { code: 'PGRST202' } }),
+      }),
+    ).rejects.toEqual({ code: 'PGRST202' });
+    expect(
+      await fetchSchedulerSecret({ rpc: vi.fn().mockResolvedValue({ data: '', error: null }) }),
+    ).toBeNull();
   });
 
   it('caches successes for the TTL, does not cache failures, and dedupes concurrent loads', async () => {
     let t = 0;
-    const fetcher = vi.fn()
+    const fetcher = vi
+      .fn()
       .mockRejectedValueOnce(new Error('not migrated yet'))
       .mockResolvedValue(SECRET);
     const get = createSchedulerSecretProvider(fetcher, { ttlMs: 1000, now: () => t });
@@ -114,9 +141,11 @@ describe('fetchSchedulerSecret / createSchedulerSecretProvider', () => {
     const [a, b] = await Promise.all([get(), get()]);
     expect([a, b]).toEqual([SECRET, SECRET]);
     expect(fetcher).toHaveBeenCalledTimes(2);
-    t = 999; await get();
+    t = 999;
+    await get();
     expect(fetcher).toHaveBeenCalledTimes(2);
-    t = 2000; await get();
+    t = 2000;
+    await get();
     expect(fetcher).toHaveBeenCalledTimes(3);
   });
 });

@@ -11,11 +11,7 @@ import { ComponentErrorBoundary } from '@/components/ComponentErrorBoundary';
 import { StaleDataBadge } from '@/components/StaleDataBadge';
 import { NowOrWaitDecision } from '@/components/home/NowOrWaitDecision';
 import { GardenStageUpLine } from '@/components/home/GardenStageUpLine';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import type { ForecastData, GenerationMix } from '@/lib/carbonApi';
 import type { SceneGrowthStage } from '@/hooks/useSceneGrowth';
 import { cn } from '@/lib/utils';
@@ -62,10 +58,7 @@ export function IntensityDashboard({
 
       <GardenStageUpLine growthStage={growthStage} gardenDays={gardenDays} />
 
-      <section
-        className={cn('sheet-surface px-3 py-3', glowClass)}
-        data-tour="generation-mix"
-      >
+      <section className={cn('sheet-surface px-3 py-3', glowClass)} data-tour="generation-mix">
         <ComponentErrorBoundary name="Generation Mix">
           <div className="flex items-center justify-between mb-1.5 px-1">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -78,16 +71,9 @@ export function IntensityDashboard({
       </section>
 
       {forecast.length > 0 && (
-        <section
-          className={cn('sheet-surface p-3', glowClass)}
-          data-tour="forecast-chart"
-        >
+        <section className={cn('sheet-surface p-3', glowClass)} data-tour="forecast-chart">
           <ComponentErrorBoundary name="Hourly Forecast">
-            <ForecastChart
-              forecast={forecast}
-              showNext={24}
-              currentIntensity={intensity}
-            />
+            <ForecastChart forecast={forecast} showNext={24} currentIntensity={intensity} />
           </ComponentErrorBoundary>
         </section>
       )}

@@ -13,7 +13,10 @@ export function useRoutePrefetch() {
       void import('@/pages/Settings');
     };
 
-    const ric = window.requestIdleCallback ?? ((cb: IdleRequestCallback) => window.setTimeout(() => cb({ didTimeout: false, timeRemaining: () => 0 }), 250));
+    const ric =
+      window.requestIdleCallback ??
+      ((cb: IdleRequestCallback) =>
+        window.setTimeout(() => cb({ didTimeout: false, timeRemaining: () => 0 }), 250));
     const cancel = window.cancelIdleCallback ?? window.clearTimeout;
     const id = ric(prefetch, { timeout: 2000 });
 

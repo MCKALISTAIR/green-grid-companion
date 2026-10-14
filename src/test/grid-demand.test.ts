@@ -23,8 +23,9 @@ const fuelinst = fixture('elexon-fuelinst.json');
 const embedded = fixture('neso-embedded-forecast.json');
 const frequency = fixture('elexon-frequency.json');
 
-const live = () => buildGridDemand({ now: RECORDED_AT, fuelinst, embedded, frequency }) as GridDemandOk;
-const mw = (r: GridDemandOk, fuel: string) => r.mix.find(m => m.id === fuel)?.mw;
+const live = () =>
+  buildGridDemand({ now: RECORDED_AT, fuelinst, embedded, frequency }) as GridDemandOk;
+const mw = (r: GridDemandOk, fuel: string) => r.mix.find((m) => m.id === fuel)?.mw;
 
 describe('grid-demand: live sources (recorded fixtures)', () => {
   it('builds real per-fuel MW from Elexon FUELINST plus NESO embedded solar/wind', () => {
@@ -63,11 +64,25 @@ describe('grid-demand: live sources (recorded fixtures)', () => {
     const r = live();
     for (const m of r.mix) expect(m.perc).toBeCloseTo((m.mw / r.totalSupplyMW) * 100, 0);
     expect(r.mix.reduce((s, m) => s + m.perc, 0)).toBeCloseTo(100, 0);
-    expect(r.mix.map(m => m.id)).toEqual(['imports', 'solar', 'nuclear', 'wind', 'gas', 'biomass', 'hydro', 'other', 'coal']);
+    expect(r.mix.map((m) => m.id)).toEqual([
+      'imports',
+      'solar',
+      'nuclear',
+      'wind',
+      'gas',
+      'biomass',
+      'hydro',
+      'other',
+      'coal',
+    ]);
   });
 
   it('keeps every fuel id the app knows, including 0 MW ones', () => {
-    expect(live().mix.map(m => m.id).sort()).toEqual(['biomass', 'coal', 'gas', 'hydro', 'imports', 'nuclear', 'other', 'solar', 'wind']);
+    expect(
+      live()
+        .mix.map((m) => m.id)
+        .sort(),
+    ).toEqual(['biomass', 'coal', 'gas', 'hydro', 'imports', 'nuclear', 'other', 'solar', 'wind']);
   });
 });
 
@@ -76,14 +91,25 @@ describe('grid-demand: refuses old or partial data', () => {
     const later = new Date(Date.parse('2026-10-11T10:35:00Z') + (MIX_MAX_AGE_MINUTES + 1) * 60_000);
     const r = buildGridDemand({ now: later, fuelinst, embedded, frequency });
     expect(r.status).toBe('unavailable');
-    expect(r).toMatchObject({ reason: 'mix_stale', timestamp: null, totalDemandMW: null, mix: [], dataTime: '2026-10-11T10:35:00.000Z' });
+    expect(r).toMatchObject({
+      reason: 'mix_stale',
+      timestamp: null,
+      totalDemandMW: null,
+      mix: [],
+      dataTime: '2026-10-11T10:35:00.000Z',
+    });
     expect(r.gridFrequency).toBeNull(); // frequency reading is old too
   });
 
   it('upstream failure is "unavailable", never a fallback figure', () => {
     for (const bad of [null, {}, { data: [] }, { error: 'x' }, 'nope']) {
       const r = buildGridDemand({ now: RECORDED_AT, fuelinst: bad, embedded, frequency });
-      expect(r).toMatchObject({ status: 'unavailable', reason: 'mix_fetch_failed', totalDemandMW: null, mix: [] });
+      expect(r).toMatchObject({
+        status: 'unavailable',
+        reason: 'mix_fetch_failed',
+        totalDemandMW: null,
+        mix: [],
+      });
       expect(r.gridFrequency).toBe(50.029); // independent source still shown
     }
   });
@@ -98,45 +124,94 @@ describe('grid-demand: refuses old or partial data', () => {
   it('refuses an old NESO forecast run (current period not near the start of the run)', () => {
     const records = embedded.result.records as Record<string, unknown>[];
     // Pretend the run started 9 half hours earlier: SP24 is now row 10.
-    const oldRun = { success: true, result: { records: records.map((r, i) => ({ ...r, _id: i + 10 })).concat(
-      Array.from({ length: 9 }, (_, i) => ({ ...records[0], _id: i + 1, SETTLEMENT_PERIOD: 10 + i })),
-    ) } };
+    const oldRun = {
+      success: true,
+      result: {
+        records: records
+          .map((r, i) => ({ ...r, _id: i + 10 }))
+          .concat(
+            Array.from({ length: 9 }, (_, i) => ({
+              ...records[0],
+              _id: i + 1,
+              SETTLEMENT_PERIOD: 10 + i,
+            })),
+          ),
+      },
+    };
     expect(embeddedForPeriod(oldRun, '2026-10-11', 24)).toBeNull();
-    expect(embeddedForPeriod(embedded, '2026-10-11', 24)).toEqual({ solarMW: 6679, windMW: 219, settlementDate: '2026-10-11', settlementPeriod: 24 });
+    expect(embeddedForPeriod(embedded, '2026-10-11', 24)).toEqual({
+      solarMW: 6679,
+      windMW: 219,
+      settlementDate: '2026-10-11',
+      settlementPeriod: 24,
+    });
     expect(embeddedForPeriod(embedded, '2026-10-12', 24)).toBeNull();
   });
 
   it('skips a partial newest FUELINST interval and uses the latest complete one', () => {
     const rows = (fuelinst.data as Record<string, unknown>[]).concat([
-      { dataset: 'FUELINST', publishTime: '2026-10-11T10:45:00Z', startTime: '2026-10-11T10:40:00Z', settlementDate: '2026-10-11', settlementPeriod: 24, fuelType: 'WIND', generation: 9999 },
+      {
+        dataset: 'FUELINST',
+        publishTime: '2026-10-11T10:45:00Z',
+        startTime: '2026-10-11T10:40:00Z',
+        settlementDate: '2026-10-11',
+        settlementPeriod: 24,
+        fuelType: 'WIND',
+        generation: 9999,
+      },
     ]);
     expect(latestFuelinstSnapshot({ data: rows })?.startTime).toBe('2026-10-11T10:35:00.000Z');
   });
 
   it('uses the newest revision when FUELINST republishes an interval', () => {
     const rows = (fuelinst.data as Record<string, unknown>[]).concat([
-      { dataset: 'FUELINST', publishTime: '2026-10-11T10:41:00Z', startTime: '2026-10-11T10:35:00Z', settlementDate: '2026-10-11', settlementPeriod: 24, fuelType: 'NUCLEAR', generation: 4100 },
+      {
+        dataset: 'FUELINST',
+        publishTime: '2026-10-11T10:41:00Z',
+        startTime: '2026-10-11T10:35:00Z',
+        settlementDate: '2026-10-11',
+        settlementPeriod: 24,
+        fuelType: 'NUCLEAR',
+        generation: 4100,
+      },
     ]);
     expect(latestFuelinstSnapshot({ data: rows })?.byFuelType.NUCLEAR).toBe(4100);
   });
 
   it('ignores old or implausible frequency readings', () => {
     expect(latestFrequency(frequency, new Date('2026-10-11T11:30:00Z'))).toBeNull();
-    expect(latestFrequency({ data: [{ measurementTime: '2026-10-11T10:43:00Z', frequency: 0 }] }, RECORDED_AT)).toBeNull();
-    expect(latestFrequency({ data: [{ measurementTime: '2026-10-11T10:43:00Z', frequency: 49.98 }] }, RECORDED_AT)?.frequency).toBe(49.98);
+    expect(
+      latestFrequency(
+        { data: [{ measurementTime: '2026-10-11T10:43:00Z', frequency: 0 }] },
+        RECORDED_AT,
+      ),
+    ).toBeNull();
+    expect(
+      latestFrequency(
+        { data: [{ measurementTime: '2026-10-11T10:43:00Z', frequency: 49.98 }] },
+        RECORDED_AT,
+      )?.frequency,
+    ).toBe(49.98);
   });
 });
 
 describe('grid-demand: request URLs', () => {
   it('asks for a recent window, never the whole of yesterday', () => {
     const now = new Date('2026-10-11T10:43:38Z');
-    expect(fuelinstUrl(now)).toContain('/datasets/FUELINST?publishDateTimeFrom=2026-10-11T09%3A58%3A38.000Z');
-    expect(frequencyUrl(now)).toContain('/system/frequency?from=2026-10-11T10%3A28%3A38.000Z&to=2026-10-11T10%3A43%3A38.000Z');
+    expect(fuelinstUrl(now)).toContain(
+      '/datasets/FUELINST?publishDateTimeFrom=2026-10-11T09%3A58%3A38.000Z',
+    );
+    expect(frequencyUrl(now)).toContain(
+      '/system/frequency?from=2026-10-11T10%3A28%3A38.000Z&to=2026-10-11T10%3A43%3A38.000Z',
+    );
     expect(embeddedForecastUrl()).toContain('resource_id=db6c038f-98af-4570-ab60-24d71ebd0ae5');
   });
 
   it('edge function no longer reads the frozen Historic Demand 2025 resource, keeps rate limiting and checks response.ok', () => {
-    const src = readFileSync(resolve(__dirname, '../../supabase/functions/grid-demand/index.ts'), 'utf-8');
+    const src = readFileSync(
+      resolve(__dirname, '../../supabase/functions/grid-demand/index.ts'),
+      'utf-8',
+    );
     expect(src).not.toContain('b2bde559-3455-4021-b179-dfe60c0337b0');
     expect(src).not.toContain('carbonintensity.org.uk');
     expect(src).toContain('checkRateLimit(clientIP, 30, 60)');
@@ -159,7 +234,12 @@ describe('useGridDemand freshness gate', () => {
   });
 
   it('hides the old function’s frozen response (no status, fake-fresh timestamp)', () => {
-    const old = { timestamp: '2026-10-11T10:43:00Z', totalDemandMW: 24730, gridFrequency: null, mix: [{ id: 'wind', perc: 20, mw: 4946 }] };
+    const old = {
+      timestamp: '2026-10-11T10:43:00Z',
+      totalDemandMW: 24730,
+      gridFrequency: null,
+      mix: [{ id: 'wind', perc: 20, mw: 4946 }],
+    };
     expect(gridDemandUnavailableReason(old, at('2026-10-11T10:43:38Z'))).toBe('unavailable');
   });
 

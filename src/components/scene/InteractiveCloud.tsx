@@ -36,7 +36,10 @@ export function InteractiveCloud({ className, style, shouldReduceMotion }: Inter
       }
       transition={{ duration: 0.8, ease: 'easeInOut' as const }}
     >
-      <Cloud className="w-full h-full transition-colors duration-200 hover:text-sky-50/90" aria-hidden="true" />
+      <Cloud
+        className="w-full h-full transition-colors duration-200 hover:text-sky-50/90"
+        aria-hidden="true"
+      />
     </motion.div>
   );
 }

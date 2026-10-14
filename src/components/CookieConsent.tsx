@@ -80,7 +80,10 @@ export const CookieConsent = () => {
     const root = document.documentElement;
     const tabBar = measureTabBar();
     // No tab bar (desktop): sit just above the safe area instead.
-    root.style.setProperty(BOTTOM_VAR, tabBar > 0 ? `${tabBar}px` : 'calc(4px + env(safe-area-inset-bottom))');
+    root.style.setProperty(
+      BOTTOM_VAR,
+      tabBar > 0 ? `${tabBar}px` : 'calc(4px + env(safe-area-inset-bottom))',
+    );
     const h = sheetRef.current?.getBoundingClientRect().height ?? 0;
     root.style.setProperty(SPACE_VAR, `${Math.ceil(h)}px`);
   }, []);
@@ -139,14 +142,26 @@ export const CookieConsent = () => {
             onClick={() => setDetailsOpen((o) => !o)}
           >
             {CONSENT_COPY.details}
-            <ChevronDown className={cn('h-4 w-4 transition-transform motion-reduce:transition-none', detailsOpen && 'rotate-180')} aria-hidden="true" />
+            <ChevronDown
+              className={cn(
+                'h-4 w-4 transition-transform motion-reduce:transition-none',
+                detailsOpen && 'rotate-180',
+              )}
+              aria-hidden="true"
+            />
           </button>
         </div>
         {detailsOpen && (
-          <div id={detailsId} className="mt-1 space-y-2 text-[13px] leading-relaxed text-muted-foreground" data-testid="consent-details">
+          <div
+            id={detailsId}
+            className="mt-1 space-y-2 text-[13px] leading-relaxed text-muted-foreground"
+            data-testid="consent-details"
+          >
             {(['always', 'ifAccepted', 'never'] as const).map((group) => (
               <div key={group}>
-                <h3 className="font-semibold text-card-foreground">{CONSENT_COPY.detailsHeadings[group]}</h3>
+                <h3 className="font-semibold text-card-foreground">
+                  {CONSENT_COPY.detailsHeadings[group]}
+                </h3>
                 <ul className="mt-0.5 list-disc space-y-0.5 pl-5">
                   {DIAGNOSTICS_DISCLOSURE[group].map((line) => (
                     <li key={line}>{line}</li>
@@ -160,10 +175,20 @@ export const CookieConsent = () => {
       </div>
       {/* Equal weight: same component, variant, size and width; only the label differs. */}
       <div className="consent-sheet__actions">
-        <Button type="button" variant="outline" className="consent-sheet__button" onClick={() => choose('declined')}>
+        <Button
+          type="button"
+          variant="outline"
+          className="consent-sheet__button"
+          onClick={() => choose('declined')}
+        >
           {CONSENT_COPY.decline}
         </Button>
-        <Button type="button" variant="outline" className="consent-sheet__button" onClick={() => choose('accepted')}>
+        <Button
+          type="button"
+          variant="outline"
+          className="consent-sheet__button"
+          onClick={() => choose('accepted')}
+        >
           {CONSENT_COPY.accept}
         </Button>
       </div>

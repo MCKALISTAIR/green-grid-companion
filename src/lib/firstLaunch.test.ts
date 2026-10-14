@@ -1,7 +1,19 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { consumeFirstNumber, countSession, markFirstNumberPending, shouldNudgeNotifications } from './firstLaunch';
+import {
+  consumeFirstNumber,
+  countSession,
+  markFirstNumberPending,
+  shouldNudgeNotifications,
+} from './firstLaunch';
 
-const base = { sessions: 1, usefulMoment: false, answered: false, permission: 'prompt' as const, supported: true, alertsAlreadyOn: false };
+const base = {
+  sessions: 1,
+  usefulMoment: false,
+  answered: false,
+  permission: 'prompt' as const,
+  supported: true,
+  alertsAlreadyOn: false,
+};
 
 describe('first launch bookkeeping', () => {
   beforeEach(() => {

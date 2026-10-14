@@ -20,7 +20,8 @@ export function OnboardingBackdrop() {
       <div
         className="absolute inset-x-0 bottom-0 h-[48%]"
         style={{
-          background: 'linear-gradient(180deg, transparent 0%, hsl(222 40% 12% / 0.55) 45%, hsl(222 45% 8%) 100%)',
+          background:
+            'linear-gradient(180deg, transparent 0%, hsl(222 40% 12% / 0.55) 45%, hsl(222 45% 8%) 100%)',
         }}
       />
       <svg

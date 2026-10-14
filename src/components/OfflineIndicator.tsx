@@ -20,7 +20,9 @@ export function OfflineIndicator() {
         ...queryClient
           .getQueryCache()
           .getAll()
-          .filter((q) => CARBON_QUERY_ROOTS.has(String(q.queryKey[0])) && q.state.data !== undefined)
+          .filter(
+            (q) => CARBON_QUERY_ROOTS.has(String(q.queryKey[0])) && q.state.data !== undefined,
+          )
           .map((q) => q.state.dataUpdatedAt),
       ) || null
     : null;
@@ -62,9 +64,7 @@ export function OfflineIndicator() {
         >
           <div className="flex items-center justify-center gap-3 max-w-md mx-auto">
             <WifiOff className="w-5 h-5 shrink-0" aria-hidden="true" />
-            <span className="text-sm font-medium">
-              {offlineBannerText(savedAt)}
-            </span>
+            <span className="text-sm font-medium">{offlineBannerText(savedAt)}</span>
           </div>
         </motion.div>
       )}
@@ -83,9 +83,7 @@ export function OfflineIndicator() {
           <div className="flex items-center justify-between max-w-md mx-auto">
             <div className="flex items-center gap-3">
               <Wifi className="w-5 h-5 shrink-0" aria-hidden="true" />
-              <span className="text-sm font-medium">
-                {BACK_ONLINE_TEXT}
-              </span>
+              <span className="text-sm font-medium">{BACK_ONLINE_TEXT}</span>
             </div>
             <Button
               size="sm"

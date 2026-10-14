@@ -30,18 +30,32 @@ export class GridDataUnavailableError extends Error {
 const ageMinutes = (iso: string, now: number) => (now - Date.parse(iso)) / 60_000;
 
 /** null when the mix/GW figures can be shown, otherwise why not. */
-export function gridDemandUnavailableReason(data: GridDemandPayloadLike | null | undefined, now = Date.now()): string | null {
+export function gridDemandUnavailableReason(
+  data: GridDemandPayloadLike | null | undefined,
+  now = Date.now(),
+): string | null {
   if (!data) return 'no_data';
   // Responses without a status come from the old function (frozen 2025 demand).
-  if (data.status !== 'ok') return typeof (data as { reason?: unknown }).reason === 'string' ? (data as { reason: string }).reason : 'unavailable';
-  if (typeof data.timestamp !== 'string' || Number.isNaN(Date.parse(data.timestamp))) return 'no_timestamp';
+  if (data.status !== 'ok')
+    return typeof (data as { reason?: unknown }).reason === 'string'
+      ? (data as { reason: string }).reason
+      : 'unavailable';
+  if (typeof data.timestamp !== 'string' || Number.isNaN(Date.parse(data.timestamp)))
+    return 'no_timestamp';
   if (ageMinutes(data.timestamp, now) > GRID_DEMAND_MAX_AGE_MINUTES) return 'stale';
   return null;
 }
 
 /** Live frequency or null (missing, old, or from a response without a reading time). */
-export function liveGridFrequency(data: GridDemandPayloadLike | null | undefined, now = Date.now()): number | null {
-  if (!data || typeof data.gridFrequency !== 'number' || !Number.isFinite(data.gridFrequency)) return null;
-  if (typeof data.frequencyTime !== 'string' || Number.isNaN(Date.parse(data.frequencyTime))) return null;
-  return ageMinutes(data.frequencyTime, now) <= GRID_FREQUENCY_MAX_AGE_MINUTES ? data.gridFrequency : null;
+export function liveGridFrequency(
+  data: GridDemandPayloadLike | null | undefined,
+  now = Date.now(),
+): number | null {
+  if (!data || typeof data.gridFrequency !== 'number' || !Number.isFinite(data.gridFrequency))
+    return null;
+  if (typeof data.frequencyTime !== 'string' || Number.isNaN(Date.parse(data.frequencyTime)))
+    return null;
+  return ageMinutes(data.frequencyTime, now) <= GRID_FREQUENCY_MAX_AGE_MINUTES
+    ? data.gridFrequency
+    : null;
 }

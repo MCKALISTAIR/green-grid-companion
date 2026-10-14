@@ -2,7 +2,18 @@ import { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Cloud, CloudOff, LogOut, Mail, RefreshCw, ChevronDown, ChevronUp, ArrowRightLeft, Trash2, Download } from 'lucide-react';
+import {
+  Cloud,
+  CloudOff,
+  LogOut,
+  Mail,
+  RefreshCw,
+  ChevronDown,
+  ChevronUp,
+  ArrowRightLeft,
+  Trash2,
+  Download,
+} from 'lucide-react';
 import { lovable } from '@/integrations/lovable/index';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -31,7 +42,12 @@ interface AccountBackupProps {
   formatLastSync?: (date: Date | null) => string;
 }
 
-export function AccountBackup({ isSyncing, lastSyncedAt, onSyncNow, formatLastSync }: AccountBackupProps) {
+export function AccountBackup({
+  isSyncing,
+  lastSyncedAt,
+  onSyncNow,
+  formatLastSync,
+}: AccountBackupProps) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -62,7 +78,9 @@ export function AccountBackup({ isSyncing, lastSyncedAt, onSyncNow, formatLastSy
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       const previousUser = user;
       setUser(session?.user ?? null);
 
@@ -77,14 +95,14 @@ export function AccountBackup({ isSyncing, lastSyncedAt, onSyncNow, formatLastSy
           // Attempt to migrate data from the anonymous session
           try {
             const { data, error } = await supabase.functions.invoke('octopus-energy', {
-              body: { action: 'migrate-data', previousUserId: storedAnonId }
+              body: { action: 'migrate-data', previousUserId: storedAnonId },
             });
 
             if (!error && data?.migrated) {
               const { credentials, meters, consumption_records, footprint_records } = data.migrated;
               if (credentials || meters > 0) {
                 toast.success(
-                  `Restored your Octopus data: ${meters} meter(s), ${footprint_records} footprint records`
+                  `Restored your Octopus data: ${meters} meter(s), ${footprint_records} footprint records`,
                 );
               }
             }
@@ -110,15 +128,18 @@ export function AccountBackup({ isSyncing, lastSyncedAt, onSyncNow, formatLastSy
     setLoading(true);
 
     // Store current user ID before sign-in for potential migration
-    const { data: { session: currentSession } } = await supabase.auth.getSession();
+    const {
+      data: { session: currentSession },
+    } = await supabase.auth.getSession();
     if (currentSession?.user?.id) {
       localStorage.setItem(ANON_USER_ID_KEY, currentSession.user.id);
     }
 
     try {
-      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const isLocalhost =
+        window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
       let redirectUri: string;
-      
+
       if (Capacitor.isNativePlatform()) {
         redirectUri = `${APP_SCHEME}://auth/callback`;
       } else if (isLocalhost) {
@@ -181,7 +202,9 @@ export function AccountBackup({ isSyncing, lastSyncedAt, onSyncNow, formatLastSy
 
       toast.success('Your account and all data have been permanently deleted.');
       if (usesApple && data?.apple_revocation !== 'revoked') {
-        toast.info('To finish, remove GridSense in your iPhone Settings: [your name] > Sign-In & Security > Sign in with Apple.');
+        toast.info(
+          'To finish, remove GridSense in your iPhone Settings: [your name] > Sign-In & Security > Sign in with Apple.',
+        );
       }
       setShowDeleteDialog(false);
     } catch (err) {
@@ -243,9 +266,10 @@ export function AccountBackup({ isSyncing, lastSyncedAt, onSyncNow, formatLastSy
       await supabase.auth.signOut();
 
       // Sign in with the new provider
-      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const isLocalhost =
+        window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
       let redirectUri: string;
-      
+
       if (Capacitor.isNativePlatform()) {
         redirectUri = `${APP_SCHEME}://auth/callback`;
       } else if (isLocalhost) {
@@ -298,10 +322,22 @@ export function AccountBackup({ isSyncing, lastSyncedAt, onSyncNow, formatLastSy
         name: 'Google',
         icon: (
           <svg className="w-3.5 h-3.5" viewBox="0 0 24 24">
-            <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-            <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-            <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-            <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+            <path
+              fill="currentColor"
+              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+            />
+            <path
+              fill="currentColor"
+              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+            />
+            <path
+              fill="currentColor"
+              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+            />
+            <path
+              fill="currentColor"
+              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+            />
           </svg>
         ),
       };
@@ -416,7 +452,9 @@ export function AccountBackup({ isSyncing, lastSyncedAt, onSyncNow, formatLastSy
 
             {/* Destructive Actions Group */}
             <div className="pt-2 mt-1 border-t border-border/50">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2 px-1 font-medium">Danger Zone</p>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2 px-1 font-medium">
+                Danger Zone
+              </p>
               <div className="grid grid-cols-2 gap-2">
                 <Button
                   variant="ghost"
@@ -450,7 +488,9 @@ export function AccountBackup({ isSyncing, lastSyncedAt, onSyncNow, formatLastSy
             <AlertDialogHeader>
               <AlertDialogTitle>Switch to {alternateProviderName}?</AlertDialogTitle>
               <AlertDialogDescription>
-                Your energy data (Octopus meters, consumption history, and carbon footprint) will be transferred to your new {alternateProviderName} account. You'll be signed out and redirected to sign in with {alternateProviderName}.
+                Your energy data (Octopus meters, consumption history, and carbon footprint) will be
+                transferred to your new {alternateProviderName} account. You'll be signed out and
+                redirected to sign in with {alternateProviderName}.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -463,16 +503,21 @@ export function AccountBackup({ isSyncing, lastSyncedAt, onSyncNow, formatLastSy
         </AlertDialog>
 
         {/* Delete Account Confirmation Dialog */}
-        <AlertDialog open={showDeleteDialog} onOpenChange={(open) => {
-          setShowDeleteDialog(open);
-          if (!open) setDeleteConfirmText('');
-        }}>
+        <AlertDialog
+          open={showDeleteDialog}
+          onOpenChange={(open) => {
+            setShowDeleteDialog(open);
+            if (!open) setDeleteConfirmText('');
+          }}
+        >
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Delete your account?</AlertDialogTitle>
               <AlertDialogDescription asChild>
                 <div className="space-y-3">
-                  <p>This will <strong>permanently delete</strong> all your data including:</p>
+                  <p>
+                    This will <strong>permanently delete</strong> all your data including:
+                  </p>
                   <ul className="list-disc pl-5 space-y-1 text-sm">
                     <li>Octopus Energy credentials and meter data</li>
                     <li>Energy consumption and carbon footprint history</li>
@@ -525,7 +570,8 @@ export function AccountBackup({ isSyncing, lastSyncedAt, onSyncNow, formatLastSy
       </div>
 
       <p className="text-sm text-muted-foreground">
-        Your Octopus Energy data is stored encrypted for this session. Sign in to keep it linked if you switch devices.
+        Your Octopus Energy data is stored encrypted for this session. Sign in to keep it linked if
+        you switch devices.
       </p>
 
       <div className="space-y-2">
@@ -536,10 +582,22 @@ export function AccountBackup({ isSyncing, lastSyncedAt, onSyncNow, formatLastSy
           disabled={loading}
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24">
-            <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-            <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-            <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-            <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+            <path
+              fill="currentColor"
+              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+            />
+            <path
+              fill="currentColor"
+              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+            />
+            <path
+              fill="currentColor"
+              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+            />
+            <path
+              fill="currentColor"
+              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+            />
           </svg>
           Continue with Google
         </Button>

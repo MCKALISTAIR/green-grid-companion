@@ -40,10 +40,10 @@ interface SceneCase {
 }
 
 const SCENE_CASES: SceneCase[] = [
-  { label: 'Very clean', intensity: 30,  index: 'very low'  },
-  { label: 'Clean',      intensity: 100, index: 'low'       },
-  { label: 'Moderate',   intensity: 180, index: 'moderate'  },
-  { label: 'Dirty',      intensity: 300, index: 'high'      },
+  { label: 'Very clean', intensity: 30, index: 'very low' },
+  { label: 'Clean', intensity: 100, index: 'low' },
+  { label: 'Moderate', intensity: 180, index: 'moderate' },
+  { label: 'Dirty', intensity: 300, index: 'high' },
   { label: 'Very dirty', intensity: 380, index: 'very high' },
 ];
 
@@ -51,17 +51,35 @@ type SceneTypeOpt = 'auto' | 'countryside' | 'city' | 'coastal';
 const SCENE_TYPES: SceneTypeOpt[] = ['auto', 'countryside', 'city', 'coastal'];
 const PREFERENCE_KEY = 'gridgreen-scene-preference';
 
-const TIMES_OF_DAY: TimeOfDay[] = ['midday', 'sunset', 'night', 'dawn', 'dusk', 'morning', 'afternoon'];
-const WEATHER_CONDITIONS: WeatherData['condition'][] = ['clear', 'cloudy', 'rain', 'snow', 'fog', 'thunderstorm'];
+const TIMES_OF_DAY: TimeOfDay[] = [
+  'midday',
+  'sunset',
+  'night',
+  'dawn',
+  'dusk',
+  'morning',
+  'afternoon',
+];
+const WEATHER_CONDITIONS: WeatherData['condition'][] = [
+  'clear',
+  'cloudy',
+  'rain',
+  'snow',
+  'fog',
+  'thunderstorm',
+];
 
 export default function SceneTest() {
   const [scaleToFit, setScaleToFit] = useState(true);
   const [selectedCase, setSelectedCase] = useState<SceneCase>(SCENE_CASES[0]);
   const [sceneTypePref, setSceneTypePref] = useState<SceneTypeOpt>(() => {
-    try { return (localStorage.getItem(PREFERENCE_KEY) as SceneTypeOpt) || 'auto'; }
-    catch { return 'auto'; }
+    try {
+      return (localStorage.getItem(PREFERENCE_KEY) as SceneTypeOpt) || 'auto';
+    } catch {
+      return 'auto';
+    }
   });
-  
+
   const [selectedTimeOfDay, setSelectedTimeOfDay] = useState<TimeOfDay>('midday');
   const [selectedWeather, setSelectedWeather] = useState<WeatherData['condition']>('clear');
   const [windSpeed, setWindSpeed] = useState<number>(5);
@@ -69,7 +87,9 @@ export default function SceneTest() {
   useEffect(() => {
     const prev = document.title;
     document.title = 'Scene Visual Test — GridSense Dev';
-    return () => { document.title = prev; };
+    return () => {
+      document.title = prev;
+    };
   }, []);
 
   // Force a scene type for the duration of the test page; restore on unmount.
@@ -94,10 +114,10 @@ export default function SceneTest() {
       <header className="mb-6 max-w-4xl">
         <h1 className="text-2xl font-bold mb-2">Scene Visual Test</h1>
         <p className="text-muted-foreground text-sm">
-          Renders <code>IntensityScene</code> at common device viewports so vertical
-          stretching, ridge alignment, and sky-to-ground ratio can be eyeballed
-          side-by-side. Resize the browser to test responsive behavior of the scene
-          container itself; the cards below show fixed device sizes.
+          Renders <code>IntensityScene</code> at common device viewports so vertical stretching,
+          ridge alignment, and sky-to-ground ratio can be eyeballed side-by-side. Resize the browser
+          to test responsive behavior of the scene container itself; the cards below show fixed
+          device sizes.
         </p>
 
         <div className="mt-4 flex flex-col gap-4">
@@ -191,7 +211,10 @@ export default function SceneTest() {
             <div className="h-4 w-[1px] bg-border hidden md:block" />
 
             <div className="flex items-center gap-3">
-              <label htmlFor="wind-slider" className="text-xs text-muted-foreground font-medium whitespace-nowrap">
+              <label
+                htmlFor="wind-slider"
+                className="text-xs text-muted-foreground font-medium whitespace-nowrap"
+              >
                 Wind: <span className="font-mono text-foreground font-bold">{windSpeed}m/s</span>
               </label>
               <input
@@ -253,7 +276,7 @@ export default function SceneTest() {
                     weatherOverride={{
                       condition: selectedWeather,
                       temperature: 15,
-                      windSpeed: windSpeed
+                      windSpeed: windSpeed,
                     }}
                     style={{ height: '100%' }}
                   />
@@ -266,9 +289,8 @@ export default function SceneTest() {
 
       <footer className="mt-8 text-xs text-muted-foreground max-w-2xl">
         <p>
-          See <code>docs/SCENE_VISUAL_QA.md</code> and <code>docs/IPHONE_DUO.md</code> for
-          the full checklist. Scene height CSS:{' '}
-          <code>{SCENE_HEIGHT_CSS}</code>.
+          See <code>docs/SCENE_VISUAL_QA.md</code> and <code>docs/IPHONE_DUO.md</code> for the full
+          checklist. Scene height CSS: <code>{SCENE_HEIGHT_CSS}</code>.
         </p>
       </footer>
     </div>
