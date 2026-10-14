@@ -26,8 +26,7 @@ const HERO_STATES = [
   { scenario: 'stale', expectBadge: false },
   { scenario: 'long-region', expectBadge: true },
 ];
-// /planner is left out: PullToRefresh's min-h-screen adds the same extra scroll (flagged for follow-up).
-const SCROLL_ROUTES = ['/history', '/settings', '/achievements', '/help', '/glossary', '/terms'];
+const SCROLL_ROUTES = ['/history', '/settings', '/achievements', '/help', '/glossary', '/terms', '/planner', '/map', '/locations'];
 
 async function startPreview() {
   // Run vite's own bin with node (not `npx`): killing an npx wrapper left the vite

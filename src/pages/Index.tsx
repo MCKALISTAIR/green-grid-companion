@@ -215,11 +215,12 @@ const Index = () => {
   return (
     <TooltipProvider>
       <div
-        className="min-h-screen bg-background transition-colors duration-1000"
+        className="min-h-[100dvh] bg-background transition-colors duration-1000"
         style={{ background: skyColor }}
       >
         <PullToRefresh onRefresh={handleRefresh} disabled={isLoading}>
-          <main className="home-shell min-h-[100dvh] flex flex-col animate-in fade-in duration-700 lg:pb-0">
+          {/* AppLayout main already reserves bottom-nav space (pb-28); don't stack another min-height pad. */}
+          <main className="home-shell flex flex-col animate-in fade-in duration-700 lg:min-h-[100dvh] lg:pb-0">
             <h1 className="sr-only">Carbon Intensity Dashboard</h1>
 
             <IntensityHeroOverlay
@@ -244,7 +245,7 @@ const Index = () => {
               hideGauge={viewMode === 'demand'}
             />
 
-            <div className="home-feed flex-1 px-4 pt-5 pb-[calc(7.5rem+env(safe-area-inset-bottom))] lg:pb-6 space-y-4 -mt-8 relative z-10 bg-card rounded-t-none shadow-[0_-12px_40px_-20px_rgba(15,23,42,0.18)] lg:max-w-7xl lg:mx-auto w-full lg:shadow-xl lg:-mt-10 lg:pt-8 lg:space-y-6">
+            <div className="home-feed flex-1 px-4 pt-5 pb-4 lg:pb-6 space-y-4 -mt-8 relative z-10 bg-card rounded-t-none shadow-[0_-12px_40px_-20px_rgba(15,23,42,0.18)] lg:max-w-7xl lg:mx-auto w-full lg:shadow-xl lg:-mt-10 lg:pt-8 lg:space-y-6">
               {/* Scalloped top edge of the sheet. The sheet itself has square top corners so the
                   scallop meets both edges cleanly (no sliver or doubled half-circle). */}
               <div className="scene-wave-divider absolute -top-[79px] left-0 right-0 h-[80px] pointer-events-none overflow-hidden z-20" data-testid="scene-wave-divider">
@@ -268,7 +269,7 @@ const Index = () => {
                 </div>
               )}
 
-              <div className="px-1 pb-2 pt-0">
+              <div className="home-feed-fact px-1 pb-2 pt-0">
                 <EnergyFactBubble
                   intensity={intensity}
                   generationMix={generationMix}
@@ -329,7 +330,7 @@ const Index = () => {
                         animate="animate"
                         exit="exit"
                         transition={stateTransition}
-                        className="w-full pb-10"
+                        className="w-full"
                       >
                         {viewMode === 'demand' ? (
                           <DemandView />

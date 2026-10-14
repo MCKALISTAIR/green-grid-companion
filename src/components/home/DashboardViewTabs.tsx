@@ -33,7 +33,7 @@ function TabButton({
       tabIndex={isActive ? 0 : -1}
       aria-selected={isActive}
       aria-controls="dashboard-tab-content"
-      className={`relative flex-1 min-w-[100px] h-9 rounded-xl text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 z-10 ${
+      className={`relative flex-1 min-w-0 h-9 rounded-xl text-[11px] sm:text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 z-10 ${
         isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
       }`}
       onClick={onSelect}
@@ -46,16 +46,17 @@ function TabButton({
           transition={{ type: 'spring' as const, stiffness: 380, damping: 30 }}
         />
       )}
-      <span className="relative z-20 flex items-center justify-center h-full">
+      <span className="relative z-20 flex items-center justify-center gap-1 sm:gap-2 h-full px-0.5 truncate">
         <motion.span
           key={isActive ? 'active' : 'inactive'}
+          className="shrink-0"
           initial={isActive ? { scale: 1.3 } : false}
           animate={{ scale: 1 }}
           transition={{ type: 'spring' as const, stiffness: 400, damping: 20 }}
         >
           {icon}
         </motion.span>
-        {label}
+        <span className="truncate">{label}</span>
       </span>
     </button>
   );
@@ -82,21 +83,21 @@ export function DashboardViewTabs({
       <TabButton
         mode="intensity"
         label="Intensity"
-        icon={<Activity className="w-4 h-4 mr-2" />}
+        icon={<Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
         viewMode={viewMode}
         onSelect={() => select('intensity')}
       />
       <TabButton
         mode="demand"
         label="Demand"
-        icon={<Zap className="w-4 h-4 mr-2" />}
+        icon={<Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
         viewMode={viewMode}
         onSelect={() => select('demand')}
       />
       <TabButton
         mode="footprint"
         label="Footprint"
-        icon={<Leaf className="w-4 h-4 mr-2" />}
+        icon={<Leaf className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
         viewMode={viewMode}
         onSelect={() => select('footprint')}
         dataTour="view-footprint"

@@ -158,12 +158,12 @@ export default function Planner() {
     if (isError) {
         const errorInfo = getErrorInfo(error);
         return (
-            <div className="h-[100dvh] overflow-hidden bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
-                <div className="p-4 space-y-6 pt-[max(env(safe-area-inset-top),59px)]">
-                    <div>
-                        <h1 className="text-2xl font-bold">Power Planner</h1>
-                        <p className="text-muted-foreground">Schedule high-energy tasks to save carbon.</p>
-                    </div>
+            <div className="page-shell page-shell--fit">
+                <div className="page-shell-inner space-y-6">
+                    <PageHeader
+                        title="Power Planner"
+                        description="Schedule high-energy tasks to save carbon."
+                    />
                     <ErrorState
                         title={errorInfo.title}
                         description={errorInfo.description}
@@ -218,7 +218,7 @@ export default function Planner() {
     };
 
     return (
-        <div className="page-shell">
+        <div className="page-shell page-shell--fit">
             <PullToRefresh onRefresh={async () => { await refetch(); }}>
                 <div className="page-shell-inner space-y-6">
                     <PageHeader

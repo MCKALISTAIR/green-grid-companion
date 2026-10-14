@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, MapPin, Star, Trash2, Pencil, Check, X } from 'lucide-react';
+import { ArrowLeft, MapPin, Star, Trash2, Pencil, Check, X, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -86,8 +86,8 @@ export default function ManageLocations() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
-      <div className="p-4 pt-[max(env(safe-area-inset-top),59px)] space-y-6">
+    <div className="page-shell page-shell--fit">
+      <div className="page-shell-inner space-y-6">
         {/* Header */}
         <div className="flex items-center gap-3">
           <Link to="/settings">
@@ -116,10 +116,12 @@ export default function ManageLocations() {
           </div>
 
           {savedLocations.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <MapPin className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p>No saved locations yet</p>
-              <p className="text-sm">Save locations from the home screen to see them here</p>
+            <div className="rounded-2xl border border-border/50 bg-card/60 px-4 py-8 text-center">
+              <MapPin className="mx-auto mb-3 h-8 w-8 text-muted-foreground/50" />
+              <p className="font-medium text-foreground">No saved locations yet</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Save locations from the home screen to see them here.
+              </p>
             </div>
           ) : (
             <motion.div className="space-y-2" layout>
@@ -199,7 +201,10 @@ export default function ManageLocations() {
         {/* Recent Locations Section */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Recent Searches</h2>
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <Clock className="w-4 h-4 text-primary" />
+              Recent Searches
+            </h2>
             {recentLocations.length > 0 && (
               <Button
                 variant="ghost"
@@ -213,9 +218,13 @@ export default function ManageLocations() {
           </div>
 
           {recentLocations.length === 0 ? (
-            <p className="text-muted-foreground text-sm py-4 text-center">
-              No recent searches
-            </p>
+            <div className="rounded-2xl border border-border/50 bg-card/60 px-4 py-6 text-center">
+              <Clock className="mx-auto mb-2 h-7 w-7 text-muted-foreground/50" />
+              <p className="font-medium text-foreground">No recent searches</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Locations you look up from Home will show up here.
+              </p>
+            </div>
           ) : (
             <motion.div className="flex flex-wrap gap-2" layout>
               <AnimatePresence initial={false}>

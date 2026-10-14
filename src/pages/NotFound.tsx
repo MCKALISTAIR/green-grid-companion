@@ -30,7 +30,7 @@ const NotFound = () => {
   }, []);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-6">
+    <div className="page-shell page-shell--fit flex items-center justify-center px-6 py-16">
       <div className="text-center space-y-6 max-w-md">
         <div className="space-y-2">
           <h1 className="text-6xl font-bold text-primary">404</h1>

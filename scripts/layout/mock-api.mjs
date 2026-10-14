@@ -92,9 +92,18 @@ export async function installMocks(context, scenarioIn = {}) {
     if (s.mode !== 'ok') return s.mode === 'loading' ? undefined : json(route, { error: 'mock' }, 500);
     const total = 24750;
     return json(route, {
-      timestamp: fromIso, settlementDate: null, settlementPeriod: null, totalDemandMW: total, gridFrequency: 50.01,
-      embeddedSolarMW: 900, embeddedWindMW: 600,
-      mix: NATIONAL_MIX.map((m) => ({ id: m.fuel, name: m.fuel, perc: m.perc, mw: Math.round((total * m.perc) / 100) }))
+      status: 'ok',
+      timestamp: fromIso,
+      dataTime: fromIso,
+      fetchedAt: new Date().toISOString(),
+      settlementDate: null,
+      settlementPeriod: null,
+      totalDemandMW: total,
+      gridFrequency: 50.01,
+      frequencyTime: fromIso,
+      embeddedSolarMW: 900,
+      embeddedWindMW: 600,
+      mix: NATIONAL_MIX.map((m) => ({ id: m.fuel, name: m.fuel, fuel: m.fuel, perc: m.perc, mw: Math.round((total * m.perc) / 100) }))
         .sort((a, b) => b.mw - a.mw),
     });
   });

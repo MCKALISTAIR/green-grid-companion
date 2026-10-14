@@ -95,6 +95,16 @@ export async function checkHero(page, { scenario, expectBadge, region, viewport 
  */
 export async function checkSheetEdge(page, { viewport }) {
   const tag = `[sheet-edge ${viewport.width}x${viewport.height}]`;
+  // Large-text / tall HUDs can push the sheet below the fold; elementFromPoint
+  // only works for on-screen pixels, so scroll the seam into view first.
+  await page.evaluate(() => {
+    const sheet = document.querySelector('.home-feed');
+    if (!sheet) return;
+    const top = sheet.getBoundingClientRect().top + window.scrollY;
+    const target = Math.max(0, top - 40);
+    window.scrollTo(0, target);
+  });
+  await page.waitForTimeout(100);
   const r = await page.evaluate(() => {
     const sheet = document.querySelector('.home-feed');
     const divider = document.querySelector('[data-testid="scene-wave-divider"], .scene-wave-divider');
@@ -102,7 +112,9 @@ export async function checkSheetEdge(page, { viewport }) {
     const s = sheet.getBoundingClientRect();
     const d = divider.getBoundingClientRect();
     const y = s.top + 6;
+    if (y < 0 || y > innerHeight) return { offscreen: true };
     const probe = (x) => {
+      if (x < 0 || x > innerWidth) return false;
       const el = document.elementFromPoint(x, y);
       return el ? sheet.contains(el) || el === sheet : false;
     };
@@ -112,6 +124,7 @@ export async function checkSheetEdge(page, { viewport }) {
     };
   });
   if (r.missing) return [`${tag} ${r.missing} not found`];
+  if (r.offscreen) return [`${tag} sheet seam still off-screen after scroll`];
   const fails = [];
   if (r.divider.left > r.sheet.left + 0.5 || r.divider.right < r.sheet.right - 0.5) fails.push(`${tag} scallop doesn't span the sheet's full width`);
   if (!r.leftOk) fails.push(`${tag} gap at the sheet's left edge under the scallop`);

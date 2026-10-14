@@ -117,7 +117,7 @@ export function IntensityHeroOverlay({
           index={index}
           generationMix={generationMix}
           hasLiveReading={hasFreshReading}
-          className="h-full"
+          className="absolute inset-0 h-full"
           style={{ height: '100%' }}
         />
 
@@ -154,7 +154,9 @@ export function IntensityHeroOverlay({
       {!hideGauge && (
         <div
           className={cn(
-            'home-scene-gauge absolute inset-x-0 top-0 z-10 flex flex-col items-center pointer-events-none',
+            /* In-flow (not absolute): scene height grows with the HUD so large-text
+               and short phones keep badge/meta above the scalloped sheet. */
+            'home-scene-gauge relative z-10 flex flex-col items-center pointer-events-none',
             'pt-[calc(max(env(safe-area-inset-top),12px)+3.25rem)]',
           )}
           data-tour="intensity-gauge"
@@ -176,7 +178,7 @@ export function IntensityHeroOverlay({
           )}
 
           <div className="relative flex flex-col items-center text-center w-full max-w-[22rem] min-[540px]:max-w-[40rem] px-4 pointer-events-auto">
-            <div className="lg:hidden mb-3 max-w-[calc(100vw-8.5rem)]" data-testid="hero-location">
+            <div className="lg:hidden mb-2 sm:mb-3 max-w-[calc(100vw-8.5rem)]" data-testid="hero-location">
               <LocationManager
                 value={postcode}
                 onChange={setPostcode}
@@ -198,7 +200,7 @@ export function IntensityHeroOverlay({
               />
             </div>
 
-            <div className="flex items-end justify-center gap-2 min-h-[5.5rem]" data-testid="hero-number">
+            <div className="flex items-end justify-center gap-1.5 sm:gap-2 min-h-[4.5rem] sm:min-h-[5.5rem]" data-testid="hero-number">
               {isLoading ? (
                 <RefreshCw className="w-12 h-12 text-white animate-spin drop-shadow-lg" aria-label="Loading data" />
               ) : isError ? (
@@ -217,11 +219,11 @@ export function IntensityHeroOverlay({
                     size="hero"
                     highContrast={needsHardScrim}
                   />
-                  <div className="flex flex-col items-start pb-2 gap-0.5">
-                    <span className="text-white text-base font-semibold leading-none tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.7)]">
+                  <div className="flex flex-col items-start pb-1.5 sm:pb-2 gap-0.5">
+                    <span className="text-white text-sm sm:text-base font-semibold leading-none tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.7)]">
                       gCO₂
                     </span>
-                    <span className="text-white/85 text-xs font-medium leading-none drop-shadow-[0_1px_8px_rgba(0,0,0,0.65)]">
+                    <span className="text-white/85 text-[11px] sm:text-xs font-medium leading-none drop-shadow-[0_1px_8px_rgba(0,0,0,0.65)]">
                       /kWh
                     </span>
                   </div>
@@ -245,7 +247,7 @@ export function IntensityHeroOverlay({
                   <p
                     className={cn(
                       // Intensity band labels — Plus Jakarta Sans bold (same face as HUD).
-                      'font-sans text-3xl sm:text-4xl font-bold text-white tracking-tight',
+                      'font-sans text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight',
                       needsHardScrim
                         ? 'drop-shadow-[0_3px_16px_rgba(0,0,0,0.75)]'
                         : 'drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)]',
@@ -254,7 +256,7 @@ export function IntensityHeroOverlay({
                   >
                     <TypewriterText text={conditionParts.band} />
                     {conditionParts.quip && (
-                      <span className="block mt-1 text-base sm:text-lg font-semibold text-white/95 normal-case">
+                      <span className="block mt-0.5 sm:mt-1 text-sm sm:text-base md:text-lg font-semibold text-white/95 normal-case">
                         {conditionParts.quip}
                       </span>
                     )}

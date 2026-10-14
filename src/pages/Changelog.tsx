@@ -193,8 +193,8 @@ export default function Changelog() {
   }, [markVersionSeen]);
 
   return (
-    <div className="min-h-screen bg-background pb-[calc(6rem+env(safe-area-inset-bottom))]">
-      <div className="p-4 pt-[calc(max(env(safe-area-inset-top),59px)+1rem)] space-y-6">
+    <div className="page-shell page-shell--fit">
+      <div className="page-shell-inner space-y-6">
         {/* Header */}
         <div className="flex items-center gap-3">
           <Link to="/settings">
