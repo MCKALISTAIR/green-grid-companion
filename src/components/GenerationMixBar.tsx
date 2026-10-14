@@ -230,27 +230,36 @@ export function GenerationMixBar({ mix, showMW = false, frequency, embeddedSolar
 
       <DialogContent className="max-w-md max-h-[85vh] flex flex-col overflow-hidden">
         <DialogHeader>
-          {/* pr-8 clears the absolute Dialog close (right-4) so the freq pill never kisses the X */}
-          <DialogTitle className="flex items-center justify-between gap-3 pr-8">
-            <span className="min-w-0">Generation Mix Breakdown</span>
-            {typeof frequency === 'number' && !isNaN(frequency) && (
-              <div className="flex shrink-0 items-center gap-2 text-sm font-normal bg-muted/50 px-2 py-1 rounded-md">
-                <span className="text-muted-foreground">Grid Freq:</span>
-                <div className="flex items-center gap-1.5">
-                  <span className={`font-mono font-medium ${frequency < 49.8 || frequency > 50.2 ? 'text-destructive' : 'text-emerald-500'
-                    }`}>
-                    {frequency.toFixed(3)} Hz
-                  </span>
-                  <span className="relative flex h-2 w-2">
-                    <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${frequency < 49.8 || frequency > 50.2 ? 'bg-destructive' : 'bg-emerald-500'
-                      }`}></span>
-                    <span className={`relative inline-flex rounded-full h-2 w-2 ${frequency < 49.8 || frequency > 50.2 ? 'bg-destructive' : 'bg-emerald-500'
-                      }`}></span>
-                  </span>
-                </div>
+          <DialogTitle className="pr-10 leading-snug">Generation Mix Breakdown</DialogTitle>
+          {typeof frequency === 'number' && !isNaN(frequency) && (
+            <div
+              className="mr-10 flex w-fit items-center gap-2 text-sm font-normal bg-muted/50 px-2.5 py-1 rounded-md"
+              data-testid="grid-freq-pill"
+            >
+              <span className="text-muted-foreground">Grid Freq:</span>
+              <div className="flex items-center gap-1.5">
+                <span
+                  className={`font-mono font-medium ${
+                    frequency < 49.8 || frequency > 50.2 ? 'text-destructive' : 'text-emerald-500'
+                  }`}
+                >
+                  {frequency.toFixed(3)} Hz
+                </span>
+                <span className="relative flex h-2 w-2">
+                  <span
+                    className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                      frequency < 49.8 || frequency > 50.2 ? 'bg-destructive' : 'bg-emerald-500'
+                    }`}
+                  />
+                  <span
+                    className={`relative inline-flex rounded-full h-2 w-2 ${
+                      frequency < 49.8 || frequency > 50.2 ? 'bg-destructive' : 'bg-emerald-500'
+                    }`}
+                  />
+                </span>
               </div>
-            )}
-          </DialogTitle>
+            </div>
+          )}
         </DialogHeader>
         <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain -mx-6 px-6">
           <div className="space-y-4 py-4">
