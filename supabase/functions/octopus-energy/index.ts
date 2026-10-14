@@ -6,7 +6,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 declare const Deno: any;
 
 import { corsHeaders } from '../_shared/cors.ts';
-import { parseIntensityPoint } from '../_shared/intensity-point.ts';
+import { buildIntensityMap } from '../_shared/footprint-records.ts';
 import {
   verifySchedulerRequest,
   cronAuthErrorResponse,
@@ -358,24 +358,10 @@ Deno.serve(async (req: Request) => {
                   const intensityJson = await intensityResponse.json();
                   const intensityMap = new Map<string, { intensity: number, index: string }>();
 
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  let intensityList: any[] = [];
-                  if (isRegional) {
-                    intensityList = Array.isArray(intensityJson.data)
-                      ? intensityJson.data[0]?.data || []
-                      : intensityJson.data?.data || [];
-                  } else {
-                    intensityList = intensityJson.data || [];
-                  }
-
-                  // No made-up 0 / 'moderate': half-hours without real data are skipped.
-                  let skippedIntensity = 0;
-                  for (const item of intensityList) {
-                    const point = item?.from ? parseIntensityPoint(item) : null;
-                    if (point) intensityMap.set(item.from, point);
-                    else skippedIntensity++;
-                  }
-                  if (skippedIntensity > 0) console.warn(`[FOOTPRINT] Skipped ${skippedIntensity} half-hour(s) with no usable intensity data`);
+                  // Shared rules (actual → forecast, skip unusable half-hours): _shared/footprint-records.ts
+                  const built = buildIntensityMap(intensityJson, isRegional);
+                  for (const [k, v] of built.map) intensityMap.set(k, v);
+                  if (built.skipped > 0) console.warn(`[FOOTPRINT] Skipped ${built.skipped} half-hour(s) with no usable intensity data`);
 
                   // Store footprint records if intensity was found
                   const footprintRecords: FootprintRecord[] = [];
@@ -472,24 +458,10 @@ Deno.serve(async (req: Request) => {
                 const intensityJson = await intensityResponse.json();
                 const intensityMap = new Map<string, { intensity: number, index: string }>();
 
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                let intensityList: any[] = [];
-                if (isRegional) {
-                  intensityList = Array.isArray(intensityJson.data)
-                    ? intensityJson.data[0]?.data || []
-                    : intensityJson.data?.data || [];
-                } else {
-                  intensityList = intensityJson.data || [];
-                }
-
-                // No made-up 0 / 'moderate': half-hours without real data are skipped.
-                let skippedIntensity = 0;
-                for (const item of intensityList) {
-                  const point = item?.from ? parseIntensityPoint(item) : null;
-                  if (point) intensityMap.set(item.from, point);
-                  else skippedIntensity++;
-                }
-                if (skippedIntensity > 0) console.warn(`[FOOTPRINT] Skipped ${skippedIntensity} half-hour(s) with no usable intensity data`);
+                // Shared rules (actual → forecast, skip unusable half-hours): _shared/footprint-records.ts
+                const built = buildIntensityMap(intensityJson, isRegional);
+                for (const [k, v] of built.map) intensityMap.set(k, v);
+                if (built.skipped > 0) console.warn(`[FOOTPRINT] Skipped ${built.skipped} half-hour(s) with no usable intensity data`);
 
                 const footprintRecords: FootprintRecord[] = [];
                 for (const record of consumption) {
@@ -1151,25 +1123,10 @@ Deno.serve(async (req: Request) => {
           if (!intensityResponse.ok) throw new Error(`Failed to fetch batch intensity: ${intensityResponse.status}`);
 
           const intensityJson = await intensityResponse.json();
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          let intensityList: any[] = [];
-
-          if (isRegional) {
-            intensityList = Array.isArray(intensityJson.data)
-              ? intensityJson.data[0]?.data || []
-              : intensityJson.data?.data || [];
-          } else {
-            intensityList = intensityJson.data || [];
-          }
-
-          // No made-up 0 / 'moderate': half-hours without real data are skipped.
-          let skippedIntensity = 0;
-          for (const item of intensityList) {
-            const point = item?.from ? parseIntensityPoint(item) : null;
-            if (point) intensityMap.set(item.from, point);
-            else skippedIntensity++;
-          }
-          if (skippedIntensity > 0) console.warn(`[FOOTPRINT] Skipped ${skippedIntensity} half-hour(s) with no usable intensity data`);
+          // Shared rules (actual → forecast, skip unusable half-hours): _shared/footprint-records.ts
+          const built = buildIntensityMap(intensityJson, isRegional);
+          for (const [k, v] of built.map) intensityMap.set(k, v);
+          if (built.skipped > 0) console.warn(`[FOOTPRINT] Skipped ${built.skipped} half-hour(s) with no usable intensity data`);
         } catch (error) {
           console.error(`Batch fetch failed for meter ${mpan}:`, error);
           continue;

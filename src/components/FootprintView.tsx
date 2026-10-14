@@ -368,7 +368,7 @@ export function FootprintView() {
               <p className="text-muted-foreground text-sm mt-1">
                 Based on {getHouseTypeLabel(houseType)} typical usage and today&apos;s grid intensity
                 {intensity ? ` (${intensity}g CO₂/kWh · ${intensityIndex})` : ''}.
-                Not your smart-meter truth yet — link Octopus for a real Green Score.{' '}
+                A rough Ofgem benchmark, not your actual usage — link Octopus to get a Green Score.{' '}
                 <button
                   type="button"
                   className="underline text-primary hover:text-primary/80 font-medium"

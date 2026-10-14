@@ -67,10 +67,31 @@ function parseArgs(argv) {
   return out;
 }
 
+/** NESO outage (network / 5xx / 429) after retries — exit 2, distinct from a gate failure (exit 1). */
+class UpstreamError extends Error {}
+
+const FETCH_TIMEOUT_MS = Number(process.env.NESO_FETCH_TIMEOUT_MS ?? 20000);
+const FETCH_ATTEMPTS = Number(process.env.NESO_FETCH_ATTEMPTS ?? 4);
+
 async function getJson(path) {
-  const res = await fetch(`${BASE}${path}`);
-  if (!res.ok) throw new Error(`GET ${path} → ${res.status}`);
-  return res.json();
+  let lastErr;
+  for (let attempt = 1; attempt <= FETCH_ATTEMPTS; attempt++) {
+    try {
+      const res = await fetch(`${BASE}${path}`, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
+      if (res.ok) return await res.json();
+      lastErr = new Error(`GET ${path} → ${res.status}`);
+      if (res.status < 500 && res.status !== 429) throw lastErr; // 4xx = our bug, don't retry
+    } catch (err) {
+      lastErr = err;
+      if (err?.message?.includes('→ 4') && !err.message.endsWith('429')) throw err;
+    }
+    if (attempt < FETCH_ATTEMPTS) {
+      const wait = 2000 * 2 ** (attempt - 1);
+      console.warn(`[audit] ${path} failed (${lastErr?.message}); retry ${attempt}/${FETCH_ATTEMPTS - 1} in ${wait}ms`);
+      await new Promise((r) => setTimeout(r, wait));
+    }
+  }
+  throw new UpstreamError(`NESO unavailable after ${FETCH_ATTEMPTS} attempts: ${lastErr?.message}`);
 }
 
 function calcFromMix(mix, factors = CARBON_FACTORS) {

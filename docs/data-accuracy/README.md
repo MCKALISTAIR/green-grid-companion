@@ -41,6 +41,19 @@ The script:
 4. Reports regional mix-estimate vs regional **forecast** (no regional actuals exist).
 
 Unit tests in `src/lib/carbonApi.test.ts` pin factors and fixture weeks (South Scotland / South East).
+`src/test/security/footprint-records.test.ts` spot-checks Octopus footprint maths (`carbon_g = kWh × intensity`, actual → forecast, unusable half-hours skipped) on national and regional fixtures via `supabase/functions/_shared/footprint-records.ts`.
+
+### In CI
+
+`.github/workflows/neso-audit.yml` runs the audit every Monday 07:17 UTC, on manual dispatch, and on PRs touching `src/lib/carbonApi.ts` or the script. The job fails only on a **gate failure** (exit 1). Each NESO request has a 20 s timeout and 4 attempts with backoff (`NESO_FETCH_TIMEOUT_MS`, `NESO_FETCH_ATTEMPTS`); if NESO is still unreachable the script exits 2 and the job warns instead of failing. The JSON report is uploaded as an artifact.
+
+## Re-calibrate `REGION_IMPORTS_FACTOR` quarterly
+
+1. Run `npm run audit:neso -- --days 30 --json /tmp/neso-audit.json` (or dispatch the workflow with `days=30`).
+2. For East England (10), London (13) and North East England (4), read `ΔMAE vs default`. Keep the override while it beats the French default by **≥ 2 g MAE**.
+3. Check other regions: consider a new override only if MAE > 10 g **and** |bias| > 5 g in two separate 30-day windows.
+4. Change a factor only for a **meaningful improvement**: ≥ 2 g MAE lower in two windows, without raising national MAE. Drop an override that no longer clears the bar.
+5. Update both `src/lib/carbonApi.ts` and `scripts/audit-neso-accuracy.mjs` (they must match), the table above, and the pinned tests.
 
 ## Known limitations (by design)
 

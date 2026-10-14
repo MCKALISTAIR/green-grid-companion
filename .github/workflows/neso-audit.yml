@@ -1,0 +1,52 @@
+name: NESO accuracy audit
+
+# Live check: GridSense mix-estimate vs NESO national actuals (MAE gate, default 12 g).
+# Runs weekly, on manual dispatch, and on PRs that touch emission factors or the audit itself.
+# Exit codes from the script: 0 pass, 1 gate fail (job fails), 2 NESO unreachable after retries
+# (job warns but passes so an upstream outage never blocks merges).
+on:
+  schedule:
+    - cron: '17 7 * * 1' # Mondays 07:17 UTC
+  workflow_dispatch:
+    inputs:
+      days:
+        description: 'Backtest window in days (1-30)'
+        default: '14'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/lib/carbonApi.ts'
+      - 'scripts/audit-neso-accuracy.mjs'
+      - '.github/workflows/neso-audit.yml'
+
+concurrency:
+  group: neso-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run audit
+        id: audit
+        run: |
+          set +e
+          node scripts/audit-neso-accuracy.mjs --days "${{ github.event.inputs.days || '14' }}" --json neso-audit.json
+          code=$?
+          set -e
+          if [ "$code" -eq 2 ]; then
+            echo "::warning::NESO API unavailable after retries; audit skipped (not a gate failure)"
+            exit 0
+          fi
+          exit $code
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: neso-audit
+          path: neso-audit.json
+          if-no-files-found: ignore
