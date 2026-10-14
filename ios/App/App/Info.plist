@@ -22,6 +22,10 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>GSAppGroupIdentifier</key>
+	<string>$(GS_APP_GROUP_ID)</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
@@ -54,11 +58,7 @@
     </array>
 
     <key>NSLocationWhenInUseUsageDescription</key>
-    <string>We need your location to show you the local energy grid intensity.</string>
-    <key>NSLocationAlwaysUsageDescription</key>
-    <string>We need your location to show you the local energy grid intensity.</string>
-    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-    <string>We need your location to show you the local energy grid intensity.</string>
+    <string>GridSense uses your location to find your local electricity grid region and weather. Your exact location isn't stored in your account or used for tracking.</string>
     <key>CFBundleURLTypes</key>
     <array>
         <dict>

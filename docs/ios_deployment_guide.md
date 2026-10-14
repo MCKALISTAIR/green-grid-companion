@@ -2,6 +2,8 @@
 
 This guide outlines the steps to package your current web application as an iOS app and deploy it to a physical device for testing.
 
+For **TestFlight / App Store Connect uploads** (paid Apple Developer team, widget + entitlements), see `docs/ios-testflight.md`.
+
 ## Prerequisites
 
 1.  **Xcode**: Ensure you have Xcode installed from the Mac App Store.
