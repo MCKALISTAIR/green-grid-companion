@@ -271,8 +271,11 @@ export function WeatherEffects({
       )}
 
       {showWind && (
-        <div className="absolute left-[6%] top-[22%] art-wind" data-art-wind>
-          <WindStreaks opacity={0.6} />
+        <div
+          className="absolute left-[2%] top-[24%] w-[84px] art-wind [&_svg]:w-full [&_svg]:h-auto"
+          data-art-wind
+        >
+          <WindStreaks opacity={0.9} />
         </div>
       )}
 
