@@ -12,6 +12,9 @@ for (const safeArea of [0, 34]) {
       await page.getByRole('button', { name: 'Just show me the GB average' }).click();
     }
     await expect(page.getByRole('tab', { name: 'Demand', exact: true })).toBeVisible();
+    const decline = page.getByRole('button', { name: 'Decline', exact: true });
+    await decline.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
+    if (await decline.isVisible()) await decline.click();
     await page.addStyleTag({ content: `:root { --bottom-safe-area: ${safeArea}px; }` });
 
     for (const view of ['Intensity', 'Demand', 'Footprint']) {
