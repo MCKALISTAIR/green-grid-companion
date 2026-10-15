@@ -100,10 +100,9 @@ export function useProductTour() {
   }, [releaseTurn]);
 
   useEffect(() => {
-    rebuildDriver();
-
     let resizeTimer: ReturnType<typeof setTimeout> | undefined;
     const onResize = () => {
+      if (!driverObj.current) return;
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(rebuildDriver, 150);
     };
@@ -133,6 +132,7 @@ export function useProductTour() {
           if (turn.current !== handle) return;
           rebuildDriver();
           driverObj.current?.drive();
+          if (driverObj.current?.isActive?.()) sessionStorage.removeItem('product_tour_replay');
           if (!driverObj.current?.isActive?.()) releaseTurn(); // nothing to show
         }, delayMs);
       });
@@ -147,7 +147,6 @@ export function useProductTour() {
     const replayPending = sessionStorage.getItem('product_tour_replay') === 'true';
 
     if (replayPending || (!seen && onboardingComplete === 'true')) {
-      sessionStorage.removeItem('product_tour_replay');
       runWhenOurTurn(TOUR_START_DELAY_MS);
     }
   }, [runWhenOurTurn, location.pathname, location.key]);

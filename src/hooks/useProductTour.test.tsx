@@ -38,13 +38,13 @@ describe('product tour hand-off', () => {
     expect(sessionStorage.getItem('product_tour_replay')).toBe('true');
   });
 
-  it('consumes pending replay on Home even when tips have already been seen', () => {
+  it('queues pending replay on Home even when tips have already been seen', () => {
     mocks.location = { pathname: '/', key: 'home' };
     localStorage.setItem('product_tour_seen', 'true');
     sessionStorage.setItem('product_tour_replay', 'true');
     const { result } = renderHook(() => useProductTour());
     act(() => result.current.startTour());
     expect(mocks.request).toHaveBeenCalledWith('tips', 'product-tour');
-    expect(sessionStorage.getItem('product_tour_replay')).toBeNull();
+    expect(sessionStorage.getItem('product_tour_replay')).toBe('true');
   });
 });
