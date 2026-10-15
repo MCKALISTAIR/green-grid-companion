@@ -15,7 +15,7 @@ import {
 import { useRef, useLayoutEffect, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getForecastMax, getForecastDifferences, getSlotDisplayValue } from '@/lib/forecastUtils';
-import { Target, ArrowUp, ArrowDown, Clock3, Leaf, Sparkles } from 'lucide-react';
+import { Star, Target, ArrowUp, ArrowDown, Clock3, Leaf, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { findDefaultForecastIndex, getForecastHourInsight } from '@/lib/forecastHourInsight';
 import { getNowOrWaitDecision } from '@/lib/nowOrWait';
@@ -256,11 +256,15 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
             </div>
             {pinnedBlockInfo && (
               <p
-                className="text-xs font-semibold text-intensity-very-low-text"
+                role="note"
+                aria-label={`Best window, forecast, ${pinnedBlockInfo.start} to ${pinnedBlockInfo.end}, ${pinnedBlockInfo.hours} hours, average ${pinnedBlockInfo.avg} grams CO2 per kilowatt hour.`}
+                className="inline-flex items-center gap-1 text-xs font-semibold text-intensity-very-low-text"
                 data-testid="best-window-readout"
               >
-                ★ Best window {pinnedBlockInfo.start}–{pinnedBlockInfo.end} ({pinnedBlockInfo.hours}
-                h) · avg {pinnedBlockInfo.avg} gCO₂/kWh
+                <Star className="h-3 w-3 fill-current" aria-hidden />
+                <span aria-hidden>
+                  {pinnedBlockInfo.start}–{pinnedBlockInfo.end} · avg {pinnedBlockInfo.avg} g
+                </span>
               </p>
             )}
             <p className="text-sm text-foreground/90 leading-snug">{insight.action}</p>
@@ -519,6 +523,9 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
           <div className="w-2 h-2 rounded-full bg-intensity-very-high" />
           <span>Very High</span>
         </div>
+        <span className="text-muted-foreground/80" data-testid="forecast-unit">
+          Values in gCO₂/kWh
+        </span>
       </div>
     </div>
   );
