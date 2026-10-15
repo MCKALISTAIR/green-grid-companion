@@ -15,8 +15,7 @@ import { cn } from '@/lib/utils';
 import { getConditionLabel, getConditionParts } from '@/lib/conditionLabels';
 import { formatLondonTime } from '@/lib/londonTime';
 import { useEnergyFacts } from '@/hooks/useEnergyFacts';
-import { useAchievements } from '@/hooks/useAchievements';
-import { getTrophySeenAt, shouldShowTrophyChip } from '@/lib/trophyChip';
+import { useUnseenBadge } from '@/lib/trophyChip';
 import { useTimeOfDay } from '@/hooks/useTimeOfDay';
 import { getCleanlinessBand } from '@/hooks/useCleanlinessBand';
 import type { GenerationMix } from '@/lib/carbonApi';
@@ -73,9 +72,8 @@ export function IntensityHeroOverlay({
   hideGauge,
 }: IntensityHeroOverlayProps) {
   const { tone } = useEnergyFacts();
-  const { achievements } = useAchievements();
-  // Only while there's an unseen new badge (see lib/trophyChip.ts).
-  const showTrophyChip = shouldShowTrophyChip(achievements, getTrophySeenAt());
+  // "New badge" pill only while an unseen badge exists (hero-v2 §4).
+  const showTrophyChip = useUnseenBadge();
   const { timeOfDay } = useTimeOfDay();
   const { weather } = useWeatherData();
   // AA: ink on light skies, white on dark skies (art pass v1 §3).
@@ -159,10 +157,12 @@ export function IntensityHeroOverlay({
             {/* A single link (was <a><button>, a nested-interactive a11y failure). */}
             <Link
               to="/achievements"
-              className="hero-chip flex min-h-11 min-w-11 items-center justify-center transition-all cursor-pointer active:scale-95 hover:scale-105 rounded-full shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
-              aria-label="Trophy Room"
+              data-testid="new-badge-pill"
+              className="flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full bg-white px-3.5 text-[13px] font-bold leading-none text-[#0f1a24] shadow-md transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f1a24] focus-visible:ring-offset-2"
+              aria-label="New badge: open the Trophy Room"
             >
-              <Trophy className="hero-chip-icon w-4 h-4" aria-hidden="true" />
+              <Trophy className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>New badge</span>
             </Link>
           </div>
         )}
@@ -206,7 +206,13 @@ export function IntensityHeroOverlay({
 
           <div className="relative flex flex-col items-center text-center w-full max-w-[22rem] min-[540px]:max-w-[40rem] px-4 pointer-events-none">
             <div
-              className="lg:hidden mb-2 sm:mb-3 max-w-[calc(100vw-8.5rem)]"
+              className={cn(
+                'lg:hidden mb-2 sm:mb-3',
+                // With the pill top-right, the chip moves left and narrows to clear it.
+                showTrophyChip
+                  ? 'self-start max-w-[calc(100vw-13rem)]'
+                  : 'max-w-[calc(100vw-8.5rem)]',
+              )}
               data-testid="hero-location"
             >
               <LocationManager

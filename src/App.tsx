@@ -1,4 +1,5 @@
 import { ThemeProvider } from '@/components/ThemeProvider';
+import { BadgeSeenOnRoute } from '@/components/BadgeSeenOnRoute';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { QueryClient } from '@tanstack/react-query';
@@ -142,6 +143,7 @@ function AppContent() {
         </ComponentErrorBoundary>
         <DeepLinkHandler />
         <ScrollToTop />
+        <BadgeSeenOnRoute />
         <Routes>
           <Route element={<AppLayout />}>
             {/* Suspense fallback lives in AppLayout so loaders ride the page slide */}

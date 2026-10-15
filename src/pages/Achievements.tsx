@@ -5,13 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { Trophy, Lock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { useEffect } from 'react';
-import { markTrophyRoomSeen } from '@/lib/trophyChip';
 
 export default function AchievementsPage() {
   const { achievements } = useAchievements();
-  // Visiting the Trophy Room clears Home's new-badge chip.
-  useEffect(() => markTrophyRoomSeen(), []);
 
   const unlockedCount = achievements.filter((a) => a.unlocked).length;
   const totalCount = achievements.length;
