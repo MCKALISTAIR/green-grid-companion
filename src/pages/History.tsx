@@ -23,7 +23,8 @@ import {
   Brush,
 } from 'recharts';
 import { format, parseISO, subDays, isSameHour, isSameDay } from 'date-fns';
-import { Loader2, TrendingDown, TrendingUp, Zap, BarChart3, Info, X } from 'lucide-react';
+import { Loader2, TrendingDown, TrendingUp, Minus, Zap, BarChart3, Info, X } from 'lucide-react';
+import { classifyHistoryTrend, historyTrendCopy } from '@/lib/historyTrend';
 import { ErrorState } from '@/components/ErrorState';
 import { EmptyState } from '@/components/EmptyState';
 import { getErrorInfo } from '@/lib/errorUtils';
@@ -191,7 +192,7 @@ export default function HistoryPage() {
 
   const startVal = data[0]?.intensity.forecast || 0;
   const endVal = data[data.length - 1]?.intensity.forecast || 0;
-  const trend = endVal < startVal ? 'improving' : 'worsening';
+  const trend = classifyHistoryTrend(startVal, endVal);
 
   // Handle error state
   if (isRegionError || isError) {
@@ -510,18 +511,28 @@ export default function HistoryPage() {
                       </div>
                       <div className="flex items-center gap-2 mt-1">
                         {trend === 'improving' ? (
-                          <TrendingDown className="w-6 h-6 text-green-500" />
+                          <TrendingDown className="w-6 h-6 text-green-500" aria-hidden="true" />
+                        ) : trend === 'worsening' ? (
+                          <TrendingUp className="w-6 h-6 text-red-500" aria-hidden="true" />
                         ) : (
-                          <TrendingUp className="w-6 h-6 text-red-500" />
+                          <Minus className="w-6 h-6 text-muted-foreground" aria-hidden="true" />
                         )}
                         <span
-                          className={`text-sm font-bold ${trend === 'improving' ? 'text-green-600' : 'text-red-600'}`}
+                          data-testid="history-trend-value"
+                          data-trend={trend}
+                          className={`text-sm font-bold ${
+                            trend === 'improving'
+                              ? 'text-green-600'
+                              : trend === 'worsening'
+                                ? 'text-red-600'
+                                : 'text-foreground'
+                          }`}
                         >
                           {Math.abs(endVal - startVal)} gCO2/kWh
                         </span>
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">
-                        Currently {trend === 'improving' ? 'lower' : 'higher'} than start
+                        {historyTrendCopy(trend, timeRange)}
                       </div>
                     </Card>
                   </motion.div>
