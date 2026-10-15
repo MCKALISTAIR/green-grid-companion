@@ -67,6 +67,15 @@ export async function fetchRegionalIntensityForOutcode(
 }
 
 /**
+ * Channel Islands (GY, JE) and Isle of Man (IM) are not on the GB grid. Older
+ * app builds could save these outward codes, and NESO's lookup has mapped GY1
+ * to South Scotland, so never alert on them.
+ */
+export function isOffGridOutcode(key: string): boolean {
+  return /^(GY|JE|IM)\d/i.test(key.trim());
+}
+
+/**
  * Returns a per-run resolver (cached per outward code, and the national
  * reading fetched at most once). null = no trustworthy reading: skip.
  */
@@ -79,6 +88,10 @@ export function createAlertReadingResolver(
     const key = normalizeSubscriptionPostcode(postcode);
     if (!key) {
       log(`[INTENSITY] Unusable subscription postcode; skipping`);
+      return Promise.resolve(null);
+    }
+    if (isOffGridOutcode(key)) {
+      log(`[INTENSITY] ${key} is not on the GB grid (Channel Islands / Isle of Man); skipping`);
       return Promise.resolve(null);
     }
     let pending = cache.get(key);
