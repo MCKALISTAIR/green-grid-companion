@@ -98,11 +98,71 @@
           -webkit-fill-available + env(safe-area-inset-top) + env(safe-area-inset-bottom)
         );
       }
+
+      /* Inline splash: painted before any JS loads (React replaces #root's
+         children on first render). Without it, slow 2G showed 8s+ of white. */
+      .gs-splash {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        background: #f1f7f9;
+        color: #0f172a;
+        font-family:
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          sans-serif;
+      }
+      .gs-splash img {
+        width: 72px;
+        height: 72px;
+        border-radius: 18px;
+      }
+      .gs-splash p {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        opacity: 0.8;
+      }
+      .gs-splash .gs-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #10b981;
+        animation: gs-pulse 1.2s ease-in-out infinite;
+      }
+      @keyframes gs-pulse {
+        50% {
+          opacity: 0.25;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .gs-splash .gs-dot {
+          animation: none;
+        }
+      }
+      @media (prefers-color-scheme: dark) {
+        .gs-splash {
+          background: #0f172a;
+          color: #e2e8f0;
+        }
+      }
     </style>
   </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="gs-splash" role="status" aria-label="Loading GridSense">
+        <img src="/icon-192.png" alt="" width="72" height="72" />
+        <p>GridSense</p>
+        <span class="gs-dot" aria-hidden="true"></span>
+      </div>
+    </div>
 
     <script>
       // Prevent stale Service Worker caches from breaking the dev preview.
