@@ -1,3 +1,4 @@
+import { REGIONAL_FALLBACK_LABEL } from '@/lib/regionalFallback';
 import { useQuery, useQueryClient, useIsRestoring } from '@tanstack/react-query';
 import { useMemo, useEffect, useRef, useCallback, useState } from 'react';
 import {
@@ -86,9 +87,6 @@ function useSmartRefetch(refetchFn: () => Promise<void>, enabled: boolean) {
     };
   }, [enabled]);
 }
-
-/** Shown instead of the region name when the GB figure stands in (BH-29). Copy: Design review. */
-export const REGIONAL_FALLBACK_LABEL = 'GB (regional figure unavailable)';
 
 export function useCarbonData(postcode: string) {
   const queryClient = useQueryClient();
@@ -342,6 +340,8 @@ export function useCarbonData(postcode: string) {
     region,
     /** True when the regional figure is missing and the GB figure is shown (BH-29). */
     usingNationalFallback,
+    /** The region whose figure is missing, for the fallback explanation. */
+    fallbackRegionName: usingNationalFallback ? regionalDataQuery.data?.shortname : undefined,
     regionId, // Export regionId for use in other hooks/pages
     // Half-hour period start from the API reading (for staleness / next update).
     lastUpdated: regionalData?.from || nationalQuery.data?.from,
@@ -404,3 +404,5 @@ export function useCarbonData(postcode: string) {
     },
   };
 }
+
+export { REGIONAL_FALLBACK_LABEL };
