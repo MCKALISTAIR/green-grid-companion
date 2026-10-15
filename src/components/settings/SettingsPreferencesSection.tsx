@@ -117,13 +117,17 @@ export function SettingsPreferencesSection({
                 <Activity className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h3 className="font-medium">Show Grid Frequency</h3>
+                <h3 id="pref-grid-frequency" className="font-medium">
+                  Show Grid Frequency
+                </h3>
                 <p className="text-sm text-muted-foreground">Display live 50Hz frequency data</p>
               </div>
             </div>
             <button
+              type="button"
               role="switch"
               aria-checked={showGridFrequency}
+              aria-labelledby="pref-grid-frequency"
               onClick={() => setShowGridFrequency(!showGridFrequency)}
               className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${showGridFrequency ? 'bg-primary' : 'bg-input'}`}
             >

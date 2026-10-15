@@ -168,7 +168,7 @@ const Onboarding = () => {
             )}
           </Button>
 
-          <div aria-live="polite" className="empty:hidden">
+          <div id="onboarding-postcode-notice" aria-live="polite" className="empty:hidden">
             {notice && notice.kind !== 'northernIreland' && (
               <p
                 className="text-sm text-white/85 text-center"
@@ -207,6 +207,7 @@ const Onboarding = () => {
               enterKeyHint="go"
               className="bg-background/50 h-11"
               aria-invalid={notice?.kind === 'invalid' || undefined}
+              aria-describedby={notice ? 'onboarding-postcode-notice' : undefined}
             />
             <Button
               type="submit"
