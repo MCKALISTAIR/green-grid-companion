@@ -30,6 +30,7 @@ import { useRelativeTime } from '@/hooks/useRelativeTime';
 import { DashboardSkeleton } from '@/components/home/DashboardSkeleton';
 import { SlowLoadingNotice } from '@/components/SlowLoadingNotice';
 import { OffGridNotice } from '@/components/home/OffGridNotice';
+import { StaleReadingNotice } from '@/components/home/StaleReadingNotice';
 import { DashboardViewTabs, type DashboardViewMode } from '@/components/home/DashboardViewTabs';
 import { IntensityDashboard } from '@/components/home/IntensityDashboard';
 import { IntensityHeroOverlay } from '@/components/home/IntensityHeroOverlay';
@@ -264,6 +265,10 @@ const Index = () => {
 
               {offGrid && (
                 <OffGridNotice area={offGrid} postcode={postcode} onChangePostcode={setPostcode} />
+              )}
+
+              {!isLoading && !isError && (
+                <StaleReadingNotice readingFrom={lastUpdated} onRetry={() => void refetch()} />
               )}
 
               {isDegraded && !offGrid && (
