@@ -18,13 +18,13 @@ export const ONBOARDING_COPY = {
   notFound: "We couldn't find that postcode. Check it, or use the GB average.",
   checking: 'Checking…',
   northernIreland:
-    "Northern Ireland has its own grid, which this data doesn't cover. We'll show the GB average instead.",
-  northernIrelandCta: 'Show the GB average',
+    "Northern Ireland is on the all-island grid it shares with Ireland, which this data doesn't cover. We'll show the GB average instead.",
+  offGridCta: 'Show the GB average',
   channelIslands:
-    "The Channel Islands have their own grid, which this data doesn't cover. We'll show the GB average instead.",
+    "The Channel Islands aren't on the GB grid, so this data doesn't cover them. We'll show the GB average instead.",
   isleOfMan:
     "The Isle of Man has its own grid, which this data doesn't cover. We'll show the GB average instead.",
-  bfpo: "Forces (BFPO) addresses aren't on the GB grid map. We'll show the GB average instead.",
+  bfpo: "We can't tell where a Forces (BFPO) address is, so we'll show the GB average instead.",
 } as const;
 
 /** Asked after the first useful moment, never on first launch. Plain in both tones. */

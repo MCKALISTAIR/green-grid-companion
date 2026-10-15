@@ -212,7 +212,7 @@ const Onboarding = () => {
               <div className="rounded-xl bg-white/10 p-3 space-y-2 text-center">
                 <p className="text-sm text-white/90">{c[notice.area]}</p>
                 <Button size="sm" variant="secondary" onClick={showNational}>
-                  {c.northernIrelandCta}
+                  {c.offGridCta}
                 </Button>
               </div>
             )}
