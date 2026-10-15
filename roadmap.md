@@ -6,3 +6,8 @@
 - [x] Polish Settings, onboarding, History, privacy and view-tab targets; protect scroll-end clearance.
 - [x] Confirm existing History autoscaling and run focused tests plus mobile/desktop visual checks.
 - [x] List changed files; do not publish.
+
+# B1 bottom navigation clearance
+- [x] Share dock dimensions, safe area and content inset across Home and page chrome.
+- [ ] Verify all Home views and Settings/Plan/History scroll ends with a simulated iOS home indicator.
+- [ ] Confirm mobile and desktop appearance; do not publish.
