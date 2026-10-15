@@ -81,6 +81,7 @@ export function SceneHotspots({ hotspots }: Props) {
           <div
             key={h.id}
             className="absolute"
+            data-scene-hotspot={h.id}
             style={{
               left: `${h.x}%`,
               top: `${Math.max(h.y, HUD_CLEAR_Y)}%`,
