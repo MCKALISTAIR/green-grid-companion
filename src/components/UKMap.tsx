@@ -80,7 +80,7 @@ export function UKMap({ regions, onRegionSelect, selectedRegionId }: UKMapProps)
 
           <g
             transform="translate(0.000000,1024.000000) scale(0.100000,-0.100000)"
-            className="fill-muted/10 stroke-primary/30 stroke-[18] hover:fill-primary/5 transition-all duration-350"
+            className="fill-muted/15 stroke-primary/45 stroke-[18] hover:fill-primary/5 transition-all duration-350"
             style={{ filter: 'url(#glow)' }}
           >
             <path
@@ -382,7 +382,8 @@ c21 14 23 19 14 45 -8 23 -7 35 5 53 9 13 25 50 36 83 15 44 17 61 8 72 -9 11
         </svg>
       </div>
 
-      <div className="absolute bottom-14 sm:bottom-2 right-4 text-[10px] text-muted-foreground/40 font-medium">
+      {/* bottom-14 clears the floating phone dock; muted (not /40) keeps the label legible */}
+      <div className="absolute bottom-14 sm:bottom-2 right-4 z-10 text-[10px] text-muted-foreground font-medium pointer-events-none">
         Geographic View
       </div>
 

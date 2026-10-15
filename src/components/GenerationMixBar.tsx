@@ -282,10 +282,10 @@ export function GenerationMixBar({
 
       <DialogContent className="max-w-md max-h-[85vh] flex flex-col overflow-hidden">
         <DialogHeader>
-          <DialogTitle className="pr-10 leading-snug">{breakdownTitle}</DialogTitle>
+          <DialogTitle className="pr-14 leading-snug">{breakdownTitle}</DialogTitle>
           {typeof frequency === 'number' && !isNaN(frequency) && (
             <div
-              className="mr-10 flex w-fit items-center gap-2 text-sm font-normal bg-muted/50 px-2.5 py-1 rounded-md"
+              className="mr-14 flex w-fit items-center gap-2 text-sm font-normal bg-muted/50 px-2.5 py-1 rounded-md"
               data-testid="grid-freq-pill"
             >
               <span className="text-muted-foreground">Grid Freq:</span>

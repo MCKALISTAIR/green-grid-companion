@@ -51,8 +51,9 @@ export function FuelRecordCelebration({ record, onDismiss }: FuelRecordCelebrati
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
+            className="min-h-11 min-w-11 h-11 w-11 shrink-0 text-muted-foreground hover:text-foreground"
             onClick={onDismiss}
+            aria-label={`Dismiss ${fuelName}-free record`}
           >
             <X className="w-4 h-4" />
           </Button>
