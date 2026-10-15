@@ -1,0 +1,2 @@
+# Architecture rules
+- Product-tour replay hands off through a session-scoped pending flag and Home navigation state; Home starts the queued tour only after a real reading renders, so Settings unmounting cannot discard replay.
