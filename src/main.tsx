@@ -16,6 +16,7 @@ initMonitoring({
 });
 
 import { logger } from './lib/logger';
+import { hydrateAppStorage } from './lib/appStorage';
 
 // Log startup in development
 if (import.meta.env.DEV) {
@@ -24,8 +25,12 @@ if (import.meta.env.DEV) {
   });
 }
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+// Native: load saved settings from Preferences before the first render so the
+// app never flashes default state. Web resolves immediately.
+void hydrateAppStorage().finally(() => {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+  );
+});

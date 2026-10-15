@@ -1,3 +1,4 @@
+import { appStorage } from '@/lib/appStorage';
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 
@@ -82,7 +83,7 @@ export const ACHIEVEMENT_LIST: Omit<Achievement, 'unlocked'>[] = [
 
 export function useAchievements() {
   const [achievements, setAchievements] = useState<Achievement[]>(() => {
-    const saved = localStorage.getItem(ACHIEVEMENTS_KEY);
+    const saved = appStorage.getItem(ACHIEVEMENTS_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
       // Merge saved state with current list definitions (in case list changed)
@@ -101,7 +102,7 @@ export function useAchievements() {
 
   const saveAchievements = (newAchievements: Achievement[]) => {
     setAchievements(newAchievements);
-    localStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify(newAchievements));
+    appStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify(newAchievements));
   };
 
   const unlock = useCallback((id: string) => {
@@ -113,7 +114,7 @@ export function useAchievements() {
         a.id === id ? { ...a, unlocked: true, unlockedAt: new Date().toISOString() } : a,
       );
 
-      localStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify(updated));
+      appStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify(updated));
 
       // Toast notification
       toast.success(`Achievement Unlocked: ${achievement.title}`, {
@@ -145,7 +146,7 @@ export function useAchievements() {
             ? { ...a, unlocked: true, unlockedAt: new Date().toISOString(), progress: newProgress }
             : a,
         );
-        localStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify(updated));
+        appStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify(updated));
 
         toast.success(`Achievement Unlocked: ${achievement.title}`, {
           description: achievement.description,
@@ -157,7 +158,7 @@ export function useAchievements() {
 
       // Just update progress
       const updated = prev.map((a) => (a.id === id ? { ...a, progress: newProgress } : a));
-      localStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify(updated));
+      appStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify(updated));
       return updated;
     });
   }, []);

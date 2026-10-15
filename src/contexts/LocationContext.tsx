@@ -1,3 +1,4 @@
+import { appStorage } from '@/lib/appStorage';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { resolvePostcode } from '@/lib/location';
 import { Capacitor } from '@capacitor/core';
@@ -30,19 +31,19 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
   const [postcode, setPostcodeState] = useState<string>(() => {
     // Only the outward code is kept. Older installs may have a full postcode
     // saved, so trim it on first read.
-    const saved = localStorage.getItem(POSTCODE_KEY) || '';
+    const saved = appStorage.getItem(POSTCODE_KEY) || '';
     const outward = saved ? toOutwardCode(saved) : '';
-    if (outward !== saved) localStorage.setItem(POSTCODE_KEY, outward);
+    if (outward !== saved) appStorage.setItem(POSTCODE_KEY, outward);
     return outward;
   });
 
   const [coordinates, setCoordinates] = useState<Coordinates | null>(() => {
     // If we have a postcode, we wait for effect to resolve it
-    const savedPostcode = localStorage.getItem(POSTCODE_KEY);
+    const savedPostcode = appStorage.getItem(POSTCODE_KEY);
     if (savedPostcode) return null;
 
     // Otherwise try to load cached device location
-    const cached = localStorage.getItem(COORDS_KEY);
+    const cached = appStorage.getItem(COORDS_KEY);
     if (cached) {
       try {
         return JSON.parse(cached);
@@ -60,9 +61,9 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
     const newPostcode = input ? toOutwardCode(input) : '';
     setPostcodeState(newPostcode);
     if (newPostcode) {
-      localStorage.setItem(POSTCODE_KEY, newPostcode);
+      appStorage.setItem(POSTCODE_KEY, newPostcode);
     } else {
-      localStorage.removeItem(POSTCODE_KEY);
+      appStorage.removeItem(POSTCODE_KEY);
     }
   }, []);
 
@@ -114,7 +115,7 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
 
             // Kept at 2 dp: these feed the weather call, so round before storing.
             const newCoords = roundCoords({ lat: latitude, lon: longitude });
-            localStorage.setItem(COORDS_KEY, JSON.stringify(newCoords));
+            appStorage.setItem(COORDS_KEY, JSON.stringify(newCoords));
             setCoordinates(newCoords);
           } catch (e) {
             if (!isMounted) return;

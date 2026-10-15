@@ -403,6 +403,9 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
                         id={`forecast-hour-${i}`}
                         role="option"
                         aria-selected={isSelected}
+                        aria-label={`${format(time, 'HH:mm')}${isCurrentHour ? ' (now)' : ''}: ${
+                          isUnknown ? 'no data' : `${displayValue} gCO₂/kWh`
+                        }`}
                         className={cn(
                           'relative flex flex-col items-center gap-1 w-12 transition-all duration-300 rounded-lg py-1 cursor-pointer',
                           isPast ? 'opacity-80' : 'opacity-100',

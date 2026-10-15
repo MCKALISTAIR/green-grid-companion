@@ -1,3 +1,4 @@
+import { appStorage } from '@/lib/appStorage';
 import { useEffect, useState, useCallback } from 'react';
 import { MixItem } from '@/lib/generationUtils';
 import { getGenerationMix, GenerationMix } from '@/lib/carbonApi';
@@ -98,12 +99,12 @@ export function useFuelStreaks(mix: MixItem[]) {
   const [isLoading, setIsLoading] = useState(true);
 
   const dismissRecord = useCallback((fuel: string) => {
-    const stored = localStorage.getItem(RECORDS_KEY);
+    const stored = appStorage.getItem(RECORDS_KEY);
     if (stored) {
       const records: Record<string, FuelRecord> = JSON.parse(stored);
       if (records[fuel]) {
         records[fuel].celebrated = true;
-        localStorage.setItem(RECORDS_KEY, JSON.stringify(records));
+        appStorage.setItem(RECORDS_KEY, JSON.stringify(records));
         setNewRecords((prev) => prev.filter((r) => r.fuel !== fuel));
       }
     }
@@ -117,9 +118,9 @@ export function useFuelStreaks(mix: MixItem[]) {
       const nowStr = now.toISOString();
 
       // Load existing data
-      const storedStreaks = localStorage.getItem(STORAGE_KEY);
-      const storedRecords = localStorage.getItem(RECORDS_KEY);
-      const storedLastSeen = localStorage.getItem(LAST_SEEN_KEY);
+      const storedStreaks = appStorage.getItem(STORAGE_KEY);
+      const storedRecords = appStorage.getItem(RECORDS_KEY);
+      const storedLastSeen = appStorage.getItem(LAST_SEEN_KEY);
 
       const streakData: Record<string, FuelStreakData> = storedStreaks
         ? JSON.parse(storedStreaks)
@@ -267,9 +268,9 @@ export function useFuelStreaks(mix: MixItem[]) {
       }
 
       // Save updated data
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(streakData));
-      localStorage.setItem(RECORDS_KEY, JSON.stringify(recordData));
-      localStorage.setItem(LAST_SEEN_KEY, JSON.stringify(lastSeenData));
+      appStorage.setItem(STORAGE_KEY, JSON.stringify(streakData));
+      appStorage.setItem(RECORDS_KEY, JSON.stringify(recordData));
+      appStorage.setItem(LAST_SEEN_KEY, JSON.stringify(lastSeenData));
 
       setStreaks(updatedStreaks);
       setNewRecords(updatedRecords);
