@@ -1,3 +1,4 @@
+import { appStorage } from '@/lib/appStorage';
 import { useCallback, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { driver } from 'driver.js';
@@ -21,7 +22,7 @@ function buildViewportAwareSteps() {
 
   const steps = buildProductTourSteps({
     tone: readTone(),
-    national: isNationalMode(localStorage.getItem('gridgreen-postcode')),
+    national: isNationalMode(appStorage.getItem('gridgreen-postcode')),
   });
   return steps.map((step) => {
     if (typeof step.element === 'string' && step.element.includes('nav-')) {
@@ -61,7 +62,7 @@ function createTourDriver(onDone: () => void) {
       d.destroy();
     },
     onDestroyed: () => {
-      localStorage.setItem('product_tour_seen', 'true');
+      appStorage.setItem('product_tour_seen', 'true');
       onDone();
     },
   });
@@ -145,8 +146,8 @@ export function useProductTour() {
 
   const startTour = useCallback(() => {
     if (location.pathname !== '/') return;
-    const seen = localStorage.getItem('product_tour_seen');
-    const onboardingComplete = localStorage.getItem('onboarding_complete');
+    const seen = appStorage.getItem('product_tour_seen');
+    const onboardingComplete = appStorage.getItem('onboarding_complete');
     const replayPending = sessionStorage.getItem('product_tour_replay') === 'true';
 
     if (replayPending || (!seen && onboardingComplete === 'true')) {

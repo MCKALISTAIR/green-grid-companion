@@ -1,3 +1,4 @@
+import { appStorage } from './appStorage';
 /**
  * Optional-analytics consent (UK GDPR / PECR).
  *
@@ -19,12 +20,8 @@ export const CONSENT_VERSION_KEY = 'cookie-consent-version';
 export const CONSENT_VERSION = '2';
 export const CONSENT_CHANGE_EVENT = 'gridsense:consent-change';
 
-function storage(): Storage | null {
-  try {
-    return typeof window !== 'undefined' ? window.localStorage : null;
-  } catch {
-    return null;
-  }
+function storage(): Pick<Storage, 'getItem' | 'setItem' | 'removeItem'> | null {
+  return typeof window !== 'undefined' ? appStorage : null;
 }
 
 /** The user's current choice, or null when they have not chosen yet. */

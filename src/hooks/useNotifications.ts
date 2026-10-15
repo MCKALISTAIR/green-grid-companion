@@ -1,3 +1,4 @@
+import { appStorage } from '@/lib/appStorage';
 import { LocalNotifications, ScheduleOptions } from '@capacitor/local-notifications';
 import { BackgroundFetch } from '@transistorsoft/capacitor-background-fetch';
 import { ForecastData, getRegionalIntensity } from '@/lib/carbonApi';
@@ -88,7 +89,7 @@ export function useNotifications() {
     'prompt',
   );
   const [prefs, setPrefs] = useState<NotificationPrefs>(() => {
-    const saved = localStorage.getItem(PREFS_KEY);
+    const saved = appStorage.getItem(PREFS_KEY);
     return saved ? normalizePrefs(JSON.parse(saved)) : { ...DEFAULT_PREFS };
   });
 
@@ -117,7 +118,7 @@ export function useNotifications() {
   }, [checkPermission]);
 
   const checkLiveIntensity = useCallback(async () => {
-    const postcode = localStorage.getItem('gridgreen-postcode');
+    const postcode = appStorage.getItem('gridgreen-postcode');
     if (!postcode) return;
 
     try {
@@ -180,7 +181,7 @@ export function useNotifications() {
 
   // Persist prefs and handle Background Fetch toggle
   useEffect(() => {
-    localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+    appStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
 
     if (isNative) {
       if (prefs.useBackgroundFetch && prefs.lowIntensityEnabled) {

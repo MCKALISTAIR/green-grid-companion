@@ -1,3 +1,4 @@
+import { appStorage } from '@/lib/appStorage';
 import { useState, useEffect, useMemo } from 'react';
 import { useCarbonData } from '@/hooks/useCarbonData';
 import { useSettings } from '@/hooks/useSettings';
@@ -63,7 +64,7 @@ import { EstimateDisclaimer } from '@/components/attribution/EstimateDisclaimer'
 export default function Planner() {
   const { settings, updateSetting } = useSettings();
   const [customEvent, setCustomEvent] = useState(() => {
-    const saved = localStorage.getItem('planner-custom-event');
+    const saved = appStorage.getItem('planner-custom-event');
     return saved ? JSON.parse(saved) : { name: '', duration: '1', power: '1.0' };
   });
 
@@ -74,7 +75,7 @@ export default function Planner() {
   }, [settings.customEvent]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(() => {
-    return !localStorage.getItem('planner-onboarding-seen');
+    return !appStorage.getItem('planner-onboarding-seen');
   });
 
   const { postcode } = useAppLocation();
@@ -84,7 +85,7 @@ export default function Planner() {
 
   const dismissOnboarding = () => {
     setShowOnboarding(false);
-    localStorage.setItem('planner-onboarding-seen', 'true');
+    appStorage.setItem('planner-onboarding-seen', 'true');
   };
 
   // Build dynamic appliance list including custom appliances

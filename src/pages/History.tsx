@@ -1,3 +1,4 @@
+import { appStorage } from '@/lib/appStorage';
 import { useState, useMemo, useEffect } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
@@ -81,12 +82,12 @@ export default function HistoryPage() {
   const [timeRange, setTimeRange] = useState<'24h' | '7d'>('7d');
   const [date, setDate] = useState<Date | undefined>(undefined); // If defined, we are in Time Machine mode
   const [showChartTip, setShowChartTip] = useState(
-    () => !localStorage.getItem('history-chart-tip-seen'),
+    () => !appStorage.getItem('history-chart-tip-seen'),
   );
 
   const dismissChartTip = () => {
     setShowChartTip(false);
-    localStorage.setItem('history-chart-tip-seen', 'true');
+    appStorage.setItem('history-chart-tip-seen', 'true');
   };
 
   // Standard History Query (Live/Recent)
