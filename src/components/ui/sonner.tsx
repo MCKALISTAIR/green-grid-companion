@@ -2,6 +2,12 @@ import { useTheme } from '@/components/ThemeProvider';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Toaster as Sonner, toast } from 'sonner';
 
+const DOCK_OFFSET = {
+  bottom: 'var(--bottom-content-inset)',
+  left: '12px',
+  right: '12px',
+};
+
 type ToasterProps = React.ComponentProps<typeof Sonner>;
 
 const Toaster = ({ ...props }: ToasterProps) => {
@@ -18,12 +24,12 @@ const Toaster = ({ ...props }: ToasterProps) => {
       // top-anchored toasts covered the landscape picker and other controls
       // near the top of Settings (M5).
       position={isMobile ? 'bottom-center' : 'top-center'}
-      offset={`calc(max(env(safe-area-inset-top), 59px) + 16px)`}
-      mobileOffset={{
-        bottom: 'var(--bottom-content-inset)',
-        left: '12px',
-        right: '12px',
-      }}
+      // Bottom-anchored toasts clear the dock + home indicator. The old offset
+      // was derived from the *top* safe area, and Sonner applies `offset` (not
+      // `mobileOffset`) from 600px up, so 600–767px phones/iPad mini in
+      // portrait put toasts on top of the tab bar.
+      offset={isMobile ? DOCK_OFFSET : 'calc(max(env(safe-area-inset-top), 59px) + 16px)'}
+      mobileOffset={DOCK_OFFSET}
       toastOptions={{
         classNames: {
           toast:
