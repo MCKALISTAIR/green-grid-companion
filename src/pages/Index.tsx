@@ -28,7 +28,8 @@ import { useIndexPageEffects } from '@/hooks/useIndexPageEffects';
 import { useThrottledRefetch } from '@/hooks/useThrottledRefetch';
 import { useRelativeTime } from '@/hooks/useRelativeTime';
 import { DashboardSkeleton } from '@/components/home/DashboardSkeleton';
-import { OFF_GRID_HOME_COPY } from '@/lib/voice/statesCopy';
+import { SlowLoadingNotice } from '@/components/SlowLoadingNotice';
+import { OffGridNotice } from '@/components/home/OffGridNotice';
 import { DashboardViewTabs, type DashboardViewMode } from '@/components/home/DashboardViewTabs';
 import { IntensityDashboard } from '@/components/home/IntensityDashboard';
 import { IntensityHeroOverlay } from '@/components/home/IntensityHeroOverlay';
@@ -262,19 +263,7 @@ const Index = () => {
               </div>
 
               {offGrid && (
-                <div
-                  role="status"
-                  className="mx-2 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-lg flex items-start gap-3 text-sm text-amber-800 dark:text-amber-200"
-                >
-                  <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-500" />
-                  <div className="space-y-2">
-                    <p className="font-semibold">{OFF_GRID_HOME_COPY[offGrid]}</p>
-                    <p>{OFF_GRID_HOME_COPY.body}</p>
-                    <Button size="sm" variant="outline" onClick={() => navigate('/settings')}>
-                      {OFF_GRID_HOME_COPY.action}
-                    </Button>
-                  </div>
-                </div>
+                <OffGridNotice area={offGrid} postcode={postcode} onChangePostcode={setPostcode} />
               )}
 
               {isDegraded && !offGrid && (
@@ -293,6 +282,7 @@ const Index = () => {
               <div className="home-feed-fact px-1 pb-2 pt-0">
                 <EnergyFactBubble
                   intensity={intensity}
+                  hasReading={!isLoading && !isError}
                   generationMix={generationMix}
                   variant="plain"
                   className="mx-auto max-w-prose text-center"
@@ -306,7 +296,10 @@ const Index = () => {
                 {/* Prefer skeleton over error while loading/restoring so a brief
                     no-reading frame never mounts ErrorState and shifts the feed. */}
                 {isLoading && forecast.length === 0 ? (
-                  <DashboardSkeleton />
+                  <div className="space-y-3">
+                    <SlowLoadingNotice active onRetry={() => void refetch()} />
+                    <DashboardSkeleton />
+                  </div>
                 ) : isError ? (
                   <div className="py-8 bg-card rounded-2xl border border-border shadow-lg">
                     <ErrorState

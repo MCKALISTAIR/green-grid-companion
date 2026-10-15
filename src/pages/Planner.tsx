@@ -38,6 +38,7 @@ import { formatLondonTime, formatLondonTimeWithDay } from '@/lib/londonTime';
 import { PullToRefresh } from '@/components/PullToRefresh';
 import { TurbineSpinner } from '@/components/ui/turbine-spinner';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SlowLoadingNotice } from '@/components/SlowLoadingNotice';
 import { plannerLiveIntensity } from '@/lib/plannerLive';
 
 import { toast } from 'sonner';
@@ -385,7 +386,9 @@ export default function Planner() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={stateTransition}
+                className="space-y-3"
               >
+                <SlowLoadingNotice active onRetry={() => void refetch()} />
                 <Card className="sheet-surface p-6 space-y-6">
                   <div className="flex items-center justify-between pb-2 border-b border-muted">
                     <div className="space-y-1.5 flex-1">

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getSmartTip } from '@/lib/getSmartTip';
 import type { ForecastData } from '@/lib/carbonApi';
 import { buildTurbineLayout } from '@/lib/turbineLayout';
@@ -14,6 +14,16 @@ function slot(hoursFromNow: number, forecast: number): ForecastData {
 }
 
 describe('getSmartTip', () => {
+  // Pin the clock: tips depend on the London time of day, so an unpinned
+  // clock made 'celebrates very low current intensity' flaky (BH-19).
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-06-15T11:10:00Z'));
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('returns a fallback when forecast is too short', () => {
     expect(getSmartTip(120, [])).toContain('Forecast not in yet');
   });
