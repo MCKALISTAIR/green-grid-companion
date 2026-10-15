@@ -24,6 +24,8 @@
     /* Primary green for clean energy */
     --primary: 157.2 66.7% 27.1%; /* #177350 — white on it 5.83:1 */
     --primary-foreground: 0 0% 100%;
+    /* Primary text on primary/10 tints (active tab): #136546, 5.36:1 on #d6e3e2 */
+    --primary-on-tint: 157.3 68.3% 23.5%;
 
     --secondary: 198 28% 90%;
     --secondary-foreground: 210 28% 14%;
@@ -34,7 +36,7 @@
     --accent: 38 92% 58%;
     --accent-foreground: 32 70% 18%;
 
-    --destructive: 0 72% 50%;
+    --destructive: 0 72% 45%; /* #c52020 — light text on it 5.29:1, 5.83:1 as text on white */
     --destructive-foreground: 0 85% 97%;
 
     --border: 200 18% 88%;
@@ -151,6 +153,7 @@
 
     --primary: 158 55% 48%;
     --primary-foreground: 220 25% 10%;
+    --primary-on-tint: 158 55% 48%;
 
     --secondary: 220 18% 22%;
     --secondary-foreground: 0 0% 95%;

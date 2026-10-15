@@ -70,6 +70,7 @@ export default {
           '4': 'hsl(var(--chart-4))',
           '5': 'hsl(var(--chart-5))',
         },
+        'primary-on-tint': 'hsl(var(--primary-on-tint))',
         intensity: {
           'very-low': 'hsl(var(--intensity-very-low))',
           low: 'hsl(var(--intensity-low))',

@@ -44,7 +44,7 @@ export function EmptyState({
         <h3 className="text-xl font-semibold text-foreground">{title}</h3>
         <p className="text-muted-foreground max-w-sm leading-relaxed">{description}</p>
         {isOffline && (
-          <div className="mt-4 flex items-center gap-2 text-sm text-amber-600 bg-amber-50 dark:bg-amber-950/30 px-3 py-1.5 rounded-md">
+          <div className="mt-4 flex items-center gap-2 text-sm text-amber-800 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-3 py-1.5 rounded-md">
             <WifiOff className="w-4 h-4" />
             <span>You&apos;re offline. We&apos;ll fetch this when you&apos;re back.</span>
           </div>

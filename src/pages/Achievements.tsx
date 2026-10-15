@@ -49,7 +49,7 @@ export default function AchievementsPage() {
                 className={`overflow-hidden h-full transition-all duration-300 ${
                   achievement.unlocked
                     ? 'border-primary/15 ring-1 ring-primary/10'
-                    : 'bg-muted/30 border-dashed opacity-75'
+                    : 'bg-muted/30 border-dashed'
                 }`}
               >
                 <CardContent className="p-4 flex gap-4 items-start">

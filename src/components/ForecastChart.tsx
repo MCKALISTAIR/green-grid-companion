@@ -408,11 +408,11 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
                         }`}
                         className={cn(
                           'relative flex flex-col items-center gap-1 w-12 transition-all duration-300 rounded-lg py-1 cursor-pointer',
-                          isPast ? 'opacity-80' : 'opacity-100',
+                          isPast && '[&>div:first-child]:opacity-80',
                           isCurrentHour && !isSelected && 'bg-accent/20 scale-105 z-10',
                           isSelected &&
                             'bg-accent/30 ring-2 ring-primary/55 scale-110 shadow-sm z-20',
-                          dimOthers && 'opacity-45',
+                          dimOthers && '[&>div:first-child]:opacity-45',
                         )}
                         ref={(el) => {
                           if (isCurrentHour && el) currentHourRef.current = el;
@@ -454,7 +454,7 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
                           className={cn(
                             'text-xs font-medium font-mono tabular-nums',
                             isSelected || isCurrentHour
-                              ? 'text-primary font-bold'
+                              ? 'text-primary-on-tint font-bold dark:text-foreground'
                               : 'text-foreground dark:text-[#9fb0b5]',
                           )}
                         >
@@ -481,7 +481,7 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
                           className={cn(
                             'text-[10px] whitespace-nowrap',
                             isSelected || isCurrentHour
-                              ? 'text-primary font-bold'
+                              ? 'text-primary-on-tint font-bold dark:text-foreground'
                               : 'text-muted-foreground dark:text-[#8a9ba1]',
                           )}
                         >

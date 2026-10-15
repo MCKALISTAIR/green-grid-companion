@@ -271,7 +271,7 @@ export default function Glossary() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1 gap-1">
                           <h4 className="font-semibold truncate">{fuel.name}</h4>
-                          <span className="text-[10px] uppercase font-bold tracking-wider opacity-50 border px-1.5 py-0.5 rounded-full shrink-0">
+                          <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground border px-1.5 py-0.5 rounded-full shrink-0">
                             {fuel.category}
                           </span>
                         </div>

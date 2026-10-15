@@ -341,7 +341,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
       </Card>
 
       {/* Weekly Digest — server push not wired from Settings yet */}
-      <Card className="p-4 space-y-4 opacity-90">
+      <Card className="p-4 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
@@ -370,7 +370,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
       </Card>
 
       {/* Monthly Report — server push not wired from Settings yet */}
-      <Card className="p-4 space-y-4 opacity-90">
+      <Card className="p-4 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-accent/50 flex items-center justify-center">
