@@ -29,7 +29,7 @@ export default function Support() {
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <h1 className="text-xl font-semibold">Terms of Use</h1>
+          <h1 className="text-xl font-semibold">Support</h1>
         </div>
       </div>
 
