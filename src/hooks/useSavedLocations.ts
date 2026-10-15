@@ -1,3 +1,4 @@
+import { appStorage } from '@/lib/appStorage';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { RealtimeChannel } from '@supabase/supabase-js';
@@ -17,7 +18,7 @@ const MAX_RECENT = 5;
 export function useSavedLocations() {
   const [savedLocations, setSavedLocations] = useState<SavedLocation[]>(() => {
     try {
-      const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+      const stored = appStorage.getItem(LOCAL_STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch {
       return [];
@@ -26,7 +27,7 @@ export function useSavedLocations() {
 
   const [recentLocations, setRecentLocations] = useState<string[]>(() => {
     try {
-      const stored = localStorage.getItem(LOCAL_RECENT_KEY);
+      const stored = appStorage.getItem(LOCAL_RECENT_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch {
       return [];
@@ -111,8 +112,8 @@ export function useSavedLocations() {
           const dbRecentLocations = (data.recent_locations as unknown as string[]) || [];
 
           // Merge local data with database data (database takes precedence)
-          const localSaved = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
-          const localRecent = JSON.parse(localStorage.getItem(LOCAL_RECENT_KEY) || '[]');
+          const localSaved = JSON.parse(appStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
+          const localRecent = JSON.parse(appStorage.getItem(LOCAL_RECENT_KEY) || '[]');
 
           // If DB is empty but local has data, use local (first sync scenario)
           if (dbSavedLocations.length === 0 && localSaved.length > 0) {
@@ -126,8 +127,8 @@ export function useSavedLocations() {
           }
         } else {
           // No record exists - create one with local data
-          const localSaved = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
-          const localRecent = JSON.parse(localStorage.getItem(LOCAL_RECENT_KEY) || '[]');
+          const localSaved = JSON.parse(appStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
+          const localRecent = JSON.parse(appStorage.getItem(LOCAL_RECENT_KEY) || '[]');
           await syncToDatabase(localSaved, localRecent);
         }
 
@@ -192,11 +193,11 @@ export function useSavedLocations() {
 
   // Sync to localStorage (always, for offline support)
   useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(savedLocations));
+    appStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(savedLocations));
   }, [savedLocations]);
 
   useEffect(() => {
-    localStorage.setItem(LOCAL_RECENT_KEY, JSON.stringify(recentLocations));
+    appStorage.setItem(LOCAL_RECENT_KEY, JSON.stringify(recentLocations));
   }, [recentLocations]);
 
   // Debounced sync on data changes

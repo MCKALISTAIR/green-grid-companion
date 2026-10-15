@@ -30,6 +30,7 @@
     "@capacitor/haptics": "^7.0.3",
     "@capacitor/ios": "^7.4.5",
     "@capacitor/local-notifications": "^7.0.4",
+    "@capacitor/preferences": "^7.0.4",
     "@capacitor/push-notifications": "^7.0.4",
     "@capacitor/splash-screen": "^7.0.4",
     "@capacitor/status-bar": "^7.0.4",
