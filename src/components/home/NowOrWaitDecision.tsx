@@ -87,7 +87,7 @@ export function NowOrWaitDecision({ intensity, forecast }: NowOrWaitDecisionProp
             to="/planner"
             onClick={markUsefulMoment}
             className={cn(
-              'inline-flex items-center gap-1.5 mt-2 text-sm font-semibold transition-colors',
+              'tap-target inline-flex items-center gap-1.5 mt-2 text-sm font-semibold transition-colors',
               isUseNow
                 ? 'text-intensity-very-low hover:text-intensity-very-low/80'
                 : 'text-primary hover:text-primary/80',
