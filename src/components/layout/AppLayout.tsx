@@ -29,7 +29,8 @@ export function AppLayout() {
         <main
           className={cn(
             'flex-1 w-full relative overflow-x-hidden',
-            hideChrome ? 'max-w-none pb-0' : 'max-w-7xl mx-auto pb-28 lg:pb-0',
+            hideChrome ? 'max-w-none pb-0' : 'app-content max-w-7xl mx-auto',
+            !hideChrome && pathname === '/' && 'app-content--home',
           )}
         >
           <AnimatedOutlet />

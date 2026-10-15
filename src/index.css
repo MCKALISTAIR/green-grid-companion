@@ -122,6 +122,11 @@
     --shadow-xl: 0 24px 56px -16px hsl(210 20% 20% / 0.18);
 
     --spacing: 0.25rem;
+    /* Dock geometry and scroll clearance share one source of truth. */
+    --bottom-nav-height: 3.85rem;
+    --bottom-nav-gap: 12px;
+    --bottom-safe-area: env(safe-area-inset-bottom, 0px);
+    --bottom-content-inset: calc(var(--bottom-nav-height) + 2px + var(--bottom-nav-gap) + var(--bottom-safe-area) + 1rem);
   }
 
   .dark {
@@ -814,10 +819,24 @@ blockquote {
 }
 
 /* Shared secondary-page chrome (art direction: one product feel) */
+.app-content {
+  padding-bottom: var(--bottom-content-inset);
+  scroll-padding-bottom: var(--bottom-content-inset);
+}
+
+/* Keep Home's clearance inside its sheet rather than on the sky below it. */
+.app-content--home {
+  padding-bottom: 0;
+}
+
+.app-content--home .home-feed {
+  padding-bottom: var(--bottom-content-inset);
+}
+
 .page-shell {
   min-height: 100dvh;
   background: hsl(var(--background));
-  padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+  padding-bottom: var(--bottom-content-inset);
 }
 
 /* For pages inside AppLayout, whose <main> already reserves room for the bottom nav:
@@ -838,6 +857,15 @@ blockquote {
 .map-light-ink { color: hsl(var(--map-light-ink)); }
 .map-dark-ink { color: hsl(var(--scene-hud-text)); }
 @media (min-width: 1024px) {
+  .app-content {
+    padding-bottom: 0;
+    scroll-padding-bottom: 0;
+  }
+
+  .app-content--home .home-feed {
+    padding-bottom: 1.5rem;
+  }
+
   .page-shell.page-shell--fit {
     padding-bottom: 1.5rem;
   }
@@ -937,7 +965,7 @@ blockquote {
 
 /* Floating bottom dock — same paper as the home sheet (seam test) */
 .nav-dock {
-  margin: 0 14px calc(12px + env(safe-area-inset-bottom));
+  margin: 0 14px calc(var(--bottom-nav-gap) + var(--bottom-safe-area));
   border-radius: 1.5rem;
   background: hsl(var(--card) / 0.96);
   backdrop-filter: blur(16px) saturate(140%);
@@ -946,6 +974,10 @@ blockquote {
   box-shadow:
     0 1px 0 hsl(0 0% 100% / 0.55) inset,
     var(--shadow-md);
+}
+
+.nav-dock > div {
+  height: var(--bottom-nav-height);
 }
 
 .dark .nav-dock {
@@ -1091,8 +1123,8 @@ blockquote {
 @media (min-width: 800px) and (max-height: 720px) {
   .home-shell {
     flex-direction: row !important;
-    height: calc(100dvh - 6rem - env(safe-area-inset-bottom, 0px));
-    max-height: calc(100dvh - 6rem - env(safe-area-inset-bottom, 0px));
+    height: calc(100dvh - var(--bottom-content-inset));
+    max-height: calc(100dvh - var(--bottom-content-inset));
     overflow: hidden;
   }
 

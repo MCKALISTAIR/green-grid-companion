@@ -217,7 +217,7 @@ const Index = () => {
         style={{ background: skyColor }}
       >
         <PullToRefresh onRefresh={handleRefresh} disabled={isLoading}>
-          {/* AppLayout main already reserves bottom-nav space (pb-28); don't stack another min-height pad. */}
+          {/* Shared app-content inset lives inside home-feed to clear the dock without a sky-coloured gap. */}
           <main className="home-shell flex flex-col animate-in fade-in duration-700 lg:min-h-[100dvh] lg:pb-0">
             <h1 className="sr-only">Carbon Intensity Dashboard</h1>
 
