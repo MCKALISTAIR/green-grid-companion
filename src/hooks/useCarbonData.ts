@@ -87,7 +87,6 @@ function useSmartRefetch(refetchFn: () => Promise<void>, enabled: boolean) {
   }, [enabled]);
 }
 
-
 /** Shown instead of the region name when the GB figure stands in (BH-29). Copy: Design review. */
 export const REGIONAL_FALLBACK_LABEL = 'GB (regional figure unavailable)';
 
@@ -284,10 +283,10 @@ export function useCarbonData(postcode: string) {
   // If regional data failed to load, explicit fallback to "National"
   const region = usingNationalFallback
     ? REGIONAL_FALLBACK_LABEL
-    : regionalDataQuery.data?.shortname ??
-    postcodeQuery.data?.shortname ??
-    foundRegion?.shortname ??
-    (nationalQuery.data ? 'National' : '');
+    : (regionalDataQuery.data?.shortname ??
+      postcodeQuery.data?.shortname ??
+      foundRegion?.shortname ??
+      (nationalQuery.data ? 'National' : ''));
 
   // Generation mix from regional or national
   const generationMix =
