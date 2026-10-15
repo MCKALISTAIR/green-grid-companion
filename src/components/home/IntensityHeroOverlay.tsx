@@ -158,7 +158,7 @@ export function IntensityHeroOverlay({
             <Link
               to="/achievements"
               data-testid="new-badge-pill"
-              className="flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full bg-white px-3.5 text-[13px] font-bold leading-none text-[#0f1a24] shadow-md transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f1a24] focus-visible:ring-offset-2"
+              className="flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full bg-white px-3.5 text-[13px] max-[359px]:gap-1 max-[359px]:px-3 max-[359px]:text-xs font-bold leading-none text-[#0f1a24] shadow-md transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f1a24] focus-visible:ring-offset-2"
               aria-label="New badge: open the Trophy Room"
             >
               <Trophy className="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -210,7 +210,7 @@ export function IntensityHeroOverlay({
                 'lg:hidden mb-2 sm:mb-3',
                 // With the pill top-right, the chip moves left and narrows to clear it.
                 showTrophyChip
-                  ? 'self-start max-w-[calc(100vw-13rem)]'
+                  ? 'self-start max-w-[calc(100vw-13rem)] max-[359px]:max-w-[calc(100vw-10rem)]'
                   : 'max-w-[calc(100vw-8.5rem)]',
               )}
               data-testid="hero-location"
