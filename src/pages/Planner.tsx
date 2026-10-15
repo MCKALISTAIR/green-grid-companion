@@ -38,6 +38,7 @@ import { formatLondonTime, formatLondonTimeWithDay } from '@/lib/londonTime';
 import { PullToRefresh } from '@/components/PullToRefresh';
 import { TurbineSpinner } from '@/components/ui/turbine-spinner';
 import { Skeleton } from '@/components/ui/skeleton';
+import { plannerLiveIntensity } from '@/lib/plannerLive';
 
 import { toast } from 'sonner';
 import { Bell } from 'lucide-react';
@@ -79,9 +80,10 @@ export default function Planner() {
   });
 
   const { postcode } = useAppLocation();
-  const { forecast, intensity, refetch, isLoading, isError, error } = useCarbonData(postcode);
+  const { forecast, intensity, hasReading, refetch, isLoading, isError, error } =
+    useCarbonData(postcode);
   // useCarbonData reports 0 until a live reading arrives; don't treat that as a reading.
-  const liveLoaded = !isLoading && !isError && intensity > 0;
+  const liveIntensity = plannerLiveIntensity(intensity, { isLoading, isError, hasReading });
 
   const dismissOnboarding = () => {
     setShowOnboarding(false);
@@ -156,7 +158,7 @@ export default function Planner() {
   // One shared engine with the home card, so both give the same kind of answer.
   const plan = planLoad({
     forecast,
-    liveIntensity: liveLoaded ? intensity : null,
+    liveIntensity,
     slots: Math.ceil(selectedAppliance.duration * 2),
     horizonHours: null,
   });
@@ -448,7 +450,7 @@ export default function Planner() {
                     <p className="text-3xl font-bold text-foreground">
                       {formatLondonTimeWithDay(parseISO(bestSlot.startTime))}
                     </p>
-                    <p className="text-sm text-green-600 font-medium">
+                    <p className="text-sm text-green-700 dark:text-green-400 font-medium">
                       Around {roundPercent(plan.percentCleaner)}% cleaner ({plan.nowAvg} to{' '}
                       {bestSlot.avgIntensity} gCO₂/kWh)
                     </p>
@@ -465,7 +467,7 @@ export default function Planner() {
                   {savings > 0 && (
                     <div className="bg-background/50 rounded-lg p-4 text-center">
                       <p className="text-sm text-muted-foreground">Compared with starting now</p>
-                      <p className="text-xl font-bold text-green-600 flex items-center justify-center gap-1">
+                      <p className="text-xl font-bold text-green-700 dark:text-green-400 flex items-center justify-center gap-1">
                         <Leaf className="w-5 h-5" />
                         Save about {savings}g CO₂
                       </p>

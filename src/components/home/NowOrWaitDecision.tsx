@@ -46,7 +46,7 @@ export function NowOrWaitDecision({ intensity, forecast }: NowOrWaitDecisionProp
           )}
         >
           {isUseNow ? (
-            <BatteryCharging className="w-5 h-5 text-intensity-very-low" />
+            <BatteryCharging className="w-5 h-5 text-intensity-very-low-text" />
           ) : (
             <Clock3 className="w-5 h-5 text-muted-foreground" />
           )}
@@ -57,13 +57,13 @@ export function NowOrWaitDecision({ intensity, forecast }: NowOrWaitDecisionProp
             <h2
               className={cn(
                 'text-lg font-semibold tracking-tight font-display',
-                isUseNow ? 'text-intensity-very-low' : 'text-foreground',
+                isUseNow ? 'text-intensity-very-low-text' : 'text-foreground',
               )}
             >
               {voiced.headline}
             </h2>
             {isUseNow && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-intensity-very-low/20 text-intensity-very-low">
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-intensity-very-low/20 text-intensity-very-low-text">
                 <Leaf className="w-3 h-3" />
                 {isAnyTimePlan(decision) ? 'Any time' : 'Now'}
               </span>
@@ -79,9 +79,7 @@ export function NowOrWaitDecision({ intensity, forecast }: NowOrWaitDecisionProp
             {voiced.detail}
             {voiced.tail && <span className="text-foreground/80"> {voiced.tail}</span>}
           </p>
-          <p className="text-xs text-muted-foreground/90 leading-snug line-clamp-2">
-            {decision.tip}
-          </p>
+          <p className="text-xs text-muted-foreground leading-snug line-clamp-2">{decision.tip}</p>
 
           <Link
             to="/planner"
@@ -89,7 +87,7 @@ export function NowOrWaitDecision({ intensity, forecast }: NowOrWaitDecisionProp
             className={cn(
               'tap-target inline-flex items-center gap-1.5 mt-2 text-sm font-semibold transition-colors',
               isUseNow
-                ? 'text-intensity-very-low hover:text-intensity-very-low/80'
+                ? 'text-intensity-very-low-text hover:text-intensity-very-low-text'
                 : 'text-primary hover:text-primary/80',
             )}
           >

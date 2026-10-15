@@ -67,11 +67,11 @@ export function IntensityDashboard({
               </h3>
               {/* Regional NESO mix — Demand tab uses national Elexon meters instead */}
               <p
-                className="text-[11px] font-medium normal-case tracking-normal text-muted-foreground/90 truncate mt-0.5"
+                className="text-[11px] font-medium normal-case tracking-normal text-muted-foreground truncate mt-0.5"
                 data-testid="intensity-mix-scope"
               >
                 {regionName && regionName !== 'National' ? regionName : 'Great Britain'}
-                <span className="text-muted-foreground/70"> · regional · NESO</span>
+                <span className="text-muted-foreground"> · regional · NESO</span>
               </p>
             </div>
             <StaleDataBadge lastUpdated={lastUpdated} />

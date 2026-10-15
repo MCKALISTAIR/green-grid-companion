@@ -28,7 +28,7 @@ export function ErrorState({
         className="relative mb-6"
       >
         <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center">
-          <CloudOff className="w-12 h-12 text-muted-foreground/50" />
+          <CloudOff className="w-12 h-12 text-muted-foreground" />
         </div>
         <div className="absolute -bottom-1 -right-1 bg-destructive rounded-full p-2 border-4 border-background">
           <AlertCircle className="w-6 h-6 text-destructive-foreground" />
@@ -39,7 +39,7 @@ export function ErrorState({
       <p className="text-muted-foreground max-w-[300px] mb-6 leading-relaxed">{description}</p>
 
       {steps && steps.length > 0 && (
-        <ul className="text-sm text-muted-foreground/80 mb-8 text-left space-y-2 bg-muted/30 p-4 rounded-lg border border-border/50">
+        <ul className="text-sm text-muted-foreground mb-8 text-left space-y-2 bg-muted/30 p-4 rounded-lg border border-border/50">
           {steps.map((step, i) => (
             <li key={i} className="flex items-start gap-2">
               <span className="text-primary mt-1">•</span>
