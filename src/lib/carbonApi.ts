@@ -310,11 +310,11 @@ export function getIntensityColor(index: string): string {
 
 export function getIntensityTextColor(index: string): string {
   const colors: Record<string, string> = {
-    'very low': 'text-intensity-very-low',
-    low: 'text-intensity-low',
-    moderate: 'text-intensity-moderate',
-    high: 'text-intensity-high',
-    'very high': 'text-intensity-very-high',
+    'very low': 'text-intensity-very-low-text',
+    low: 'text-intensity-low-text',
+    moderate: 'text-intensity-moderate-text',
+    high: 'text-intensity-high-text',
+    'very high': 'text-intensity-very-high-text',
   };
   return colors[index] || 'text-muted-foreground';
 }

@@ -114,15 +114,15 @@ export function ForecastSummary({
                         variants={iconLowVariants}
                         className="p-1.5 rounded-full bg-intensity-very-low/10 mb-1"
                       >
-                        <TrendingDown className="w-4 h-4 text-intensity-very-low" />
+                        <TrendingDown className="w-4 h-4 text-intensity-very-low-text" />
                       </motion.div>
                       <div className="grid grid-cols-2 gap-x-2 text-center w-full px-1">
                         <div className="flex flex-col">
                           <Value
                             value={day.min}
-                            className="text-xs font-semibold text-muted-foreground/70"
+                            className="text-xs font-semibold text-muted-foreground"
                           />
-                          <span className="text-[9px] text-muted-foreground/50 uppercase scale-90">
+                          <span className="text-[9px] text-muted-foreground uppercase scale-90">
                             Pred
                           </span>
                         </div>
@@ -147,15 +147,15 @@ export function ForecastSummary({
                         variants={iconAvgVariants}
                         className="p-1.5 rounded-full bg-intensity-moderate/10 mb-1"
                       >
-                        <Activity className="w-4 h-4 text-intensity-moderate" />
+                        <Activity className="w-4 h-4 text-intensity-moderate-text" />
                       </motion.div>
                       <div className="grid grid-cols-2 gap-x-2 text-center w-full px-1">
                         <div className="flex flex-col">
                           <Value
                             value={day.avg}
-                            className="text-xs font-semibold text-muted-foreground/70"
+                            className="text-xs font-semibold text-muted-foreground"
                           />
-                          <span className="text-[9px] text-muted-foreground/50 uppercase scale-90">
+                          <span className="text-[9px] text-muted-foreground uppercase scale-90">
                             Pred
                           </span>
                         </div>
@@ -180,15 +180,15 @@ export function ForecastSummary({
                         variants={iconHighVariants}
                         className="p-1.5 rounded-full bg-intensity-very-high/10 mb-1"
                       >
-                        <TrendingUp className="w-4 h-4 text-intensity-very-high" />
+                        <TrendingUp className="w-4 h-4 text-intensity-very-high-text" />
                       </motion.div>
                       <div className="grid grid-cols-2 gap-x-2 text-center w-full px-1">
                         <div className="flex flex-col">
                           <Value
                             value={day.max}
-                            className="text-xs font-semibold text-muted-foreground/70"
+                            className="text-xs font-semibold text-muted-foreground"
                           />
-                          <span className="text-[9px] text-muted-foreground/50 uppercase scale-90">
+                          <span className="text-[9px] text-muted-foreground uppercase scale-90">
                             Pred
                           </span>
                         </div>
@@ -215,7 +215,7 @@ export function ForecastSummary({
                         variants={iconLowVariants}
                         className="p-1.5 rounded-full bg-intensity-very-low/10"
                       >
-                        <TrendingDown className="w-4 h-4 text-intensity-very-low" />
+                        <TrendingDown className="w-4 h-4 text-intensity-very-low-text" />
                       </motion.div>
                       <Value value={day.min} className="text-sm font-bold text-foreground" />
                       <span className="text-[10px] text-muted-foreground uppercase">Low</span>
@@ -227,7 +227,7 @@ export function ForecastSummary({
                         variants={iconAvgVariants}
                         className="p-1.5 rounded-full bg-intensity-moderate/10"
                       >
-                        <Activity className="w-4 h-4 text-intensity-moderate" />
+                        <Activity className="w-4 h-4 text-intensity-moderate-text" />
                       </motion.div>
                       <Value value={day.avg} className="text-sm font-bold text-foreground" />
                       <span className="text-[10px] text-muted-foreground uppercase">Avg</span>
@@ -239,7 +239,7 @@ export function ForecastSummary({
                         variants={iconHighVariants}
                         className="p-1.5 rounded-full bg-intensity-very-high/10"
                       >
-                        <TrendingUp className="w-4 h-4 text-intensity-very-high" />
+                        <TrendingUp className="w-4 h-4 text-intensity-very-high-text" />
                       </motion.div>
                       <Value value={day.max} className="text-sm font-bold text-foreground" />
                       <span className="text-[10px] text-muted-foreground uppercase">High</span>
