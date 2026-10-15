@@ -375,7 +375,7 @@ function ComponentInventory() {
         {
           name: 'IntensityGauge',
           purpose: 'The hero number on Home — current carbon intensity.',
-          path: 'src/components/IntensityGauge.tsx',
+          path: 'src/components/AnimatedIntensity.tsx',
         },
         {
           name: 'GenerationMixBar',
