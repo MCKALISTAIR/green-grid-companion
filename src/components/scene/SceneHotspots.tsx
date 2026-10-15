@@ -5,6 +5,10 @@ import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useHaptics } from '@/hooks/useHaptics';
 
+/** Home's HUD stack (number → status line) reaches ~65% of scene height on
+ *  phones; nodes above this line sat on the "% renewable" copy. */
+export const HUD_CLEAR_Y = 70;
+
 export interface HotspotDef {
   id: string;
   label: string;
@@ -59,7 +63,7 @@ export function SceneHotspots({ hotspots }: Props) {
   }, [activeId, visible]);
 
   const active = visible.find((h) => h.id === activeId) ?? null;
-  const flipY = active ? active.y > 55 : false;
+  const flipY = active ? Math.max(active.y, HUD_CLEAR_Y) > 55 : false;
   // Home's HUD is a sibling stacking context; facts must sit above it, not behind its text.
   const homeScene = layer.current?.closest('.home-scene');
   const bubbleHost = homeScene ?? layer.current;
@@ -72,7 +76,7 @@ export function SceneHotspots({ hotspots }: Props) {
           <div
             key={h.id}
             className="absolute"
-            style={{ left: `${h.x}%`, top: `${h.y}%`, transform: 'translate(-50%, -50%)' }}
+            style={{ left: `${h.x}%`, top: `${Math.max(h.y, HUD_CLEAR_Y)}%`, transform: 'translate(-50%, -50%)' }}
           >
             <MotionButton
               variant="ghost"
