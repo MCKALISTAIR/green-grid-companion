@@ -23,10 +23,11 @@ export function AnimatedIntensity({
   previousValue,
   animationDuration = 500,
   className,
-  isUpdating = false,
+  isUpdating: _isUpdating = false,
   size = 'default',
   highContrast = false,
 }: AnimatedIntensityProps) {
+  void _isUpdating; // kept for API compat; opacity pulse removed (WebKit flash)
   const [showArrow, setShowArrow] = useState(false);
   const [direction, setDirection] = useState<'up' | 'down' | null>(null);
   const shouldReduceMotion = useReducedMotion();
@@ -119,6 +120,9 @@ export function AnimatedIntensity({
         )}
       </AnimatePresence>
 
+      {/* No opacity pulse while updating: on WebKit that promotes a compositing
+          layer and reads as a flashing rectangle behind the digit (esp. hero 0).
+          Background refresh is already signaled by “Updating…” in the meta row. */}
       <motion.span
         className={cn(
           'font-bold tabular-nums tracking-tighter',
@@ -128,23 +132,18 @@ export function AnimatedIntensity({
               : 'text-[4.25rem] min-[380px]:text-[5.5rem] sm:text-8xl leading-none text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.35)]'
             : 'text-6xl text-card drop-shadow-md',
         )}
-        key={value}
         initial={
           !shouldReduceMotion && previousValue !== null && previousValue !== value
-            ? { scale: 1.15, opacity: 0.7 }
+            ? { scale: 1.12 }
             : false
         }
         animate={{
           scale: !shouldReduceMotion && transition ? [1, 1.08, 1] : 1,
-          opacity: !shouldReduceMotion && isUpdating ? [1, 0.55, 1] : 1,
         }}
         transition={{
           scale: transition
             ? { duration: 0.5, ease: 'easeOut' as const }
             : { type: 'spring' as const, stiffness: 380, damping: 18, duration: 0.4 },
-          opacity: isUpdating
-            ? { repeat: Infinity, duration: 1.6, ease: 'easeInOut' as const }
-            : { duration: 0.25 },
         }}
       >
         {displayNumber}
