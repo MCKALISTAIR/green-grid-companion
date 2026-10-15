@@ -58,9 +58,7 @@ export function getCompactSceneIntrinsicHeight(
   viewportHeight: number,
 ): number {
   const shortViewport = isShortWideViewport(viewportWidth, viewportHeight);
-  const floor = shortViewport
-    ? Math.min(240, viewportHeight * 0.4)
-    : SCENE_HEIGHT_COMPACT_FLOOR_PX;
+  const floor = shortViewport ? Math.min(240, viewportHeight * 0.4) : SCENE_HEIGHT_COMPACT_FLOOR_PX;
   const preferred = Math.min(viewportHeight * 0.38, viewportWidth * 0.55);
   const cap = Math.min(SCENE_HEIGHT_COMPACT_CAP_PX, viewportHeight * 0.46);
   return Math.min(cap, Math.max(floor, preferred));

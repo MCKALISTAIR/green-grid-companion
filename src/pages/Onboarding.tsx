@@ -223,7 +223,10 @@ const Onboarding = () => {
 
           <p className="text-xs text-white/65 text-center">
             {c.keepNote}{' '}
-            <a href="/privacy" className="inline-block min-h-11 py-2 underline hover:text-white/95 transition-colors">
+            <a
+              href="/privacy"
+              className="inline-block min-h-11 py-2 underline hover:text-white/95 transition-colors"
+            >
               Privacy Policy
             </a>
           </p>
@@ -239,11 +242,17 @@ const Onboarding = () => {
         <CardFooter className="justify-center py-3 bg-white/5 border-t border-white/5 text-xs text-white/60 text-center">
           <p>
             By continuing you agree to the{' '}
-            <a href="/terms" className="inline-block min-h-11 py-2 underline hover:text-white/95 transition-colors">
+            <a
+              href="/terms"
+              className="inline-block min-h-11 py-2 underline hover:text-white/95 transition-colors"
+            >
               Terms
             </a>{' '}
             and have read the{' '}
-            <a href="/privacy" className="inline-block min-h-11 py-2 underline hover:text-white/95 transition-colors">
+            <a
+              href="/privacy"
+              className="inline-block min-h-11 py-2 underline hover:text-white/95 transition-colors"
+            >
               Privacy Policy
             </a>
           </p>

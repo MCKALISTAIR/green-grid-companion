@@ -29,7 +29,8 @@ function TabButton({
   const isActive = viewMode === mode;
 
   return (
-    <Button variant="ghost"
+    <Button
+      variant="ghost"
       role="tab"
       tabIndex={isActive ? 0 : -1}
       aria-selected={isActive}
