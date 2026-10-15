@@ -326,19 +326,18 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
                         width: `${widthRem}rem`,
                       }}
                     >
-                      <div className="absolute inset-x-0 top-1 bottom-6 rounded-lg bg-gradient-to-b from-intensity-very-low/15 to-intensity-very-low/5 dark:from-intensity-very-low/20 dark:to-intensity-very-low/8" />
-                      <div className="absolute left-0 top-1 bottom-6 w-[2px] bg-intensity-very-low/60 rounded-full" />
-                      <div className="absolute left-0 top-1 w-2 h-[2px] bg-intensity-very-low/60 rounded-full" />
-                      <div className="absolute left-0 bottom-6 w-2 h-[2px] bg-intensity-very-low/60 rounded-full" />
-                      <div className="absolute right-0 top-1 bottom-6 w-[2px] bg-intensity-very-low/60 rounded-full" />
-                      <div className="absolute right-0 top-1 w-2 h-[2px] bg-intensity-very-low/60 rounded-full" />
-                      <div className="absolute right-0 bottom-6 w-2 h-[2px] bg-intensity-very-low/60 rounded-full" />
+                      {/* Soft wash + one rounded band — same “best window” job as the
+                          old hand-drawn [ ] bracket, without competing with Now. */}
+                      <div
+                        aria-hidden
+                        className="absolute inset-x-0 top-1 bottom-6 rounded-2xl bg-intensity-very-low/[0.12] dark:bg-intensity-very-low/15 ring-1 ring-inset ring-intensity-very-low/35"
+                      />
                       <div className="absolute -top-2 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-intensity-very-low/15 dark:bg-intensity-very-low/25 border border-intensity-very-low/30 px-2 py-0.5 rounded-full whitespace-nowrap shadow-sm z-10">
                         <span className="text-[8px] font-bold tracking-wide text-intensity-very-low">
                           ★
                         </span>
                         <span className="text-[8px] font-semibold text-intensity-very-low">
-                          {startTime}–{endTime}
+                          Best · {startTime}–{endTime}
                         </span>
                       </div>
                     </div>
