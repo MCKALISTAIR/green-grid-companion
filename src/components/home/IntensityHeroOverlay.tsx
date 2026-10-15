@@ -341,7 +341,12 @@ export function IntensityHeroOverlay({
                   )}
                 </motion.div>
               )}
-              {showZeroCarbonBadge && <ZeroCarbonBadge />}
+              {showZeroCarbonBadge && (
+                <ZeroCarbonBadge
+                  tone={tone}
+                  isRegional={!!postcode && region !== 'National' && !region?.startsWith('GB')}
+                />
+              )}
             </div>
 
             {!isLoading && !isError && (
