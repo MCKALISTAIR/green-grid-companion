@@ -72,7 +72,10 @@ export async function heroBoxes(page, { region = 'South Scotland', band = 'Very 
  * Hero checks for one scenario. Returns a list of failure strings.
  * expectBadge: true = must be visible (zero-carbon, fresh); false = must be hidden (stale).
  */
-export async function checkHero(page, { scenario, expectBadge, region, viewport }) {
+export async function checkHero(
+  page,
+  { scenario, expectBadge, expectMeta = false, region, viewport },
+) {
   const tag = `[${scenario} ${viewport.width}x${viewport.height}]`;
   const fails = [];
   const b = await heroBoxes(page, { region });
@@ -81,7 +84,11 @@ export async function checkHero(page, { scenario, expectBadge, region, viewport 
     fails.push(`${tag} zero-carbon badge expected but not visible`);
   if (expectBadge === false && b.badge)
     fails.push(`${tag} zero-carbon badge shown for a stale reading`);
-  const named = ['header', 'badge', 'number', 'band'].filter((k) => b[k]);
+  if (expectMeta && !b.meta)
+    fails.push(`${tag} % renewable / updated row (hero-meta) expected but not visible`);
+  const named = ['header', 'badge', 'number', 'band', ...(expectMeta ? ['meta'] : [])].filter(
+    (k) => b[k],
+  );
   for (let i = 0; i < named.length; i++) {
     for (let j = i + 1; j < named.length; j++) {
       const [p, q] = [named[i], named[j]];

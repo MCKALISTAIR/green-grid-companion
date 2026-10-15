@@ -7,6 +7,8 @@
  *      intersect (zero-carbon, stale and long-region states, 5 viewports); the
  *      badge shows for a fresh 0 g reading and is hidden when stale;
  *   2. the scalloped sheet edge spans the full width with no gap at either edge;
+ *      at 320x568 the compact hero must also keep the % renewable / updated row
+ *      visible, clear of the text above it and of the sheet;
  *   3. key routes don't leave empty scroll space below their last content, and
  *      that content scrolls fully clear of the bottom nav;
  *   4. every bottom-nav tab page (Home, Plan, History, Rank, Settings) scrolls its
@@ -29,6 +31,9 @@ const HERO_STATES = [
   { scenario: 'stale', expectBadge: false },
   { scenario: 'long-region', expectBadge: true },
 ];
+/** Short phones (iPhone SE 1st gen): compact hero must keep every line visible. */
+const COMPACT_HERO_VIEWPORTS = [{ width: 320, height: 568 }];
+
 const SCROLL_ROUTES = [
   '/history',
   '/settings',
@@ -164,6 +169,27 @@ async function main() {
         failures.push(
           ...(await checkScrollSpace(page, { route, viewport, minClearance: TAB_MIN_CLEARANCE })),
         );
+        checks++;
+        await context.close();
+      }
+    }
+    for (const viewport of COMPACT_HERO_VIEWPORTS) {
+      for (const st of HERO_STATES) {
+        const { context, page } = await openPage(browser, base, {
+          viewport,
+          scenario: st.scenario,
+        });
+        await waitForHero(page);
+        failures.push(
+          ...(await checkHero(page, {
+            ...st,
+            expectMeta: true,
+            viewport,
+            region: SCENARIOS[st.scenario].regionName ?? 'South Scotland',
+          })),
+        );
+        if (st.scenario === 'zero-carbon')
+          failures.push(...(await checkSheetEdge(page, { viewport })));
         checks++;
         await context.close();
       }
