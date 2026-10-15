@@ -25,7 +25,11 @@ interface Props {
 /** Soft max width for fact bubbles; also used when clamping into the scene. */
 const BUBBLE_MAX_PX = 220;
 const BUBBLE_EDGE_PAD_PX = 8;
-const MotionButton = motion.create(Button);
+/** Created on first render, not at module load, so it never depends on import
+ *  order (e.g. a test mock of framer-motion that isn't initialised yet). */
+const createMotionButton = () => motion.create(Button);
+let cachedMotionButton: ReturnType<typeof createMotionButton> | undefined;
+const getMotionButton = () => (cachedMotionButton ??= createMotionButton());
 
 /**
  * Diegetic info layer — small tap targets anchored to "informative" scene props.
@@ -42,6 +46,7 @@ export function SceneHotspots({ hotspots }: Props) {
   const layer = useRef<HTMLDivElement>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const { selection } = useHaptics({ decorative: true });
+  const MotionButton = getMotionButton();
 
   const close = useCallback(() => setActiveId(null), []);
 
@@ -76,7 +81,11 @@ export function SceneHotspots({ hotspots }: Props) {
           <div
             key={h.id}
             className="absolute"
-            style={{ left: `${h.x}%`, top: `${Math.max(h.y, HUD_CLEAR_Y)}%`, transform: 'translate(-50%, -50%)' }}
+            style={{
+              left: `${h.x}%`,
+              top: `${Math.max(h.y, HUD_CLEAR_Y)}%`,
+              transform: 'translate(-50%, -50%)',
+            }}
           >
             <MotionButton
               variant="ghost"
