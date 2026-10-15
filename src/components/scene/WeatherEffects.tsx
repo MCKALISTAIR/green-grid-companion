@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Cloud } from 'lucide-react';
 import { WeatherData } from '@/hooks/useWeatherData';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface WeatherEffectsProps {
   weather: WeatherData;
@@ -58,6 +59,7 @@ function Snowflake({
   x: number;
   size?: 'sm' | 'md' | 'lg';
 }) {
+  const reduced = useReducedMotion();
   const params = useMemo(() => {
     const sizes = { sm: 2, md: 4, lg: 6 };
     return {
@@ -66,6 +68,9 @@ function Snowflake({
       drift: 20 + Math.random() * 30,
     };
   }, [size]);
+
+  // Falling particles are pure decoration; drop them under reduced motion.
+  if (reduced) return null;
 
   return (
     <motion.div

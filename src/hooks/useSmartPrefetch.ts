@@ -1,12 +1,9 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSavedLocations } from '@/hooks/useSavedLocations';
-import {
-  UK_REGIONS,
-  getRegionalIntensityById,
-  getRegionalHistoryAndForecast,
-} from '@/lib/carbonApi';
+import { getRegionalIntensityById, getRegionalHistoryAndForecast } from '@/lib/carbonApi';
 import { logger } from '@/lib/logger';
+import { regionNameForPostcode } from '@/lib/regionMatch';
 
 export function useSmartPrefetch() {
   const queryClient = useQueryClient();
@@ -24,9 +21,7 @@ export function useSmartPrefetch() {
       // We want to prefetch regional intensity and forecast for each saved location
       for (const loc of savedLocations) {
         // Find regionId for this location's postcode
-        const targetRegionName = UK_REGIONS.filter((r) =>
-          loc.postcode.toUpperCase().startsWith(r.postcode),
-        ).sort((a, b) => b.postcode.length - a.postcode.length)[0]?.name;
+        const targetRegionName = regionNameForPostcode(loc.postcode);
 
         // Assuming we rely on the same ID logic,
         // we might not have the regional list here unless it's cached.

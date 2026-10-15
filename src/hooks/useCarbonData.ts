@@ -10,7 +10,6 @@ import {
   getCurrentIntensity,
   getAllRegions,
   pickLiveIntensity,
-  UK_REGIONS,
   RegionalData,
   RegionListItem,
   ForecastData,
@@ -19,6 +18,7 @@ import {
   REGION_IDS,
 } from '@/lib/carbonApi';
 import { logger } from '@/lib/logger';
+import { regionNameForPostcode } from '@/lib/regionMatch';
 
 // Calculate ms until next half-hour boundary (:00 or :30)
 // NESO updates at these times, so we align our refreshes
@@ -123,9 +123,7 @@ export function useCarbonData(postcode: string) {
 
   // Find region by matching postcode prefix (e.g. "EH1..." matches "EH")
   // We sort by length descending to ensure "BS" matches "BS" before "B" matches "B" (if both existed and overlapped)
-  const targetRegionName = UK_REGIONS.filter((r) =>
-    postcode.toUpperCase().startsWith(r.postcode),
-  ).sort((a, b) => b.postcode.length - a.postcode.length)[0]?.name;
+  const targetRegionName = regionNameForPostcode(postcode);
 
   const foundRegion = regionalListQuery.data?.find((r) => {
     if (!targetRegionName) return false;
@@ -319,6 +317,8 @@ export function useCarbonData(postcode: string) {
   return {
     // Current intensity
     intensity,
+    /** False when `intensity` is only the 0 placeholder (no real reading yet). */
+    hasReading,
     previousIntensity,
     index,
     region,

@@ -36,7 +36,7 @@ function TabButton({
       aria-selected={isActive}
       aria-controls="dashboard-tabpanel"
       className={`relative flex-1 min-w-0 min-h-11 h-11 p-0 rounded-xl text-[11px] sm:text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 z-10 ${
-        isActive ? 'text-primary' : 'text-foreground/75 hover:text-foreground'
+        isActive ? 'text-primary-on-tint' : 'text-foreground/75 hover:text-foreground'
       }`}
       onClick={onSelect}
       data-tour={dataTour}

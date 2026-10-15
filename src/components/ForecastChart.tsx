@@ -5,6 +5,13 @@ import {
   isEstimatedActual,
 } from '@/lib/carbonApi';
 import { format, parseISO } from 'date-fns';
+import {
+  formatLondonLongDate,
+  formatLondonShortDay,
+  formatLondonTime,
+  londonDateKey,
+  londonDayLabel,
+} from '@/lib/londonTime';
 import { useRef, useLayoutEffect, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getForecastMax, getForecastDifferences, getSlotDisplayValue } from '@/lib/forecastUtils';
@@ -159,13 +166,13 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
     nowAction,
   );
 
-  const isToday = visibleDate.getDate() === now.getDate();
-  const isTomorrow = visibleDate.getDate() === new Date(now.getTime() + 86400000).getDate();
-  const headerDateLabel = isToday
-    ? 'Today'
-    : isTomorrow
-      ? 'Tomorrow'
-      : format(visibleDate, 'EEEE, d MMM');
+  const visibleDay = londonDayLabel(visibleDate, now);
+  const headerDateLabel =
+    visibleDay === ''
+      ? 'Today'
+      : visibleDay === 'tomorrow'
+        ? 'Tomorrow'
+        : formatLondonLongDate(visibleDate);
 
   const selectHour = (i: number) => {
     setSelectedIndex(i);
@@ -197,6 +204,21 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
         </div>
       </div>
 
+      {/* Persistent live region: the visual card remounts per hour, which screen readers
+          often skip. One structured sentence instead of run-together fragments. */}
+      <p className="sr-only" aria-live="polite" aria-atomic="true" data-testid="forecast-hour-live">
+        {insight
+          ? [
+              `${insight.timeLabel}: ${insight.value} grams of CO₂ per kilowatt hour, ${insight.condition}.`,
+              insight.vsNow ? `${insight.vsNow}.` : '',
+              insight.inBestWindow ? 'In the best window.' : '',
+              insight.action,
+            ]
+              .filter(Boolean)
+              .join(' ')
+          : ''}
+      </p>
+
       <AnimatePresence mode="wait">
         {insight && (
           <motion.div
@@ -206,7 +228,6 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
             className={cn('rounded-2xl border px-3.5 py-3 space-y-1', insight.washClass)}
-            aria-live="polite"
             data-testid="forecast-hour-insight"
           >
             <div className="flex items-baseline justify-between gap-3 flex-wrap">
@@ -233,7 +254,7 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
             <div className="flex items-center gap-2 flex-wrap text-xs text-muted-foreground">
               <span>{insight.vsNow}</span>
               {insight.inBestWindow && (
-                <span className="inline-flex items-center gap-1 text-intensity-very-low font-semibold">
+                <span className="inline-flex items-center gap-1 text-intensity-very-low-text font-semibold">
                   <Clock3 className="w-3 h-3" aria-hidden />
                   Best window
                 </span>
@@ -300,8 +321,8 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
               const leftRem = 1.0 + block.start * 3.5 + sepsBeforeStart * 2.0;
               const widthRem = (block.end - block.start) * 3.5 + sepsInBlock * 2.0 + 3.0;
 
-              const startTime = format(parseISO(forecast[block.start].from), 'HH:mm');
-              const endTime = format(parseISO(forecast[block.end].to), 'HH:mm');
+              const startTime = formatLondonTime(parseISO(forecast[block.start].from));
+              const endTime = formatLondonTime(parseISO(forecast[block.end].to));
               const slotCount = block.end - block.start + 1;
               const avgIntensity = Math.round(
                 forecast
@@ -333,10 +354,10 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
                         className="absolute inset-x-0 top-1 bottom-6 rounded-2xl bg-intensity-very-low/[0.12] dark:bg-intensity-very-low/15 ring-1 ring-inset ring-intensity-very-low/35"
                       />
                       <div className="absolute -top-2 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-intensity-very-low/15 dark:bg-intensity-very-low/25 border border-intensity-very-low/30 px-2 py-0.5 rounded-full whitespace-nowrap shadow-sm z-10">
-                        <span className="text-[8px] font-bold tracking-wide text-intensity-very-low">
+                        <span className="text-[8px] font-bold tracking-wide text-intensity-very-low-text">
                           ★
                         </span>
-                        <span className="text-[8px] font-semibold text-intensity-very-low">
+                        <span className="text-[8px] font-semibold text-intensity-very-low-text">
                           Best · {startTime}–{endTime}
                         </span>
                       </div>
@@ -344,7 +365,9 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
                   </TooltipTrigger>
                   <TooltipContent side="top" className="text-xs max-w-[200px]">
                     <div className="flex flex-col gap-0.5">
-                      <span className="font-semibold text-intensity-very-low">★ Best window</span>
+                      <span className="font-semibold text-intensity-very-low-text">
+                        ★ Best window
+                      </span>
                       <span>
                         {startTime} → {endTime} ({slotCount * 0.5}h)
                       </span>
@@ -367,19 +390,17 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
 
               const prevItem = forecast[i - 1];
               const prevTime = prevItem ? parseISO(prevItem.from) : null;
-              const showSeparator = !prevTime || time.getDate() !== prevTime.getDate();
+              const showSeparator = !prevTime || londonDateKey(time) !== londonDateKey(prevTime);
               const displayValue = getSlotDisplayValue(item, now);
               const isSelected = selectedIndex === i;
               const dimOthers = selectedIndex !== null && !isSelected;
 
               let dateLabel = '';
               if (showSeparator) {
-                const today = new Date();
-                const tomorrow = new Date(today);
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                if (time.getDate() === today.getDate()) dateLabel = 'Today';
-                else if (time.getDate() === tomorrow.getDate()) dateLabel = 'Tomorrow';
-                else dateLabel = format(time, 'EEE d');
+                const day = londonDayLabel(time);
+                if (day === '') dateLabel = 'Today';
+                else if (day === 'tomorrow') dateLabel = 'Tomorrow';
+                else dateLabel = formatLondonShortDay(time);
               }
 
               return (
@@ -401,16 +422,16 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
                         id={`forecast-hour-${i}`}
                         role="option"
                         aria-selected={isSelected}
-                        aria-label={`${format(time, 'HH:mm')}${isCurrentHour ? ' (now)' : ''}: ${
+                        aria-label={`${formatLondonTime(time)}${isCurrentHour ? ' (now)' : ''}: ${
                           isUnknown ? 'no data' : `${displayValue} gCO₂/kWh`
                         }`}
                         className={cn(
                           'relative flex flex-col items-center gap-1 w-12 transition-all duration-300 rounded-lg py-1 cursor-pointer',
-                          isPast ? 'opacity-80' : 'opacity-100',
+                          isPast && '[&>div:first-child]:opacity-80',
                           isCurrentHour && !isSelected && 'bg-accent/20 scale-105 z-10',
                           isSelected &&
                             'bg-accent/30 ring-2 ring-primary/55 scale-110 shadow-sm z-20',
-                          dimOthers && 'opacity-45',
+                          dimOthers && '[&>div:first-child]:opacity-45',
                         )}
                         ref={(el) => {
                           if (isCurrentHour && el) currentHourRef.current = el;
@@ -452,8 +473,8 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
                           className={cn(
                             'text-xs font-medium font-mono tabular-nums',
                             isSelected || isCurrentHour
-                              ? 'text-primary font-bold'
-                              : 'text-foreground',
+                              ? 'text-primary-on-tint font-bold dark:text-foreground'
+                              : 'text-foreground dark:text-[#9fb0b5]',
                           )}
                         >
                           {isUnknown || displayValue === null ? '?' : displayValue}
@@ -479,11 +500,11 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
                           className={cn(
                             'text-[10px] whitespace-nowrap',
                             isSelected || isCurrentHour
-                              ? 'text-primary font-bold'
-                              : 'text-muted-foreground',
+                              ? 'text-primary-on-tint font-bold dark:text-foreground'
+                              : 'text-muted-foreground dark:text-[#8a9ba1]',
                           )}
                         >
-                          {isCurrentHour ? 'Now' : format(time, 'HH:mm')}
+                          {isCurrentHour ? 'Now' : formatLondonTime(time)}
                         </span>
                       </button>
                     </TooltipTrigger>
@@ -544,8 +565,8 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
         createPortal(
           (() => {
             const block = bestBlocks[selectedBestBlock];
-            const startTime = format(parseISO(forecast[block.start].from), 'HH:mm');
-            const endTime = format(parseISO(forecast[block.end].to), 'HH:mm');
+            const startTime = formatLondonTime(parseISO(forecast[block.start].from));
+            const endTime = formatLondonTime(parseISO(forecast[block.end].to));
             const slotCount = block.end - block.start + 1;
             const avgIntensity = Math.round(
               forecast
@@ -561,7 +582,7 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
                 }}
               >
                 <div className="flex flex-col gap-0.5 text-xs">
-                  <span className="font-semibold text-intensity-very-low">★ Best window</span>
+                  <span className="font-semibold text-intensity-very-low-text">★ Best window</span>
                   <span className="text-foreground">
                     {startTime} → {endTime} ({slotCount * 0.5}h)
                   </span>

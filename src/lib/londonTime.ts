@@ -54,3 +54,43 @@ export function formatLondonTimeWithDay(date: Date, now: Date = new Date()): str
   const day = londonDayLabel(date, now);
   return day ? `${formatLondonTime(date)} ${day}` : formatLondonTime(date);
 }
+
+const shortDayFormatter = new Intl.DateTimeFormat('en-GB', {
+  timeZone: LONDON_TZ,
+  weekday: 'short',
+  day: 'numeric',
+});
+
+const shortWeekdayFormatter = new Intl.DateTimeFormat('en-GB', {
+  timeZone: LONDON_TZ,
+  weekday: 'short',
+});
+
+/** "Sat 24" in UK time. */
+export function formatLondonShortDay(date: Date): string {
+  return shortDayFormatter.format(date).replace(',', '');
+}
+
+/** "Sat" in UK time. */
+export function formatLondonShortWeekday(date: Date): string {
+  return shortWeekdayFormatter.format(date);
+}
+
+/** Long weekday ("Saturday") in UK time. */
+export function formatLondonWeekday(date: Date): string {
+  return weekdayFormatter.format(date);
+}
+
+const longDateFormatter = new Intl.DateTimeFormat('en-GB', {
+  timeZone: LONDON_TZ,
+  weekday: 'long',
+  day: 'numeric',
+  month: 'short',
+});
+
+/** "Saturday, 24 Oct" in UK time. */
+export function formatLondonLongDate(date: Date): string {
+  const parts = longDateFormatter.formatToParts(date);
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? '';
+  return `${get('weekday')}, ${get('day')} ${get('month')}`;
+}

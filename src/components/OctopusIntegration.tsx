@@ -164,7 +164,7 @@ export function OctopusIntegration() {
                     : 'Unlock your personal Carbon Footprint & Green Score'}
               </p>
               {hasCredentials && apiKeyHint && (
-                <p className="text-[11px] text-muted-foreground/80 mt-1">
+                <p className="text-[11px] text-muted-foreground mt-1">
                   API key ending <span className="font-mono">••••{apiKeyHint}</span>
                 </p>
               )}
@@ -260,7 +260,7 @@ export function OctopusIntegration() {
                           className="inline-flex items-center justify-center rounded-full hover:bg-muted p-0.5"
                           aria-label="What is an MPAN?"
                         >
-                          <Info className="w-3 h-3 text-muted-foreground/60" />
+                          <Info className="w-3 h-3 text-muted-foreground" />
                         </button>
                       </PopoverTrigger>
                       <PopoverContent className="w-[280px] p-3 text-xs" align="start">
