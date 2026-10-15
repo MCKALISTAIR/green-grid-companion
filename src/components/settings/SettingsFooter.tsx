@@ -1,6 +1,14 @@
 import { Construction } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { VERSION_STRING } from '@/lib/version';
 import { settingsItemVariants } from './settingsMotion';
 import { DataAttribution } from '@/components/attribution/DataAttribution';
@@ -20,7 +28,7 @@ export function SettingsFooter({ isLinked, unlocked, onVersionClick }: SettingsF
       <p>
         Developed by{' '}
         <a
-          href="https://alistair-mckay.lovable.app"
+          href="https://alistairmckay.com"
           target="_blank"
           rel="noopener noreferrer"
           className="underline hover:text-foreground transition-colors"
@@ -28,20 +36,41 @@ export function SettingsFooter({ isLinked, unlocked, onVersionClick }: SettingsF
           Alistair McKay
         </a>
       </p>
-      <DataAttribution className="max-w-sm mx-auto" />
-      {isLinked && (
-        <p>
-          Footprint data powered by{' '}
-          <a
-            href="https://developer.octopus.energy/docs/api/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline hover:text-foreground transition-colors"
+
+      <Dialog>
+        <DialogTrigger asChild>
+          <button
+            type="button"
+            className="underline hover:text-foreground transition-colors bg-transparent border-0 p-0 cursor-pointer"
           >
-            Octopus Energy API
-          </a>
-        </p>
-      )}
+            Data sources &amp; licences
+          </button>
+        </DialogTrigger>
+        <DialogContent className="max-w-md max-h-[85dvh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Data sources &amp; licences</DialogTitle>
+            <DialogDescription>Credits for the live data GridSense shows.</DialogDescription>
+          </DialogHeader>
+          <div className="text-sm text-muted-foreground space-y-3 text-left">
+            <DataAttribution />
+            {isLinked && (
+              <p>
+                Footprint data powered by{' '}
+                <a
+                  href="https://developer.octopus.energy/rest/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-foreground transition-colors"
+                >
+                  Octopus Energy API
+                </a>
+                .
+              </p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="pt-2 flex flex-col items-center gap-1">
         <span
           onClick={(e) => {
