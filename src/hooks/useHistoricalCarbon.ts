@@ -1,3 +1,4 @@
+import { appStorage } from '@/lib/appStorage';
 import { useQuery } from '@tanstack/react-query';
 import {
   getRegionalHistoryAndForecast,
@@ -8,7 +9,7 @@ import { useCarbonData } from '@/hooks/useCarbonData';
 import { addDays, endOfDay, formatISO, startOfDay, subYears } from 'date-fns';
 
 export function useHistoricalCarbon(date: Date | undefined) {
-  const postcode = localStorage.getItem('gridgreen-postcode') || '';
+  const postcode = appStorage.getItem('gridgreen-postcode') || '';
   const { regionId } = useCarbonData(postcode);
 
   const query = useQuery<ForecastData[]>({
