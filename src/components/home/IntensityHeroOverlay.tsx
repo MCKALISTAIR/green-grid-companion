@@ -349,7 +349,7 @@ export function IntensityHeroOverlay({
                 className={cn(
                   /* Soft backing so the renewable + updated lines stay legible over
                      whatever scene art sits behind them (the house, dark hills) (BH-22). */
-                  'mt-3 flex flex-col items-center gap-2 rounded-2xl px-3 py-1.5',
+                  'mt-2 flex flex-col items-center gap-2 rounded-2xl px-3 py-1',
                   isInk ? 'bg-white/55' : 'bg-black/35',
                 )}
                 data-testid="hero-meta"
