@@ -71,6 +71,7 @@ export async function runDigest(
   let handler: ((r: Request) => Promise<Response>) | undefined;
   const origServe = Deno.serve;
   // deno-lint-ignore no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (Deno as any).serve = (h: (r: Request) => Promise<Response>) => {
     handler = h;
     return { finished: Promise.resolve(), shutdown() {} };
@@ -83,6 +84,8 @@ export async function runDigest(
     return { status: res.status, json: await res.json(), pushes, queries };
   } finally {
     // deno-lint-ignore no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (Deno as any).serve = origServe;
     globalThis.fetch = origFetch;
     Deno.env.get = origEnvGet;
