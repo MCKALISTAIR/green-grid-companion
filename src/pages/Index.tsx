@@ -29,7 +29,7 @@ import { useThrottledRefetch } from '@/hooks/useThrottledRefetch';
 import { useRelativeTime } from '@/hooks/useRelativeTime';
 import { DashboardSkeleton } from '@/components/home/DashboardSkeleton';
 import { SlowLoadingNotice } from '@/components/SlowLoadingNotice';
-import { OFF_GRID_HOME_COPY } from '@/lib/voice/statesCopy';
+import { OffGridNotice } from '@/components/home/OffGridNotice';
 import { DashboardViewTabs, type DashboardViewMode } from '@/components/home/DashboardViewTabs';
 import { IntensityDashboard } from '@/components/home/IntensityDashboard';
 import { IntensityHeroOverlay } from '@/components/home/IntensityHeroOverlay';
@@ -263,19 +263,7 @@ const Index = () => {
               </div>
 
               {offGrid && (
-                <div
-                  role="status"
-                  className="mx-2 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-lg flex items-start gap-3 text-sm text-amber-800 dark:text-amber-200"
-                >
-                  <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-500" />
-                  <div className="space-y-2">
-                    <p className="font-semibold">{OFF_GRID_HOME_COPY[offGrid]}</p>
-                    <p>{OFF_GRID_HOME_COPY.body}</p>
-                    <Button size="sm" variant="outline" onClick={() => navigate('/settings')}>
-                      {OFF_GRID_HOME_COPY.action}
-                    </Button>
-                  </div>
-                </div>
+                <OffGridNotice area={offGrid} postcode={postcode} onChangePostcode={setPostcode} />
               )}
 
               {isDegraded && !offGrid && (
