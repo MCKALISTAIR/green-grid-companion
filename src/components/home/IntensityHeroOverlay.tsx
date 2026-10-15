@@ -178,7 +178,9 @@ export function IntensityHeroOverlay({
             className={cn(
               /* Fixed px height (not %) so loading→reading gauge growth doesn't
                  reposition this scrim and register as CLS. */
-              'absolute inset-x-0 top-0 h-56 pointer-events-none transition-opacity duration-700',
+              /* h-80 covers the full stack down to the "updated" line (was h-56,
+                 which faded out above the renewable/status rows). */
+              'absolute inset-x-0 top-0 h-80 pointer-events-none transition-opacity duration-700',
               needsHardScrim
                 ? 'bg-gradient-to-b from-black/55 via-black/28 to-transparent'
                 : 'scene-hud-scrim',
@@ -189,8 +191,8 @@ export function IntensityHeroOverlay({
           <div
             aria-hidden
             className={cn(
-              'absolute inset-x-0 top-16 h-40 pointer-events-none scene-hud-radial transition-opacity duration-700',
-              needsHardScrim ? 'opacity-100' : 'opacity-40',
+              'absolute inset-x-0 top-16 h-64 pointer-events-none scene-hud-radial transition-opacity duration-700',
+              needsHardScrim ? 'opacity-100' : 'opacity-70',
             )}
           />
 

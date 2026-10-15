@@ -851,9 +851,10 @@ blockquote {
 .scene-hud-scrim {
   background: linear-gradient(
     to bottom,
-    hsl(var(--scene-hud-ink) / 0.5),
-    hsl(var(--scene-hud-ink) / 0.25),
-    transparent
+    hsl(var(--scene-hud-ink) / 0.5) 0%,
+    hsl(var(--scene-hud-ink) / 0.32) 55%,
+    hsl(var(--scene-hud-ink) / 0.18) 80%,
+    transparent 100%
   );
 }
 .scene-hud-radial {
