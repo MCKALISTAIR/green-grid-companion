@@ -406,7 +406,8 @@ c21 14 23 19 14 45 -8 23 -7 35 5 53 9 13 25 50 36 83 15 44 17 61 8 72 -9 11
         const isSelected = selectedRegionId === region.regionid;
 
         return (
-          <MotionButton variant="ghost"
+          <MotionButton
+            variant="ghost"
             key={region.regionid}
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: isSelected ? 1.15 : 1, opacity: 1, zIndex: isSelected ? 50 : 10 }}
@@ -427,14 +428,15 @@ c21 14 23 19 14 45 -8 23 -7 35 5 53 9 13 25 50 36 83 15 44 17 61 8 72 -9 11
             {isSelected && (
               <span className="absolute inset-0 rounded-full animate-ping bg-current opacity-30 pointer-events-none" />
             )}
-            <span className="text-[10px] font-bold z-10">
-              {region.intensity.forecast}
-            </span>
+            <span className="text-[10px] font-bold z-10">{region.intensity.forecast}</span>
             {isSelected && (
               <motion.div
                 initial={{ y: 5, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                className={cn("absolute top-full mt-2 w-max max-w-[180px] bg-popover/95 backdrop-blur-md px-3 py-1.5 rounded-lg text-xs shadow-lg border border-border/50 font-semibold whitespace-normal text-center text-popover-foreground z-50 pointer-events-none", x > 65 ? "right-0" : x < 35 ? "left-0" : "left-1/2 -translate-x-1/2")}
+                className={cn(
+                  'absolute top-full mt-2 w-max max-w-[180px] bg-popover/95 backdrop-blur-md px-3 py-1.5 rounded-lg text-xs shadow-lg border border-border/50 font-semibold whitespace-normal text-center text-popover-foreground z-50 pointer-events-none',
+                  x > 65 ? 'right-0' : x < 35 ? 'left-0' : 'left-1/2 -translate-x-1/2',
+                )}
               >
                 {region.shortname}
               </motion.div>
