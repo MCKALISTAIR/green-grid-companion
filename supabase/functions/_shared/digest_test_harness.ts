@@ -85,7 +85,6 @@ export async function runDigest(
   } finally {
     // deno-lint-ignore no-explicit-any
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (Deno as any).serve = origServe;
     globalThis.fetch = origFetch;
     Deno.env.get = origEnvGet;
