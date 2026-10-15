@@ -100,7 +100,7 @@ interface DepthProps {
 export function SceneAtmosphericDepth({ cleanliness, isNight }: DepthProps) {
   // Haze for depth — keep it airy. Cap so dirty days don't paint an opaque
   // muddy bar across mid-scene (common UK live intensities are dirty/high).
-  const intensity = Math.min(0.24, 0.1 + (1 - cleanliness) * 0.16);
+  const intensity = Math.min(0.14, 0.06 + (1 - cleanliness) * 0.08);
   // Hue: cool blue when clean, warm sepia when dirty.
   const hue = cleanliness > 0.5 ? 210 : 28;
   const sat = cleanliness > 0.5 ? 32 : 22;
@@ -113,11 +113,14 @@ export function SceneAtmosphericDepth({ cleanliness, isNight }: DepthProps) {
       style={{
         top: '42%',
         height: '22%',
+        maskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)',
       }}
       animate={{
         background: `linear-gradient(to bottom,
                     hsla(${hue}, ${sat}%, ${light}%, 0) 0%,
-                    hsla(${hue}, ${sat}%, ${light}%, ${intensity}) 55%,
+                    hsla(${hue}, ${sat}%, ${light}%, ${intensity * 0.5}) 30%,
+                    hsla(${hue}, ${sat}%, ${light}%, ${intensity}) 50%,
+                    hsla(${hue}, ${sat}%, ${light}%, ${intensity * 0.5}) 70%,
                     hsla(${hue}, ${sat}%, ${light}%, 0) 100%)`,
       }}
       transition={{ duration: 2.2, ease: 'easeInOut' as const }}

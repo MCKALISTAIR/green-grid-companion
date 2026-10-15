@@ -142,7 +142,8 @@ export function DemandView() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-5 w-5 rounded-full p-0 hover:bg-transparent"
+                      className="min-h-11 min-w-11 rounded-full p-0 hover:bg-transparent"
+                      aria-label="About Total Grid Demand"
                     >
                       <Info className="w-3.5 h-3.5 text-muted-foreground/70 cursor-help" />
                     </Button>
@@ -306,8 +307,8 @@ export function DemandView() {
                   aria-hidden
                 />
 
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-2 min-w-0">
+                <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-2 min-w-0">
                     <motion.div
                       className="w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0"
                       style={{ backgroundColor: hex, opacity: isZero ? 0.35 : 1 }}
@@ -333,32 +334,20 @@ export function DemandView() {
                     >
                       <Icon className="w-4 h-4 text-white" aria-hidden="true" />
                     </motion.div>
-                    <div className="min-w-0">
+                    <div className="min-w-0 w-full">
                       <div className="flex items-center gap-1">
-                        <span className="text-sm font-semibold capitalize truncate">
+                        <span className="min-w-0 text-sm font-semibold capitalize whitespace-normal break-words">
                           {source.name}
                         </span>
-                        <FuelTrendIndicator
-                          currentPerc={source.perc}
-                          previousPerc={source.previousPerc}
-                          trend={source.trend}
-                          showDiff={false}
-                        />
-                      </div>
-                      {categoryLabel && !isZero && (
-                        <div className="flex items-center gap-1">
-                          <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                            {categoryLabel}
-                          </span>
                           {fuelKey === 'biomass' && (
                             <Popover>
                               <PopoverTrigger asChild>
-                                <button
-                                  className="h-3.5 w-3.5 rounded-full p-0 flex items-center justify-center hover:bg-muted transition-colors"
+                                <Button variant="ghost" size="icon"
+                                  className="min-h-11 min-w-11 flex-shrink-0 rounded-full p-0 flex items-center justify-center hover:bg-muted transition-colors"
                                   aria-label="More information about Biomass classification"
                                 >
                                   <Info className="w-2.5 h-2.5 cursor-help text-muted-foreground" />
-                                </button>
+                                </Button>
                               </PopoverTrigger>
                               <PopoverContent className="w-[240px] p-3 text-xs bg-card border-border z-50">
                                 <p className="font-semibold mb-1">Kind of Renewable?</p>
@@ -371,11 +360,24 @@ export function DemandView() {
                               </PopoverContent>
                             </Popover>
                           )}
+                        <FuelTrendIndicator
+                          currentPerc={source.perc}
+                          previousPerc={source.previousPerc}
+                          trend={source.trend}
+                          showDiff={false}
+                        />
+                      </div>
+                      {categoryLabel && !isZero && (
+                        <div className="flex items-center gap-1">
+                          <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                            {categoryLabel}
+                          </span>
+
                         </div>
                       )}
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="flex items-baseline justify-between gap-1 min-w-0">
                     {source.mw !== null && (
                       <span className="block text-base font-bold font-mono tabular-nums leading-tight">
                         {(source.mw / 1000).toFixed(2)}
