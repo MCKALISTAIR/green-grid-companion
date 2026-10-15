@@ -431,7 +431,7 @@ export function GenerationMixBar({
 
         {/* GW Definition Note */}
         {showMW && (
-          <div className="pt-2 pb-2 text-xs text-muted-foreground/80 text-center px-4">
+          <div className="pt-2 pb-2 text-xs text-muted-foreground text-center px-4">
             <p>{DEFINITIONS['GW']}</p>
           </div>
         )}

@@ -77,11 +77,17 @@ async function auditRoute(
   route: { path: string; label: string },
 ): Promise<RouteResult> {
   const url = new URL(route.path, baseUrl).toString();
-  const page = await browser.newPage();
+  // @axe-core/playwright needs a page from browser.newContext(); browser.newPage()
+  // made every route throw, and the audit reported 0 violations / 0 passes.
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await context.newPage();
   try {
-    await page.goto(url, { waitUntil: 'networkidle', timeout: 30_000 });
+    // 'networkidle' never settles on routes with long-lived requests (Supabase
+    // realtime/auth refresh on /settings, /help) and timed out in CI.
+    await page.goto(url, { waitUntil: 'load', timeout: 30_000 });
+    await page.waitForTimeout(2_500);
     const results = await new AxeBuilder({ page })
-      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
       .analyze();
     return {
       path: route.path,
@@ -108,7 +114,7 @@ async function auditRoute(
       error: err instanceof Error ? err.message : String(err),
     };
   } finally {
-    await page.close();
+    await context.close();
   }
 }
 
@@ -198,6 +204,11 @@ async function main() {
   writeFileSync(outPath, formatReport(baseUrl, results), 'utf8');
   console.log(`\n✅ Wrote ${outPath}`);
 
+  const errored = results.filter((r) => r.error || r.passes === 0);
+  if (errored.length > 0) {
+    console.error(`❌ axe could not audit: ${errored.map((r) => r.path).join(', ')}`);
+    process.exit(1);
+  }
   const totalViolations = results.reduce((s, r) => s + r.violations.length, 0);
   if (totalViolations > 0) {
     console.log(`⚠️  ${totalViolations} violation(s) found across ${results.length} route(s).`);

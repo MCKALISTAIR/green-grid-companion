@@ -139,7 +139,7 @@ export function MonthlyReportPreview() {
           <div className="grid grid-cols-2 gap-2">
             <div className="flex items-center gap-2 p-2 rounded-lg bg-background/50">
               <div className="w-7 h-7 rounded-full bg-intensity-very-low/20 flex items-center justify-center">
-                <Leaf className="w-3.5 h-3.5 text-intensity-very-low" />
+                <Leaf className="w-3.5 h-3.5 text-intensity-very-low-text" />
               </div>
               <div>
                 <p className="text-[10px] text-muted-foreground">CO₂</p>
@@ -151,7 +151,7 @@ export function MonthlyReportPreview() {
 
             <div className="flex items-center gap-2 p-2 rounded-lg bg-background/50">
               <div className="w-7 h-7 rounded-full bg-intensity-moderate/20 flex items-center justify-center">
-                <Zap className="w-3.5 h-3.5 text-intensity-moderate" />
+                <Zap className="w-3.5 h-3.5 text-intensity-moderate-text" />
               </div>
               <div>
                 <p className="text-[10px] text-muted-foreground">Energy</p>
@@ -262,7 +262,7 @@ export function MonthlyReportPreview() {
             stats.best_week.week !== stats.worst_week.week && (
               <div className="flex gap-2 text-xs">
                 <div className="flex-1 p-2 rounded-lg bg-intensity-very-low/10 border border-intensity-very-low/20">
-                  <div className="flex items-center gap-1 text-intensity-very-low">
+                  <div className="flex items-center gap-1 text-intensity-very-low-text">
                     <TrendingDown className="w-3 h-3" />
                     <span className="font-medium">Best</span>
                   </div>
@@ -271,7 +271,7 @@ export function MonthlyReportPreview() {
                   </p>
                 </div>
                 <div className="flex-1 p-2 rounded-lg bg-intensity-high/10 border border-intensity-high/20">
-                  <div className="flex items-center gap-1 text-intensity-high">
+                  <div className="flex items-center gap-1 text-intensity-high-text">
                     <TrendingUp className="w-3 h-3" />
                     <span className="font-medium">Highest</span>
                   </div>

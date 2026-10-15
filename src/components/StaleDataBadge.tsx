@@ -35,7 +35,7 @@ export function StaleDataBadge({ lastUpdated, thresholdMinutes = 35 }: StaleData
     <AnimatePresence>
       {isStale && (
         <motion.span
-          className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-1.5 py-0.5 rounded-full"
+          className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-800 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-1.5 py-0.5 rounded-full"
           role="status"
           aria-live="polite"
           initial={{ opacity: 0, scale: 0.8, y: -3 }}
