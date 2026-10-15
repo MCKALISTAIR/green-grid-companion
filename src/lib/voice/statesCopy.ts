@@ -15,6 +15,13 @@ export const BACK_ONLINE_TEXT = "You're back online.";
 /** Query keys (first element) that hold carbon intensity figures. */
 export const CARBON_QUERY_ROOTS = new Set(['national', 'regional', 'forecast']);
 
+/** Shown when a load has taken longer than ~8s (the request gives up at 10s). */
+export const SLOW_LOADING_COPY = {
+  title: 'Still waiting for NESO…',
+  body: 'The grid data service is slow right now.',
+  retry: 'Try again',
+} as const;
+
 /** Home notice when the saved postcode is not on the GB grid (figures are the GB average). */
 export const OFF_GRID_HOME_COPY = {
   northernIreland: 'Northern Ireland is on the all-island grid',

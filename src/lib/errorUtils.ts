@@ -209,7 +209,13 @@ export function getErrorInfo(error: unknown): ErrorInfo {
   }
 
   // Network/fetch errors
-  if (lowerMessage.includes('network') || lowerMessage.includes('fetch')) {
+  // An HTTP status in the message means we did reach the server: handled below.
+  const hasHttpStatus = /:\s*\d{3}\b|\(\s*[\w ]*:\s*\d{3}\s*\)/.test(lowerMessage);
+  if (
+    !hasHttpStatus &&
+    !lowerMessage.includes('too many requests') &&
+    (lowerMessage.includes('network') || lowerMessage.includes('fetch'))
+  ) {
     return {
       title: "Can't reach the grid data",
       description: "We couldn't reach the carbon intensity service.",
@@ -227,10 +233,19 @@ export function getErrorInfo(error: unknown): ErrorInfo {
   }
 
   // API/server errors
-  if (lowerMessage.includes('500') || lowerMessage.includes('server error')) {
+  if (/\b5\d\d\b/.test(lowerMessage) || lowerMessage.includes('server error')) {
     return {
       title: "The data service isn't answering",
       description: "NESO's carbon intensity service is having a problem. It's not you.",
+      steps: ['Try again in a few minutes'],
+    };
+  }
+
+  // Response arrived but wasn't what NESO normally sends (malformed / empty)
+  if (lowerMessage.includes('bad data') || error instanceof SyntaxError) {
+    return {
+      title: 'The data looks wrong',
+      description: "NESO sent something we couldn't read. It's usually fixed within the hour.",
       steps: ['Try again in a few minutes'],
     };
   }

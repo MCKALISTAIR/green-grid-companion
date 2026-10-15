@@ -134,7 +134,8 @@ function AppContent() {
     <>
       {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
       <OfflineIndicator />
-      <Sonner position="top-center" />
+      {/* Position/offset live in ui/sonner.tsx: bottom above the dock on phones, top on desktop. */}
+      <Sonner />
       <BrowserRouter>
         <ComponentErrorBoundary name="Status Bar Manager">
           <StatusBarManager />
