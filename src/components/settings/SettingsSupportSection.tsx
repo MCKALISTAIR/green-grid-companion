@@ -9,7 +9,7 @@ export function SettingsSupportSection() {
       <SettingsSectionHeading>Support</SettingsSectionHeading>
 
       <div className="flex flex-col gap-3">
-        <a href="mailto:allymckay5@gmail.com?subject=GridSense%20Feedback">
+        <a href="mailto:support@getgridsense.com?subject=GridSense%20Feedback">
           <motion.div
             whileHover={{ scale: 1.01, y: -2 }}
             whileTap={{ scale: 0.99 }}

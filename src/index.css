@@ -1389,3 +1389,19 @@ body {
 .dark.reduce-transparency [class*='backdrop-blur'] {
   background-color: #1c3134 !important;
 }
+
+/* 44pt touch targets without changing visuals: the hit area grows to at least
+   44x44 around small controls (WCAG 2.5.8 / Apple HIG). Positioned elements
+   already contain the ::after, so only static ones need position: relative. */
+.tap-target:not(.absolute):not(.fixed):not(.sticky) {
+  position: relative;
+}
+.tap-target::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: max(100%, 44px);
+  height: max(100%, 44px);
+  transform: translate(-50%, -50%);
+}

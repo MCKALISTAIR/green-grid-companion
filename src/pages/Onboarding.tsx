@@ -18,14 +18,16 @@ import { useHaptics } from '@/hooks/useHaptics';
 import { markFirstNumberPending } from '@/lib/firstLaunch';
 import {
   NATIONAL_POSTCODE,
-  isNorthernIrelandPostcode,
+  offGridArea,
+  type OffGridArea,
   isValidPostcode,
   toOutwardCode,
 } from '@/lib/postcode';
 import { ONBOARDING_COPY } from '@/lib/voice/onboardingCopy';
 
 type Notice = {
-  kind: 'denied' | 'deniedForever' | 'failed' | 'invalid' | 'notFound' | 'northernIreland';
+  kind: 'denied' | 'deniedForever' | 'failed' | 'invalid' | 'notFound' | 'offGrid';
+  area?: OffGridArea;
 } | null;
 
 const Onboarding = () => {
@@ -47,9 +49,11 @@ const Onboarding = () => {
   };
 
   const finishWithPostcode = (postcode: string) => {
-    if (isNorthernIrelandPostcode(postcode)) {
-      // Say so before switching to the GB average, rather than in a toast that vanishes.
-      setNotice({ kind: 'northernIreland' });
+    const area = offGridArea(postcode);
+    if (area) {
+      // Not on the GB grid (NI, Channel Islands, Isle of Man, BFPO): say so before
+      // switching to the GB average, never show another region's figure.
+      setNotice({ kind: 'offGrid', area });
       return;
     }
     setAppPostcode(toOutwardCode(postcode));
@@ -122,13 +126,14 @@ const Onboarding = () => {
     e.preventDefault();
     const value = manualPostcode.trim();
     if (!value) return;
-    if (!isValidPostcode(value)) {
+    if (!isValidPostcode(value) && !offGridArea(value)) {
       setNotice({ kind: 'invalid' });
       void notification(NotificationType.Error);
       return;
     }
     setNotice(null);
-    if (isNorthernIrelandPostcode(value)) {
+    // Off-grid areas (GY/JE/IM/BFPO/BT) skip the lookup and get the off-grid notice.
+    if (offGridArea(value)) {
       finishWithPostcode(value);
       return;
     }
@@ -188,7 +193,7 @@ const Onboarding = () => {
           </Button>
 
           <div id="onboarding-postcode-notice" aria-live="polite" className="empty:hidden">
-            {notice && notice.kind !== 'northernIreland' && (
+            {notice && notice.kind !== 'offGrid' && (
               <p
                 className="text-sm text-white/85 text-center"
                 role={notice.kind === 'invalid' || notice.kind === 'notFound' ? 'alert' : undefined}
@@ -203,9 +208,9 @@ const Onboarding = () => {
                 {notice.kind === 'deniedForever' && <> {c.deniedForever}</>}
               </p>
             )}
-            {notice?.kind === 'northernIreland' && (
+            {notice?.kind === 'offGrid' && notice.area && (
               <div className="rounded-xl bg-white/10 p-3 space-y-2 text-center">
-                <p className="text-sm text-white/90">{c.northernIreland}</p>
+                <p className="text-sm text-white/90">{c[notice.area]}</p>
                 <Button size="sm" variant="secondary" onClick={showNational}>
                   {c.northernIrelandCta}
                 </Button>

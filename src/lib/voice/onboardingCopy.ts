@@ -20,6 +20,11 @@ export const ONBOARDING_COPY = {
   northernIreland:
     "Northern Ireland has its own grid, which this data doesn't cover. We'll show the GB average instead.",
   northernIrelandCta: 'Show the GB average',
+  channelIslands:
+    "The Channel Islands have their own grid, which this data doesn't cover. We'll show the GB average instead.",
+  isleOfMan:
+    "The Isle of Man has its own grid, which this data doesn't cover. We'll show the GB average instead.",
+  bfpo: "Forces (BFPO) addresses aren't on the GB grid map. We'll show the GB average instead.",
 } as const;
 
 /** Asked after the first useful moment, never on first launch. Plain in both tones. */

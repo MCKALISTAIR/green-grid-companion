@@ -70,8 +70,8 @@ jobs:
         with:
           name: a11y-report-${{ steps.report.outputs.name }}
           path: docs/a11y/*.md
-          if-no-files-found: warn
-          retention-days: 30
+          if-no-files-found: ignore
+          retention-days: 3
 
       - name: Comment summary on PR
         if: always() && github.event_name == 'pull_request' && steps.report.outputs.found == 'true'

@@ -2,6 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
 import { sendPushNotifications, type PushDeliveryResult } from '../_shared/push.ts';
 import { selectSavableStateUpdates, type PendingStateUpdate } from './state-updates.ts';
+import { nextHighState, nextLowState } from './alert-state.ts';
 import {
   verifySchedulerRequest,
   cronAuthErrorResponse,
@@ -98,9 +99,12 @@ Deno.serve(async (req) => {
 
       // === LOW INTENSITY ALERTS ===
       if (sub.low_intensity_enabled) {
-        const currentState =
-          regionIntensity.intensity <= sub.low_intensity_threshold ? 'below' : 'above';
         const previousState = sub.last_intensity_state;
+        const currentState = nextLowState(
+          regionIntensity.intensity,
+          sub.low_intensity_threshold,
+          previousState,
+        );
 
         if (currentState !== previousState) {
           if (currentState === 'below') {
@@ -133,9 +137,12 @@ Deno.serve(async (req) => {
 
       // === HIGH INTENSITY ALERTS ===
       if (sub.high_intensity_enabled) {
-        const currentHighState =
-          regionIntensity.intensity >= sub.high_intensity_threshold ? 'above' : 'below';
         const previousHighState = sub.last_high_intensity_state;
+        const currentHighState = nextHighState(
+          regionIntensity.intensity,
+          sub.high_intensity_threshold,
+          previousHighState,
+        );
 
         if (currentHighState !== previousHighState) {
           if (currentHighState === 'above') {

@@ -6,7 +6,7 @@
 
 These terms cover your use of the GridSense website (https://gridsense-app.lovable.app), the GridSense iPhone and iPad app and widget, and the GridSense macOS menu-bar app (together, "**GridSense**").
 
-GridSense is provided by **Alistair McKay**, a sole developer in the United Kingdom ("**I**", "**me**" or "**we**"). You can contact me at **allymckay5@gmail.com**.
+GridSense is provided by **Alistair McKay**, a sole developer in the United Kingdom ("**I**", "**me**" or "**we**"). You can contact me at **support@getgridsense.com**.
 
 By using GridSense you agree to these terms. If you don't agree, please don't use it. Our [Privacy Policy](/privacy) explains how we handle your personal data.
 
@@ -126,4 +126,4 @@ If you downloaded GridSense from Apple's App Store:
 - **No third-party rights.** Except for Apple (section 12), no one else has rights under these terms under the Contracts (Rights of Third Parties) Act 1999 (or the equivalent under Scots law).
 - **Severability.** If a court finds part of these terms unenforceable, the rest still applies.
 - **Governing law.** These terms are governed by the **law of Scotland**. You can bring legal proceedings in the Scottish courts. If you live in **England or Wales**, you can also bring proceedings there. If you live in **Northern Ireland**, you can also bring proceedings there.
-- **Contact.** allymckay5@gmail.com
+- **Contact.** support@getgridsense.com

@@ -1,4 +1,5 @@
 import { UK_REGIONS, getRegionalIntensity } from './carbonApi';
+import { offGridArea } from './postcode';
 import { logger } from './logger';
 import { supabase } from '@/integrations/supabase/client';
 import { roundCoords, postcodesIoReverseUrl, nominatimReverseUrl } from '@/lib/coords';
@@ -355,6 +356,8 @@ function isValidPostcodeFormat(query: string): boolean {
  * This is the source of truth for "What region is this postcode in?"
  */
 async function lookupByCarbonApi(postcode: string): Promise<LocationSearchResult | null> {
+  // Not on the GB grid: never let NESO's lookup map these to a GB region.
+  if (offGridArea(postcode)) return null;
   try {
     const regionData = await getRegionalIntensity(postcode);
 
