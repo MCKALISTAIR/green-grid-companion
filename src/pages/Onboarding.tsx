@@ -1,3 +1,4 @@
+import { appStorage } from '@/lib/appStorage';
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Navigation } from 'lucide-react';
@@ -36,7 +37,7 @@ const Onboarding = () => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const completeOnboarding = () => {
-    localStorage.setItem('onboarding_complete', 'true');
+    appStorage.setItem('onboarding_complete', 'true');
     markFirstNumberPending();
     // Do not record consent here: the (non-blocking) cookie banner asks on the
     // home screen, and optional diagnostics stay off until the user accepts.
@@ -168,7 +169,7 @@ const Onboarding = () => {
             )}
           </Button>
 
-          <div aria-live="polite" className="empty:hidden">
+          <div id="onboarding-postcode-notice" aria-live="polite" className="empty:hidden">
             {notice && notice.kind !== 'northernIreland' && (
               <p
                 className="text-sm text-white/85 text-center"
@@ -207,6 +208,7 @@ const Onboarding = () => {
               enterKeyHint="go"
               className="bg-background/50 h-11"
               aria-invalid={notice?.kind === 'invalid' || undefined}
+              aria-describedby={notice ? 'onboarding-postcode-notice' : undefined}
             />
             <Button
               type="submit"

@@ -1,3 +1,4 @@
+import { appStorage } from '@/lib/appStorage';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { RealtimeChannel } from '@supabase/supabase-js';
@@ -27,7 +28,7 @@ const LAST_SYNC_KEY = 'grid-companion-last-sync';
 export function useSettings() {
   const [settings, setSettings] = useState<Settings>(() => {
     try {
-      const saved = localStorage.getItem(LOCAL_SETTINGS_KEY);
+      const saved = appStorage.getItem(LOCAL_SETTINGS_KEY);
       return saved ? { ...DEFAULT_SETTINGS, ...JSON.parse(saved) } : DEFAULT_SETTINGS;
     } catch (error) {
       console.error('Failed to parse settings:', error);
@@ -38,7 +39,7 @@ export function useSettings() {
   const [userId, setUserId] = useState<string | null>(null);
   const isSyncingRef = useRef(false);
   const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(() => {
-    const saved = localStorage.getItem(LAST_SYNC_KEY);
+    const saved = appStorage.getItem(LAST_SYNC_KEY);
     return saved ? new Date(saved) : null;
   });
   const channelRef = useRef<RealtimeChannel | null>(null);
@@ -83,7 +84,7 @@ export function useSettings() {
         } else {
           const now = new Date();
           setLastSyncedAt(now);
-          localStorage.setItem(LAST_SYNC_KEY, now.toISOString());
+          appStorage.setItem(LAST_SYNC_KEY, now.toISOString());
         }
       } catch (err) {
         logger.error('Error syncing settings', { error: err });
@@ -123,7 +124,7 @@ export function useSettings() {
           setSettings({ ...DEFAULT_SETTINGS, ...dbSettings });
         } else {
           // No settings in DB, sync local settings up
-          const localSettings = JSON.parse(localStorage.getItem(LOCAL_SETTINGS_KEY) || '{}');
+          const localSettings = JSON.parse(appStorage.getItem(LOCAL_SETTINGS_KEY) || '{}');
           if (Object.keys(localSettings).length > 0) {
             await syncToDatabase({ ...DEFAULT_SETTINGS, ...localSettings });
           }
@@ -184,7 +185,7 @@ export function useSettings() {
   // Always sync to localStorage for offline support
   useEffect(() => {
     try {
-      localStorage.setItem(LOCAL_SETTINGS_KEY, JSON.stringify(settings));
+      appStorage.setItem(LOCAL_SETTINGS_KEY, JSON.stringify(settings));
     } catch (error) {
       console.error('Failed to save settings:', error);
     }

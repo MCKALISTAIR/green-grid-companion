@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getHeroTextTone, HERO_INK, TIME_SKY_COLORS } from './sceneUtils';
+import { getHeroTextTone, HERO_CHIP, HERO_INK, TIME_SKY_COLORS } from './sceneUtils';
 import type { TimeOfDay } from '@/hooks/useTimeOfDay';
 
 type RGB = [number, number, number];
@@ -77,5 +77,22 @@ describe('hero text AA contrast against the actual sky', () => {
     expect(getHeroTextTone('sunset')).toBe('ink');
     expect(getHeroTextTone('night')).toBe('light');
     expect(getHeroTextTone('dusk')).toBe('light');
+  });
+});
+
+describe('hero location pill + trophy chip AA on every sky (light and dark mode)', () => {
+  // Chip colours are fixed hex, independent of theme, so one check covers both modes.
+  it.each(skies)('%s: text 4.5:1, icon 3:1, boundary 3:1', (_n, _t, _w, stops) => {
+    for (const fill of [HERO_CHIP.fill, HERO_CHIP.fillHover]) {
+      expect(ratio(hex(HERO_CHIP.text), hex(fill))).toBeGreaterThanOrEqual(4.5);
+      expect(ratio(hex(HERO_CHIP.icon), hex(fill))).toBeGreaterThanOrEqual(3);
+      // Ring is adjacent to the fill; whichever of fill/ring meets the sky identifies the chip.
+      expect(ratio(hex(HERO_CHIP.border), hex(fill))).toBeGreaterThanOrEqual(3);
+      for (const s of stops) {
+        const sky = parseHsl(s);
+        const edge = Math.max(ratio(hex(fill), sky), ratio(hex(HERO_CHIP.border), sky));
+        expect(edge).toBeGreaterThanOrEqual(3);
+      }
+    }
   });
 });

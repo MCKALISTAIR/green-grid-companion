@@ -142,7 +142,7 @@ export function IntensityHeroOverlay({
             onChange={setPostcode}
             trigger={
               <button
-                className="flex min-h-11 max-w-full items-center gap-2 text-white/90 text-sm font-semibold tracking-wide transition-all cursor-pointer bg-black/25 hover:bg-black/35 backdrop-blur-md px-4 py-2 rounded-full border border-white/15 hover:border-white/25 shadow-sm group"
+                className="hero-chip flex min-h-11 max-w-full items-center gap-2 text-sm font-semibold tracking-wide transition-all cursor-pointer px-4 py-2 rounded-full shadow-sm group"
                 title={region || undefined}
               >
                 <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
@@ -160,13 +160,13 @@ export function IntensityHeroOverlay({
         </div>
 
         <div className="absolute top-[calc(max(env(safe-area-inset-top),24px)+0.5rem)] right-4 z-30 lg:top-6 lg:right-6">
-          <Link to="/achievements">
-            <button
-              className="flex min-h-11 min-w-11 items-center justify-center text-white/90 transition-all cursor-pointer bg-black/25 hover:bg-black/35 active:scale-95 hover:scale-105 backdrop-blur-md rounded-full border border-white/15 hover:border-white/25 shadow-sm"
-              aria-label="Trophy Room"
-            >
-              <Trophy className="w-4 h-4 text-amber-300" />
-            </button>
+          {/* A single link (was <a><button>, a nested-interactive a11y failure). */}
+          <Link
+            to="/achievements"
+            className="hero-chip flex min-h-11 min-w-11 items-center justify-center transition-all cursor-pointer active:scale-95 hover:scale-105 rounded-full shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+            aria-label="Trophy Room"
+          >
+            <Trophy className="hero-chip-icon w-4 h-4" aria-hidden="true" />
           </Link>
         </div>
       </ComponentErrorBoundary>
@@ -219,10 +219,10 @@ export function IntensityHeroOverlay({
                   <Button
                     variant="ghost"
                     type="button"
-                    className="pointer-events-auto min-h-11 h-auto max-w-full gap-1.5 px-0 text-primary-foreground text-[13px] font-semibold tracking-wide hover:bg-transparent hover:text-primary-foreground transition-colors drop-shadow-[0_1px_8px_rgba(0,0,0,0.65)]"
+                    className="hero-chip pointer-events-auto min-h-11 h-auto max-w-full gap-1.5 px-3.5 rounded-full text-[13px] font-semibold tracking-wide transition-colors"
                     title={region || undefined}
                   >
-                    <MapPin className="w-3.5 h-3.5 opacity-90 flex-shrink-0" />
+                    <MapPin className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
                     <span className="truncate">
                       {isLoading ? 'Loading…' : region || 'Select location'}
                     </span>
@@ -284,57 +284,71 @@ export function IntensityHeroOverlay({
               {!isLoading && !isError && conditionLabel && (
                 <motion.div
                   key={conditionLabel}
-                  className="mt-1 flex items-center gap-1.5"
+                  className="mt-1 flex flex-col items-center"
                   data-testid="hero-band"
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                 >
-                  <p
-                    className={cn(
-                      // Intensity band labels — Plus Jakarta Sans bold (same face as HUD).
-                      'font-sans text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight',
-                      needsHardScrim
-                        ? 'drop-shadow-[0_3px_16px_rgba(0,0,0,0.75)]'
-                        : 'drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)]',
-                      tone === 'plain' ? 'capitalize' : '',
-                    )}
-                  >
-                    <TypewriterText text={conditionParts.band} />
-                    {conditionParts.quip && (
-                      <span className="block mt-0.5 sm:mt-1 text-sm sm:text-base md:text-lg font-semibold text-white/95 normal-case">
-                        {conditionParts.quip}
-                      </span>
-                    )}
-                  </p>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="pointer-events-auto min-h-11 min-w-11 h-11 w-11 rounded-full p-0 scene-hud-info"
-                        aria-label="What is carbon intensity?"
-                      >
-                        <Info className="w-3.5 h-3.5" aria-hidden="true" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[260px] p-3 text-xs bg-card border-border backdrop-blur-xl space-y-2">
-                      <p className="font-semibold">Carbon intensity</p>
-                      <p>{DEFINITIONS['Carbon Intensity']}</p>
-                      <p className="text-muted-foreground">{DEFINITIONS['gCO2/kWh']}</p>
-                      {index && tone !== 'plain' && (
-                        <p className="text-muted-foreground">
-                          Official band:{' '}
-                          <span className="font-semibold capitalize text-foreground">{index}</span>
-                        </p>
+                  {/* Label is centred on its own; the (i) hangs off its right edge on the
+                      label's centre line so it never pulls the label off-centre. */}
+                  <div className="relative inline-flex items-center">
+                    <p
+                      data-testid="hero-band-label"
+                      className={cn(
+                        // Intensity band labels — Plus Jakarta Sans bold (same face as HUD).
+                        'font-sans text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight',
+                        needsHardScrim
+                          ? 'drop-shadow-[0_3px_16px_rgba(0,0,0,0.75)]'
+                          : 'drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)]',
+                        tone === 'plain' ? 'capitalize' : '',
                       )}
-                      <p className="text-muted-foreground">
-                        This is NESO&apos;s forecast for your region for this half hour. It updates
-                        every <span className="font-semibold text-foreground">30 minutes</span>.
-                      </p>
-                      <CompactDataAttribution />
-                    </PopoverContent>
-                  </Popover>
+                    >
+                      <TypewriterText text={conditionParts.band} />
+                    </p>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="pointer-events-auto absolute left-full top-1/2 -translate-y-1/2 min-h-11 min-w-11 h-11 w-11 rounded-full p-0 scene-hud-info"
+                          aria-label="What is carbon intensity?"
+                        >
+                          <Info className="w-3.5 h-3.5" aria-hidden="true" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[260px] p-3 text-xs bg-card border-border backdrop-blur-xl space-y-2">
+                        <p className="font-semibold">Carbon intensity</p>
+                        <p>{DEFINITIONS['Carbon Intensity']}</p>
+                        <p className="text-muted-foreground">{DEFINITIONS['gCO2/kWh']}</p>
+                        {index && tone !== 'plain' && (
+                          <p className="text-muted-foreground">
+                            Official band:{' '}
+                            <span className="font-semibold capitalize text-foreground">
+                              {index}
+                            </span>
+                          </p>
+                        )}
+                        <p className="text-muted-foreground">
+                          This is NESO&apos;s forecast for your region for this half hour. It
+                          updates every{' '}
+                          <span className="font-semibold text-foreground">30 minutes</span>.
+                        </p>
+                        <CompactDataAttribution />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  {conditionParts.quip && (
+                    // Own element with normal tracking: inheriting the label's tight
+                    // tracking (computed in px from 24px) squeezed the word gaps, and Plus Jakarta
+                    // Sans' space is only ~2px at 14px, so open it by 0.1em.
+                    <p
+                      data-testid="hero-quip"
+                      className="mt-0.5 sm:mt-1 font-sans text-sm sm:text-base md:text-lg font-semibold tracking-normal [word-spacing:0.1em] text-white/95 drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)]"
+                    >
+                      {conditionParts.quip}
+                    </p>
+                  )}
                 </motion.div>
               )}
               {showZeroCarbonBadge && <ZeroCarbonBadge />}
