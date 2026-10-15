@@ -1,4 +1,5 @@
-import { format, parseISO, isBefore, differenceInMinutes } from 'date-fns';
+import { parseISO, isBefore, differenceInMinutes } from 'date-fns';
+import { formatLondonShortWeekday, formatLondonTime, londonDayLabel } from '@/lib/londonTime';
 import type { ForecastData } from '@/lib/carbonApi';
 import { getConditionParts, type ConditionTone } from '@/lib/conditionLabels';
 import type { NowOrWaitAction } from '@/lib/nowOrWait';
@@ -46,14 +47,11 @@ function resolveBand(item: ForecastData): string {
 function buildTimeLabel(fromIso: string, now: Date, isCurrent: boolean, isPast: boolean): string {
   if (isCurrent) return 'Now';
   const time = parseISO(fromIso);
-  const sameDay = time.toDateString() === now.toDateString();
-  const clock = format(time, 'HH:mm');
-  if (sameDay) return clock;
-  if (isPast) return format(time, 'EEE HH:mm');
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  if (time.toDateString() === tomorrow.toDateString()) return `Tomorrow ${clock}`;
-  return format(time, 'EEE HH:mm');
+  const clock = formatLondonTime(time);
+  const day = londonDayLabel(time, now);
+  if (day === '') return clock;
+  if (!isPast && day === 'tomorrow') return `Tomorrow ${clock}`;
+  return `${formatLondonShortWeekday(time)} ${clock}`;
 }
 
 function buildVsNow(selected: number, current: number, isCurrent: boolean): string {
