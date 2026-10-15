@@ -197,6 +197,21 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
         </div>
       </div>
 
+      {/* Persistent live region: the visual card remounts per hour, which screen readers
+          often skip. One structured sentence instead of run-together fragments. */}
+      <p className="sr-only" aria-live="polite" aria-atomic="true" data-testid="forecast-hour-live">
+        {insight
+          ? [
+              `${insight.timeLabel}: ${insight.value} grams of CO₂ per kilowatt hour, ${insight.condition}.`,
+              insight.vsNow ? `${insight.vsNow}.` : '',
+              insight.inBestWindow ? 'In the best window.' : '',
+              insight.action,
+            ]
+              .filter(Boolean)
+              .join(' ')
+          : ''}
+      </p>
+
       <AnimatePresence mode="wait">
         {insight && (
           <motion.div
@@ -206,7 +221,6 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
             className={cn('rounded-2xl border px-3.5 py-3 space-y-1', insight.washClass)}
-            aria-live="polite"
             data-testid="forecast-hour-insight"
           >
             <div className="flex items-baseline justify-between gap-3 flex-wrap">

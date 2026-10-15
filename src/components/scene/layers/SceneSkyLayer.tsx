@@ -106,7 +106,7 @@ export function SceneSkyLayer({
             <motion.div
               className="cursor-pointer relative select-none"
               role="button"
-              tabIndex={0}
+              tabIndex={-1}
               aria-label={`Toggle synthwave mode ${synthwaveMode ? 'off' : 'on'}. Double click for cool sunglasses.`}
               onClick={() => {
                 impactMedium();
