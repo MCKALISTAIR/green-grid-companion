@@ -1,50 +1,42 @@
 {
- "390 /": [
-  "More insights 358x40 hits=0011"
- ],
- "390 /planner": [],
- "390 /history": [],
- "390 /map": [],
- "390 /settings": [
-  "BUTTON 44x24 hits=0011",
-  "Privacy policy 90x18 hits=0011",
-  "Alistair McKay 79x15 hits=0011",
-  "Data sources & licences 135x16 hits=0011",
-  "Tap version number multiple times to unl 72x16 hits=0011"
- ],
- "390 /help": [],
- "390 /glossary": [],
- "390 /achievements": [],
- "390 /support": [
-  "support@getgridsense.com 188x18 hits=0011",
-  "Privacy policy 90x18 hits=0011",
-  "Terms of use 83x18 hits=0011"
- ],
- "390 /onboarding": [
-  "Terms 33x44 hits=1100"
- ],
- "320 /": [
-  "More insights 288x40 hits=0011"
- ],
- "320 /planner": [],
- "320 /history": [],
- "320 /map": [],
- "320 /settings": [
-  "BUTTON 44x24 hits=0011",
-  "Privacy policy 90x18 hits=0011",
-  "Alistair McKay 79x15 hits=0011",
-  "Data sources & licences 135x16 hits=0011",
-  "Tap version number multiple times to unl 72x16 hits=0011"
- ],
- "320 /help": [],
- "320 /glossary": [],
- "320 /achievements": [],
- "320 /support": [
-  "support@getgridsense.com 188x18 hits=0011",
-  "Privacy policy 90x18 hits=0011",
-  "Terms of use 83x18 hits=0011"
- ],
- "320 /onboarding": [
-  "Terms 33x44 hits=1100"
- ]
+  "390 /": ["More insights 358x40 hits=0011"],
+  "390 /planner": [],
+  "390 /history": [],
+  "390 /map": [],
+  "390 /settings": [
+    "BUTTON 44x24 hits=0011",
+    "Privacy policy 90x18 hits=0011",
+    "Alistair McKay 79x15 hits=0011",
+    "Data sources & licences 135x16 hits=0011",
+    "Tap version number multiple times to unl 72x16 hits=0011"
+  ],
+  "390 /help": [],
+  "390 /glossary": [],
+  "390 /achievements": [],
+  "390 /support": [
+    "support@getgridsense.com 188x18 hits=0011",
+    "Privacy policy 90x18 hits=0011",
+    "Terms of use 83x18 hits=0011"
+  ],
+  "390 /onboarding": ["Terms 33x44 hits=1100"],
+  "320 /": ["More insights 288x40 hits=0011"],
+  "320 /planner": [],
+  "320 /history": [],
+  "320 /map": [],
+  "320 /settings": [
+    "BUTTON 44x24 hits=0011",
+    "Privacy policy 90x18 hits=0011",
+    "Alistair McKay 79x15 hits=0011",
+    "Data sources & licences 135x16 hits=0011",
+    "Tap version number multiple times to unl 72x16 hits=0011"
+  ],
+  "320 /help": [],
+  "320 /glossary": [],
+  "320 /achievements": [],
+  "320 /support": [
+    "support@getgridsense.com 188x18 hits=0011",
+    "Privacy policy 90x18 hits=0011",
+    "Terms of use 83x18 hits=0011"
+  ],
+  "320 /onboarding": ["Terms 33x44 hits=1100"]
 }
