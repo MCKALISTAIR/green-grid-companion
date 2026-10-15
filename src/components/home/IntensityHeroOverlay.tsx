@@ -142,7 +142,7 @@ export function IntensityHeroOverlay({
             onChange={setPostcode}
             trigger={
               <button
-                className="flex min-h-11 max-w-full items-center gap-2 text-white/90 text-sm font-semibold tracking-wide transition-all cursor-pointer bg-black/25 hover:bg-black/35 backdrop-blur-md px-4 py-2 rounded-full border border-white/15 hover:border-white/25 shadow-sm group"
+                className="hero-chip flex min-h-11 max-w-full items-center gap-2 text-sm font-semibold tracking-wide transition-all cursor-pointer px-4 py-2 rounded-full shadow-sm group"
                 title={region || undefined}
               >
                 <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
@@ -162,10 +162,10 @@ export function IntensityHeroOverlay({
         <div className="absolute top-[calc(max(env(safe-area-inset-top),24px)+0.5rem)] right-4 z-30 lg:top-6 lg:right-6">
           <Link to="/achievements">
             <button
-              className="flex min-h-11 min-w-11 items-center justify-center text-white/90 transition-all cursor-pointer bg-black/25 hover:bg-black/35 active:scale-95 hover:scale-105 backdrop-blur-md rounded-full border border-white/15 hover:border-white/25 shadow-sm"
+              className="hero-chip flex min-h-11 min-w-11 items-center justify-center transition-all cursor-pointer active:scale-95 hover:scale-105 rounded-full shadow-sm"
               aria-label="Trophy Room"
             >
-              <Trophy className="w-4 h-4 text-amber-300" />
+              <Trophy className="hero-chip-icon w-4 h-4" aria-hidden="true" />
             </button>
           </Link>
         </div>
@@ -219,10 +219,10 @@ export function IntensityHeroOverlay({
                   <Button
                     variant="ghost"
                     type="button"
-                    className="pointer-events-auto min-h-11 h-auto max-w-full gap-1.5 px-0 text-primary-foreground text-[13px] font-semibold tracking-wide hover:bg-transparent hover:text-primary-foreground transition-colors drop-shadow-[0_1px_8px_rgba(0,0,0,0.65)]"
+                    className="hero-chip pointer-events-auto min-h-11 h-auto max-w-full gap-1.5 px-3.5 rounded-full text-[13px] font-semibold tracking-wide transition-colors"
                     title={region || undefined}
                   >
-                    <MapPin className="w-3.5 h-3.5 opacity-90 flex-shrink-0" />
+                    <MapPin className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
                     <span className="truncate">
                       {isLoading ? 'Loading…' : region || 'Select location'}
                     </span>
