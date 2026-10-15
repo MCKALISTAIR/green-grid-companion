@@ -256,7 +256,11 @@ export default function PrivacyPolicy() {
           </p>
           <p>
             If you have any questions about this policy, your data, or wish to exercise your rights,
-            please feel free to reach out.
+            please email{' '}
+            <a href="mailto:support@getgridsense.com" className="underline">
+              support@getgridsense.com
+            </a>
+            .
           </p>
         </div>
       </div>

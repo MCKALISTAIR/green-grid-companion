@@ -4,7 +4,7 @@ GridSense shows how clean Great Britain's electricity is right now and when it w
 
 ## Get help
 
-Email **support@gridsense.app** and we'll reply as soon as we can. Please tell us your device and what you were doing when the problem happened.
+Email [support@getgridsense.com](mailto:support@getgridsense.com) and we'll reply as soon as we can. Please tell us your device and what you were doing when the problem happened.
 
 ## Common questions
 
