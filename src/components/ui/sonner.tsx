@@ -1,14 +1,16 @@
-import { useTheme } from 'next-themes';
+import { useTheme } from '@/components/ThemeProvider';
 import { Toaster as Sonner, toast } from 'sonner';
 
 type ToasterProps = React.ComponentProps<typeof Sonner>;
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = 'system' } = useTheme();
+  // Use our ThemeProvider (not next-themes) so toasts follow OS-forced appearance
+  // when preference is "system", and don't fight an explicit light/dark choice.
+  const { resolvedTheme } = useTheme();
 
   return (
     <Sonner
-      theme={theme as ToasterProps['theme']}
+      theme={resolvedTheme}
       className="toaster group"
       offset={`calc(max(env(safe-area-inset-top), 59px) + 16px)`}
       toastOptions={{
@@ -16,8 +18,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
           toast:
             'group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg',
           description: 'group-[.toast]:text-muted-foreground',
-          actionButton: 'group-[.toast]:bg-primary group-[.toast]:text-primary-foreground',
-          cancelButton: 'group-[.toast]:bg-muted group-[.toast]:text-muted-foreground',
+          actionButton: 'group-[.toaster]:bg-primary group-[.toaster]:text-primary-foreground',
+          cancelButton: 'group-[.toaster]:bg-muted group-[.toaster]:text-muted-foreground',
         },
       }}
       {...props}

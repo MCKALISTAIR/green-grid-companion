@@ -300,7 +300,8 @@ export function IntensityScene({
         filter: sceneConfig.sceneFilter,
       }}
       transition={{ duration: 2, ease: 'easeInOut' as const }}
-      role="img"
+      // region (not img): scene contains focusable hotspots — role="img" forbids that
+      role="region"
       aria-label={`Animated landscape representing ${index} carbon intensity`}
     >
       {isVintage && (

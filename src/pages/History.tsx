@@ -121,8 +121,7 @@ export default function HistoryPage() {
   const displayData = date ? historicalData : historyQuery.data || [];
   const isLoading = date ? isHistoricalLoading : historyQuery.isLoading;
   // Only the first paint (or a true empty fetch) may swap to skeletons — not range toggles.
-  const showHistorySkeleton =
-    isRegionLoading || (isLoading && (displayData?.length ?? 0) === 0);
+  const showHistorySkeleton = isRegionLoading || (isLoading && (displayData?.length ?? 0) === 0);
   const isRangeRefreshing = !date && historyQuery.isFetching && historyQuery.isPlaceholderData;
   const isError = date ? isHistoricalError : historyQuery.isError;
   const error = date ? null : historyQuery.error; // Historical hook handles its own error retrieval if needed
@@ -287,8 +286,9 @@ export default function HistoryPage() {
                     size="icon"
                     onClick={() => setDate(undefined)}
                     title="Return to Present"
+                    aria-label="Return to present"
                   >
-                    <RotateCcw className="h-4 w-4" />
+                    <RotateCcw className="h-4 w-4" aria-hidden="true" />
                   </Button>
                 )}
               </div>

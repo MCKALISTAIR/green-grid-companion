@@ -50,7 +50,7 @@ export default function Settings() {
   const { replayTour } = useProductTour();
   const { postcode } = useAppLocation();
   const {
-    lastUpdated: gridLastUpdated,
+    lastCheckedAt: gridLastCheckedAt,
     refetch: refetchGrid,
     isBackgroundFetching: isGridFetching,
   } = useCarbonData(postcode);
@@ -142,7 +142,7 @@ export default function Settings() {
         <SettingsSupportSection />
 
         <SettingsDataSyncSection
-          gridLastUpdated={gridLastUpdated}
+          gridLastCheckedAt={gridLastCheckedAt}
           refetchGrid={refetchGrid}
           isGridFetching={isGridFetching}
           isOffline={isOffline}

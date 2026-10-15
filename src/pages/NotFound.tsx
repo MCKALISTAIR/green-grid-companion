@@ -31,7 +31,7 @@ const NotFound = () => {
 
   return (
     <div className="page-shell page-shell--fit flex items-center justify-center px-6 py-16">
-      <div className="text-center space-y-6 max-w-md">
+      <div className="text-center space-y-6 max-w-md animate-page-enter">
         <div className="space-y-2">
           <h1 className="text-6xl font-bold text-primary">404</h1>
           <h2 className="text-2xl font-semibold text-foreground">Page Not Found</h2>

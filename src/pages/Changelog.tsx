@@ -234,8 +234,8 @@ export default function Changelog() {
         {/* Header */}
         <div className="flex items-center gap-3">
           <Link to="/settings">
-            <Button variant="ghost" size="icon" className="shrink-0">
-              <ChevronLeft className="w-5 h-5" />
+            <Button variant="ghost" size="icon" className="shrink-0" aria-label="Back to settings">
+              <ChevronLeft className="w-5 h-5" aria-hidden="true" />
             </Button>
           </Link>
           <div>

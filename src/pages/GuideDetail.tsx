@@ -15,7 +15,7 @@ export default function GuideDetail() {
 
   return (
     <div className="page-shell page-shell--fit">
-      <div className="page-shell-inner space-y-6 max-w-2xl mx-auto">
+      <div className="page-shell-inner space-y-6 max-w-2xl mx-auto animate-page-enter">
         <Button variant="ghost" onClick={() => navigate(-1)} className="-ml-4">
           <ChevronLeft className="w-4 h-4 mr-1" /> Back
         </Button>

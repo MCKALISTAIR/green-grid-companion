@@ -26,12 +26,8 @@ const CLS_INIT = () => {
           sources: (e.sources || []).map((s) => ({
             tag: s.node?.nodeName || null,
             cls: s.node?.className?.toString?.()?.slice?.(0, 80) || null,
-            prev: s.previousRect
-              ? { y: s.previousRect.y, h: s.previousRect.height }
-              : null,
-            cur: s.currentRect
-              ? { y: s.currentRect.y, h: s.currentRect.height }
-              : null,
+            prev: s.previousRect ? { y: s.previousRect.y, h: s.previousRect.height } : null,
+            cur: s.currentRect ? { y: s.currentRect.y, h: s.currentRect.height } : null,
           })),
         });
       }
@@ -66,7 +62,9 @@ async function geometry(page) {
     const scene = document.querySelector('.home-scene');
     const gauge = document.querySelector('.home-scene-gauge');
     const feed = document.querySelector('.home-feed');
-    const tabs = document.querySelector('[data-testid="dashboard-view-tabs"], .dashboard-view-tabs, [role="tablist"]');
+    const tabs = document.querySelector(
+      '[data-testid="dashboard-view-tabs"], .dashboard-view-tabs, [role="tablist"]',
+    );
     const sr = scene?.getBoundingClientRect();
     const gr = gauge?.getBoundingClientRect();
     const fr = feed?.getBoundingClientRect();
@@ -75,7 +73,9 @@ async function geometry(page) {
       sceneH: sr ? Math.round(sr.height) : null,
       sceneTop: sr ? Math.round(sr.top) : null,
       gaugeH: gr ? Math.round(gr.height) : null,
-      gaugeVisible: gauge ? getComputedStyle(gauge).visibility !== 'hidden' && getComputedStyle(gauge).opacity !== '0' : false,
+      gaugeVisible: gauge
+        ? getComputedStyle(gauge).visibility !== 'hidden' && getComputedStyle(gauge).opacity !== '0'
+        : false,
       gaugeInDom: !!gauge,
       feedTop: fr ? Math.round(fr.top) : null,
       feedH: fr ? Math.round(fr.height) : null,
@@ -124,7 +124,10 @@ async function openHome(browser, viewport) {
   await dismissOverlays(page);
   await page
     .waitForFunction(
-      () => /gCO₂|Very Low|Very High/.test(document.querySelector('.home-scene-gauge')?.textContent || ''),
+      () =>
+        /gCO₂|Very Low|Very High/.test(
+          document.querySelector('.home-scene-gauge')?.textContent || '',
+        ),
       null,
       { timeout: 20000 },
     )
@@ -174,7 +177,8 @@ async function measureViewToggle(page) {
       feedTop_intensity_to_demand: (demand.feedTop ?? 0) - (intensity.feedTop ?? 0),
       sceneH_demand_to_intensity: (back.sceneH ?? 0) - (demand.sceneH ?? 0),
       feedTop_demand_to_intensity: (back.feedTop ?? 0) - (demand.feedTop ?? 0),
-      feedTop_intensity_to_footprint: (footprint.feedTop ?? 0) - (intensity.sceneH ? intensity.feedTop : 0),
+      feedTop_intensity_to_footprint:
+        (footprint.feedTop ?? 0) - (intensity.sceneH ? intensity.feedTop : 0),
     },
     cls: {
       toDemand: afterDemandCls,
@@ -209,8 +213,12 @@ async function measureHistoryToggle(page) {
   await resetCls(page);
 
   const before = await page.evaluate(() => {
-    const chart = document.querySelector('.recharts-responsive-container, [data-testid="history-chart"], canvas, svg.recharts-surface');
-    const title = Array.from(document.querySelectorAll('h1,h2,h3')).find((el) => /day|hour|view|history/i.test(el.textContent || ''));
+    const chart = document.querySelector(
+      '.recharts-responsive-container, [data-testid="history-chart"], canvas, svg.recharts-surface',
+    );
+    const title = Array.from(document.querySelectorAll('h1,h2,h3')).find((el) =>
+      /day|hour|view|history/i.test(el.textContent || ''),
+    );
     return {
       chartH: chart ? Math.round(chart.getBoundingClientRect().height) : null,
       chartTop: chart ? Math.round(chart.getBoundingClientRect().top) : null,

@@ -119,8 +119,8 @@ vi.mock('framer-motion', async () => {
 describe('IntensityScene', () => {
   it('renders correctly', () => {
     render(<IntensityScene intensity={100} index="moderate" />);
-    // Check if the main container exists (it has role="img")
-    expect(screen.getByRole('img')).toBeInTheDocument();
+    // Scene is a region (hotspots are focusable; role="img" forbids that)
+    expect(screen.getByRole('region')).toBeInTheDocument();
   });
 
   it('renders wind turbines when clean', () => {
@@ -134,6 +134,6 @@ describe('IntensityScene', () => {
 
   it('renders vintage snapshot without crashing', () => {
     render(<IntensityScene intensity={120} index="moderate" isVintage />);
-    expect(screen.getByRole('img')).toBeInTheDocument();
+    expect(screen.getByRole('region')).toBeInTheDocument();
   });
 });

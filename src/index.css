@@ -7,7 +7,10 @@
 /* GridSense — Plus Jakarta Sans craft type (see docs/TYPOGRAPHY.md) */
 
 @layer base {
+  /* Lock native form controls / scrollbars to the app theme so an OS-forced
+     appearance can't paint dark widgets on a light GridSense chrome (or vice versa). */
   :root {
+    color-scheme: light;
     /* Soft sky-paper surfaces — calm, not clinical */
     --background: 198 42% 96%;
     --foreground: 210 28% 14%;
@@ -119,6 +122,7 @@
   }
 
   .dark {
+    color-scheme: dark;
     --background: 220 25% 10%;
     --foreground: 0 0% 95%;
 
@@ -794,7 +798,15 @@ blockquote {
 }
 
 .animate-page-enter {
-  animation: page-enter 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: page-enter 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-page-enter {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* Shared secondary-page chrome (art direction: one product feel) */

@@ -18,7 +18,8 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ensureAuthSession } from '@/lib/auth-utils';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
+import { stateTransition } from '@/lib/motion';
 
 interface ChargingSession {
   id: string;
@@ -115,8 +116,9 @@ function ChargingHistory() {
           size="icon"
           onClick={() => navigate(-1)}
           className="hover:scale-105 transition-transform duration-200"
+          aria-label="Go back"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="w-5 h-5" aria-hidden="true" />
         </Button>
         <div>
           <h1 className="text-xl font-bold">Charging History</h1>
@@ -124,187 +126,199 @@ function ChargingHistory() {
         </div>
       </motion.div>
 
-      {/* Summary Cards */}
-      {!isLoading && totalSessions > 0 && (
-        <motion.div variants={itemVariants} className="grid grid-cols-3 gap-3 mb-4">
+      <AnimatePresence mode="wait" initial={false}>
+        {isLoading ? (
           <motion.div
-            whileHover={{ y: -2, scale: 1.02 }}
-            transition={{ type: 'spring' as const, stiffness: 450, damping: 22 }}
+            key="loading"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={stateTransition}
+            className="space-y-3"
           >
-            <Card className="p-3 text-center h-full">
-              <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
-                <BatteryCharging className="w-4 h-4" />
-                <span className="text-xs">Sessions</span>
-              </div>
-              <span className="text-2xl font-bold">{totalSessions}</span>
-            </Card>
-          </motion.div>
-          <motion.div
-            whileHover={{ y: -2, scale: 1.02 }}
-            transition={{ type: 'spring' as const, stiffness: 450, damping: 22 }}
-          >
-            <Card className="p-3 text-center h-full">
-              <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
-                <TrendingUp className="w-4 h-4" />
-                <span className="text-xs">Energy</span>
-              </div>
-              <span className="text-2xl font-bold">{totalEnergy.toFixed(1)}</span>
-              <span className="text-xs text-muted-foreground ml-1">kWh</span>
-            </Card>
-          </motion.div>
-          <motion.div
-            whileHover={{ y: -2, scale: 1.02 }}
-            transition={{ type: 'spring' as const, stiffness: 450, damping: 22 }}
-          >
-            <Card className="p-3 text-center h-full">
-              <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
-                <Leaf className="w-4 h-4 text-primary" />
-                <span className="text-xs">CO₂ Saved</span>
-              </div>
-              <span className="text-2xl font-bold text-primary">
-                {totalCarbonSavedKg >= 1
-                  ? totalCarbonSavedKg.toFixed(1)
-                  : Math.round(totalCarbonSavedG)}
-              </span>
-              <span className="text-xs text-muted-foreground ml-1">
-                {totalCarbonSavedKg >= 1 ? 'kg' : 'g'}
-              </span>
-            </Card>
-          </motion.div>
-        </motion.div>
-      )}
-
-      {/* Loading State */}
-      {isLoading && (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <Card
-              key={i}
-              className="p-4 bg-card border border-border shadow-sm flex items-center justify-between"
-            >
-              <div className="space-y-2 flex-1">
-                <div className="flex items-center gap-2">
-                  <Skeleton className="w-4 h-4 rounded-full animate-shimmer" />
-                  <Skeleton className="h-4 w-24 animate-shimmer" />
+            {[1, 2, 3].map((i) => (
+              <Card
+                key={i}
+                className="p-4 bg-card border border-border shadow-sm flex items-center justify-between"
+              >
+                <div className="space-y-2 flex-1">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="w-4 h-4 rounded-full animate-shimmer" />
+                    <Skeleton className="h-4 w-24 animate-shimmer" />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-3 w-16 animate-shimmer" />
+                    <Skeleton className="h-3 w-12 animate-shimmer" />
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Skeleton className="h-3 w-16 animate-shimmer" />
-                  <Skeleton className="h-3 w-12 animate-shimmer" />
+                <div className="text-right space-y-2">
+                  <Skeleton className="h-5 w-16 ml-auto animate-shimmer" />
+                  <Skeleton className="h-3.5 w-12 ml-auto rounded-full animate-shimmer" />
                 </div>
-              </div>
-              <div className="text-right space-y-2">
-                <Skeleton className="h-5 w-16 ml-auto animate-shimmer" />
-                <Skeleton className="h-3.5 w-12 ml-auto rounded-full animate-shimmer" />
-              </div>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {/* Empty State */}
-      {!isLoading && totalSessions === 0 && (
-        <motion.div variants={itemVariants}>
-          <EmptyState
-            icon={BatteryCharging}
-            title="No charging sessions yet"
-            description="Once Octopus schedules and completes smart charging sessions, they'll appear here."
-          />
-        </motion.div>
-      )}
-
-      {/* Grouped Session List */}
-      {!isLoading &&
-        Object.entries(groupedSessions).map(([dateKey, daySessions]) => (
-          <motion.div key={dateKey} variants={itemVariants} className="mb-5">
-            <div className="flex items-center gap-2 mb-2">
-              <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                {formatDateLabel(dateKey)}
-              </span>
+              </Card>
+            ))}
+          </motion.div>
+        ) : totalSessions === 0 ? (
+          <motion.div
+            key="empty"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={stateTransition}
+          >
+            <EmptyState
+              icon={BatteryCharging}
+              title="No charging sessions yet"
+              description="Once Octopus schedules and completes smart charging sessions, they'll appear here."
+            />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="content"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={stateTransition}
+          >
+            {/* Summary Cards */}
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              <motion.div
+                whileHover={{ y: -2, scale: 1.02 }}
+                transition={{ type: 'spring' as const, stiffness: 450, damping: 22 }}
+              >
+                <Card className="p-3 text-center h-full">
+                  <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
+                    <BatteryCharging className="w-4 h-4" />
+                    <span className="text-xs">Sessions</span>
+                  </div>
+                  <span className="text-2xl font-bold">{totalSessions}</span>
+                </Card>
+              </motion.div>
+              <motion.div
+                whileHover={{ y: -2, scale: 1.02 }}
+                transition={{ type: 'spring' as const, stiffness: 450, damping: 22 }}
+              >
+                <Card className="p-3 text-center h-full">
+                  <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
+                    <TrendingUp className="w-4 h-4" />
+                    <span className="text-xs">Energy</span>
+                  </div>
+                  <span className="text-2xl font-bold">{totalEnergy.toFixed(1)}</span>
+                  <span className="text-xs text-muted-foreground ml-1">kWh</span>
+                </Card>
+              </motion.div>
+              <motion.div
+                whileHover={{ y: -2, scale: 1.02 }}
+                transition={{ type: 'spring' as const, stiffness: 450, damping: 22 }}
+              >
+                <Card className="p-3 text-center h-full">
+                  <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
+                    <Leaf className="w-4 h-4 text-primary" />
+                    <span className="text-xs">CO₂ Saved</span>
+                  </div>
+                  <span className="text-2xl font-bold text-primary">
+                    {totalCarbonSavedKg >= 1
+                      ? totalCarbonSavedKg.toFixed(1)
+                      : Math.round(totalCarbonSavedG)}
+                  </span>
+                  <span className="text-xs text-muted-foreground ml-1">
+                    {totalCarbonSavedKg >= 1 ? 'kg' : 'g'}
+                  </span>
+                </Card>
+              </motion.div>
             </div>
-            <div className="space-y-2">
-              {daySessions.map((session) => {
-                const duration = differenceInMinutes(
-                  new Date(session.end_time),
-                  new Date(session.start_time),
-                );
-                const hours = Math.floor(duration / 60);
-                const mins = duration % 60;
-                const durationStr = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
 
-                return (
-                  <motion.div
-                    key={session.id}
-                    whileHover={{ y: -1, scale: 1.01 }}
-                    transition={{ type: 'spring' as const, stiffness: 450, damping: 22 }}
-                  >
-                    <Card className="p-3 shadow-sm hover:shadow-md transition-shadow duration-300">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-start gap-3">
-                          <div className="mt-0.5 p-1.5 rounded-full bg-primary/10">
-                            <Zap className="w-4 h-4 text-primary" />
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-sm">
-                                {formatTime(session.start_time)} – {formatTime(session.end_time)}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                                <Clock className="w-3 h-3" />
-                                {durationStr}
-                              </span>
-                              {session.source && (
-                                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                                  {session.source}
-                                </Badge>
-                              )}
-                            </div>
-                            {session.carbon_saved_g != null && session.carbon_saved_g > 0 && (
-                              <div className="flex items-center gap-1 mt-1">
-                                <Leaf className="w-3 h-3 text-primary" />
-                                <span className="text-xs text-primary font-medium">
-                                  {session.carbon_saved_g >= 1000
-                                    ? `${(session.carbon_saved_g / 1000).toFixed(1)} kg CO₂ saved`
-                                    : `${Math.round(session.carbon_saved_g)} g CO₂ saved`}
-                                </span>
-                                {session.avg_intensity_gco2 != null && (
-                                  <span className="text-[10px] text-muted-foreground">
-                                    ({session.avg_intensity_gco2} gCO₂/kWh)
+            {/* Grouped Session List */}
+            {Object.entries(groupedSessions).map(([dateKey, daySessions]) => (
+              <motion.div key={dateKey} variants={itemVariants} className="mb-5">
+                <div className="flex items-center gap-2 mb-2">
+                  <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    {formatDateLabel(dateKey)}
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {daySessions.map((session) => {
+                    const duration = differenceInMinutes(
+                      new Date(session.end_time),
+                      new Date(session.start_time),
+                    );
+                    const hours = Math.floor(duration / 60);
+                    const mins = duration % 60;
+                    const durationStr = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+
+                    return (
+                      <motion.div
+                        key={session.id}
+                        whileHover={{ y: -1, scale: 1.01 }}
+                        transition={{ type: 'spring' as const, stiffness: 450, damping: 22 }}
+                      >
+                        <Card className="p-3 shadow-sm hover:shadow-md transition-shadow duration-300">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-start gap-3">
+                              <div className="mt-0.5 p-1.5 rounded-full bg-primary/10">
+                                <Zap className="w-4 h-4 text-primary" />
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium text-sm">
+                                    {formatTime(session.start_time)} –{' '}
+                                    {formatTime(session.end_time)}
                                   </span>
+                                </div>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                    <Clock className="w-3 h-3" />
+                                    {durationStr}
+                                  </span>
+                                  {session.source && (
+                                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                                      {session.source}
+                                    </Badge>
+                                  )}
+                                </div>
+                                {session.carbon_saved_g != null && session.carbon_saved_g > 0 && (
+                                  <div className="flex items-center gap-1 mt-1">
+                                    <Leaf className="w-3 h-3 text-primary" />
+                                    <span className="text-xs text-primary font-medium">
+                                      {session.carbon_saved_g >= 1000
+                                        ? `${(session.carbon_saved_g / 1000).toFixed(1)} kg CO₂ saved`
+                                        : `${Math.round(session.carbon_saved_g)} g CO₂ saved`}
+                                    </span>
+                                    {session.avg_intensity_gco2 != null && (
+                                      <span className="text-[10px] text-muted-foreground">
+                                        ({session.avg_intensity_gco2} gCO₂/kWh)
+                                      </span>
+                                    )}
+                                  </div>
                                 )}
                               </div>
-                            )}
+                            </div>
+                            <div className="text-right flex items-center gap-2">
+                              {session.charge_kwh != null && session.charge_kwh > 0 ? (
+                                <span className="font-semibold text-sm">
+                                  {session.charge_kwh.toFixed(1)} kWh
+                                </span>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">—</span>
+                              )}
+                              <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+                            </div>
                           </div>
-                        </div>
-                        <div className="text-right flex items-center gap-2">
-                          {session.charge_kwh != null && session.charge_kwh > 0 ? (
-                            <span className="font-semibold text-sm">
-                              {session.charge_kwh.toFixed(1)} kWh
-                            </span>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">—</span>
-                          )}
-                          <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
-                        </div>
-                      </div>
-                    </Card>
-                  </motion.div>
-                );
-              })}
+                        </Card>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            ))}
+
+            <div className="text-center text-xs text-muted-foreground mt-4">
+              Showing last {totalSessions} sessions
             </div>
           </motion.div>
-        ))}
-
-      {!isLoading && totalSessions > 0 && (
-        <motion.div
-          variants={itemVariants}
-          className="text-center text-xs text-muted-foreground mt-4"
-        >
-          Showing last {totalSessions} sessions
-        </motion.div>
-      )}
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

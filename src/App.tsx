@@ -6,7 +6,7 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useCapacitor } from '@/hooks/useCapacitor';
-import { useEffect, Suspense, lazy, useState } from 'react';
+import { useEffect, lazy, useState } from 'react';
 import { App as CapacitorApp } from '@capacitor/app';
 import { registerServiceWorker } from '@/hooks/useOffline';
 import { OfflineIndicator } from '@/components/OfflineIndicator';
@@ -55,8 +55,6 @@ const DesignSystemPage = DEV_ROUTES_ENABLED ? lazy(() => import('./pages/DesignS
 const ChargingHistory = lazy(() => import('./pages/ChargingHistory'));
 const AchievementsPage = lazy(() => import('./pages/Achievements'));
 import AuthCallback from './pages/AuthCallback';
-
-import { PageLoader } from '@/components/ui/PageLoader';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -160,20 +158,14 @@ function AppContent() {
             <Route path="/guides/:id" element={<GuideDetail />} />
             <Route path="/charging-history" element={<ChargingHistory />} />
             <Route path="/achievements" element={<AchievementsPage />} />
+            {/* Under AppLayout so exit→home rides AnimatedOutlet (chrome hidden in AppLayout). */}
+            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             {TurbineTest && <Route path="/__turbine-test" element={<TurbineTest />} />}
             {SceneTestPage && <Route path="/__scene-test" element={<SceneTestPage />} />}
             {DesignSystemPage && <Route path="/__design-system" element={<DesignSystemPage />} />}
             <Route path="*" element={<NotFound />} />
           </Route>
-          <Route
-            path="/onboarding"
-            element={
-              <Suspense fallback={<PageLoader fullscreen={false} />}>
-                <Onboarding />
-              </Suspense>
-            }
-          />
-          <Route path="/auth/callback" element={<AuthCallback />} />
         </Routes>
         <CookieConsent />
       </BrowserRouter>

@@ -633,15 +633,15 @@ function HandoverNotes() {
 }
 
 export default function DesignSystemPage() {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   // Bump on theme change so memoised swatches re-read computed styles.
   const [version, setVersion] = useState(0);
   useEffect(() => {
     const t = setTimeout(() => setVersion((v) => v + 1), 0);
     return () => clearTimeout(t);
-  }, [theme]);
+  }, [resolvedTheme]);
 
-  const isDark = theme === 'dark';
+  const isDark = resolvedTheme === 'dark';
 
   return (
     <div className="container mx-auto max-w-6xl space-y-10 px-4 py-8">

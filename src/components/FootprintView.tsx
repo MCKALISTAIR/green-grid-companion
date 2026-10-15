@@ -52,8 +52,7 @@ import {
 import { format, parseISO, startOfDay, getHours } from 'date-fns';
 import { ComponentErrorBoundary } from '@/components/ComponentErrorBoundary';
 import { EstimateDisclaimer } from '@/components/attribution/EstimateDisclaimer';
-import { GreenScoreExplainerContent } from '@/components/GreenScoreExplainer';
-import { getGreenScoreRating } from '@/lib/greenScore';
+import { GreenScoreExplainerContent, getGreenScoreRating } from '@/components/GreenScoreExplainer';
 
 const INTENSITY_COLORS: Record<string, string> = {
   'very low': 'hsl(var(--intensity-very-low))',
@@ -95,6 +94,7 @@ export function FootprintView() {
   const {
     footprint,
     isLoading,
+    statusLoading,
     isLinked,
     status,
     isSyncing,
@@ -383,9 +383,25 @@ export function FootprintView() {
       }));
   }, [footprint]);
 
+  // Wait for Octopus status before painting the unlinked CTA (avoids mid-load flash).
+  if (statusLoading && !isLinked) {
+    return (
+      <div className="space-y-4 min-h-[50vh] animate-in fade-in duration-200">
+        <Card className="p-6 animate-pulse bg-card">
+          <div className="h-4 bg-muted rounded w-1/3 mb-4"></div>
+          <div className="h-40 bg-muted rounded"></div>
+        </Card>
+        <Card className="p-6 animate-pulse bg-card">
+          <div className="h-4 bg-muted rounded w-1/4 mb-3"></div>
+          <div className="h-32 bg-muted rounded"></div>
+        </Card>
+      </div>
+    );
+  }
+
   if (!isLinked) {
     return (
-      <div className="space-y-6 pt-2 max-w-2xl mx-auto">
+      <div className="space-y-6 pt-2 max-w-2xl mx-auto animate-in fade-in duration-200">
         <Card className="p-6 space-y-4 border-primary/20 bg-primary/5">
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -502,7 +518,7 @@ export function FootprintView() {
 
   if (isLoading) {
     return (
-      <div className="space-y-4 min-h-[50vh]">
+      <div className="space-y-4 min-h-[50vh] animate-in fade-in duration-200">
         <Card className="p-6 animate-pulse bg-card">
           <div className="h-4 bg-muted rounded w-1/3 mb-4"></div>
           <div className="h-40 bg-muted rounded"></div>
@@ -517,7 +533,7 @@ export function FootprintView() {
 
   if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4 p-6 text-center">
+      <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4 p-6 text-center animate-in fade-in duration-200">
         <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mb-2">
           <AlertCircle className="w-8 h-8 text-destructive" />
         </div>
@@ -537,7 +553,7 @@ export function FootprintView() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 animate-in fade-in duration-200">
       {/* Time Range Selector & Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

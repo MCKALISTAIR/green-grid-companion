@@ -28,7 +28,11 @@ export default function AchievementsPage() {
               <span className="text-xl text-muted-foreground font-semibold">/ {totalCount}</span>
             </div>
             <div className="text-sm font-medium text-muted-foreground">Achievements unlocked</div>
-            <Progress value={progressPercent} className="h-2 mt-4 max-w-xs mx-auto" />
+            <Progress
+              value={progressPercent}
+              className="h-2 mt-4 max-w-xs mx-auto"
+              aria-label={`${unlockedCount} of ${totalCount} achievements unlocked`}
+            />
           </CardContent>
         </Card>
 
