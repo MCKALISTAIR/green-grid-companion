@@ -1,4 +1,3 @@
-// @ts-expect-error: Suppress Deno namespace error
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // Hack to make VS Code happy with Deno globals in a Node workspace
