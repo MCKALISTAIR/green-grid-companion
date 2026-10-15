@@ -11,21 +11,21 @@
  * Override the base URL with `BASE_URL=https://example.com bun scripts/a11y-audit.ts`
  * to skip the local preview spawn (useful for auditing the deployed site).
  */
-import { chromium, type Browser } from "playwright";
-import AxeBuilder from "@axe-core/playwright";
-import { spawn, type ChildProcess } from "node:child_process";
-import { mkdirSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { chromium, type Browser } from 'playwright';
+import AxeBuilder from '@axe-core/playwright';
+import { spawn, type ChildProcess } from 'node:child_process';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 const ROUTES: Array<{ path: string; label: string }> = [
-  { path: "/", label: "Home (anonymous)" },
-  { path: "/onboarding", label: "Onboarding" },
-  { path: "/history", label: "History" },
-  { path: "/planner", label: "Planner" },
-  { path: "/settings", label: "Settings" },
-  { path: "/help", label: "Help" },
-  { path: "/glossary", label: "Glossary" },
-  { path: "/__design-system", label: "Design system" },
+  { path: '/', label: 'Home (anonymous)' },
+  { path: '/onboarding', label: 'Onboarding' },
+  { path: '/history', label: 'History' },
+  { path: '/planner', label: 'Planner' },
+  { path: '/settings', label: 'Settings' },
+  { path: '/help', label: 'Help' },
+  { path: '/glossary', label: 'Glossary' },
+  { path: '/__design-system', label: 'Design system' },
 ];
 
 const PREVIEW_PORT = 4173;
@@ -45,13 +45,13 @@ async function waitForServer(url: string, timeoutMs = 30_000) {
 }
 
 function startPreview(): ChildProcess {
-  const runner = process.versions.bun ? "bunx" : "npx";
-  const proc = spawn(runner, ["vite", "preview", "--port", String(PREVIEW_PORT), "--strictPort"], {
-    stdio: ["ignore", "pipe", "pipe"],
+  const runner = process.versions.bun ? 'bunx' : 'npx';
+  const proc = spawn(runner, ['vite', 'preview', '--port', String(PREVIEW_PORT), '--strictPort'], {
+    stdio: ['ignore', 'pipe', 'pipe'],
     env: process.env,
   });
-  proc.stdout?.on("data", (d) => process.stdout.write(`[preview] ${d}`));
-  proc.stderr?.on("data", (d) => process.stderr.write(`[preview] ${d}`));
+  proc.stdout?.on('data', (d) => process.stdout.write(`[preview] ${d}`));
+  proc.stderr?.on('data', (d) => process.stderr.write(`[preview] ${d}`));
   return proc;
 }
 
@@ -71,13 +71,17 @@ interface RouteResult {
   error?: string;
 }
 
-async function auditRoute(browser: Browser, baseUrl: string, route: { path: string; label: string }): Promise<RouteResult> {
+async function auditRoute(
+  browser: Browser,
+  baseUrl: string,
+  route: { path: string; label: string },
+): Promise<RouteResult> {
   const url = new URL(route.path, baseUrl).toString();
   const page = await browser.newPage();
   try {
-    await page.goto(url, { waitUntil: "networkidle", timeout: 30_000 });
+    await page.goto(url, { waitUntil: 'networkidle', timeout: 30_000 });
     const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
       .analyze();
     return {
       path: route.path,
@@ -109,16 +113,19 @@ async function auditRoute(browser: Browser, baseUrl: string, route: { path: stri
 }
 
 function impactRank(i: string | null | undefined): number {
-  return { critical: 4, serious: 3, moderate: 2, minor: 1 }[i ?? ""] ?? 0;
+  return { critical: 4, serious: 3, moderate: 2, minor: 1 }[i ?? ''] ?? 0;
 }
 
 function formatReport(baseUrl: string, results: RouteResult[]): string {
   const today = new Date().toISOString().slice(0, 10);
   const totalViolations = results.reduce((sum, r) => sum + r.violations.length, 0);
-  const totalNodes = results.reduce((sum, r) => sum + r.violations.reduce((s, v) => s + v.nodes, 0), 0);
+  const totalNodes = results.reduce(
+    (sum, r) => sum + r.violations.reduce((s, v) => s + v.nodes, 0),
+    0,
+  );
 
   let md = `# Accessibility audit — ${today}\n\n`;
-  md += `**Tool:** [axe-core](https://github.com/dequelabs/axe-core) ${"4.x"} via Playwright (Chromium)\n`;
+  md += `**Tool:** [axe-core](https://github.com/dequelabs/axe-core) ${'4.x'} via Playwright (Chromium)\n`;
   md += `**Tags:** \`wcag2a\`, \`wcag2aa\`, \`wcag21a\`, \`wcag21aa\`\n`;
   md += `**Base URL:** \`${baseUrl}\`\n\n`;
   md += `## Summary\n\n`;
@@ -128,7 +135,7 @@ function formatReport(baseUrl: string, results: RouteResult[]): string {
   md += `## Per route\n\n`;
   md += `| Route | Violations | Passes | Incomplete |\n|---|---|---|---|\n`;
   for (const r of results) {
-    md += `| \`${r.path}\` (${r.label}) | ${r.error ? "—" : r.violations.length} | ${r.passes} | ${r.incomplete} |\n`;
+    md += `| \`${r.path}\` (${r.label}) | ${r.error ? '—' : r.violations.length} | ${r.passes} | ${r.incomplete} |\n`;
   }
   md += `\n`;
 
@@ -145,7 +152,7 @@ function formatReport(baseUrl: string, results: RouteResult[]): string {
     const sorted = [...r.violations].sort((a, b) => impactRank(b.impact) - impactRank(a.impact));
     md += `| Impact | Rule | Nodes | Help |\n|---|---|---|---|\n`;
     for (const v of sorted) {
-      md += `| ${v.impact ?? "—"} | \`${v.id}\` | ${v.nodes} | [${v.help}](${v.helpUrl}) |\n`;
+      md += `| ${v.impact ?? '—'} | \`${v.id}\` | ${v.nodes} | [${v.help}](${v.helpUrl}) |\n`;
     }
     md += `\n`;
   }
@@ -163,7 +170,7 @@ async function main() {
   let baseUrl: string;
 
   if (externalBase) {
-    baseUrl = externalBase.replace(/\/$/, "");
+    baseUrl = externalBase.replace(/\/$/, '');
     console.log(`Using external base URL: ${baseUrl}`);
   } else {
     baseUrl = `http://localhost:${PREVIEW_PORT}`;
@@ -181,14 +188,14 @@ async function main() {
     }
   } finally {
     await browser.close();
-    if (preview) preview.kill("SIGTERM");
+    if (preview) preview.kill('SIGTERM');
   }
 
   const today = new Date().toISOString().slice(0, 10);
-  const outDir = join(process.cwd(), "docs", "a11y");
+  const outDir = join(process.cwd(), 'docs', 'a11y');
   mkdirSync(outDir, { recursive: true });
   const outPath = join(outDir, `${today}.md`);
-  writeFileSync(outPath, formatReport(baseUrl, results), "utf8");
+  writeFileSync(outPath, formatReport(baseUrl, results), 'utf8');
   console.log(`\n✅ Wrote ${outPath}`);
 
   const totalViolations = results.reduce((s, r) => s + r.violations.length, 0);

@@ -28,7 +28,9 @@ type StorageLike = Pick<Storage, 'getItem' | 'removeItem'>;
  * The caller decides whether to upload them once (only needed when
  * `pendingSync` is true); they are never written back to the device.
  */
-export function takeLegacyOctopusCredentials(storage: StorageLike | null | undefined): LegacyOctopusTakeResult {
+export function takeLegacyOctopusCredentials(
+  storage: StorageLike | null | undefined,
+): LegacyOctopusTakeResult {
   if (!storage) return { credentials: null, pendingSync: false };
 
   let raw: string | null = null;
@@ -50,7 +52,10 @@ export function takeLegacyOctopusCredentials(storage: StorageLike | null | undef
   try {
     const parsed = JSON.parse(raw);
     if (parsed && typeof parsed.apiKey === 'string' && typeof parsed.accountNumber === 'string') {
-      return { credentials: { apiKey: parsed.apiKey, accountNumber: parsed.accountNumber }, pendingSync };
+      return {
+        credentials: { apiKey: parsed.apiKey, accountNumber: parsed.accountNumber },
+        pendingSync,
+      };
     }
   } catch {
     // Corrupt entry - already removed.

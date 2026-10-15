@@ -9,12 +9,20 @@ interface WeatherEffectsProps {
   cleanliness: number;
 }
 
-function FogLayer({ intensity = 0.5, layer = 1, cleanliness = 0.5 }: { intensity?: number; layer?: number; cleanliness?: number }) {
+function FogLayer({
+  intensity = 0.5,
+  layer = 1,
+  cleanliness = 0.5,
+}: {
+  intensity?: number;
+  layer?: number;
+  cleanliness?: number;
+}) {
   const duration = 20 + layer * 10;
   const yOffset = layer * 15;
   const fogHue = cleanliness > 0.6 ? 190 : 40;
   const fogSaturation = cleanliness > 0.6 ? '20%' : '10%';
-  const fogLightness = cleanliness > 0.6 ? (layer === 1 ? 95 : 90) : (layer === 1 ? 80 : 75);
+  const fogLightness = cleanliness > 0.6 ? (layer === 1 ? 95 : 90) : layer === 1 ? 80 : 75;
 
   return (
     <motion.div
@@ -41,7 +49,15 @@ function FogLayer({ intensity = 0.5, layer = 1, cleanliness = 0.5 }: { intensity
   );
 }
 
-function Snowflake({ delay, x, size = 'md' }: { delay: number; x: number; size?: 'sm' | 'md' | 'lg' }) {
+function Snowflake({
+  delay,
+  x,
+  size = 'md',
+}: {
+  delay: number;
+  x: number;
+  size?: 'sm' | 'md' | 'lg';
+}) {
   const params = useMemo(() => {
     const sizes = { sm: 2, md: 4, lg: 6 };
     return {
@@ -86,7 +102,10 @@ function LightningFlash({ active }: { active: boolean }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: [0, 1, 0, 0.7, 0] }}
           transition={{ duration: 0.3, times: [0, 0.1, 0.2, 0.25, 0.4] }}
-          style={{ background: 'linear-gradient(180deg, hsl(60 100% 95% / 0.4) 0%, hsl(60 100% 90% / 0.2) 50%, transparent 100%)' }}
+          style={{
+            background:
+              'linear-gradient(180deg, hsl(60 100% 95% / 0.4) 0%, hsl(60 100% 90% / 0.2) 50%, transparent 100%)',
+          }}
         />
       )}
     </AnimatePresence>
@@ -120,7 +139,7 @@ function WeatherClouds({
   cloudCover,
   isRaining,
   isNight,
-  cleanliness
+  cleanliness,
 }: {
   cloudCover: number;
   isRaining: boolean;
@@ -129,8 +148,10 @@ function WeatherClouds({
 }) {
   const cloudCount = Math.ceil(cloudCover / 25);
   const cloudOpacity = isNight ? 0.4 : 0.7;
-  const cloudColor = isRaining 
-    ? (cleanliness > 0.6 ? 'hsl(200 20% 75%)' : 'hsl(220 10% 45%)') 
+  const cloudColor = isRaining
+    ? cleanliness > 0.6
+      ? 'hsl(200 20% 75%)'
+      : 'hsl(220 10% 45%)'
     : 'hsl(0 0% 95%)';
 
   const clouds = useMemo(() => {
@@ -163,7 +184,11 @@ function WeatherClouds({
               width: `${cloud.size * 4}px`,
               height: `${cloud.size * 2.5}px`,
               color: cloudColor,
-              filter: isRaining ? (cleanliness > 0.6 ? 'brightness(0.95)' : 'brightness(0.65)') : 'none',
+              filter: isRaining
+                ? cleanliness > 0.6
+                  ? 'brightness(0.95)'
+                  : 'brightness(0.65)'
+                : 'none',
             }}
             aria-hidden="true"
           />
@@ -173,7 +198,13 @@ function WeatherClouds({
   );
 }
 
-function HeavyRain({ intensity = 0.5, cleanliness = 0.5 }: { intensity: number; cleanliness?: number }) {
+function HeavyRain({
+  intensity = 0.5,
+  cleanliness = 0.5,
+}: {
+  intensity: number;
+  cleanliness?: number;
+}) {
   const dropCount = Math.floor(30 * intensity);
 
   const drops = useMemo(() => {
@@ -260,14 +291,16 @@ export function WeatherEffects({ weather, isNight, cleanliness }: WeatherEffects
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            {Array.from({ length: Math.floor(25 * weather.precipitationIntensity) + 15 }).map((_, i) => (
-              <Snowflake
-                key={i}
-                delay={Math.random() * 5}
-                x={Math.random() * 100}
-                size={['sm', 'md', 'lg'][i % 3] as 'sm' | 'md' | 'lg'}
-              />
-            ))}
+            {Array.from({ length: Math.floor(25 * weather.precipitationIntensity) + 15 }).map(
+              (_, i) => (
+                <Snowflake
+                  key={i}
+                  delay={Math.random() * 5}
+                  x={Math.random() * 100}
+                  size={['sm', 'md', 'lg'][i % 3] as 'sm' | 'md' | 'lg'}
+                />
+              ),
+            )}
           </motion.div>
         )}
       </AnimatePresence>

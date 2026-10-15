@@ -1,5 +1,5 @@
 interface TurbineLogoProps {
-    className?: string;
+  className?: string;
 }
 
 /** Hub centre in viewBox units. The rotor spins around exactly this point. */
@@ -27,45 +27,45 @@ export const TURBINE_BLADE_ANGLES = [0, 120, 240] as const;
  *
  * PullToRefresh stops the spin with `[&_g]:!animate-none`, so the rotor must stay a `<g>`.
  */
-export function TurbineLogo({ className = "" }: TurbineLogoProps) {
-    return (
-        <svg
-            viewBox="0 0 512 512"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className={className}
-            aria-hidden="true"
-        >
-            {/* Tower (static) */}
-            <path
-                d="M236 296V480C236 488.8 243.2 496 252 496H260C268.8 496 276 488.8 276 480V296C276 287.2 268.8 280 260 280H252C243.2 280 236 287.2 236 296Z"
-                fill="currentColor"
-            />
+export function TurbineLogo({ className = '' }: TurbineLogoProps) {
+  return (
+    <svg
+      viewBox="0 0 512 512"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      aria-hidden="true"
+    >
+      {/* Tower (static) */}
+      <path
+        d="M236 296V480C236 488.8 243.2 496 252 496H260C268.8 496 276 488.8 276 480V296C276 287.2 268.8 280 260 280H252C243.2 280 236 287.2 236 296Z"
+        fill="currentColor"
+      />
 
-            {/* Rotor: one rigid rotating group around the hub */}
-            <g
-                data-turbine-rotor=""
-                className="animate-[spin_4s_linear_infinite] motion-reduce:animate-none"
-                style={{
-                    transformBox: 'view-box',
-                    transformOrigin: `${TURBINE_HUB.x}px ${TURBINE_HUB.y}px`,
-                    // Promote the rotor to its own layer so spin stays smooth when
-                    // the page also has blur / other paint (e.g. onboarding card).
-                    willChange: 'transform',
-                }}
-            >
-                {TURBINE_BLADE_ANGLES.map((angle) => (
-                    <path
-                        key={angle}
-                        data-turbine-blade=""
-                        d={TURBINE_BLADE_PATH}
-                        fill="currentColor"
-                        transform={`rotate(${angle} ${TURBINE_HUB.x} ${TURBINE_HUB.y})`}
-                    />
-                ))}
-                {/* Hub on top so the blade roots meet cleanly */}
-                <circle cx={TURBINE_HUB.x} cy={TURBINE_HUB.y} r="32" fill="currentColor" />
-            </g>
-        </svg>
-    );
+      {/* Rotor: one rigid rotating group around the hub */}
+      <g
+        data-turbine-rotor=""
+        className="animate-[spin_4s_linear_infinite] motion-reduce:animate-none"
+        style={{
+          transformBox: 'view-box',
+          transformOrigin: `${TURBINE_HUB.x}px ${TURBINE_HUB.y}px`,
+          // Promote the rotor to its own layer so spin stays smooth when
+          // the page also has blur / other paint (e.g. onboarding card).
+          willChange: 'transform',
+        }}
+      >
+        {TURBINE_BLADE_ANGLES.map((angle) => (
+          <path
+            key={angle}
+            data-turbine-blade=""
+            d={TURBINE_BLADE_PATH}
+            fill="currentColor"
+            transform={`rotate(${angle} ${TURBINE_HUB.x} ${TURBINE_HUB.y})`}
+          />
+        ))}
+        {/* Hub on top so the blade roots meet cleanly */}
+        <circle cx={TURBINE_HUB.x} cy={TURBINE_HUB.y} r="32" fill="currentColor" />
+      </g>
+    </svg>
+  );
 }

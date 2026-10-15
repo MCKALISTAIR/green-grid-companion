@@ -51,11 +51,16 @@ export async function fetchNationalIntensity(
   try {
     const response = await fetchFn('https://api.carbonintensity.org.uk/intensity');
     if (!response.ok) {
-      log(`[INTENSITY] National fetch failed with HTTP ${response.status}; skipping national-fallback alerts`);
+      log(
+        `[INTENSITY] National fetch failed with HTTP ${response.status}; skipping national-fallback alerts`,
+      );
       return null;
     }
     const reading = parseNationalIntensity(await response.json());
-    if (!reading) log('[INTENSITY] National response had no valid forecast/index; skipping national-fallback alerts');
+    if (!reading)
+      log(
+        '[INTENSITY] National response had no valid forecast/index; skipping national-fallback alerts',
+      );
     return reading;
   } catch (error) {
     log('[INTENSITY] National fetch threw; skipping national-fallback alerts', error);

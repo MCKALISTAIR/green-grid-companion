@@ -43,7 +43,7 @@ jobs:
           VITE_SUPABASE_PROJECT_ID: ${{ vars.VITE_SUPABASE_PROJECT_ID }}
           # Dev/QA routes are off in production builds; the audit still checks
           # /__design-system, so opt in for this CI-only build.
-          VITE_ENABLE_DEV_ROUTES: "true"
+          VITE_ENABLE_DEV_ROUTES: 'true'
 
       - name: Run axe audit
         id: audit

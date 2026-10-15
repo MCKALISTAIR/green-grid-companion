@@ -55,11 +55,7 @@ export function SceneWaveDivider({ cleanliness, fillColor }: SceneWaveDividerPro
       style={{ height: '80px' }}
       aria-hidden="true"
     >
-      <svg
-        viewBox="0 0 1440 80"
-        preserveAspectRatio="none"
-        className="w-full h-full"
-      >
+      <svg viewBox="0 0 1440 80" preserveAspectRatio="none" className="w-full h-full">
         <path
           d={path}
           fill={fill}

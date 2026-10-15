@@ -118,12 +118,18 @@ function migrateLegacyCredentialsOnce(): Promise<boolean> {
       const session = await ensureAuthSession();
       if (!session) throw new Error('No session');
       const { error } = await supabase.functions.invoke('octopus-energy', {
-        body: { action: 'save-credentials', apiKey: credentials.apiKey, accountNumber: credentials.accountNumber }
+        body: {
+          action: 'save-credentials',
+          apiKey: credentials.apiKey,
+          accountNumber: credentials.accountNumber,
+        },
       });
       if (error) throw new Error(error.message);
       return true;
     } catch (error) {
-      logger.warn('Could not upload legacy Octopus credentials; user must re-enter them', { error });
+      logger.warn('Could not upload legacy Octopus credentials; user must re-enter them', {
+        error,
+      });
       toast.info('Please re-enter your Octopus API key in Settings to reconnect.');
       return false;
     }
@@ -136,8 +142,12 @@ export function useOctopusEnergy(days: number = 30) {
 
   // All useState hooks must be declared first in the same order every render
   const [isSyncing, setIsSyncing] = useState(false);
-  const [cachedIsLinked, setCachedIsLinked] = useState(() => localStorage.getItem(LOCAL_STORAGE_KEYS.isLinked) === 'true');
-  const [cachedHasCreds, setCachedHasCreds] = useState(() => localStorage.getItem(LOCAL_STORAGE_KEYS.hasCreds) === 'true');
+  const [cachedIsLinked, setCachedIsLinked] = useState(
+    () => localStorage.getItem(LOCAL_STORAGE_KEYS.isLinked) === 'true',
+  );
+  const [cachedHasCreds, setCachedHasCreds] = useState(
+    () => localStorage.getItem(LOCAL_STORAGE_KEYS.hasCreds) === 'true',
+  );
 
   // Fetch status if user might have credentials
   const shouldFetchStatus = cachedIsLinked || cachedHasCreds;
@@ -148,7 +158,7 @@ export function useOctopusEnergy(days: number = 30) {
     isLoading: statusLoading,
     refetch: refetchStatus,
     isError: statusError,
-    error: statusErr
+    error: statusErr,
   } = useQuery({
     queryKey: ['octopus-status'],
     queryFn: async (): Promise<OctopusStatus> => {
@@ -162,12 +172,12 @@ export function useOctopusEnergy(days: number = 30) {
           has_credentials: false,
           meters: [],
           latest_consumption: null,
-          footprint_records: 0
+          footprint_records: 0,
         };
       }
 
       const { data, error } = await supabase.functions.invoke('octopus-energy', {
-        body: { action: 'get-status' }
+        body: { action: 'get-status' },
       });
 
       if (error) {
@@ -180,7 +190,7 @@ export function useOctopusEnergy(days: number = 30) {
             has_credentials: false,
             meters: [],
             latest_consumption: null,
-            footprint_records: 0
+            footprint_records: 0,
           };
         }
         throw new Error(error.message || 'Failed to fetch status');
@@ -198,13 +208,13 @@ export function useOctopusEnergy(days: number = 30) {
     isLoading: footprintLoading,
     refetch: refetchFootprint,
     isError: footprintError,
-    error: footprintErr
+    error: footprintErr,
   } = useQuery({
     queryKey: ['octopus-footprint', days],
     queryFn: async (): Promise<FootprintData> => {
       const safeDays = Math.max(1, days);
       const { data, error } = await supabase.functions.invoke('octopus-energy', {
-        body: { action: 'get-footprint', days: safeDays }
+        body: { action: 'get-footprint', days: safeDays },
       });
 
       if (error) throw new Error(error.message || 'Failed to fetch footprint');
@@ -219,12 +229,12 @@ export function useOctopusEnergy(days: number = 30) {
     data: greennessForecast,
     isLoading: forecastLoading,
     isError: forecastError,
-    error: forecastErr
+    error: forecastErr,
   } = useQuery({
     queryKey: ['greenness-forecast'],
     queryFn: async (): Promise<GreennessForecastItem[]> => {
       const { data, error } = await supabase.functions.invoke('octopus-energy', {
-        body: { action: 'get-greenness-forecast' }
+        body: { action: 'get-greenness-forecast' },
       });
       if (error) {
         logger.warn('Greenness forecast fetch failed', { error: error.message });
@@ -242,12 +252,12 @@ export function useOctopusEnergy(days: number = 30) {
   const {
     data: intelligentDispatches,
     isLoading: dispatchesLoading,
-    refetch: refetchDispatches
+    refetch: refetchDispatches,
   } = useQuery({
     queryKey: ['intelligent-dispatches'],
     queryFn: async (): Promise<IntelligentDispatchData> => {
       const { data, error } = await supabase.functions.invoke('octopus-energy', {
-        body: { action: 'get-intelligent-dispatches' }
+        body: { action: 'get-intelligent-dispatches' },
       });
       if (error) {
         logger.warn('Intelligent dispatches fetch failed', { error: error.message });
@@ -263,14 +273,11 @@ export function useOctopusEnergy(days: number = 30) {
   });
 
   // Fetch available footprint dates for date picker
-  const {
-    data: availableDates,
-    isLoading: availableDatesLoading
-  } = useQuery({
+  const { data: availableDates, isLoading: availableDatesLoading } = useQuery({
     queryKey: ['octopus-available-dates'],
     queryFn: async (): Promise<{ minDate: string | null; maxDate: string | null }> => {
       const { data, error } = await supabase.functions.invoke('octopus-energy', {
-        body: { action: 'get-available-dates' }
+        body: { action: 'get-available-dates' },
       });
       if (error) {
         logger.warn('Available dates fetch failed', { error: error.message });
@@ -284,7 +291,6 @@ export function useOctopusEnergy(days: number = 30) {
     retry: 1,
   });
 
-
   // Remove API keys cached by older app versions (uploading them once if they
   // never reached the server), and listen for auth changes.
   useEffect(() => {
@@ -296,7 +302,9 @@ export function useOctopusEnergy(days: number = 30) {
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_IN') {
         // Re-enable status query so we discover existing server-side data
         setCachedHasCreds(true);
@@ -304,7 +312,7 @@ export function useOctopusEnergy(days: number = 30) {
       }
       if (event === 'SIGNED_OUT') {
         // Clear all cached octopus state so signed-out view is clean
-        Object.values(LOCAL_STORAGE_KEYS).forEach(key => localStorage.removeItem(key));
+        Object.values(LOCAL_STORAGE_KEYS).forEach((key) => localStorage.removeItem(key));
         setCachedIsLinked(false);
         setCachedHasCreds(false);
         queryClient.removeQueries({ queryKey: ['octopus-status'] });
@@ -318,35 +326,38 @@ export function useOctopusEnergy(days: number = 30) {
   }, [queryClient]);
 
   // Migrate data from anonymous session to authenticated user
-  const migrateData = useCallback(async (previousUserId: string) => {
-    setIsSyncing(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('octopus-energy', {
-        body: { action: 'migrate-data', previousUserId }
-      });
+  const migrateData = useCallback(
+    async (previousUserId: string) => {
+      setIsSyncing(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('octopus-energy', {
+          body: { action: 'migrate-data', previousUserId },
+        });
 
-      if (error) throw new Error(error.message || 'Failed to migrate data');
+        if (error) throw new Error(error.message || 'Failed to migrate data');
 
-      if (data.migrated?.credentials || data.migrated?.meters > 0) {
-        toast.success('Your Octopus data has been restored to this account!');
-        await refetchStatus();
+        if (data.migrated?.credentials || data.migrated?.meters > 0) {
+          toast.success('Your Octopus data has been restored to this account!');
+          await refetchStatus();
+        }
+        return data;
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Failed to migrate data';
+        logger.error('Data migration failed', { error: message });
+        // Don't show error toast - this is a background operation
+        return null;
+      } finally {
+        setIsSyncing(false);
       }
-      return data;
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to migrate data';
-      logger.error('Data migration failed', { error: message });
-      // Don't show error toast - this is a background operation
-      return null;
-    } finally {
-      setIsSyncing(false);
-    }
-  }, [refetchStatus]);
+    },
+    [refetchStatus],
+  );
 
   // Helper function to link meters (internal use)
   const linkMeterInternal = useCallback(async (): Promise<boolean> => {
     try {
       const { data, error } = await supabase.functions.invoke('octopus-energy', {
-        body: { action: 'get-meters' }
+        body: { action: 'get-meters' },
       });
 
       if (error) {
@@ -368,46 +379,49 @@ export function useOctopusEnergy(days: number = 30) {
   // Save Credentials - sent once to the server (stored encrypted there), never
   // persisted on the device. Auto-links meters on success. Throws on failure so
   // the form can keep the user's input (in memory only) for a retry.
-  const saveCredentials = useCallback(async (apiKey: string, accountNumber: string) => {
-    setIsSyncing(true);
-    try {
-      const session = await ensureAuthSession();
-      if (!session) {
-        throw new Error('Could not start a secure session. Check your connection and try again.');
-      }
+  const saveCredentials = useCallback(
+    async (apiKey: string, accountNumber: string) => {
+      setIsSyncing(true);
+      try {
+        const session = await ensureAuthSession();
+        if (!session) {
+          throw new Error('Could not start a secure session. Check your connection and try again.');
+        }
 
-      const { error } = await supabase.functions.invoke('octopus-energy', {
-        body: { action: 'save-credentials', apiKey, accountNumber }
-      });
+        const { error } = await supabase.functions.invoke('octopus-energy', {
+          body: { action: 'save-credentials', apiKey, accountNumber },
+        });
 
-      if (error) {
+        if (error) {
+          throw error;
+        }
+
+        localStorage.setItem(LOCAL_STORAGE_KEYS.hasCreds, 'true');
+        setCachedHasCreds(true);
+
+        // Auto-link meters immediately after saving credentials
+        const metersLinked = await linkMeterInternal();
+
+        if (metersLinked) {
+          toast.success('Account connected and meter(s) linked!');
+          localStorage.setItem(LOCAL_STORAGE_KEYS.isLinked, 'true');
+          setCachedIsLinked(true);
+        } else {
+          toast.success('Credentials saved. Could not find meters - check your account.');
+        }
+
+        await refetchStatus();
+      } catch (error: unknown) {
+        logger.warn('Error saving Octopus credentials', { error });
+        const message = parseEdgeFunctionError(error, { feature: 'octopus', action: 'save' });
+        toast.error(message);
         throw error;
+      } finally {
+        setIsSyncing(false);
       }
-
-      localStorage.setItem(LOCAL_STORAGE_KEYS.hasCreds, 'true');
-      setCachedHasCreds(true);
-
-      // Auto-link meters immediately after saving credentials
-      const metersLinked = await linkMeterInternal();
-
-      if (metersLinked) {
-        toast.success('Account connected and meter(s) linked!');
-        localStorage.setItem(LOCAL_STORAGE_KEYS.isLinked, 'true');
-        setCachedIsLinked(true);
-      } else {
-        toast.success('Credentials saved. Could not find meters - check your account.');
-      }
-
-      await refetchStatus();
-    } catch (error: unknown) {
-      logger.warn('Error saving Octopus credentials', { error });
-      const message = parseEdgeFunctionError(error, { feature: 'octopus', action: 'save' });
-      toast.error(message);
-      throw error;
-    } finally {
-      setIsSyncing(false);
-    }
-  }, [refetchStatus, linkMeterInternal]);
+    },
+    [refetchStatus, linkMeterInternal],
+  );
 
   // Link meter (fetch from Octopus API)
   const linkMeter = useCallback(async () => {
@@ -422,7 +436,7 @@ export function useOctopusEnergy(days: number = 30) {
       }
 
       const { data, error } = await supabase.functions.invoke('octopus-energy', {
-        body: { action: 'get-meters' }
+        body: { action: 'get-meters' },
       });
 
       if (error) throw new Error(error.message || 'Failed to link meter');
@@ -445,34 +459,37 @@ export function useOctopusEnergy(days: number = 30) {
   }, [refetchStatus]);
 
   // Sync consumption data
-  const syncConsumption = useCallback(async (syncDays: number = 7) => {
-    setIsSyncing(true);
-    try {
-      // Ensure we have a session
-      const session = await ensureAuthSession();
+  const syncConsumption = useCallback(
+    async (syncDays: number = 7) => {
+      setIsSyncing(true);
+      try {
+        // Ensure we have a session
+        const session = await ensureAuthSession();
 
-      if (!session) {
-        toast.error('Please sign in to sync consumption data');
-        return null;
+        if (!session) {
+          toast.error('Please sign in to sync consumption data');
+          return null;
+        }
+
+        const { data, error } = await supabase.functions.invoke('octopus-energy', {
+          body: { action: 'sync-consumption', days: syncDays },
+        });
+
+        if (error) throw new Error(error.message || 'Failed to sync consumption');
+
+        toast.success(`Synced ${data.readings_synced} consumption readings`);
+        await refetchStatus();
+        return data;
+      } catch (error: unknown) {
+        const message = parseEdgeFunctionError(error, { feature: 'octopus', action: 'sync' });
+        toast.error(message);
+        throw error;
+      } finally {
+        setIsSyncing(false);
       }
-
-      const { data, error } = await supabase.functions.invoke('octopus-energy', {
-        body: { action: 'sync-consumption', days: syncDays }
-      });
-
-      if (error) throw new Error(error.message || 'Failed to sync consumption');
-
-      toast.success(`Synced ${data.readings_synced} consumption readings`);
-      await refetchStatus();
-      return data;
-    } catch (error: unknown) {
-      const message = parseEdgeFunctionError(error, { feature: 'octopus', action: 'sync' });
-      toast.error(message);
-      throw error;
-    } finally {
-      setIsSyncing(false);
-    }
-  }, [refetchStatus]);
+    },
+    [refetchStatus],
+  );
 
   // Calculate footprint from consumption
   const calculateFootprint = useCallback(async () => {
@@ -487,7 +504,7 @@ export function useOctopusEnergy(days: number = 30) {
       }
 
       const { data, error } = await supabase.functions.invoke('octopus-energy', {
-        body: { action: 'calculate-footprint' }
+        body: { action: 'calculate-footprint' },
       });
 
       if (error) throw new Error(error.message || 'Failed to calculate footprint');
@@ -505,40 +522,45 @@ export function useOctopusEnergy(days: number = 30) {
   }, [refetchFootprint]);
 
   // Full sync: consumption + footprint calculation
-  const fullSync = useCallback(async (syncDays: number = 7) => {
-    setIsSyncing(true);
-    try {
-      // Ensure we have a session
-      const session = await ensureAuthSession();
+  const fullSync = useCallback(
+    async (syncDays: number = 7) => {
+      setIsSyncing(true);
+      try {
+        // Ensure we have a session
+        const session = await ensureAuthSession();
 
-      if (!session) {
-        toast.error('Please sign in to sync data');
-        return null;
+        if (!session) {
+          toast.error('Please sign in to sync data');
+          return null;
+        }
+
+        const { data, error } = await supabase.functions.invoke('octopus-energy', {
+          body: { action: 'full-sync', days: syncDays },
+        });
+
+        if (error) throw new Error(error.message || 'Failed to sync data');
+
+        if (data?.success) {
+          const readings = data.sync?.readings_synced || 0;
+          const calculations = data.calculation?.records_calculated || 0;
+          toast.success(
+            `Synced ${readings} readings and calculated ${calculations} footprint records`,
+          );
+          await refetchStatus();
+          await refetchFootprint();
+        }
+
+        return data;
+      } catch (error: unknown) {
+        const message = parseEdgeFunctionError(error, { feature: 'octopus', action: 'sync' });
+        toast.error(message);
+        throw error;
+      } finally {
+        setIsSyncing(false);
       }
-
-      const { data, error } = await supabase.functions.invoke('octopus-energy', {
-        body: { action: 'full-sync', days: syncDays }
-      });
-
-      if (error) throw new Error(error.message || 'Failed to sync data');
-
-      if (data?.success) {
-        const readings = data.sync?.readings_synced || 0;
-        const calculations = data.calculation?.records_calculated || 0;
-        toast.success(`Synced ${readings} readings and calculated ${calculations} footprint records`);
-        await refetchStatus();
-        await refetchFootprint();
-      }
-
-      return data;
-    } catch (error: unknown) {
-      const message = parseEdgeFunctionError(error, { feature: 'octopus', action: 'sync' });
-      toast.error(message);
-      throw error;
-    } finally {
-      setIsSyncing(false);
-    }
-  }, [refetchStatus, refetchFootprint]);
+    },
+    [refetchStatus, refetchFootprint],
+  );
 
   // Disconnect Account
   const disconnect = useCallback(async () => {
@@ -548,7 +570,7 @@ export function useOctopusEnergy(days: number = 30) {
 
       if (hasSession) {
         const { error } = await supabase.functions.invoke('octopus-energy', {
-          body: { action: 'disconnect-account' }
+          body: { action: 'disconnect-account' },
         });
 
         if (error) throw new Error(error.message || 'Failed to disconnect account');
@@ -559,7 +581,7 @@ export function useOctopusEnergy(days: number = 30) {
       // Clear all local storage
       queryClient.setQueryData(['octopus-status'], null);
       queryClient.setQueryData(['octopus-footprint', days], null);
-      Object.values(LOCAL_STORAGE_KEYS).forEach(key => localStorage.removeItem(key));
+      Object.values(LOCAL_STORAGE_KEYS).forEach((key) => localStorage.removeItem(key));
       setCachedIsLinked(false);
       setCachedHasCreds(false);
 

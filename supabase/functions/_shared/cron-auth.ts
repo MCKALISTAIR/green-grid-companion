@@ -37,9 +37,7 @@ export async function timingSafeEqual(a: string, b: string): Promise<boolean> {
   return diff === 0;
 }
 
-export type CronAuthResult =
-  | { ok: true }
-  | { ok: false; status: 401 | 500 | 503; error: string };
+export type CronAuthResult = { ok: true } | { ok: false; status: 401 | 500 | 503; error: string };
 
 /**
  * Verify that a request came from the scheduler. Fails closed: if the server
@@ -50,7 +48,9 @@ export async function verifyCronRequest(
   expectedSecret: string | undefined | null,
 ): Promise<CronAuthResult> {
   if (!expectedSecret || expectedSecret.length < MIN_CRON_SECRET_LENGTH) {
-    console.error('[CRON AUTH] Scheduler secret is missing or too short; rejecting scheduler request');
+    console.error(
+      '[CRON AUTH] Scheduler secret is missing or too short; rejecting scheduler request',
+    );
     return { ok: false, status: 500, error: 'Scheduler authentication is not configured' };
   }
 
@@ -86,7 +86,9 @@ export interface SchedulerSecretRpcClient {
 }
 
 /** Fetch the scheduler secret with the service-role client. Throws if the RPC is missing (migration not applied). */
-export async function fetchSchedulerSecret(client: SchedulerSecretRpcClient): Promise<string | null> {
+export async function fetchSchedulerSecret(
+  client: SchedulerSecretRpcClient,
+): Promise<string | null> {
   const { data, error } = await client.rpc('get_scheduler_secret');
   if (error) throw error;
   return typeof data === 'string' && data.length > 0 ? data : null;
@@ -139,7 +141,10 @@ export async function verifySchedulerRequest(
   try {
     secret = await getSecret();
   } catch (err) {
-    console.error('[CRON AUTH] Could not load scheduler secret (has the security migration been applied?)', err);
+    console.error(
+      '[CRON AUTH] Could not load scheduler secret (has the security migration been applied?)',
+      err,
+    );
   }
   if (!secret) {
     return { ok: false, status: 503, error: 'Scheduler authentication not ready' };

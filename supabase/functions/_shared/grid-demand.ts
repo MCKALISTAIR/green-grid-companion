@@ -55,12 +55,26 @@ export const FREQUENCY_MAX_AGE_MINUTES = 10;
 export const EMBEDDED_MAX_RUN_OFFSET = 8;
 
 /** Same fuel ids the app already uses (from the Carbon Intensity API). */
-export const MIX_FUELS = ['biomass', 'coal', 'imports', 'gas', 'nuclear', 'other', 'hydro', 'solar', 'wind'] as const;
+export const MIX_FUELS = [
+  'biomass',
+  'coal',
+  'imports',
+  'gas',
+  'nuclear',
+  'other',
+  'hydro',
+  'solar',
+  'wind',
+] as const;
 export type MixFuel = (typeof MIX_FUELS)[number];
 
 export function fuelinstUrl(now: Date, windowMinutes = 45): string {
   const from = new Date(now.getTime() - windowMinutes * 60_000).toISOString();
-  const params = new URLSearchParams({ publishDateTimeFrom: from, publishDateTimeTo: now.toISOString(), format: 'json' });
+  const params = new URLSearchParams({
+    publishDateTimeFrom: from,
+    publishDateTimeTo: now.toISOString(),
+    format: 'json',
+  });
   return `${ELEXON_BASE}/datasets/FUELINST?${params}`;
 }
 
@@ -105,9 +119,16 @@ interface FuelinstRow {
 
 function isFuelinstRow(r: unknown): r is FuelinstRow {
   const x = r as Partial<FuelinstRow> | null;
-  return !!x && typeof x.startTime === 'string' && typeof x.publishTime === 'string'
-    && typeof x.settlementDate === 'string' && typeof x.settlementPeriod === 'number'
-    && typeof x.fuelType === 'string' && typeof x.generation === 'number' && Number.isFinite(x.generation);
+  return (
+    !!x &&
+    typeof x.startTime === 'string' &&
+    typeof x.publishTime === 'string' &&
+    typeof x.settlementDate === 'string' &&
+    typeof x.settlementPeriod === 'number' &&
+    typeof x.fuelType === 'string' &&
+    typeof x.generation === 'number' &&
+    Number.isFinite(x.generation)
+  );
 }
 
 /** A snapshot needs the big fuels present, otherwise it is a partial publication. */
@@ -133,15 +154,18 @@ export function latestFuelinstSnapshot(payload: unknown): FuelinstSnapshot | nul
   const starts = [...byStart.keys()].sort((a, b) => Date.parse(b) - Date.parse(a));
   for (const start of starts) {
     const fuels = byStart.get(start)!;
-    if (!REQUIRED_FUEL_TYPES.every(f => fuels.has(f))) continue;
+    if (!REQUIRED_FUEL_TYPES.every((f) => fuels.has(f))) continue;
     const list = [...fuels.values()];
-    const latestPublish = list.reduce((m, r) => (Date.parse(r.publishTime) > Date.parse(m) ? r.publishTime : m), list[0].publishTime);
+    const latestPublish = list.reduce(
+      (m, r) => (Date.parse(r.publishTime) > Date.parse(m) ? r.publishTime : m),
+      list[0].publishTime,
+    );
     return {
       startTime: new Date(start).toISOString(),
       publishTime: new Date(latestPublish).toISOString(),
       settlementDate: list[0].settlementDate,
       settlementPeriod: list[0].settlementPeriod,
-      byFuelType: Object.fromEntries(list.map(r => [r.fuelType, r.generation])),
+      byFuelType: Object.fromEntries(list.map((r) => [r.fuelType, r.generation])),
     };
   }
   return null;
@@ -153,14 +177,20 @@ export function appFuelFor(fuelType: string): MixFuel {
     case 'CCGT':
     case 'OCGT':
       return 'gas';
-    case 'COAL': return 'coal';
-    case 'NUCLEAR': return 'nuclear';
-    case 'WIND': return 'wind';
-    case 'BIOMASS': return 'biomass';
-    case 'NPSHYD': return 'hydro';
+    case 'COAL':
+      return 'coal';
+    case 'NUCLEAR':
+      return 'nuclear';
+    case 'WIND':
+      return 'wind';
+    case 'BIOMASS':
+      return 'biomass';
+    case 'NPSHYD':
+      return 'hydro';
     // Pumped storage releases stored energy, so it is not counted as hydro
     // (which the app treats as renewable). OIL and OTHER are small.
-    default: return 'other';
+    default:
+      return 'other';
   }
 }
 
@@ -175,15 +205,22 @@ export interface EmbeddedEstimate {
 }
 
 /** Estimate for one settlement period, only if it sits near the start of NESO's latest run. */
-export function embeddedForPeriod(payload: unknown, settlementDate: string, settlementPeriod: number): EmbeddedEstimate | null {
+export function embeddedForPeriod(
+  payload: unknown,
+  settlementDate: string,
+  settlementPeriod: number,
+): EmbeddedEstimate | null {
   const result = (payload as { success?: boolean; result?: { records?: unknown } })?.result;
   if ((payload as { success?: boolean })?.success === false) return null;
   const records = result?.records;
   if (!Array.isArray(records)) return null;
-  const sorted = [...records].sort((a, b) => Number((a as { _id?: number })._id) - Number((b as { _id?: number })._id));
+  const sorted = [...records].sort(
+    (a, b) => Number((a as { _id?: number })._id) - Number((b as { _id?: number })._id),
+  );
   for (const raw of sorted.slice(0, EMBEDDED_MAX_RUN_OFFSET)) {
     const r = raw as Record<string, unknown>;
-    if (typeof r.SETTLEMENT_DATE !== 'string' || r.SETTLEMENT_DATE.slice(0, 10) !== settlementDate) continue;
+    if (typeof r.SETTLEMENT_DATE !== 'string' || r.SETTLEMENT_DATE.slice(0, 10) !== settlementDate)
+      continue;
     if (Number(r.SETTLEMENT_PERIOD) !== settlementPeriod) continue;
     const solar = Number(r.EMBEDDED_SOLAR_FORECAST);
     const wind = Number(r.EMBEDDED_WIND_FORECAST);
@@ -197,7 +234,10 @@ export function embeddedForPeriod(payload: unknown, settlementDate: string, sett
 // ---------------------------------------------------------------------------
 // Frequency
 
-export function latestFrequency(payload: unknown, now: Date): { frequency: number; measurementTime: string } | null {
+export function latestFrequency(
+  payload: unknown,
+  now: Date,
+): { frequency: number; measurementTime: string } | null {
   const rows = Array.isArray(payload) ? payload : (payload as { data?: unknown })?.data;
   if (!Array.isArray(rows)) return null;
   let best: { frequency: number; measurementTime: string } | null = null;
@@ -216,7 +256,12 @@ export function latestFrequency(payload: unknown, now: Date): { frequency: numbe
 // ---------------------------------------------------------------------------
 // Response
 
-export interface MixEntry { id: MixFuel; name: MixFuel; perc: number; mw: number }
+export interface MixEntry {
+  id: MixFuel;
+  name: MixFuel;
+  perc: number;
+  mw: number;
+}
 
 export type UnavailableReason = 'mix_fetch_failed' | 'mix_stale' | 'embedded_unavailable';
 
@@ -272,16 +317,31 @@ export interface BuildInput {
 
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
-export function buildGridDemand({ now, fuelinst, embedded, frequency }: BuildInput): GridDemandResponse {
+export function buildGridDemand({
+  now,
+  fuelinst,
+  embedded,
+  frequency,
+}: BuildInput): GridDemandResponse {
   const freq = frequency == null ? null : latestFrequency(frequency, now);
   const common: Common = {
     fetchedAt: now.toISOString(),
     gridFrequency: freq?.frequency ?? null,
     frequencyTime: freq?.measurementTime ?? null,
   };
-  const unavailable = (reason: UnavailableReason, dataTime: string | null): GridDemandUnavailable => ({
-    ...common, status: 'unavailable', reason, timestamp: null, dataTime,
-    totalDemandMW: null, embeddedSolarMW: null, embeddedWindMW: null, mix: [],
+  const unavailable = (
+    reason: UnavailableReason,
+    dataTime: string | null,
+  ): GridDemandUnavailable => ({
+    ...common,
+    status: 'unavailable',
+    reason,
+    timestamp: null,
+    dataTime,
+    totalDemandMW: null,
+    embeddedSolarMW: null,
+    embeddedWindMW: null,
+    mix: [],
   });
 
   const snap = fuelinst == null ? null : latestFuelinstSnapshot(fuelinst);
@@ -289,15 +349,29 @@ export function buildGridDemand({ now, fuelinst, embedded, frequency }: BuildInp
   const ageMin = (now.getTime() - Date.parse(snap.startTime)) / 60_000;
   if (ageMin > MIX_MAX_AGE_MINUTES) return unavailable('mix_stale', snap.startTime);
 
-  const emb = embedded == null ? null : embeddedForPeriod(embedded, snap.settlementDate, snap.settlementPeriod);
+  const emb =
+    embedded == null
+      ? null
+      : embeddedForPeriod(embedded, snap.settlementDate, snap.settlementPeriod);
   // Midday solar is several GW: a mix without it would be badly wrong, so refuse.
   if (!emb) return unavailable('embedded_unavailable', snap.startTime);
 
-  const mw: Record<MixFuel, number> = { biomass: 0, coal: 0, imports: 0, gas: 0, nuclear: 0, other: 0, hydro: 0, solar: 0, wind: 0 };
+  const mw: Record<MixFuel, number> = {
+    biomass: 0,
+    coal: 0,
+    imports: 0,
+    gas: 0,
+    nuclear: 0,
+    other: 0,
+    hydro: 0,
+    solar: 0,
+    wind: 0,
+  };
   let exportsMW = 0;
   for (const [fuelType, gen] of Object.entries(snap.byFuelType)) {
     if (fuelType.toUpperCase().startsWith('INT')) {
-      if (gen > 0) mw.imports += gen; else exportsMW += -gen;
+      if (gen > 0) mw.imports += gen;
+      else exportsMW += -gen;
       continue;
     }
     // Negative pumped storage = pumping (consumption), not supply.
@@ -309,9 +383,12 @@ export function buildGridDemand({ now, fuelinst, embedded, frequency }: BuildInp
   const totalSupplyMW = MIX_FUELS.reduce((s, f) => s + mw[f], 0);
   if (totalSupplyMW <= 0) return unavailable('mix_fetch_failed', snap.startTime);
 
-  const mix: MixEntry[] = MIX_FUELS
-    .map(f => ({ id: f, name: f, mw: Math.round(mw[f]), perc: round1((mw[f] / totalSupplyMW) * 100) }))
-    .sort((a, b) => b.mw - a.mw);
+  const mix: MixEntry[] = MIX_FUELS.map((f) => ({
+    id: f,
+    name: f,
+    mw: Math.round(mw[f]),
+    perc: round1((mw[f] / totalSupplyMW) * 100),
+  })).sort((a, b) => b.mw - a.mw);
 
   return {
     ...common,
@@ -328,6 +405,10 @@ export function buildGridDemand({ now, fuelinst, embedded, frequency }: BuildInp
     embeddedWindMW: Math.round(emb.windMW),
     embeddedIsEstimate: true,
     mix,
-    sources: ['Elexon BMRS FUELINST', 'NESO Embedded Solar and Wind Forecast', ...(freq ? ['Elexon BMRS FREQ'] : [])],
+    sources: [
+      'Elexon BMRS FUELINST',
+      'NESO Embedded Solar and Wind Forecast',
+      ...(freq ? ['Elexon BMRS FREQ'] : []),
+    ],
   };
 }

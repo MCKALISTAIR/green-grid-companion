@@ -1,141 +1,164 @@
 <!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- iOS / Apple specific -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="GridSense" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+    <link rel="icon" type="image/png" href="/icon-192.png" />
 
-  <!-- iOS / Apple specific -->
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="GridSense" />
-  <link rel="apple-touch-icon" href="/icon-192.png" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/icon-192.png" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
-  <link rel="icon" type="image/png" href="/icon-192.png" />
+    <!-- Theme color for mobile browsers -->
+    <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
 
-  <!-- Theme color for mobile browsers -->
-  <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
-  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <!-- Prevent text size adjustment on orientation change -->
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="mobile-web-app-capable" content="yes" />
 
-  <!-- Prevent text size adjustment on orientation change -->
-  <meta name="format-detection" content="telephone=no" />
-  <meta name="mobile-web-app-capable" content="yes" />
+    <title>GridSense</title>
+    <meta
+      name="description"
+      content="Track UK carbon intensity and find the best times to use clean energy."
+    />
+    <meta name="author" content="GridSense" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="canonical" href="https://gridsense-app.lovable.app/" />
 
-  <title>GridSense</title>
-  <meta name="description" content="Track UK carbon intensity and find the best times to use clean energy." />
-  <meta name="author" content="GridSense" />
-  <link rel="manifest" href="/manifest.json" />
-  <link rel="canonical" href="https://gridsense-app.lovable.app/" />
+    <!-- Share cards: absolute URLs (crawlers don't resolve relative og:image). -->
+    <meta property="og:site_name" content="GridSense" />
+    <meta property="og:title" content="GridSense" />
+    <meta
+      property="og:description"
+      content="Track UK carbon intensity and find the best times to use clean energy."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://gridsense-app.lovable.app/" />
+    <meta property="og:image" content="https://gridsense-app.lovable.app/og-image.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="GridSense: know when your electricity is cleanest, and plan around it."
+    />
+    <meta property="og:locale" content="en_GB" />
 
-  <!-- Share cards: absolute URLs (crawlers don't resolve relative og:image). -->
-  <meta property="og:site_name" content="GridSense" />
-  <meta property="og:title" content="GridSense" />
-  <meta property="og:description" content="Track UK carbon intensity and find the best times to use clean energy." />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://gridsense-app.lovable.app/" />
-  <meta property="og:image" content="https://gridsense-app.lovable.app/og-image.png" />
-  <meta property="og:image:type" content="image/png" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="GridSense: know when your electricity is cleanest, and plan around it." />
-  <meta property="og:locale" content="en_GB" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@GridSense" />
+    <meta name="twitter:title" content="GridSense" />
+    <meta
+      name="twitter:description"
+      content="Track UK carbon intensity and find the best times to use clean energy."
+    />
+    <meta name="twitter:image" content="https://gridsense-app.lovable.app/og-image.png" />
+    <meta
+      name="twitter:image:alt"
+      content="GridSense: know when your electricity is cleanest, and plan around it."
+    />
 
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:site" content="@GridSense" />
-  <meta name="twitter:title" content="GridSense" />
-  <meta name="twitter:description" content="Track UK carbon intensity and find the best times to use clean energy." />
-  <meta name="twitter:image" content="https://gridsense-app.lovable.app/og-image.png" />
-  <meta name="twitter:image:alt" content="GridSense: know when your electricity is cleanest, and plan around it." />
-
-  <!-- Capacitor / iOS safe area handling -->
-  <style>
-    :root {
-      --sat: env(safe-area-inset-top);
-      --sar: env(safe-area-inset-right);
-      --sab: env(safe-area-inset-bottom);
-      --sal: env(safe-area-inset-left);
-    }
-
-    /* Prevent overscroll bounce on iOS */
-    html,
-    body {
-      overscroll-behavior: none;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    /* Ensure app takes full screen including safe areas */
-    html,
-    body {
-      height: 100%;
-      width: 100%;
-      margin: 0;
-      padding: 0;
-      /* Extend background to cover safe areas */
-      min-height: 100vh;
-      min-height: -webkit-fill-available;
-    }
-
-    #root {
-      height: 100%;
-      width: 100%;
-      /* Ensure root extends into safe areas */
-      min-height: calc(100vh + env(safe-area-inset-top) + env(safe-area-inset-bottom));
-      min-height: calc(-webkit-fill-available + env(safe-area-inset-top) + env(safe-area-inset-bottom));
-    }
-  </style>
-</head>
-
-<body>
-  <div id="root"></div>
-
-  <script>
-    // Prevent stale Service Worker caches from breaking the dev preview.
-    // Some browsers can keep an old SW controlling the page, serving outdated
-    // JS chunks which leads to React hook crashes and even "HTTP ERROR 412".
-    // NOTE: Skip this in Capacitor native apps (they run on capacitor:// or ionic:// schemes)
-    (function () {
-      try {
-        var protocol = window.location.protocol || '';
-        // Skip for native Capacitor apps (capacitor://, ionic://, file://)
-        if (protocol === 'capacitor:' || protocol === 'ionic:' || protocol === 'file:') return;
-
-        // Also check for Capacitor in userAgent (fallback detection)
-        if (window.navigator && /Capacitor/i.test(window.navigator.userAgent)) return;
-
-        var host = window.location.hostname || '';
-        var isDevPreview = host.endsWith('.lovableproject.com');
-        // Don't trigger on localhost for Capacitor compatibility
-        if (!isDevPreview) return;
-        if (!('serviceWorker' in navigator)) return;
-
-        var key = 'gridsense_sw_cleared_v1';
-        if (sessionStorage.getItem(key)) return;
-
-        var hadSW = false;
-        var hadCache = false;
-        Promise.all([
-          navigator.serviceWorker.getRegistrations().then(function (regs) {
-            hadSW = regs.length > 0;
-            return Promise.all(regs.map(function (r) { return r.unregister(); }));
-          }),
-          ('caches' in window)
-            ? caches.keys().then(function (names) {
-                hadCache = names.length > 0;
-                return Promise.all(names.map(function (n) { return caches.delete(n); }));
-              })
-            : Promise.resolve(),
-        ]).finally(function () {
-          sessionStorage.setItem(key, '1');
-          if (hadSW || hadCache) window.location.reload();
-        });
-      } catch (e) {
-        // no-op
+    <!-- Capacitor / iOS safe area handling -->
+    <style>
+      :root {
+        --sat: env(safe-area-inset-top);
+        --sar: env(safe-area-inset-right);
+        --sab: env(safe-area-inset-bottom);
+        --sal: env(safe-area-inset-left);
       }
-    })();
-  </script>
 
-  <script type="module" src="/src/main.tsx"></script>
-</body>
+      /* Prevent overscroll bounce on iOS */
+      html,
+      body {
+        overscroll-behavior: none;
+        -webkit-overflow-scrolling: touch;
+      }
 
+      /* Ensure app takes full screen including safe areas */
+      html,
+      body {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        /* Extend background to cover safe areas */
+        min-height: 100vh;
+        min-height: -webkit-fill-available;
+      }
+
+      #root {
+        height: 100%;
+        width: 100%;
+        /* Ensure root extends into safe areas */
+        min-height: calc(100vh + env(safe-area-inset-top) + env(safe-area-inset-bottom));
+        min-height: calc(
+          -webkit-fill-available + env(safe-area-inset-top) + env(safe-area-inset-bottom)
+        );
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="root"></div>
+
+    <script>
+      // Prevent stale Service Worker caches from breaking the dev preview.
+      // Some browsers can keep an old SW controlling the page, serving outdated
+      // JS chunks which leads to React hook crashes and even "HTTP ERROR 412".
+      // NOTE: Skip this in Capacitor native apps (they run on capacitor:// or ionic:// schemes)
+      (function () {
+        try {
+          var protocol = window.location.protocol || '';
+          // Skip for native Capacitor apps (capacitor://, ionic://, file://)
+          if (protocol === 'capacitor:' || protocol === 'ionic:' || protocol === 'file:') return;
+
+          // Also check for Capacitor in userAgent (fallback detection)
+          if (window.navigator && /Capacitor/i.test(window.navigator.userAgent)) return;
+
+          var host = window.location.hostname || '';
+          var isDevPreview = host.endsWith('.lovableproject.com');
+          // Don't trigger on localhost for Capacitor compatibility
+          if (!isDevPreview) return;
+          if (!('serviceWorker' in navigator)) return;
+
+          var key = 'gridsense_sw_cleared_v1';
+          if (sessionStorage.getItem(key)) return;
+
+          var hadSW = false;
+          var hadCache = false;
+          Promise.all([
+            navigator.serviceWorker.getRegistrations().then(function (regs) {
+              hadSW = regs.length > 0;
+              return Promise.all(
+                regs.map(function (r) {
+                  return r.unregister();
+                }),
+              );
+            }),
+            'caches' in window
+              ? caches.keys().then(function (names) {
+                  hadCache = names.length > 0;
+                  return Promise.all(
+                    names.map(function (n) {
+                      return caches.delete(n);
+                    }),
+                  );
+                })
+              : Promise.resolve(),
+          ]).finally(function () {
+            sessionStorage.setItem(key, '1');
+            if (hadSW || hadCache) window.location.reload();
+          });
+        } catch (e) {
+          // no-op
+        }
+      })();
+    </script>
+
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>

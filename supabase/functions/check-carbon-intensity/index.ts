@@ -9,7 +9,11 @@ import {
   type SchedulerSecretRpcClient,
 } from '../_shared/cron-auth.ts';
 import { createKeyLoader, backfillLegacyCredentials } from '../_shared/octopus-credentials.ts';
-import { fetchNationalIntensity, toIntensityReading, type IntensityReading } from '../_shared/intensity-reading.ts';
+import {
+  fetchNationalIntensity,
+  toIntensityReading,
+  type IntensityReading,
+} from '../_shared/intensity-reading.ts';
 
 interface CarbonIntensityResponse {
   data: Array<{
@@ -43,8 +47,12 @@ interface PushSubscription {
 // read with the service role and cached per instance.
 const getSchedulerSecret = createSchedulerSecretProvider(() =>
   fetchSchedulerSecret(
-    createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!) as unknown as SchedulerSecretRpcClient,
-  ));
+    createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    ) as unknown as SchedulerSecretRpcClient,
+  ),
+);
 
 // Used to encrypt any remaining legacy plaintext Octopus API keys (see below).
 const getCredentialKey = createKeyLoader(() => Deno.env.get('OCTOPUS_CREDENTIALS_KEY'));
@@ -84,7 +92,9 @@ Deno.serve(async (req) => {
       if (region?.shortname && reading) {
         intensityByRegion.set(region.shortname.toLowerCase(), reading);
       } else {
-        console.warn(`[INTENSITY] Ignoring region with invalid data: ${region?.shortname ?? 'unknown'}`);
+        console.warn(
+          `[INTENSITY] Ignoring region with invalid data: ${region?.shortname ?? 'unknown'}`,
+        );
       }
     }
 
@@ -98,7 +108,13 @@ Deno.serve(async (req) => {
       throw subError;
     }
 
-    const notifications: Array<{ token: string; title: string; body: string; platform: string; isSandbox?: boolean }> = [];
+    const notifications: Array<{
+      token: string;
+      title: string;
+      body: string;
+      platform: string;
+      isSandbox?: boolean;
+    }> = [];
     const stateUpdates: Array<{ id: string; low_state?: string; high_state?: string }> = [];
 
     // Cache for postcode-to-region lookups to avoid redundant searches
@@ -117,7 +133,8 @@ Deno.serve(async (req) => {
       }
 
       // Try exact match
-      let regionIntensity: IntensityReading | null | undefined = intensityByRegion.get(postcodeLower);
+      let regionIntensity: IntensityReading | null | undefined =
+        intensityByRegion.get(postcodeLower);
 
       // If no exact match, try to find by first letter(s)
       if (!regionIntensity) {
@@ -157,7 +174,8 @@ Deno.serve(async (req) => {
 
       // === LOW INTENSITY ALERTS ===
       if (sub.low_intensity_enabled) {
-        const currentState = regionIntensity.intensity <= sub.low_intensity_threshold ? 'below' : 'above';
+        const currentState =
+          regionIntensity.intensity <= sub.low_intensity_threshold ? 'below' : 'above';
         const previousState = sub.last_intensity_state;
 
         if (currentState !== previousState) {
@@ -184,7 +202,8 @@ Deno.serve(async (req) => {
 
       // === HIGH INTENSITY ALERTS ===
       if (sub.high_intensity_enabled) {
-        const currentHighState = regionIntensity.intensity >= sub.high_intensity_threshold ? 'above' : 'below';
+        const currentHighState =
+          regionIntensity.intensity >= sub.high_intensity_threshold ? 'above' : 'below';
         const previousHighState = sub.last_high_intensity_state;
 
         if (currentHighState !== previousHighState) {
@@ -225,20 +244,19 @@ Deno.serve(async (req) => {
         const updateData: Record<string, string> = {};
         if (states.low_state) updateData.last_intensity_state = states.low_state;
         if (states.high_state) updateData.last_high_intensity_state = states.high_state;
-        return supabase
-          .from('push_subscriptions')
-          .update(updateData)
-          .eq('id', id);
-      })
+        return supabase.from('push_subscriptions').update(updateData).eq('id', id);
+      }),
     );
 
-    console.log(`Checked ${subscriptions?.length || 0} subscriptions, ${stateUpdates.length} state changes, ${notifications.length} notifications to send, ${skippedNoData} skipped (no valid intensity data)`);
+    console.log(
+      `Checked ${subscriptions?.length || 0} subscriptions, ${stateUpdates.length} state changes, ${notifications.length} notifications to send, ${skippedNoData} skipped (no valid intensity data)`,
+    );
 
     // Actually deliver the push notifications to APNs/FCM
     try {
       await sendPushNotifications(notifications);
     } catch (e) {
-      console.error("[PUSH] Error sending push notifications:", e);
+      console.error('[PUSH] Error sending push notifications:', e);
     }
 
     // Piggyback: encrypt any legacy plaintext Octopus API keys left from before
@@ -262,17 +280,14 @@ Deno.serve(async (req) => {
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      },
     );
   } catch (error) {
     console.error('Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(
-      JSON.stringify({ error: errorMessage }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+    return new Response(JSON.stringify({ error: errorMessage }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });

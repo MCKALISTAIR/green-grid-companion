@@ -1,7 +1,12 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import type { ForecastData } from '@/lib/carbonApi';
 import { getRegionalHistoryAndForecast } from '@/lib/carbonApi';
-import { getDailyStats, londonDayBounds, londonWallTimeToInstant, SLOT_MS } from '@/lib/dayForecast';
+import {
+  getDailyStats,
+  londonDayBounds,
+  londonWallTimeToInstant,
+  SLOT_MS,
+} from '@/lib/dayForecast';
 import { formatLondonTime } from '@/lib/londonTime';
 import southScotland from '@/test/fixtures/neso-regional-south-scotland-2026-10-11.json';
 import london from '@/test/fixtures/neso-regional-london-fw48h-2026-10-11.json';
@@ -14,7 +19,11 @@ const LDN = london.data.data as unknown as ForecastData[];
 const GB = national.data as unknown as ForecastData[];
 const NOW = new Date('2026-10-11T10:10:00Z'); // 11:10 BST, Sunday
 
-function slot(from: string, forecast: number | null, extra: Partial<ForecastData['intensity']> = {}): ForecastData {
+function slot(
+  from: string,
+  forecast: number | null,
+  extra: Partial<ForecastData['intensity']> = {},
+): ForecastData {
   const to = new Date(Date.parse(from) + SLOT_MS).toISOString();
   return {
     from,
@@ -26,11 +35,13 @@ function slot(from: string, forecast: number | null, extra: Partial<ForecastData
 /** A synthetic day of half-hours from a London day's bounds. */
 function syntheticDay(dateKey: string, value: (i: number) => number | null): ForecastData[] {
   const { start, slotCount } = londonDayBounds(dateKey);
-  return Array.from({ length: slotCount }, (_, i) => slot(new Date(start + i * SLOT_MS).toISOString(), value(i)));
+  return Array.from({ length: slotCount }, (_, i) =>
+    slot(new Date(start + i * SLOT_MS).toISOString(), value(i)),
+  );
 }
 
 describe('getDailyStats (48-hour overview cards)', () => {
-  it('keeps NESO\'s published zeros for South Scotland as real zeros, and flags the day', () => {
+  it("keeps NESO's published zeros for South Scotland as real zeros, and flags the day", () => {
     // Live API, 11 Oct 2026: every South Scotland half-hour is forecast 0 (wind + nuclear).
     expect(SS.every((r) => r.intensity.forecast === 0)).toBe(true);
     const days = getDailyStats(SS, NOW);
@@ -41,9 +52,9 @@ describe('getDailyStats (48-hour overview cards)', () => {
   it('computes real ranges for a non-zero region (London fw48h fixture)', () => {
     const days = getDailyStats(LDN, NOW);
     const today = days.find((d) => d.date === '2026-10-11')!;
-    const values = LDN.filter((r) => r.from >= '2026-10-10T23:00Z' && r.from < '2026-10-11T23:00Z').map(
-      (r) => r.intensity.forecast,
-    );
+    const values = LDN.filter(
+      (r) => r.from >= '2026-10-10T23:00Z' && r.from < '2026-10-11T23:00Z',
+    ).map((r) => r.intensity.forecast);
     expect(today.min).toBe(Math.min(...values));
     expect(today.max).toBe(Math.max(...values));
     expect(today.min).toBeGreaterThan(0);
@@ -60,7 +71,11 @@ describe('getDailyStats (48-hour overview cards)', () => {
     const days = getDailyStats(
       [
         slot('2026-10-12T10:00:00Z', null),
-        { from: '2026-10-12T10:30:00Z', to: '2026-10-12T11:00:00Z', intensity: {} as ForecastData['intensity'] },
+        {
+          from: '2026-10-12T10:30:00Z',
+          to: '2026-10-12T11:00:00Z',
+          intensity: {} as ForecastData['intensity'],
+        },
       ],
       NOW,
     );
@@ -70,7 +85,10 @@ describe('getDailyStats (48-hour overview cards)', () => {
 
   it('buckets by the Europe/London day, not UTC or the device zone', () => {
     // 23:30Z on 11 Oct is 00:30 BST on Monday 12 Oct.
-    const days = getDailyStats([slot('2026-10-11T22:30:00Z', 100), slot('2026-10-11T23:30:00Z', 50)], NOW);
+    const days = getDailyStats(
+      [slot('2026-10-11T22:30:00Z', 100), slot('2026-10-11T23:30:00Z', 50)],
+      NOW,
+    );
     expect(days.map((d) => [d.date, d.avg])).toEqual([
       ['2026-10-11', 100],
       ['2026-10-12', 50],
@@ -85,16 +103,26 @@ describe('getDailyStats (48-hour overview cards)', () => {
       ],
       NOW,
     );
-    expect(days[0]).toMatchObject({ label: 'Saturday', hasActuals: true, actualsEstimated: true, avgActual: 0 });
+    expect(days[0]).toMatchObject({
+      label: 'Saturday',
+      hasActuals: true,
+      actualsEstimated: true,
+      avgActual: 0,
+    });
     expect(days[1]).toMatchObject({ label: 'Today', hasActuals: false, avgActual: null });
   });
 });
 
 describe('regional backfill', () => {
   const mockFetch = (rows: unknown[]) =>
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify({ data: { regionid: 2, shortname: 'South Scotland', data: rows } }), { status: 200 }),
-    );
+    vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(
+        new Response(
+          JSON.stringify({ data: { regionid: 2, shortname: 'South Scotland', data: rows } }),
+          { status: 200 },
+        ),
+      );
 
   it('does not invent a 0 "actual" when the generation mix is empty or missing', async () => {
     mockFetch([
@@ -117,20 +145,28 @@ describe('regional backfill', () => {
 describe('London day bucketing and DST', () => {
   it('a normal day has 48 half-hours', () => {
     expect(londonDayBounds('2026-10-11').slotCount).toBe(48);
-    expect(new Date(londonDayBounds('2026-10-11').start).toISOString()).toBe('2026-10-10T23:00:00.000Z');
+    expect(new Date(londonDayBounds('2026-10-11').start).toISOString()).toBe(
+      '2026-10-10T23:00:00.000Z',
+    );
   });
 
   it('Sun 25 Oct 2026 (clocks go back) has 50 half-hours and they all land on that day', () => {
     const b = londonDayBounds('2026-10-25');
     expect(b.slotCount).toBe(50);
-    const days = getDailyStats(syntheticDay('2026-10-25', () => 100), NOW);
+    const days = getDailyStats(
+      syntheticDay('2026-10-25', () => 100),
+      NOW,
+    );
     expect(days.map((d) => d.date)).toEqual(['2026-10-25']);
     expect(formatLondonTime(new Date(londonWallTimeToInstant('2026-10-25', 6)))).toBe('06:00');
   });
 
   it('Sun 29 Mar 2026 (clocks go forward) has 46 half-hours and they all land on that day', () => {
     expect(londonDayBounds('2026-03-29').slotCount).toBe(46);
-    const days = getDailyStats(syntheticDay('2026-03-29', () => 100), NOW);
+    const days = getDailyStats(
+      syntheticDay('2026-03-29', () => 100),
+      NOW,
+    );
     expect(days.map((d) => d.date)).toEqual(['2026-03-29']);
   });
 });

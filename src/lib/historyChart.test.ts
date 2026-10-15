@@ -28,7 +28,9 @@ describe('/history chart (South Scotland, 4 to 11 Oct)', () => {
   it('the y-axis no longer stretches a 6g blip across the chart', async () => {
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date('2026-10-11T10:10:00Z'));
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify(history), { status: 200 }));
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify(history), { status: 200 }),
+    );
     const rows = await getRegionalHistoryAndForecast(2, 'x', 'y');
     const points = rows.map(toHistoryPoint);
     expect(historyYAxisMax(points)).toBe(HISTORY_Y_MIN_CEILING);

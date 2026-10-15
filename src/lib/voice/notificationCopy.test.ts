@@ -15,7 +15,9 @@ describe('notification copy', () => {
   it('shows times in Europe/London and the full unit', () => {
     const n = cleanWindowNotification(START, 42, 100, 'plain');
     expect(n.title).toBe('Clean window from 13:00');
-    expect(n.body).toBe('42 gCO₂/kWh forecast, under your 100 gCO₂/kWh alert. A good time for big loads.');
+    expect(n.body).toBe(
+      '42 gCO₂/kWh forecast, under your 100 gCO₂/kWh alert. A good time for big loads.',
+    );
   });
 
   it('keeps numbers and title identical across tones', () => {
@@ -44,7 +46,9 @@ describe('notification copy', () => {
         threshold: 100,
         best: { start: START, end: new Date('2026-10-11T15:00:00Z'), hours: 3 },
       }),
-    ).toBe('Average forecast today: 120 gCO₂/kWh. 3.5 hours under your 100 gCO₂/kWh alert. Cleanest stretch: 13:00 to 16:00.');
+    ).toBe(
+      'Average forecast today: 120 gCO₂/kWh. 3.5 hours under your 100 gCO₂/kWh alert. Cleanest stretch: 13:00 to 16:00.',
+    );
     expect(dailyOutlookBody({ avg: 300, cleanHours: 0, threshold: 100, best: null })).toBe(
       'Average forecast today: 300 gCO₂/kWh. No half hours under your 100 gCO₂/kWh alert today.',
     );

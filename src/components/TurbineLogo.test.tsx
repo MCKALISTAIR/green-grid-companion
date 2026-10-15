@@ -13,8 +13,8 @@ describe('TurbineLogo rotor', () => {
   it('has exactly three identical blades, 120° apart, around the hub', () => {
     const blades = [...setup().querySelectorAll('[data-turbine-blade]')];
     expect(blades).toHaveLength(3);
-    expect(new Set(blades.map(b => b.getAttribute('d')))).toEqual(new Set([TURBINE_BLADE_PATH]));
-    expect(blades.map(b => b.getAttribute('transform'))).toEqual([
+    expect(new Set(blades.map((b) => b.getAttribute('d')))).toEqual(new Set([TURBINE_BLADE_PATH]));
+    expect(blades.map((b) => b.getAttribute('transform'))).toEqual([
       'rotate(0 256 256)',
       'rotate(120 256 256)',
       'rotate(240 256 256)',
@@ -24,8 +24,10 @@ describe('TurbineLogo rotor', () => {
   });
 
   it('blade path is symmetric about the hub axis (x = 256)', () => {
-    const xs = TURBINE_BLADE_PATH.match(/-?\d+(\.\d+)?/g)!.map(Number).filter((_, i) => i % 2 === 0);
-    const mirrored = xs.map(x => 512 - x).sort((a, b) => a - b);
+    const xs = TURBINE_BLADE_PATH.match(/-?\d+(\.\d+)?/g)!
+      .map(Number)
+      .filter((_, i) => i % 2 === 0);
+    const mirrored = xs.map((x) => 512 - x).sort((a, b) => a - b);
     expect(mirrored).toEqual([...xs].sort((a, b) => a - b));
   });
 

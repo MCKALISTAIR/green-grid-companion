@@ -39,7 +39,12 @@ export function SceneAdvancedLayer({
       <AnimatePresence>
         {!isCity && !isCoastal && sceneConfig.cleanliness > 0.5 && (
           <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-1">
-            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio={SCENE_SILHOUETTE_ASPECT} aria-hidden="true">
+            <svg
+              viewBox="0 30 400 120"
+              className="w-full h-full"
+              preserveAspectRatio={SCENE_SILHOUETTE_ASPECT}
+              aria-hidden="true"
+            >
               <BackgroundMountains isNight={isNight} />
             </svg>
           </div>
@@ -50,14 +55,17 @@ export function SceneAdvancedLayer({
       <AnimatePresence>
         {!isCity && !isCoastal && sceneConfig.cleanliness > 0.6 && (
           <div className="absolute bottom-0 left-0 right-0 h-[75%] pointer-events-none z-30">
-            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio={SCENE_SILHOUETTE_ASPECT} aria-hidden="true">
+            <svg
+              viewBox="0 30 400 120"
+              className="w-full h-full"
+              preserveAspectRatio={SCENE_SILHOUETTE_ASPECT}
+              aria-hidden="true"
+            >
               <ForegroundGrass windSpeed={windSpeed} />
             </svg>
           </div>
         )}
       </AnimatePresence>
-
-
 
       {/* EV Charging Station at night when clean — city/countryside street furniture */}
       <AnimatePresence>
@@ -79,7 +87,12 @@ export function SceneAdvancedLayer({
       <AnimatePresence>
         {!isCity && !isCoastal && isRaining && hydroPercentage > 10 && (
           <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-14 overflow-hidden">
-            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio={SCENE_SILHOUETTE_ASPECT} aria-hidden="true">
+            <svg
+              viewBox="0 30 400 120"
+              className="w-full h-full"
+              preserveAspectRatio={SCENE_SILHOUETTE_ASPECT}
+              aria-hidden="true"
+            >
               <HydroDam flowIntensity={Math.min(hydroPercentage / 50, 1)} />
             </svg>
           </div>
@@ -87,15 +100,18 @@ export function SceneAdvancedLayer({
       </AnimatePresence>
 
       {/* Meteor Shower - Double-click moon */}
-      <AnimatePresence>
-        {showMeteorShower && <MeteorShower />}
-      </AnimatePresence>
+      <AnimatePresence>{showMeteorShower && <MeteorShower />}</AnimatePresence>
 
       {/* Biomass Smoke — countryside only */}
       <AnimatePresence>
         {!isCity && !isCoastal && biomassPercentage > 5 && sceneConfig.showRenewables && (
           <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-15 overflow-hidden">
-            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio={SCENE_SILHOUETTE_ASPECT} aria-hidden="true">
+            <svg
+              viewBox="0 30 400 120"
+              className="w-full h-full"
+              preserveAspectRatio={SCENE_SILHOUETTE_ASPECT}
+              aria-hidden="true"
+            >
               <BiomassSmoke x={180} intensity={biomassPercentage / 100} />
               {biomassPercentage > 15 && <BiomassSmoke x={220} intensity={0.6} />}
             </svg>

@@ -1,15 +1,5 @@
 import { Badge } from '@/components/ui/badge';
 
-export type GreenScoreRating = 'Excellent' | 'Good' | 'Fair' | 'Growing';
-
-/** Align rating labels everywhere Green Score appears. */
-export function getGreenScoreRating(greenPercentage: number): GreenScoreRating {
-  if (greenPercentage >= 70) return 'Excellent';
-  if (greenPercentage >= 50) return 'Good';
-  if (greenPercentage >= 30) return 'Fair';
-  return 'Growing';
-}
-
 /**
  * Shared explainer body for Green Score — popovers, first-run tips, History overlay education.
  */
@@ -19,8 +9,8 @@ export function GreenScoreExplainerContent() {
       <div>
         <h4 className="font-semibold text-sm mb-2">How it&apos;s calculated</h4>
         <p className="text-xs text-muted-foreground leading-relaxed">
-          Your Green Score is the share of your metered kWh used during low-carbon intensity
-          periods (very low + low). Timing demand into clean windows raises it — not just using less.
+          Your Green Score is the share of your metered kWh used during low-carbon intensity periods
+          (very low + low). Timing demand into clean windows raises it — not just using less.
         </p>
       </div>
       <div>
@@ -28,13 +18,19 @@ export function GreenScoreExplainerContent() {
         <div className="space-y-1.5 text-xs">
           <div className="flex justify-between gap-3">
             <span className="text-muted-foreground">70%+</span>
-            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-[10px] h-5">
+            <Badge
+              variant="outline"
+              className="bg-primary/10 text-primary border-primary/20 text-[10px] h-5"
+            >
               Excellent
             </Badge>
           </div>
           <div className="flex justify-between gap-3">
             <span className="text-muted-foreground">50–69%</span>
-            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-[10px] h-5">
+            <Badge
+              variant="outline"
+              className="bg-primary/10 text-primary border-primary/20 text-[10px] h-5"
+            >
               Good
             </Badge>
           </div>

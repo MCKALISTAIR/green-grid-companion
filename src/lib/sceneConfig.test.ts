@@ -15,12 +15,7 @@ const clearWeather = {
   isThunderstorm: false,
 } as WeatherData;
 
-function ground(
-  sceneType: SceneType,
-  timeOfDay: TimeOfDay,
-  intensity = 80,
-  isNight = false,
-) {
+function ground(sceneType: SceneType, timeOfDay: TimeOfDay, intensity = 80, isNight = false) {
   return buildSceneConfig({
     intensity,
     index: 'low',

@@ -25,7 +25,7 @@ vi.mock('@/hooks/useTimeOfDay', () => ({
   TimeOfDay: {
     Day: 'day',
     Night: 'night',
-  }
+  },
 }));
 
 vi.mock('@/hooks/useWeatherData', () => ({
@@ -66,36 +66,48 @@ vi.mock('@/hooks/useSceneDirector', () => ({
 // Mock framer-motion
 vi.mock('framer-motion', async () => {
   const actual = await vi.importActual('framer-motion');
-  const motion = new Proxy({}, {
-    get: (target, prop) => {
-      // Returns a component that renders the tag with the property name
-      return React.forwardRef(({
-        children,
-        animate,
-        transition,
-        variants,
-        initial,
-        exit,
-        whileHover,
-        whileTap,
-        whileDrag,
-        whileFocus,
-        layout,
-        layoutId,
-        onPan,
-        onPanStart,
-        onPanEnd,
-        onTap,
-        viewport,
-        ...props
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      }: any, ref) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const Tag = prop as any;
-        return <Tag {...props} ref={ref}>{children}</Tag>;
-      });
-    }
-  });
+  const motion = new Proxy(
+    {},
+    {
+      get: (target, prop) => {
+        // Returns a component that renders the tag with the property name
+        return React.forwardRef(
+          (
+            {
+              children,
+              animate,
+              transition,
+              variants,
+              initial,
+              exit,
+              whileHover,
+              whileTap,
+              whileDrag,
+              whileFocus,
+              layout,
+              layoutId,
+              onPan,
+              onPanStart,
+              onPanEnd,
+              onTap,
+              viewport,
+              ...props
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            }: any,
+            ref,
+          ) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const Tag = prop as any;
+            return (
+              <Tag {...props} ref={ref}>
+                {children}
+              </Tag>
+            );
+          },
+        );
+      },
+    },
+  );
 
   return {
     ...actual,

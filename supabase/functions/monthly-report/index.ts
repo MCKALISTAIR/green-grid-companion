@@ -8,7 +8,11 @@ import {
   fetchSchedulerSecret,
   type SchedulerSecretRpcClient,
 } from '../_shared/cron-auth.ts';
-import { claimSubscriptionsForPeriod, monthPeriodKey, type NotificationLogClient } from '../_shared/notification-periods.ts';
+import {
+  claimSubscriptionsForPeriod,
+  monthPeriodKey,
+  type NotificationLogClient,
+} from '../_shared/notification-periods.ts';
 
 interface FootprintRecord {
   interval_start: string;
@@ -40,8 +44,20 @@ interface WeeklyData {
 }
 
 function getMonthName(month: number): string {
-  const months = ['January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'];
+  const months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
   return months[month] || 'Unknown';
 }
 
@@ -62,8 +78,12 @@ function getWeekOfMonth(date: Date): number {
 // read with the service role and cached per instance.
 const getSchedulerSecret = createSchedulerSecretProvider(() =>
   fetchSchedulerSecret(
-    createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!) as unknown as SchedulerSecretRpcClient,
-  ));
+    createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    ) as unknown as SchedulerSecretRpcClient,
+  ),
+);
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -87,7 +107,9 @@ Deno.serve(async (req) => {
     const lastMonth = now.getUTCMonth() === 0 ? 11 : now.getUTCMonth() - 1;
     const lastMonthYear = now.getUTCMonth() === 0 ? now.getUTCFullYear() - 1 : now.getUTCFullYear();
 
-    console.log(`Monthly Report - Running on day ${currentDay} for ${getMonthName(lastMonth)} ${lastMonthYear}`);
+    console.log(
+      `Monthly Report - Running on day ${currentDay} for ${getMonthName(lastMonth)} ${lastMonthYear}`,
+    );
 
     // Get subscriptions that should receive monthly report today
     const { data: subscriptions, error: subError } = await supabase
@@ -124,7 +146,10 @@ Deno.serve(async (req) => {
     let totalKwh = 0;
     let totalIntensity = 0;
     const byIndex: Record<string, { count: number; carbon_g: number; kwh: number }> = {};
-    const weeklyBreakdown: Record<number, { carbon_g: number; kwh: number; intensity: number; count: number; greenCount: number }> = {};
+    const weeklyBreakdown: Record<
+      number,
+      { carbon_g: number; kwh: number; intensity: number; count: number; greenCount: number }
+    > = {};
 
     for (const record of (footprint || []) as FootprintRecord[]) {
       const recordDate = new Date(record.interval_start);
@@ -211,7 +236,13 @@ Deno.serve(async (req) => {
     // Calculate month-over-month comparison (we'd need previous month data for this)
     // For now, we'll just provide the current month stats
 
-    const notifications: Array<{ token: string; title: string; body: string; platform: string; isSandbox?: boolean }> = [];
+    const notifications: Array<{
+      token: string;
+      title: string;
+      body: string;
+      platform: string;
+      isSandbox?: boolean;
+    }> = [];
 
     // Idempotency: claim each subscription for the reported month before
     // sending so a duplicate/replayed run never sends the same report twice.
@@ -224,7 +255,9 @@ Deno.serve(async (req) => {
       allSubs.map((s) => s.id),
     );
     const dueSubscriptions = allSubs.filter((s) => claimed.has(s.id));
-    console.log(`Monthly report ${periodKey}: ${dueSubscriptions.length} due, ${allSubs.length - dueSubscriptions.length} already sent`);
+    console.log(
+      `Monthly report ${periodKey}: ${dueSubscriptions.length} due, ${allSubs.length - dueSubscriptions.length} already sent`,
+    );
 
     // Generate notification for each subscription
     for (const sub of dueSubscriptions) {
@@ -232,11 +265,13 @@ Deno.serve(async (req) => {
 
       let body: string;
       if (footprint && footprint.length > 0) {
-        body = `📊 ${getMonthName(lastMonth)}: ${totalCarbonKg.toFixed(1)}kg CO₂ from ${totalKwh.toFixed(1)}kWh. ` +
+        body =
+          `📊 ${getMonthName(lastMonth)}: ${totalCarbonKg.toFixed(1)}kg CO₂ from ${totalKwh.toFixed(1)}kWh. ` +
           `${greenPercentage}% green! ` +
           `Best: ${bestWeek?.weekLabel || 'N/A'} (${bestWeek?.greenPercentage || 0}% green)`;
       } else {
-        body = `📊 Your ${getMonthName(lastMonth)} report is ready! ` +
+        body =
+          `📊 Your ${getMonthName(lastMonth)} report is ready! ` +
           `Link your Octopus meter for detailed carbon insights.`;
       }
 
@@ -250,13 +285,15 @@ Deno.serve(async (req) => {
     }
 
     console.log(`Generated ${notifications.length} monthly report notifications`);
-    console.log(`Stats: ${totalCarbonKg.toFixed(2)}kg CO₂, ${totalKwh.toFixed(2)}kWh, ${greenPercentage}% green`);
+    console.log(
+      `Stats: ${totalCarbonKg.toFixed(2)}kg CO₂, ${totalKwh.toFixed(2)}kWh, ${greenPercentage}% green`,
+    );
 
     // Actually deliver the push notifications to APNs/FCM
     try {
       await sendPushNotifications(notifications);
     } catch (e) {
-      console.error("[PUSH] Error sending push notifications:", e);
+      console.error('[PUSH] Error sending push notifications:', e);
     }
 
     return new Response(
@@ -281,7 +318,7 @@ Deno.serve(async (req) => {
           worst_week: worstWeek,
           by_intensity: Object.entries(byIndex).map(([index, data]) => ({
             index,
-            kwh: Number((data.kwh).toFixed(2)),
+            kwh: Number(data.kwh.toFixed(2)),
             carbon_kg: Number((data.carbon_g / 1000).toFixed(2)),
             percentage: Math.round((data.count / totalCount) * 100),
           })),
@@ -289,17 +326,14 @@ Deno.serve(async (req) => {
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      },
     );
   } catch (error) {
     console.error('Monthly Report Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(
-      JSON.stringify({ error: errorMessage }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+    return new Response(JSON.stringify({ error: errorMessage }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });

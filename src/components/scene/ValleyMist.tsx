@@ -13,7 +13,11 @@ export function ValleyMist({ cleanliness, timeOfDay, isNight }: ValleyMistProps)
   const id = useId();
 
   // Show mist in dawn, morning, sunset, or dusk. Keep midday and full night clear.
-  const isVisible = timeOfDay === 'dawn' || timeOfDay === 'morning' || timeOfDay === 'sunset' || timeOfDay === 'dusk';
+  const isVisible =
+    timeOfDay === 'dawn' ||
+    timeOfDay === 'morning' ||
+    timeOfDay === 'sunset' ||
+    timeOfDay === 'dusk';
   if (!isVisible) return null;
 
   // Tint of mist: cool blue on clean days, warm sepia on dirty days
@@ -22,23 +26,26 @@ export function ValleyMist({ cleanliness, timeOfDay, isNight }: ValleyMistProps)
   const light = isNight ? '25%' : '88%';
   const mistColor = `hsl(${hue} ${sat} ${light}% / 0.15)`;
 
-  const mistAnimate = reduced
-    ? { x: 0 }
-    : { x: ['-15%', '15%', '-15%'] };
+  const mistAnimate = reduced ? { x: 0 } : { x: ['-15%', '15%', '-15%'] };
 
   return (
     <motion.div
       className="absolute inset-x-0 bottom-0 pointer-events-none z-[15] overflow-hidden"
       style={{
         height: '40%', // Positioned exactly at valley height
-        transform: 'translateY(5px)' // Flush with hills
+        transform: 'translateY(5px)', // Flush with hills
       }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 2 }}
     >
-      <svg viewBox="0 20 400 60" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
+      <svg
+        viewBox="0 20 400 60"
+        className="w-full h-full"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
         <defs>
           <filter id={`${id}-mistBlur`}>
             <feGaussianBlur stdDeviation="3.5" />
@@ -50,7 +57,7 @@ export function ValleyMist({ cleanliness, timeOfDay, isNight }: ValleyMistProps)
           transition={{
             duration: 38,
             repeat: Infinity,
-            ease: 'easeInOut' as const
+            ease: 'easeInOut' as const,
           }}
         >
           {/* Valley mist shapes */}

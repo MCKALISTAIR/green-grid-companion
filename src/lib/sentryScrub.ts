@@ -14,9 +14,11 @@ import type { Breadcrumb, Event } from '@sentry/react';
 export const REDACTED = '[redacted]';
 
 // Query params that carry coordinates or a postcode (full or outward).
-const LOCATION_PARAM = /((?:^|[?&;])(?:lat|latitude|lon|lng|long|longitude|postcode|postal_?code|outcode|q|query)=)[^&#\s"']*/gi;
+const LOCATION_PARAM =
+  /((?:^|[?&;])(?:lat|latitude|lon|lng|long|longitude|postcode|postal_?code|outcode|q|query)=)[^&#\s"']*/gi;
 // A path segment after an endpoint that takes a postcode or outward code.
-const POSTCODE_PATH = /(\/(?:postcode|postcodes|outcode|outcodes|regional\/postcode)\/)[^/?#\s"']+/gi;
+const POSTCODE_PATH =
+  /(\/(?:postcode|postcodes|outcode|outcodes|regional\/postcode)\/)[^/?#\s"']+/gi;
 // Coordinates as a path segment (e.g. /55.9533/-3.1883) or a "lat,lon" pair.
 const COORD_PAIR = /-?\d{1,3}\.\d{2,}\s*(?:,|%2C|\/)\s*-?\d{1,3}\.\d{2,}/gi;
 const COORD_SEGMENT = /\/-?\d{1,3}\.\d{3,}(?=[/?#\s"']|$)/g;
@@ -40,7 +42,8 @@ export function redactDeep<T>(value: T, depth = 0): T {
   if (depth > MAX_DEPTH || value === null || typeof value !== 'object') return value;
   if (Array.isArray(value)) return value.map((v) => redactDeep(v, depth + 1)) as unknown as T;
   const out: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(value as Record<string, unknown>)) out[k] = redactDeep(v, depth + 1);
+  for (const [k, v] of Object.entries(value as Record<string, unknown>))
+    out[k] = redactDeep(v, depth + 1);
   return out as T;
 }
 

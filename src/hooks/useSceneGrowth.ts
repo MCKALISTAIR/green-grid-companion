@@ -71,10 +71,7 @@ export function gardenDaysToStage(gardenDays: number): SceneGrowthStage {
  * Hours are the growth engine only — UI surfaces garden day / stage, never raw hours
  * (Carrot pattern: calendar story, half-hour grid truth under the hood).
  */
-export function useSceneGrowth(
-  intensity: number,
-  generationMix?: GenerationMix[],
-): SceneGrowth {
+export function useSceneGrowth(intensity: number, generationMix?: GenerationMix[]): SceneGrowth {
   const coalFree = useCoalFreeStreak(generationMix);
   const [cleanHours, setCleanHours] = useState(() => readStore().cleanHours);
 

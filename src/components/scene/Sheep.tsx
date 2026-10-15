@@ -4,168 +4,189 @@ import { useHaptics } from '@/hooks/useHaptics';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface SheepProps {
-    x: number;
-    y: number;
-    scale?: number;
-    isNight: boolean;
-    delay?: number;
+  x: number;
+  y: number;
+  scale?: number;
+  isNight: boolean;
+  delay?: number;
 }
 
 const SheepPhrases = [
-    "Ewe should wait until 9pm to wash clothes!",
-    "Feeling wool-y green today!",
-    "This pasture is powered by wind!",
-    "No coal in our grass, please!",
-    "Baa-rry clean energy!",
-    "I only eat zero-carbon clover!"
+  'Ewe should wait until 9pm to wash clothes!',
+  'Feeling wool-y green today!',
+  'This pasture is powered by wind!',
+  'No coal in our grass, please!',
+  'Baa-rry clean energy!',
+  'I only eat zero-carbon clover!',
 ];
 
 export function Sheep({ x, y, scale = 1, isNight, delay = 0 }: SheepProps) {
-    const [isJumping, setIsJumping] = useState(false);
-    const [bubbleText, setBubbleText] = useState<string | null>(null);
-    const [clickCount, setClickCount] = useState(0);
-    const id = useId();
-    const { impactLight: impactMedium } = useHaptics({ decorative: true });
-    const shouldReduceMotion = useReducedMotion();
+  const [isJumping, setIsJumping] = useState(false);
+  const [bubbleText, setBubbleText] = useState<string | null>(null);
+  const [clickCount, setClickCount] = useState(0);
+  const id = useId();
+  const { impactLight: impactMedium } = useHaptics({ decorative: true });
+  const shouldReduceMotion = useReducedMotion();
 
-    const handleClick = () => {
-        if (isJumping) return;
-        setIsJumping(true);
-        impactMedium(); // Haptic feedback!
+  const handleClick = () => {
+    if (isJumping) return;
+    setIsJumping(true);
+    impactMedium(); // Haptic feedback!
 
-        // Pick random phrase
-        const randomPhrase = SheepPhrases[Math.floor(Math.random() * SheepPhrases.length)];
-        setBubbleText(randomPhrase);
-        setClickCount(prev => prev + 1);
+    // Pick random phrase
+    const randomPhrase = SheepPhrases[Math.floor(Math.random() * SheepPhrases.length)];
+    setBubbleText(randomPhrase);
+    setClickCount((prev) => prev + 1);
 
-        setTimeout(() => setIsJumping(false), 1000);
-    };
+    setTimeout(() => setIsJumping(false), 1000);
+  };
 
-    // Auto-hide bubble
-    useEffect(() => {
-        if (!bubbleText) return;
-        const timer = setTimeout(() => {
-            setBubbleText(null);
-        }, 3000);
-        return () => clearTimeout(timer);
-    }, [bubbleText, clickCount]);
+  // Auto-hide bubble
+  useEffect(() => {
+    if (!bubbleText) return;
+    const timer = setTimeout(() => {
+      setBubbleText(null);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [bubbleText, clickCount]);
 
-    return (
-        <motion.div
-            className="absolute z-10 cursor-pointer pointer-events-auto select-none"
-            style={{ left: `${x}%`, bottom: `${y}%`, transform: `scale(${scale})` }}
-            onClick={handleClick}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay, duration: 1 }}
-        >
-            {/* Speech Bubble */}
-            <AnimatePresence>
-                {bubbleText && (
-                    <motion.div
-                        initial={!shouldReduceMotion ? { opacity: 0, scale: 0.8, y: 5 } : { opacity: 0 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={!shouldReduceMotion ? { opacity: 0, scale: 0.8 } : { opacity: 0 }}
-                        transition={{ type: 'spring', stiffness: 350, damping: 15 }}
-                        className="absolute -top-12 left-1/2 -translate-x-1/2 bg-slate-900/90 dark:bg-slate-100/90 text-white dark:text-slate-900 border border-slate-700/30 text-[9px] font-bold py-1 px-2 rounded shadow-lg pointer-events-none whitespace-nowrap z-50"
-                    >
-                        {bubbleText}
-                        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-slate-900/90 dark:bg-slate-100/90 border-r border-b border-slate-700/30 rotate-45" />
-                    </motion.div>
-                )}
-            </AnimatePresence>
+  return (
+    <motion.div
+      className="absolute z-10 cursor-pointer pointer-events-auto select-none"
+      style={{ left: `${x}%`, bottom: `${y}%`, transform: `scale(${scale})` }}
+      onClick={handleClick}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay, duration: 1 }}
+    >
+      {/* Speech Bubble */}
+      <AnimatePresence>
+        {bubbleText && (
+          <motion.div
+            initial={!shouldReduceMotion ? { opacity: 0, scale: 0.8, y: 5 } : { opacity: 0 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={!shouldReduceMotion ? { opacity: 0, scale: 0.8 } : { opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 350, damping: 15 }}
+            className="absolute -top-12 left-1/2 -translate-x-1/2 bg-slate-900/90 dark:bg-slate-100/90 text-white dark:text-slate-900 border border-slate-700/30 text-[9px] font-bold py-1 px-2 rounded shadow-lg pointer-events-none whitespace-nowrap z-50"
+          >
+            {bubbleText}
+            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-slate-900/90 dark:bg-slate-100/90 border-r border-b border-slate-700/30 rotate-45" />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-            <motion.div
-                animate={isJumping && !shouldReduceMotion ? { 
-                    y: [-10, -35, -5, 0], 
-                    rotate: [0, 180, 360] 
-                } : isJumping ? {
-                    y: [-10, -25, 0]
-                } : { 
-                    y: 0, 
-                    rotate: 0 
-                }}
-                whileHover={{ scale: 1.12 }}
-                transition={{ duration: 0.8, ease: "easeInOut" }}
-            >
-                <svg width="40" height="30" viewBox="0 0 40 30" overflow="visible">
-                    {/* Internal Definitions */}
-                    <defs>
-                        <radialGradient id={`wool-${id}`} cx="50%" cy="50%" r="50%">
-                            <stop offset="0%" stopColor="#ffffff" />
-                            <stop offset="100%" stopColor="#e2e8f0" />
-                        </radialGradient>
-                    </defs>
+      <motion.div
+        animate={
+          isJumping && !shouldReduceMotion
+            ? {
+                y: [-10, -35, -5, 0],
+                rotate: [0, 180, 360],
+              }
+            : isJumping
+              ? {
+                  y: [-10, -25, 0],
+                }
+              : {
+                  y: 0,
+                  rotate: 0,
+                }
+        }
+        whileHover={{ scale: 1.12 }}
+        transition={{ duration: 0.8, ease: 'easeInOut' }}
+      >
+        <svg width="40" height="30" viewBox="0 0 40 30" overflow="visible">
+          {/* Internal Definitions */}
+          <defs>
+            <radialGradient id={`wool-${id}`} cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ffffff" />
+              <stop offset="100%" stopColor="#e2e8f0" />
+            </radialGradient>
+          </defs>
 
-                    {/* Legs */}
-                    <motion.g
-                        animate={isJumping ? {} : { rotate: [0, 5, 0, -5, 0] }}
-                        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' as const, delay: delay }}
-                    >
-                        <rect x="10" y="20" width="3" height="10" rx="1.5" fill="#1e293b" />
-                        <rect x="25" y="20" width="3" height="10" rx="1.5" fill="#1e293b" />
-                    </motion.g>
+          {/* Legs */}
+          <motion.g
+            animate={isJumping ? {} : { rotate: [0, 5, 0, -5, 0] }}
+            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' as const, delay: delay }}
+          >
+            <rect x="10" y="20" width="3" height="10" rx="1.5" fill="#1e293b" />
+            <rect x="25" y="20" width="3" height="10" rx="1.5" fill="#1e293b" />
+          </motion.g>
 
-                    {/* Body (Fluffy Cloud shape) */}
-                    <path
-                        d="M10,15 Q5,5 15,5 Q20,-2 25,5 Q35,0 35,10 Q40,15 35,20 Q30,28 20,25 Q10,28 5,20 Q0,18 10,15 Z"
-                        fill={`url(#wool-${id})`}
-                        filter="drop-shadow(0px 2px 2px rgba(0,0,0,0.2))"
-                    />
+          {/* Body (Fluffy Cloud shape) */}
+          <path
+            d="M10,15 Q5,5 15,5 Q20,-2 25,5 Q35,0 35,10 Q40,15 35,20 Q30,28 20,25 Q10,28 5,20 Q0,18 10,15 Z"
+            fill={`url(#wool-${id})`}
+            filter="drop-shadow(0px 2px 2px rgba(0,0,0,0.2))"
+          />
 
-                    {/* Head */}
-                    <g transform={isNight ? "translate(32, 12) rotate(15)" : "translate(32, 8)"}>
-                        {/* Face */}
-                        <ellipse cx="0" cy="0" rx="6" ry="7" fill="#1e293b" />
-                        {/* Ears */}
-                        <ellipse cx="-6" cy="-2" rx="4" ry="2" fill="#1e293b" transform="rotate(-30)" />
-                        <ellipse cx="6" cy="-2" rx="4" ry="2" fill="#1e293b" transform="rotate(30)" />
-                        {/* Eyes (Open or Closed) */}
-                        {isNight ? (
-                            // Sleeping eyes
-                            <path d="M-3,0 Q-1,2 1,0 M3,0 Q5,2 7,0" stroke="white" strokeWidth="1.5" fill="none" transform="scale(0.5)" />
-                        ) : (
-                            // Awake eyes
-                            <>
-                                <circle cx="-2" cy="0" r="1.5" fill="white" />
-                                <circle cx="2" cy="0" r="1.5" fill="white" />
-                            </>
-                        )}
-                    </g>
+          {/* Head */}
+          <g transform={isNight ? 'translate(32, 12) rotate(15)' : 'translate(32, 8)'}>
+            {/* Face */}
+            <ellipse cx="0" cy="0" rx="6" ry="7" fill="#1e293b" />
+            {/* Ears */}
+            <ellipse cx="-6" cy="-2" rx="4" ry="2" fill="#1e293b" transform="rotate(-30)" />
+            <ellipse cx="6" cy="-2" rx="4" ry="2" fill="#1e293b" transform="rotate(30)" />
+            {/* Eyes (Open or Closed) */}
+            {isNight ? (
+              // Sleeping eyes
+              <path
+                d="M-3,0 Q-1,2 1,0 M3,0 Q5,2 7,0"
+                stroke="white"
+                strokeWidth="1.5"
+                fill="none"
+                transform="scale(0.5)"
+              />
+            ) : (
+              // Awake eyes
+              <>
+                <circle cx="-2" cy="0" r="1.5" fill="white" />
+                <circle cx="2" cy="0" r="1.5" fill="white" />
+              </>
+            )}
+          </g>
 
-                    {/* Zzz for sleeping */}
-                    <AnimatePresence>
-                        {isNight && !isJumping && (
-                            <motion.g
-                                initial={{ opacity: 0, y: 0, x: 30 }}
-                                animate={{ opacity: [0, 1, 0], y: -20, x: 40 }}
-                                transition={{ duration: 2, repeat: Infinity, delay: delay }}
-                            >
-                                <text x="0" y="0" fontSize="10" fill="white" fontFamily="sans-serif" fontWeight="bold">Z</text>
-                            </motion.g>
-                        )}
-                    </AnimatePresence>
+          {/* Zzz for sleeping */}
+          <AnimatePresence>
+            {isNight && !isJumping && (
+              <motion.g
+                initial={{ opacity: 0, y: 0, x: 30 }}
+                animate={{ opacity: [0, 1, 0], y: -20, x: 40 }}
+                transition={{ duration: 2, repeat: Infinity, delay: delay }}
+              >
+                <text
+                  x="0"
+                  y="0"
+                  fontSize="10"
+                  fill="white"
+                  fontFamily="sans-serif"
+                  fontWeight="bold"
+                >
+                  Z
+                </text>
+              </motion.g>
+            )}
+          </AnimatePresence>
 
-                    {/* Reaction "!" when clicked/jumping */}
-                    <AnimatePresence>
-                        {isJumping && (
-                            <motion.text
-                                initial={{ opacity: 0, y: 0 }}
-                                animate={{ opacity: 1, y: -25, scale: 1.5 }}
-                                exit={{ opacity: 0 }}
-                                x="20" y="0"
-                                fontSize="14"
-                                fill="#22c55e" // Green
-                                fontWeight="bold"
-                                textAnchor="middle"
-                            >
-                                Bah!
-                            </motion.text>
-                        )}
-                    </AnimatePresence>
-
-                </svg>
-            </motion.div>
-        </motion.div>
-    );
+          {/* Reaction "!" when clicked/jumping */}
+          <AnimatePresence>
+            {isJumping && (
+              <motion.text
+                initial={{ opacity: 0, y: 0 }}
+                animate={{ opacity: 1, y: -25, scale: 1.5 }}
+                exit={{ opacity: 0 }}
+                x="20"
+                y="0"
+                fontSize="14"
+                fill="#22c55e" // Green
+                fontWeight="bold"
+                textAnchor="middle"
+              >
+                Bah!
+              </motion.text>
+            )}
+          </AnimatePresence>
+        </svg>
+      </motion.div>
+    </motion.div>
+  );
 }

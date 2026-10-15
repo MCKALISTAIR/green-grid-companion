@@ -1,11 +1,11 @@
 /**
  * Application version configuration
- * 
+ *
  * Update this file when making releases:
  * - MAJOR: Breaking changes or major new features
  * - MINOR: New features, enhancements
  * - PATCH: Bug fixes, small improvements
- * 
+ *
  * Stage: 'alpha' | 'beta' | 'rc' | 'stable'
  */
 

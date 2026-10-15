@@ -37,12 +37,7 @@ describe('notificationIds', () => {
   });
 
   it('filters pending notifications without touching planner IDs', () => {
-    const pending = [
-      { id: 2100 },
-      { id: 15000 },
-      { id: 9000 },
-      { id: 8050 },
-    ];
+    const pending = [{ id: 2100 }, { id: 15000 }, { id: 9000 }, { id: 8050 }];
     const greenOnly = filterNotificationIds(pending, isGreenAlertId);
     expect(greenOnly).toEqual([{ id: 2100 }]);
     expect(pending.find((n) => n.id === 15000)).toBeTruthy();

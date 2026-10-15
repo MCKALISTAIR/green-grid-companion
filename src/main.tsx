@@ -1,9 +1,9 @@
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import App from "./App.tsx";
-import "./index.css";
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App.tsx';
+import './index.css';
 
-import { initMonitoring } from "./lib/monitoring";
+import { initMonitoring } from './lib/monitoring';
 
 // Error monitoring (Sentry). Enabled in production once VITE_SENTRY_DSN is set;
 // tracing + Session Replay only run after cookie-banner consent.
@@ -12,10 +12,10 @@ initMonitoring({
   version: import.meta.env.VITE_APP_VERSION,
   environment: import.meta.env.VITE_SENTRY_ENVIRONMENT,
   isDev: import.meta.env.DEV,
-  hostname: typeof window !== "undefined" ? window.location.hostname : undefined,
+  hostname: typeof window !== 'undefined' ? window.location.hostname : undefined,
 });
 
-import { logger } from "./lib/logger";
+import { logger } from './lib/logger';
 
 // Log startup in development
 if (import.meta.env.DEV) {
@@ -24,8 +24,8 @@ if (import.meta.env.DEV) {
   });
 }
 
-createRoot(document.getElementById("root")!).render(
+createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
-  </StrictMode>
+  </StrictMode>,
 );

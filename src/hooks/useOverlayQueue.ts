@@ -7,7 +7,11 @@ export function useOverlayQueue(): OverlayQueueState & {
   release: typeof overlayQueue.release;
   setConsentPending: typeof overlayQueue.setConsentPending;
 } {
-  const state = useSyncExternalStore(overlayQueue.subscribe, overlayQueue.getState, overlayQueue.getState);
+  const state = useSyncExternalStore(
+    overlayQueue.subscribe,
+    overlayQueue.getState,
+    overlayQueue.getState,
+  );
   return {
     ...state,
     requestOverlay: overlayQueue.request,

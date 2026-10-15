@@ -3,6 +3,7 @@
 ## Before you deploy, test these scenarios:
 
 ### ✅ Test 1: Fresh User (2 minutes)
+
 1. Open DevTools → Application → Clear all storage
 2. Open http://localhost:8080
 3. Navigate to Settings (bottom nav)
@@ -13,6 +14,7 @@
 6. Click "Save"
 
 **Expected Result:**
+
 - ✅ No sign-in prompt
 - ✅ Success toast appears
 - ✅ "Link Meter" button becomes available
@@ -21,6 +23,7 @@
 - ✅ Console shows: "Anonymous session created successfully"
 
 **If Failed:**
+
 - Check Supabase Dashboard → Authentication → Providers → Anonymous sign-ins is enabled
 - Check console for error messages
 - Verify edge function is accessible
@@ -28,6 +31,7 @@
 ---
 
 ### ✅ Test 2: Sign-In Migration (3 minutes)
+
 **Prerequisites:** Complete Test 1 first
 
 1. Still in Settings page
@@ -37,6 +41,7 @@
 5. Return to app
 
 **Expected Result:**
+
 - ✅ Toast: "Restored your Octopus data: X meters, Y records"
 - ✅ Credentials still saved
 - ✅ "Backup Your Data" → "Data Backup Active"
@@ -44,6 +49,7 @@
 - ✅ Console shows migration details
 
 **If Failed:**
+
 - Check localStorage for `octopus-anon-user-id`
 - Check edge function logs for `migrate-data` action
 - Verify AccountBackup.tsx is listening to auth changes
@@ -51,12 +57,14 @@
 ---
 
 ### ✅ Test 3: Already Authenticated (1 minute)
+
 **Prerequisites:** Be signed in from Test 2
 
 1. Refresh page
 2. Navigate to Settings
 
 **Expected Result:**
+
 - ✅ Shows "Data Backup Active"
 - ✅ Email address displayed
 - ✅ Integration still works
@@ -65,12 +73,14 @@
 ---
 
 ### ✅ Test 4: Sign Out (1 minute)
+
 **Prerequisites:** Be signed in from Test 2
 
 1. In Settings, click "Sign Out"
 2. Observe UI changes
 
 **Expected Result:**
+
 - ✅ "Data Backup Active" → "Backup Your Data"
 - ✅ App still works fully
 - ✅ Can add new credentials without sign-in
@@ -83,6 +93,7 @@
 Watch for these log messages:
 
 ### Good Signs ✅
+
 ```
 [INFO] Creating anonymous authentication session
 [INFO] Anonymous session created successfully, userId: 1a2b3c4d...
@@ -90,12 +101,14 @@ Watch for these log messages:
 ```
 
 ### Success Migration ✅
+
 ```
 Migration complete: creds=true, meters=1, consumption=500, footprint=7
 Restored your Octopus data: 1 meter(s), 7 footprint records
 ```
 
 ### Bad Signs ❌
+
 ```
 Failed to create anonymous session
 Unauthorized
@@ -107,11 +120,13 @@ Unauthorized
 ## Supabase Dashboard Check
 
 ### Before Testing
+
 1. Go to Supabase Dashboard → Authentication → Providers
 2. Ensure "Anonymous sign-ins" is **ENABLED**
 3. Optional: Set "Session expiry" to 90 days
 
 ### After Test 1
+
 1. Go to Authentication → Users
 2. Should see new user with:
    - ID: Random UUID
@@ -120,12 +135,14 @@ Unauthorized
    - Created: Just now
 
 ### After Test 2
+
 1. Go to Authentication → Users
 2. Should see:
    - Your Google account (authenticated)
    - Anonymous user may still exist (can be cleaned up later)
 
 ### Database Check
+
 1. Go to Table Editor → `octopus_credentials`
 2. After Test 1: user_id = anonymous UUID
 3. After Test 2: user_id = authenticated UUID
@@ -152,13 +169,13 @@ curl -X POST https://your-project.supabase.co/functions/v1/octopus-energy \
 
 ## Common Issues & Fixes
 
-| Issue | Cause | Fix |
-|-------|-------|-----|
-| "Missing Authorization header" | ensureAuthSession() not called | Check hooks have await ensureAuthSession() |
-| "Failed to create session" | Anonymous auth disabled | Enable in Supabase dashboard |
-| No migration toast | localStorage cleared | Expected - migration only works on same device |
-| Credentials not saving | Edge function error | Check Supabase function logs |
-| "401 Unauthorized" | Token expired | Clear storage and try again |
+| Issue                          | Cause                          | Fix                                            |
+| ------------------------------ | ------------------------------ | ---------------------------------------------- |
+| "Missing Authorization header" | ensureAuthSession() not called | Check hooks have await ensureAuthSession()     |
+| "Failed to create session"     | Anonymous auth disabled        | Enable in Supabase dashboard                   |
+| No migration toast             | localStorage cleared           | Expected - migration only works on same device |
+| Credentials not saving         | Edge function error            | Check Supabase function logs                   |
+| "401 Unauthorized"             | Token expired                  | Clear storage and try again                    |
 
 ---
 
@@ -192,6 +209,7 @@ curl -X POST https://your-project.supabase.co/functions/v1/octopus-energy \
 ## Success Indicators
 
 All of these should be true:
+
 - [ ] Can add Octopus credentials without signing in
 - [ ] Integration works for anonymous users
 - [ ] Sign-in shows migration toast
@@ -206,6 +224,7 @@ All of these should be true:
 ## Ready to Deploy? ✅
 
 Once all tests pass:
+
 1. Ensure Supabase anonymous auth is enabled in production
 2. Deploy to staging first
 3. Run same tests on staging

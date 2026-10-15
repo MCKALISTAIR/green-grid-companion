@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ForecastData } from '@/lib/carbonApi';
-import {
-  findDefaultForecastIndex,
-  getForecastHourInsight,
-} from '@/lib/forecastHourInsight';
+import { findDefaultForecastIndex, getForecastHourInsight } from '@/lib/forecastHourInsight';
 
 function slotAt(
   from: Date,
@@ -47,14 +44,7 @@ describe('getForecastHourInsight', () => {
 
   it('marks best-window slots and prefers action copy for them', () => {
     const forecast = [slot(1, 40, 'very low'), slot(2, 45, 'very low')];
-    const insight = getForecastHourInsight(
-      forecast,
-      0,
-      200,
-      'plain',
-      new Date(),
-      new Set([0, 1]),
-    );
+    const insight = getForecastHourInsight(forecast, 0, 200, 'plain', new Date(), new Set([0, 1]));
     expect(insight!.inBestWindow).toBe(true);
     expect(insight!.action.toLowerCase()).toMatch(/best window/);
   });

@@ -17,16 +17,22 @@ async function dismissChrome(page) {
   // Cookie banner
   const accept = page.getByRole('button', { name: /accept/i });
   if (await accept.count()) {
-    try { await accept.first().click({ timeout: 2000 }); } catch { /* ignore */ }
+    try {
+      await accept.first().click({ timeout: 2000 });
+    } catch {
+      /* ignore */
+    }
   }
   // Google Lens / other overlays — Escape + hide common chrome
   await page.keyboard.press('Escape').catch(() => {});
-  await page.addStyleTag({
-    content: `
+  await page
+    .addStyleTag({
+      content: `
       [class*="cookie"], [id*="cookie"], [aria-label*="cookie" i],
       [class*="Lens"], [aria-label*="Lens" i] { display: none !important; }
     `,
-  }).catch(() => {});
+    })
+    .catch(() => {});
 }
 
 async function clickLabel(page, groupLabel, buttonText) {
@@ -60,7 +66,7 @@ async function main() {
         const preview = page.locator('[aria-label*="iPhone 14 viewport preview"]').first();
         const file = path.join(
           OUT,
-          `${theme}_${intensity.replace(/\s+/g, '-').toLowerCase()}_${time.toLowerCase()}.png`
+          `${theme}_${intensity.replace(/\s+/g, '-').toLowerCase()}_${time.toLowerCase()}.png`,
         );
         if (await preview.count()) {
           await preview.screenshot({ path: file, animations: 'disabled' });
@@ -81,7 +87,9 @@ async function main() {
   await clickLabel(page, 'Time of day', 'night');
   await clickLabel(page, 'Weather condition', 'thunderstorm');
   await page.waitForTimeout(800);
-  await page.locator('[aria-label*="iPhone 14 viewport preview"]').first()
+  await page
+    .locator('[aria-label*="iPhone 14 viewport preview"]')
+    .first()
     .screenshot({ path: path.join(OUT, 'city_very-dirty_night_thunderstorm.png') });
 
   await clickLabel(page, 'Scene type', 'coastal');
@@ -89,7 +97,9 @@ async function main() {
   await clickLabel(page, 'Time of day', 'dawn');
   await clickLabel(page, 'Weather condition', 'clear');
   await page.waitForTimeout(800);
-  await page.locator('[aria-label*="iPhone 14 viewport preview"]').first()
+  await page
+    .locator('[aria-label*="iPhone 14 viewport preview"]')
+    .first()
     .screenshot({ path: path.join(OUT, 'coastal_clean_dawn.png') });
 
   await browser.close();

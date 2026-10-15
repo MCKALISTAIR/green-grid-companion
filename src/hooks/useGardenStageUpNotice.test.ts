@@ -1,9 +1,6 @@
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import {
-  GARDEN_STAGE_UP_COPY,
-  useGardenStageUpNotice,
-} from './useGardenStageUpNotice';
+import { GARDEN_STAGE_UP_COPY, useGardenStageUpNotice } from './useGardenStageUpNotice';
 
 describe('useGardenStageUpNotice', () => {
   beforeEach(() => {

@@ -39,7 +39,10 @@ export function subscribeHaptics(listener: (on: boolean) => void): () => void {
 
 function prefersReducedMotion(): boolean {
   try {
-    return typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    return (
+      typeof window !== 'undefined' &&
+      !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    );
   } catch {
     return false;
   }
@@ -51,7 +54,10 @@ export interface HapticGateOptions {
 }
 
 /** True when a haptic of this kind may fire right now. */
-export function canHaptic(opts: HapticGateOptions = {}, isNative = Capacitor.isNativePlatform()): boolean {
+export function canHaptic(
+  opts: HapticGateOptions = {},
+  isNative = Capacitor.isNativePlatform(),
+): boolean {
   if (!isNative) return false;
   if (!isHapticsEnabled()) return false;
   if (opts.decorative && prefersReducedMotion()) return false;
@@ -71,7 +77,10 @@ export async function hapticImpact(style: ImpactStyle, opts?: HapticGateOptions)
   await safely(() => Haptics.impact({ style }));
 }
 
-export async function hapticNotification(type: NotificationType, opts?: HapticGateOptions): Promise<void> {
+export async function hapticNotification(
+  type: NotificationType,
+  opts?: HapticGateOptions,
+): Promise<void> {
   if (!canHaptic(opts)) return;
   await safely(() => Haptics.notification({ type }));
 }

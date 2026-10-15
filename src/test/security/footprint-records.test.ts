@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { buildIntensityMap, buildFootprintRows } from '../../../supabase/functions/_shared/footprint-records.ts';
+import {
+  buildIntensityMap,
+  buildFootprintRows,
+} from '../../../supabase/functions/_shared/footprint-records.ts';
 import national from '../fixtures/neso-national-2026-10-11.json';
 import londonRegional from '../fixtures/neso-regional-london-fw48h-2026-10-11.json';
 
@@ -61,6 +64,7 @@ describe('Octopus footprint spot-check (carbon_g = kWh × intensity)', () => {
       MPAN,
     );
     expect(rows.length).toBeGreaterThan(0);
-    for (const r of rows) expect(r.carbon_g).toBeCloseTo(r.consumption_kwh * r.intensity_gco2_kwh, 9);
+    for (const r of rows)
+      expect(r.carbon_g).toBeCloseTo(r.consumption_kwh * r.intensity_gco2_kwh, 9);
   });
 });

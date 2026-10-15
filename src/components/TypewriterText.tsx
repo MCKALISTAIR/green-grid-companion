@@ -39,7 +39,7 @@ export function TypewriterText({ text, charDelay = 48, className }: TypewriterTe
     }, charDelay);
 
     return () => clearInterval(interval);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [text, charDelay]);
 
   return (

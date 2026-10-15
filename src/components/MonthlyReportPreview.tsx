@@ -48,9 +48,9 @@ interface MonthlyStats {
 
 const INTENSITY_COLORS: Record<string, string> = {
   'very low': 'hsl(var(--intensity-very-low))',
-  'low': 'hsl(var(--intensity-low))',
-  'moderate': 'hsl(var(--intensity-moderate))',
-  'high': 'hsl(var(--intensity-high))',
+  low: 'hsl(var(--intensity-low))',
+  moderate: 'hsl(var(--intensity-moderate))',
+  high: 'hsl(var(--intensity-high))',
   'very high': 'hsl(var(--intensity-very-high))',
 };
 
@@ -95,12 +95,7 @@ export function MonthlyReportPreview() {
 
   if (!stats && !loading && !error) {
     return (
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={fetchPreview}
-        className="w-full gap-2 mt-2"
-      >
+      <Button variant="outline" size="sm" onClick={fetchPreview} className="w-full gap-2 mt-2">
         <Eye className="w-4 h-4" />
         Preview Report
       </Button>
@@ -172,9 +167,7 @@ export function MonthlyReportPreview() {
               </div>
               <div>
                 <p className="text-[10px] text-muted-foreground">Green</p>
-                <p className="text-xs font-semibold text-foreground">
-                  {stats.green_percentage}%
-                </p>
+                <p className="text-xs font-semibold text-foreground">{stats.green_percentage}%</p>
               </div>
             </div>
 
@@ -184,9 +177,7 @@ export function MonthlyReportPreview() {
               </div>
               <div>
                 <p className="text-[10px] text-muted-foreground">Avg</p>
-                <p className="text-xs font-semibold text-foreground">
-                  {stats.avg_intensity}g
-                </p>
+                <p className="text-xs font-semibold text-foreground">{stats.avg_intensity}g</p>
               </div>
             </div>
           </div>
@@ -266,34 +257,34 @@ export function MonthlyReportPreview() {
           )}
 
           {/* Best/Worst Week */}
-          {stats.best_week && stats.worst_week && stats.best_week.week !== stats.worst_week.week && (
-            <div className="flex gap-2 text-xs">
-              <div className="flex-1 p-2 rounded-lg bg-intensity-very-low/10 border border-intensity-very-low/20">
-                <div className="flex items-center gap-1 text-intensity-very-low">
-                  <TrendingDown className="w-3 h-3" />
-                  <span className="font-medium">Best</span>
+          {stats.best_week &&
+            stats.worst_week &&
+            stats.best_week.week !== stats.worst_week.week && (
+              <div className="flex gap-2 text-xs">
+                <div className="flex-1 p-2 rounded-lg bg-intensity-very-low/10 border border-intensity-very-low/20">
+                  <div className="flex items-center gap-1 text-intensity-very-low">
+                    <TrendingDown className="w-3 h-3" />
+                    <span className="font-medium">Best</span>
+                  </div>
+                  <p className="text-muted-foreground mt-0.5">
+                    {stats.best_week.weekLabel}: {stats.best_week.greenPercentage}% green
+                  </p>
                 </div>
-                <p className="text-muted-foreground mt-0.5">
-                  {stats.best_week.weekLabel}: {stats.best_week.greenPercentage}% green
-                </p>
-              </div>
-              <div className="flex-1 p-2 rounded-lg bg-intensity-high/10 border border-intensity-high/20">
-                <div className="flex items-center gap-1 text-intensity-high">
-                  <TrendingUp className="w-3 h-3" />
-                  <span className="font-medium">Highest</span>
+                <div className="flex-1 p-2 rounded-lg bg-intensity-high/10 border border-intensity-high/20">
+                  <div className="flex items-center gap-1 text-intensity-high">
+                    <TrendingUp className="w-3 h-3" />
+                    <span className="font-medium">Highest</span>
+                  </div>
+                  <p className="text-muted-foreground mt-0.5">
+                    {stats.worst_week.weekLabel}: {stats.worst_week.avgIntensity}g avg
+                  </p>
                 </div>
-                <p className="text-muted-foreground mt-0.5">
-                  {stats.worst_week.weekLabel}: {stats.worst_week.avgIntensity}g avg
-                </p>
               </div>
-            </div>
-          )}
+            )}
         </div>
       ) : (
         <div className="text-center py-2">
-          <p className="text-sm text-muted-foreground">
-            📊 Your monthly report is ready!
-          </p>
+          <p className="text-sm text-muted-foreground">📊 Your monthly report is ready!</p>
           <p className="text-xs text-muted-foreground mt-1">
             Link your smart meter for personalised insights.
           </p>

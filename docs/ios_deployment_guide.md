@@ -20,6 +20,7 @@ Currently, your `capacitor.config.ts` might be configured to load a remote URL (
 **To test your LOCALLY running code on the device, you have two options:**
 
 #### Option A: Bundled Mode (Recommended for simple testing)
+
 This packs your built web assets into the app itself. It works offline and is closest to a production release.
 
 1.  Open `capacitor.config.ts`.
@@ -35,6 +36,7 @@ This packs your built web assets into the app itself. It works offline and is cl
 3.  Ensure `webDir` is set to `'dist'`.
 
 #### Option B: Live Reload (Best for active development)
+
 This makes the app load from your computer's local server, allowing instant updates when you save files.
 
 1.  Ensure your computer and iPhone are on the **same Wi-Fi network**.
@@ -55,7 +57,7 @@ Before syncing to iOS, you must build the latest version of your web application
 npm run build
 ```
 
-*Note: If using Option B (Live Reload), you can skip this step after the initial setup, but the dev server must be running (`npm run dev -- --host`).*
+_Note: If using Option B (Live Reload), you can skip this step after the initial setup, but the dev server must be running (`npm run dev -- --host`)._
 
 ## Step 3: Sync to iOS
 
@@ -79,7 +81,7 @@ npx cap open ios
 2.  Select the **App** target in the main view.
 3.  Go to the **Signing & Capabilities** tab.
 4.  Under **Team**, select your Apple ID (Personal Team).
-    *   *If none are listed, click "Add an Account..." and log in with your Apple ID.*
+    - _If none are listed, click "Add an Account..." and log in with your Apple ID._
 5.  Ensure "Automatically manage signing" is checked.
 6.  You may need to change the **Bundle Identifier** if the current one is taken or invalid (e.g., change `app.lovable...` to `com.yourname.projectname`).
 
@@ -92,5 +94,5 @@ npx cap open ios
 
 ## Step 7: Troubleshooting
 
-*   **"Untrusted Developer" Error**: On your iPhone, go to **Settings > General > VPN & Device Management**, tap your Apple ID, and tap "Trust".
-*   **White Screen**: If using Live Reload, ensure your phone can reach your computer's IP. Try opening Safari on the phone and visiting `http://<your-ip>:8080`.
+- **"Untrusted Developer" Error**: On your iPhone, go to **Settings > General > VPN & Device Management**, tap your Apple ID, and tap "Trust".
+- **White Screen**: If using Live Reload, ensure your phone can reach your computer's IP. Try opening Safari on the phone and visiting `http://<your-ip>:8080`.

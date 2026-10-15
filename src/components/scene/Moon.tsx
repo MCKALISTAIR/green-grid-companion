@@ -78,10 +78,22 @@ export function Moon({ position = 0.5, onDoubleClick }: MoonProps) {
         </defs>
 
         {/* Ambient background glow (separate from filter glow for stronger effect) */}
-        <circle cx="48" cy="48" r="32" fill="rgba(255,255,255,0.15)" filter={`url(#${id}-moon-glow)`} />
+        <circle
+          cx="48"
+          cy="48"
+          r="32"
+          fill="rgba(255,255,255,0.15)"
+          filter={`url(#${id}-moon-glow)`}
+        />
 
         {/* Moon body */}
-        <circle cx="48" cy="48" r="24" fill={`url(#${id}-moon-body)`} filter={`url(#${id}-moon-glow)`} />
+        <circle
+          cx="48"
+          cy="48"
+          r="24"
+          fill={`url(#${id}-moon-body)`}
+          filter={`url(#${id}-moon-glow)`}
+        />
 
         {/* Craters mapped to the 24px radius moon body at center (48,48) */}
         <g stroke="rgba(255,255,255,0.4)" strokeWidth="0.5">
@@ -105,9 +117,21 @@ export function Moon({ position = 0.5, onDoubleClick }: MoonProps) {
               {/* Left Eye (Open/Winking or Blinking) */}
               <circle cx="40" cy="42" r="2" fill="#334155" />
               {/* Right Eye (Winking - Arch) */}
-              <path d="M52 42Q55 39 58 42" stroke="#334155" strokeWidth="2.2" strokeLinecap="round" fill="none" />
+              <path
+                d="M52 42Q55 39 58 42"
+                stroke="#334155"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                fill="none"
+              />
               {/* Little Smile */}
-              <path d="M45 49Q48 52 51 49" stroke="#334155" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+              <path
+                d="M45 49Q48 52 51 49"
+                stroke="#334155"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                fill="none"
+              />
               {/* Rosy cheek */}
               <circle cx="37" cy="46" r="1.5" fill="#f43f5e" opacity="0.6" />
               <circle cx="59" cy="46" r="1.5" fill="#f43f5e" opacity="0.6" />

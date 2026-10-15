@@ -1,17 +1,32 @@
 import { describe, it, expect } from 'vitest';
-import { deleteOctopusUsageData, type UserDataClient } from '../../../supabase/functions/_shared/user-data.ts';
-import { isDeadPushToken, removeDeadPushTokens } from '../../../supabase/functions/_shared/push-cleanup.ts';
+import {
+  deleteOctopusUsageData,
+  type UserDataClient,
+} from '../../../supabase/functions/_shared/user-data.ts';
+import {
+  isDeadPushToken,
+  removeDeadPushTokens,
+} from '../../../supabase/functions/_shared/push-cleanup.ts';
 
 function fakeClient(opts: { meters: string[]; failOn?: string }) {
   const calls: string[] = [];
-  const result = (table: string) => Promise.resolve({ error: opts.failOn === table ? { message: 'boom' } : null });
+  const result = (table: string) =>
+    Promise.resolve({ error: opts.failOn === table ? { message: 'boom' } : null });
   const client: UserDataClient = {
     from(table) {
       return {
-        select: () => ({ eq: () => Promise.resolve({ data: opts.meters.map((mpan) => ({ mpan })), error: null }) }),
+        select: () => ({
+          eq: () => Promise.resolve({ data: opts.meters.map((mpan) => ({ mpan })), error: null }),
+        }),
         delete: () => ({
-          eq: (col, val) => { calls.push(`delete ${table} ${col}=${val}`); return result(table); },
-          in: (col, vals) => { calls.push(`delete ${table} ${col} in ${vals.join(',')}`); return result(table); },
+          eq: (col, val) => {
+            calls.push(`delete ${table} ${col}=${val}`);
+            return result(table);
+          },
+          in: (col, vals) => {
+            calls.push(`delete ${table} ${col} in ${vals.join(',')}`);
+            return result(table);
+          },
         }),
       };
     },
@@ -35,7 +50,10 @@ describe('deleteOctopusUsageData (disconnect + account delete)', () => {
   it('still deletes dispatches when there are no meters', async () => {
     const { client, calls } = fakeClient({ meters: [] });
     await deleteOctopusUsageData(client, 'u1');
-    expect(calls).toEqual(['delete octopus_intelligent_dispatches user_id=u1', 'delete octopus_meters user_id=u1']);
+    expect(calls).toEqual([
+      'delete octopus_intelligent_dispatches user_id=u1',
+      'delete octopus_meters user_id=u1',
+    ]);
   });
 
   it('keeps the meters (so readings stay findable) if a reading delete fails', async () => {
@@ -50,16 +68,39 @@ describe('dead push tokens', () => {
   it('only treats permanent errors as dead', () => {
     expect(isDeadPushToken('apns', 410, '{"reason":"Unregistered"}')).toBe(true);
     expect(isDeadPushToken('apns', 400, '{"reason":"BadDeviceToken"}')).toBe(false);
-    expect(isDeadPushToken('fcm', 404, '{"error":{"status":"NOT_FOUND","details":[{"errorCode":"UNREGISTERED"}]}}')).toBe(true);
+    expect(
+      isDeadPushToken(
+        'fcm',
+        404,
+        '{"error":{"status":"NOT_FOUND","details":[{"errorCode":"UNREGISTERED"}]}}',
+      ),
+    ).toBe(true);
     expect(isDeadPushToken('fcm', 500, 'UNREGISTERED')).toBe(false);
   });
 
   it('deletes unique dead tokens and never throws', async () => {
     const seen: string[][] = [];
     const quiet = { info: () => {}, error: () => {} };
-    expect(await removeDeadPushTokens(['a', 'a', 'b'], async (t) => { seen.push(t); return { error: null }; }, quiet)).toBe(2);
+    expect(
+      await removeDeadPushTokens(
+        ['a', 'a', 'b'],
+        async (t) => {
+          seen.push(t);
+          return { error: null };
+        },
+        quiet,
+      ),
+    ).toBe(2);
     expect(seen).toEqual([['a', 'b']]);
     expect(await removeDeadPushTokens([], async () => ({ error: null }), quiet)).toBe(0);
-    expect(await removeDeadPushTokens(['a'], async () => { throw new Error('x'); }, quiet)).toBe(0);
+    expect(
+      await removeDeadPushTokens(
+        ['a'],
+        async () => {
+          throw new Error('x');
+        },
+        quiet,
+      ),
+    ).toBe(0);
   });
 });

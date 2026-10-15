@@ -2,7 +2,7 @@
 
 A lightweight, single-source-of-truth reference for everyone touching the GridSense UI — designers, UX researchers, engineers, and reviewers.
 
-> **Art direction:** read [`ART_DIRECTION.md`](./ART_DIRECTION.md) first — “Living grid paper,” one-product tests (brand / seam / register / job). This file is the token & component inventory; that file is the *why*.
+> **Art direction:** read [`ART_DIRECTION.md`](./ART_DIRECTION.md) first — “Living grid paper,” one-product tests (brand / seam / register / job). This file is the token & component inventory; that file is the _why_.
 
 > **Live page:** open the running app at `/__design-system` for an always-current view of every token, swatch, contrast ratio and component pattern. The page reads CSS custom properties at runtime, so it cannot drift from the codebase.
 
@@ -15,14 +15,14 @@ A lightweight, single-source-of-truth reference for everyone touching the GridSe
 
 ## Foundations at a glance
 
-| Layer | Where it lives | Notes |
-|---|---|---|
-| Color tokens | `src/index.css` (`:root`, `.dark`) | All tokens are HSL triples consumed via `hsl(var(--token))`. |
-| Tailwind aliases | `tailwind.config.ts` | Semantic colour, radius, shadow and font families. |
-| Typography | Plus Jakarta Sans (UI / HUD / titles / personality italic), Inconsolata (dense data). | See [`TYPOGRAPHY.md`](./TYPOGRAPHY.md). Loaded in `index.css`. |
-| Radius | `--radius: 1.25rem` (lg). md/sm derived. | Soft, friendly shapes throughout. |
-| Spacing | Tailwind default `4px` scale. | No custom spacing scale needed. |
-| Shadow | `--shadow-sm/md/lg/xl`. | Used sparingly; surfaces favour borders + elevation through colour. |
+| Layer            | Where it lives                                                                        | Notes                                                               |
+| ---------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Color tokens     | `src/index.css` (`:root`, `.dark`)                                                    | All tokens are HSL triples consumed via `hsl(var(--token))`.        |
+| Tailwind aliases | `tailwind.config.ts`                                                                  | Semantic colour, radius, shadow and font families.                  |
+| Typography       | Plus Jakarta Sans (UI / HUD / titles / personality italic), Inconsolata (dense data). | See [`TYPOGRAPHY.md`](./TYPOGRAPHY.md). Loaded in `index.css`.      |
+| Radius           | `--radius: 1.25rem` (lg). md/sm derived.                                              | Soft, friendly shapes throughout.                                   |
+| Spacing          | Tailwind default `4px` scale.                                                         | No custom spacing scale needed.                                     |
+| Shadow           | `--shadow-sm/md/lg/xl`.                                                               | Used sparingly; surfaces favour borders + elevation through colour. |
 
 ## Color families
 
@@ -49,12 +49,12 @@ A lightweight, single-source-of-truth reference for everyone touching the GridSe
 
 We treat AA as a thing to **prove**, not declare:
 
-| Layer | Tool | Evidence |
-|---|---|---|
-| Static token contrast | live matrix on `/__design-system → Accessibility` | computed from the active theme at runtime |
-| Page-level a11y rules | [axe-core](https://github.com/dequelabs/axe-core) via Playwright (`scripts/a11y-audit.ts`) | dated reports in [`docs/a11y/`](./a11y/) |
-| Dynamic scene contrast | `SceneContrastMatrix` on `/__design-system → Accessibility` | sky colour sampled per (time × intensity) and graded vs white / near-black |
-| Manual screen reader | VoiceOver / NVDA walkthrough | recorded in `docs/a11y/MANUAL_*.md` when performed |
+| Layer                  | Tool                                                                                       | Evidence                                                                   |
+| ---------------------- | ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| Static token contrast  | live matrix on `/__design-system → Accessibility`                                          | computed from the active theme at runtime                                  |
+| Page-level a11y rules  | [axe-core](https://github.com/dequelabs/axe-core) via Playwright (`scripts/a11y-audit.ts`) | dated reports in [`docs/a11y/`](./a11y/)                                   |
+| Dynamic scene contrast | `SceneContrastMatrix` on `/__design-system → Accessibility`                                | sky colour sampled per (time × intensity) and graded vs white / near-black |
+| Manual screen reader   | VoiceOver / NVDA walkthrough                                                               | recorded in `docs/a11y/MANUAL_*.md` when performed                         |
 
 To run a fresh axe pass:
 

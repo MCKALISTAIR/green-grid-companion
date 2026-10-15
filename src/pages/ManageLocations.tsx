@@ -157,7 +157,12 @@ export default function ManageLocations() {
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={saveEdit}>
                           <Check className="w-4 h-4 text-primary" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={cancelEdit}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={cancelEdit}
+                        >
                           <X className="w-4 h-4 text-destructive" />
                         </Button>
                       </div>
@@ -185,7 +190,11 @@ export default function ManageLocations() {
 
           {/* Bulk Delete Button */}
           {selectedIds.size > 0 && (
-            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}>
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+            >
               <Button
                 variant="destructive"
                 className="w-full"

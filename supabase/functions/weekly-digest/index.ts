@@ -8,7 +8,11 @@ import {
   fetchSchedulerSecret,
   type SchedulerSecretRpcClient,
 } from '../_shared/cron-auth.ts';
-import { claimSubscriptionsForPeriod, isoWeekPeriodKey, type NotificationLogClient } from '../_shared/notification-periods.ts';
+import {
+  claimSubscriptionsForPeriod,
+  isoWeekPeriodKey,
+  type NotificationLogClient,
+} from '../_shared/notification-periods.ts';
 
 interface FootprintRecord {
   interval_start: string;
@@ -57,8 +61,12 @@ function getIntensityEmoji(avgIntensity: number): string {
 // read with the service role and cached per instance.
 const getSchedulerSecret = createSchedulerSecretProvider(() =>
   fetchSchedulerSecret(
-    createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!) as unknown as SchedulerSecretRpcClient,
-  ));
+    createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    ) as unknown as SchedulerSecretRpcClient,
+  ),
+);
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -174,7 +182,7 @@ Deno.serve(async (req) => {
       if (lowestForecast) {
         bestTimeToday = new Date(lowestForecast.from).toLocaleTimeString('en-GB', {
           hour: '2-digit',
-          minute: '2-digit'
+          minute: '2-digit',
         });
       }
     }
@@ -184,7 +192,13 @@ Deno.serve(async (req) => {
     const totalCount = footprint?.length || 1;
     const greenPercentage = Math.round((greenCount / totalCount) * 100);
 
-    const notifications: Array<{ token: string; title: string; body: string; platform: string; isSandbox?: boolean }> = [];
+    const notifications: Array<{
+      token: string;
+      title: string;
+      body: string;
+      platform: string;
+      isSandbox?: boolean;
+    }> = [];
 
     // Idempotency: claim each subscription for this ISO week before sending so
     // a duplicate/replayed run never sends the same digest twice.
@@ -197,7 +211,9 @@ Deno.serve(async (req) => {
       allSubs.map((s) => s.id),
     );
     const dueSubscriptions = allSubs.filter((s) => claimed.has(s.id));
-    console.log(`Weekly digest ${periodKey}: ${dueSubscriptions.length} due, ${allSubs.length - dueSubscriptions.length} already sent`);
+    console.log(
+      `Weekly digest ${periodKey}: ${dueSubscriptions.length} due, ${allSubs.length - dueSubscriptions.length} already sent`,
+    );
 
     // Generate notification for each subscription
     for (const sub of dueSubscriptions) {
@@ -205,11 +221,13 @@ Deno.serve(async (req) => {
 
       let body: string;
       if (footprint && footprint.length > 0) {
-        body = `📊 This week: ${totalCarbonKg.toFixed(1)}kg CO₂ from ${totalKwh.toFixed(1)}kWh. ` +
+        body =
+          `📊 This week: ${totalCarbonKg.toFixed(1)}kg CO₂ from ${totalKwh.toFixed(1)}kWh. ` +
           `${greenPercentage}% green energy! ` +
           `💡 Best time today: ${bestTimeToday}`;
       } else {
-        body = `💡 Best time to use energy today: ${bestTimeToday}. ` +
+        body =
+          `💡 Best time to use energy today: ${bestTimeToday}. ` +
           `Link your Octopus meter for personalized insights!`;
       }
 
@@ -223,13 +241,15 @@ Deno.serve(async (req) => {
     }
 
     console.log(`Generated ${notifications.length} weekly digest notifications`);
-    console.log(`Stats: ${totalCarbonKg.toFixed(2)}kg CO₂, ${totalKwh.toFixed(2)}kWh, ${greenPercentage}% green`);
+    console.log(
+      `Stats: ${totalCarbonKg.toFixed(2)}kg CO₂, ${totalKwh.toFixed(2)}kWh, ${greenPercentage}% green`,
+    );
 
     // Actually deliver the push notifications to APNs/FCM
     try {
       await sendPushNotifications(notifications);
     } catch (e) {
-      console.error("[PUSH] Error sending push notifications:", e);
+      console.error('[PUSH] Error sending push notifications:', e);
     }
 
     return new Response(
@@ -253,17 +273,14 @@ Deno.serve(async (req) => {
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      },
     );
   } catch (error) {
     console.error('Weekly Digest Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(
-      JSON.stringify({ error: errorMessage }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+    return new Response(JSON.stringify({ error: errorMessage }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });

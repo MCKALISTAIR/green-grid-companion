@@ -30,9 +30,13 @@ export function SettingsDataSyncSection({
           <div>
             <h3 className="font-medium">Grid Network Data</h3>
             <p className="text-sm text-muted-foreground flex items-center gap-2">
-              Last checked: {gridLastUpdated ? new Date(gridLastUpdated).toLocaleTimeString() : 'Unknown'}
+              Last checked:{' '}
+              {gridLastUpdated ? new Date(gridLastUpdated).toLocaleTimeString() : 'Unknown'}
               {isOffline && (
-                <Badge variant="secondary" className="text-[10px] bg-amber-100 text-amber-800 border-amber-200">
+                <Badge
+                  variant="secondary"
+                  className="text-[10px] bg-amber-100 text-amber-800 border-amber-200"
+                >
                   Offline
                 </Badge>
               )}

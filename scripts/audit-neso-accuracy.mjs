@@ -57,7 +57,9 @@ function parseArgs(argv) {
     else if (a === '--gate-mae') out.gateMae = Number(argv[++i]);
     else if (a === '--json') out.jsonPath = argv[++i];
     else if (a === '--help' || a === '-h') {
-      console.log('Usage: node scripts/audit-neso-accuracy.mjs [--days 14] [--gate-mae 12] [--json out.json]');
+      console.log(
+        'Usage: node scripts/audit-neso-accuracy.mjs [--days 14] [--gate-mae 12] [--json out.json]',
+      );
       process.exit(0);
     }
   }
@@ -87,7 +89,9 @@ async function getJson(path) {
     }
     if (attempt < FETCH_ATTEMPTS) {
       const wait = 2000 * 2 ** (attempt - 1);
-      console.warn(`[audit] ${path} failed (${lastErr?.message}); retry ${attempt}/${FETCH_ATTEMPTS - 1} in ${wait}ms`);
+      console.warn(
+        `[audit] ${path} failed (${lastErr?.message}); retry ${attempt}/${FETCH_ATTEMPTS - 1} in ${wait}ms`,
+      );
       await new Promise((r) => setTimeout(r, wait));
     }
   }
@@ -161,7 +165,9 @@ async function main() {
 
   console.log(`GridSense NESO accuracy audit`);
   console.log(`Window: ${from} → ${to} (${args.days}d)`);
-  console.log(`Factors: imports default=${CARBON_FACTORS.imports}, gas=${CARBON_FACTORS.gas} (CCGT)`);
+  console.log(
+    `Factors: imports default=${CARBON_FACTORS.imports}, gas=${CARBON_FACTORS.gas} (CCGT)`,
+  );
   console.log(
     `Region imports overrides: ${Object.entries(REGION_IMPORTS_FACTOR)
       .map(([id, f]) => `${id}→${f}`)
@@ -205,9 +211,7 @@ async function main() {
   const forecastSummary = summarize(forecastVsActual);
 
   const current = currentBody.data?.[0];
-  const currentEst = calcFromMix(
-    (await getJson('/generation')).data?.generationmix ?? [],
-  );
+  const currentEst = calcFromMix((await getJson('/generation')).data?.generationmix ?? []);
 
   const regional = [];
   for (const region of REGIONS) {
@@ -237,9 +241,7 @@ async function main() {
       vsForecast,
       vsForecastDefaultFrench53: vsForecastDefault,
       maeImprovementVsDefault:
-        vsForecast && vsForecastDefault
-          ? round2(vsForecastDefault.mae - vsForecast.mae)
-          : null,
+        vsForecast && vsForecastDefault ? round2(vsForecastDefault.mae - vsForecast.mae) : null,
     });
   }
 
@@ -259,16 +261,20 @@ async function main() {
     national: {
       mixEstimateVsActual: mixSummary,
       nesoForecastVsActual: forecastSummary,
-      mixBetterThanForecastPct: mixSummary && forecastSummary
-        ? round1(
-            (100 *
-              mixVsActual.filter((e, i) => Math.abs(e) < Math.abs(forecastVsActual[i])).length) /
-              mixVsActual.length,
-          )
-        : null,
+      mixBetterThanForecastPct:
+        mixSummary && forecastSummary
+          ? round1(
+              (100 *
+                mixVsActual.filter((e, i) => Math.abs(e) < Math.abs(forecastVsActual[i])).length) /
+                mixVsActual.length,
+            )
+          : null,
     },
     regionalMixEstimateVsNesoForecast: regional,
-    gate: { nationalMixMaeMax: args.gateMae, passed: mixSummary ? mixSummary.mae <= args.gateMae : false },
+    gate: {
+      nationalMixMaeMax: args.gateMae,
+      passed: mixSummary ? mixSummary.mae <= args.gateMae : false,
+    },
   };
 
   const printSummary = (label, s) => {
@@ -296,7 +302,9 @@ async function main() {
   printSummary('National mix-est vs NESO ACTUAL', mixSummary);
   printSummary('NESO forecast vs NESO ACTUAL   ', forecastSummary);
   if (report.national.mixBetterThanForecastPct != null) {
-    console.log(`Mix-est closer than NESO forecast: ${report.national.mixBetterThanForecastPct}% of half-hours`);
+    console.log(
+      `Mix-est closer than NESO forecast: ${report.national.mixBetterThanForecastPct}% of half-hours`,
+    );
   }
   console.log('');
   console.log('Regional mix-est vs NESO regional FORECAST (no regional actuals published):');

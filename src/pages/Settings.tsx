@@ -91,10 +91,7 @@ export default function Settings() {
         animate="show"
       >
         <motion.div variants={settingsItemVariants}>
-          <PageHeader
-            title="Settings"
-            description="Notifications, meter link, and preferences."
-          />
+          <PageHeader title="Settings" description="Notifications, meter link, and preferences." />
         </motion.div>
 
         <motion.div variants={settingsItemVariants} className="space-y-4">
@@ -144,11 +141,7 @@ export default function Settings() {
 
         <SettingsSupportSection />
 
-        <SettingsFooter
-          isLinked={isLinked}
-          unlocked={unlocked}
-          onVersionClick={handleVersionTap}
-        />
+        <SettingsFooter isLinked={isLinked} unlocked={unlocked} onVersionClick={handleVersionTap} />
 
         <SettingsDataSyncSection
           gridLastUpdated={gridLastUpdated}

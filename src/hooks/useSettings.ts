@@ -51,7 +51,9 @@ export function useSettings() {
       setUserId(session?.user?.id ?? null);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_, session) => {
       setUserId(session?.user?.id ?? null);
     });
 
@@ -59,34 +61,38 @@ export function useSettings() {
   }, []);
 
   // Sync to database
-  const syncToDatabase = useCallback(async (newSettings: Settings) => {
-    if (!userId || isSyncingRef.current) return;
+  const syncToDatabase = useCallback(
+    async (newSettings: Settings) => {
+      if (!userId || isSyncingRef.current) return;
 
-    isSyncingRef.current = true;
-    lastWriteRef.current = Date.now();
-    try {
-      const { error } = await supabase
-        .from('user_preferences')
-        .upsert({
-          user_id: userId,
-          settings: newSettings as unknown as Record<string, unknown>,
-          updated_at: new Date().toISOString(),
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } as any, { onConflict: 'user_id' });
+      isSyncingRef.current = true;
+      lastWriteRef.current = Date.now();
+      try {
+        const { error } = await supabase.from('user_preferences').upsert(
+          {
+            user_id: userId,
+            settings: newSettings as unknown as Record<string, unknown>,
+            updated_at: new Date().toISOString(),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          } as any,
+          { onConflict: 'user_id' },
+        );
 
-      if (error) {
-        logger.error('Failed to sync settings', { error });
-      } else {
-        const now = new Date();
-        setLastSyncedAt(now);
-        localStorage.setItem(LAST_SYNC_KEY, now.toISOString());
+        if (error) {
+          logger.error('Failed to sync settings', { error });
+        } else {
+          const now = new Date();
+          setLastSyncedAt(now);
+          localStorage.setItem(LAST_SYNC_KEY, now.toISOString());
+        }
+      } catch (err) {
+        logger.error('Error syncing settings', { error: err });
+      } finally {
+        isSyncingRef.current = false;
       }
-    } catch (err) {
-      logger.error('Error syncing settings', { error: err });
-    } finally {
-      isSyncingRef.current = false;
-    }
-  }, [userId]);
+    },
+    [userId],
+  );
 
   // Load settings from database when authenticated
   useEffect(() => {
@@ -108,7 +114,11 @@ export function useSettings() {
           return;
         }
 
-        if (data?.settings && typeof data.settings === 'object' && Object.keys(data.settings).length > 0) {
+        if (
+          data?.settings &&
+          typeof data.settings === 'object' &&
+          Object.keys(data.settings).length > 0
+        ) {
           const dbSettings = data.settings as unknown as Settings;
           setSettings({ ...DEFAULT_SETTINGS, ...dbSettings });
         } else {
@@ -160,7 +170,7 @@ export function useSettings() {
               setSettings({ ...DEFAULT_SETTINGS, ...newData.settings });
             }
           }
-        }
+        },
       )
       .subscribe();
 
@@ -201,7 +211,9 @@ export function useSettings() {
 
   // Keep a ref to the latest settings so the periodic interval never captures stale values
   const settingsRef = useRef(settings);
-  useEffect(() => { settingsRef.current = settings; }, [settings]);
+  useEffect(() => {
+    settingsRef.current = settings;
+  }, [settings]);
 
   // Periodic sync every 48 hours
   useEffect(() => {

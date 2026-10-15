@@ -52,41 +52,45 @@ export function SceneGenerationOverlay({
 
       {/* Wind Turbines - dynamically positioned across the scene */}
       <AnimatePresence>
-        {!isCity && !isCoastal && sceneConfig.showRenewables && turbineLayout.map((slot, i) => {
-          // Wind speed drives rotation: near-zero wind → very slow / stopped
-          const effectiveWindSpeed = sceneConfig.windSpeed ?? 0;
-          const baseSpeed = effectiveWindSpeed < 2
-            ? 30 // Almost still
-            : Math.max(1.5, 6 - (effectiveWindSpeed / 8));
-          const isOverdrive = turbineOverdrive === i;
-          // Background turbines slightly slower for parallax feel
-          const layerSpeedMod = slot.layer === 'back' ? 1.3 : slot.layer === 'mid' ? 1.1 : 1;
-          // Opacity based on depth layer
-          const layerOpacity = slot.layer === 'back' ? 0.5 : slot.layer === 'mid' ? 0.75 : 1;
+        {!isCity &&
+          !isCoastal &&
+          sceneConfig.showRenewables &&
+          turbineLayout.map((slot, i) => {
+            // Wind speed drives rotation: near-zero wind → very slow / stopped
+            const effectiveWindSpeed = sceneConfig.windSpeed ?? 0;
+            const baseSpeed =
+              effectiveWindSpeed < 2
+                ? 30 // Almost still
+                : Math.max(1.5, 6 - effectiveWindSpeed / 8);
+            const isOverdrive = turbineOverdrive === i;
+            // Background turbines slightly slower for parallax feel
+            const layerSpeedMod = slot.layer === 'back' ? 1.3 : slot.layer === 'mid' ? 1.1 : 1;
+            // Opacity based on depth layer
+            const layerOpacity = slot.layer === 'back' ? 0.5 : slot.layer === 'mid' ? 0.75 : 1;
 
-          return (
-            <motion.div
-              key={`turbine-${slot.left}-${slot.bottom}`}
-              className="absolute"
-              style={{
-                left: `${slot.left}%`,
-                bottom: `${slot.bottom}%`,
-                zIndex: slot.z,
-                opacity: layerOpacity,
-              }}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: layerOpacity, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              transition={{ duration: 0.6, delay: i * 0.1 }}
-            >
-              <WindTurbine
-                scale={slot.scale}
-                speed={isOverdrive ? 0.2 : (baseSpeed * layerSpeedMod + i * 0.2)}
-                onClick={() => handleTurbineClick(i)}
-              />
-            </motion.div>
-          );
-        })}
+            return (
+              <motion.div
+                key={`turbine-${slot.left}-${slot.bottom}`}
+                className="absolute"
+                style={{
+                  left: `${slot.left}%`,
+                  bottom: `${slot.bottom}%`,
+                  zIndex: slot.z,
+                  opacity: layerOpacity,
+                }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: layerOpacity, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                transition={{ duration: 0.6, delay: i * 0.1 }}
+              >
+                <WindTurbine
+                  scale={slot.scale}
+                  speed={isOverdrive ? 0.2 : baseSpeed * layerSpeedMod + i * 0.2}
+                  onClick={() => handleTurbineClick(i)}
+                />
+              </motion.div>
+            );
+          })}
       </AnimatePresence>
 
       {/* Solar panels — countryside only; city has rooftop panels in CityLandscape */}
@@ -103,7 +107,7 @@ export function SceneGenerationOverlay({
               <div
                 key={i}
                 className="relative w-7 h-5 bg-gen-solar/80 rounded-sm transform -skew-x-12 shadow-md overflow-hidden"
-                style={{ opacity: 0.7 + (sceneConfig.cleanliness * 0.3) }}
+                style={{ opacity: 0.7 + sceneConfig.cleanliness * 0.3 }}
               >
                 <motion.div
                   className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"
@@ -136,7 +140,11 @@ export function SceneGenerationOverlay({
             transition={{ duration: 0.6 }}
           >
             <div className="relative">
-              <SimpleFactory className="w-18 h-18 text-secondary" style={{ width: '4.5rem', height: '4.5rem' }} isNight={isNight} />
+              <SimpleFactory
+                className="w-18 h-18 text-secondary"
+                style={{ width: '4.5rem', height: '4.5rem' }}
+                isNight={isNight}
+              />
               {sceneConfig.showSmoke && (
                 <>
                   <SmokeParticle delay={0} x={35} />
@@ -222,7 +230,6 @@ export function SceneGenerationOverlay({
         )}
       </AnimatePresence>
 
-
       {/* Water/hydro indicator — countryside / coastal only */}
       <AnimatePresence>
         {!isCity && sceneConfig.cleanliness > 0.6 && (
@@ -247,9 +254,20 @@ export function SceneGenerationOverlay({
       <AnimatePresence>
         {sceneConfig.showRenewables && nuclearPercentage > 5 && !isCity && !isCoastal && (
           <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-15">
-            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio={SCENE_SILHOUETTE_ASPECT} aria-hidden="true">
-              <NuclearCoolingTower x={280} steamIntensity={nuclearPercentage / 100} isNight={isNight} />
-              {nuclearPercentage > 15 && <NuclearCoolingTower x={240} steamIntensity={0.5} isNight={isNight} />}
+            <svg
+              viewBox="0 30 400 120"
+              className="w-full h-full"
+              preserveAspectRatio={SCENE_SILHOUETTE_ASPECT}
+              aria-hidden="true"
+            >
+              <NuclearCoolingTower
+                x={280}
+                steamIntensity={nuclearPercentage / 100}
+                isNight={isNight}
+              />
+              {nuclearPercentage > 15 && (
+                <NuclearCoolingTower x={240} steamIntensity={0.5} isNight={isNight} />
+              )}
             </svg>
           </div>
         )}
@@ -259,8 +277,16 @@ export function SceneGenerationOverlay({
       <AnimatePresence>
         {windPercentage > 10 && !isCity && !isCoastal && (
           <div className="absolute bottom-0 left-0 right-0 h-[65%] pointer-events-none z-5">
-            <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio={SCENE_SILHOUETTE_ASPECT} aria-hidden="true">
-              <OffshoreWind count={Math.min(3, Math.floor(windPercentage / 10))} windSpeed={windSpeed} />
+            <svg
+              viewBox="0 30 400 120"
+              className="w-full h-full"
+              preserveAspectRatio={SCENE_SILHOUETTE_ASPECT}
+              aria-hidden="true"
+            >
+              <OffshoreWind
+                count={Math.min(3, Math.floor(windPercentage / 10))}
+                windSpeed={windSpeed}
+              />
             </svg>
           </div>
         )}
@@ -270,7 +296,12 @@ export function SceneGenerationOverlay({
       <AnimatePresence>
         {isCoastal && (hydroPercentage > 5 || marinePercentage > 0) && (
           <div className="absolute bottom-0 left-0 right-0 h-[65%] pointer-events-none z-25">
-            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio={SCENE_WASH_ASPECT} aria-hidden="true">
+            <svg
+              viewBox="0 0 400 150"
+              className="w-full h-full"
+              preserveAspectRatio={SCENE_WASH_ASPECT}
+              aria-hidden="true"
+            >
               <TidalWaves intensity={(hydroPercentage + marinePercentage) / 100} />
             </svg>
           </div>

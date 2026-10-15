@@ -36,19 +36,24 @@ export function SettingsHouseholdSection({
           onValueChange={(val) => setHouseType(val as HouseType)}
           className="flex flex-col gap-2 pt-1"
         >
-          {(Object.entries(OFGEM_TDCV_2025) as [HouseType, typeof OFGEM_TDCV_2025['LOW']][]).map(([key, value]) => (
-            <div key={key} className="flex items-start space-x-2 p-2 rounded hover:bg-muted/50 transition-colors">
-              <RadioGroupItem value={key} id={`house-${key}`} className="mt-1" />
-              <div className="grid gap-0.5">
-                <Label htmlFor={`house-${key}`} className="font-medium">
-                  {value.label}
-                </Label>
-                <span className="text-xs text-muted-foreground">
-                  ~{value.annualKwh.toLocaleString()} kWh/year
-                </span>
+          {(Object.entries(OFGEM_TDCV_2025) as [HouseType, (typeof OFGEM_TDCV_2025)['LOW']][]).map(
+            ([key, value]) => (
+              <div
+                key={key}
+                className="flex items-start space-x-2 p-2 rounded hover:bg-muted/50 transition-colors"
+              >
+                <RadioGroupItem value={key} id={`house-${key}`} className="mt-1" />
+                <div className="grid gap-0.5">
+                  <Label htmlFor={`house-${key}`} className="font-medium">
+                    {value.label}
+                  </Label>
+                  <span className="text-xs text-muted-foreground">
+                    ~{value.annualKwh.toLocaleString()} kWh/year
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
+            ),
+          )}
 
           <div className="flex items-start space-x-2 p-2 rounded hover:bg-muted/50 transition-colors">
             <RadioGroupItem value="CUSTOM" id="house-CUSTOM" className="mt-1" />

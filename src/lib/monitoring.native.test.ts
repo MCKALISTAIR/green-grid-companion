@@ -17,15 +17,23 @@ function walk(dir: string, exts: string[], out: string[] = []): string[] {
 
 describe('native Sentry is not started', () => {
   it('no app code imports @sentry/capacitor', () => {
-    const files = walk(join(process.cwd(), 'src'), ['.ts', '.tsx']).filter((f) => !f.endsWith('.test.ts'));
-    const offenders = files.filter((f) => /from ['"]@sentry\/capacitor['"]|require\(['"]@sentry\/capacitor/.test(readFileSync(f, 'utf8')));
+    const files = walk(join(process.cwd(), 'src'), ['.ts', '.tsx']).filter(
+      (f) => !f.endsWith('.test.ts'),
+    );
+    const offenders = files.filter((f) =>
+      /from ['"]@sentry\/capacitor['"]|require\(['"]@sentry\/capacitor/.test(
+        readFileSync(f, 'utf8'),
+      ),
+    );
     expect(offenders).toEqual([]);
   });
 
   it('no iOS/Android code calls SentrySDK.start / SentryAndroid.init', () => {
     const roots = ['ios', 'android'].map((d) => join(process.cwd(), d)).filter(existsSync);
     const files = roots.flatMap((r) => walk(r, ['.swift', '.m', '.kt', '.java']));
-    const offenders = files.filter((f) => /SentrySDK\.start|SentryAndroid\.init/.test(readFileSync(f, 'utf8')));
+    const offenders = files.filter((f) =>
+      /SentrySDK\.start|SentryAndroid\.init/.test(readFileSync(f, 'utf8')),
+    );
     expect(offenders).toEqual([]);
   });
 });

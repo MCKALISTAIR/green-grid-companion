@@ -17,7 +17,8 @@ describe('toOutwardCode', () => {
 
 describe('isValidPostcode', () => {
   it('accepts full postcodes with or without a space, and outward codes', () => {
-    for (const v of ['SW1A 1AA', 'SW1A1AA', 'SW1A', 'B1', 'EH1 1YZ']) expect(isValidPostcode(v)).toBe(true);
+    for (const v of ['SW1A 1AA', 'SW1A1AA', 'SW1A', 'B1', 'EH1 1YZ'])
+      expect(isValidPostcode(v)).toBe(true);
   });
   it('rejects junk', () => {
     for (const v of ['', 'hello', '12345', 'SW1A 1A']) expect(isValidPostcode(v)).toBe(false);

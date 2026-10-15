@@ -61,10 +61,14 @@ export async function importCredentialKey(secret: string | undefined | null): Pr
   }
 
   if (value.length < MIN_CREDENTIAL_SECRET_LENGTH) {
-    throw new Error(`OCTOPUS_CREDENTIALS_KEY must be at least ${MIN_CREDENTIAL_SECRET_LENGTH} characters (or a base64 32-byte key)`);
+    throw new Error(
+      `OCTOPUS_CREDENTIALS_KEY must be at least ${MIN_CREDENTIAL_SECRET_LENGTH} characters (or a base64 32-byte key)`,
+    );
   }
 
-  const ikm = await crypto.subtle.importKey('raw', new TextEncoder().encode(value), 'HKDF', false, ['deriveKey']);
+  const ikm = await crypto.subtle.importKey('raw', new TextEncoder().encode(value), 'HKDF', false, [
+    'deriveKey',
+  ]);
   return crypto.subtle.deriveKey(
     { name: 'HKDF', hash: 'SHA-256', salt: new Uint8Array(new ArrayBuffer(32)), info: HKDF_INFO },
     ikm,
@@ -75,7 +79,11 @@ export async function importCredentialKey(secret: string | undefined | null): Pr
 }
 
 /** Encrypt `plaintext` for `userId`. Output format: `v1.<iv b64>.<ciphertext b64>`. */
-export async function encryptCredential(plaintext: string, key: CryptoKey, userId: string): Promise<string> {
+export async function encryptCredential(
+  plaintext: string,
+  key: CryptoKey,
+  userId: string,
+): Promise<string> {
   const iv = crypto.getRandomValues(new Uint8Array(new ArrayBuffer(12)));
   const ct = await crypto.subtle.encrypt(
     { name: 'AES-GCM', iv, additionalData: new TextEncoder().encode(userId) },
@@ -86,7 +94,11 @@ export async function encryptCredential(plaintext: string, key: CryptoKey, userI
 }
 
 /** Decrypt a value produced by `encryptCredential` for the same `userId`. Throws on tamper/mismatch. */
-export async function decryptCredential(payload: string, key: CryptoKey, userId: string): Promise<string> {
+export async function decryptCredential(
+  payload: string,
+  key: CryptoKey,
+  userId: string,
+): Promise<string> {
   const parts = payload.split('.');
   if (parts.length !== 3 || parts[0] !== VERSION) {
     throw new Error('Unsupported credential ciphertext format');

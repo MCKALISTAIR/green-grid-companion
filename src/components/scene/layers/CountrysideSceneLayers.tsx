@@ -47,7 +47,12 @@ export function CountrysideSceneLayers({
         style={{ y: shouldReduceMotion ? 0 : backY }}
         className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-0 overflow-hidden"
       >
-        <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio={SCENE_SILHOUETTE_ASPECT} aria-hidden="true">
+        <svg
+          viewBox="0 30 400 120"
+          className="w-full h-full"
+          preserveAspectRatio={SCENE_SILHOUETTE_ASPECT}
+          aria-hidden="true"
+        >
           <LandscapeBack
             cleanliness={sceneConfig.cleanliness}
             isNight={isNight}
@@ -66,7 +71,12 @@ export function CountrysideSceneLayers({
         style={{ y: shouldReduceMotion ? 0 : midY }}
         className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-10 overflow-hidden"
       >
-        <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio={SCENE_SILHOUETTE_ASPECT} aria-hidden="true">
+        <svg
+          viewBox="0 30 400 120"
+          className="w-full h-full"
+          preserveAspectRatio={SCENE_SILHOUETTE_ASPECT}
+          aria-hidden="true"
+        >
           <LandscapeMid
             cleanliness={sceneConfig.cleanliness}
             isNight={isNight}
@@ -102,7 +112,12 @@ export function CountrysideSceneLayers({
 
       {/* Countryside: Foreground Landscape Layer (Front Hill) */}
       <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-20 overflow-hidden">
-        <svg viewBox="0 30 400 120" className="w-full h-full" preserveAspectRatio={SCENE_SILHOUETTE_ASPECT} aria-hidden="true">
+        <svg
+          viewBox="0 30 400 120"
+          className="w-full h-full"
+          preserveAspectRatio={SCENE_SILHOUETTE_ASPECT}
+          aria-hidden="true"
+        >
           <LandscapeFront
             cleanliness={sceneConfig.cleanliness}
             isNight={isNight}
@@ -118,36 +133,42 @@ export function CountrysideSceneLayers({
 
       {/* Countryside: Diegetic info hotspots */}
       <SceneHotspots
-        hotspots={[
-          {
-            id: 'countryside-wind',
-            label: 'Wind Farm',
-            x: 48, y: 58,
-            visible: sceneConfig.showRenewables && windPercentage > 0,
-            fact: 'Onshore wind is one of the cheapest forms of electricity generation in the UK, saving carbon and lowering energy bills.',
-          },
-          {
-            id: 'countryside-solar',
-            label: 'Solar Array',
-            x: 88, y: 88,
-            visible: sceneConfig.showRenewables && sceneConfig.showSun,
-            fact: 'UK solar capacity has grown rapidly, providing clean power to millions of homes during sunny peak demand hours.',
-          },
-          {
-            id: 'countryside-hydro',
-            label: 'Hydro Dam',
-            x: 10, y: 82,
-            visible: isRaining && hydroPercentage > 10,
-            fact: 'Hydroelectric power uses flowing water to drive turbines, providing reliable renewable energy that can ramp up instantly.',
-          },
-          {
-            id: 'countryside-nuclear',
-            label: 'Nuclear Power',
-            x: 70, y: 80,
-            visible: sceneConfig.showRenewables && nuclearPercentage > 5,
-            fact: 'Nuclear energy provides a steady foundation of low-carbon electricity, running continuously regardless of weather conditions.',
-          },
-        ] satisfies HotspotDef[]}
+        hotspots={
+          [
+            {
+              id: 'countryside-wind',
+              label: 'Wind Farm',
+              x: 48,
+              y: 58,
+              visible: sceneConfig.showRenewables && windPercentage > 0,
+              fact: 'Onshore wind is one of the cheapest forms of electricity generation in the UK, saving carbon and lowering energy bills.',
+            },
+            {
+              id: 'countryside-solar',
+              label: 'Solar Array',
+              x: 88,
+              y: 88,
+              visible: sceneConfig.showRenewables && sceneConfig.showSun,
+              fact: 'UK solar capacity has grown rapidly, providing clean power to millions of homes during sunny peak demand hours.',
+            },
+            {
+              id: 'countryside-hydro',
+              label: 'Hydro Dam',
+              x: 10,
+              y: 82,
+              visible: isRaining && hydroPercentage > 10,
+              fact: 'Hydroelectric power uses flowing water to drive turbines, providing reliable renewable energy that can ramp up instantly.',
+            },
+            {
+              id: 'countryside-nuclear',
+              label: 'Nuclear Power',
+              x: 70,
+              y: 80,
+              visible: sceneConfig.showRenewables && nuclearPercentage > 5,
+              fact: 'Nuclear energy provides a steady foundation of low-carbon electricity, running continuously regardless of weather conditions.',
+            },
+          ] satisfies HotspotDef[]
+        }
       />
     </>
   );

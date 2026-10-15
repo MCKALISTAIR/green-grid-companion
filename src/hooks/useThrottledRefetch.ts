@@ -42,9 +42,7 @@ export function useThrottledRefetch(
       if (notifyOnSkip) {
         const remaining = Math.ceil((cooldownMs - elapsed) / 1000);
         toast.info(skipToastTitle, {
-          description:
-            skipToastDescription ??
-            `You can refresh again in ${remaining}s.`,
+          description: skipToastDescription ?? `You can refresh again in ${remaining}s.`,
         });
       }
       return false;

@@ -57,13 +57,13 @@ export function SceneSkyLayer({
       </AnimatePresence>
 
       <AnimatePresence>
-        {sceneConfig.showStars && (
-          <Stars count={40} visibility={sceneConfig.starVisibility} />
-        )}
+        {sceneConfig.showStars && <Stars count={40} visibility={sceneConfig.starVisibility} />}
       </AnimatePresence>
 
       <AnimatePresence>
-        {sceneConfig.showMoon && <Moon position={sunPosition} onDoubleClick={handleMoonDoubleClick} />}
+        {sceneConfig.showMoon && (
+          <Moon position={sunPosition} onDoubleClick={handleMoonDoubleClick} />
+        )}
       </AnimatePresence>
 
       <AnimatePresence>
@@ -90,7 +90,14 @@ export function SceneSkyLayer({
             style={{
               // Position via style — Framer `animate` top/right % was resolving to 0px
               // and parking the sun mid-frame (and duplicating under grid capture).
-              top: timeOfDay === 'sunset' ? '35%' : timeOfDay === 'morning' ? '15%' : timeOfDay === 'afternoon' ? '12%' : '8%',
+              top:
+                timeOfDay === 'sunset'
+                  ? '35%'
+                  : timeOfDay === 'morning'
+                    ? '15%'
+                    : timeOfDay === 'afternoon'
+                      ? '12%'
+                      : '8%',
               right: timeOfDay === 'sunset' ? '15%' : timeOfDay === 'morning' ? '20%' : '8%',
               left: 'auto',
               filter: `brightness(${sceneConfig.solarBrightness + 0.5})`,
@@ -129,7 +136,8 @@ export function SceneSkyLayer({
               <motion.div
                 className="absolute inset-0 w-20 h-20 -translate-x-2 -translate-y-2 rounded-full blur-xl pointer-events-none"
                 style={{
-                  backgroundColor: timeOfDay === 'sunset' ? 'hsl(30 90% 55% / 0.4)' : 'hsl(var(--accent) / 0.3)',
+                  backgroundColor:
+                    timeOfDay === 'sunset' ? 'hsl(30 90% 55% / 0.4)' : 'hsl(var(--accent) / 0.3)',
                 }}
                 animate={{ scale: [1, 1.25, 1], opacity: [0.6, 1, 0.6] }}
                 transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' as const }}
@@ -155,15 +163,47 @@ export function SceneSkyLayer({
                     exit={{ scale: 0, rotate: 45, opacity: 0 }}
                     transition={{ type: 'spring', stiffness: 350, damping: 15 }}
                   >
-                    <svg width="40" height="15" viewBox="0 0 40 15" fill="none" className="drop-shadow-md">
+                    <svg
+                      width="40"
+                      height="15"
+                      viewBox="0 0 40 15"
+                      fill="none"
+                      className="drop-shadow-md"
+                    >
                       {/* Left Lens */}
-                      <rect x="3" y="3" width="12" height="9" rx="2" fill="#0f172a" stroke="#ffffff" strokeWidth="1.2" />
+                      <rect
+                        x="3"
+                        y="3"
+                        width="12"
+                        height="9"
+                        rx="2"
+                        fill="#0f172a"
+                        stroke="#ffffff"
+                        strokeWidth="1.2"
+                      />
                       <path d="M5 5H11" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" />
                       {/* Right Lens */}
-                      <rect x="25" y="3" width="12" height="9" rx="2" fill="#0f172a" stroke="#ffffff" strokeWidth="1.2" />
+                      <rect
+                        x="25"
+                        y="3"
+                        width="12"
+                        height="9"
+                        rx="2"
+                        fill="#0f172a"
+                        stroke="#ffffff"
+                        strokeWidth="1.2"
+                      />
                       <path d="M27 5H33" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" />
                       {/* Bridge */}
-                      <rect x="15" y="5" width="10" height="2" fill="#0f172a" stroke="#ffffff" strokeWidth="0.5" />
+                      <rect
+                        x="15"
+                        y="5"
+                        width="10"
+                        height="2"
+                        fill="#0f172a"
+                        stroke="#ffffff"
+                        strokeWidth="0.5"
+                      />
                     </svg>
                   </motion.div>
                 )}

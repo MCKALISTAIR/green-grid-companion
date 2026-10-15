@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getGreenScoreRating } from '@/components/GreenScoreExplainer';
+import { getGreenScoreRating } from '@/lib/greenScore';
 
 describe('getGreenScoreRating', () => {
   it('maps percentages to consistent labels', () => {

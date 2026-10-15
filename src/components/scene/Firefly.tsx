@@ -15,7 +15,7 @@ export function Firefly({ delay, x, y }: { delay: number; x: number; y: number }
         duration: 4,
         delay,
         repeat: Infinity,
-        ease: 'easeInOut' as const
+        ease: 'easeInOut' as const,
       }}
     />
   );

@@ -3,6 +3,7 @@
 Turn the scene from a "postcard" into a living, readable, interactive world that communicates carbon intensity at a glance.
 
 ## Guiding principles
+
 1. **Silhouette test** — clean vs dirty must be readable in under 1 second, even squinting.
 2. **One hero per state** — each intensity band has a single focal element; everything else demotes.
 3. **Transitions matter more than states** — every state change earns a moment of "juice".
@@ -12,6 +13,7 @@ Turn the scene from a "postcard" into a living, readable, interactive world that
 ---
 
 ## Phase 1 — Readability (the silhouette fix)
+
 Goal: make state instantly readable.
 
 - **Global colour grading layer**: a full-scene CSS `filter` / overlay tied to `cleanliness`.
@@ -19,7 +21,7 @@ Goal: make state instantly readable.
   - Moderate → neutral.
   - Very dirty → sepia/sickly yellow wash, -saturation, slight vignette.
 - **Boost dirty-state signals at night**: smog band + distant stack opacity ramped so they survive dark skies.
-- **Add starfield + aurora trigger** at `cleanliness > 0.85` (night only) — clean nights should feel *magical*. ✅ (`SceneSkyLayer`, 2026-10)
+- **Add starfield + aurora trigger** at `cleanliness > 0.85` (night only) — clean nights should feel _magical_. ✅ (`SceneSkyLayer`, 2026-10)
 - **Window-light hue shift**: warm amber when clean, sickly green-tinged when dirty. ✅ (`getWindowLitColor`, city + cottage)
 
 Deliverable: side-by-side screenshots of all 5 intensity bands × 4 times-of-day passing the squint test.
@@ -27,6 +29,7 @@ Deliverable: side-by-side screenshots of all 5 intensity bands × 4 times-of-day
 ---
 
 ## Phase 2 — Composition & hierarchy
+
 Goal: one hero, supporting cast, ambient detail.
 
 - **Pick a hero per state**:
@@ -42,6 +45,7 @@ Goal: one hero, supporting cast, ambient detail.
 ---
 
 ## Phase 3 — Juice (transitions & ambient life)
+
 Goal: the scene breathes; state changes feel earned.
 
 - **State-transition flourishes** (framer-motion):
@@ -58,6 +62,7 @@ Goal: the scene breathes; state changes feel earned.
 ---
 
 ## Phase 4 — Interactivity (diegetic info)
+
 Goal: 3-4 props become tappable and educational.
 
 - **Tappable hotspots** on: London Eye, BESS, EV charger, distant stack.
@@ -72,6 +77,7 @@ Goal: 3-4 props become tappable and educational.
 ---
 
 ## Phase 5 — Information design commitment
+
 **Decision (2026-09): Scene-as-HUD (Option A), Carrot Weather pattern.**
 
 - One giant intensity number floats over the scene with a soft gradient wash — no glass card.
@@ -83,6 +89,7 @@ Goal: 3-4 props become tappable and educational.
 ---
 
 ## Technical notes
+
 - New files anticipated:
   - `src/components/scene/SceneColorGrade.tsx` — global tint/saturation overlay.
   - `src/components/scene/StateTransitionFX.tsx` — flourish layer (mounts on cleanliness band changes).
@@ -96,6 +103,7 @@ Goal: 3-4 props become tappable and educational.
 - New memory: `mem://design/scene-game-feel` documenting the hero/silhouette/juice rules.
 
 ## Suggested build order
+
 1. Phase 1 (biggest readability win, lowest risk).
 2. Phase 2 (composition — needs Phase 1 grading to judge).
 3. Phase 4 (interactivity — independent, ships value fast).
@@ -103,6 +111,7 @@ Goal: 3-4 props become tappable and educational.
 5. Phase 5 (HUD decision — needs user choice first).
 
 ## Follow-ons (Carrot comparison 2026-09)
+
 - **Quiet sheet** — home content sheet leads with now-or-wait; secondary insights collapsed.
 - **Temporal scene life** — `useSceneGrowth` + `SceneTemporalLife` evolve countryside flora with coal-free + clean hours (stages 0–4). UI shows stage-up copy only (`GardenStageUpLine`).
 - **One product feel** — `docs/ART_DIRECTION.md` (“Living grid paper”); seam/register/job tests; paper sheet + dock; diegetic events only.

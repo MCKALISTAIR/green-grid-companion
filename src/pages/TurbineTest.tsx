@@ -1,4 +1,4 @@
-import { IntensityScene } from "@/components/IntensityScene";
+import { IntensityScene } from '@/components/IntensityScene';
 
 export default function TurbineTest() {
   return (

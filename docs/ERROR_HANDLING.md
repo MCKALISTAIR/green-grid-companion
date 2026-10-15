@@ -5,6 +5,7 @@ This guide explains how to provide user-friendly error messages throughout the G
 ## The Problem
 
 When Supabase edge functions fail, they often return generic error messages like:
+
 - "Edge function returned a non-2xx status code"
 - Raw HTTP status codes without context
 - Server-side technical errors
@@ -32,17 +33,17 @@ import { toast } from 'sonner';
 
 try {
   const { data, error } = await supabase.functions.invoke('some-function', {
-    body: { action: 'do-something' }
+    body: { action: 'do-something' },
   });
-  
+
   if (error) throw error;
-  
+
   // Success!
   toast.success('Action completed!');
 } catch (error: unknown) {
   const message = parseEdgeFunctionError(error, {
-    feature: 'octopus',  // What feature is this for?
-    action: 'save'       // What action were we trying to do?
+    feature: 'octopus', // What feature is this for?
+    action: 'save', // What action were we trying to do?
   });
   toast.error(message);
 }
@@ -51,6 +52,7 @@ try {
 ### Available Context Options
 
 #### Features
+
 - `'octopus'` - Octopus Energy integration
 - `'tesla'` - Tesla integration
 - `'notifications'` - Notification system
@@ -59,6 +61,7 @@ try {
 - `'auth'` - Authentication
 
 #### Actions
+
 - `'save'` - Saving credentials or data
 - `'fetch'` - Fetching/loading data
 - `'sync'` - Synchronizing data
@@ -73,13 +76,13 @@ try {
 ```typescript
 try {
   const { error } = await supabase.functions.invoke('octopus-energy', {
-    body: { action: 'save-credentials', apiKey, accountNumber }
+    body: { action: 'save-credentials', apiKey, accountNumber },
   });
   if (error) throw error;
 } catch (error: unknown) {
   const message = parseEdgeFunctionError(error, {
     feature: 'octopus',
-    action: 'save'
+    action: 'save',
   });
   toast.error(message);
   // Shows: "Failed to save Octopus Energy credentials. Check they are correct and try again."
@@ -96,7 +99,7 @@ try {
 } catch (error) {
   const message = parseEdgeFunctionError(error, {
     feature: 'tesla',
-    action: 'link'
+    action: 'link',
   });
   toast.error(message);
   // Shows: "Failed to connect Tesla account. Please try again."
@@ -109,13 +112,13 @@ try {
 ```typescript
 try {
   const { data, error } = await supabase.functions.invoke('get-data', {
-    body: { type: 'consumption' }
+    body: { type: 'consumption' },
   });
   if (error) throw error;
 } catch (error: unknown) {
   const message = parseEdgeFunctionError(error, {
     feature: 'data',
-    action: 'fetch'
+    action: 'fetch',
   });
   toast.error(message);
   // Shows: "Failed to load data. Please check your connection and try again."
@@ -124,27 +127,29 @@ try {
 
 ## Error Message Mapping
 
-| Status Code | Default Message | Octopus Context | Tesla Context |
-|------------|----------------|-----------------|---------------|
-| 401 | Authentication failed | Invalid Octopus Energy credentials | Tesla authentication expired |
-| 403 | You don't have permission | Check your Octopus Energy API permissions | Access denied |
-| 404 | Data could not be found | No meters found. Check account number | Data not found |
-| 429 | Too many requests | Too many requests. Wait and try again | Too many requests |
-| 500-503 | Service temporarily unavailable | Octopus Energy service unavailable | Tesla service unavailable |
-| Timeout | Request timed out | Check your connection and try again | Check your connection |
-| Network | Connection failed | Check your internet connection | Check your internet connection |
-| Offline | You're offline | Check your connection | Check your connection |
+| Status Code | Default Message                 | Octopus Context                           | Tesla Context                  |
+| ----------- | ------------------------------- | ----------------------------------------- | ------------------------------ |
+| 401         | Authentication failed           | Invalid Octopus Energy credentials        | Tesla authentication expired   |
+| 403         | You don't have permission       | Check your Octopus Energy API permissions | Access denied                  |
+| 404         | Data could not be found         | No meters found. Check account number     | Data not found                 |
+| 429         | Too many requests               | Too many requests. Wait and try again     | Too many requests              |
+| 500-503     | Service temporarily unavailable | Octopus Energy service unavailable        | Tesla service unavailable      |
+| Timeout     | Request timed out               | Check your connection and try again       | Check your connection          |
+| Network     | Connection failed               | Check your internet connection            | Check your internet connection |
+| Offline     | You're offline                  | Check your connection                     | Check your connection          |
 
 ## Best Practices
 
 ### ✅ Do
 
 1. **Always provide context** when using `parseEdgeFunctionError`
+
    ```typescript
    const message = parseEdgeFunctionError(error, { feature: 'octopus', action: 'save' });
    ```
 
 2. **Show success messages** to confirm actions worked
+
    ```typescript
    toast.success('Credentials saved successfully');
    ```
@@ -159,20 +164,22 @@ try {
 ### ❌ Don't
 
 1. **Don't show raw error messages**
+
    ```typescript
    // BAD
    toast.error(error.message);
-   
+
    // GOOD
    const message = parseEdgeFunctionError(error, { feature: 'octopus', action: 'save' });
    toast.error(message);
    ```
 
 2. **Don't use generic errors for user-facing messages**
+
    ```typescript
    // BAD
    toast.error('Something went wrong');
-   
+
    // GOOD
    const message = parseEdgeFunctionError(error, { feature: 'octopus', action: 'save' });
    toast.error(message);
@@ -183,7 +190,7 @@ try {
    // BAD - User sees "Edge function returned a non-2xx status code"
    const { error } = await supabase.functions.invoke('action');
    if (error) toast.error(error.message);
-   
+
    // GOOD - User sees contextual message
    const { error } = await supabase.functions.invoke('action');
    if (error) {
@@ -197,6 +204,7 @@ try {
 If you have existing error handling code, migrate it as follows:
 
 ### Before (Generic)
+
 ```typescript
 catch (error: unknown) {
   const message = error instanceof Error ? error.message : 'Failed to save credentials';
@@ -205,6 +213,7 @@ catch (error: unknown) {
 ```
 
 ### After (Context-Aware)
+
 ```typescript
 catch (error: unknown) {
   const message = parseEdgeFunctionError(error, { feature: 'octopus', action: 'save' });
@@ -217,7 +226,7 @@ catch (error: unknown) {
 To test your error handling:
 
 1. **Offline Mode**: Disable network in DevTools to test offline messages
-2. **Invalid Credentials**: Use fake API keys to test 401 errors  
+2. **Invalid Credentials**: Use fake API keys to test 401 errors
 3. **Server Errors**: Edge function errors will be caught and transformed automatically
 4. **Rate Limiting**: Make rapid requests to test 429 handling
 

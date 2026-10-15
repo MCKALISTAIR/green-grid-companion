@@ -26,7 +26,7 @@ export function useRelativeTime(isoTimestamp: string | null | undefined): string
     setLabel(getLabel());
     const id = setInterval(() => setLabel(getLabel()), 30_000);
     return () => clearInterval(id);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isoTimestamp]);
 
   return label;

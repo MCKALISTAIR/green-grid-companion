@@ -24,7 +24,7 @@ export function useTimeOfDay(): TimeOfDayState {
 
   return useMemo(() => {
     let timeOfDay: TimeOfDay;
-    
+
     if (hour >= 0 && hour < 5) {
       timeOfDay = 'night';
     } else if (hour >= 5 && hour < 7) {
@@ -45,7 +45,7 @@ export function useTimeOfDay(): TimeOfDayState {
 
     // Sun position: 0 at 6am, 0.5 at noon, 1 at 6pm
     const sunPosition = Math.max(0, Math.min(1, (hour - 6) / 12));
-    
+
     return {
       timeOfDay,
       hour,

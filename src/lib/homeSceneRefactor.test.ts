@@ -34,7 +34,9 @@ describe('getSmartTip', () => {
     // The live reading stands in for the missing current half hour, so "start
     // now" is the 3-hour window average (180, 200, 200, 200, 55, 55), as it is
     // whenever the current half hour is in the forecast.
-    expect(getSmartTip(180, forecast)).toMatch(/^Wait about 2 hours\. It'll be around 65% cleaner \(148 to 55/);
+    expect(getSmartTip(180, forecast)).toMatch(
+      /^Wait about 2 hours\. It'll be around 65% cleaner \(148 to 55/,
+    );
   });
 });
 

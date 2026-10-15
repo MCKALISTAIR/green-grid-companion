@@ -15,7 +15,12 @@ export const SCENE_SHORT_ASPECT = 1.55;
 /** Estimated CSS logical sizes for iPhone Duo (3x). */
 export const IPHONE_DUO_VIEWPORTS = {
   cover: { label: 'iPhone Duo Cover', width: 466, height: 678, aspect: '1.42:1' },
-  coverLandscape: { label: 'iPhone Duo Cover Landscape', width: 678, height: 466, aspect: '1.42:1' },
+  coverLandscape: {
+    label: 'iPhone Duo Cover Landscape',
+    width: 678,
+    height: 466,
+    aspect: '1.42:1',
+  },
   inner: { label: 'iPhone Duo Inner', width: 890, height: 626, aspect: '1.42:1' },
   innerPortrait: { label: 'iPhone Duo Inner Portrait', width: 626, height: 890, aspect: '1.42:1' },
   splitView: { label: 'iPhone Duo Split View', width: 445, height: 626, aspect: '~half inner' },
@@ -42,5 +47,4 @@ export function getSceneIntrinsicHeight(viewportWidth: number, viewportHeight: n
 }
 
 /** CSS value used by IntensityScene when no style override is passed. */
-export const SCENE_HEIGHT_CSS =
-  'clamp(min(280px, 45dvh), min(55dvh, 75vw), min(620px, 70dvh))';
+export const SCENE_HEIGHT_CSS = 'clamp(min(280px, 45dvh), min(55dvh, 75vw), min(620px, 70dvh))';

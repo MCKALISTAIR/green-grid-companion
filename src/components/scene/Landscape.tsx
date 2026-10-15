@@ -3,332 +3,398 @@ import { motion } from 'framer-motion';
 import { useHaptics } from '@/hooks/useHaptics';
 import { getWindowLitColor } from '@/lib/windowLitColor';
 
-export type TimeOfDayLandscape = 'night' | 'dawn' | 'morning' | 'midday' | 'afternoon' | 'sunset' | 'dusk';
+export type TimeOfDayLandscape =
+  'night' | 'dawn' | 'morning' | 'midday' | 'afternoon' | 'sunset' | 'dusk';
 
 export interface LandscapeProps {
-    cleanliness: number;
-    isNight: boolean;
-    synthwaveMode: boolean;
-    isSnowing?: boolean;
-    isChristmas?: boolean;
-    skipIntro?: boolean;
-    windSpeed?: number;
-    timeOfDay?: TimeOfDayLandscape;
+  cleanliness: number;
+  isNight: boolean;
+  synthwaveMode: boolean;
+  isSnowing?: boolean;
+  isChristmas?: boolean;
+  skipIntro?: boolean;
+  windSpeed?: number;
+  timeOfDay?: TimeOfDayLandscape;
 }
 
 // Get current season based on month
 function getCurrentSeason(): 'spring' | 'summer' | 'autumn' | 'winter' {
-    const month = new Date().getMonth(); // 0-11
-    if (month >= 2 && month <= 4) return 'spring'; // Mar-May
-    if (month >= 5 && month <= 7) return 'summer'; // Jun-Aug  
-    if (month >= 8 && month <= 10) return 'autumn'; // Sep-Nov
-    return 'winter'; // Dec-Feb
+  const month = new Date().getMonth(); // 0-11
+  if (month >= 2 && month <= 4) return 'spring'; // Mar-May
+  if (month >= 5 && month <= 7) return 'summer'; // Jun-Aug
+  if (month >= 8 && month <= 10) return 'autumn'; // Sep-Nov
+  return 'winter'; // Dec-Feb
 }
 
 // 🌲 Stylized Pine Tree with Shading
-function PineTree({ x, y, scale = 1, colorPrimary, colorShadow, isSnowing, isChristmas, windSpeed = 0 }: { x: number; y: number; scale?: number; colorPrimary: string; colorShadow: string; isSnowing?: boolean; isChristmas?: boolean; windSpeed?: number }) {
-    const season = getCurrentSeason();
+function PineTree({
+  x,
+  y,
+  scale = 1,
+  colorPrimary,
+  colorShadow,
+  isSnowing,
+  isChristmas,
+  windSpeed = 0,
+}: {
+  x: number;
+  y: number;
+  scale?: number;
+  colorPrimary: string;
+  colorShadow: string;
+  isSnowing?: boolean;
+  isChristmas?: boolean;
+  windSpeed?: number;
+}) {
+  const season = getCurrentSeason();
 
-    // Seasonal color overrides
-    const getSeasonalColors = () => {
-        if (isChristmas || isSnowing) return { primary: colorPrimary, shadow: colorShadow };
+  // Seasonal color overrides
+  const getSeasonalColors = () => {
+    if (isChristmas || isSnowing) return { primary: colorPrimary, shadow: colorShadow };
 
-        switch (season) {
-            case 'spring':
-                return { primary: '#86efac', shadow: '#4ade80' };
-            case 'autumn':
-                // Restrained rust/olive — neon orange needles read as map pins under scrutiny
-                return { primary: '#b45309', shadow: '#78350f' };
-            default:
-                return { primary: colorPrimary, shadow: colorShadow };
-        }
-    };
+    switch (season) {
+      case 'spring':
+        return { primary: '#86efac', shadow: '#4ade80' };
+      case 'autumn':
+        // Restrained rust/olive — neon orange needles read as map pins under scrutiny
+        return { primary: '#b45309', shadow: '#78350f' };
+      default:
+        return { primary: colorPrimary, shadow: colorShadow };
+    }
+  };
 
-    const seasonalColors = getSeasonalColors();
+  const seasonalColors = getSeasonalColors();
 
-    // Calculate sway animation based on wind speed
-    const swayIntensity = Math.min(windSpeed / 30, 1); // Normalize 0-1
-    const swayAmount = swayIntensity * 2; // Max 2 degrees
-    const swayDuration = Math.max(1.5, 3 - (swayIntensity * 1.5)); // Faster in high wind
+  // Calculate sway animation based on wind speed
+  const swayIntensity = Math.min(windSpeed / 30, 1); // Normalize 0-1
+  const swayAmount = swayIntensity * 2; // Max 2 degrees
+  const swayDuration = Math.max(1.5, 3 - swayIntensity * 1.5); // Faster in high wind
 
-    // Randomize timing slightly per tree for natural effect
-    const randomOffset = useMemo(() => Math.random() * 0.5, []);
+  // Randomize timing slightly per tree for natural effect
+  const randomOffset = useMemo(() => Math.random() * 0.5, []);
 
-    return (
-        <svg
-            x={x - 18 * scale}
-            y={y - 40 * scale}
-            width={36 * scale}
-            height={48 * scale}
-            viewBox="-18 -40 36 48"
-            preserveAspectRatio="xMidYMax meet"
-            className="overflow-visible"
-        >
-            <motion.g
-                animate={{
-                    rotate: [0, swayAmount, 0, -swayAmount, 0],
-                }}
-                transition={{
-                    duration: swayDuration,
-                    repeat: Infinity,
-                    ease: 'easeInOut' as const,
-                    delay: randomOffset,
-                }}
-                style={{ transformOrigin: '0px 8px' }}
-            >
-                {/* Trunk */}
-                <path d="M-2.5,-6 L2.5,-6 L2.5,8 Q0,9.5 -2.5,8 Z" fill="rgba(60, 40, 20, 0.85)" />
+  return (
+    <svg
+      x={x - 18 * scale}
+      y={y - 40 * scale}
+      width={36 * scale}
+      height={48 * scale}
+      viewBox="-18 -40 36 48"
+      preserveAspectRatio="xMidYMax meet"
+      className="overflow-visible"
+    >
+      <motion.g
+        animate={{
+          rotate: [0, swayAmount, 0, -swayAmount, 0],
+        }}
+        transition={{
+          duration: swayDuration,
+          repeat: Infinity,
+          ease: 'easeInOut' as const,
+          delay: randomOffset,
+        }}
+        style={{ transformOrigin: '0px 8px' }}
+      >
+        {/* Trunk */}
+        <path d="M-2.5,-6 L2.5,-6 L2.5,8 Q0,9.5 -2.5,8 Z" fill="rgba(60, 40, 20, 0.85)" />
 
-                {/* Bottom tier — wide canopy (reads as foliage, not a map pin) */}
-                <path d="M0,-16 Q12,-14 16,-2 Q5,-4 0,-4" fill={seasonalColors.shadow} />
-                <path d="M0,-16 Q-12,-14 -16,-2 Q-5,-4 0,-4" fill={seasonalColors.primary} />
+        {/* Bottom tier — wide canopy (reads as foliage, not a map pin) */}
+        <path d="M0,-16 Q12,-14 16,-2 Q5,-4 0,-4" fill={seasonalColors.shadow} />
+        <path d="M0,-16 Q-12,-14 -16,-2 Q-5,-4 0,-4" fill={seasonalColors.primary} />
 
-                {/* Middle tier */}
-                <path d="M0,-26 Q9,-24 12,-12 Q4,-14 0,-14" fill={seasonalColors.shadow} />
-                <path d="M0,-26 Q-9,-24 -12,-12 Q-4,-14 0,-14" fill={seasonalColors.primary} />
+        {/* Middle tier */}
+        <path d="M0,-26 Q9,-24 12,-12 Q4,-14 0,-14" fill={seasonalColors.shadow} />
+        <path d="M0,-26 Q-9,-24 -12,-12 Q-4,-14 0,-14" fill={seasonalColors.primary} />
 
-                {/* Top tier */}
-                <path d="M0,-36 Q6,-33 8,-22 Q3,-24 0,-24" fill={seasonalColors.shadow} />
-                <path d="M0,-36 Q-6,-33 -8,-22 Q-3,-24 0,-24" fill={seasonalColors.primary} />
+        {/* Top tier */}
+        <path d="M0,-36 Q6,-33 8,-22 Q3,-24 0,-24" fill={seasonalColors.shadow} />
+        <path d="M0,-36 Q-6,-33 -8,-22 Q-3,-24 0,-24" fill={seasonalColors.primary} />
 
-                {/* Spring Blossoms */}
-                {season === 'spring' && !isChristmas && (
-                    <g>
-                        <circle cx="-8" cy="-10" r="1.2" fill="#fda4af" opacity="0.9" />
-                        <circle cx="6" cy="-16" r="1.2" fill="#fda4af" opacity="0.9" />
-                        <circle cx="-4" cy="-22" r="1.2" fill="#fda4af" opacity="0.9" />
-                        <circle cx="5" cy="-28" r="1.2" fill="#fda4af" opacity="0.9" />
-                    </g>
-                )}
+        {/* Spring Blossoms */}
+        {season === 'spring' && !isChristmas && (
+          <g>
+            <circle cx="-8" cy="-10" r="1.2" fill="#fda4af" opacity="0.9" />
+            <circle cx="6" cy="-16" r="1.2" fill="#fda4af" opacity="0.9" />
+            <circle cx="-4" cy="-22" r="1.2" fill="#fda4af" opacity="0.9" />
+            <circle cx="5" cy="-28" r="1.2" fill="#fda4af" opacity="0.9" />
+          </g>
+        )}
 
-                {/* Christmas Decorations */}
-                {isChristmas && (
-                    <g>
-                        <circle cx="-6" cy="-8" r="1.5" fill="#ef4444" />
-                        <circle cx="5" cy="-14" r="1.5" fill="#fbbf24" />
-                        <circle cx="0" cy="-22" r="1.5" fill="#3b82f6" />
-                        <circle cx="-3" cy="-28" r="1.5" fill="#ef4444" />
-                        <circle cx="0" cy="-38" r="2" fill="#fbbf24" filter="drop-shadow(0 0 2px #fcd34d)" />
-                    </g>
-                )}
+        {/* Christmas Decorations */}
+        {isChristmas && (
+          <g>
+            <circle cx="-6" cy="-8" r="1.5" fill="#ef4444" />
+            <circle cx="5" cy="-14" r="1.5" fill="#fbbf24" />
+            <circle cx="0" cy="-22" r="1.5" fill="#3b82f6" />
+            <circle cx="-3" cy="-28" r="1.5" fill="#ef4444" />
+            <circle cx="0" cy="-38" r="2" fill="#fbbf24" filter="drop-shadow(0 0 2px #fcd34d)" />
+          </g>
+        )}
 
-                {/* Snow cap on top (if snowing) */}
-                {isSnowing && (
-                    <path d="M0,-38 L5,-30 L-5,-30 Z" fill="#ffffff" opacity="0.9" />
-                )}
-            </motion.g>
-        </svg>
-    );
+        {/* Snow cap on top (if snowing) */}
+        {isSnowing && <path d="M0,-38 L5,-30 L-5,-30 Z" fill="#ffffff" opacity="0.9" />}
+      </motion.g>
+    </svg>
+  );
 }
 
 // ⛰️ Rolling Hill Layer (Generic)
 function HillLayer({
-    d,
-    fill,
-    trees = [],
-    treeColors,
-    delay = 0,
-    isSnowing,
-    isChristmas,
-    skipIntro,
-    windSpeed = 0
+  d,
+  fill,
+  trees = [],
+  treeColors,
+  delay = 0,
+  isSnowing,
+  isChristmas,
+  skipIntro,
+  windSpeed = 0,
 }: {
-    d: string;
-    fill: string;
-    trees?: { x: number, y: number, scale: number }[];
-    treeColors?: { primary: string, shadow: string };
-    delay?: number;
-    isSnowing?: boolean;
-    isChristmas?: boolean;
-    skipIntro?: boolean;
-    windSpeed?: number;
+  d: string;
+  fill: string;
+  trees?: { x: number; y: number; scale: number }[];
+  treeColors?: { primary: string; shadow: string };
+  delay?: number;
+  isSnowing?: boolean;
+  isChristmas?: boolean;
+  skipIntro?: boolean;
+  windSpeed?: number;
 }) {
-    return (
-        <motion.g
-            initial={skipIntro ? { y: 0, opacity: 1 } : { y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={skipIntro ? { duration: 0 } : { duration: 1.5, delay, ease: 'easeOut' as const }}
-        >
-            <path
-                d={d}
-                fill={fill}
-                stroke="rgba(255,255,255,0.12)"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-            />
+  return (
+    <motion.g
+      initial={skipIntro ? { y: 0, opacity: 1 } : { y: 50, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={skipIntro ? { duration: 0 } : { duration: 1.5, delay, ease: 'easeOut' as const }}
+    >
+      <path
+        d={d}
+        fill={fill}
+        stroke="rgba(255,255,255,0.12)"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
 
-            {/* Snow layer on top of hill curve if snowing */}
-            {isSnowing && (
-                <path d={d} fill="white" fillOpacity="0.25" stroke="white" strokeWidth="1.5" strokeOpacity="0.4" strokeDasharray="10 20" />
-            )}
+      {/* Snow layer on top of hill curve if snowing */}
+      {isSnowing && (
+        <path
+          d={d}
+          fill="white"
+          fillOpacity="0.25"
+          stroke="white"
+          strokeWidth="1.5"
+          strokeOpacity="0.4"
+          strokeDasharray="10 20"
+        />
+      )}
 
-            {trees.map((tree, i) => (
-                <PineTree
-                    key={i}
-                    x={tree.x}
-                    y={tree.y}
-                    scale={tree.scale}
-                    colorPrimary={treeColors?.primary || '#4ade80'}
-                    colorShadow={treeColors?.shadow || '#22c55e'}
-                    isSnowing={isSnowing}
-                    isChristmas={isChristmas}
-                    windSpeed={windSpeed}
-                />
-            ))}
-        </motion.g>
-    );
+      {trees.map((tree, i) => (
+        <PineTree
+          key={i}
+          x={tree.x}
+          y={tree.y}
+          scale={tree.scale}
+          colorPrimary={treeColors?.primary || '#4ade80'}
+          colorShadow={treeColors?.shadow || '#22c55e'}
+          isSnowing={isSnowing}
+          isChristmas={isChristmas}
+          windSpeed={windSpeed}
+        />
+      ))}
+    </motion.g>
+  );
 }
 
 // 🎨 Palette Hook
-function useLandscapePalette(cleanliness: number, isNight: boolean, synthwaveMode: boolean, isSnowing?: boolean, timeOfDay?: TimeOfDayLandscape) {
-    return useMemo(() => {
-        if (synthwaveMode) {
-            return {
-                backHillHighlight: '#3c096c', backHillShadow: '#1a0033',
-                midHillHighlight: '#5a189a', midHillShadow: '#240046',
-                frontHillHighlight: '#7b2cbf', frontHillShadow: '#3c096c',
-                treePrimary: '#e0aaff', treeShadow: '#9d4edd',
-            };
-        }
-        if (isSnowing) {
-            return {
-                backHillHighlight: isNight ? '#2d3748' : '#e2e8f0', backHillShadow: isNight ? '#0f172a' : '#cbd5e1',
-                midHillHighlight: isNight ? '#334155' : '#f1f5f9', midHillShadow: isNight ? '#1e293b' : '#e2e8f0',
-                frontHillHighlight: isNight ? '#475569' : '#ffffff', frontHillShadow: isNight ? '#334155' : '#f1f5f9',
-                treePrimary: isNight ? '#0f172a' : '#14532d',
-                treeShadow: isNight ? '#020617' : '#052e16',
-            };
-        }
-        if (isNight) {
-            return {
-                backHillHighlight: '#1e293b', backHillShadow: '#020617',
-                midHillHighlight: '#334155', midHillShadow: '#0f172a',
-                frontHillHighlight: '#475569', frontHillShadow: '#1e293b',
-                treePrimary: '#475569', treeShadow: '#0f172a',
-            };
-        }
+function useLandscapePalette(
+  cleanliness: number,
+  isNight: boolean,
+  synthwaveMode: boolean,
+  isSnowing?: boolean,
+  timeOfDay?: TimeOfDayLandscape,
+) {
+  return useMemo(() => {
+    if (synthwaveMode) {
+      return {
+        backHillHighlight: '#3c096c',
+        backHillShadow: '#1a0033',
+        midHillHighlight: '#5a189a',
+        midHillShadow: '#240046',
+        frontHillHighlight: '#7b2cbf',
+        frontHillShadow: '#3c096c',
+        treePrimary: '#e0aaff',
+        treeShadow: '#9d4edd',
+      };
+    }
+    if (isSnowing) {
+      return {
+        backHillHighlight: isNight ? '#2d3748' : '#e2e8f0',
+        backHillShadow: isNight ? '#0f172a' : '#cbd5e1',
+        midHillHighlight: isNight ? '#334155' : '#f1f5f9',
+        midHillShadow: isNight ? '#1e293b' : '#e2e8f0',
+        frontHillHighlight: isNight ? '#475569' : '#ffffff',
+        frontHillShadow: isNight ? '#334155' : '#f1f5f9',
+        treePrimary: isNight ? '#0f172a' : '#14532d',
+        treeShadow: isNight ? '#020617' : '#052e16',
+      };
+    }
+    if (isNight) {
+      return {
+        backHillHighlight: '#1e293b',
+        backHillShadow: '#020617',
+        midHillHighlight: '#334155',
+        midHillShadow: '#0f172a',
+        frontHillHighlight: '#475569',
+        frontHillShadow: '#1e293b',
+        treePrimary: '#475569',
+        treeShadow: '#0f172a',
+      };
+    }
 
-        const isClean = cleanliness > 0.5;
+    const isClean = cleanliness > 0.5;
 
-        // Time-of-day tinting for landscape
-        if (timeOfDay === 'dawn') {
-            return {
-                backHillHighlight: isClean ? '#2b5a3e' : '#5c3e1a', backHillShadow: isClean ? '#13281a' : '#2b1a08',
-                midHillHighlight: isClean ? '#34704b' : '#734e26', midHillShadow: isClean ? '#1a3d25' : '#3d250f',
-                frontHillHighlight: isClean ? '#3e8c5b' : '#8c5e32', frontHillShadow: isClean ? '#204d30' : '#4d3215',
-                treePrimary: isClean ? '#6ec89b' : '#b8860b',
-                treeShadow: isClean ? '#3a8a65' : '#8b6914',
-            };
-        }
-        if (timeOfDay === 'sunset') {
-            return {
-                backHillHighlight: isClean ? '#4a702e' : '#733e0d', backHillShadow: isClean ? '#203610' : '#381c03',
-                midHillHighlight: isClean ? '#5c8a39' : '#8c4e12', midHillShadow: isClean ? '#2a4714' : '#4c2505',
-                frontHillHighlight: isClean ? '#70a644' : '#a65f1a', frontHillShadow: isClean ? '#365a18' : '#5c3209',
-                treePrimary: isClean ? '#8bc34a' : '#cd853f',
-                treeShadow: isClean ? '#558b2f' : '#a0522d',
-            };
-        }
-        if (timeOfDay === 'dusk') {
-            return {
-                backHillHighlight: isClean ? '#25354c' : '#3d281a', backHillShadow: isClean ? '#0f1824' : '#1f130a',
-                midHillHighlight: isClean ? '#324a6b' : '#543b27', midHillShadow: isClean ? '#172538' : '#2a1a0f',
-                frontHillHighlight: isClean ? '#44608c' : '#6b4e36', frontHillShadow: isClean ? '#21334c' : '#3a2818',
-                treePrimary: isClean ? '#5a7a90' : '#7a6040',
-                treeShadow: isClean ? '#2a4a60' : '#5a4030',
-            };
-        }
+    // Time-of-day tinting for landscape
+    if (timeOfDay === 'dawn') {
+      return {
+        backHillHighlight: isClean ? '#2b5a3e' : '#5c3e1a',
+        backHillShadow: isClean ? '#13281a' : '#2b1a08',
+        midHillHighlight: isClean ? '#34704b' : '#734e26',
+        midHillShadow: isClean ? '#1a3d25' : '#3d250f',
+        frontHillHighlight: isClean ? '#3e8c5b' : '#8c5e32',
+        frontHillShadow: isClean ? '#204d30' : '#4d3215',
+        treePrimary: isClean ? '#6ec89b' : '#b8860b',
+        treeShadow: isClean ? '#3a8a65' : '#8b6914',
+      };
+    }
+    if (timeOfDay === 'sunset') {
+      return {
+        backHillHighlight: isClean ? '#4a702e' : '#733e0d',
+        backHillShadow: isClean ? '#203610' : '#381c03',
+        midHillHighlight: isClean ? '#5c8a39' : '#8c4e12',
+        midHillShadow: isClean ? '#2a4714' : '#4c2505',
+        frontHillHighlight: isClean ? '#70a644' : '#a65f1a',
+        frontHillShadow: isClean ? '#365a18' : '#5c3209',
+        treePrimary: isClean ? '#8bc34a' : '#cd853f',
+        treeShadow: isClean ? '#558b2f' : '#a0522d',
+      };
+    }
+    if (timeOfDay === 'dusk') {
+      return {
+        backHillHighlight: isClean ? '#25354c' : '#3d281a',
+        backHillShadow: isClean ? '#0f1824' : '#1f130a',
+        midHillHighlight: isClean ? '#324a6b' : '#543b27',
+        midHillShadow: isClean ? '#172538' : '#2a1a0f',
+        frontHillHighlight: isClean ? '#44608c' : '#6b4e36',
+        frontHillShadow: isClean ? '#21334c' : '#3a2818',
+        treePrimary: isClean ? '#5a7a90' : '#7a6040',
+        treeShadow: isClean ? '#2a4a60' : '#5a4030',
+      };
+    }
 
-        // Midday / Normal daylight
-        return {
-            backHillHighlight: isClean ? '#1f6e3c' : '#61330b', backHillShadow: isClean ? '#0e3a1d' : '#2d1402',
-            midHillHighlight: isClean ? '#22c55e' : '#854d0e', midHillShadow: isClean ? '#14532d' : '#451a03',
-            frontHillHighlight: isClean ? '#4ade80' : '#a16207', frontHillShadow: isClean ? '#16a34a' : '#713f12',
-            treePrimary: isClean ? '#4ade80' : '#a16207',
-            treeShadow: isClean ? '#16a34a' : '#854d0e',
-        };
-    }, [cleanliness, isNight, synthwaveMode, isSnowing, timeOfDay]);
+    // Midday / Normal daylight
+    return {
+      backHillHighlight: isClean ? '#1f6e3c' : '#61330b',
+      backHillShadow: isClean ? '#0e3a1d' : '#2d1402',
+      midHillHighlight: isClean ? '#22c55e' : '#854d0e',
+      midHillShadow: isClean ? '#14532d' : '#451a03',
+      frontHillHighlight: isClean ? '#4ade80' : '#a16207',
+      frontHillShadow: isClean ? '#16a34a' : '#713f12',
+      treePrimary: isClean ? '#4ade80' : '#a16207',
+      treeShadow: isClean ? '#16a34a' : '#854d0e',
+    };
+  }, [cleanliness, isNight, synthwaveMode, isSnowing, timeOfDay]);
 }
 
 // --- Independent Layer Components ---
 
 export function LandscapeBack(props: LandscapeProps) {
-    const palette = useLandscapePalette(props.cleanliness, props.isNight, props.synthwaveMode, props.isSnowing, props.timeOfDay);
-    const id = useId();
+  const palette = useLandscapePalette(
+    props.cleanliness,
+    props.isNight,
+    props.synthwaveMode,
+    props.isSnowing,
+    props.timeOfDay,
+  );
+  const id = useId();
 
-    // Explicit tree placements on the new curve to stay grounded
-    // Ridge samples: (40,84) (80,76) (150,81) (220,107) (290,116) (360,100)
-    // Anchor sits +4 below ridge so trunk base (y+6*scale) sinks slightly into the hill
-    // and foliage doesn't hover — prevents "floating tree" on tall viewports.
-    // Scale hierarchy (must stay below turbine visual weight):
-    // back ~0.22–0.28, mid ~0.34–0.40, front ~0.45–0.52. Cottage ~0.75.
-    const backTrees = [
-        { x: 40, y: 90, scale: 0.24 },
-        { x: 80, y: 82, scale: 0.26 },
-        { x: 150, y: 87, scale: 0.22 },
-        { x: 220, y: 113, scale: 0.25 },
-        { x: 290, y: 122, scale: 0.23 },
-        { x: 360, y: 106, scale: 0.27 },
-    ];
+  // Explicit tree placements on the new curve to stay grounded
+  // Ridge samples: (40,84) (80,76) (150,81) (220,107) (290,116) (360,100)
+  // Anchor sits +4 below ridge so trunk base (y+6*scale) sinks slightly into the hill
+  // and foliage doesn't hover — prevents "floating tree" on tall viewports.
+  // Scale hierarchy (must stay below turbine visual weight):
+  // back ~0.22–0.28, mid ~0.34–0.40, front ~0.45–0.52. Cottage ~0.75.
+  const backTrees = [
+    { x: 40, y: 90, scale: 0.24 },
+    { x: 80, y: 82, scale: 0.26 },
+    { x: 150, y: 87, scale: 0.22 },
+    { x: 220, y: 113, scale: 0.25 },
+    { x: 290, y: 122, scale: 0.23 },
+    { x: 360, y: 106, scale: 0.27 },
+  ];
 
-    return (
-        <>
-            <defs>
-                <linearGradient id={`${id}-gradBack`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={palette.backHillHighlight} />
-                    <stop offset="100%" stopColor={palette.backHillShadow} />
-                </linearGradient>
-            </defs>
-            <HillLayer
-                d="M0,150 L0,100 Q100,50 200,100 Q300,140 400,80 L400,150 Z"
-                fill={`url(#${id}-gradBack)`}
-                trees={backTrees}
-                treeColors={{ primary: palette.treePrimary, shadow: palette.treeShadow }}
-                delay={0}
-                isSnowing={props.isSnowing}
-                isChristmas={props.isChristmas}
-                skipIntro={props.skipIntro}
-                windSpeed={props.windSpeed}
-            />
-        </>
-    );
+  return (
+    <>
+      <defs>
+        <linearGradient id={`${id}-gradBack`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={palette.backHillHighlight} />
+          <stop offset="100%" stopColor={palette.backHillShadow} />
+        </linearGradient>
+      </defs>
+      <HillLayer
+        d="M0,150 L0,100 Q100,50 200,100 Q300,140 400,80 L400,150 Z"
+        fill={`url(#${id}-gradBack)`}
+        trees={backTrees}
+        treeColors={{ primary: palette.treePrimary, shadow: palette.treeShadow }}
+        delay={0}
+        isSnowing={props.isSnowing}
+        isChristmas={props.isChristmas}
+        skipIntro={props.skipIntro}
+        windSpeed={props.windSpeed}
+      />
+    </>
+  );
 }
 
 export function LandscapeMid(props: LandscapeProps) {
-    const palette = useLandscapePalette(props.cleanliness, props.isNight, props.synthwaveMode, props.isSnowing, props.timeOfDay);
-    const id = useId();
+  const palette = useLandscapePalette(
+    props.cleanliness,
+    props.isNight,
+    props.synthwaveMode,
+    props.isSnowing,
+    props.timeOfDay,
+  );
+  const id = useId();
 
-    // Trees positioned so trunk base sits just into the mid hill ridge.
-    // Ridge curve: M0,120 Q80,140 160,100 Q240,60 320,110 Q360,130 400,100
-    const midTrees = [
-        { x: 45, y: 127, scale: 0.36 },
-        { x: 120, y: 117, scale: 0.38 },
-        { x: 190, y: 89, scale: 0.34 },
-        { x: 260, y: 86, scale: 0.37 },
-        { x: 330, y: 115, scale: 0.35 },
-    ];
+  // Trees positioned so trunk base sits just into the mid hill ridge.
+  // Ridge curve: M0,120 Q80,140 160,100 Q240,60 320,110 Q360,130 400,100
+  const midTrees = [
+    { x: 45, y: 127, scale: 0.36 },
+    { x: 120, y: 117, scale: 0.38 },
+    { x: 190, y: 89, scale: 0.34 },
+    { x: 260, y: 86, scale: 0.37 },
+    { x: 330, y: 115, scale: 0.35 },
+  ];
 
-    return (
-        <>
-            <defs>
-                <linearGradient id={`${id}-gradMid`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={palette.midHillHighlight} />
-                    <stop offset="100%" stopColor={palette.midHillShadow} />
-                </linearGradient>
-            </defs>
-            <HillLayer
-                d="M0,150 L0,120 Q80,140 160,100 Q240,60 320,110 Q360,130 400,100 L400,150 Z"
-                fill={`url(#${id}-gradMid)`}
-                trees={midTrees}
-                treeColors={{ primary: palette.treePrimary, shadow: palette.treeShadow }}
-                delay={0.2}
-                isSnowing={props.isSnowing}
-                isChristmas={props.isChristmas}
-                skipIntro={props.skipIntro}
-                windSpeed={props.windSpeed}
-            />
-        </>
-    );
+  return (
+    <>
+      <defs>
+        <linearGradient id={`${id}-gradMid`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={palette.midHillHighlight} />
+          <stop offset="100%" stopColor={palette.midHillShadow} />
+        </linearGradient>
+      </defs>
+      <HillLayer
+        d="M0,150 L0,120 Q80,140 160,100 Q240,60 320,110 Q360,130 400,100 L400,150 Z"
+        fill={`url(#${id}-gradMid)`}
+        trees={midTrees}
+        treeColors={{ primary: palette.treePrimary, shadow: palette.treeShadow }}
+        delay={0.2}
+        isSnowing={props.isSnowing}
+        isChristmas={props.isChristmas}
+        skipIntro={props.skipIntro}
+        windSpeed={props.windSpeed}
+      />
+    </>
+  );
 }
 
 function Cottage({
@@ -384,8 +450,13 @@ function Cottage({
 
       {/* 2. Stone Retaining Foundation (Grounds the house into the sloped hill) */}
       {/* It extends down to y=7 on the right to fill the gap on the sloped hillside */}
-      <path d="M-10.5,1 L10.5,1 L10.5,7 L-10.5,4 Z" fill="#4b5563" stroke="#27272a" strokeWidth="0.5" />
-      
+      <path
+        d="M-10.5,1 L10.5,1 L10.5,7 L-10.5,4 Z"
+        fill="#4b5563"
+        stroke="#27272a"
+        strokeWidth="0.5"
+      />
+
       {/* Foundation details (individual stone blocks) */}
       <line x1="-5" y1="1" x2="-5" y2="5" stroke="#3f3f46" strokeWidth="0.5" />
       <line x1="5" y1="1" x2="5" y2="6" stroke="#3f3f46" strokeWidth="0.5" />
@@ -404,8 +475,17 @@ function Cottage({
 
       {/* 4. Main House Structure */}
       {/* Stone walls */}
-      <rect x="-10" y="-8" width="20" height="9" fill="#e4e4e7" stroke="#71717a" strokeWidth="0.5" rx="0.5" />
-      
+      <rect
+        x="-10"
+        y="-8"
+        width="20"
+        height="9"
+        fill="#e4e4e7"
+        stroke="#71717a"
+        strokeWidth="0.5"
+        rx="0.5"
+      />
+
       {/* Timber accents / framing */}
       <line x1="-10" y1="-4" x2="10" y2="-4" stroke="#7f1d1d" strokeWidth="0.5" opacity="0.3" />
 
@@ -415,18 +495,36 @@ function Cottage({
 
       {/* Roof */}
       <polygon points="-12,-8 0,-16 12,-8" fill="#450a0a" stroke="#7f1d1d" strokeWidth="0.5" />
-      
+
       {/* Tiny solar panels on the roof */}
       <polygon points="-9,-10 0,-14 -1,-11 -8,-8" fill="#1e1b4b" opacity="0.8" />
       <line x1="-9" y1="-10" x2="-8" y2="-8" stroke="#38bdf8" strokeWidth="0.3" opacity="0.5" />
-      
+
       {/* Chimney */}
       <rect x="6" y="-14" width="3" height="6" fill="#3f3f46" rx="0.2" />
-      
+
       {/* Windows with night glow */}
-      <rect x="-7" y="-5" width="3" height="3" fill={windowLit ? litColor : "#93c5fd"} rx="0.5" stroke="#4b5563" strokeWidth="0.3" />
-      <rect x="4" y="-5" width="3" height="3" fill={windowLit ? litColor : "#93c5fd"} rx="0.5" stroke="#4b5563" strokeWidth="0.3" />
-      
+      <rect
+        x="-7"
+        y="-5"
+        width="3"
+        height="3"
+        fill={windowLit ? litColor : '#93c5fd'}
+        rx="0.5"
+        stroke="#4b5563"
+        strokeWidth="0.3"
+      />
+      <rect
+        x="4"
+        y="-5"
+        width="3"
+        height="3"
+        fill={windowLit ? litColor : '#93c5fd'}
+        rx="0.5"
+        stroke="#4b5563"
+        strokeWidth="0.3"
+      />
+
       {/* Ambient window glow cast onto walls/ground */}
       {windowLit && (
         <>
@@ -455,60 +553,71 @@ function Cottage({
 }
 
 export function LandscapeFront(props: LandscapeProps) {
-    const palette = useLandscapePalette(props.cleanliness, props.isNight, props.synthwaveMode, props.isSnowing, props.timeOfDay);
-    const id = useId();
+  const palette = useLandscapePalette(
+    props.cleanliness,
+    props.isNight,
+    props.synthwaveMode,
+    props.isSnowing,
+    props.timeOfDay,
+  );
+  const id = useId();
 
-    const frontTrees = [
-        { x: 40, y: 132, scale: 0.48 },
-        { x: 90, y: 124, scale: 0.5 },
-        { x: 370, y: 132, scale: 0.46 }
-    ];
+  const frontTrees = [
+    { x: 40, y: 132, scale: 0.48 },
+    { x: 90, y: 124, scale: 0.5 },
+    { x: 370, y: 132, scale: 0.46 },
+  ];
 
-    return (
-        <>
-            <defs>
-                <linearGradient id={`${id}-gradFront`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={palette.frontHillHighlight} />
-                    <stop offset="100%" stopColor={palette.frontHillShadow} />
-                </linearGradient>
-            </defs>
-            <HillLayer
-                d="M0,150 L0,135 Q120,100 200,135 Q280,180 400,120 L400,150 Z"
-                fill={`url(#${id}-gradFront)`}
-                trees={frontTrees}
-                treeColors={{ primary: palette.treePrimary, shadow: palette.treeShadow }}
-                delay={0.4}
-                isSnowing={props.isSnowing}
-                isChristmas={props.isChristmas}
-                skipIntro={props.skipIntro}
-                windSpeed={props.windSpeed}
-            />
-            {/* Countryside Cottage */}
-            <Cottage
-              x={210}
-              y={135}
-              scale={0.78}
-              isNight={props.isNight}
-              cleanliness={props.cleanliness}
-              timeOfDay={props.timeOfDay}
-            />
+  return (
+    <>
+      <defs>
+        <linearGradient id={`${id}-gradFront`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={palette.frontHillHighlight} />
+          <stop offset="100%" stopColor={palette.frontHillShadow} />
+        </linearGradient>
+      </defs>
+      <HillLayer
+        d="M0,150 L0,135 Q120,100 200,135 Q280,180 400,120 L400,150 Z"
+        fill={`url(#${id}-gradFront)`}
+        trees={frontTrees}
+        treeColors={{ primary: palette.treePrimary, shadow: palette.treeShadow }}
+        delay={0.4}
+        isSnowing={props.isSnowing}
+        isChristmas={props.isChristmas}
+        skipIntro={props.skipIntro}
+        windSpeed={props.windSpeed}
+      />
+      {/* Countryside Cottage */}
+      <Cottage
+        x={210}
+        y={135}
+        scale={0.78}
+        isNight={props.isNight}
+        cleanliness={props.cleanliness}
+        timeOfDay={props.timeOfDay}
+      />
 
-            {/* Ground strip at the very bottom for visible earth */}
-            <rect x={0} y={145} width={400} height={5} fill={palette.frontHillShadow} />
-            <rect x={0} y={148} width={400} height={2} fill="rgba(0,0,0,0.15)" />
-        </>
-    );
+      {/* Ground strip at the very bottom for visible earth */}
+      <rect x={0} y={145} width={400} height={5} fill={palette.frontHillShadow} />
+      <rect x={0} y={148} width={400} height={2} fill="rgba(0,0,0,0.15)" />
+    </>
+  );
 }
 
 // Deprecated Monolith - Keeping for compatibility if needed, but Index.tsx should use layers
 export function Landscape(props: LandscapeProps) {
-    return (
-        <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-0">
-            <svg viewBox="0 0 400 150" className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-                <LandscapeBack {...props} />
-                <LandscapeMid {...props} />
-                <LandscapeFront {...props} />
-            </svg>
-        </div>
-    );
+  return (
+    <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-0">
+      <svg
+        viewBox="0 0 400 150"
+        className="w-full h-full"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <LandscapeBack {...props} />
+        <LandscapeMid {...props} />
+        <LandscapeFront {...props} />
+      </svg>
+    </div>
+  );
 }

@@ -42,6 +42,9 @@ jobs:
       - name: Lint (errors fail, warnings allowed)
         run: npx eslint .
 
+      - name: Prettier
+        run: npx prettier --check .
+
       - name: Unit tests (Vitest on Node)
         run: npx vitest run
 

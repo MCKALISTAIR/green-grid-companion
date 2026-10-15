@@ -24,9 +24,10 @@ export function Grass({ cleanliness, windSpeed = 1 }: GrassProps) {
     }));
   }, [cleanliness]);
 
-  const grassColor = cleanliness > 0.5 
-    ? 'hsl(142 50% 40%)' // Healthy green
-    : 'hsl(45 40% 45%)'; // Yellow/brown
+  const grassColor =
+    cleanliness > 0.5
+      ? 'hsl(142 50% 40%)' // Healthy green
+      : 'hsl(45 40% 45%)'; // Yellow/brown
 
   const safeWindSpeed = typeof windSpeed === 'number' && windSpeed > 0 ? windSpeed : 1;
 

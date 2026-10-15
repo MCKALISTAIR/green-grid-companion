@@ -58,11 +58,17 @@ describe('credential encryption', () => {
     const secret = 'Zq8v1LmN4pR7sT0wX3yA6bC9dE2fG5hJ8kM1nP4qS7uV0-x_';
     const ct = await encryptCredential(API_KEY, await importCredentialKey(secret), USER_A);
     // a fresh import (e.g. another function instance) decrypts it
-    expect(await decryptCredential(ct, await importCredentialKey(` ${secret} `), USER_A)).toBe(API_KEY);
+    expect(await decryptCredential(ct, await importCredentialKey(` ${secret} `), USER_A)).toBe(
+      API_KEY,
+    );
     // a different passphrase does not
-    await expect(decryptCredential(ct, await importCredentialKey(secret + 'x'), USER_A)).rejects.toThrow();
+    await expect(
+      decryptCredential(ct, await importCredentialKey(secret + 'x'), USER_A),
+    ).rejects.toThrow();
     // and it is not confused with the raw base64 key path
-    await expect(decryptCredential(ct, await importCredentialKey(keyB64), USER_A)).rejects.toThrow();
+    await expect(
+      decryptCredential(ct, await importCredentialKey(keyB64), USER_A),
+    ).rejects.toThrow();
   });
 
   it('only exposes the last 4 characters as a hint', () => {

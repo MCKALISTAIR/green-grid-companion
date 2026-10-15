@@ -2,13 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { getCityHeroEmphasis, isCityHotspotActive } from './cityHeroDemotion';
 import type { CleanlinessBand } from '@/hooks/useCleanlinessBand';
 
-const BANDS: CleanlinessBand[] = [
-  'very-clean',
-  'clean',
-  'moderate',
-  'dirty',
-  'very-dirty',
-];
+const BANDS: CleanlinessBand[] = ['very-clean', 'clean', 'moderate', 'dirty', 'very-dirty'];
 
 describe('getCityHeroEmphasis', () => {
   it('keeps city presence: mass + micro-life floors', () => {

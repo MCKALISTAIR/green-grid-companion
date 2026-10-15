@@ -13,20 +13,32 @@ export interface CoastalLandscapeProps {
   timeOfDay?: 'night' | 'dawn' | 'morning' | 'midday' | 'afternoon' | 'sunset' | 'dusk';
 }
 
-function useCoastalPalette(cleanliness: number, isNight: boolean, synthwaveMode: boolean, isSnowing?: boolean, timeOfDay?: string) {
+function useCoastalPalette(
+  cleanliness: number,
+  isNight: boolean,
+  synthwaveMode: boolean,
+  isSnowing?: boolean,
+  timeOfDay?: string,
+) {
   return useMemo(() => {
     if (synthwaveMode) {
       return {
-        seaHighlight: '#7597de', seaShadow: '#240046', sand: '#3c096c',
-        cliffHighlight: '#9d4edd', cliffShadow: '#5a189a', lighthouse: '#e0aaff',
+        seaHighlight: '#7597de',
+        seaShadow: '#240046',
+        sand: '#3c096c',
+        cliffHighlight: '#9d4edd',
+        cliffShadow: '#5a189a',
+        lighthouse: '#e0aaff',
         foam: '#c77dff',
       };
     }
     if (isSnowing) {
       return {
-        seaHighlight: isNight ? '#1e293b' : '#64748b', seaShadow: isNight ? '#0f172a' : '#475569',
-        sand: isNight ? '#1e293b' : '#cbd5e1', 
-        cliffHighlight: isNight ? '#475569' : '#e2e8f0', cliffShadow: isNight ? '#334155' : '#94a3b8',
+        seaHighlight: isNight ? '#1e293b' : '#64748b',
+        seaShadow: isNight ? '#0f172a' : '#475569',
+        sand: isNight ? '#1e293b' : '#cbd5e1',
+        cliffHighlight: isNight ? '#475569' : '#e2e8f0',
+        cliffShadow: isNight ? '#334155' : '#94a3b8',
         lighthouse: '#f1f5f9',
         foam: isNight ? '#64748b' : '#f1f5f9',
       };
@@ -71,7 +83,17 @@ function useCoastalPalette(cleanliness: number, isNight: boolean, synthwaveMode:
 }
 
 // Animated ocean waves
-function OceanWaves({ sea, seaHighlight, foam, skipIntro }: { sea: string; seaHighlight: string; foam: string; skipIntro?: boolean }) {
+function OceanWaves({
+  sea,
+  seaHighlight,
+  foam,
+  skipIntro,
+}: {
+  sea: string;
+  seaHighlight: string;
+  foam: string;
+  skipIntro?: boolean;
+}) {
   return (
     <motion.g
       initial={skipIntro ? { opacity: 1 } : { opacity: 0 }}
@@ -86,11 +108,13 @@ function OceanWaves({ sea, seaHighlight, foam, skipIntro }: { sea: string; seaHi
         d="M0,95 Q50,90 100,95 T200,95 T300,95 T400,95 L400,100 L0,100 Z"
         fill={seaHighlight}
         opacity={0.3}
-        animate={{ d: [
-          "M0,95 Q50,90 100,95 T200,95 T300,95 T400,95 L400,100 L0,100 Z",
-          "M0,95 Q50,98 100,93 T200,97 T300,93 T400,95 L400,100 L0,100 Z",
-          "M0,95 Q50,90 100,95 T200,95 T300,95 T400,95 L400,100 L0,100 Z",
-        ] }}
+        animate={{
+          d: [
+            'M0,95 Q50,90 100,95 T200,95 T300,95 T400,95 L400,100 L0,100 Z',
+            'M0,95 Q50,98 100,93 T200,97 T300,93 T400,95 L400,100 L0,100 Z',
+            'M0,95 Q50,90 100,95 T200,95 T300,95 T400,95 L400,100 L0,100 Z',
+          ],
+        }}
         transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' as const }}
       />
       <motion.path
@@ -98,11 +122,13 @@ function OceanWaves({ sea, seaHighlight, foam, skipIntro }: { sea: string; seaHi
         d="M0,100 Q60,96 120,100 T240,100 T360,100 T400,100 L400,106 L0,106 Z"
         fill={seaHighlight}
         opacity={0.2}
-        animate={{ d: [
-          "M0,100 Q60,96 120,100 T240,100 T360,100 T400,100 L400,106 L0,106 Z",
-          "M0,100 Q60,103 120,98 T240,102 T360,98 T400,100 L400,106 L0,106 Z",
-          "M0,100 Q60,96 120,100 T240,100 T360,100 T400,100 L400,106 L0,106 Z",
-        ] }}
+        animate={{
+          d: [
+            'M0,100 Q60,96 120,100 T240,100 T360,100 T400,100 L400,106 L0,106 Z',
+            'M0,100 Q60,103 120,98 T240,102 T360,98 T400,100 L400,106 L0,106 Z',
+            'M0,100 Q60,96 120,100 T240,100 T360,100 T400,100 L400,106 L0,106 Z',
+          ],
+        }}
         transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' as const, delay: 0.5 }}
       />
       {/* Foam/surf line on shore */}
@@ -112,11 +138,13 @@ function OceanWaves({ sea, seaHighlight, foam, skipIntro }: { sea: string; seaHi
         stroke={foam}
         strokeWidth="1.5"
         fill="none"
-        animate={{ d: [
-          "M200,108 Q220,106 240,108 T280,108 T320,108 T360,108 T400,108",
-          "M195,109 Q220,107 245,109 T285,108 T325,109 T365,108 T400,109",
-          "M200,108 Q220,106 240,108 T280,108 T320,108 T360,108 T400,108",
-        ] }}
+        animate={{
+          d: [
+            'M200,108 Q220,106 240,108 T280,108 T320,108 T360,108 T400,108',
+            'M195,109 Q220,107 245,109 T285,108 T325,109 T365,108 T400,109',
+            'M200,108 Q220,106 240,108 T280,108 T320,108 T360,108 T400,108',
+          ],
+        }}
         transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' as const }}
       />
     </motion.g>
@@ -124,7 +152,17 @@ function OceanWaves({ sea, seaHighlight, foam, skipIntro }: { sea: string; seaHi
 }
 
 // Lighthouse
-function Lighthouse({ x, isNight, fill, skipIntro }: { x: number; isNight: boolean; fill: string; skipIntro?: boolean }) {
+function Lighthouse({
+  x,
+  isNight,
+  fill,
+  skipIntro,
+}: {
+  x: number;
+  isNight: boolean;
+  fill: string;
+  skipIntro?: boolean;
+}) {
   const [isFlashing, setIsFlashing] = useState(false);
   const { impactLight: impactMedium } = useHaptics({ decorative: true });
 
@@ -141,7 +179,9 @@ function Lighthouse({ x, isNight, fill, skipIntro }: { x: number; isNight: boole
     <motion.g
       initial={skipIntro ? { y: 0, opacity: 1 } : { y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={skipIntro ? { duration: 0 } : { duration: 1.2, delay: 0.3, ease: 'easeOut' as const }}
+      transition={
+        skipIntro ? { duration: 0 } : { duration: 1.2, delay: 0.3, ease: 'easeOut' as const }
+      }
       className="cursor-pointer pointer-events-auto"
       onClick={handleClick}
       role="button"
@@ -164,7 +204,7 @@ function Lighthouse({ x, isNight, fill, skipIntro }: { x: number; isNight: boole
       <rect x={x - 6} y={65} width={12} height={2} fill="#374151" />
       {/* Dome */}
       <path d={`M${x - 4},65 Q${x},60 ${x + 4},65`} fill="#374151" />
-      
+
       {/* Interactive Strobe / Light beam */}
       {isNight && (
         <>
@@ -177,8 +217,16 @@ function Lighthouse({ x, isNight, fill, skipIntro }: { x: number; isNight: boole
               {/* Massive ambient light glow */}
               <circle cx={x} cy={67} r={18} fill="#fbbf24" opacity={0.35} filter="blur(2px)" />
               <circle cx={x} cy={67} r={6} fill="#fbbf24" opacity={0.9} />
-              <polygon points={`${x},67 ${x - 120},20 ${x - 100},10`} fill="#fbbf24" opacity={0.25} />
-              <polygon points={`${x},67 ${x + 120},20 ${x + 100},10`} fill="#fbbf24" opacity={0.25} />
+              <polygon
+                points={`${x},67 ${x - 120},20 ${x - 100},10`}
+                fill="#fbbf24"
+                opacity={0.25}
+              />
+              <polygon
+                points={`${x},67 ${x + 120},20 ${x + 100},10`}
+                fill="#fbbf24"
+                opacity={0.25}
+              />
             </motion.g>
           ) : (
             // Normal rotating/sweeping light beam
@@ -188,22 +236,14 @@ function Lighthouse({ x, isNight, fill, skipIntro }: { x: number; isNight: boole
               style={{ transformOrigin: `${x}px 67px` }}
             >
               {/* Sweeping light cones */}
-              <polygon
-                points={`${x},67 ${x - 70},54 ${x - 60},42`}
-                fill="#fbbf24"
-                opacity={0.16}
-              />
-              <polygon
-                points={`${x},67 ${x + 70},54 ${x + 60},42`}
-                fill="#fbbf24"
-                opacity={0.16}
-              />
+              <polygon points={`${x},67 ${x - 70},54 ${x - 60},42`} fill="#fbbf24" opacity={0.16} />
+              <polygon points={`${x},67 ${x + 70},54 ${x + 60},42`} fill="#fbbf24" opacity={0.16} />
               <circle cx={x} cy={67} r={3} fill="#fbbf24" opacity={0.7} />
             </motion.g>
           )}
         </>
       )}
-      
+
       {/* Daytime lamp glass */}
       {!isNight && (
         <rect x={x - 3} y={67} width={6} height={3} fill="rgba(200,230,255,0.4)" rx={1} />
@@ -215,7 +255,17 @@ function Lighthouse({ x, isNight, fill, skipIntro }: { x: number; isNight: boole
 }
 
 // Cliff/headland
-function Cliff({ side, fill, highlight, skipIntro }: { side: 'left' | 'right'; fill: string; highlight: string; skipIntro?: boolean }) {
+function Cliff({
+  side,
+  fill,
+  highlight,
+  skipIntro,
+}: {
+  side: 'left' | 'right';
+  fill: string;
+  highlight: string;
+  skipIntro?: boolean;
+}) {
   const isLeft = side === 'left';
   return (
     <motion.g
@@ -285,7 +335,13 @@ function HarbourWall({ skipIntro }: { skipIntro?: boolean }) {
 
 // Background layer: distant sea + horizon
 export function CoastalLandscapeBack(props: CoastalLandscapeProps) {
-  const palette = useCoastalPalette(props.cleanliness, props.isNight, props.synthwaveMode, props.isSnowing, props.timeOfDay);
+  const palette = useCoastalPalette(
+    props.cleanliness,
+    props.isNight,
+    props.synthwaveMode,
+    props.isSnowing,
+    props.timeOfDay,
+  );
   const id = useId();
 
   return (
@@ -296,14 +352,25 @@ export function CoastalLandscapeBack(props: CoastalLandscapeProps) {
           <stop offset="100%" stopColor={palette.seaShadow} />
         </linearGradient>
       </defs>
-      <OceanWaves sea={`url(#${id}-gradSea)`} seaHighlight={palette.seaHighlight} foam={palette.foam} skipIntro={props.skipIntro} />
+      <OceanWaves
+        sea={`url(#${id}-gradSea)`}
+        seaHighlight={palette.seaHighlight}
+        foam={palette.foam}
+        skipIntro={props.skipIntro}
+      />
     </g>
   );
 }
 
 // Mid layer: cliffs + lighthouse
 export function CoastalLandscapeMid(props: CoastalLandscapeProps) {
-  const palette = useCoastalPalette(props.cleanliness, props.isNight, props.synthwaveMode, props.isSnowing, props.timeOfDay);
+  const palette = useCoastalPalette(
+    props.cleanliness,
+    props.isNight,
+    props.synthwaveMode,
+    props.isSnowing,
+    props.timeOfDay,
+  );
   const id = useId();
 
   return (
@@ -314,15 +381,31 @@ export function CoastalLandscapeMid(props: CoastalLandscapeProps) {
           <stop offset="100%" stopColor={palette.cliffShadow} />
         </linearGradient>
       </defs>
-      <Cliff side="left" fill={`url(#${id}-gradCliff)`} highlight={palette.cliffHighlight} skipIntro={props.skipIntro} />
-      <Lighthouse x={35} isNight={props.isNight} fill={palette.lighthouse} skipIntro={props.skipIntro} />
+      <Cliff
+        side="left"
+        fill={`url(#${id}-gradCliff)`}
+        highlight={palette.cliffHighlight}
+        skipIntro={props.skipIntro}
+      />
+      <Lighthouse
+        x={35}
+        isNight={props.isNight}
+        fill={palette.lighthouse}
+        skipIntro={props.skipIntro}
+      />
     </g>
   );
 }
 
 // Front layer: beach + harbour
 export function CoastalLandscapeFront(props: CoastalLandscapeProps) {
-  const palette = useCoastalPalette(props.cleanliness, props.isNight, props.synthwaveMode, props.isSnowing, props.timeOfDay);
+  const palette = useCoastalPalette(
+    props.cleanliness,
+    props.isNight,
+    props.synthwaveMode,
+    props.isSnowing,
+    props.timeOfDay,
+  );
   const id = useId();
 
   return (
@@ -333,7 +416,12 @@ export function CoastalLandscapeFront(props: CoastalLandscapeProps) {
           <stop offset="100%" stopColor={palette.cliffShadow} />
         </linearGradient>
       </defs>
-      <Cliff side="right" fill={`url(#${id}-gradCliff)`} highlight={palette.cliffHighlight} skipIntro={props.skipIntro} />
+      <Cliff
+        side="right"
+        fill={`url(#${id}-gradCliff)`}
+        highlight={palette.cliffHighlight}
+        skipIntro={props.skipIntro}
+      />
       <Beach sand={palette.sand} skipIntro={props.skipIntro} />
       <HarbourWall skipIntro={props.skipIntro} />
     </g>

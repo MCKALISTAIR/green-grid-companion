@@ -14,7 +14,7 @@ import {
   LogOut,
   ArrowRightLeft,
   Info,
-  History
+  History,
 } from 'lucide-react';
 import { TurbineSpinner } from '@/components/ui/turbine-spinner';
 import {
@@ -22,12 +22,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+} from '@/components/ui/dropdown-menu';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
 import { formatDistanceToNow } from 'date-fns';
@@ -76,7 +72,11 @@ export function OctopusIntegration() {
   };
 
   const handleDisconnect = async () => {
-    if (confirm("Are you sure you want to disconnect? This will remove your credentials and unlink your meters.")) {
+    if (
+      confirm(
+        'Are you sure you want to disconnect? This will remove your credentials and unlink your meters.',
+      )
+    ) {
       await disconnect();
     }
   };
@@ -93,7 +93,7 @@ export function OctopusIntegration() {
           </div>
         </Card>
       </div>
-    )
+    );
   }
 
   // 2. No Credentials OR (Editing AND not linked) -> Benefits intro, then settings form
@@ -121,7 +121,7 @@ export function OctopusIntegration() {
           }
         />
       </div>
-    )
+    );
   }
 
   // 3. Has Credentials -> Show Integration Dashboard
@@ -140,12 +140,18 @@ export function OctopusIntegration() {
               <div className="flex items-center gap-2">
                 <h3 className="font-medium text-foreground">Octopus Energy</h3>
                 {isLinked ? (
-                  <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20 px-1.5 py-0 h-5 text-[10px]">
+                  <Badge
+                    variant="outline"
+                    className="bg-green-500/10 text-green-600 border-green-500/20 px-1.5 py-0 h-5 text-[10px]"
+                  >
                     <Check className="w-3 h-3 mr-1" />
                     Meters linked
                   </Badge>
                 ) : hasCredentials ? (
-                  <Badge variant="outline" className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20 px-1.5 py-0 h-5 text-[10px]">
+                  <Badge
+                    variant="outline"
+                    className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20 px-1.5 py-0 h-5 text-[10px]"
+                  >
                     Credentials saved
                   </Badge>
                 ) : null}
@@ -197,7 +203,10 @@ export function OctopusIntegration() {
                     <ArrowRightLeft className="w-4 h-4 mr-2" />
                     Change Credentials
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleDisconnect} className="text-red-600 focus:text-red-600">
+                  <DropdownMenuItem
+                    onClick={handleDisconnect}
+                    className="text-red-600 focus:text-red-600"
+                  >
                     <LogOut className="w-4 h-4 mr-2" />
                     Clear Credentials
                   </DropdownMenuItem>
@@ -213,14 +222,21 @@ export function OctopusIntegration() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={handleSync} disabled={isSyncing}>
-                  {isSyncing ? <TurbineSpinner size="sm" className="mr-2" /> : <Wind className="w-4 h-4 mr-2" />}
+                  {isSyncing ? (
+                    <TurbineSpinner size="sm" className="mr-2" />
+                  ) : (
+                    <Wind className="w-4 h-4 mr-2" />
+                  )}
                   Sync Data
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setIsEditing(true)}>
                   <ArrowRightLeft className="w-4 h-4 mr-2" />
                   Switch Account
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleDisconnect} className="text-red-600 focus:text-red-600">
+                <DropdownMenuItem
+                  onClick={handleDisconnect}
+                  className="text-red-600 focus:text-red-600"
+                >
                   <LogOut className="w-4 h-4 mr-2" />
                   Disconnect
                 </DropdownMenuItem>
@@ -240,20 +256,26 @@ export function OctopusIntegration() {
                     MPAN: {meter.mpan.slice(-6)}
                     <Popover>
                       <PopoverTrigger asChild>
-                        <button className="inline-flex items-center justify-center rounded-full hover:bg-muted p-0.5" aria-label="What is an MPAN?">
+                        <button
+                          className="inline-flex items-center justify-center rounded-full hover:bg-muted p-0.5"
+                          aria-label="What is an MPAN?"
+                        >
                           <Info className="w-3 h-3 text-muted-foreground/60" />
                         </button>
                       </PopoverTrigger>
                       <PopoverContent className="w-[280px] p-3 text-xs" align="start">
                         <p className="font-medium mb-1">What's an MPAN?</p>
                         <p className="text-muted-foreground">
-                          MPAN (Meter Point Administration Number) is a unique 13-digit number that identifies your electricity meter.
-                          You can find it on your energy bill.
+                          MPAN (Meter Point Administration Number) is a unique 13-digit number that
+                          identifies your electricity meter. You can find it on your energy bill.
                         </p>
                       </PopoverContent>
                     </Popover>
                     {meter.meter_type === 'export' && (
-                      <Badge variant="outline" className="ml-1.5 text-[9px] h-4 px-1 bg-primary/10 text-primary border-primary/20">
+                      <Badge
+                        variant="outline"
+                        className="ml-1.5 text-[9px] h-4 px-1 bg-primary/10 text-primary border-primary/20"
+                      >
                         Export
                       </Badge>
                     )}
@@ -261,7 +283,8 @@ export function OctopusIntegration() {
                 </div>
                 {meter.last_sync_at && (
                   <span className="text-xs text-muted-foreground">
-                    Last sync: {formatDistanceToNow(new Date(meter.last_sync_at), { addSuffix: true })}
+                    Last sync:{' '}
+                    {formatDistanceToNow(new Date(meter.last_sync_at), { addSuffix: true })}
                   </span>
                 )}
               </div>
@@ -313,9 +336,16 @@ export function OctopusIntegration() {
           <div>
             <p className="font-medium text-foreground mb-1">Unlock Smart Features</p>
             <ul className="list-disc pl-4 space-y-1 mt-1">
-              <li>See your <strong>Real Carbon Footprint</strong> based on actual usage.</li>
-              <li>Get your <strong>Green Energy Score</strong> and personalized insights.</li>
-              <li>Your API key is sent once over HTTPS and stored encrypted on our servers. It's never kept on your device.</li>
+              <li>
+                See your <strong>Real Carbon Footprint</strong> based on actual usage.
+              </li>
+              <li>
+                Get your <strong>Green Energy Score</strong> and personalized insights.
+              </li>
+              <li>
+                Your API key is sent once over HTTPS and stored encrypted on our servers. It's never
+                kept on your device.
+              </li>
             </ul>
           </div>
         </div>

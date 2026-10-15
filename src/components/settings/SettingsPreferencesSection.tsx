@@ -1,5 +1,14 @@
 import { Link } from 'react-router-dom';
-import { Activity, Vibrate, MapPin, MessageSquare, Paintbrush, Play, Sparkles, ChevronRight } from 'lucide-react';
+import {
+  Activity,
+  Vibrate,
+  MapPin,
+  MessageSquare,
+  Paintbrush,
+  Play,
+  Sparkles,
+  ChevronRight,
+} from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -78,7 +87,9 @@ export function SettingsPreferencesSection({
                 <Vibrate className="w-5 h-5 text-primary" aria-hidden="true" />
               </div>
               <div>
-                <h3 className="font-medium" id="haptics-label">Haptics</h3>
+                <h3 className="font-medium" id="haptics-label">
+                  Haptics
+                </h3>
                 <p className="text-sm text-muted-foreground" id="haptics-desc">
                   Small taps for things that matter. Playful ones skip when Reduce Motion is on.
                 </p>
@@ -177,7 +188,9 @@ export function SettingsPreferencesSection({
               </div>
               <div>
                 <h3 className="font-medium">Manage Locations</h3>
-                <p className="text-sm text-muted-foreground">Edit saved locations & clear history</p>
+                <p className="text-sm text-muted-foreground">
+                  Edit saved locations & clear history
+                </p>
               </div>
             </div>
             <ChevronRight className="w-5 h-5 text-muted-foreground" />

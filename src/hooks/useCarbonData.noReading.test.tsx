@@ -18,7 +18,9 @@ import { useCarbonData } from './useCarbonData';
 
 const wrapper = () => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return ({ children }: { children: ReactNode }) => <QueryClientProvider client={qc}>{children}</QueryClientProvider>;
+  return ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={qc}>{children}</QueryClientProvider>
+  );
 };
 const never = () => new Promise<never>(() => {});
 
@@ -42,7 +44,11 @@ describe('useCarbonData: no fake 0 / moderate before a reading', () => {
   });
 
   it('shows the real national reading once it arrives', async () => {
-    api.getCurrentIntensity.mockResolvedValue({ from: 'a', to: 'b', intensity: { forecast: 150, actual: null, index: 'moderate' } });
+    api.getCurrentIntensity.mockResolvedValue({
+      from: 'a',
+      to: 'b',
+      intensity: { forecast: 150, actual: null, index: 'moderate' },
+    });
     const { result } = renderHook(() => useCarbonData(''), { wrapper: wrapper() });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.intensity).toBe(150);
@@ -68,7 +74,11 @@ describe('useCarbonData: no fake 0 / moderate before a reading', () => {
   });
 
   it('is an error when the API answers with no number', async () => {
-    api.getCurrentIntensity.mockResolvedValue({ from: 'a', to: 'b', intensity: { forecast: null, actual: null, index: null } });
+    api.getCurrentIntensity.mockResolvedValue({
+      from: 'a',
+      to: 'b',
+      intensity: { forecast: null, actual: null, index: null },
+    });
     const { result } = renderHook(() => useCarbonData(''), { wrapper: wrapper() });
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.isLoading).toBe(false);

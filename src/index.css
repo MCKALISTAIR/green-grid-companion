@@ -1,5 +1,5 @@
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500;1,600&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;600;700&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500;1,600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -59,9 +59,24 @@
     --gen-other: 0 0% 60%;
 
     /* Sky gradients */
-    --sky-clean: linear-gradient(180deg, hsl(195 90% 55%) 0%, hsl(195 80% 70%) 50%, hsl(150 60% 75%) 100%);
-    --sky-moderate: linear-gradient(180deg, hsl(200 50% 60%) 0%, hsl(180 40% 65%) 50%, hsl(150 30% 70%) 100%);
-    --sky-dirty: linear-gradient(180deg, hsl(30 30% 50%) 0%, hsl(25 35% 55%) 50%, hsl(20 25% 60%) 100%);
+    --sky-clean: linear-gradient(
+      180deg,
+      hsl(195 90% 55%) 0%,
+      hsl(195 80% 70%) 50%,
+      hsl(150 60% 75%) 100%
+    );
+    --sky-moderate: linear-gradient(
+      180deg,
+      hsl(200 50% 60%) 0%,
+      hsl(180 40% 65%) 50%,
+      hsl(150 30% 70%) 100%
+    );
+    --sky-dirty: linear-gradient(
+      180deg,
+      hsl(30 30% 50%) 0%,
+      hsl(25 35% 55%) 50%,
+      hsl(20 25% 60%) 100%
+    );
 
     /* Chart colors */
     --chart-1: 150 70% 45%;
@@ -168,7 +183,6 @@
 /* Custom animations */
 /* Custom animations */
 @keyframes float {
-
   0%,
   100% {
     transform: translateY(0px);
@@ -212,7 +226,6 @@
 }
 
 @keyframes pulse-glow {
-
   0%,
   100% {
     filter: drop-shadow(0 0 5px currentColor);
@@ -245,14 +258,13 @@
 }
 
 @keyframes bird-wings {
-
   0%,
   100% {
-    d: path("M2 12 C6 8, 10 10, 12 12 C14 10, 18 8, 22 12");
+    d: path('M2 12 C6 8, 10 10, 12 12 C14 10, 18 8, 22 12');
   }
 
   50% {
-    d: path("M2 12 C6 16, 10 14, 12 12 C14 14, 18 16, 22 12");
+    d: path('M2 12 C6 16, 10 14, 12 12 C14 14, 18 16, 22 12');
   }
 }
 
@@ -313,7 +325,6 @@
 
 /* Sun rays pulsing */
 @keyframes sun-ray {
-
   0%,
   100% {
     opacity: 0.2;
@@ -351,7 +362,6 @@
 
 /* Flame flicker */
 @keyframes flame {
-
   0%,
   100% {
     transform: scaleY(1) scaleX(1);
@@ -387,7 +397,6 @@
 
 /* Water ripple */
 @keyframes water-ripple {
-
   0%,
   100% {
     transform: scale(1);
@@ -477,7 +486,6 @@
 
 /* Reduced Motion Preferences */
 @media (prefers-reduced-motion: reduce) {
-
   *,
   ::before,
   ::after {
@@ -648,13 +656,21 @@
 }
 
 @keyframes fade-out {
-  from { opacity: 1; }
-  to { opacity: 0; }
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }
 
 @keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* Reduced Motion Override for View Transitions */
@@ -734,28 +750,34 @@
     gap: 0.5rem;
     padding: 0.75rem;
   }
-  
+
   .weather-widget-stats {
     width: 100%;
     justify-content: space-between;
     padding-left: 2rem;
   }
-  
+
   .weather-widget-close-btn {
     display: none; /* Hide standard inline close button */
   }
-  
+
   .weather-widget-absolute-close {
     display: inline-flex; /* Show absolute positioned close button in top right */
   }
 }
 
 /* 4. Premium Typography Updates */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   text-wrap: balance;
 }
 
-p, blockquote {
+p,
+blockquote {
   text-wrap: pretty;
 }
 
@@ -789,7 +811,9 @@ p, blockquote {
   padding-bottom: 0;
 }
 @media (min-width: 1024px) {
-  .page-shell.page-shell--fit { padding-bottom: 1.5rem; }
+  .page-shell.page-shell--fit {
+    padding-bottom: 1.5rem;
+  }
 }
 
 .page-shell-inner {
@@ -820,7 +844,9 @@ p, blockquote {
   border: 1px solid hsl(var(--border) / 0.5) !important;
   border-radius: 1.25rem !important;
   box-shadow: var(--shadow-sm) !important;
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition:
+    transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .dark .glass-card {
@@ -831,35 +857,55 @@ p, blockquote {
 
 /* Ambient glow — whisper, not neon */
 .glow-intensity-very-low {
-  box-shadow: 0 10px 28px -12px hsl(var(--intensity-very-low) / 0.18), 0 0 0 1px hsl(var(--intensity-very-low) / 0.08) !important;
+  box-shadow:
+    0 10px 28px -12px hsl(var(--intensity-very-low) / 0.18),
+    0 0 0 1px hsl(var(--intensity-very-low) / 0.08) !important;
 }
 .glow-intensity-low {
-  box-shadow: 0 10px 28px -12px hsl(var(--intensity-low) / 0.16), 0 0 0 1px hsl(var(--intensity-low) / 0.08) !important;
+  box-shadow:
+    0 10px 28px -12px hsl(var(--intensity-low) / 0.16),
+    0 0 0 1px hsl(var(--intensity-low) / 0.08) !important;
 }
 .glow-intensity-moderate {
-  box-shadow: 0 10px 28px -12px hsl(var(--intensity-moderate) / 0.14), 0 0 0 1px hsl(var(--intensity-moderate) / 0.07) !important;
+  box-shadow:
+    0 10px 28px -12px hsl(var(--intensity-moderate) / 0.14),
+    0 0 0 1px hsl(var(--intensity-moderate) / 0.07) !important;
 }
 .glow-intensity-high {
-  box-shadow: 0 10px 28px -12px hsl(var(--intensity-high) / 0.16), 0 0 0 1px hsl(var(--intensity-high) / 0.08) !important;
+  box-shadow:
+    0 10px 28px -12px hsl(var(--intensity-high) / 0.16),
+    0 0 0 1px hsl(var(--intensity-high) / 0.08) !important;
 }
 .glow-intensity-very-high {
-  box-shadow: 0 10px 28px -12px hsl(var(--intensity-very-high) / 0.16), 0 0 0 1px hsl(var(--intensity-very-high) / 0.08) !important;
+  box-shadow:
+    0 10px 28px -12px hsl(var(--intensity-very-high) / 0.16),
+    0 0 0 1px hsl(var(--intensity-very-high) / 0.08) !important;
 }
 
 .dark .glow-intensity-very-low {
-  box-shadow: 0 14px 36px -14px hsl(var(--intensity-very-low) / 0.28), 0 0 0 1px hsl(var(--intensity-very-low) / 0.12) !important;
+  box-shadow:
+    0 14px 36px -14px hsl(var(--intensity-very-low) / 0.28),
+    0 0 0 1px hsl(var(--intensity-very-low) / 0.12) !important;
 }
 .dark .glow-intensity-low {
-  box-shadow: 0 14px 36px -14px hsl(var(--intensity-low) / 0.26), 0 0 0 1px hsl(var(--intensity-low) / 0.12) !important;
+  box-shadow:
+    0 14px 36px -14px hsl(var(--intensity-low) / 0.26),
+    0 0 0 1px hsl(var(--intensity-low) / 0.12) !important;
 }
 .dark .glow-intensity-moderate {
-  box-shadow: 0 14px 36px -14px hsl(var(--intensity-moderate) / 0.24), 0 0 0 1px hsl(var(--intensity-moderate) / 0.1) !important;
+  box-shadow:
+    0 14px 36px -14px hsl(var(--intensity-moderate) / 0.24),
+    0 0 0 1px hsl(var(--intensity-moderate) / 0.1) !important;
 }
 .dark .glow-intensity-high {
-  box-shadow: 0 14px 36px -14px hsl(var(--intensity-high) / 0.26), 0 0 0 1px hsl(var(--intensity-high) / 0.12) !important;
+  box-shadow:
+    0 14px 36px -14px hsl(var(--intensity-high) / 0.26),
+    0 0 0 1px hsl(var(--intensity-high) / 0.12) !important;
 }
 .dark .glow-intensity-very-high {
-  box-shadow: 0 14px 36px -14px hsl(var(--intensity-very-high) / 0.26), 0 0 0 1px hsl(var(--intensity-very-high) / 0.12) !important;
+  box-shadow:
+    0 14px 36px -14px hsl(var(--intensity-very-high) / 0.26),
+    0 0 0 1px hsl(var(--intensity-very-high) / 0.12) !important;
 }
 
 /* Floating bottom dock — same paper as the home sheet (seam test) */
@@ -966,17 +1012,17 @@ p, blockquote {
     padding-bottom: 3.75rem;
   }
 
-  .home-scene-gauge [data-testid="hero-number"] {
+  .home-scene-gauge [data-testid='hero-number'] {
     min-height: 3.75rem;
   }
 
-  .home-scene-gauge [data-testid="hero-band"] p {
+  .home-scene-gauge [data-testid='hero-band'] p {
     font-size: 1.375rem;
     line-height: 1.15;
   }
 
   /* Keep Intensity/Demand/Footprint above the dock on iPhone SE–class heights. */
-  .home-scene-gauge [data-testid="hero-meta"] {
+  .home-scene-gauge [data-testid='hero-meta'] {
     display: none;
   }
 
@@ -1080,13 +1126,23 @@ body {
 }
 
 @keyframes consent-sheet-in {
-  from { transform: translateY(16px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 @keyframes consent-sheet-fade {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

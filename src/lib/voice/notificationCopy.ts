@@ -15,7 +15,11 @@ export interface NotificationText {
 }
 
 /** Background check: the current half hour is under the user's clean alert. */
-export function liveCleanNotification(n: number, threshold: number, tone: CommentaryTone): NotificationText {
+export function liveCleanNotification(
+  n: number,
+  threshold: number,
+  tone: CommentaryTone,
+): NotificationText {
   return {
     title: `Clean grid now: ${n} ${UNIT}`,
     body:
@@ -35,7 +39,10 @@ export function cleanWindowNotification(
   const base = `${n} ${UNIT} forecast, under your ${threshold} ${UNIT} alert.`;
   return {
     title: `Clean window from ${formatLondonTime(start)}`,
-    body: tone === 'cheeky' ? `${base} The washing's been waiting for this.` : `${base} A good time for big loads.`,
+    body:
+      tone === 'cheeky'
+        ? `${base} The washing's been waiting for this.`
+        : `${base} A good time for big loads.`,
   };
 }
 
@@ -49,7 +56,10 @@ export function highWindowNotification(
   const base = `${n} ${UNIT} forecast, over your ${threshold} ${UNIT} alert.`;
   return {
     title: `Dirtier grid from ${formatLondonTime(start)}`,
-    body: tone === 'cheeky' ? `${base} If something can wait, let it.` : `${base} Worth delaying big loads if you can.`,
+    body:
+      tone === 'cheeky'
+        ? `${base} If something can wait, let it.`
+        : `${base} Worth delaying big loads if you can.`,
   };
 }
 

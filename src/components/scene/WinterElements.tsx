@@ -93,8 +93,20 @@ export function FrozenPond() {
           transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' as const }}
         />
         {/* Crack lines */}
-        <path d="M20,15 L35,10 L50,16" stroke="hsl(200 30% 75%)" strokeWidth="0.5" fill="none" opacity="0.5" />
-        <path d="M30,18 L45,13 L60,17" stroke="hsl(200 30% 75%)" strokeWidth="0.3" fill="none" opacity="0.4" />
+        <path
+          d="M20,15 L35,10 L50,16"
+          stroke="hsl(200 30% 75%)"
+          strokeWidth="0.5"
+          fill="none"
+          opacity="0.5"
+        />
+        <path
+          d="M30,18 L45,13 L60,17"
+          stroke="hsl(200 30% 75%)"
+          strokeWidth="0.3"
+          fill="none"
+          opacity="0.4"
+        />
       </svg>
     </motion.div>
   );
@@ -104,14 +116,15 @@ export function FrozenPond() {
  * Icicles hanging from factory/structure edges.
  */
 export function Icicles({ x = 0, count = 5 }: { x?: number; count?: number }) {
-  const icicles = useMemo(() =>
-    Array.from({ length: count }, (_, i) => ({
-      id: i,
-      offsetX: i * 6,
-      height: 6 + Math.random() * 8,
-      delay: Math.random() * 2,
-    })),
-    [count]
+  const icicles = useMemo(
+    () =>
+      Array.from({ length: count }, (_, i) => ({
+        id: i,
+        offsetX: i * 6,
+        height: 6 + Math.random() * 8,
+        delay: Math.random() * 2,
+      })),
+    [count],
   );
 
   return (
@@ -138,10 +151,7 @@ export function Icicles({ x = 0, count = 5 }: { x?: number; count?: number }) {
  */
 export function BreathMist({ x, y }: { x: number; y: number }) {
   return (
-    <motion.div
-      className="absolute pointer-events-none"
-      style={{ left: `${x}%`, bottom: `${y}%` }}
-    >
+    <motion.div className="absolute pointer-events-none" style={{ left: `${x}%`, bottom: `${y}%` }}>
       <motion.div
         className="w-3 h-2 rounded-full bg-card/40 blur-[2px]"
         animate={{

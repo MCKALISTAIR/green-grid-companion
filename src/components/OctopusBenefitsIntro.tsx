@@ -4,11 +4,7 @@ import { Button } from '@/components/ui/button';
 import { SettingsSectionHeading } from '@/components/settings/SettingsSectionHeading';
 
 const OctopusLogo = ({ className }: { className?: string }) => (
-  <img
-    src="/octopus_logo.png"
-    alt=""
-    className={`${className} object-contain`}
-  />
+  <img src="/octopus_logo.png" alt="" className={`${className} object-contain`} />
 );
 
 interface OctopusBenefitsIntroProps {
@@ -33,16 +29,29 @@ export function OctopusBenefitsIntro({ onContinue }: OctopusBenefitsIntroProps) 
               Prove your green shifts
             </h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Link Octopus to multiply your real half-hourly usage by grid intensity — then see whether you used power at cleaner times.
+              Link Octopus to multiply your real half-hourly usage by grid intensity — then see
+              whether you used power at cleaner times.
             </p>
           </div>
         </div>
 
         <ul className="space-y-2.5">
           {[
-            { icon: Leaf, label: 'True daily emissions from your meter', detail: 'Not a household estimate' },
-            { icon: Trophy, label: 'Green Score for timing demand', detail: '% of your kWh used in low-carbon windows — timing beats thrift alone' },
-            { icon: Sun, label: 'Solar & renewables impact', detail: 'See when your usage matched clean generation' },
+            {
+              icon: Leaf,
+              label: 'True daily emissions from your meter',
+              detail: 'Not a household estimate',
+            },
+            {
+              icon: Trophy,
+              label: 'Green Score for timing demand',
+              detail: '% of your kWh used in low-carbon windows — timing beats thrift alone',
+            },
+            {
+              icon: Sun,
+              label: 'Solar & renewables impact',
+              detail: 'See when your usage matched clean generation',
+            },
           ].map(({ icon: Icon, label, detail }) => (
             <li
               key={label}
@@ -66,7 +75,8 @@ export function OctopusBenefitsIntro({ onContinue }: OctopusBenefitsIntroProps) 
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
           <p className="text-[11px] text-center text-muted-foreground leading-relaxed">
-            You’ll enter your Octopus account number and API key next. Your key is sent once over HTTPS and stored encrypted on our servers — never kept on this device.
+            You’ll enter your Octopus account number and API key next. Your key is sent once over
+            HTTPS and stored encrypted on our servers — never kept on this device.
           </p>
           <p className="text-[11px] text-center text-muted-foreground">
             Not with Octopus yet?{' '}

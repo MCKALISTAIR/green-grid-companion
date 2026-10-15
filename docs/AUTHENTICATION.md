@@ -7,13 +7,15 @@ GridSense supports both **anonymous** and **authenticated** users through Supaba
 ## Authentication Types
 
 ### Anonymous Authentication
+
 - **What**: Temporary Supabase session without OAuth provider
 - **When**: Automatically created when user adds Octopus/Tesla credentials
 - **Duration**: Persistent until user signs in or clears browser data
 - **Unique ID**: Each anonymous session gets a unique user ID
 - **Data**: All integrations, credentials, and footprint data stored normally
 
-### Authenticated Authentication  
+### Authenticated Authentication
+
 - **What**: OAuth-based authentication (Google or Apple)
 - **When**: User explicitly clicks "Continue with Google/Apple"
 - **Benefits**: Cross-device sync, data backup, account recovery
@@ -22,6 +24,7 @@ GridSense supports both **anonymous** and **authenticated** users through Supaba
 ## User Flows
 
 ### New User (No Sign-In)
+
 ```
 1. User opens app
 2. Navigates to Settings
@@ -34,6 +37,7 @@ GridSense supports both **anonymous** and **authenticated** users through Supaba
 ```
 
 ### Sign-In Flow (From Anonymous)
+
 ```
 1. Anonymous user with existing data
 2. Clicks "Continue with Google/Apple"
@@ -48,6 +52,7 @@ GridSense supports both **anonymous** and **authenticated** users through Supaba
 ```
 
 ### Sign-Out Flow
+
 ```
 1. User clicks "Sign Out"
 2. AccountBackup stores current user_id for future migration
@@ -60,6 +65,7 @@ GridSense supports both **anonymous** and **authenticated** users through Supaba
 ### Core Utilities (`src/lib/auth-utils.ts`)
 
 #### `ensureAuthSession()`
+
 Ensures the user has a valid Supabase session, creating an anonymous one if needed.
 
 ```typescript
@@ -73,11 +79,13 @@ await ensureAuthSession();
 **Throws**: Error if session creation fails
 
 **Use Cases:**
+
 - Before saving credentials (Octopus, Tesla)
 - Before fetching integration status
 - Before any authenticated API call
 
 #### `isAuthenticated()`
+
 Check if current user is authenticated (not anonymous).
 
 ```typescript
@@ -90,6 +98,7 @@ if (!authenticated) {
 **Returns**: `Promise<boolean>` - true if Google/Apple authenticated
 
 #### `getCurrentUserId()`
+
 Get the current user ID (anonymous or authenticated).
 
 ```typescript
@@ -99,6 +108,7 @@ const userId = await getCurrentUserId();
 **Returns**: `Promise<string | null>` - User ID or null
 
 #### `shouldPromptForAuth()`
+
 Determine if we should encourage user to sign in.
 
 ```typescript
@@ -111,6 +121,7 @@ const shouldPrompt = await shouldPromptForAuth();
 Both `useOctopusEnergy` and `useTeslaEnergy` have been updated:
 
 **Before:**
+
 ```typescript
 // Required authenticated session
 const { hasSession } = useState(false);
@@ -120,6 +131,7 @@ if (!hasSession) {
 ```
 
 **After:**
+
 ```typescript
 // No session requirement
 const saveCredentials = async () => {
@@ -142,6 +154,7 @@ The migration system was already built and now works seamlessly with anonymous a
 ### Edge Functions
 
 Both `octopus-energy` and `tesla-energy` edge functions:
+
 - ✅ Already accept anonymous JWT tokens
 - ✅ Validate token using `supabase.auth.getUser(token)`
 - ✅ Work identically for anonymous and authenticated users
@@ -152,17 +165,20 @@ Both `octopus-energy` and `tesla-energy` edge functions:
 ## Security
 
 ### Anonymous Session Safety
+
 - ✅ Each anonymous user gets unique UUID
 - ✅ JWT tokens expire and refresh normally
 - ✅ Cannot access other users' data (enforced by user_id)
 - ✅ Migration validates ownership via localStorage
 
 ### Data Isolation
+
 - ✅ RLS (Row Level Security) policies enforce user_id matching
 - ✅ Edge functions use service role key but validate user identity
 - ✅ Anonymous users cannot see authenticated users' data
 
 ### Migration Security
+
 - ✅ Only migrates if user has stored anonymous ID (same device)
 - ✅ Cannot hijack another user's data
 - ✅ One-time migration (clears ID after completion)
@@ -170,20 +186,26 @@ Both `octopus-energy` and `tesla-energy` edge functions:
 ## Database Implications
 
 ### Anonymous User Records
+
 Anonymous users create normal database records:
+
 - `octopus_credentials` table: user_id = anonymous UUID
-- `octopus_meters` table: user_id = anonymous UUID  
+- `octopus_meters` table: user_id = anonymous UUID
 - `octopus_consumption` table: linked by MPAN
 - `carbon_footprint` table: linked by MPAN
 
 ### Session Expiry
+
 Supabase anonymous sessions can be configured to expire:
+
 - **Default**: Never expires (persists until sign-in or clear data)
 - **Recommended**: 90-day expiry
 - **After Expiry**: Records become orphaned (not deleted)
 
 ### Cleanup Strategy (Future)
+
 Consider implementing:
+
 - Background job to delete orphaned anonymous data after 180 days
 - Or: Keep anonymous data indefinitely (storage is cheap)
 
@@ -192,6 +214,7 @@ Consider implementing:
 ### Manual Test Plan
 
 #### Test 1: Fresh Anonymous User
+
 ```bash
 # 1. Clear all data
 localStorage.clear()
@@ -206,6 +229,7 @@ localStorage.clear()
 ```
 
 #### Test 2: Migration Flow
+
 ```bash
 # 1. As anonymous user with credentials
 # 2. Click "Continue with Google"
@@ -218,6 +242,7 @@ localStorage.clear()
 ```
 
 #### Test 3: Sign Out & Back In
+
 ```bash
 # 1. As authenticated user
 # 2. Click "Sign Out"
@@ -230,35 +255,40 @@ localStorage.clear()
 
 ### Edge Cases
 
-| Scenario | Expected Behavior |
-|----------|-------------------|
-| Anonymous user clears browser data | Loses all data (acceptable) |
-| Anonymous user signs in on different device | No migration (data only on original device) |
-| User creates multiple anonymous sessions | Each session independent (unlikely but safe) |
-| Anonymous user never signs in | Works indefinitely (until session expires) |
-| Authenticated user signs out then back in | No migration attempted (already authenticated) |
+| Scenario                                    | Expected Behavior                              |
+| ------------------------------------------- | ---------------------------------------------- |
+| Anonymous user clears browser data          | Loses all data (acceptable)                    |
+| Anonymous user signs in on different device | No migration (data only on original device)    |
+| User creates multiple anonymous sessions    | Each session independent (unlikely but safe)   |
+| Anonymous user never signs in               | Works indefinitely (until session expires)     |
+| Authenticated user signs out then back in   | No migration attempted (already authenticated) |
 
 ## Troubleshooting
 
 ### "Failed to create authentication session"
+
 **Cause**: Supabase anonymous auth might be disabled
 **Solution**: Enable anonymous auth in Supabase dashboard → Authentication → Providers
 
 ### "Migration failed" or no toast after sign-in
+
 **Cause**: Anonymous user ID not in localStorage
 **Solution**: Expected on different devices - data only migrates on same device
 
 ### Anonymous sessions not persisting
+
 **Cause**: Browser is clearing cookies/local storage aggressively
 **Solution**: User should allow cookies for the site
 
 ### Orphaned data accumulating
+
 **Cause**: Many anonymous users never converting to authenticated
 **Solution**: Implement cleanup job (future enhancement)
 
 ## Metrics to Track (Future)
 
 Consider tracking:
+
 - Anonymous → Authenticated conversion rate
 - Time from first anonymous use to authentication
 - Number of orphaned anonymous records
@@ -296,6 +326,7 @@ A: Anonymous data can be cleaned up after session expiry. Consider 90-day expiry
 ## Summary
 
 The anonymous authentication implementation enables:
+
 - ✅ **Immediate value**: Users can use integrations without sign-in friction
 - ✅ **Seamless upgrade**: One-click migration when users authenticate
 - ✅ **Secure**: Same security model as authenticated users

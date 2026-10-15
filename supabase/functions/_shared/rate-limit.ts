@@ -6,10 +6,10 @@ const localStore = new Map<string, { count: number; resetAt: number; blockedUnti
 
 async function redisPipeline(url: string, token: string, commands: string[][]): Promise<unknown[]> {
   const response = await fetch(`${url}/pipeline`, {
-    method: "POST",
+    method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify(commands),
   });
@@ -23,7 +23,7 @@ async function redisPipeline(url: string, token: string, commands: string[][]): 
 function checkLocalRateLimit(
   key: string,
   limit: number,
-  windowSeconds: number
+  windowSeconds: number,
 ): { allowed: boolean; retryAfter: number } {
   const now = Date.now();
   const record = localStore.get(key);
@@ -57,19 +57,19 @@ function checkLocalRateLimit(
 export async function checkRateLimit(
   key: string,
   limit: number,
-  windowSeconds: number
+  windowSeconds: number,
 ): Promise<{ allowed: boolean; retryAfter: number }> {
-  const redisUrl = Deno.env.get("UPSTASH_REDIS_REST_URL");
-  const redisToken = Deno.env.get("UPSTASH_REDIS_REST_TOKEN");
+  const redisUrl = Deno.env.get('UPSTASH_REDIS_REST_URL');
+  const redisToken = Deno.env.get('UPSTASH_REDIS_REST_TOKEN');
 
   if (redisUrl && redisToken) {
     try {
-      const url = redisUrl.startsWith("http") ? redisUrl : `https://${redisUrl}`;
-      
+      const url = redisUrl.startsWith('http') ? redisUrl : `https://${redisUrl}`;
+
       // Execute INCR and TTL in a pipeline to save RTT
       const results = await redisPipeline(url, redisToken, [
-        ["INCR", key],
-        ["TTL", key]
+        ['INCR', key],
+        ['TTL', key],
       ]);
 
       const count = results[0]?.result;
@@ -78,9 +78,7 @@ export async function checkRateLimit(
       // If TTL is -1, it means the key was just created and has no expiry.
       // Set the expiry to the window.
       if (ttl === -1) {
-        await redisPipeline(url, redisToken, [
-          ["EXPIRE", key, String(windowSeconds)]
-        ]);
+        await redisPipeline(url, redisToken, [['EXPIRE', key, String(windowSeconds)]]);
         ttl = windowSeconds;
       }
 
@@ -90,7 +88,10 @@ export async function checkRateLimit(
 
       return { allowed: true, retryAfter: 0 };
     } catch (err) {
-      console.error("[RATE LIMIT] Upstash Redis connection failed. Falling back to local in-memory store:", err);
+      console.error(
+        '[RATE LIMIT] Upstash Redis connection failed. Falling back to local in-memory store:',
+        err,
+      );
       // Fall through to local rate limiting fallback
     }
   }

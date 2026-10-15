@@ -1,5 +1,12 @@
 import { Link } from 'react-router-dom';
-import { ChevronRight, GraduationCap, History, MessageSquare, Shield, Sparkles } from 'lucide-react';
+import {
+  ChevronRight,
+  GraduationCap,
+  History,
+  MessageSquare,
+  Shield,
+  Sparkles,
+} from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { settingsItemVariants } from './settingsMotion';
@@ -31,7 +38,9 @@ export function SettingsResourcesSection({
                   <p className="text-sm text-muted-foreground">Your year in UK electricity</p>
                 </div>
               </div>
-              <Badge variant="secondary" className="text-[10px]">New</Badge>
+              <Badge variant="secondary" className="text-[10px]">
+                New
+              </Badge>
             </div>
           </button>
         )}
@@ -49,7 +58,9 @@ export function SettingsResourcesSection({
               </div>
               <div>
                 <h3 className="font-medium">Feature Guides</h3>
-                <p className="text-sm text-muted-foreground">Detailed how-to guides for each feature</p>
+                <p className="text-sm text-muted-foreground">
+                  Detailed how-to guides for each feature
+                </p>
               </div>
             </div>
             <ChevronRight className="w-5 h-5 text-muted-foreground" />

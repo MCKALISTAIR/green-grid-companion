@@ -1,6 +1,6 @@
-import "@testing-library/jest-dom";
+import '@testing-library/jest-dom';
 
-Object.defineProperty(window, "matchMedia", {
+Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: (query: string) => ({
     matches: false,
@@ -14,7 +14,7 @@ Object.defineProperty(window, "matchMedia", {
   }),
 });
 
-if (typeof window !== "undefined") {
+if (typeof window !== 'undefined') {
   const store: Record<string, string> = {};
   const mockLocalStorage = {
     getItem: (key: string) => (key in store ? store[key] : null),
@@ -34,14 +34,14 @@ if (typeof window !== "undefined") {
   };
 
   try {
-    if (!window.localStorage || typeof window.localStorage.setItem !== "function") {
-      Object.defineProperty(window, "localStorage", {
+    if (!window.localStorage || typeof window.localStorage.setItem !== 'function') {
+      Object.defineProperty(window, 'localStorage', {
         value: mockLocalStorage,
         writable: true,
       });
     }
   } catch {
-    Object.defineProperty(window, "localStorage", {
+    Object.defineProperty(window, 'localStorage', {
       value: mockLocalStorage,
       writable: true,
     });

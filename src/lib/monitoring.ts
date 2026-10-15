@@ -28,7 +28,11 @@ export const REPLAY_SESSION_SAMPLE_RATE = 0.1;
 export const REPLAY_ON_ERROR_SAMPLE_RATE = 1.0;
 /** Default integrations removed in every mode. */
 export const EXCLUDED_DEFAULT_INTEGRATIONS = ['BrowserSession'];
-export const REPLAY_PRIVACY = { maskAllText: true, maskAllInputs: true, blockAllMedia: true } as const;
+export const REPLAY_PRIVACY = {
+  maskAllText: true,
+  maskAllInputs: true,
+  blockAllMedia: true,
+} as const;
 
 const pct = (rate: number) => `${Math.round(rate * 100)}%`;
 
@@ -44,7 +48,7 @@ export const DIAGNOSTICS_DISCLOSURE = {
   ifAccepted: [
     `Performance data: how long screens and requests take, for ${pct(TRACES_SAMPLE_RATE)} of visits.`,
     `Session replays: a replay of taps and screen changes for ${pct(REPLAY_SESSION_SAMPLE_RATE)} of visits${REPLAY_ON_ERROR_SAMPLE_RATE > 0 ? ', and for visits where something goes wrong' : ''}. ${REPLAY_PRIVACY.maskAllText ? 'All text is hidden' : 'Text is shown'}, ${REPLAY_PRIVACY.maskAllInputs ? 'nothing you type is recorded' : 'inputs are recorded'}${REPLAY_PRIVACY.blockAllMedia ? ' and images are blocked' : ''}.`,
-    'While a replay runs, Sentry keeps a session id in this tab\'s session storage. It goes when you close the tab.',
+    "While a replay runs, Sentry keeps a session id in this tab's session storage. It goes when you close the tab.",
   ],
   never: ['No ads, no cross-site tracking, and we never sell your data.'],
 } as const;
@@ -75,7 +79,10 @@ export function isMonitoringEnabled(env: MonitoringEnv): boolean {
 }
 
 /** Sentry options derived from the build env. Exported for tests. */
-export function buildSentryOptions(env: MonitoringEnv, consentGranted: () => boolean): Sentry.BrowserOptions {
+export function buildSentryOptions(
+  env: MonitoringEnv,
+  consentGranted: () => boolean,
+): Sentry.BrowserOptions {
   return {
     dsn: env.dsn?.trim() || undefined,
     enabled: isMonitoringEnabled(env),
@@ -85,7 +92,8 @@ export function buildSentryOptions(env: MonitoringEnv, consentGranted: () => boo
     // Tracing and Replay are only added after consent (enableOptionalDiagnostics).
     // BrowserSession (release-health session tracking) is dropped so errors-only
     // mode sends no session pings and keeps nothing about the visit.
-    integrations: (defaults) => defaults.filter((i) => !EXCLUDED_DEFAULT_INTEGRATIONS.includes(i.name)),
+    integrations: (defaults) =>
+      defaults.filter((i) => !EXCLUDED_DEFAULT_INTEGRATIONS.includes(i.name)),
     // Sampled per trace, so withdrawing consent takes effect for the next trace.
     tracesSampler: () => (consentGranted() ? (env.isDev ? 1.0 : TRACES_SAMPLE_RATE) : 0),
     replaysSessionSampleRate: REPLAY_SESSION_SAMPLE_RATE,
@@ -113,9 +121,7 @@ function enableOptionalDiagnostics(): void {
   }
   optionalDiagnosticsOn = true;
   Sentry.addIntegration(Sentry.browserTracingIntegration());
-  Sentry.addIntegration(
-    Sentry.replayIntegration({ ...REPLAY_PRIVACY }),
-  );
+  Sentry.addIntegration(Sentry.replayIntegration({ ...REPLAY_PRIVACY }));
 }
 
 function disableOptionalDiagnostics(): void {

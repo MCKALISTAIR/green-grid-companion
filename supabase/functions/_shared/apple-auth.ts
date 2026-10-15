@@ -29,15 +29,13 @@ export interface AppleSigninConfig {
 }
 
 export type AppleRevocationStatus =
-  | 'not_apple_user'
-  | 'revoked'
-  | 'not_configured'
-  | 'no_authorization_code'
-  | 'failed';
+  'not_apple_user' | 'revoked' | 'not_configured' | 'no_authorization_code' | 'failed';
 
 const APPLE_AUDIENCE = 'https://appleid.apple.com';
 
-export function loadAppleSigninConfig(getEnv: (name: string) => string | undefined): AppleSigninConfig | null {
+export function loadAppleSigninConfig(
+  getEnv: (name: string) => string | undefined,
+): AppleSigninConfig | null {
   const teamId = getEnv('APPLE_TEAM_ID') || getEnv('APNS_TEAM_ID');
   const keyId = getEnv('APPLE_SIGNIN_KEY_ID');
   const privateKeyPem = getEnv('APPLE_SIGNIN_PRIVATE_KEY');
@@ -74,14 +72,20 @@ export async function createAppleClientSecret(
   nowSeconds = Math.floor(Date.now() / 1000),
 ): Promise<string> {
   const enc = new TextEncoder();
-  const header = base64Url(enc.encode(JSON.stringify({ alg: 'ES256', kid: config.keyId, typ: 'JWT' })));
-  const payload = base64Url(enc.encode(JSON.stringify({
-    iss: config.teamId,
-    iat: nowSeconds,
-    exp: nowSeconds + 300,
-    aud: APPLE_AUDIENCE,
-    sub: clientId,
-  })));
+  const header = base64Url(
+    enc.encode(JSON.stringify({ alg: 'ES256', kid: config.keyId, typ: 'JWT' })),
+  );
+  const payload = base64Url(
+    enc.encode(
+      JSON.stringify({
+        iss: config.teamId,
+        iat: nowSeconds,
+        exp: nowSeconds + 300,
+        aud: APPLE_AUDIENCE,
+        sub: clientId,
+      }),
+    ),
+  );
   const key = await crypto.subtle.importKey(
     'pkcs8',
     pemToPkcs8(config.privateKeyPem),
@@ -90,7 +94,11 @@ export async function createAppleClientSecret(
     ['sign'],
   );
   // WebCrypto returns the raw r||s (IEEE P1363) form JWS expects.
-  const sig = await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, key, enc.encode(`${header}.${payload}`));
+  const sig = await crypto.subtle.sign(
+    { name: 'ECDSA', hash: 'SHA-256' },
+    key,
+    enc.encode(`${header}.${payload}`),
+  );
   return `${header}.${payload}.${base64Url(sig)}`;
 }
 
@@ -140,29 +148,35 @@ export async function revokeAppleSignin(params: {
       body: new URLSearchParams(fields).toString(),
     });
 
-    const tokenRes = await fetchFn(`${APPLE_AUDIENCE}/auth/token`, form({
-      client_id: clientId,
-      client_secret: clientSecret,
-      code: authorizationCode,
-      grant_type: 'authorization_code',
-    }));
+    const tokenRes = await fetchFn(
+      `${APPLE_AUDIENCE}/auth/token`,
+      form({
+        client_id: clientId,
+        client_secret: clientSecret,
+        code: authorizationCode,
+        grant_type: 'authorization_code',
+      }),
+    );
     if (!tokenRes.ok) {
       log(`[APPLE] Authorization code exchange failed: HTTP ${tokenRes.status}`);
       return 'failed';
     }
-    const tokens = await tokenRes.json() as { refresh_token?: string; access_token?: string };
+    const tokens = (await tokenRes.json()) as { refresh_token?: string; access_token?: string };
     const token = tokens.refresh_token ?? tokens.access_token;
     if (!token) {
       log('[APPLE] Code exchange returned no token');
       return 'failed';
     }
 
-    const revokeRes = await fetchFn(`${APPLE_AUDIENCE}/auth/revoke`, form({
-      client_id: clientId,
-      client_secret: clientSecret,
-      token,
-      token_type_hint: tokens.refresh_token ? 'refresh_token' : 'access_token',
-    }));
+    const revokeRes = await fetchFn(
+      `${APPLE_AUDIENCE}/auth/revoke`,
+      form({
+        client_id: clientId,
+        client_secret: clientSecret,
+        token,
+        token_type_hint: tokens.refresh_token ? 'refresh_token' : 'access_token',
+      }),
+    );
     if (!revokeRes.ok) {
       log(`[APPLE] Token revocation failed: HTTP ${revokeRes.status}`);
       return 'failed';

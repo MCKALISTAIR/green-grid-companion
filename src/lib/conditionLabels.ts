@@ -27,8 +27,16 @@ export const CHEEKY_LINES: Record<string, readonly string[]> = {
   'very low': ["The grid's showing off.", 'Go on, run the big stuff.', 'Smug grid alert.'],
   low: ['Pretty tidy, this.', 'Not bad at all.', "The grid's behaving."],
   moderate: ['Middle of the road.', 'Neither smug nor sorry.', 'Could go either way.'],
-  high: ["The grid's having a grumpy one.", 'Worth waiting if you can.', "Not the grid's finest hour."],
-  'very high': ["The grid's in a mood.", 'Hold the big stuff if you can.', "Grid's having a shocker."],
+  high: [
+    "The grid's having a grumpy one.",
+    'Worth waiting if you can.',
+    "Not the grid's finest hour.",
+  ],
+  'very high': [
+    "The grid's in a mood.",
+    'Hold the big stuff if you can.',
+    "Grid's having a shocker.",
+  ],
 };
 
 function normalizeIndex(index: string): string {

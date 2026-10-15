@@ -8,7 +8,7 @@ const PRESETS = [
   { name: 'iPhone-Duo-Inner', width: 890, height: 626 },
   { name: 'iPhone-Duo-Inner-Portrait', width: 626, height: 890 },
   { name: 'iPad-Pro', width: 1024, height: 1366 },
-  { name: 'Desktop-1080p', width: 1920, height: 1080 }
+  { name: 'Desktop-1080p', width: 1920, height: 1080 },
 ];
 
 /** Map e2e slug → SceneTest aria-label fragment (human labels in SceneTest). */
@@ -26,7 +26,7 @@ test.describe('GridSense Dynamic Art Visual Integrity', () => {
   const TEST_CASES = [
     { label: 'very-clean-midday', intensity: 'very low', time: 'midday', weather: 'clear' },
     { label: 'moderate-sunset', intensity: 'moderate', time: 'sunset', weather: 'clouds' },
-    { label: 'very-dirty-night', intensity: 'very high', time: 'night', weather: 'thunderstorm' }
+    { label: 'very-dirty-night', intensity: 'very high', time: 'night', weather: 'thunderstorm' },
   ];
 
   for (const tc of TEST_CASES) {
@@ -38,9 +38,9 @@ test.describe('GridSense Dynamic Art Visual Integrity', () => {
 
         const ariaFragment = PRESET_ARIA[preset.name] ?? preset.name.replace(/-/g, ' ');
         const preview = page.locator(`[aria-label*="${ariaFragment} viewport preview"]`);
-        if (await preview.count() > 0) {
+        if ((await preview.count()) > 0) {
           await expect(preview.first()).toHaveScreenshot(`scene-${tc.label}-${preset.name}.png`, {
-            maxDiffPixelRatio: 0.01
+            maxDiffPixelRatio: 0.01,
           });
         }
       });

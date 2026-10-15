@@ -13,9 +13,13 @@ export interface IntensityPoint {
 const BANDS = new Set(['very low', 'low', 'moderate', 'high', 'very high']);
 
 export function parseIntensityPoint(item: unknown): IntensityPoint | null {
-  const raw = (item as { intensity?: { actual?: unknown; forecast?: unknown; index?: unknown } } | null)?.intensity;
+  const raw = (
+    item as { intensity?: { actual?: unknown; forecast?: unknown; index?: unknown } } | null
+  )?.intensity;
   if (!raw) return null;
-  const value = [raw.actual, raw.forecast].find((v) => typeof v === 'number' && Number.isFinite(v) && v >= 0) as number | undefined;
+  const value = [raw.actual, raw.forecast].find(
+    (v) => typeof v === 'number' && Number.isFinite(v) && v >= 0,
+  ) as number | undefined;
   const index = typeof raw.index === 'string' ? raw.index.toLowerCase() : null;
   if (value === undefined || !index || !BANDS.has(index)) return null;
   return { intensity: value, index };

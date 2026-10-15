@@ -157,7 +157,12 @@ export function planLoad({
   // A live reading is real data for the current half hour: if the forecast row
   // for it is missing but the next one starts within half an hour, stand the
   // live value in for it (never a made-up value).
-  if (live !== null && upcoming.length && upcoming[0].from > nowMs && upcoming[0].from - nowMs <= SLOT_MS) {
+  if (
+    live !== null &&
+    upcoming.length &&
+    upcoming[0].from > nowMs &&
+    upcoming[0].from - nowMs <= SLOT_MS
+  ) {
     upcoming.unshift({ from: upcoming[0].from - SLOT_MS, to: upcoming[0].from, value: live });
   }
 
@@ -173,10 +178,7 @@ export function planLoad({
 
   // Partial forecast: shrink the load window so there's still something
   // later to compare with. Full forecasts (~96 slots) are unaffected.
-  const len = Math.max(
-    1,
-    Math.min(Math.round(requestedSlots), Math.floor(upcoming.length / 2)),
-  );
+  const len = Math.max(1, Math.min(Math.round(requestedSlots), Math.floor(upcoming.length / 2)));
 
   // Missing half hours inside the window we're judging (never treated as 0).
   const considered = upcoming.filter((s) => s.from < horizonEnd);
@@ -195,7 +197,13 @@ export function planLoad({
   const current = upcoming[0].from <= nowMs ? 0 : -1;
   const nowAvg = current === 0 ? windowAvg(upcoming, 0, len, live ?? undefined) : null;
   if (nowAvg === null) {
-    return { ...emptyPlan(live), reason: 'missing_data', coveredHours, partial, missingSlots: Math.max(1, missingSlots) };
+    return {
+      ...emptyPlan(live),
+      reason: 'missing_data',
+      coveredHours,
+      partial,
+      missingSlots: Math.max(1, missingSlots),
+    };
   }
 
   // Cleanest later start (earliest wins ties).
@@ -223,7 +231,9 @@ export function planLoad({
 
   // Whole window at/near zero or flat: any start time is as good as another,
   // so say that instead of implying "now" beats later.
-  const windowValues = considered.map((s, i) => (i === 0 && current === 0 && live !== null ? live : s.value));
+  const windowValues = considered.map((s, i) =>
+    i === 0 && current === 0 && live !== null ? live : s.value,
+  );
   const spread = classifySpread(windowValues);
   const anyTime: LoadPlan | null =
     spread === 'near_zero' || spread === 'flat' ? { ...base, reason: spread } : null;
@@ -303,7 +313,9 @@ function describeRange(start: Date, end: Date, now: Date): string {
 }
 
 /** Shared "any time works" detail line for near-zero or flat windows (home card and Planner). */
-export function describeAnyTime(plan: Pick<LoadPlan, 'reason' | 'coveredHours' | 'nowAvg'>): string {
+export function describeAnyTime(
+  plan: Pick<LoadPlan, 'reason' | 'coveredHours' | 'nowAvg'>,
+): string {
   const span = describeSpan(plan.coveredHours);
   const around = plan.nowAvg !== null ? `, around ${plan.nowAvg} ${UNIT}` : '';
   return plan.reason === 'near_zero'
@@ -311,7 +323,8 @@ export function describeAnyTime(plan: Pick<LoadPlan, 'reason' | 'coveredHours' |
     : `It stays about the same for ${span}${around}, so there's no cleaner time to wait for.`;
 }
 
-export const MISSING_SLOTS_NOTE = 'Some half hours are missing from the forecast, so this is based on the hours we have.';
+export const MISSING_SLOTS_NOTE =
+  'Some half hours are missing from the forecast, so this is based on the hours we have.';
 export const MISSING_DATA_TITLE = 'Some of the forecast is missing';
 export const MISSING_DATA_DETAIL =
   "Half hours are missing from the forecast, so we can't compare starting now with later yet.";
@@ -333,7 +346,6 @@ export interface NowOrWaitDecision {
   countdownTarget: Date | null;
   plan: LoadPlan;
 }
-
 
 /**
  * Home-card answer to "use energy now or wait?" for a 3-hour load.

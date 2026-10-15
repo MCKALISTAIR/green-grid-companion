@@ -30,9 +30,7 @@ export function SceneMilestoneFX({
       </AnimatePresence>
 
       {/* Pollution Warning - High carbon (>300g) */}
-      <AnimatePresence>
-        {intensity > 300 && <PollutionWarning />}
-      </AnimatePresence>
+      <AnimatePresence>{intensity > 300 && <PollutionWarning />}</AnimatePresence>
 
       {/* Zero-carbon celebration: only on a real 0 gCO2/kWh reading */}
       <AnimatePresence>

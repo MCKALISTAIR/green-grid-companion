@@ -8,7 +8,11 @@ import {
   fetchSchedulerSecret,
   type SchedulerSecretRpcClient,
 } from '../_shared/cron-auth.ts';
-import { claimSubscriptionsForPeriod, ukDatePeriodKey, type NotificationLogClient } from '../_shared/notification-periods.ts';
+import {
+  claimSubscriptionsForPeriod,
+  ukDatePeriodKey,
+  type NotificationLogClient,
+} from '../_shared/notification-periods.ts';
 
 interface ForecastData {
   from: string;
@@ -32,9 +36,9 @@ interface PushSubscription {
 function getIntensityEmoji(index: string): string {
   const emojis: Record<string, string> = {
     'very low': '🌿',
-    'low': '🍃',
-    'moderate': '☁️',
-    'high': '🏭',
+    low: '🍃',
+    moderate: '☁️',
+    high: '🏭',
     'very high': '💨',
   };
   return emojis[index] || '⚡';
@@ -51,19 +55,23 @@ function getUKOffset(date: Date): number {
   const marchLastSunday = new Date(Date.UTC(year, 2, 31, 1, 0, 0));
   marchLastSunday.setUTCDate(31 - marchLastSunday.getUTCDay());
 
-  // Last Sunday in October at 1:00 UTC  
+  // Last Sunday in October at 1:00 UTC
   const octoberLastSunday = new Date(Date.UTC(year, 9, 31, 1, 0, 0));
   octoberLastSunday.setUTCDate(31 - octoberLastSunday.getUTCDay());
 
-  return (date >= marchLastSunday && date < octoberLastSunday) ? 1 : 0;
+  return date >= marchLastSunday && date < octoberLastSunday ? 1 : 0;
 }
 
 // Scheduler secret lives in the database (see 20261003120000 migration);
 // read with the service role and cached per instance.
 const getSchedulerSecret = createSchedulerSecretProvider(() =>
   fetchSchedulerSecret(
-    createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!) as unknown as SchedulerSecretRpcClient,
-  ));
+    createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    ) as unknown as SchedulerSecretRpcClient,
+  ),
+);
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -101,12 +109,19 @@ Deno.serve(async (req) => {
     }
 
     // Filter to only include subscriptions where the scheduled minute has passed
-    const subscriptions = allSubscriptions?.filter(sub => {
-      const [, minute] = sub.daily_forecast_time.split(':');
-      return parseInt(minute) <= ukMinute;
-    }) || [];
+    const subscriptions =
+      allSubscriptions?.filter((sub) => {
+        const [, minute] = sub.daily_forecast_time.split(':');
+        return parseInt(minute) <= ukMinute;
+      }) || [];
 
-    const notifications: Array<{ token: string; title: string; body: string; platform: string; isSandbox?: boolean }> = [];
+    const notifications: Array<{
+      token: string;
+      title: string;
+      body: string;
+      platform: string;
+      isSandbox?: boolean;
+    }> = [];
 
     // Fetch today's and tomorrow's forecast so we always have future windows
     const tomorrow = new Date(now);
@@ -133,7 +148,7 @@ Deno.serve(async (req) => {
 
     // All forecasts for stats, but only future slots for best/worst windows
     const allForecasts = [...todayForecasts, ...tomorrowForecasts];
-    const futureForecasts = allForecasts.filter(f => new Date(f.to) > now);
+    const futureForecasts = allForecasts.filter((f) => new Date(f.to) > now);
 
     // Calculate today's overall stats (for context)
     let totalIntensity = 0;
@@ -146,9 +161,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    const avgIntensity = todayForecasts.length > 0
-      ? Math.round(totalIntensity / todayForecasts.length)
-      : 0;
+    const avgIntensity =
+      todayForecasts.length > 0 ? Math.round(totalIntensity / todayForecasts.length) : 0;
     const greenHours = Math.round(greenSlots / 2);
 
     // Find best/worst from FUTURE slots only
@@ -177,8 +191,9 @@ Deno.serve(async (req) => {
       // Adjust to UK date
       const ukDate = new Date(d.getTime() + ukOffset * 60 * 60 * 1000);
       const nowUK = new Date(now.getTime() + ukOffset * 60 * 60 * 1000);
-      return ukDate.getUTCDate() !== nowUK.getUTCDate()
-        || ukDate.getUTCMonth() !== nowUK.getUTCMonth();
+      return (
+        ukDate.getUTCDate() !== nowUK.getUTCDate() || ukDate.getUTCMonth() !== nowUK.getUTCMonth()
+      );
     }
 
     // Idempotency: claim each subscription for today's UK date before sending
@@ -191,7 +206,9 @@ Deno.serve(async (req) => {
       (subscriptions as PushSubscription[]).map((s) => s.id),
     );
     const dueSubscriptions = (subscriptions as PushSubscription[]).filter((s) => claimed.has(s.id));
-    console.log(`Daily forecast ${periodKey}: ${dueSubscriptions.length} due, ${subscriptions.length - dueSubscriptions.length} already sent`);
+    console.log(
+      `Daily forecast ${periodKey}: ${dueSubscriptions.length} due, ${subscriptions.length - dueSubscriptions.length} already sent`,
+    );
 
     // Generate notification for each subscription
     for (const sub of dueSubscriptions) {
@@ -210,7 +227,10 @@ Deno.serve(async (req) => {
           startIdx--;
         }
         // Expand forward while adjacent and within threshold
-        while (endIdx < futureForecasts.length - 1 && futureForecasts[endIdx + 1].intensity.forecast <= threshold) {
+        while (
+          endIdx < futureForecasts.length - 1 &&
+          futureForecasts[endIdx + 1].intensity.forecast <= threshold
+        ) {
           endIdx++;
         }
         bestWindowStart = futureForecasts[startIdx].from;
@@ -219,7 +239,10 @@ Deno.serve(async (req) => {
 
       const bestStartFmt = formatUKTime(bestWindowStart);
       const bestEndFmt = formatUKTime(bestWindowEnd);
-      const bestDurationH = Math.round((new Date(bestWindowEnd).getTime() - new Date(bestWindowStart).getTime()) / (1000 * 60 * 60));
+      const bestDurationH = Math.round(
+        (new Date(bestWindowEnd).getTime() - new Date(bestWindowStart).getTime()) /
+          (1000 * 60 * 60),
+      );
       const bestLabel = bestTime && isTomorrowSlot(bestWindowStart) ? ', tomorrow' : '';
       const worstFmt = worstTime ? formatUKTime(worstTime.from) : 'N/A';
       const worstLabel = worstTime && isTomorrowSlot(worstTime.from) ? ' (tomorrow)' : '';
@@ -231,8 +254,12 @@ Deno.serve(async (req) => {
           `Average forecast today: ${avgIntensity} gCO₂/kWh.`,
           `${greenHours === 1 ? '1 hour' : `${greenHours} hours`} forecast low or very low.`,
           `Best window: ${bestStartFmt} to ${bestEndFmt} (${bestDurationH}h${bestLabel}).`,
-          worstTime ? `Dirtiest: ${worstFmt}${worstLabel} (${worstTime.intensity.forecast} gCO₂/kWh).` : ''
-        ].filter(Boolean).join(' '),
+          worstTime
+            ? `Dirtiest: ${worstFmt}${worstLabel} (${worstTime.intensity.forecast} gCO₂/kWh).`
+            : '',
+        ]
+          .filter(Boolean)
+          .join(' '),
         platform: sub.platform,
         isSandbox: sub.is_sandbox,
       });
@@ -244,7 +271,7 @@ Deno.serve(async (req) => {
     try {
       await sendPushNotifications(notifications);
     } catch (e) {
-      console.error("[PUSH] Error sending push notifications:", e);
+      console.error('[PUSH] Error sending push notifications:', e);
     }
 
     return new Response(
@@ -261,17 +288,14 @@ Deno.serve(async (req) => {
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      },
     );
   } catch (error) {
     console.error('Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(
-      JSON.stringify({ error: errorMessage }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+    return new Response(JSON.stringify({ error: errorMessage }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });

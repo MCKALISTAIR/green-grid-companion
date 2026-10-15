@@ -47,7 +47,9 @@ export function setConsent(choice: ConsentChoice): void {
     store.setItem(CONSENT_VERSION_KEY, CONSENT_VERSION);
   }
   if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent<ConsentChoice | null>(CONSENT_CHANGE_EVENT, { detail: choice }));
+    window.dispatchEvent(
+      new CustomEvent<ConsentChoice | null>(CONSENT_CHANGE_EVENT, { detail: choice }),
+    );
   }
 }
 
@@ -58,14 +60,17 @@ export function clearConsent(): void {
     store.removeItem(CONSENT_VERSION_KEY);
   }
   if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent<ConsentChoice | null>(CONSENT_CHANGE_EVENT, { detail: null }));
+    window.dispatchEvent(
+      new CustomEvent<ConsentChoice | null>(CONSENT_CHANGE_EVENT, { detail: null }),
+    );
   }
 }
 
 /** Subscribe to consent changes. Returns an unsubscribe function. */
 export function onConsentChange(listener: (choice: ConsentChoice | null) => void): () => void {
   if (typeof window === 'undefined') return () => {};
-  const handler = (event: Event) => listener((event as CustomEvent<ConsentChoice | null>).detail ?? null);
+  const handler = (event: Event) =>
+    listener((event as CustomEvent<ConsentChoice | null>).detail ?? null);
   window.addEventListener(CONSENT_CHANGE_EVENT, handler);
   return () => window.removeEventListener(CONSENT_CHANGE_EVENT, handler);
 }

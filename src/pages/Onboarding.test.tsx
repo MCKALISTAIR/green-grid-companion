@@ -36,7 +36,9 @@ describe('first launch', () => {
 
   it('is one screen with location, postcode and a GB-average skip', () => {
     renderOnboarding();
-    expect(screen.getByRole('heading', { name: 'How clean is your power right now?' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'How clean is your power right now?' }),
+    ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Use my location/ })).toBeInTheDocument();
     expect(screen.getByText('Just show me the GB average')).toBeInTheDocument();
     expect(screen.getByText(/We only keep the first half of your postcode/)).toBeInTheDocument();
@@ -83,7 +85,9 @@ describe('first launch', () => {
     geo.requestPermissions.mockResolvedValue({ location: 'denied' });
     renderOnboarding();
     fireEvent.click(screen.getByRole('button', { name: /Use my location/ }));
-    expect(await screen.findByText('No problem. A postcode works just as well.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('No problem. A postcode works just as well.'),
+    ).toBeInTheDocument();
     expect(geo.requestPermissions).toHaveBeenCalled();
     expect(geo.getCurrentPosition).not.toHaveBeenCalled();
   });
@@ -92,16 +96,22 @@ describe('first launch', () => {
     geo.checkPermissions.mockResolvedValue({ location: 'denied' });
     renderOnboarding();
     fireEvent.click(screen.getByRole('button', { name: /Use my location/ }));
-    expect(await screen.findByText(/You can turn location on later in Settings/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/You can turn location on later in Settings/),
+    ).toBeInTheDocument();
     expect(geo.requestPermissions).not.toHaveBeenCalled();
   });
 
   it('turns a location into the outward code', async () => {
     geo.checkPermissions.mockResolvedValue({ location: 'granted' });
     geo.getCurrentPosition.mockResolvedValue({ coords: { latitude: 55.95, longitude: -3.19 } });
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify({ status: 200, result: [{ outcode: 'EH1', postcode: 'EH1 1YZ' }] })),
-    );
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(
+        new Response(
+          JSON.stringify({ status: 200, result: [{ outcode: 'EH1', postcode: 'EH1 1YZ' }] }),
+        ),
+      );
     renderOnboarding();
     fireEvent.click(screen.getByRole('button', { name: /Use my location/ }));
     await screen.findByText('HOME');

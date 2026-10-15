@@ -26,7 +26,7 @@ import {
   Coffee,
   SunMedium,
   AlertCircle,
-  X
+  X,
 } from 'lucide-react';
 import { TurbineSpinner } from '@/components/ui/turbine-spinner';
 import { formatDistanceToNow } from 'date-fns';
@@ -47,21 +47,19 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
-  Cell
+  Cell,
 } from 'recharts';
 import { format, parseISO, startOfDay, getHours } from 'date-fns';
 import { ComponentErrorBoundary } from '@/components/ComponentErrorBoundary';
 import { EstimateDisclaimer } from '@/components/attribution/EstimateDisclaimer';
-import {
-  GreenScoreExplainerContent,
-  getGreenScoreRating,
-} from '@/components/GreenScoreExplainer';
+import { GreenScoreExplainerContent } from '@/components/GreenScoreExplainer';
+import { getGreenScoreRating } from '@/lib/greenScore';
 
 const INTENSITY_COLORS: Record<string, string> = {
   'very low': 'hsl(var(--intensity-very-low))',
-  'low': 'hsl(var(--intensity-low))',
-  'moderate': 'hsl(var(--intensity-moderate))',
-  'high': 'hsl(var(--intensity-high))',
+  low: 'hsl(var(--intensity-low))',
+  moderate: 'hsl(var(--intensity-moderate))',
+  high: 'hsl(var(--intensity-high))',
   'very high': 'hsl(var(--intensity-very-high))',
 };
 
@@ -82,7 +80,7 @@ export function FootprintView() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const { houseType, customAnnualKwh } = useSettings();
   const [showScoreTip, setShowScoreTip] = useState(
-    () => !localStorage.getItem('green-score-tip-seen')
+    () => !localStorage.getItem('green-score-tip-seen'),
   );
 
   const dismissScoreTip = () => {
@@ -94,7 +92,18 @@ export function FootprintView() {
   // The UI will filter to show the appropriate range based on selectedDate and timeRange
   const daysToFetch = 60;
 
-  const { footprint, isLoading, isLinked, status, isSyncing, fullSync, isError, refetchFootprint, availableDates, hasCredentials } = useOctopusEnergy(daysToFetch);
+  const {
+    footprint,
+    isLoading,
+    isLinked,
+    status,
+    isSyncing,
+    fullSync,
+    isError,
+    refetchFootprint,
+    availableDates,
+    hasCredentials,
+  } = useOctopusEnergy(daysToFetch);
   const { achievements: globalAchievements, unlock } = useAchievements();
   const { postcode } = useAppLocation();
   const { intensity, index: intensityIndex } = useCarbonData(postcode);
@@ -129,7 +138,7 @@ export function FootprintView() {
       const dayEnd = new Date(dayStart);
       dayEnd.setDate(dayEnd.getDate() + 1);
 
-      filteredRecords = footprint.records.filter(record => {
+      filteredRecords = footprint.records.filter((record) => {
         const recordDate = parseISO(record.interval_start);
         return recordDate >= dayStart && recordDate < dayEnd;
       });
@@ -139,7 +148,7 @@ export function FootprintView() {
       const weekEnd = new Date(weekStart);
       weekEnd.setDate(weekEnd.getDate() + 7);
 
-      filteredRecords = footprint.records.filter(record => {
+      filteredRecords = footprint.records.filter((record) => {
         const recordDate = parseISO(record.interval_start);
         return recordDate >= weekStart && recordDate < weekEnd;
       });
@@ -179,7 +188,7 @@ export function FootprintView() {
 
     return Object.values(aggregated)
       .sort((a, b) => a.date.getTime() - b.date.getTime())
-      .map(d => {
+      .map((d) => {
         let dateParams = '';
         if (timeRange === 'day') dateParams = 'HH:mm';
         else if (timeRange === 'year') dateParams = 'MMM';
@@ -205,16 +214,19 @@ export function FootprintView() {
     const netCarbonKg = footprint.summary.net_carbon_kg ?? total_carbon_kg;
 
     // Calculate green vs dirty usage
-    const greenKwh = (by_intensity_index['very low']?.kwh || 0) + (by_intensity_index['low']?.kwh || 0);
-    const dirtyKwh = (by_intensity_index['high']?.kwh || 0) + (by_intensity_index['very high']?.kwh || 0);
+    const greenKwh =
+      (by_intensity_index['very low']?.kwh || 0) + (by_intensity_index['low']?.kwh || 0);
+    const dirtyKwh =
+      (by_intensity_index['high']?.kwh || 0) + (by_intensity_index['very high']?.kwh || 0);
     const greenPercentage = total_kwh > 0 ? (greenKwh / total_kwh) * 100 : 0;
-    const veryLowPercentage = total_kwh > 0 ? ((by_intensity_index['very low']?.kwh || 0) / total_kwh) * 100 : 0;
+    const veryLowPercentage =
+      total_kwh > 0 ? ((by_intensity_index['very low']?.kwh || 0) / total_kwh) * 100 : 0;
 
     // Average intensity
     const avgIntensity = footprint.summary.avg_intensity;
 
     // Potential savings (if all usage was at "very low" ~50g)
-    const optimalCarbon = total_kwh * 50 / 1000;
+    const optimalCarbon = (total_kwh * 50) / 1000;
     const potentialSavings = total_carbon_kg - optimalCarbon;
 
     // Actual Savings (compared to average intensity for the period)
@@ -223,34 +235,47 @@ export function FootprintView() {
 
     const impact = getImpactEquivalents(carbonSaved);
 
-
     // Household Comparison
     const benchmarkDaily = getAverageDailyKwh(houseType, customAnnualKwh);
     // Calculate actual days in the period based on filtered data
-    const actualDays = dailyData.length > 0 ? dailyData.length :
-      timeRange === 'day' ? 1 :
-        timeRange === 'week' ? 7 :
-          timeRange === 'month' ? 31 : 365;
+    const actualDays =
+      dailyData.length > 0
+        ? dailyData.length
+        : timeRange === 'day'
+          ? 1
+          : timeRange === 'week'
+            ? 7
+            : timeRange === 'month'
+              ? 31
+              : 365;
     const benchmarkTotal = benchmarkDaily * actualDays;
     const comparisonDiff = total_kwh - benchmarkTotal;
     const comparisonPercent = benchmarkTotal > 0 ? (comparisonDiff / benchmarkTotal) * 100 : 0;
     const isEfficient = comparisonDiff < 0;
 
     // Best period calculation
-    const dataPoints = dailyData.map(d => ({ date: d.date, carbon: d.carbon_kg, kwh: d.kwh }));
-    const bestPeriod = dataPoints.length > 0
-      ? dataPoints.reduce((min, d) => d.carbon < min.carbon ? d : min, dataPoints[0])
-      : null;
+    const dataPoints = dailyData.map((d) => ({ date: d.date, carbon: d.carbon_kg, kwh: d.kwh }));
+    const bestPeriod =
+      dataPoints.length > 0
+        ? dataPoints.reduce((min, d) => (d.carbon < min.carbon ? d : min), dataPoints[0])
+        : null;
 
     // Time of day analysis - More granular periods
     const hourlyUsage: Record<string, number> = {};
     for (const record of footprint.records || []) {
       const hour = getHours(parseISO(record.interval_start));
-      const period = hour >= 22 || hour < 2 ? 'late evening' :
-        hour >= 2 && hour < 6 ? 'early morning' :
-          hour >= 6 && hour < 10 ? 'morning' :
-            hour >= 10 && hour < 16 ? 'midday' :
-              hour >= 16 && hour < 19 ? 'evening peak' : 'evening';
+      const period =
+        hour >= 22 || hour < 2
+          ? 'late evening'
+          : hour >= 2 && hour < 6
+            ? 'early morning'
+            : hour >= 6 && hour < 10
+              ? 'morning'
+              : hour >= 10 && hour < 16
+                ? 'midday'
+                : hour >= 16 && hour < 19
+                  ? 'evening peak'
+                  : 'evening';
       hourlyUsage[period] = (hourlyUsage[period] || 0) + Number(record.consumption_kwh);
     }
     const peakPeriod = Object.entries(hourlyUsage).sort((a, b) => b[1] - a[1])[0]?.[0] || 'unknown';
@@ -267,7 +292,7 @@ export function FootprintView() {
         diff: comparisonDiff,
         percent: Math.abs(comparisonPercent),
         isEfficient,
-        benchmark: benchmarkTotal
+        benchmark: benchmarkTotal,
       },
       totalCarbon: total_carbon_kg,
       totalKwh: total_kwh,
@@ -296,7 +321,8 @@ export function FootprintView() {
   // Generate achievements list merging local definitions with global unlock state
   const achievementsList = useMemo((): Achievement[] => {
     // Helper to find global status
-    const isUnlocked = (id: string) => globalAchievements.find(a => a.id === id)?.unlocked ?? false;
+    const isUnlocked = (id: string) =>
+      globalAchievements.find((a) => a.id === id)?.unlocked ?? false;
 
     return [
       {
@@ -348,8 +374,8 @@ export function FootprintView() {
 
     const order = ['very low', 'low', 'moderate', 'high', 'very high'];
     return order
-      .filter(idx => footprint.summary.by_intensity_index[idx])
-      .map(idx => ({
+      .filter((idx) => footprint.summary.by_intensity_index[idx])
+      .map((idx) => ({
         name: idx.charAt(0).toUpperCase() + idx.slice(1),
         kwh: Number(footprint.summary.by_intensity_index[idx].kwh.toFixed(1)),
         carbon: Number((footprint.summary.by_intensity_index[idx].carbon_g / 1000).toFixed(2)),
@@ -363,12 +389,17 @@ export function FootprintView() {
         <Card className="p-6 space-y-4 border-primary/20 bg-primary/5">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <Badge variant="secondary" className="mb-2">Estimated</Badge>
-              <h2 className="font-display text-2xl font-semibold tracking-tight text-foreground">Your household benchmark</h2>
+              <Badge variant="secondary" className="mb-2">
+                Estimated
+              </Badge>
+              <h2 className="font-display text-2xl font-semibold tracking-tight text-foreground">
+                Your household benchmark
+              </h2>
               <p className="text-muted-foreground text-sm mt-1">
-                Based on {getHouseTypeLabel(houseType)} typical usage and today&apos;s grid intensity
-                {intensity ? ` (${intensity}g CO₂/kWh · ${intensityIndex})` : ''}.
-                A rough Ofgem benchmark, not your actual usage — link Octopus to get a Green Score.{' '}
+                Based on {getHouseTypeLabel(houseType)} typical usage and today&apos;s grid
+                intensity
+                {intensity ? ` (${intensity}g CO₂/kWh · ${intensityIndex})` : ''}. A rough Ofgem
+                benchmark, not your actual usage — link Octopus to get a Green Score.{' '}
                 <button
                   type="button"
                   className="underline text-primary hover:text-primary/80 font-medium"
@@ -386,7 +417,9 @@ export function FootprintView() {
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
               <p className="text-xs text-muted-foreground">Est. daily usage</p>
-              <p className="text-2xl font-semibold font-mono tabular-nums">{estimatedDailyKwh.toFixed(1)} kWh</p>
+              <p className="text-2xl font-semibold font-mono tabular-nums">
+                {estimatedDailyKwh.toFixed(1)} kWh
+              </p>
             </div>
             <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
               <p className="text-xs text-muted-foreground">Est. daily CO₂</p>
@@ -400,17 +433,20 @@ export function FootprintView() {
 
           {hasCredentials && (
             <div className="rounded-lg border border-border bg-muted/40 p-3 text-sm text-foreground">
-              Your Octopus key is saved securely, but meters aren&apos;t fully linked yet.
-              Open Settings to finish linking, then wait up to 24–48 hours for smart-meter history.
+              Your Octopus key is saved securely, but meters aren&apos;t fully linked yet. Open
+              Settings to finish linking, then wait up to 24–48 hours for smart-meter history.
             </div>
           )}
         </Card>
 
         <Card className="p-8 text-center space-y-6">
           <div className="space-y-3">
-            <h3 className="font-display text-xl font-semibold text-foreground">Unlock your real footprint</h3>
+            <h3 className="font-display text-xl font-semibold text-foreground">
+              Unlock your real footprint
+            </h3>
             <p className="text-muted-foreground text-sm max-w-md mx-auto">
-              Connect Octopus Energy to multiply your actual half-hourly usage by grid intensity — and get a Green Score for how well you time demand.
+              Connect Octopus Energy to multiply your actual half-hourly usage by grid intensity —
+              and get a Green Score for how well you time demand.
             </p>
           </div>
 
@@ -455,7 +491,8 @@ export function FootprintView() {
             </a>
 
             <p className="text-xs text-muted-foreground pt-2 max-w-sm">
-              Your Octopus API key is stored encrypted on our servers, never on your device. We use it only to fetch your meter data.
+              Your Octopus API key is stored encrypted on our servers, never on your device. We use
+              it only to fetch your meter data.
             </p>
           </div>
         </Card>
@@ -487,14 +524,11 @@ export function FootprintView() {
         <div className="space-y-2 max-w-sm">
           <h3 className="text-lg font-semibold">Unable to load footprint data</h3>
           <p className="text-sm text-muted-foreground">
-            We encountered an error while fetching your carbon data. Please check your connection and try again.
+            We encountered an error while fetching your carbon data. Please check your connection
+            and try again.
           </p>
         </div>
-        <Button
-          variant="outline"
-          onClick={() => refetchFootprint()}
-          className="mt-4"
-        >
+        <Button variant="outline" onClick={() => refetchFootprint()} className="mt-4">
           <RefreshCw className="w-4 h-4 mr-2" />
           Retry
         </Button>
@@ -502,22 +536,34 @@ export function FootprintView() {
     );
   }
 
-
-
   return (
     <div className="space-y-4">
       {/* Time Range Selector & Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="font-display text-xl font-semibold tracking-tight text-foreground">My Footprint</h2>
+          <h2 className="font-display text-xl font-semibold tracking-tight text-foreground">
+            My Footprint
+          </h2>
           <p className="text-sm text-muted-foreground">Track your carbon impact over time</p>
         </div>
-        <Tabs value={timeRange} onValueChange={(v) => setTimeRange(v as TimeRange)} className="w-full sm:w-auto">
+        <Tabs
+          value={timeRange}
+          onValueChange={(v) => setTimeRange(v as TimeRange)}
+          className="w-full sm:w-auto"
+        >
           <TabsList className="grid w-full grid-cols-4 sm:w-auto">
-            <TabsTrigger value="day" className="text-xs px-3">Day</TabsTrigger>
-            <TabsTrigger value="week" className="text-xs px-3">Week</TabsTrigger>
-            <TabsTrigger value="month" className="text-xs px-3">Month</TabsTrigger>
-            <TabsTrigger value="year" className="text-xs px-3">Year</TabsTrigger>
+            <TabsTrigger value="day" className="text-xs px-3">
+              Day
+            </TabsTrigger>
+            <TabsTrigger value="week" className="text-xs px-3">
+              Week
+            </TabsTrigger>
+            <TabsTrigger value="month" className="text-xs px-3">
+              Month
+            </TabsTrigger>
+            <TabsTrigger value="year" className="text-xs px-3">
+              Year
+            </TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
@@ -548,9 +594,11 @@ export function FootprintView() {
             <div className="space-y-2">
               <p className="text-sm font-semibold text-foreground">Your Green Score is live</p>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                It&apos;s currently <strong className="text-foreground">{insights.greenPercentage.toFixed(0)}%</strong>
-                {' '}({getGreenScoreRating(insights.greenPercentage)}). This measures <em>when</em> you used power —
-                not just how much. Open History to see yellow usage bars against dirty intensity spikes.
+                It&apos;s currently{' '}
+                <strong className="text-foreground">{insights.greenPercentage.toFixed(0)}%</strong>{' '}
+                ({getGreenScoreRating(insights.greenPercentage)}). This measures <em>when</em> you
+                used power — not just how much. Open History to see yellow usage bars against dirty
+                intensity spikes.
               </p>
               <GreenScoreExplainerContent />
             </div>
@@ -562,7 +610,10 @@ export function FootprintView() {
         <Card className="p-6">
           <div className="text-center mb-4">
             <Leaf className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-            <h3 className="font-medium text-foreground mb-2">No Footprint Data{timeRange === 'day' && selectedDate ? ` for ${format(selectedDate, 'PPP')}` : ''}</h3>
+            <h3 className="font-medium text-foreground mb-2">
+              No Footprint Data
+              {timeRange === 'day' && selectedDate ? ` for ${format(selectedDate, 'PPP')}` : ''}
+            </h3>
             <p className="text-sm text-muted-foreground mb-4 max-w-xs mx-auto">
               {timeRange === 'day' && selectedDate
                 ? `No data available for ${format(selectedDate, 'PPP')}. Smart meter data typically has a 24-48 hour delay.`
@@ -584,13 +635,19 @@ export function FootprintView() {
                 Linked Meters
               </h4>
               {status.meters.map((meter) => (
-                <div key={meter.mpan} className="flex items-center justify-between text-sm bg-muted/30 rounded-lg px-3 py-2">
+                <div
+                  key={meter.mpan}
+                  className="flex items-center justify-between text-sm bg-muted/30 rounded-lg px-3 py-2"
+                >
                   <div>
                     <span className="text-foreground font-medium">
                       MPAN: ...{meter.mpan.slice(-6)}
                     </span>
                     {meter.meter_type === 'export' && (
-                      <Badge variant="outline" className="ml-1.5 text-[9px] h-4 px-1 bg-primary/10 text-primary border-primary/20">
+                      <Badge
+                        variant="outline"
+                        className="ml-1.5 text-[9px] h-4 px-1 bg-primary/10 text-primary border-primary/20"
+                      >
                         Export
                       </Badge>
                     )}
@@ -611,9 +668,15 @@ export function FootprintView() {
                 className="w-full mt-2"
               >
                 {isSyncing ? (
-                  <><TurbineSpinner size="sm" className="mr-2" />Syncing &amp; Calculating...</>
+                  <>
+                    <TurbineSpinner size="sm" className="mr-2" />
+                    Syncing &amp; Calculating...
+                  </>
                 ) : (
-                  <><RefreshCw className="w-4 h-4 mr-2" />Sync Now</>
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Sync Now
+                  </>
                 )}
               </Button>
             </div>
@@ -625,22 +688,25 @@ export function FootprintView() {
           {dailyData.length > 0 && (
             <div className="mb-4 text-center">
               <p className="text-xs text-muted-foreground">
-                {timeRange === 'day' && dailyData[0]?.fullDate && (
-                  format(dailyData[0].fullDate, 'EEEE, MMMM d, yyyy')
-                )}
+                {timeRange === 'day' &&
+                  dailyData[0]?.fullDate &&
+                  format(dailyData[0].fullDate, 'EEEE, MMMM d, yyyy')}
                 {timeRange === 'week' && dailyData.length > 0 && (
                   <>
-                    {format(dailyData[0].fullDate, 'MMM d')} - {format(dailyData[dailyData.length - 1].fullDate, 'MMM d, yyyy')}
+                    {format(dailyData[0].fullDate, 'MMM d')} -{' '}
+                    {format(dailyData[dailyData.length - 1].fullDate, 'MMM d, yyyy')}
                   </>
                 )}
                 {timeRange === 'month' && dailyData.length > 0 && (
                   <>
-                    {format(dailyData[0].fullDate, 'MMM d')} - {format(dailyData[dailyData.length - 1].fullDate, 'MMM d, yyyy')}
+                    {format(dailyData[0].fullDate, 'MMM d')} -{' '}
+                    {format(dailyData[dailyData.length - 1].fullDate, 'MMM d, yyyy')}
                   </>
                 )}
                 {timeRange === 'year' && dailyData.length > 0 && (
                   <>
-                    {format(dailyData[0].fullDate, 'MMM yyyy')} - {format(dailyData[dailyData.length - 1].fullDate, 'MMM yyyy')}
+                    {format(dailyData[0].fullDate, 'MMM yyyy')} -{' '}
+                    {format(dailyData[dailyData.length - 1].fullDate, 'MMM yyyy')}
                   </>
                 )}
               </p>
@@ -655,9 +721,12 @@ export function FootprintView() {
                 <span className="text-xs text-muted-foreground">Grid Import</span>
               </div>
               <p className="text-2xl font-bold text-foreground">
-                {insights?.totalCarbon.toFixed(1)} <span className="text-sm font-normal">kg CO₂</span>
+                {insights?.totalCarbon.toFixed(1)}{' '}
+                <span className="text-sm font-normal">kg CO₂</span>
               </p>
-              <p className="text-xs text-muted-foreground mt-1">{insights?.totalKwh.toFixed(1)} kWh</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {insights?.totalKwh.toFixed(1)} kWh
+              </p>
             </Card>
 
             {insights?.hasExport && (
@@ -669,26 +738,36 @@ export function FootprintView() {
                   </div>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0 hover:bg-primary/10">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-5 w-5 rounded-full p-0 hover:bg-primary/10"
+                      >
                         <Info className="w-3.5 h-3.5 text-muted-foreground" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-[280px] p-3 text-xs" align="end">
                       <p>
-                        Your solar export meter shows clean energy you sent back to the grid ({insights.exportKwh.toFixed(1)} kWh),
-                        which actively displaces fossil fuels and reduces your net footprint.
+                        Your solar export meter shows clean energy you sent back to the grid (
+                        {insights.exportKwh.toFixed(1)} kWh), which actively displaces fossil fuels
+                        and reduces your net footprint.
                       </p>
                     </PopoverContent>
                   </Popover>
                 </div>
                 <p className="text-2xl font-bold font-mono tabular-nums text-primary">
-                  -{insights.exportCarbonKg.toFixed(1)} <span className="text-sm font-normal font-sans">kg CO₂</span>
+                  -{insights.exportCarbonKg.toFixed(1)}{' '}
+                  <span className="text-sm font-normal font-sans">kg CO₂</span>
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">{insights.exportKwh.toFixed(1)} kWh exported</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {insights.exportKwh.toFixed(1)} kWh exported
+                </p>
               </Card>
             )}
 
-            <Card className={`p-4 ${insights?.hasExport ? 'border-primary/20 bg-primary/5' : ''} relative`}>
+            <Card
+              className={`p-4 ${insights?.hasExport ? 'border-primary/20 bg-primary/5' : ''} relative`}
+            >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <Leaf className="w-5 h-5 text-primary" />
@@ -699,21 +778,29 @@ export function FootprintView() {
                 {insights?.hasExport && (
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0 hover:bg-primary/10">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-5 w-5 rounded-full p-0 hover:bg-primary/10"
+                      >
                         <Info className="w-3.5 h-3.5 text-muted-foreground" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-[280px] p-3 text-xs" align="end">
                       <p>
-                        Your <strong>net footprint</strong> is your total grid emissions minus the carbon you offset by exporting solar energy.
-                        We subtract your export offset from your import emissions.
+                        Your <strong>net footprint</strong> is your total grid emissions minus the
+                        carbon you offset by exporting solar energy. We subtract your export offset
+                        from your import emissions.
                       </p>
                     </PopoverContent>
                   </Popover>
                 )}
               </div>
-              <p className={`text-2xl font-bold font-mono tabular-nums ${insights?.hasExport ? 'text-primary' : 'text-foreground'}`}>
-                {(insights?.hasExport ? insights.netCarbonKg : insights?.totalCarbon)?.toFixed(1)} <span className="text-sm font-normal font-sans">kg CO₂</span>
+              <p
+                className={`text-2xl font-bold font-mono tabular-nums ${insights?.hasExport ? 'text-primary' : 'text-foreground'}`}
+              >
+                {(insights?.hasExport ? insights.netCarbonKg : insights?.totalCarbon)?.toFixed(1)}{' '}
+                <span className="text-sm font-normal font-sans">kg CO₂</span>
               </p>
               {insights?.hasExport && (
                 <p className="text-xs text-muted-foreground mt-1">After solar offset</p>
@@ -734,11 +821,18 @@ export function FootprintView() {
                       <h3 className="font-medium text-foreground">Green Energy Score</h3>
                       <Popover>
                         <PopoverTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full p-0 hover:bg-transparent">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-5 w-5 rounded-full p-0 hover:bg-transparent"
+                          >
                             <Info className="w-4 h-4 text-muted-foreground cursor-help" />
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-[300px] p-4 bg-card border-border" align="start">
+                        <PopoverContent
+                          className="w-[300px] p-4 bg-card border-border"
+                          align="start"
+                        >
                           <GreenScoreExplainerContent />
                         </PopoverContent>
                       </Popover>
@@ -756,9 +850,11 @@ export function FootprintView() {
                   </p>
                   <Badge
                     variant="outline"
-                    className={`${insights.greenPercentage >= 50
-                      ? 'bg-primary/10 text-primary border-primary/20'
-                      : 'bg-muted text-muted-foreground border-border'} text-center justify-center h-auto py-1`}
+                    className={`${
+                      insights.greenPercentage >= 50
+                        ? 'bg-primary/10 text-primary border-primary/20'
+                        : 'bg-muted text-muted-foreground border-border'
+                    } text-center justify-center h-auto py-1`}
                   >
                     {getGreenScoreRating(insights.greenPercentage)}
                   </Badge>
@@ -767,18 +863,23 @@ export function FootprintView() {
             </Card>
           )}
 
-
-
           {/* Household Comparison Card */}
           {insights && (
             <Card className="p-4 mb-4">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${insights.comparison.isEfficient
-                    ? 'bg-primary/10 text-primary'
-                    : 'bg-muted text-muted-foreground'
-                    }`}>
-                    {insights.comparison.isEfficient ? <TrendingDown className="w-5 h-5" /> : <TrendingUp className="w-5 h-5" />}
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      insights.comparison.isEfficient
+                        ? 'bg-primary/10 text-primary'
+                        : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    {insights.comparison.isEfficient ? (
+                      <TrendingDown className="w-5 h-5" />
+                    ) : (
+                      <TrendingUp className="w-5 h-5" />
+                    )}
                   </div>
                   <div>
                     <h3 className="font-semibold text-foreground">Vs. Average</h3>
@@ -786,8 +887,11 @@ export function FootprintView() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className={`text-xl font-bold font-mono tabular-nums ${insights.comparison.isEfficient ? 'text-primary' : 'text-foreground'}`}>
-                    {insights.comparison.isEfficient ? '-' : '+'}{insights.comparison.percent.toFixed(0)}%
+                  <p
+                    className={`text-xl font-bold font-mono tabular-nums ${insights.comparison.isEfficient ? 'text-primary' : 'text-foreground'}`}
+                  >
+                    {insights.comparison.isEfficient ? '-' : '+'}
+                    {insights.comparison.percent.toFixed(0)}%
                   </p>
                   <p className="text-[10px] text-muted-foreground">
                     {insights.comparison.diff > 0 ? 'More' : 'Less'} energy used
@@ -796,7 +900,9 @@ export function FootprintView() {
               </div>
 
               <div className="mt-3 text-xs text-muted-foreground bg-muted/50 p-2 rounded">
-                You used <strong>{insights.totalKwh.toFixed(1)} kWh</strong> vs benchmark <strong>{insights.comparison.benchmark.toFixed(1)} kWh</strong> based on the national average for your home type.
+                You used <strong>{insights.totalKwh.toFixed(1)} kWh</strong> vs benchmark{' '}
+                <strong>{insights.comparison.benchmark.toFixed(1)} kWh</strong> based on the
+                national average for your home type.
               </div>
             </Card>
           )}
@@ -817,7 +923,10 @@ export function FootprintView() {
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-bold font-mono tabular-nums text-primary">
-                      -{insights.carbonSaved.toFixed(1)}<span className="text-sm font-normal font-sans text-muted-foreground ml-1">kg CO₂</span>
+                      -{insights.carbonSaved.toFixed(1)}
+                      <span className="text-sm font-normal font-sans text-muted-foreground ml-1">
+                        kg CO₂
+                      </span>
                     </p>
                   </div>
                 </div>
@@ -829,14 +938,23 @@ export function FootprintView() {
                       <div className="p-3 bg-muted/30 rounded-lg flex flex-col items-center text-center gap-2 border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors">
                         <Car className="w-5 h-5 text-primary" />
                         <div>
-                          <p className="text-lg font-bold font-mono tabular-nums text-foreground">{insights.impact.milesDriven}</p>
-                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Miles Driven</p>
+                          <p className="text-lg font-bold font-mono tabular-nums text-foreground">
+                            {insights.impact.milesDriven}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                            Miles Driven
+                          </p>
                         </div>
                       </div>
                     </PopoverTrigger>
                     <PopoverContent className="w-60 p-3 text-xs">
-                      <p>Equivalent to driving an average petrol car for <strong>{insights.impact.milesDriven} miles</strong>.</p>
-                      <p className="text-[10px] text-muted-foreground mt-1 text-right">Source: EPA (~0.4kg CO₂/mile)</p>
+                      <p>
+                        Equivalent to driving an average petrol car for{' '}
+                        <strong>{insights.impact.milesDriven} miles</strong>.
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-1 text-right">
+                        Source: EPA (~0.4kg CO₂/mile)
+                      </p>
                     </PopoverContent>
                   </Popover>
 
@@ -846,14 +964,24 @@ export function FootprintView() {
                       <div className="p-3 bg-muted/30 rounded-lg flex flex-col items-center text-center gap-2 border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors">
                         <Trees className="w-5 h-5 text-primary" />
                         <div>
-                          <p className="text-lg font-bold font-mono tabular-nums text-foreground">{insights.impact.treesPlanted}</p>
-                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Tree Days</p>
+                          <p className="text-lg font-bold font-mono tabular-nums text-foreground">
+                            {insights.impact.treesPlanted}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                            Tree Days
+                          </p>
                         </div>
                       </div>
                     </PopoverTrigger>
                     <PopoverContent className="w-60 p-3 text-xs">
-                      <p>Equivalent to the carbon absorbed by <strong>{insights.impact.treesPlanted} mature trees</strong> in a single day.</p>
-                      <p className="text-[10px] text-muted-foreground mt-1 text-right">Source: Carbon Trust (~25kg/year/tree)</p>
+                      <p>
+                        Equivalent to the carbon absorbed by{' '}
+                        <strong>{insights.impact.treesPlanted} mature trees</strong> in a single
+                        day.
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-1 text-right">
+                        Source: Carbon Trust (~25kg/year/tree)
+                      </p>
                     </PopoverContent>
                   </Popover>
 
@@ -863,13 +991,20 @@ export function FootprintView() {
                       <div className="p-3 bg-muted/30 rounded-lg flex flex-col items-center text-center gap-2 border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors">
                         <Smartphone className="w-5 h-5 text-primary" />
                         <div>
-                          <p className="text-lg font-bold font-mono tabular-nums text-foreground">{insights.impact.smartphonesCharged}</p>
-                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Phone Charges</p>
+                          <p className="text-lg font-bold font-mono tabular-nums text-foreground">
+                            {insights.impact.smartphonesCharged}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                            Phone Charges
+                          </p>
                         </div>
                       </div>
                     </PopoverTrigger>
                     <PopoverContent className="w-60 p-3 text-xs">
-                      <p>Equivalent to fully charging a standard smartphone <strong>{insights.impact.smartphonesCharged} times</strong>.</p>
+                      <p>
+                        Equivalent to fully charging a standard smartphone{' '}
+                        <strong>{insights.impact.smartphonesCharged} times</strong>.
+                      </p>
                     </PopoverContent>
                   </Popover>
 
@@ -879,13 +1014,20 @@ export function FootprintView() {
                       <div className="p-3 bg-muted/30 rounded-lg flex flex-col items-center text-center gap-2 border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors">
                         <Coffee className="w-5 h-5 text-primary" />
                         <div>
-                          <p className="text-lg font-bold font-mono tabular-nums text-foreground">{insights.impact.kettlesBoiled}</p>
-                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Kettles Boiled</p>
+                          <p className="text-lg font-bold font-mono tabular-nums text-foreground">
+                            {insights.impact.kettlesBoiled}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                            Kettles Boiled
+                          </p>
                         </div>
                       </div>
                     </PopoverTrigger>
                     <PopoverContent className="w-60 p-3 text-xs">
-                      <p>Equivalent to boiling a full kettle of water <strong>{insights.impact.kettlesBoiled} times</strong>.</p>
+                      <p>
+                        Equivalent to boiling a full kettle of water{' '}
+                        <strong>{insights.impact.kettlesBoiled} times</strong>.
+                      </p>
                     </PopoverContent>
                   </Popover>
                 </div>
@@ -910,10 +1052,15 @@ export function FootprintView() {
                   <Leaf className="w-5 h-5 text-primary mt-0.5" />
                   <div>
                     <p className="text-sm text-foreground">
-                      <strong>{insights.greenPercentage.toFixed(0)}%</strong> of your energy came from low-carbon sources!
-                      {insights.greenPercentage >= 70 && " You're in the top tier of eco-conscious users."}
-                      {insights.greenPercentage >= 50 && insights.greenPercentage < 70 && " Keep it up! You're doing better than average."}
-                      {insights.greenPercentage < 50 && " Try running appliances during windy or sunny periods."}
+                      <strong>{insights.greenPercentage.toFixed(0)}%</strong> of your energy came
+                      from low-carbon sources!
+                      {insights.greenPercentage >= 70 &&
+                        " You're in the top tier of eco-conscious users."}
+                      {insights.greenPercentage >= 50 &&
+                        insights.greenPercentage < 70 &&
+                        " Keep it up! You're doing better than average."}
+                      {insights.greenPercentage < 50 &&
+                        ' Try running appliances during windy or sunny periods.'}
                     </p>
                   </div>
                 </div>
@@ -924,8 +1071,8 @@ export function FootprintView() {
                     <Star className="w-5 h-5 text-primary mt-0.5" />
                     <div>
                       <p className="text-sm text-foreground">
-                        <strong>{insights.bestPeriod.date}</strong> was your greenest period with only{' '}
-                        <strong>{insights.bestPeriod.carbon.toFixed(1)}kg CO₂</strong>.
+                        <strong>{insights.bestPeriod.date}</strong> was your greenest period with
+                        only <strong>{insights.bestPeriod.carbon.toFixed(1)}kg CO₂</strong>.
                         {insights.bestPeriod.carbon < 1 && " That's incredibly low."}
                       </p>
                     </div>
@@ -934,14 +1081,20 @@ export function FootprintView() {
 
                 {/* Peak usage time insight */}
                 <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                  {insights.peakPeriod === 'morning' ? <Sun className="w-5 h-5 text-primary mt-0.5" /> :
-                    insights.peakPeriod === 'night' ? <Moon className="w-5 h-5 text-primary mt-0.5" /> :
-                      <Clock className="w-5 h-5 text-primary mt-0.5" />}
+                  {insights.peakPeriod === 'morning' ? (
+                    <Sun className="w-5 h-5 text-primary mt-0.5" />
+                  ) : insights.peakPeriod === 'night' ? (
+                    <Moon className="w-5 h-5 text-primary mt-0.5" />
+                  ) : (
+                    <Clock className="w-5 h-5 text-primary mt-0.5" />
+                  )}
                   <div>
                     <p className="text-sm text-foreground">
                       You use most energy in the <strong>{insights.peakPeriod}</strong>.
-                      {insights.peakPeriod === 'night' && " Night-time often has lower intensity – great choice!"}
-                      {insights.peakPeriod === 'afternoon' && " Afternoon can be high-intensity. Consider shifting some usage to morning or night."}
+                      {insights.peakPeriod === 'night' &&
+                        ' Night-time often has lower intensity – great choice!'}
+                      {insights.peakPeriod === 'afternoon' &&
+                        ' Afternoon can be high-intensity. Consider shifting some usage to morning or night.'}
                     </p>
                   </div>
                 </div>
@@ -959,23 +1112,32 @@ export function FootprintView() {
               {achievementsList.map((achievement) => (
                 <div
                   key={achievement.id}
-                  className={`p-3 rounded-lg border transition-all ${achievement.unlocked
-                    ? 'bg-primary/10 border-primary/30'
-                    : 'bg-muted/30 border-border opacity-50'
-                    }`}
+                  className={`p-3 rounded-lg border transition-all ${
+                    achievement.unlocked
+                      ? 'bg-primary/10 border-primary/30'
+                      : 'bg-muted/30 border-border opacity-50'
+                  }`}
                 >
                   <div className="flex items-center gap-2 mb-1">
-                    <div className={achievement.unlocked ? 'text-primary' : 'text-muted-foreground'}>
+                    <div
+                      className={achievement.unlocked ? 'text-primary' : 'text-muted-foreground'}
+                    >
                       {achievement.icon}
                     </div>
-                    <span className={`text-sm font-medium ${achievement.unlocked ? 'text-foreground' : 'text-muted-foreground'
-                      }`}>
+                    <span
+                      className={`text-sm font-medium ${
+                        achievement.unlocked ? 'text-foreground' : 'text-muted-foreground'
+                      }`}
+                    >
                       {achievement.title}
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground">{achievement.description}</p>
                   {achievement.unlocked && (
-                    <Badge variant="outline" className="mt-2 text-xs bg-primary/10 text-primary border-primary/20">
+                    <Badge
+                      variant="outline"
+                      className="mt-2 text-xs bg-primary/10 text-primary border-primary/20"
+                    >
                       Unlocked!
                     </Badge>
                   )}
@@ -1065,89 +1227,88 @@ export function FootprintView() {
           )}
 
           {/* Intensity Breakdown */}
-          {
-            intensityBreakdown.length > 0 && (
-              <Card className="p-4">
-                <h3 className="font-medium text-foreground mb-4">Usage by Grid Intensity</h3>
-                <div className="h-40">
-                  <ComponentErrorBoundary name="Intensity Breakdown">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={intensityBreakdown} layout="vertical">
-                        <XAxis
-                          type="number"
-                          fontSize={10}
-                          tickLine={false}
-                          axisLine={false}
-                          stroke="hsl(var(--muted-foreground))"
-                          tickFormatter={(value) => `${value}kWh`}
-                        />
-                        <YAxis
-                          type="category"
-                          dataKey="name"
-                          fontSize={10}
-                          tickLine={false}
-                          axisLine={false}
-                          stroke="hsl(var(--muted-foreground))"
-                          width={70}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: 'hsl(var(--card))',
-                            border: '1px solid hsl(var(--border))',
-                            borderRadius: '8px',
-                            fontSize: '12px',
-                            zIndex: 50,
-                          }}
-                          formatter={(value: number, name: string) => [
-                            `${value} kWh`,
-                            'Energy Used'
-                          ]}
-                        />
-                        <Bar dataKey="kwh" radius={[0, 4, 4, 0]}>
-                          {intensityBreakdown.map((entry, index) => (
-                            <Cell
-                              key={`cell-${index}`}
-                              fill={INTENSITY_COLORS[entry.index] || 'hsl(var(--muted))'}
-                            />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </ComponentErrorBoundary>
-                </div>
-              </Card>
-            )
-          }
+          {intensityBreakdown.length > 0 && (
+            <Card className="p-4">
+              <h3 className="font-medium text-foreground mb-4">Usage by Grid Intensity</h3>
+              <div className="h-40">
+                <ComponentErrorBoundary name="Intensity Breakdown">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={intensityBreakdown} layout="vertical">
+                      <XAxis
+                        type="number"
+                        fontSize={10}
+                        tickLine={false}
+                        axisLine={false}
+                        stroke="hsl(var(--muted-foreground))"
+                        tickFormatter={(value) => `${value}kWh`}
+                      />
+                      <YAxis
+                        type="category"
+                        dataKey="name"
+                        fontSize={10}
+                        tickLine={false}
+                        axisLine={false}
+                        stroke="hsl(var(--muted-foreground))"
+                        width={70}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                          fontSize: '12px',
+                          zIndex: 50,
+                        }}
+                        formatter={(value: number, name: string) => [`${value} kWh`, 'Energy Used']}
+                      />
+                      <Bar dataKey="kwh" radius={[0, 4, 4, 0]}>
+                        {intensityBreakdown.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={INTENSITY_COLORS[entry.index] || 'hsl(var(--muted))'}
+                          />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ComponentErrorBoundary>
+              </div>
+            </Card>
+          )}
 
           {/* Potential Savings */}
-          {
-            insights && insights.potentialSavings > 0.1 && (
-              <Card className="p-4 border-primary/20 bg-primary/5">
-                <div className="flex items-start gap-3">
-                  <Target className="w-5 h-5 text-primary mt-0.5" />
-                  <div>
-                    <h3 className="font-medium text-foreground">Potential Savings</h3>
-                    <div className="text-sm text-muted-foreground mt-1 space-y-2">
-                      <p>
-                        If all your usage was during low-intensity periods, you could save{' '}
-                        <strong className="text-foreground">{insights.potentialSavings.toFixed(1)} kg CO₂</strong> during this period!
+          {insights && insights.potentialSavings > 0.1 && (
+            <Card className="p-4 border-primary/20 bg-primary/5">
+              <div className="flex items-start gap-3">
+                <Target className="w-5 h-5 text-primary mt-0.5" />
+                <div>
+                  <h3 className="font-medium text-foreground">Potential Savings</h3>
+                  <div className="text-sm text-muted-foreground mt-1 space-y-2">
+                    <p>
+                      If all your usage was during low-intensity periods, you could save{' '}
+                      <strong className="text-foreground">
+                        {insights.potentialSavings.toFixed(1)} kg CO₂
+                      </strong>{' '}
+                      during this period!
+                    </p>
+                    <div className="flex items-center gap-2 p-2 bg-muted/40 rounded-md border border-primary/10">
+                      <Car className="w-4 h-4 text-primary" />
+                      <p className="text-xs">
+                        That's equivalent to driving{' '}
+                        <strong className="text-foreground">
+                          {getImpactEquivalents(insights.potentialSavings).milesDriven} miles
+                        </strong>{' '}
+                        in an average car.
                       </p>
-                      <div className="flex items-center gap-2 p-2 bg-muted/40 rounded-md border border-primary/10">
-                        <Car className="w-4 h-4 text-primary" />
-                        <p className="text-xs">
-                          That's equivalent to driving <strong className="text-foreground">{getImpactEquivalents(insights.potentialSavings).milesDriven} miles</strong> in an average car.
-                        </p>
-                      </div>
                     </div>
                   </div>
                 </div>
-              </Card>
-            )
-          }
+              </div>
+            </Card>
+          )}
         </>
-      )
-      }
+      )}
       <EstimateDisclaimer className="text-center pt-2" />
-    </div >
+    </div>
   );
 }
