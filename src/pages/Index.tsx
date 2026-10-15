@@ -27,6 +27,7 @@ import { useIndexPageEffects } from '@/hooks/useIndexPageEffects';
 import { useThrottledRefetch } from '@/hooks/useThrottledRefetch';
 import { useRelativeTime } from '@/hooks/useRelativeTime';
 import { DashboardSkeleton } from '@/components/home/DashboardSkeleton';
+import { SlowLoadingNotice } from '@/components/SlowLoadingNotice';
 import { DashboardViewTabs, type DashboardViewMode } from '@/components/home/DashboardViewTabs';
 import { IntensityDashboard } from '@/components/home/IntensityDashboard';
 import { IntensityHeroOverlay } from '@/components/home/IntensityHeroOverlay';
@@ -286,7 +287,10 @@ const Index = () => {
                 {/* Prefer skeleton over error while loading/restoring so a brief
                     no-reading frame never mounts ErrorState and shifts the feed. */}
                 {isLoading && forecast.length === 0 ? (
-                  <DashboardSkeleton />
+                  <div className="space-y-3">
+                    <SlowLoadingNotice active onRetry={() => void refetch()} />
+                    <DashboardSkeleton />
+                  </div>
                 ) : isError ? (
                   <div className="py-8 bg-card rounded-2xl border border-border shadow-lg">
                     <ErrorState

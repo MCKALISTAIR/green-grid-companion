@@ -131,17 +131,64 @@ export const UK_REGIONS = UK_REGIONS_CONFIG.flatMap((region) =>
   })),
 );
 
-// Helper for fetch with optional AbortSignal
-const fetchWithNoCache = async (url: string, signal?: AbortSignal) => {
-  const response = await fetch(url, { signal });
-  return response;
-};
+/** Give up on a NESO request after this long; the UI offers a retry. */
+export const FETCH_TIMEOUT_MS = 10_000;
+
+export class RequestTimeoutError extends Error {
+  constructor() {
+    super('Request timed out');
+    this.name = 'RequestTimeoutError';
+  }
+}
+
+/**
+ * fetch with the caller's AbortSignal plus a hard timeout. A hung request used
+ * to leave the UI loading for 90s+ (retry: 2, no timeout).
+ */
+export async function fetchWithTimeout(
+  url: string,
+  signal?: AbortSignal,
+  timeoutMs: number = FETCH_TIMEOUT_MS,
+): Promise<Response> {
+  const controller = new AbortController();
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, timeoutMs);
+  const onAbort = () => controller.abort();
+  if (signal) {
+    if (signal.aborted) controller.abort();
+    else signal.addEventListener('abort', onAbort, { once: true });
+  }
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } catch (e) {
+    if (timedOut) throw new RequestTimeoutError();
+    throw e;
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener('abort', onAbort);
+  }
+}
+
+const fetchWithNoCache = (url: string, signal?: AbortSignal) => fetchWithTimeout(url, signal);
+
+/** Throw a readable error for non-2xx (incl. "429 Too many requests"). */
+function assertOk(response: Response, what: string): void {
+  if (response.ok) return;
+  if (response.status === 429) throw new Error(`Too many requests (${what}: 429)`);
+  throw new Error(`Failed to fetch ${what}: ${response.status}`);
+}
 
 // Get current national intensity
 export async function getCurrentIntensity(signal?: AbortSignal): Promise<IntensityData> {
   const response = await fetchWithNoCache(`${BASE_URL}/intensity`, signal);
+  assertOk(response, 'national intensity');
   const data = await response.json();
-  return data.data[0];
+  const first = data?.data?.[0];
+  if (!first?.intensity) throw new Error('Bad data from national intensity');
+  return first;
 }
 
 // Get intensity for a specific postcode
@@ -151,9 +198,7 @@ export async function getRegionalIntensity(
 ): Promise<RegionalData> {
   const cleanPostcode = toOutwardCode(postcode).toUpperCase();
   const response = await fetchWithNoCache(`${BASE_URL}/regional/postcode/${cleanPostcode}`, signal);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch regional data: ${response.status}`);
-  }
+  assertOk(response, 'regional data');
   const data = await response.json();
   // The API returns data in format: { data: [{ regionid, shortname, data: [...] }] }
   return data.data[0];
@@ -170,9 +215,7 @@ export async function getRegionalForecast(
     `${BASE_URL}/regional/intensity/${now}/fw48h/postcode/${cleanPostcode}`,
     signal,
   );
-  if (!response.ok) {
-    throw new Error(`Failed to fetch forecast: ${response.status}`);
-  }
+  assertOk(response, 'forecast');
   const json = await response.json();
   // The API response structure is: { data: { regionid, shortname, data: [...] } }
   return json.data?.data || [];
@@ -189,9 +232,7 @@ export async function getRegionalForecastById(
     `${BASE_URL}/regional/intensity/${now}/fw48h/regionid/${regionId}`,
     signal,
   );
-  if (!response.ok) {
-    throw new Error(`Failed to fetch forecast: ${response.status}`);
-  }
+  assertOk(response, 'forecast');
   const json = await response.json();
   // Response: { data: { regionid, ... data: [] } }
   return json.data?.data || [];
@@ -209,9 +250,7 @@ export async function getRegionalHistoryAndForecast(
     `${BASE_URL}/regional/intensity/${from}/${to}/regionid/${regionId}`,
     signal,
   );
-  if (!response.ok) {
-    throw new Error(`Failed to fetch history/forecast: ${response.status}`);
-  }
+  assertOk(response, 'history/forecast');
   const json = await response.json();
   const data: ForecastData[] = json.data?.data || [];
 
@@ -249,9 +288,7 @@ export async function getNationalHistoryAndForecast(
 ): Promise<ForecastData[]> {
   // Endpoint: /intensity/{from}/{to}
   const response = await fetchWithNoCache(`${BASE_URL}/intensity/${from}/${to}`, signal);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch national history: ${response.status}`);
-  }
+  assertOk(response, 'national history');
   const json = await response.json();
   const data: ForecastData[] = json.data || [];
   return data;
@@ -263,9 +300,7 @@ export async function getRegionalIntensityById(
   signal?: AbortSignal,
 ): Promise<RegionalData> {
   const response = await fetchWithNoCache(`${BASE_URL}/regional/regionid/${regionId}`, signal);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch regional data: ${response.status}`);
-  }
+  assertOk(response, 'regional data');
   const data = await response.json();
   return data.data[0];
 }
@@ -273,8 +308,11 @@ export async function getRegionalIntensityById(
 // Get national generation mix
 export async function getGenerationMix(signal?: AbortSignal): Promise<GenerationMix[]> {
   const response = await fetchWithNoCache(`${BASE_URL}/generation`, signal);
+  assertOk(response, 'generation mix');
   const data = await response.json();
-  return data.data.generationmix;
+  const mix = data?.data?.generationmix;
+  if (!Array.isArray(mix)) throw new Error('Bad data from generation mix');
+  return mix;
 }
 
 // Interface for items in the /regional endpoint
@@ -292,8 +330,9 @@ export interface RegionListItem {
 // Get all regions
 export async function getAllRegions(signal?: AbortSignal): Promise<RegionListItem[]> {
   const response = await fetchWithNoCache(`${BASE_URL}/regional`, signal);
+  assertOk(response, 'regions');
   const data = await response.json();
-  return data.data[0]?.regions || [];
+  return data?.data?.[0]?.regions || [];
 }
 
 // Helper to get intensity color class
