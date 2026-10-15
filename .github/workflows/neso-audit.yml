@@ -46,7 +46,10 @@ jobs:
           exit $code
       - uses: actions/upload-artifact@v4
         if: always()
+        # A full Actions storage quota must not turn CI red.
+        continue-on-error: true
         with:
           name: neso-audit
           path: neso-audit.json
           if-no-files-found: ignore
+          retention-days: 3
