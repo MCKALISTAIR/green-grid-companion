@@ -10,7 +10,6 @@ import {
   getCurrentIntensity,
   getAllRegions,
   pickLiveIntensity,
-  regionNameForPostcode,
   RegionalData,
   RegionListItem,
   ForecastData,
@@ -19,6 +18,7 @@ import {
   REGION_IDS,
 } from '@/lib/carbonApi';
 import { logger } from '@/lib/logger';
+import { regionNameForPostcode } from '@/lib/regionMatch';
 
 // Calculate ms until next half-hour boundary (:00 or :30)
 // NESO updates at these times, so we align our refreshes

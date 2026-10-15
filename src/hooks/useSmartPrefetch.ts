@@ -1,12 +1,9 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSavedLocations } from '@/hooks/useSavedLocations';
-import {
-  regionNameForPostcode,
-  getRegionalIntensityById,
-  getRegionalHistoryAndForecast,
-} from '@/lib/carbonApi';
+import { getRegionalIntensityById, getRegionalHistoryAndForecast } from '@/lib/carbonApi';
 import { logger } from '@/lib/logger';
+import { regionNameForPostcode } from '@/lib/regionMatch';
 
 export function useSmartPrefetch() {
   const queryClient = useQueryClient();

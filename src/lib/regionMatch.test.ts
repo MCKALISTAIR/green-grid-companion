@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { regionNameForPostcode, UK_REGIONS } from '@/lib/carbonApi';
+import { UK_REGIONS } from '@/lib/carbonApi';
+import { regionNameForPostcode } from '@/lib/regionMatch';
 
 // Every GB postcode area (Royal Mail list, excluding BT/Crown dependencies).
 const GB_AREAS =
