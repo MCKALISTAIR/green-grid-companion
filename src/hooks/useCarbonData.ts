@@ -353,6 +353,10 @@ export function useCarbonData(postcode: string) {
         ? (regionalListQuery.isError || regionalDataQuery.isError) && nationalQuery.isError
         : nationalQuery.isError) || noReadingSettled,
 
+    // NESO couldn't place this postcode at all (e.g. a made-up one): the numbers
+    // shown are the GB average and the UI must say so, never switch silently.
+    postcodeNotFound: !!postcode && !isLocalRegionResolvable && postcodeQuery.isError,
+
     // Flag to explicitly identify graceful degradation so UI can warn the user
     isDegraded:
       !!postcode &&
