@@ -126,7 +126,9 @@
     --bottom-nav-height: 3.85rem;
     --bottom-nav-gap: 12px;
     --bottom-safe-area: env(safe-area-inset-bottom, 0px);
-    --bottom-content-inset: calc(var(--bottom-nav-height) + 2px + var(--bottom-nav-gap) + var(--bottom-safe-area) + 1rem);
+    --bottom-content-inset: calc(
+      var(--bottom-nav-height) + 2px + var(--bottom-nav-gap) + var(--bottom-safe-area) + 1rem
+    );
   }
 
   .dark {
@@ -847,15 +849,33 @@ blockquote {
 }
 
 .scene-hud-scrim {
-  background: linear-gradient(to bottom, hsl(var(--scene-hud-ink) / 0.5), hsl(var(--scene-hud-ink) / 0.25), transparent);
+  background: linear-gradient(
+    to bottom,
+    hsl(var(--scene-hud-ink) / 0.5),
+    hsl(var(--scene-hud-ink) / 0.25),
+    transparent
+  );
 }
 .scene-hud-radial {
-  background: radial-gradient(ellipse at center, hsl(var(--scene-hud-ink) / 0.35) 0%, transparent 70%);
+  background: radial-gradient(
+    ellipse at center,
+    hsl(var(--scene-hud-ink) / 0.35) 0%,
+    transparent 70%
+  );
 }
-.scene-hud-info { color: hsl(var(--scene-hud-text) / 0.8); }
-.scene-hud-info:hover { color: hsl(var(--scene-hud-text)); background: hsl(var(--scene-hud-text) / 0.1); }
-.map-light-ink { color: hsl(var(--map-light-ink)); }
-.map-dark-ink { color: hsl(var(--scene-hud-text)); }
+.scene-hud-info {
+  color: hsl(var(--scene-hud-text) / 0.8);
+}
+.scene-hud-info:hover {
+  color: hsl(var(--scene-hud-text));
+  background: hsl(var(--scene-hud-text) / 0.1);
+}
+.map-light-ink {
+  color: hsl(var(--map-light-ink));
+}
+.map-dark-ink {
+  color: hsl(var(--scene-hud-text));
+}
 @media (min-width: 1024px) {
   .app-content {
     padding-bottom: 0;
@@ -1037,7 +1057,9 @@ blockquote {
   /* Keep a classic floor on normal phones; allow growth for a11y text. */
   min-height: max(62dvh, 420px);
   max-height: none;
-  transition: min-height 0.35s ease, max-height 0.35s ease;
+  transition:
+    min-height 0.35s ease,
+    max-height 0.35s ease;
 }
 
 /*

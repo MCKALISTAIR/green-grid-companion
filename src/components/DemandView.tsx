@@ -339,27 +339,29 @@ export function DemandView() {
                         <span className="min-w-0 text-sm font-semibold capitalize whitespace-normal break-words leading-tight">
                           {source.name}
                         </span>
-                          {fuelKey === 'biomass' && (
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <Button variant="ghost" size="icon"
-                                  className="min-h-11 min-w-11 flex-shrink-0 rounded-full p-0 flex items-center justify-center hover:bg-muted transition-colors"
-                                  aria-label="More information about Biomass classification"
-                                >
-                                  <Info className="w-2.5 h-2.5 cursor-help text-muted-foreground" />
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-[240px] p-3 text-xs bg-card border-border z-50">
-                                <p className="font-semibold mb-1">Kind of Renewable?</p>
-                                <p>
-                                  Biomass is officially classified as a renewable energy source by
-                                  grid standards since the organic matter burned can be replenished.
-                                  However, it still involves burning fuel (combustion), which
-                                  releases direct carbon emissions at the point of generation.
-                                </p>
-                              </PopoverContent>
-                            </Popover>
-                          )}
+                        {fuelKey === 'biomass' && (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="min-h-11 min-w-11 flex-shrink-0 rounded-full p-0 flex items-center justify-center hover:bg-muted transition-colors"
+                                aria-label="More information about Biomass classification"
+                              >
+                                <Info className="w-2.5 h-2.5 cursor-help text-muted-foreground" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[240px] p-3 text-xs bg-card border-border z-50">
+                              <p className="font-semibold mb-1">Kind of Renewable?</p>
+                              <p>
+                                Biomass is officially classified as a renewable energy source by
+                                grid standards since the organic matter burned can be replenished.
+                                However, it still involves burning fuel (combustion), which releases
+                                direct carbon emissions at the point of generation.
+                              </p>
+                            </PopoverContent>
+                          </Popover>
+                        )}
                         <FuelTrendIndicator
                           currentPerc={source.perc}
                           previousPerc={source.previousPerc}
@@ -372,7 +374,6 @@ export function DemandView() {
                           <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                             {categoryLabel}
                           </span>
-
                         </div>
                       )}
                     </div>

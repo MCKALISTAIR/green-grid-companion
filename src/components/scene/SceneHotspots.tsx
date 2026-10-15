@@ -104,45 +104,59 @@ export function SceneHotspots({ hotspots }: Props) {
         );
       })}
 
-      {bubbleHost && createPortal(<AnimatePresence>
-        {active && (
-          <motion.div
-            key={active.id}
-            role="dialog"
-            aria-label={active.label}
-            initial={{ opacity: 0, y: flipY ? 6 : -6, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: flipY ? 6 : -6, scale: 0.95 }}
-            transition={{ duration: 0.18, ease: 'easeOut' as const }}
-            className="pointer-events-auto absolute z-[40] rounded-xl border border-border bg-background/95 backdrop-blur-md shadow-2xl"
-            style={{
-              // Center on the hotspot, then clamp so both edges stay inside the scene.
-              left: `clamp(${BUBBLE_EDGE_PAD_PX}px, calc(${active.x}% - ${BUBBLE_MAX_PX / 2}px), calc(100% - ${BUBBLE_MAX_PX}px - ${BUBBLE_EDGE_PAD_PX}px))`,
-              width: `min(${BUBBLE_MAX_PX}px, calc(100% - ${BUBBLE_EDGE_PAD_PX * 2}px))`,
-              ...(flipY
-                ? { bottom: homeScene ? `calc(${100 - active.y}% + ${20 + active.y * 0.4}px)` : `calc(${100 - active.y}% + 20px)` }
-                : { top: homeScene ? `calc(${active.y}% + ${20 - active.y * 0.4}px)` : `calc(${active.y}% + 20px)` }),
-            }}
-          >
-            <div className="flex items-start gap-2 px-3 pt-2.5 pb-1.5">
-              <h4 className="flex-1 text-xs font-semibold tracking-wide uppercase text-foreground/80">
-                {active.label}
-              </h4>
-               <Button
-                 variant="ghost"
-                 size="icon"
-                type="button"
-                onClick={close}
-                aria-label="Close"
-                 className="min-w-11 min-h-11 shrink-0 grid place-items-center text-foreground/60 hover:text-foreground transition-colors -mr-1 -mt-0.5"
+      {bubbleHost &&
+        createPortal(
+          <AnimatePresence>
+            {active && (
+              <motion.div
+                key={active.id}
+                role="dialog"
+                aria-label={active.label}
+                initial={{ opacity: 0, y: flipY ? 6 : -6, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: flipY ? 6 : -6, scale: 0.95 }}
+                transition={{ duration: 0.18, ease: 'easeOut' as const }}
+                className="pointer-events-auto absolute z-[40] rounded-xl border border-border bg-background/95 backdrop-blur-md shadow-2xl"
+                style={{
+                  // Center on the hotspot, then clamp so both edges stay inside the scene.
+                  left: `clamp(${BUBBLE_EDGE_PAD_PX}px, calc(${active.x}% - ${BUBBLE_MAX_PX / 2}px), calc(100% - ${BUBBLE_MAX_PX}px - ${BUBBLE_EDGE_PAD_PX}px))`,
+                  width: `min(${BUBBLE_MAX_PX}px, calc(100% - ${BUBBLE_EDGE_PAD_PX * 2}px))`,
+                  ...(flipY
+                    ? {
+                        bottom: homeScene
+                          ? `calc(${100 - active.y}% + ${20 + active.y * 0.4}px)`
+                          : `calc(${100 - active.y}% + 20px)`,
+                      }
+                    : {
+                        top: homeScene
+                          ? `calc(${active.y}% + ${20 - active.y * 0.4}px)`
+                          : `calc(${active.y}% + 20px)`,
+                      }),
+                }}
               >
-                <X className="w-3.5 h-3.5" />
-               </Button>
-            </div>
-            <p className="px-3 pb-3 text-[13px] leading-snug text-foreground/90">{active.fact}</p>
-          </motion.div>
+                <div className="flex items-start gap-2 px-3 pt-2.5 pb-1.5">
+                  <h4 className="flex-1 text-xs font-semibold tracking-wide uppercase text-foreground/80">
+                    {active.label}
+                  </h4>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    type="button"
+                    onClick={close}
+                    aria-label="Close"
+                    className="min-w-11 min-h-11 shrink-0 grid place-items-center text-foreground/60 hover:text-foreground transition-colors -mr-1 -mt-0.5"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+                <p className="px-3 pb-3 text-[13px] leading-snug text-foreground/90">
+                  {active.fact}
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          bubbleHost,
         )}
-      </AnimatePresence>, bubbleHost)}
     </div>
   );
 }

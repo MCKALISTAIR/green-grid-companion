@@ -71,7 +71,7 @@ export default function MapPage() {
                 variant={showMap ? 'default' : 'outline'}
                 size="icon"
                 onClick={() => setShowMap(!showMap)}
-                className="rounded-full w-10 h-10 shadow-sm"
+                className="rounded-full min-h-11 min-w-11 h-11 w-11 shadow-sm"
                 aria-label={showMap ? 'Hide map' : 'Show map'}
                 aria-pressed={showMap}
               >

@@ -154,7 +154,7 @@ export function IntensityHeroOverlay({
         <div className="absolute top-[calc(max(env(safe-area-inset-top),24px)+0.5rem)] right-4 z-30 lg:top-6 lg:right-6">
           <Link to="/achievements">
             <button
-              className="flex items-center justify-center text-white/90 transition-all cursor-pointer bg-black/25 hover:bg-black/35 active:scale-95 hover:scale-105 backdrop-blur-md p-2.5 rounded-full border border-white/15 hover:border-white/25 shadow-sm"
+              className="flex min-h-11 min-w-11 items-center justify-center text-white/90 transition-all cursor-pointer bg-black/25 hover:bg-black/35 active:scale-95 hover:scale-105 backdrop-blur-md rounded-full border border-white/15 hover:border-white/25 shadow-sm"
               aria-label="Trophy Room"
             >
               <Trophy className="w-4 h-4 text-amber-300" />

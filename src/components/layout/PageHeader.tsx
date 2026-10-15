@@ -13,10 +13,8 @@ interface PageHeaderProps {
  */
 export function PageHeader({ title, description, className, actions }: PageHeaderProps) {
   return (
-    <div
-      className={cn('flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between', className)}
-    >
-      <div className="min-w-0">
+    <div className={cn('flex items-start justify-between gap-3', className)}>
+      <div className="min-w-0 flex-1">
         <h1 className="font-display text-2xl sm:text-[1.65rem] font-semibold tracking-tight text-foreground">
           {title}
         </h1>
@@ -26,7 +24,9 @@ export function PageHeader({ title, description, className, actions }: PageHeade
           </p>
         )}
       </div>
-      {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
+      {/* Keep actions on the title row at all widths so icon controls (e.g. Hide map)
+          don't drop under the subtitle and read as an orphaned close. */}
+      {actions && <div className="flex items-center gap-2 shrink-0 pt-0.5">{actions}</div>}
     </div>
   );
 }

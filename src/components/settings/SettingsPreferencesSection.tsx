@@ -160,7 +160,10 @@ export function SettingsPreferencesSection({
                 Auto
               </span>
             </Label>
-            <Label className="flex min-h-11 items-center gap-2 cursor-pointer" htmlFor="scene-countryside">
+            <Label
+              className="flex min-h-11 items-center gap-2 cursor-pointer"
+              htmlFor="scene-countryside"
+            >
               <RadioGroupItem value="countryside" id="scene-countryside" />
               <span>🌿 Countryside</span>
             </Label>
@@ -168,7 +171,10 @@ export function SettingsPreferencesSection({
               <RadioGroupItem value="city" id="scene-city" />
               <span>🏙️ City</span>
             </Label>
-            <Label className="flex min-h-11 items-center gap-2 cursor-pointer" htmlFor="scene-coastal">
+            <Label
+              className="flex min-h-11 items-center gap-2 cursor-pointer"
+              htmlFor="scene-coastal"
+            >
               <RadioGroupItem value="coastal" id="scene-coastal" />
               <span>🌊 Coastal</span>
             </Label>

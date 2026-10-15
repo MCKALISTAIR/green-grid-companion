@@ -345,7 +345,9 @@ export default function HistoryPage() {
               {showChartTip && (
                 <motion.div variants={itemVariants}>
                   <Card className="sheet-surface mb-4 bg-muted/30 border-dashed relative animate-in fade-in slide-in-from-top-2">
-                    <Button variant="ghost" size="icon"
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={dismissChartTip}
                       className="absolute top-2 right-2 min-h-11 min-w-11 p-1 text-muted-foreground hover:text-foreground transition-colors"
                       aria-label="Dismiss tip"
@@ -552,13 +554,15 @@ export default function HistoryPage() {
                         </CardDescription>
                       </div>
                       <div className="flex bg-muted rounded-md p-1">
-                        <Button variant="ghost"
+                        <Button
+                          variant="ghost"
                           onClick={() => setTimeRange('24h')}
                           className={`min-h-11 px-4 py-1 text-xs rounded-sm transition-all ${timeRange === '24h' ? 'bg-background shadow-sm font-medium' : 'text-muted-foreground'}`}
                         >
                           24h
                         </Button>
-                        <Button variant="ghost"
+                        <Button
+                          variant="ghost"
                           onClick={() => setTimeRange('7d')}
                           className={`min-h-11 px-4 py-1 text-xs rounded-sm transition-all ${timeRange === '7d' ? 'bg-background shadow-sm font-medium' : 'text-muted-foreground'}`}
                         >
