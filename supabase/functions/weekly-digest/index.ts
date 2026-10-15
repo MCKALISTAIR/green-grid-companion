@@ -8,6 +8,13 @@ import {
   subscriberUserIds,
 } from '../_shared/digest-scope.ts';
 import {
+  bestFutureSlot,
+  extractSlots,
+  forecastUrl,
+  formatLondonTime,
+  outwardCode,
+} from '../_shared/digest-best-time.ts';
+import {
   createSchedulerSecretProvider,
   cronAuthErrorResponse,
   fetchSchedulerSecret,
@@ -39,16 +46,6 @@ interface PushSubscription {
   weekly_digest_day: number;
   platform: string;
   is_sandbox: boolean;
-}
-
-interface ForecastSlot {
-  from: string;
-  to: string;
-  intensity: {
-    forecast: number;
-    actual: number | null;
-    index: string;
-  };
 }
 
 function getDayName(day: number): string {
@@ -115,28 +112,35 @@ Deno.serve(async (req) => {
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
 
-    // Fetch this week's forecast for best times
-    const forecastResponse = await fetch('https://api.carbonintensity.org.uk/intensity/date');
-    let bestTimeToday = 'N/A';
-
-    if (forecastResponse.ok) {
-      const forecastData = await forecastResponse.json();
-      const forecasts: ForecastSlot[] = forecastData.data || [];
-
-      let lowestForecast: ForecastSlot | null = null;
-      for (const slot of forecasts) {
-        if (!lowestForecast || slot.intensity.forecast < lowestForecast.intensity.forecast) {
-          lowestForecast = slot;
-        }
+    // BH-27: best time comes from the subscriber's regional forecast, later
+    // today only, formatted in UK time. Cached per outward code for this run.
+    const londonDay = (d: Date) =>
+      new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(d);
+    const bestTimeCache = new Map<string, Promise<string>>();
+    const bestTimeFor = (postcode: string | null | undefined): Promise<string> => {
+      const out = outwardCode(postcode);
+      const key = out ?? 'GB';
+      if (!bestTimeCache.has(key)) {
+        bestTimeCache.set(
+          key,
+          (async () => {
+            try {
+              const res = await fetch(forecastUrl(out, now));
+              if (!res.ok) return 'N/A';
+              const today = londonDay(now);
+              const slots = extractSlots(await res.json()).filter(
+                (sl) => londonDay(new Date(sl.from)) === today,
+              );
+              const best = bestFutureSlot(slots, now);
+              return best ? formatLondonTime(best.from) : 'N/A';
+            } catch {
+              return 'N/A';
+            }
+          })(),
+        );
       }
-
-      if (lowestForecast) {
-        bestTimeToday = new Date(lowestForecast.from).toLocaleTimeString('en-GB', {
-          hour: '2-digit',
-          minute: '2-digit',
-        });
-      }
-    }
+      return bestTimeCache.get(key)!;
+    };
 
     const notifications: Array<{
       token: string;
@@ -247,6 +251,7 @@ Deno.serve(async (req) => {
     // Generate notification for each subscription
     for (const sub of dueSubscriptions) {
       const subFootprint = rowsForSubscriber(sub, byUser, (footprint || []) as FootprintRecord[]);
+      const bestTimeToday = await bestTimeFor(sub.postcode);
       const { totalCarbonKg, totalKwh, avgIntensity, greenPercentage, bestHour } =
         computeStats(subFootprint);
       const emoji = getIntensityEmoji(avgIntensity);
@@ -294,7 +299,6 @@ Deno.serve(async (req) => {
           // BH-26: per-subscriber stats only; no cross-user totals in logs or responses.
           footprint_records: footprint?.length || 0,
           metered_users: byUser.size,
-          best_time_today: bestTimeToday,
         },
       }),
       {
