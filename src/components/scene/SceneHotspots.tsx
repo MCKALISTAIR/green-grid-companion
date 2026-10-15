@@ -104,8 +104,8 @@ export function SceneHotspots({ hotspots }: Props) {
         );
       })}
 
-      <AnimatePresence>
-        {active && bubbleHost && createPortal(
+      {bubbleHost && createPortal(<AnimatePresence>
+        {active && (
           <motion.div
             key={active.id}
             role="dialog"
@@ -140,9 +140,9 @@ export function SceneHotspots({ hotspots }: Props) {
                </Button>
             </div>
             <p className="px-3 pb-3 text-[13px] leading-snug text-foreground/90">{active.fact}</p>
-          </motion.div>, bubbleHost
+          </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>, bubbleHost)}
     </div>
   );
 }
