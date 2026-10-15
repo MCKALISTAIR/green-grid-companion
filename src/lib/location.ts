@@ -451,3 +451,31 @@ async function lookupPlaceName(query: string): Promise<LocationSearchResult | nu
     return null;
   }
 }
+
+export type PostcodeCheck = 'ok' | 'missing' | 'unknown';
+
+/**
+ * Does this GB postcode or outward code actually exist? Uses postcodes.io
+ * (/postcodes/{full} or /outcodes/{outcode}). 'unknown' means we couldn't
+ * check (offline, 5xx, timeout): callers should not block the user on that.
+ */
+export async function checkPostcodeExists(input: string): Promise<PostcodeCheck> {
+  const clean = input.replace(/\s+/g, '').toUpperCase();
+  const endpoint = FULL_POSTCODE_RE.test(clean)
+    ? 'postcodes'
+    : OUTCODE_RE.test(clean)
+      ? 'outcodes'
+      : null;
+  if (!endpoint) return 'missing';
+  try {
+    const res = await fetch(`https://api.postcodes.io/${endpoint}/${encodeURIComponent(clean)}`, {
+      signal: typeof AbortSignal.timeout === 'function' ? AbortSignal.timeout(8000) : undefined,
+    });
+    if (res.status === 404) return 'missing';
+    if (!res.ok) return 'unknown';
+    const data = await res.json();
+    return data?.result ? 'ok' : 'missing';
+  } catch {
+    return 'unknown';
+  }
+}

@@ -360,6 +360,9 @@ export function useCarbonData(postcode: string) {
         ? (regionalListQuery.isError || regionalDataQuery.isError) && nationalQuery.isError
         : nationalQuery.isError) || noReadingSettled,
 
+    // NESO couldn't place this postcode at all (e.g. a made-up one): the numbers
+    // shown are the GB average and the UI must say so, never switch silently.
+    postcodeNotFound: !!postcode && !offGrid && !isLocalRegionResolvable && postcodeQuery.isError,
     /** Set when the saved postcode is not on the GB grid; figures are the GB average. */
     offGridArea: offGrid,
 

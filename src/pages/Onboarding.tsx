@@ -12,6 +12,7 @@ import { TurbineSpinner } from '@/components/ui/turbine-spinner';
 import { OnboardingBackdrop } from '@/components/OnboardingBackdrop';
 import { TurbineLogo } from '@/components/TurbineLogo';
 import { postcodesIoReverseUrl } from '@/lib/coords';
+import { checkPostcodeExists } from '@/lib/location';
 import { useAppLocation } from '@/contexts/LocationContext';
 import { useHaptics } from '@/hooks/useHaptics';
 import { markFirstNumberPending } from '@/lib/firstLaunch';
@@ -25,7 +26,7 @@ import {
 import { ONBOARDING_COPY } from '@/lib/voice/onboardingCopy';
 
 type Notice = {
-  kind: 'denied' | 'deniedForever' | 'failed' | 'invalid' | 'offGrid';
+  kind: 'denied' | 'deniedForever' | 'failed' | 'invalid' | 'notFound' | 'offGrid';
   area?: OffGridArea;
 } | null;
 
@@ -35,6 +36,7 @@ const Onboarding = () => {
   const { notification } = useHaptics();
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [manualPostcode, setManualPostcode] = useState('');
+  const [isCheckingPostcode, setIsCheckingPostcode] = useState(false);
   const [notice, setNotice] = useState<Notice>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -130,7 +132,24 @@ const Onboarding = () => {
       return;
     }
     setNotice(null);
-    finishWithPostcode(value);
+    // Off-grid areas (GY/JE/IM/BFPO/BT) skip the lookup and get the off-grid notice.
+    if (offGridArea(value)) {
+      finishWithPostcode(value);
+      return;
+    }
+    setIsCheckingPostcode(true);
+    void checkPostcodeExists(value)
+      .then((result) => {
+        // 'unknown' (offline, postcodes.io down): don't block; Home flags it if NESO can't place it.
+        if (result === 'missing') {
+          setNotice({ kind: 'notFound' });
+          void notification(NotificationType.Error);
+          inputRef.current?.focus();
+          return;
+        }
+        finishWithPostcode(value);
+      })
+      .finally(() => setIsCheckingPostcode(false));
   };
 
   const c = ONBOARDING_COPY;
@@ -177,13 +196,15 @@ const Onboarding = () => {
             {notice && notice.kind !== 'offGrid' && (
               <p
                 className="text-sm text-white/85 text-center"
-                role={notice.kind === 'invalid' ? 'alert' : undefined}
+                role={notice.kind === 'invalid' || notice.kind === 'notFound' ? 'alert' : undefined}
               >
                 {notice.kind === 'invalid'
                   ? c.invalid
-                  : notice.kind === 'failed'
-                    ? c.failed
-                    : c.denied}
+                  : notice.kind === 'notFound'
+                    ? c.notFound
+                    : notice.kind === 'failed'
+                      ? c.failed
+                      : c.denied}
                 {notice.kind === 'deniedForever' && <> {c.deniedForever}</>}
               </p>
             )}
@@ -211,7 +232,7 @@ const Onboarding = () => {
               autoCapitalize="characters"
               enterKeyHint="go"
               className="bg-background/50 h-11"
-              aria-invalid={notice?.kind === 'invalid' || undefined}
+              aria-invalid={notice?.kind === 'invalid' || notice?.kind === 'notFound' || undefined}
               aria-describedby={notice ? 'onboarding-postcode-notice' : undefined}
             />
             <Button
@@ -219,11 +240,15 @@ const Onboarding = () => {
               haptic
               variant="secondary"
               size="lg"
-              disabled={!manualPostcode.trim()}
+              disabled={!manualPostcode.trim() || isCheckingPostcode}
               className="h-11 min-w-11 px-4 text-foreground"
-              aria-label={c.submitLabel}
+              aria-label={isCheckingPostcode ? c.checking : c.submitLabel}
             >
-              <ArrowRight className="w-5 h-5" strokeWidth={2.5} aria-hidden="true" />
+              {isCheckingPostcode ? (
+                <TurbineSpinner size="sm" />
+              ) : (
+                <ArrowRight className="w-5 h-5" strokeWidth={2.5} aria-hidden="true" />
+              )}
             </Button>
           </form>
 
