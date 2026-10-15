@@ -127,6 +127,21 @@ export default function PrivacyPolicy() {
               "CF10").
             </p>
             <p>
+              <span className="font-semibold text-foreground">Postcodes you type in:</span> When you
+              enter a postcode, the full postcode is sent to{' '}
+              <a
+                href="https://postcodes.io"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary underline"
+              >
+                postcodes.io
+              </a>
+              , a free UK postcode lookup, only to check that it exists and to find its region. We
+              only keep the first half of your postcode (the outward code, e.g. "EX4"); we don't
+              store the full postcode.
+            </p>
+            <p>
               <span className="font-semibold text-foreground">No Tracking:</span> We do not save a
               history of where you have been. Your selected region is stored locally on your device
               so you don't have to select it every time you open the app.
@@ -152,7 +167,8 @@ export default function PrivacyPolicy() {
               </li>
               <li>
                 <strong>Postcodes.io</strong> — To convert GPS coordinates into a postcode district
-                (if you use "Current Location").
+                (if you use "Current Location"), and to check that a postcode you enter exists and
+                find its region.
               </li>
               <li>
                 <strong>Google & Apple OAuth</strong> — For secure authentication. We receive only
