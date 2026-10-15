@@ -37,6 +37,7 @@ import { CalendarIcon, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SlowLoadingNotice } from '@/components/SlowLoadingNotice';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -314,6 +315,7 @@ export default function HistoryPage() {
               transition={{ duration: 0.18 }}
               className="space-y-4"
             >
+              <SlowLoadingNotice active onRetry={() => void historyQuery.refetch()} />
               <div className="grid grid-cols-2 gap-4">
                 <Card className="sheet-surface p-4">
                   <Skeleton className="h-3.5 w-1/3 mb-2" />
