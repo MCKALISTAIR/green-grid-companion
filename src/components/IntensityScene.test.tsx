@@ -65,47 +65,50 @@ vi.mock('@/hooks/useSceneDirector', () => ({
 
 // Mock framer-motion
 vi.mock('framer-motion', async () => {
-  const actual = await vi.importActual('framer-motion');
+  const actual = await vi.importActual<typeof import('framer-motion')>('framer-motion');
+  // Use the factory's own React import: the test's top-level `React` binding may
+  // not be initialised yet when a module calls into this mock at load time.
+  const R = await vi.importActual<typeof import('react')>('react');
+  const MOTION_PROPS = new Set([
+    'animate',
+    'transition',
+    'variants',
+    'initial',
+    'exit',
+    'whileHover',
+    'whileTap',
+    'whileDrag',
+    'whileFocus',
+    'whileInView',
+    'layout',
+    'layoutId',
+    'onPan',
+    'onPanStart',
+    'onPanEnd',
+    'onTap',
+    'viewport',
+    'drag',
+    'dragConstraints',
+  ]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const strip = (props: Record<string, any>) =>
+    Object.fromEntries(Object.entries(props).filter(([k]) => !MOTION_PROPS.has(k)));
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const wrap = (Tag: any) =>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    R.forwardRef(({ children, ...props }: any, ref) =>
+      R.createElement(Tag, { ...strip(props), ref }, children),
+    );
+  const cache = new Map<unknown, unknown>();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const create = (Component: any) => {
+    if (!cache.has(Component)) cache.set(Component, wrap(Component));
+    return cache.get(Component);
+  };
   const motion = new Proxy(
     {},
     {
-      get: (target, prop) => {
-        // Returns a component that renders the tag with the property name
-        return React.forwardRef(
-          (
-            {
-              children,
-              animate,
-              transition,
-              variants,
-              initial,
-              exit,
-              whileHover,
-              whileTap,
-              whileDrag,
-              whileFocus,
-              layout,
-              layoutId,
-              onPan,
-              onPanStart,
-              onPanEnd,
-              onTap,
-              viewport,
-              ...props
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            }: any,
-            ref,
-          ) => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const Tag = prop as any;
-            return (
-              <Tag {...props} ref={ref}>
-                {children}
-              </Tag>
-            );
-          },
-        );
-      },
+      get: (_target, prop) => (prop === 'create' ? create : create(prop)),
     },
   );
 

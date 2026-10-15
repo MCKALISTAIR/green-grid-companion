@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { NotificationType } from '@capacitor/haptics';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import type { ForecastData } from '@/lib/carbonApi';
 import { usePeriodicRefresh } from '@/hooks/usePeriodicRefresh';
 import { useProductTour } from '@/hooks/useProductTour';
@@ -77,6 +77,8 @@ export function useIndexPageEffects({
 
   // First number after onboarding: one Success haptic, then the two optional tips.
   const { startTour } = useProductTour();
+  // Re-check on every navigation to '/' (e.g. "Replay tour" while already on Home).
+  const { key: navKey } = useLocation();
   const { notification } = useHaptics();
   useEffect(() => {
     if (!hasReading) return;
@@ -84,7 +86,7 @@ export function useIndexPageEffects({
     if (consumeFirstNumber()) void notification(NotificationType.Success);
     // Tips go through the overlay queue (consent > tips > other) inside startTour.
     startTour();
-  }, [hasReading, startTour, notification]);
+  }, [hasReading, startTour, notification, navKey]);
 
   // Data failed after React Query's retries: one Error haptic per failure, not per retry.
   useEffect(() => {
