@@ -10,7 +10,7 @@ describe('BH-29 fallback copy', () => {
   });
   it('has a fallback when the region name is missing', () => {
     expect(regionalFallbackMessage(undefined)).toBe(
-      'Your region figure unavailable right now, so this is the GB average.',
+      "Your region's figure is unavailable right now, so this is the GB average.",
     );
   });
 });
