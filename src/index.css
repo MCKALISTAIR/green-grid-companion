@@ -1323,3 +1323,18 @@ body {
     align-items: center;
   }
 }
+
+/* Hero location pill + trophy: solid chip so text/icon meet AA on every sky
+   and in light/dark mode (colours mirror HERO_CHIP in src/lib/sceneUtils.ts). */
+.hero-chip,
+.hero-chip:hover {
+  background-color: #0f172a;
+  color: #ffffff;
+  border: 1.5px solid #e2e8f0;
+}
+.hero-chip:hover {
+  background-color: #1e293b;
+}
+.hero-chip .hero-chip-icon {
+  color: #fcd34d;
+}
