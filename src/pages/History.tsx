@@ -729,7 +729,7 @@ export default function HistoryPage() {
                         {/* Interactive Brush for zooming/panning */}
                         <Brush
                           dataKey="formattedTime"
-                          height={30}
+                          height={44}
                           stroke="hsl(var(--primary))"
                           fill="hsl(var(--muted))"
                           tickFormatter={() => ''}

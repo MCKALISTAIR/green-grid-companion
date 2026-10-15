@@ -52,7 +52,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
         </div>
       </div>
 
-      <div className="absolute bottom-12 text-[10px] text-muted-foreground/40 font-mono">
+      <div className="absolute bottom-12 text-[10px] text-muted-foreground font-mono">
         v{import.meta.env.PACKAGE_VERSION || '1.0.0'}
       </div>
     </div>

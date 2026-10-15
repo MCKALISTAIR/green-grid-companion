@@ -134,7 +134,7 @@ export function IntensityHeroOverlay({
             onChange={setPostcode}
             trigger={
               <button
-                className="flex max-w-full items-center gap-2 text-white/90 text-sm font-semibold tracking-wide transition-all cursor-pointer bg-black/25 hover:bg-black/35 backdrop-blur-md px-4 py-2 rounded-full border border-white/15 hover:border-white/25 shadow-sm group"
+                className="flex min-h-11 max-w-full items-center gap-2 text-white/90 text-sm font-semibold tracking-wide transition-all cursor-pointer bg-black/25 hover:bg-black/35 backdrop-blur-md px-4 py-2 rounded-full border border-white/15 hover:border-white/25 shadow-sm group"
                 title={region || undefined}
               >
                 <MapPin className="w-3.5 h-3.5 flex-shrink-0" />

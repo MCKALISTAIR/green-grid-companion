@@ -307,7 +307,7 @@ export default function Planner() {
               <DialogTrigger asChild>
                 <Button
                   variant={selectedAppliance.id === 'custom' ? 'default' : 'outline'}
-                  className="h-auto py-4 flex flex-col gap-2 border-dashed"
+                  className={`h-auto py-4 flex flex-col gap-2 border-dashed ${APPLIANCES.length % 2 === 0 ? 'col-span-2' : ''}`}
                   onClick={() => {
                     // If already active, just reopen edit? or select?
                     // Let's open dialog always on click for now to allow editing

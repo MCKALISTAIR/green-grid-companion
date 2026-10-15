@@ -214,10 +214,10 @@ const Onboarding = () => {
               variant="secondary"
               size="lg"
               disabled={!manualPostcode.trim()}
-              className="px-4 h-11"
+              className="h-11 min-w-11 px-4 text-foreground"
               aria-label={c.submitLabel}
             >
-              <ArrowRight className="w-4 h-4" aria-hidden="true" />
+              <ArrowRight className="w-5 h-5" strokeWidth={2.5} aria-hidden="true" />
             </Button>
           </form>
 
