@@ -27,6 +27,7 @@ import { useIndexPageEffects } from '@/hooks/useIndexPageEffects';
 import { useThrottledRefetch } from '@/hooks/useThrottledRefetch';
 import { useRelativeTime } from '@/hooks/useRelativeTime';
 import { DashboardSkeleton } from '@/components/home/DashboardSkeleton';
+import { StaleReadingNotice } from '@/components/home/StaleReadingNotice';
 import { DashboardViewTabs, type DashboardViewMode } from '@/components/home/DashboardViewTabs';
 import { IntensityDashboard } from '@/components/home/IntensityDashboard';
 import { IntensityHeroOverlay } from '@/components/home/IntensityHeroOverlay';
@@ -256,6 +257,10 @@ const Index = () => {
               <div className="flex justify-center pt-0.5 pb-1 lg:hidden" aria-hidden>
                 <div className="h-1 w-10 rounded-full bg-muted-foreground/25" />
               </div>
+
+              {!isLoading && !isError && (
+                <StaleReadingNotice readingFrom={lastUpdated} onRetry={() => void refetch()} />
+              )}
 
               {isDegraded && (
                 <div className="mx-2 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-lg flex items-start gap-3 text-sm text-amber-800 dark:text-amber-200 animate-in fade-in">

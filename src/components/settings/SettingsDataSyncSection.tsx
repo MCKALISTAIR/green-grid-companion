@@ -1,3 +1,4 @@
+import { formatLondonTime } from '@/lib/londonTime';
 import { Cloud, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -41,7 +42,7 @@ export function SettingsDataSyncSection({
             <h3 className="font-medium">Grid Network Data</h3>
             <p className="text-sm text-muted-foreground flex items-center gap-2">
               Last checked:{' '}
-              {gridLastCheckedAt ? new Date(gridLastCheckedAt).toLocaleTimeString() : 'Unknown'}
+              {gridLastCheckedAt ? formatLondonTime(new Date(gridLastCheckedAt)) : 'Unknown'}
               {isOffline && (
                 <Badge
                   variant="secondary"
