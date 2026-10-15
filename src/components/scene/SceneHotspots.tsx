@@ -63,7 +63,7 @@ export function SceneHotspots({ hotspots }: Props) {
   }, [activeId, visible]);
 
   const active = visible.find((h) => h.id === activeId) ?? null;
-  const flipY = active ? active.y > 55 : false;
+  const flipY = active ? Math.max(active.y, HUD_CLEAR_Y) > 55 : false;
   // Home's HUD is a sibling stacking context; facts must sit above it, not behind its text.
   const homeScene = layer.current?.closest('.home-scene');
   const bubbleHost = homeScene ?? layer.current;
