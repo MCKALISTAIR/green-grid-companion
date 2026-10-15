@@ -9,5 +9,5 @@
 
 # B1 bottom navigation clearance
 - [x] Share dock dimensions, safe area and content inset across Home and page chrome.
-- [ ] Verify all Home views and Settings/Plan/History scroll ends with a simulated iOS home indicator.
-- [ ] Confirm mobile and desktop appearance; do not publish.
+- [x] Verify all Home views and Settings/Plan/History scroll ends with a simulated iOS home indicator (12 browser checks passed at 0px/34px; linked Footprint metrics not available in the guest session).
+- [x] Confirm mobile and desktop appearance; do not publish. Added a persistent Playwright regression; its JS runner lacks the matching browser here, so equivalent checks ran with the available Python browser.
