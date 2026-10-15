@@ -1447,6 +1447,7 @@ body {
   .art-fade {
     transition-duration: 200ms;
   }
+}
 
 /* Reduced transparency (OS setting; add `.reduce-transparency` on <html> for an
    in-app toggle): frosted surfaces become solid, no blur, 1px card edge. */
