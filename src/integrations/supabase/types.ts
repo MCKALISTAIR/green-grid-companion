@@ -591,6 +591,7 @@ export type Database = {
         }
         Returns: Json
       }
+      fn_cleanup_push_subscriptions: { Args: never; Returns: number }
       get_my_credentials_status: {
         Args: never
         Returns: {
