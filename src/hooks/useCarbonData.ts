@@ -18,6 +18,7 @@ import {
   REGION_IDS,
 } from '@/lib/carbonApi';
 import { logger } from '@/lib/logger';
+import { offGridArea } from '@/lib/postcode';
 import { regionNameForPostcode } from '@/lib/regionMatch';
 
 // Calculate ms until next half-hour boundary (:00 or :30)
@@ -159,7 +160,13 @@ export function useCarbonData(postcode: string) {
     // No refetchInterval - we use smart setTimeout instead
   });
 
+  // NI, Channel Islands, Isle of Man, BFPO: not on the GB grid. Show the GB
+  // average, flagged, and never ask NESO (its lookup put GY1 in South Scotland).
+  const offGrid = offGridArea(postcode);
+  if (offGrid) regionId = undefined;
+
   const isLocalRegionResolvable =
+    !!offGrid ||
     postcode === 'GB' ||
     postcode === 'Scotland' ||
     postcode === 'England' ||
@@ -352,6 +359,9 @@ export function useCarbonData(postcode: string) {
       (postcode
         ? (regionalListQuery.isError || regionalDataQuery.isError) && nationalQuery.isError
         : nationalQuery.isError) || noReadingSettled,
+
+    /** Set when the saved postcode is not on the GB grid; figures are the GB average. */
+    offGridArea: offGrid,
 
     // Flag to explicitly identify graceful degradation so UI can warn the user
     isDegraded:

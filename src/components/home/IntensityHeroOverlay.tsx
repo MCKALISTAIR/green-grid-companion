@@ -128,16 +128,6 @@ export function IntensityHeroOverlay({
       data-compact-scene={hideGauge ? 'true' : undefined}
     >
       <ComponentErrorBoundary name="Scene">
-        <IntensityScene
-          intensity={intensity}
-          index={index}
-          generationMix={generationMix}
-          hasLiveReading={hasFreshReading}
-          compact={hideGauge}
-          className="absolute inset-0 h-full"
-          style={{ height: '100%', position: 'absolute' }}
-        />
-
         <div
           className="absolute top-6 left-6 z-30 hidden lg:block max-w-[calc(50%-13rem)]"
           data-testid="hero-location-desktop"
@@ -409,6 +399,20 @@ export function IntensityHeroOverlay({
           </div>
         </div>
       )}
+
+      {/* Rendered last so keyboard/SR order is trophy → location → reading → scene hotspots.
+          Absolute + no z-index, so paint order vs. the z-10/z-30 overlays is unchanged. */}
+      <ComponentErrorBoundary name="SceneCanvas">
+        <IntensityScene
+          intensity={intensity}
+          index={index}
+          generationMix={generationMix}
+          hasLiveReading={hasFreshReading}
+          compact={hideGauge}
+          className="absolute inset-0 h-full"
+          style={{ height: '100%', position: 'absolute' }}
+        />
+      </ComponentErrorBoundary>
     </div>
   );
 }

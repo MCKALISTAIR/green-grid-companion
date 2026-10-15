@@ -6,6 +6,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
+import { londonDateKey } from '@/lib/londonTime';
 import { readTone } from '@/lib/tone';
 import {
   cleanWindowNotification,
@@ -211,15 +212,9 @@ export function useNotifications() {
   // Helper to generate forecast summary
   const generateForecastSummary = useCallback(
     (forecast: ForecastData[]): string => {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0); // Start of day
-      const endOfDay = new Date(today);
-      endOfDay.setHours(23, 59, 59, 999);
-
-      const todaySlots = forecast.filter((slot) => {
-        const slotTime = new Date(slot.from);
-        return slotTime >= today && slotTime <= endOfDay;
-      });
+      // "Today" is the UK calendar day: the grid data is GB, whatever the device TZ.
+      const todayKey = londonDateKey(new Date());
+      const todaySlots = forecast.filter((slot) => londonDateKey(new Date(slot.from)) === todayKey);
 
       if (todaySlots.length === 0) return NO_DAILY_FORECAST_BODY;
 

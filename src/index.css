@@ -302,12 +302,20 @@
    Using 100vw made clouds jump across the full browser width (and leaked
    across /__scene-test preview cards under deep scrutiny). */
 @keyframes cloud-drift {
+  /* `left` is a % of the scene, `translate` a % of the cloud: start with the
+     cloud's right edge at the scene's left edge, end with its left edge past
+     the right edge, so it fully leaves and re-enters offscreen at any width.
+     (Was translateX(-40%..140%) of the cloud's own ~80px width, so clouds
+     moved ~150px then snapped back.) `translate` keeps clear of framer-motion's
+     `transform` on tappable clouds. */
   0% {
-    transform: translateX(-40%);
+    left: 0;
+    translate: -100% 0;
   }
 
   100% {
-    transform: translateX(140%);
+    left: 100%;
+    translate: 0 0;
   }
 }
 
@@ -1388,4 +1396,20 @@ body {
 .dark.reduce-transparency .sheet-surface,
 .dark.reduce-transparency [class*='backdrop-blur'] {
   background-color: #1c3134 !important;
+}
+
+/* 44pt touch targets without changing visuals: the hit area grows to at least
+   44x44 around small controls (WCAG 2.5.8 / Apple HIG). Positioned elements
+   already contain the ::after, so only static ones need position: relative. */
+.tap-target:not(.absolute):not(.fixed):not(.sticky) {
+  position: relative;
+}
+.tap-target::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: max(100%, 44px);
+  height: max(100%, 44px);
+  transform: translate(-50%, -50%);
 }

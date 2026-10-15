@@ -253,7 +253,7 @@ export default function Planner() {
             <Card className="sheet-surface p-4 bg-primary/10 border-primary/20 relative animate-in fade-in slide-in-from-top-4 duration-500">
               <button
                 onClick={dismissOnboarding}
-                className="absolute top-2 right-2 p-2 text-muted-foreground hover:text-foreground transition-colors"
+                className="tap-target absolute top-2 right-2 p-2 text-muted-foreground hover:text-foreground transition-colors"
                 aria-label="Dismiss onboarding"
               >
                 <X className="w-4 h-4" />

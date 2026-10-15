@@ -35,6 +35,7 @@ import HistoryPage from './pages/History';
 const Onboarding = lazy(() => import('./pages/Onboarding'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const Terms = lazy(() => import('./pages/Terms'));
+const Support = lazy(() => import('./pages/Support'));
 const Glossary = lazy(() => import('./pages/Glossary'));
 const ManageLocations = lazy(() => import('./pages/ManageLocations'));
 const Changelog = lazy(() => import('./pages/Changelog'));
@@ -133,7 +134,8 @@ function AppContent() {
     <>
       {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
       <OfflineIndicator />
-      <Sonner position="top-center" />
+      {/* Position/offset live in ui/sonner.tsx: bottom above the dock on phones, top on desktop. */}
+      <Sonner />
       <BrowserRouter>
         <ComponentErrorBoundary name="Status Bar Manager">
           <StatusBarManager />
@@ -149,6 +151,7 @@ function AppContent() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<Terms />} />
+            <Route path="/support" element={<Support />} />
             <Route path="/glossary" element={<Glossary />} />
             <Route path="/history" element={<HistoryPage />} />
             <Route path="/locations" element={<ManageLocations />} />
