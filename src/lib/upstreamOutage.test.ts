@@ -2,8 +2,8 @@ import { describe, it, expect, vi } from 'vitest';
 import { classifyGridFailure, isUpstreamFailure } from '@/lib/upstreamOutage';
 import { RequestTimeoutError } from '@/lib/carbonApi';
 
-const ok = (() => Promise.resolve(new Response('{}', { status: 200 }))) as typeof fetch;
-const down = (() => Promise.reject(new TypeError('Failed to fetch'))) as typeof fetch;
+const ok = (() => Promise.resolve(new Response('{}', { status: 200 }))) as unknown as typeof fetch;
+const down = (() => Promise.reject(new TypeError('Failed to fetch'))) as unknown as typeof fetch;
 
 describe('NESO outage copy only when it is really NESO', () => {
   it('5xx and timeouts are upstream; 429, 404, bad data and network errors are not', () => {
@@ -26,7 +26,7 @@ describe('NESO outage copy only when it is really NESO', () => {
   });
 
   it('generic when offline, without even checking', async () => {
-    const f = vi.fn(ok);
+    const f = vi.fn(ok) as unknown as typeof fetch;
     expect(
       await classifyGridFailure(new RequestTimeoutError(), { online: false, fetchFn: f }),
     ).toBe('generic');
