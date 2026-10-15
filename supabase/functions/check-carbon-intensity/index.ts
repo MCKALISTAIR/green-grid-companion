@@ -10,23 +10,7 @@ import {
   type SchedulerSecretRpcClient,
 } from '../_shared/cron-auth.ts';
 import { createKeyLoader, backfillLegacyCredentials } from '../_shared/octopus-credentials.ts';
-import {
-  fetchNationalIntensity,
-  toIntensityReading,
-  type IntensityReading,
-} from '../_shared/intensity-reading.ts';
-
-interface CarbonIntensityResponse {
-  data: Array<{
-    data: Array<{
-      shortname: string;
-      intensity: {
-        forecast: number;
-        index: string;
-      };
-    }>;
-  }>;
-}
+import { createAlertReadingResolver, alertPlaceLabel } from '../_shared/alert-reading.ts';
 
 interface PushSubscription {
   id: string;
@@ -75,30 +59,6 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Fetch current carbon intensity for all UK regions
-    const carbonResponse = await fetch('https://api.carbonintensity.org.uk/regional');
-    if (!carbonResponse.ok) {
-      throw new Error('Failed to fetch carbon intensity data');
-    }
-
-    const carbonData: CarbonIntensityResponse = await carbonResponse.json();
-    const regions = carbonData.data[0]?.data || [];
-
-    // Create a map of postcode prefix to intensity
-    // Only real, well-formed readings go in; a region with missing data is left
-    // out (and then falls back to the national reading, or is skipped).
-    const intensityByRegion = new Map<string, IntensityReading>();
-    for (const region of regions) {
-      const reading = toIntensityReading(region?.intensity);
-      if (region?.shortname && reading) {
-        intensityByRegion.set(region.shortname.toLowerCase(), reading);
-      } else {
-        console.warn(
-          `[INTENSITY] Ignoring region with invalid data: ${region?.shortname ?? 'unknown'}`,
-        );
-      }
-    }
-
     // Get all subscriptions that have low OR high intensity alerts enabled
     const { data: subscriptions, error: subError } = await supabase
       .from('push_subscriptions')
@@ -119,53 +79,15 @@ Deno.serve(async (req) => {
     }> = [];
     const stateUpdates: PendingStateUpdate[] = [];
 
-    // Cache for postcode-to-region lookups to avoid redundant searches
-    const postcodeCache = new Map<string, IntensityReading | null>();
-    // undefined = not fetched yet; null = fetch failed (don't retry per subscription).
-    let nationalIntensityCache: IntensityReading | null | undefined = undefined;
+    // One NESO read per outward code per run. A failed regional read means no
+    // alert (state unchanged), never the national figure framed as regional.
+    const getAlertReading = createAlertReadingResolver();
     let skippedNoData = 0;
-
-    // Helper function to get region intensity with caching
-    const getRegionIntensity = async (postcode: string): Promise<IntensityReading | null> => {
-      const postcodeLower = postcode.toLowerCase();
-
-      // Check cache first
-      if (postcodeCache.has(postcodeLower)) {
-        return postcodeCache.get(postcodeLower) ?? null;
-      }
-
-      // Try exact match
-      let regionIntensity: IntensityReading | null | undefined =
-        intensityByRegion.get(postcodeLower);
-
-      // If no exact match, try to find by first letter(s)
-      if (!regionIntensity) {
-        for (const [key, value] of intensityByRegion) {
-          if (postcodeLower.startsWith(key) || key.startsWith(postcodeLower)) {
-            regionIntensity = value;
-            break;
-          }
-        }
-      }
-
-      // Default to national if no region match. Never invent a number: if the
-      // national reading is unavailable, return null and the caller skips.
-      if (!regionIntensity) {
-        if (nationalIntensityCache === undefined) {
-          nationalIntensityCache = await fetchNationalIntensity();
-        }
-        regionIntensity = nationalIntensityCache;
-      }
-
-      // Cache the result
-      postcodeCache.set(postcodeLower, regionIntensity ?? null);
-      return regionIntensity ?? null;
-    };
 
     // Check each subscription
     for (const sub of subscriptions as PushSubscription[]) {
       // Get region intensity (with caching)
-      const regionIntensity = await getRegionIntensity(sub.postcode);
+      const regionIntensity = await getAlertReading(sub.postcode);
       if (!regionIntensity) {
         // No trustworthy reading: send nothing and leave alert state unchanged
         // so the next run (every 30 min) re-evaluates with real data.
@@ -184,7 +106,7 @@ Deno.serve(async (req) => {
           if (currentState === 'below') {
             notifications.push({
               token: sub.device_token,
-              title: `${regionIntensity.intensity} gCO₂/kWh. Grid's looking clean`,
+              title: `${alertPlaceLabel(regionIntensity)}: ${regionIntensity.intensity} gCO₂/kWh. Grid's looking clean`,
               body: `That's at or under your ${sub.low_intensity_threshold} gCO₂/kWh alert (${regionIntensity.index}). A good time for the big loads.`,
               platform: sub.platform,
               isSandbox: sub.is_sandbox,
@@ -193,7 +115,7 @@ Deno.serve(async (req) => {
           } else if (currentState === 'above' && previousState === 'below') {
             notifications.push({
               token: sub.device_token,
-              title: `Clean spell over: ${regionIntensity.intensity} gCO₂/kWh`,
+              title: `Clean spell over (${alertPlaceLabel(regionIntensity)}): ${regionIntensity.intensity} gCO₂/kWh`,
               body: `That's back over your ${sub.low_intensity_threshold} gCO₂/kWh alert (${regionIntensity.index}). Big loads can wait for the next clean spell.`,
               platform: sub.platform,
               isSandbox: sub.is_sandbox,
@@ -219,7 +141,7 @@ Deno.serve(async (req) => {
           if (currentHighState === 'above') {
             notifications.push({
               token: sub.device_token,
-              title: `${regionIntensity.intensity} gCO₂/kWh. Grid's gone grumpy`,
+              title: `${alertPlaceLabel(regionIntensity)}: ${regionIntensity.intensity} gCO₂/kWh. Grid's gone grumpy`,
               body: `That's at or past your ${sub.high_intensity_threshold} gCO₂/kWh alert (${regionIntensity.index}). If something can wait, let it.`,
               platform: sub.platform,
               isSandbox: sub.is_sandbox,
@@ -228,7 +150,7 @@ Deno.serve(async (req) => {
           } else if (currentHighState === 'below' && previousHighState === 'above') {
             notifications.push({
               token: sub.device_token,
-              title: `${regionIntensity.intensity} gCO₂/kWh. Grid's cheering up`,
+              title: `${alertPlaceLabel(regionIntensity)}: ${regionIntensity.intensity} gCO₂/kWh. Grid's cheering up`,
               body: `That's back under your ${sub.high_intensity_threshold} gCO₂/kWh alert (${regionIntensity.index}).`,
               platform: sub.platform,
               isSandbox: sub.is_sandbox,
