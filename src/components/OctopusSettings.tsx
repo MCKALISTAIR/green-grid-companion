@@ -251,7 +251,7 @@ export const OctopusSettings = forwardRef<HTMLDivElement, OctopusSettingsProps>(
                 href="https://share.octopus.energy/light-sheep-695"
                 target="_blank"
                 rel="noreferrer"
-                className="underline font-medium text-primary hover:text-primary/80"
+                className="tap-target underline font-medium text-primary hover:text-primary/80"
               >
                 Join with £50 free credit
               </a>
