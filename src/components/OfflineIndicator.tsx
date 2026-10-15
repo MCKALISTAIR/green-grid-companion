@@ -45,8 +45,11 @@ export function OfflineIndicator() {
     }
   }, [wasOffline, clearWasOffline]);
 
+  // Refetch in place: a full reload lost scroll position, open sheets and form state.
   const handleRefresh = () => {
-    window.location.reload();
+    void queryClient.refetchQueries({ type: 'active' });
+    setShowReconnected(false);
+    clearWasOffline();
   };
 
   return (
