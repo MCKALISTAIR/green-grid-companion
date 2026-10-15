@@ -63,6 +63,9 @@ export function PullToRefresh({ onRefresh, children, disabled = false }: PullToR
 
   const onTouchStart = (e: React.TouchEvent) => {
     if (disabled || isRefreshing) return;
+    // React touch events bubble through portals, so a drag in a sheet, popover or
+    // toast rendered outside this tree still reaches here. Only DOM descendants count.
+    if (!(e.target instanceof Node) || !e.currentTarget.contains(e.target)) return;
     if (!isAtTop(e.target as HTMLElement)) return;
     startY.current = e.touches[0].clientY;
     firedHaptic.current = false;

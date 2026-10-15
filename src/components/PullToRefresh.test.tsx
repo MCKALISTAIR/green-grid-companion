@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, fireEvent, act } from '@testing-library/react';
 
@@ -42,6 +43,23 @@ describe('PullToRefresh', () => {
       fireEvent.touchEnd(root);
     });
     expect(onRefresh).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores drags that start in a portal outside its DOM (sheets, popovers)', async () => {
+    const onRefresh = vi.fn();
+    const { getByTestId } = render(
+      <PullToRefresh onRefresh={onRefresh}>
+        {createPortal(<div data-testid="portalled">sheet</div>, document.body)}
+      </PullToRefresh>,
+    );
+    const sheet = getByTestId('portalled');
+    fireEvent.touchStart(sheet, touch(0));
+    fireEvent.touchMove(sheet, touch(200));
+    await act(async () => {
+      fireEvent.touchEnd(sheet);
+    });
+    expect(impactMedium).not.toHaveBeenCalled();
+    expect(onRefresh).not.toHaveBeenCalled();
   });
 
   it('does not refresh below the threshold', async () => {
