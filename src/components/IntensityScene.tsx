@@ -181,14 +181,6 @@ export function IntensityScene({
     }));
   }, []);
 
-  const rainConfig = useMemo(() => {
-    return Array.from({ length: 20 }).map((_, i) => ({
-      id: i,
-      delay: Math.random() * 2,
-      x: 5 + i * 4.5,
-    }));
-  }, []);
-
   const { isRaining } = weather;
 
   const [activeEvent, setActiveEvent] = useState<SceneRandomEvent>('none');
@@ -354,7 +346,6 @@ export function IntensityScene({
         <SceneAmbientLife
           sceneConfig={sceneConfig}
           shouldReduceMotion={shouldReduceMotion}
-          rainConfig={rainConfig}
           birdConfig={birdConfig}
           fireflyConfig={fireflyConfig}
         />

@@ -1,6 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import type { SceneVisualConfig } from '@/lib/sceneConfig';
-import { RainDrop } from '../RainDrop';
 import { InteractiveCloud } from '../InteractiveCloud';
 import { FlyingBird } from '../FlyingBird';
 import { Butterfly } from '../Butterfly';
@@ -9,7 +8,6 @@ import { Firefly } from '../Firefly';
 export interface SceneAmbientLifeProps {
   sceneConfig: SceneVisualConfig;
   shouldReduceMotion: boolean;
-  rainConfig: Array<{ id: number; delay: number; x: number }>;
   birdConfig: Array<{ id: number; top: number; delay: number; duration: number; scale: number }>;
   fireflyConfig: Array<{ id: number; delay: number; x: number; y: number }>;
 }
@@ -17,29 +15,11 @@ export interface SceneAmbientLifeProps {
 export function SceneAmbientLife({
   sceneConfig,
   shouldReduceMotion,
-  rainConfig,
   birdConfig,
   fireflyConfig,
 }: SceneAmbientLifeProps) {
   return (
     <>
-      {/* Rain effect for dirty energy */}
-      <AnimatePresence>
-        {sceneConfig.showRain && (
-          <motion.div
-            className="absolute inset-0 overflow-hidden"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            {rainConfig.map((drop) => (
-              <RainDrop key={drop.id} delay={drop.delay} x={drop.x} />
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       <InteractiveCloud
         className={`absolute top-20 w-24 h-14 text-card/80 ${shouldReduceMotion ? '' : 'animate-cloud-drift'}`}
         style={
