@@ -47,18 +47,26 @@ import { logger } from '@/lib/logger';
 import { PageHeader } from '@/components/layout/PageHeader';
 
 const DEFAULT_APPLIANCES = [
-  { id: 'ev', name: 'EV Charge', icon: Car, power: 7.4, duration: 4, label: 'Full Charge (4h)' },
+  { id: 'ev', name: 'EV Charge', icon: Car, power: 7.4, duration: 4, label: '4h' },
   {
     id: 'washing',
     name: 'Washing',
     icon: WashingMachine,
     power: 1.0,
     duration: 2,
-    label: 'Eco Cycle (2h)',
+    label: '2h',
   },
-  { id: 'dish', name: 'Dishwasher', icon: Utensils, power: 1.5, duration: 2, label: 'Auto (2h)' },
-  { id: 'dryer', name: 'Dryer', icon: Zap, power: 2.5, duration: 1, label: 'Cotton (1h)' },
+  { id: 'dish', name: 'Dishwasher', icon: Utensils, power: 1.5, duration: 2, label: '2h' },
+  { id: 'dryer', name: 'Dryer', icon: Zap, power: 2.5, duration: 1, label: '1h' },
 ];
+
+// Copy cut: tiles show duration only; the programme name stays for screen readers.
+const PROGRAMME: Record<string, string> = {
+  ev: 'Full charge',
+  washing: 'Eco cycle',
+  dish: 'Auto',
+  dryer: 'Cotton',
+};
 
 import { useAppLocation } from '@/contexts/LocationContext';
 import { EstimateDisclaimer } from '@/components/attribution/EstimateDisclaimer';
@@ -181,10 +189,7 @@ export default function Planner() {
     return (
       <div className="page-shell page-shell--fit">
         <div className="page-shell-inner space-y-6">
-          <PageHeader
-            title="Power Planner"
-            description="Schedule high-energy tasks to save carbon."
-          />
+          <PageHeader title="Power Planner" />
           <ErrorState
             title={errorInfo.title}
             description={errorInfo.description}
@@ -245,40 +250,9 @@ export default function Planner() {
         }}
       >
         <div className="page-shell-inner space-y-6">
-          <PageHeader
-            title="Power Planner"
-            description="Schedule high-energy tasks for cleaner grid windows."
-          />
+          <PageHeader title="Power Planner" />
 
-          {showOnboarding && (
-            <Card className="sheet-surface p-4 bg-primary/10 border-primary/20 relative animate-in fade-in slide-in-from-top-4 duration-500">
-              <button
-                onClick={dismissOnboarding}
-                className="tap-target absolute top-2 right-2 p-2 text-muted-foreground hover:text-foreground transition-colors"
-                aria-label="Dismiss onboarding"
-              >
-                <X className="w-4 h-4" />
-              </button>
-              <div className="flex items-start gap-4 pr-6">
-                <div className="p-3 bg-primary/20 rounded-full text-primary mt-1 shrink-0">
-                  <Leaf className="w-6 h-6" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-foreground text-lg">
-                    Welcome to Power Planner
-                  </h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    Schedule high-energy tasks like EV charging or washing for when the grid is
-                    greenest. Simply tap an appliance below to find the best time to run it and save
-                    carbon.
-                  </p>
-                  <Button size="sm" onClick={dismissOnboarding} className="mt-2 font-medium">
-                    Got it
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          )}
+          {showOnboarding && <p className="text-sm text-muted-foreground">Tap an appliance</p>}
 
           <div className="grid grid-cols-2 gap-3">
             {APPLIANCES.map((app) => (
@@ -286,7 +260,11 @@ export default function Planner() {
                 key={app.id}
                 variant={selectedAppliance.id === app.id ? 'default' : 'outline'}
                 className="h-auto py-4 flex flex-col gap-2 relative overflow-hidden transition-all duration-200"
-                onClick={() => setSelectedAppliance(app)}
+                onClick={() => {
+                  setSelectedAppliance(app);
+                  dismissOnboarding();
+                }}
+                aria-label={`${app.name}, ${PROGRAMME[app.id] ? `${PROGRAMME[app.id]}, ` : ''}${app.duration} hours`}
               >
                 <motion.div
                   key={selectedAppliance.id === app.id ? 'active' : 'idle'}
@@ -312,6 +290,11 @@ export default function Planner() {
                 <Button
                   variant={selectedAppliance.id === 'custom' ? 'default' : 'outline'}
                   className={`h-auto py-4 flex flex-col gap-2 border-dashed ${APPLIANCES.length % 2 === 0 ? 'col-span-2' : ''}`}
+                  aria-label={
+                    selectedAppliance.id === 'custom'
+                      ? `${selectedAppliance.name}, tap to edit`
+                      : 'Add your own appliance'
+                  }
                   onClick={() => {
                     // If already active, just reopen edit? or select?
                     // Let's open dialog always on click for now to allow editing
@@ -324,9 +307,9 @@ export default function Planner() {
                     <div className="font-semibold">
                       {selectedAppliance.id === 'custom' ? selectedAppliance.name : 'Custom'}
                     </div>
-                    <div className="text-[10px] opacity-70 font-normal">
-                      {selectedAppliance.id === 'custom' ? 'Tap to edit' : 'Add your own'}
-                    </div>
+                    {selectedAppliance.id === 'custom' && (
+                      <div className="text-[10px] opacity-70 font-normal">Tap to edit</div>
+                    )}
                   </div>
                 </Button>
               </DialogTrigger>
