@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MarkdownDocument } from '@/components/MarkdownDocument';
 import supportSource from '@/content/support.md?raw';
+import { elexonAttributionStatement } from '@/lib/attribution';
 
 export default function Support() {
   const navigate = useNavigate();
@@ -35,6 +36,10 @@ export default function Support() {
 
       <article className="p-4 max-w-2xl mx-auto space-y-4 animate-page-enter">
         <MarkdownDocument source={supportSource} />
+        <footer className="pt-4 border-t border-border/50 space-y-1 text-xs text-muted-foreground">
+          <p>{elexonAttributionStatement()}</p>
+          <p>Supported by National Energy SO Open Data</p>
+        </footer>
       </article>
     </div>
   );
