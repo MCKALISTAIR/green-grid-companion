@@ -1017,7 +1017,10 @@ blockquote {
 
 /* Floating bottom dock — same paper as the home sheet (seam test) */
 .nav-dock {
-  margin: 0 14px calc(var(--bottom-nav-gap) + var(--bottom-safe-area));
+  /* Centred: a 14px side margin overrode mx-auto, so on tablet widths the
+     max-w-md dock sat at the left edge (BH-24). */
+  width: calc(100% - 28px);
+  margin: 0 auto calc(var(--bottom-nav-gap) + var(--bottom-safe-area));
   border-radius: 1.5rem;
   background: hsl(var(--card) / 0.96);
   backdrop-filter: blur(16px) saturate(140%);
