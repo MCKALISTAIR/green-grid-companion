@@ -31,6 +31,9 @@ import { DashboardSkeleton } from '@/components/home/DashboardSkeleton';
 import { SlowLoadingNotice } from '@/components/SlowLoadingNotice';
 import { OffGridNotice } from '@/components/home/OffGridNotice';
 import { StaleReadingNotice } from '@/components/home/StaleReadingNotice';
+import { OutageCard } from '@/components/home/OutageCard';
+import { useGridFailureKind } from '@/hooks/useGridFailureKind';
+import { isReadingStale } from '@/lib/voice/statesCopy';
 import { DashboardViewTabs, type DashboardViewMode } from '@/components/home/DashboardViewTabs';
 import { IntensityDashboard } from '@/components/home/IntensityDashboard';
 import { IntensityHeroOverlay } from '@/components/home/IntensityHeroOverlay';
@@ -98,11 +101,16 @@ const Index = () => {
     isDegraded,
     offGridArea: offGrid,
     isError,
+    hasReading,
     error,
     refetch,
     getNextUpdate,
     nextUpdate,
   } = useCarbonData(postcode);
+  // Design error states: keep the last known number (with its chip) when a
+  // refresh fails or the reading is old, and only blame NESO when it's NESO.
+  const failureKind = useGridFailureKind(isError, error);
+  const showLastKnown = hasReading && (isError || isReadingStale(lastUpdated ?? undefined));
 
   const { frequency: gridFrequency } = useGridDemand();
   const renewablesPct = getRenewablesPercentage(generationMix);
@@ -237,7 +245,8 @@ const Index = () => {
               generationMix={generationMix}
               isLoading={isLoading}
               isBackgroundFetching={isBackgroundFetching}
-              isError={isError}
+              isError={isError && !hasReading}
+              lastKnownAt={showLastKnown ? lastUpdated : undefined}
               lastUpdated={lastUpdated}
               nextUpdate={nextUpdate}
               getNextUpdate={getNextUpdate}
@@ -267,8 +276,20 @@ const Index = () => {
                 <OffGridNotice area={offGrid} postcode={postcode} onChangePostcode={setPostcode} />
               )}
 
-              {!isLoading && !isError && (
-                <StaleReadingNotice readingFrom={lastUpdated} onRetry={() => void refetch()} />
+              {isError && hasReading ? (
+                failureKind === 'outage' ? (
+                  <OutageCard onRetry={() => void refetch()} />
+                ) : (
+                  <StaleReadingNotice
+                    force
+                    readingFrom={lastUpdated}
+                    onRetry={() => void refetch()}
+                  />
+                )
+              ) : (
+                !isLoading && (
+                  <StaleReadingNotice readingFrom={lastUpdated} onRetry={() => void refetch()} />
+                )
               )}
 
               {isDegraded && !offGrid && (
@@ -304,7 +325,9 @@ const Index = () => {
                     <SlowLoadingNotice active onRetry={() => void refetch()} />
                     <DashboardSkeleton />
                   </div>
-                ) : isError ? (
+                ) : isError && !hasReading && failureKind === 'outage' ? (
+                  <OutageCard onRetry={() => void refetch()} />
+                ) : isError && !hasReading ? (
                   <div className="py-8 bg-card rounded-2xl border border-border shadow-lg">
                     <ErrorState
                       title={getErrorInfo(error).title}
