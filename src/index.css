@@ -1140,7 +1140,7 @@ blockquote {
     font-size: 3.5rem;
   }
 
-  .home-scene-gauge [data-testid='hero-band'] p {
+  .home-scene-gauge [data-testid='hero-band-label'] {
     font-size: 1.25rem;
     line-height: 1.15;
   }
@@ -1312,4 +1312,14 @@ body {
   color: #0f1a24;
   --tw-drop-shadow: drop-shadow(0 1px 6px rgba(255, 255, 255, 0.35));
   text-shadow: none;
+}
+
+/* Narrow + short (320x568): renewable and updated lines on two centred rows
+   instead of crammed onto one (Design review of #94). Extends #93's compact
+   max-height: 640px rule. */
+@media (max-width: 359px) and (max-height: 640px) {
+  .home-scene-gauge [data-testid='hero-meta'] {
+    flex-direction: column;
+    align-items: center;
+  }
 }
