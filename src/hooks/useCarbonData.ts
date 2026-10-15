@@ -319,6 +319,8 @@ export function useCarbonData(postcode: string) {
   return {
     // Current intensity
     intensity,
+    /** False when `intensity` is only the 0 placeholder (no real reading yet). */
+    hasReading,
     previousIntensity,
     index,
     region,
