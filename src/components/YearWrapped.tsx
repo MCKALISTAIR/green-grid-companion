@@ -415,7 +415,7 @@ function HighlightsSlide({ data }: { data: YearWrappedData }) {
                 {format(parse(data.greenestDay.date, 'yyyy-MM-dd', new Date()), 'MMMM d')}
               </p>
               <p className="text-xs text-primary">
-                {data.greenestDay.renewableShare.toFixed(1)}% renewable
+                {data.greenestDay.renewableShare.toFixed(1)}% renewable (incl. biomass)
               </p>
             </div>
           </motion.div>
