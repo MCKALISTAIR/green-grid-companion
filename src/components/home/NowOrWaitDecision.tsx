@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, BatteryCharging, Clock3, Leaf } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -12,14 +13,27 @@ import { markUsefulMoment } from '@/lib/firstLaunch';
 interface NowOrWaitDecisionProps {
   intensity: number;
   forecast: ForecastData[];
+  /** Half-hour start of the live reading; a stale one never shows "Now". */
+  lastUpdated?: string | null;
+}
+
+/** Re-judge every minute so a card left open goes stale instead of staying "Now". */
+function useMinuteTick(): Date {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(new Date()), 60_000);
+    return () => window.clearInterval(id);
+  }, []);
+  return now;
 }
 
 /**
  * Primary home-sheet action: answer "use energy now or wait?"
  * before any secondary insight chrome.
  */
-export function NowOrWaitDecision({ intensity, forecast }: NowOrWaitDecisionProps) {
-  const decision = getNowOrWaitDecision(intensity, forecast);
+export function NowOrWaitDecision({ intensity, forecast, lastUpdated }: NowOrWaitDecisionProps) {
+  const now = useMinuteTick();
+  const decision = getNowOrWaitDecision(intensity, forecast, now, lastUpdated ?? null);
   const isUseNow = decision.action === 'use_now';
   const countdown = useCountdown(decision.countdownTarget);
   const { tone } = useEnergyFacts();

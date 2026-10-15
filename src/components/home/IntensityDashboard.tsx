@@ -54,7 +54,7 @@ export function IntensityDashboard({
 
   return (
     <div className="space-y-5">
-      <NowOrWaitDecision intensity={intensity} forecast={forecast} />
+      <NowOrWaitDecision intensity={intensity} forecast={forecast} lastUpdated={lastUpdated} />
 
       <GardenStageUpLine growthStage={growthStage} gardenDays={gardenDays} />
 
