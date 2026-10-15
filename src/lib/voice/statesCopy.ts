@@ -21,3 +21,13 @@ export const SLOW_LOADING_COPY = {
   body: 'The grid data service is slow right now.',
   retry: 'Try again',
 } as const;
+
+/** Home notice when the saved postcode is not on the GB grid (figures are the GB average). */
+export const OFF_GRID_HOME_COPY = {
+  northernIreland: 'Northern Ireland has its own grid',
+  channelIslands: 'The Channel Islands have their own grid',
+  isleOfMan: 'The Isle of Man has its own grid',
+  bfpo: "Forces (BFPO) addresses aren't on the GB grid map",
+  body: "NESO's data only covers Great Britain, so this is the GB average.",
+  action: 'Change postcode',
+} as const;

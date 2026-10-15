@@ -39,6 +39,7 @@ import { PullToRefresh } from '@/components/PullToRefresh';
 import { TurbineSpinner } from '@/components/ui/turbine-spinner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SlowLoadingNotice } from '@/components/SlowLoadingNotice';
+import { plannerLiveIntensity } from '@/lib/plannerLive';
 
 import { toast } from 'sonner';
 import { Bell } from 'lucide-react';
@@ -80,9 +81,10 @@ export default function Planner() {
   });
 
   const { postcode } = useAppLocation();
-  const { forecast, intensity, refetch, isLoading, isError, error } = useCarbonData(postcode);
+  const { forecast, intensity, hasReading, refetch, isLoading, isError, error } =
+    useCarbonData(postcode);
   // useCarbonData reports 0 until a live reading arrives; don't treat that as a reading.
-  const liveLoaded = !isLoading && !isError && intensity > 0;
+  const liveIntensity = plannerLiveIntensity(intensity, { isLoading, isError, hasReading });
 
   const dismissOnboarding = () => {
     setShowOnboarding(false);
@@ -157,7 +159,7 @@ export default function Planner() {
   // One shared engine with the home card, so both give the same kind of answer.
   const plan = planLoad({
     forecast,
-    liveIntensity: liveLoaded ? intensity : null,
+    liveIntensity,
     slots: Math.ceil(selectedAppliance.duration * 2),
     horizonHours: null,
   });
@@ -252,7 +254,7 @@ export default function Planner() {
             <Card className="sheet-surface p-4 bg-primary/10 border-primary/20 relative animate-in fade-in slide-in-from-top-4 duration-500">
               <button
                 onClick={dismissOnboarding}
-                className="absolute top-2 right-2 p-2 text-muted-foreground hover:text-foreground transition-colors"
+                className="tap-target absolute top-2 right-2 p-2 text-muted-foreground hover:text-foreground transition-colors"
                 aria-label="Dismiss onboarding"
               >
                 <X className="w-4 h-4" />

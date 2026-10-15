@@ -39,3 +39,19 @@ export function isNorthernIrelandPostcode(input: string): boolean {
 export function isNationalMode(postcode: string | null | undefined): boolean {
   return (postcode ?? '').trim().toUpperCase() === NATIONAL_POSTCODE;
 }
+
+/**
+ * Places with postcodes that are not on the GB grid, so NESO has no figure for
+ * them. Never map these to a GB region (NESO's postcode lookup has returned
+ * South Scotland for GY1): say so, and offer the GB average instead.
+ */
+export type OffGridArea = 'northernIreland' | 'channelIslands' | 'isleOfMan' | 'bfpo';
+
+export function offGridArea(input: string | null | undefined): OffGridArea | null {
+  const v = (input ?? '').trim().toUpperCase();
+  if (/^BT\d/.test(v)) return 'northernIreland';
+  if (/^(GY|JE)\d/.test(v)) return 'channelIslands';
+  if (/^IM\d/.test(v)) return 'isleOfMan';
+  if (/^BFPO\s*\d{1,4}$/.test(v)) return 'bfpo';
+  return null;
+}

@@ -5,6 +5,13 @@ import {
   isEstimatedActual,
 } from '@/lib/carbonApi';
 import { format, parseISO } from 'date-fns';
+import {
+  formatLondonLongDate,
+  formatLondonShortDay,
+  formatLondonTime,
+  londonDateKey,
+  londonDayLabel,
+} from '@/lib/londonTime';
 import { useRef, useLayoutEffect, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getForecastMax, getForecastDifferences, getSlotDisplayValue } from '@/lib/forecastUtils';
@@ -159,13 +166,13 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
     nowAction,
   );
 
-  const isToday = visibleDate.getDate() === now.getDate();
-  const isTomorrow = visibleDate.getDate() === new Date(now.getTime() + 86400000).getDate();
-  const headerDateLabel = isToday
-    ? 'Today'
-    : isTomorrow
-      ? 'Tomorrow'
-      : format(visibleDate, 'EEEE, d MMM');
+  const visibleDay = londonDayLabel(visibleDate, now);
+  const headerDateLabel =
+    visibleDay === ''
+      ? 'Today'
+      : visibleDay === 'tomorrow'
+        ? 'Tomorrow'
+        : formatLondonLongDate(visibleDate);
 
   const selectHour = (i: number) => {
     setSelectedIndex(i);
@@ -197,6 +204,21 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
         </div>
       </div>
 
+      {/* Persistent live region: the visual card remounts per hour, which screen readers
+          often skip. One structured sentence instead of run-together fragments. */}
+      <p className="sr-only" aria-live="polite" aria-atomic="true" data-testid="forecast-hour-live">
+        {insight
+          ? [
+              `${insight.timeLabel}: ${insight.value} grams of CO₂ per kilowatt hour, ${insight.condition}.`,
+              insight.vsNow ? `${insight.vsNow}.` : '',
+              insight.inBestWindow ? 'In the best window.' : '',
+              insight.action,
+            ]
+              .filter(Boolean)
+              .join(' ')
+          : ''}
+      </p>
+
       <AnimatePresence mode="wait">
         {insight && (
           <motion.div
@@ -206,7 +228,6 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
             className={cn('rounded-2xl border px-3.5 py-3 space-y-1', insight.washClass)}
-            aria-live="polite"
             data-testid="forecast-hour-insight"
           >
             <div className="flex items-baseline justify-between gap-3 flex-wrap">
@@ -300,8 +321,8 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
               const leftRem = 1.0 + block.start * 3.5 + sepsBeforeStart * 2.0;
               const widthRem = (block.end - block.start) * 3.5 + sepsInBlock * 2.0 + 3.0;
 
-              const startTime = format(parseISO(forecast[block.start].from), 'HH:mm');
-              const endTime = format(parseISO(forecast[block.end].to), 'HH:mm');
+              const startTime = formatLondonTime(parseISO(forecast[block.start].from));
+              const endTime = formatLondonTime(parseISO(forecast[block.end].to));
               const slotCount = block.end - block.start + 1;
               const avgIntensity = Math.round(
                 forecast
@@ -369,19 +390,17 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
 
               const prevItem = forecast[i - 1];
               const prevTime = prevItem ? parseISO(prevItem.from) : null;
-              const showSeparator = !prevTime || time.getDate() !== prevTime.getDate();
+              const showSeparator = !prevTime || londonDateKey(time) !== londonDateKey(prevTime);
               const displayValue = getSlotDisplayValue(item, now);
               const isSelected = selectedIndex === i;
               const dimOthers = selectedIndex !== null && !isSelected;
 
               let dateLabel = '';
               if (showSeparator) {
-                const today = new Date();
-                const tomorrow = new Date(today);
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                if (time.getDate() === today.getDate()) dateLabel = 'Today';
-                else if (time.getDate() === tomorrow.getDate()) dateLabel = 'Tomorrow';
-                else dateLabel = format(time, 'EEE d');
+                const day = londonDayLabel(time);
+                if (day === '') dateLabel = 'Today';
+                else if (day === 'tomorrow') dateLabel = 'Tomorrow';
+                else dateLabel = formatLondonShortDay(time);
               }
 
               return (
@@ -403,7 +422,7 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
                         id={`forecast-hour-${i}`}
                         role="option"
                         aria-selected={isSelected}
-                        aria-label={`${format(time, 'HH:mm')}${isCurrentHour ? ' (now)' : ''}: ${
+                        aria-label={`${formatLondonTime(time)}${isCurrentHour ? ' (now)' : ''}: ${
                           isUnknown ? 'no data' : `${displayValue} gCO₂/kWh`
                         }`}
                         className={cn(
@@ -485,7 +504,7 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
                               : 'text-muted-foreground dark:text-[#8a9ba1]',
                           )}
                         >
-                          {isCurrentHour ? 'Now' : format(time, 'HH:mm')}
+                          {isCurrentHour ? 'Now' : formatLondonTime(time)}
                         </span>
                       </button>
                     </TooltipTrigger>
@@ -546,8 +565,8 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
         createPortal(
           (() => {
             const block = bestBlocks[selectedBestBlock];
-            const startTime = format(parseISO(forecast[block.start].from), 'HH:mm');
-            const endTime = format(parseISO(forecast[block.end].to), 'HH:mm');
+            const startTime = formatLondonTime(parseISO(forecast[block.start].from));
+            const endTime = formatLondonTime(parseISO(forecast[block.end].to));
             const slotCount = block.end - block.start + 1;
             const avgIntensity = Math.round(
               forecast

@@ -73,6 +73,22 @@ describe('first launch', () => {
     expect(localStorage.getItem('gridgreen-postcode')).toBe('GB');
   });
 
+  it.each([
+    ['GY1 1AA', /Channel Islands have their own grid/],
+    ['JE2 3AB', /Channel Islands have their own grid/],
+    ['IM1 1AA', /Isle of Man has its own grid/],
+    ['BFPO 1', /Forces \(BFPO\) addresses/],
+  ])('%s is not on the GB grid: says so and offers the GB average', async (pc, text) => {
+    renderOnboarding();
+    fireEvent.change(field(), { target: { value: pc } });
+    submit();
+    expect(await screen.findByText(text)).toBeInTheDocument();
+    expect(localStorage.getItem('gridgreen-postcode')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Show the GB average' }));
+    await screen.findByText('HOME');
+    expect(localStorage.getItem('gridgreen-postcode')).toBe('GB');
+  });
+
   it('says so inline for something that is not a postcode', () => {
     renderOnboarding();
     fireEvent.change(field(), { target: { value: 'hello' } });
