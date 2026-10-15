@@ -809,19 +809,6 @@ export function BatteryStorageContainer({
         animate={{ opacity: [1, 0.45, 1] }}
         transition={{ duration: isClean ? 2.5 : 1.6, repeat: Infinity, ease: 'easeInOut' as const }}
       />
-      {/* "BESS" label — bigger so it reads */}
-      <text
-        x={x + w / 2}
-        y={groundY - 3}
-        textAnchor="middle"
-        fontSize="2.4"
-        fontWeight="700"
-        fill="rgba(255,255,255,0.55)"
-        fontFamily="monospace"
-        letterSpacing="0.2"
-      >
-        BESS
-      </text>
     </motion.g>
   );
 }

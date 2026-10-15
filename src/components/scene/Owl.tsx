@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useOffline } from '@/hooks/useOffline';
 
 interface OwlProps {
   treeX: number; // X position to perch on tree (0-400 SVG coords)
@@ -10,19 +11,30 @@ interface OwlProps {
 export function Owl({ treeX, treeY, scale = 1 }: OwlProps) {
   const [isHooting, setIsHooting] = useState(false);
 
-  // Trigger random hoots
-  useState(() => {
+  const { isOffline } = useOffline();
+
+  // Random hoots, but never while offline (copy audit: 'Hoot!' showed offline).
+  // Was useState(() => setInterval(...)), which never cleared the interval.
+  useEffect(() => {
+    if (isOffline) {
+      setIsHooting(false);
+      return;
+    }
+    let hide: ReturnType<typeof setTimeout> | undefined;
     const interval = setInterval(() => {
       if (Math.random() > 0.7) {
         setIsHooting(true);
-        setTimeout(() => setIsHooting(false), 1000);
+        hide = setTimeout(() => setIsHooting(false), 1000);
       }
     }, 5000);
-    return () => clearInterval(interval);
-  });
+    return () => {
+      clearInterval(interval);
+      if (hide) clearTimeout(hide);
+    };
+  }, [isOffline]);
 
   return (
-    <g transform={`translate(${treeX}, ${treeY}) scale(${scale})`}>
+    <g aria-hidden="true" transform={`translate(${treeX}, ${treeY}) scale(${scale})`}>
       <motion.g
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
