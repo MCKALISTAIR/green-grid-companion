@@ -31,7 +31,7 @@ import { IntensityDashboard } from '@/components/home/IntensityDashboard';
 import { IntensityHeroOverlay } from '@/components/home/IntensityHeroOverlay';
 import { useSceneGrowth } from '@/hooks/useSceneGrowth';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { createHorizontalStateVariants, easeOutExpo, stateTransition } from '@/lib/motion';
+import { createHorizontalStateVariants, stateTransition } from '@/lib/motion';
 
 import { formatLondonTime } from '@/lib/londonTime';
 
@@ -274,42 +274,25 @@ const Index = () => {
                 />
               </div>
 
-              <AnimatePresence mode="wait" initial={false}>
-                {isError ? (
-                  <motion.div
-                    key="error"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={stateTransition}
-                    className="py-8 bg-card rounded-2xl border border-border shadow-lg"
-                  >
+              {/* Stable min-height + no enter/exit layout animation on the
+                  loading↔content swap. Framer y/height motion here was a CLS
+                  source; Intensity/Demand/Footprint still animate below. */}
+              <div className="home-feed-body min-h-[54.8rem]">
+                {/* Prefer skeleton over error while loading/restoring so a brief
+                    no-reading frame never mounts ErrorState and shifts the feed. */}
+                {isLoading && forecast.length === 0 ? (
+                  <DashboardSkeleton />
+                ) : isError ? (
+                  <div className="py-8 bg-card rounded-2xl border border-border shadow-lg">
                     <ErrorState
                       title={getErrorInfo(error).title}
                       description={getErrorInfo(error).description}
                       steps={getErrorInfo(error).steps}
                       retry={refetch}
                     />
-                  </motion.div>
-                ) : isLoading && forecast.length === 0 ? (
-                  <motion.div
-                    key="loading"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={stateTransition}
-                  >
-                    <DashboardSkeleton />
-                  </motion.div>
+                  </div>
                 ) : (
-                  <motion.div
-                    key="content"
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.28, ease: easeOutExpo }}
-                    className="space-y-4"
-                  >
+                  <div className="space-y-4">
                     <DashboardViewTabs
                       viewMode={viewMode}
                       onViewModeChange={setViewMode}
@@ -349,9 +332,9 @@ const Index = () => {
                         )}
                       </motion.div>
                     </AnimatePresence>
-                  </motion.div>
+                  </div>
                 )}
-              </AnimatePresence>
+              </div>
             </div>
           </main>
         </PullToRefresh>

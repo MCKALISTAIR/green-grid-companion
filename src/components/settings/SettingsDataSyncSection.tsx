@@ -7,18 +7,28 @@ import { settingsItemVariants } from './settingsMotion';
 import { SettingsSectionHeading } from './SettingsSectionHeading';
 
 interface SettingsDataSyncSectionProps {
-  gridLastUpdated: string | Date | null | undefined;
-  refetchGrid: () => void;
+  gridLastCheckedAt: string | Date | null | undefined;
+  refetchGrid: () => Promise<unknown> | void;
   isGridFetching: boolean;
   isOffline: boolean;
 }
 
 export function SettingsDataSyncSection({
-  gridLastUpdated,
+  gridLastCheckedAt,
   refetchGrid,
   isGridFetching,
   isOffline,
 }: SettingsDataSyncSectionProps) {
+  const handleForceRefresh = async () => {
+    const toastId = toast.loading('Checking for new data...');
+    try {
+      await refetchGrid();
+      toast.success('Grid data refreshed', { id: toastId });
+    } catch {
+      toast.error('Could not refresh grid data', { id: toastId });
+    }
+  };
+
   return (
     <motion.div variants={settingsItemVariants} className="space-y-4">
       <SettingsSectionHeading>Data Sync</SettingsSectionHeading>
@@ -31,7 +41,7 @@ export function SettingsDataSyncSection({
             <h3 className="font-medium">Grid Network Data</h3>
             <p className="text-sm text-muted-foreground flex items-center gap-2">
               Last checked:{' '}
-              {gridLastUpdated ? new Date(gridLastUpdated).toLocaleTimeString() : 'Unknown'}
+              {gridLastCheckedAt ? new Date(gridLastCheckedAt).toLocaleTimeString() : 'Unknown'}
               {isOffline && (
                 <Badge
                   variant="secondary"
@@ -47,8 +57,7 @@ export function SettingsDataSyncSection({
           variant="outline"
           size="sm"
           onClick={() => {
-            refetchGrid();
-            toast.info('Checking for new data...');
+            void handleForceRefresh();
           }}
           disabled={isGridFetching || isOffline}
         >

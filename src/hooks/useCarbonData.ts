@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useIsRestoring } from '@tanstack/react-query';
 import { useMemo, useEffect, useRef, useCallback, useState } from 'react';
 import {
   getRegionalForecastById,
@@ -88,6 +88,10 @@ function useSmartRefetch(refetchFn: () => Promise<void>, enabled: boolean) {
 
 export function useCarbonData(postcode: string) {
   const queryClient = useQueryClient();
+  // PersistQueryClient rehydrates async: before restore finishes, queries look
+  // idle with no data (isLoading=false). Treat that window as loading so Index
+  // doesn't flash ErrorState and shift the feed (CLS).
+  const isRestoring = useIsRestoring();
 
   // Track previous intensity for animation
   const [previousIntensity, setPreviousIntensity] = useState<number | null>(null);
@@ -275,19 +279,42 @@ export function useCarbonData(postcode: string) {
   // Determine if this is an initial load (no data yet) vs background refetch
   const isInitialLoad = postcode
     ? regionalListQuery.isLoading ||
-      (!!regionId && !regionalDataQuery.data && regionalDataQuery.isLoading)
-    : !nationalQuery.data && nationalQuery.isLoading;
+      (!!regionId &&
+        !regionalDataQuery.data &&
+        (regionalDataQuery.isLoading || regionalDataQuery.isFetching))
+    : !nationalQuery.data && (nationalQuery.isLoading || nationalQuery.isFetching);
 
   // isLoading should only be true on initial load, not during background refetches.
   // Also stay loading while there's no reading but a query is still on its way
-  // (e.g. postcode lookup or national fallback still pending).
+  // (e.g. postcode lookup or national fallback still pending), including the
+  // one-frame gap after regionId resolves before regionalData reports isLoading.
   const awaitingReading =
     !hasReading &&
-    (nationalQuery.isLoading ||
+    (isRestoring ||
+      nationalQuery.isLoading ||
+      nationalQuery.isFetching ||
       regionalListQuery.isLoading ||
+      regionalListQuery.isFetching ||
       postcodeQuery.isLoading ||
-      regionalDataQuery.isLoading);
-  const isLoading = isInitialLoad || awaitingReading;
+      postcodeQuery.isFetching ||
+      regionalDataQuery.isLoading ||
+      regionalDataQuery.isFetching ||
+      (!!regionId && !regionalDataQuery.data && !regionalDataQuery.isError));
+  const isLoading = isRestoring || isInitialLoad || awaitingReading;
+
+  // Only treat "no reading" as an error once the national (fallback) query has
+  // actually settled — not while the persist cache is still rehydrating.
+  const noReadingSettled =
+    !hasReading && !isLoading && nationalQuery.isFetched && !nationalQuery.isFetching;
+
+  // Client fetch time (not the API half-hour `from`) — used by Settings "Last checked".
+  const lastCheckedMs = Math.max(
+    nationalQuery.dataUpdatedAt,
+    regionalListQuery.dataUpdatedAt,
+    regionalDataQuery.dataUpdatedAt,
+    forecastQuery.dataUpdatedAt,
+    generationQuery.dataUpdatedAt,
+  );
 
   return {
     // Current intensity
@@ -296,7 +323,12 @@ export function useCarbonData(postcode: string) {
     index,
     region,
     regionId, // Export regionId for use in other hooks/pages
+    // Half-hour period start from the API reading (for staleness / next update).
     lastUpdated: regionalData?.from || nationalQuery.data?.from,
+
+    // When the client last successfully fetched grid data (updates on Force Refresh
+    // even if the half-hour reading itself has not changed yet).
+    lastCheckedAt: lastCheckedMs > 0 ? new Date(lastCheckedMs).toISOString() : undefined,
 
     // Generation mix
     generationMix,
@@ -309,6 +341,7 @@ export function useCarbonData(postcode: string) {
 
     // Flag for background fetching (data exists but refreshing)
     isBackgroundFetching:
+      !isRestoring &&
       !isInitialLoad &&
       (nationalQuery.isFetching || regionalDataQuery.isFetching || forecastQuery.isFetching),
 
@@ -318,8 +351,7 @@ export function useCarbonData(postcode: string) {
     isError:
       (postcode
         ? (regionalListQuery.isError || regionalDataQuery.isError) && nationalQuery.isError
-        : nationalQuery.isError) ||
-      (!hasReading && !isLoading),
+        : nationalQuery.isError) || noReadingSettled,
 
     // Flag to explicitly identify graceful degradation so UI can warn the user
     isDegraded:
