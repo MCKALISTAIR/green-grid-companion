@@ -34,7 +34,7 @@ export function SettingsFooter({
         <p>
           Footprint data powered by{' '}
           <a
-            href="https://developer.octopus.energy/docs/api/"
+            href="https://developer.octopus.energy/rest/"
             target="_blank"
             rel="noopener noreferrer"
             className="underline hover:text-foreground transition-colors"
