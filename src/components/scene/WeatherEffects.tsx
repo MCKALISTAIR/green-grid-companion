@@ -177,6 +177,8 @@ function WeatherClouds({
           className="absolute animate-cloud-drift"
           style={{
             top: `${cloud.top}%`,
+            // Static spot under reduced motion; the drift keyframes override `left`.
+            left: `${8 + ((cloud.id * 31) % 70)}%`,
             animationDuration: `${cloud.duration}s`,
             animationDelay: `${cloud.delay}s`,
           }}
