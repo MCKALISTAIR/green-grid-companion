@@ -6,7 +6,10 @@ import { Button } from '@/components/ui/button';
 import { useHaptics } from '@/hooks/useHaptics';
 import { NotificationType } from '@capacitor/haptics';
 import { useQueryClient } from '@tanstack/react-query';
-import { BACK_ONLINE_TEXT, CARBON_QUERY_ROOTS, offlineBannerText } from '@/lib/voice/statesCopy';
+import { BACK_ONLINE_TEXT, CARBON_QUERY_ROOTS } from '@/lib/voice/statesCopy';
+import { OFFLINE_COPY } from '@/lib/voice/errorStatesCopy';
+import { ErrorActionButton } from '@/components/errors/ErrorStateCard';
+import { readTone } from '@/lib/tone';
 
 export function OfflineIndicator() {
   const { isOffline, wasOffline, clearWasOffline } = useOffline();
@@ -36,6 +39,8 @@ export function OfflineIndicator() {
 
   useEffect(() => {
     if (wasOffline) {
+      // Design: refresh automatically on reconnect.
+      void queryClient.refetchQueries({ type: 'active' });
       setShowReconnected(true);
       const timer = setTimeout(() => {
         setShowReconnected(false);
@@ -43,7 +48,7 @@ export function OfflineIndicator() {
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [wasOffline, clearWasOffline]);
+  }, [wasOffline, clearWasOffline, queryClient]);
 
   // Refetch in place: a full reload lost scroll position, open sheets and form state.
   const handleRefresh = () => {
@@ -60,14 +65,26 @@ export function OfflineIndicator() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -100, opacity: 0 }}
           transition={{ type: 'spring' as const, damping: 20, stiffness: 300 }}
-          className="fixed top-0 left-0 right-0 z-[100] bg-amber-500 text-amber-950 px-4 py-3 shadow-lg"
+          className="fixed top-0 left-0 right-0 z-[100] bg-[#e2ecfb] text-[#1d3f73] px-4 pb-3 shadow-lg"
           style={{ paddingTop: 'calc(max(env(safe-area-inset-top), 59px) + 0.75rem)' }}
           role="alert"
           aria-live="assertive"
+          data-testid="offline-banner"
         >
-          <div className="flex items-center justify-center gap-3 max-w-md mx-auto">
-            <WifiOff className="w-5 h-5 shrink-0" aria-hidden="true" />
-            <span className="text-sm font-medium">{offlineBannerText(savedAt)}</span>
+          {/* Try now lives in the banner so it is on screen at 320x568 without scrolling. */}
+          <div className="flex items-start gap-3 max-w-md mx-auto">
+            <WifiOff className="w-5 h-5 shrink-0 mt-0.5" aria-hidden="true" />
+            <div className="min-w-0 flex-1 text-sm leading-[1.4]">
+              <p>
+                <b>{OFFLINE_COPY.title}</b> {OFFLINE_COPY.body(savedAt, readTone())}
+              </p>
+              <p className="mt-0.5 text-[13px] opacity-90">{OFFLINE_COPY.auto}</p>
+            </div>
+            <ErrorActionButton
+              kind="secondary"
+              label={OFFLINE_COPY.action}
+              onClick={handleRefresh}
+            />
           </div>
         </motion.div>
       )}

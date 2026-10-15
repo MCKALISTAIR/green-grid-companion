@@ -33,6 +33,7 @@ import { OffGridNotice } from '@/components/home/OffGridNotice';
 import { StaleReadingNotice } from '@/components/home/StaleReadingNotice';
 import { OutageCard } from '@/components/home/OutageCard';
 import { useGridFailureKind } from '@/hooks/useGridFailureKind';
+import { useOffline } from '@/hooks/useOffline';
 import { isReadingStale } from '@/lib/voice/statesCopy';
 import { DashboardViewTabs, type DashboardViewMode } from '@/components/home/DashboardViewTabs';
 import { IntensityDashboard } from '@/components/home/IntensityDashboard';
@@ -110,7 +111,9 @@ const Index = () => {
   // Design error states: keep the last known number (with its chip) when a
   // refresh fails or the reading is old, and only blame NESO when it's NESO.
   const failureKind = useGridFailureKind(isError, error);
-  const showLastKnown = hasReading && (isError || isReadingStale(lastUpdated ?? undefined));
+  const { isOffline } = useOffline();
+  const showLastKnown =
+    hasReading && (isError || isOffline || isReadingStale(lastUpdated ?? undefined));
 
   const { frequency: gridFrequency } = useGridDemand();
   const renewablesPct = getRenewablesPercentage(generationMix);
