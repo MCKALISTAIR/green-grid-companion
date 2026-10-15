@@ -1,3 +1,4 @@
+import { appStorage } from '@/lib/appStorage';
 import { useEffect } from 'react';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useCarbonData } from '@/hooks/useCarbonData';
@@ -19,28 +20,28 @@ export function AchievementManager() {
 
       // 2. Grid Veteran: Visit on 30 different days
       const lastVisitKey = 'gridgreen-last-visit';
-      const lastVisit = localStorage.getItem(lastVisitKey);
+      const lastVisit = appStorage.getItem(lastVisitKey);
 
       if (!lastVisit || !isSameDay(new Date(lastVisit), now)) {
         // New day visit
         progress('grid_veteran', 1);
-        localStorage.setItem(lastVisitKey, now.toISOString());
+        appStorage.setItem(lastVisitKey, now.toISOString());
       }
 
       // 3. Clean Streak
       if (!isLoading && !isError && intensity !== undefined && intensity < 50) {
         const streakKey = 'gridgreen-clean-streak-last';
-        const lastStreakDate = localStorage.getItem(streakKey);
+        const lastStreakDate = appStorage.getItem(streakKey);
 
         if (!lastStreakDate) {
           // First low carbon visit
-          localStorage.setItem(streakKey, now.toISOString());
+          appStorage.setItem(streakKey, now.toISOString());
           progress('clean_streak', 1);
         } else {
           const lastDate = new Date(lastStreakDate);
           if (isSameDay(subDays(now, 1), lastDate)) {
             // Consecutive day!
-            localStorage.setItem(streakKey, now.toISOString());
+            appStorage.setItem(streakKey, now.toISOString());
             progress('clean_streak', 1);
           } else if (!isSameDay(now, lastDate)) {
             // Missed a day, reset logic would go here if we had reset capability
@@ -54,7 +55,7 @@ export function AchievementManager() {
             // useAchievements doesn't expose setProgress.
             // For simplicity in this iteration: We won't strictly reset, we'll just track legitimate consecutive updates.
             // Actually, let's just update if consecutive.
-            localStorage.setItem(streakKey, now.toISOString());
+            appStorage.setItem(streakKey, now.toISOString());
             // If not consecutive, we should ideally reset, but let's stick to MVP:
             // Only increment if consecutive.
           }

@@ -1,3 +1,4 @@
+import { appStorage } from '@/lib/appStorage';
 import { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -195,6 +196,7 @@ export function AccountBackup({
       }
 
       // Clear all local storage
+      appStorage.clearAll();
       localStorage.clear();
 
       // Sign out locally (server account is already deleted)

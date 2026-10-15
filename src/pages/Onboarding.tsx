@@ -1,3 +1,4 @@
+import { appStorage } from '@/lib/appStorage';
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Navigation } from 'lucide-react';
@@ -36,7 +37,7 @@ const Onboarding = () => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const completeOnboarding = () => {
-    localStorage.setItem('onboarding_complete', 'true');
+    appStorage.setItem('onboarding_complete', 'true');
     markFirstNumberPending();
     // Do not record consent here: the (non-blocking) cookie banner asks on the
     // home screen, and optional diagnostics stay off until the user accepts.
