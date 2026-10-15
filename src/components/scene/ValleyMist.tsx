@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { useId } from 'react';
 
 interface ValleyMistProps {
   cleanliness: number;
@@ -10,7 +9,6 @@ interface ValleyMistProps {
 
 export function ValleyMist({ cleanliness, timeOfDay, isNight }: ValleyMistProps) {
   const reduced = useReducedMotion();
-  const id = useId();
 
   // Show mist in dawn, morning, sunset, or dusk. Keep midday and full night clear.
   const isVisible =
