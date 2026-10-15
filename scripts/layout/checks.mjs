@@ -163,7 +163,10 @@ export async function checkSheetEdge(page, { viewport }) {
  * allowance (bar height + one page bottom padding, 128px) past its last visible
  * content.
  */
-export async function checkScrollSpace(page, { route, viewport, allowance = 128 }) {
+export async function checkScrollSpace(
+  page,
+  { route, viewport, allowance = 128, minClearance = 0 },
+) {
   const tag = `[scroll ${route} ${viewport.width}x${viewport.height}]`;
   const r = await page.evaluate(() => {
     window.scrollTo(0, document.scrollingElement.scrollHeight);
@@ -204,9 +207,10 @@ export async function checkScrollSpace(page, { route, viewport, allowance = 128 
     };
   });
   const fails = [];
-  if (r.navTop !== null && r.last > r.navTop + 1)
+  if (r.navTop !== null && r.last > r.navTop + 1 - minClearance)
     fails.push(
-      `${tag} last content (bottom ${Math.round(r.last)}) sits under the bottom nav (top ${Math.round(r.navTop)})`,
+      `${tag} last content (bottom ${Math.round(r.last)}) sits under the bottom nav (top ${Math.round(r.navTop)})` +
+        (minClearance ? ` or within ${minClearance}px of it` : ''),
     );
   const limit = Math.max(r.innerH, r.last + r.navH + allowance);
   if (r.scrollH > limit + 1)

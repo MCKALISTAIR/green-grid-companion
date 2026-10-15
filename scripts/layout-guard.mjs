@@ -8,7 +8,10 @@
  *      badge shows for a fresh 0 g reading and is hidden when stale;
  *   2. the scalloped sheet edge spans the full width with no gap at either edge;
  *   3. key routes don't leave empty scroll space below their last content, and
- *      that content scrolls fully clear of the bottom nav.
+ *      that content scrolls fully clear of the bottom nav;
+ *   4. every bottom-nav tab page (Home, Plan, History, Rank, Settings) scrolls its
+ *      last item fully above the nav, with at least TAB_MIN_CLEARANCE px to spare,
+ *      at every guard viewport plus the short phones in TAB_EXTRA_VIEWPORTS.
  *
  * Usage: npm run build && node scripts/layout-guard.mjs
  *   BASE_URL=http://localhost:4302  use an already running server
@@ -37,6 +40,12 @@ const SCROLL_ROUTES = [
   '/map',
   '/locations',
 ];
+
+/** Every route in BottomNav. Clearance comes from --bottom-content-inset (index.css). */
+const TAB_ROUTES = ['/', '/planner', '/history', '/map', '/settings'];
+/** Small phones checked for tab clearance only (iPhone SE 1st gen). */
+const TAB_EXTRA_VIEWPORTS = [{ width: 320, height: 568 }];
+const TAB_MIN_CLEARANCE = 8;
 
 async function startPreview() {
   // Run vite's own bin with node (not `npx`): killing an npx wrapper left the vite
@@ -129,7 +138,7 @@ async function main() {
         checks++;
         await context.close();
       }
-      for (const route of SCROLL_ROUTES) {
+      for (const route of new Set([...SCROLL_ROUTES, ...TAB_ROUTES])) {
         const { context, page } = await openPage(browser, base, {
           viewport,
           scenario: 'zero-carbon',
@@ -137,7 +146,24 @@ async function main() {
         });
         await page.waitForLoadState('networkidle').catch(() => {});
         await page.waitForTimeout(1500);
-        failures.push(...(await checkScrollSpace(page, { route, viewport })));
+        const minClearance = TAB_ROUTES.includes(route) ? TAB_MIN_CLEARANCE : 0;
+        failures.push(...(await checkScrollSpace(page, { route, viewport, minClearance })));
+        checks++;
+        await context.close();
+      }
+    }
+    for (const viewport of TAB_EXTRA_VIEWPORTS) {
+      for (const route of TAB_ROUTES) {
+        const { context, page } = await openPage(browser, base, {
+          viewport,
+          scenario: 'zero-carbon',
+          route,
+        });
+        await page.waitForLoadState('networkidle').catch(() => {});
+        await page.waitForTimeout(1500);
+        failures.push(
+          ...(await checkScrollSpace(page, { route, viewport, minClearance: TAB_MIN_CLEARANCE })),
+        );
         checks++;
         await context.close();
       }
