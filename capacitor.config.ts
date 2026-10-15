@@ -22,8 +22,7 @@ const config: CapacitorConfig = {
   plugins: {
     SplashScreen: {
       launchAutoHide: true,
-      // Matches the LaunchBackground colour asset (light). Dark mode uses the asset's dark variant via the storyboard (BH-52).
-      backgroundColor: '#f1f7f9',
+      backgroundColor: '#0f172a',
       androidScaleType: 'CENTER_CROP',
       showSpinner: false,
     },
