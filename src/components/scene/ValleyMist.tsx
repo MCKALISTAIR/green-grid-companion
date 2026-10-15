@@ -23,7 +23,7 @@ export function ValleyMist({ cleanliness, timeOfDay, isNight }: ValleyMistProps)
   // Tint of mist: cool blue on clean days, warm sepia on dirty days
   const hue = cleanliness > 0.5 ? 200 : 35;
   const sat = cleanliness > 0.5 ? '25%' : '18%';
-  const light = isNight ? '25%' : '88%';
+  const light = isNight ? 25 : 88;
   const mistColor = `hsl(${hue} ${sat} ${light}% / 0.15)`;
 
   const mistAnimate = reduced ? { x: 0 } : { x: ['-15%', '15%', '-15%'] };
@@ -48,7 +48,7 @@ export function ValleyMist({ cleanliness, timeOfDay, isNight }: ValleyMistProps)
       >
         <defs>
           <filter id={`${id}-mistBlur`}>
-            <feGaussianBlur stdDeviation="3.5" />
+            <feGaussianBlur stdDeviation="6" />
           </filter>
         </defs>
         <motion.g
