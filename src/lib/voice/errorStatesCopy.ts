@@ -46,3 +46,24 @@ export const OUTAGE_COPY = {
   },
   action: 'Try again',
 } as const;
+
+/** State 3: location outside GB (or a VPN). Follows the tone setting. */
+export const OUTSIDE_COPY = {
+  title: 'Outside Great Britain',
+  body: {
+    plain:
+      'Your location looks like it is outside GB, or you are on a VPN. GridSense only covers the GB grid.',
+    cheeky:
+      'Bonjour? Your location looks like it is outside GB, or you are on a VPN. We only cover the GB grid.',
+  },
+  enterPostcode: 'Enter a GB postcode',
+  useAverage: 'Use GB average',
+  niNote: 'Northern Ireland runs on a separate grid, so it is not covered.',
+} as const;
+
+/** State 4: unknown postcode (inline field error). Always Plain. */
+export const POSTCODE_COPY = {
+  notFound: (outward: string) => `We couldn't find ${outward}. Check it, or use the GB average.`,
+  tryAgain: 'Try again',
+  useAverage: 'Use GB average',
+} as const;

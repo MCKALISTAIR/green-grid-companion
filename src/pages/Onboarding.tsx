@@ -1,10 +1,14 @@
 import { appStorage } from '@/lib/appStorage';
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Navigation } from 'lucide-react';
+import { ArrowRight, MapPin, Navigation } from 'lucide-react';
 import { Geolocation as CapacitorGeolocation } from '@capacitor/geolocation';
 import { NotificationType } from '@capacitor/haptics';
 import { Button } from '@/components/ui/button';
+import { ErrorActionButton, ErrorStateCard } from '@/components/errors/ErrorStateCard';
+import { OUTSIDE_COPY, POSTCODE_COPY, toneBody } from '@/lib/voice/errorStatesCopy';
+import { readTone } from '@/lib/tone';
+import { isRoughlyInGreatBritain } from '@/lib/gbBounds';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { logger } from '@/lib/logger';
@@ -26,7 +30,7 @@ import {
 import { ONBOARDING_COPY } from '@/lib/voice/onboardingCopy';
 
 type Notice = {
-  kind: 'denied' | 'deniedForever' | 'failed' | 'invalid' | 'notFound' | 'offGrid';
+  kind: 'denied' | 'deniedForever' | 'failed' | 'invalid' | 'notFound' | 'offGrid' | 'outside';
   area?: OffGridArea;
 } | null;
 
@@ -110,6 +114,10 @@ const Onboarding = () => {
 
       if (data.status === 200 && data.result && data.result.length > 0) {
         finishWithPostcode(data.result[0].outcode as string);
+      } else if (response.ok && !isRoughlyInGreatBritain(latitude, longitude)) {
+        // Design state 3: outside GB (or a VPN). Inside the box with no match is a plain failure.
+        setNotice({ kind: 'outside' });
+        void notification(NotificationType.Error);
       } else {
         throw new Error('Could not determine postcode from location');
       }
@@ -193,18 +201,56 @@ const Onboarding = () => {
           </Button>
 
           <div id="onboarding-postcode-notice" aria-live="polite" className="empty:hidden">
-            {notice && notice.kind !== 'offGrid' && (
+            {notice?.kind === 'outside' && (
+              <div className="space-y-2 text-left">
+                <ErrorStateCard
+                  testId="outside-gb"
+                  tint="blue"
+                  icon={MapPin}
+                  title={OUTSIDE_COPY.title}
+                  body={toneBody(OUTSIDE_COPY.body, readTone())}
+                  actions={[
+                    {
+                      label: OUTSIDE_COPY.enterPostcode,
+                      onClick: () => inputRef.current?.focus(),
+                    },
+                    { label: OUTSIDE_COPY.useAverage, onClick: showNational, kind: 'secondary' },
+                  ]}
+                />
+                <p className="px-1 text-xs text-white/75">{OUTSIDE_COPY.niNote}</p>
+              </div>
+            )}
+            {notice?.kind === 'notFound' && (
+              <div role="alert" className="space-y-2 text-center" data-testid="postcode-not-found">
+                <p className="text-sm font-semibold text-[#ffb4a8]">
+                  {POSTCODE_COPY.notFound(toOutwardCode(manualPostcode).toUpperCase())}
+                </p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  <ErrorActionButton
+                    label={POSTCODE_COPY.tryAgain}
+                    onClick={() => {
+                      inputRef.current?.focus();
+                      inputRef.current?.select();
+                    }}
+                  />
+                  <ErrorActionButton
+                    kind="secondary"
+                    label={POSTCODE_COPY.useAverage}
+                    onClick={showNational}
+                  />
+                </div>
+              </div>
+            )}
+            {notice && !['offGrid', 'outside', 'notFound'].includes(notice.kind) && (
               <p
                 className="text-sm text-white/85 text-center"
-                role={notice.kind === 'invalid' || notice.kind === 'notFound' ? 'alert' : undefined}
+                role={notice.kind === 'invalid' ? 'alert' : undefined}
               >
                 {notice.kind === 'invalid'
                   ? c.invalid
-                  : notice.kind === 'notFound'
-                    ? c.notFound
-                    : notice.kind === 'failed'
-                      ? c.failed
-                      : c.denied}
+                  : notice.kind === 'failed'
+                    ? c.failed
+                    : c.denied}
                 {notice.kind === 'deniedForever' && <> {c.deniedForever}</>}
               </p>
             )}
