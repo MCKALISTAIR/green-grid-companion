@@ -38,6 +38,9 @@ function createTourDriver(onDone: () => void) {
   return driver({
     showProgress: false,
     animate: true,
+    stagePadding: 12,
+    stageRadius: 16,
+    popoverOffset: 16,
     allowClose: true,
     // "previous" is reused as "Skip tips"; there's nothing to go back to in a 2-tip tour.
     showButtons: ['previous', 'next'],

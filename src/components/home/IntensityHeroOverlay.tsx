@@ -171,7 +171,6 @@ export function IntensityHeroOverlay({
             'home-scene-gauge relative z-10 flex flex-col items-center pointer-events-none',
             'pt-[calc(max(env(safe-area-inset-top),12px)+3.25rem)]',
           )}
-          data-tour="intensity-gauge"
         >
           <div
             aria-hidden
@@ -227,6 +226,7 @@ export function IntensityHeroOverlay({
 
             <div
               className="flex items-end justify-center gap-1.5 sm:gap-2 min-h-[4.5rem] sm:min-h-[5.5rem]"
+              data-tour="intensity-gauge"
               data-testid="hero-number"
             >
               {isLoading ? (
