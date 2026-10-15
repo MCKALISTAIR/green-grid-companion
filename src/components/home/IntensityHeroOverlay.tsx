@@ -190,7 +190,7 @@ export function IntensityHeroOverlay({
             aria-hidden
             className={cn(
               'absolute inset-x-0 top-16 h-40 pointer-events-none scene-hud-radial transition-opacity duration-700',
-              needsHardScrim ? 'opacity-100' : 'opacity-50',
+              needsHardScrim ? 'opacity-100' : 'opacity-40',
             )}
           />
 

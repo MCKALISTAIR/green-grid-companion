@@ -336,7 +336,7 @@ export function DemandView() {
                     </motion.div>
                     <div className="min-w-0 w-full">
                       <div className="flex items-center gap-1">
-                        <span className="min-w-0 text-sm font-semibold capitalize whitespace-normal break-words">
+                        <span className="min-w-0 text-sm font-semibold capitalize whitespace-normal break-words leading-tight">
                           {source.name}
                         </span>
                           {fuelKey === 'biomass' && (
