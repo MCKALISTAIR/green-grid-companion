@@ -10,6 +10,7 @@ const SOUTHERN_OFFSETS: Record<string, { x: number; y: number }> = {
   London: { x: -5, y: -12 },
   'South East England': { x: 24, y: 22 },
   'Southern England': { x: -20, y: 22 },
+  'South England': { x: -20, y: 22 },
   'East England': { x: 20, y: -22 },
 };
 

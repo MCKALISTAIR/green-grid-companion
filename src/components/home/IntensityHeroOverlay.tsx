@@ -122,7 +122,7 @@ export function IntensityHeroOverlay({
           hasLiveReading={hasFreshReading}
           compact={hideGauge}
           className="absolute inset-0 h-full"
-          style={{ height: '100%' }}
+          style={{ height: '100%', position: 'absolute' }}
         />
 
         <div
