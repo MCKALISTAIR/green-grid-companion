@@ -49,7 +49,7 @@ export default function AchievementsPage() {
                 className={`overflow-hidden h-full transition-all duration-300 ${
                   achievement.unlocked
                     ? 'border-primary/15 ring-1 ring-primary/10'
-                    : 'bg-muted/30 border-dashed opacity-75'
+                    : 'bg-muted/30 border-dashed'
                 }`}
               >
                 <CardContent className="p-4 flex gap-4 items-start">
@@ -57,7 +57,7 @@ export default function AchievementsPage() {
                     className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center text-2xl ${
                       achievement.unlocked
                         ? 'bg-primary/10'
-                        : 'bg-muted text-muted-foreground/50 grayscale'
+                        : 'bg-muted text-muted-foreground grayscale'
                     }`}
                   >
                     {achievement.unlocked ? (
@@ -88,7 +88,7 @@ export default function AchievementsPage() {
                         </Badge>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground/80 leading-snug">
+                    <p className="text-sm text-muted-foreground leading-snug">
                       {achievement.description}
                     </p>
                   </div>

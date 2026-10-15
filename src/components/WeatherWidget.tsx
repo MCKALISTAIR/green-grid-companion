@@ -128,7 +128,7 @@ export function WeatherWidget() {
       {/* Dismiss button */}
       <button
         onClick={handleHide}
-        className="absolute top-2 right-2 p-1 rounded-full text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/50 transition-colors z-10 weather-widget-absolute-close"
+        className="absolute top-2 right-2 p-1 rounded-full text-muted-foreground hover:text-muted-foreground hover:bg-muted/50 transition-colors z-10 weather-widget-absolute-close"
         aria-label="Hide weather widget"
       >
         <X className="w-3.5 h-3.5" />
@@ -150,7 +150,7 @@ export function WeatherWidget() {
               animate={{ y: [0, -1, 0] }}
               transition={{ repeat: Infinity, duration: 3.5, ease: 'easeInOut' as const }}
             >
-              <Thermometer className="w-3.5 h-3.5 text-muted-foreground/70" />
+              <Thermometer className="w-3.5 h-3.5 text-muted-foreground" />
             </motion.div>
             <span className="font-medium tabular-nums">{current.temperature_2m}°</span>
           </span>
@@ -159,7 +159,7 @@ export function WeatherWidget() {
               animate={{ x: [-1.5, 1.5, -1.5] }}
               transition={{ repeat: Infinity, duration: 2.8, ease: 'easeInOut' as const }}
             >
-              <Wind className="w-3.5 h-3.5 text-muted-foreground/70" />
+              <Wind className="w-3.5 h-3.5 text-muted-foreground" />
             </motion.div>
             <span className="font-medium tabular-nums">
               {current.wind_speed_10m}
@@ -171,7 +171,7 @@ export function WeatherWidget() {
         {/* Dismiss */}
         <button
           onClick={handleHide}
-          className="ml-auto p-1 rounded-full text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted/50 transition-colors weather-widget-close-btn"
+          className="ml-auto p-1 rounded-full text-muted-foreground hover:text-muted-foreground hover:bg-muted/50 transition-colors weather-widget-close-btn"
           aria-label="Hide weather widget"
         >
           <X className="w-3.5 h-3.5" />

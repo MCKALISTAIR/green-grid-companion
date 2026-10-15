@@ -215,7 +215,7 @@ function CoalSlide({ data }: { data: YearWrappedData }) {
         transition={{ type: 'spring' as const }}
         className="relative"
       >
-        <Flame className="w-20 h-20 text-muted-foreground/30" />
+        <Flame className="w-20 h-20 text-muted-foreground" />
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
