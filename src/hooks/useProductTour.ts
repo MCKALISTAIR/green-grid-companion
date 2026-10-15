@@ -152,7 +152,7 @@ export function useProductTour() {
     if (replayPending || (!seen && onboardingComplete === 'true')) {
       runWhenOurTurn(TOUR_START_DELAY_MS);
     }
-  }, [runWhenOurTurn, location.pathname, location.key]);
+  }, [runWhenOurTurn, location.pathname]);
 
   const replayTour = useCallback(() => {
     sessionStorage.setItem('product_tour_replay', 'true');
