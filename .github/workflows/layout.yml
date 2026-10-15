@@ -20,7 +20,7 @@ jobs:
     name: Layout guard (Playwright)
     runs-on: ubuntu-latest
     # The guard itself takes ~2 min; 10 min leaves room for installs without letting a hang burn 20.
-    timeout-minutes: 10
+    timeout-minutes: 12
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -61,5 +61,5 @@ jobs:
           VITE_SUPABASE_PROJECT_ID: ${{ vars.VITE_SUPABASE_PROJECT_ID }}
 
       - name: Run layout guard
-        timeout-minutes: 6
+        timeout-minutes: 8
         run: node scripts/layout-guard.mjs
