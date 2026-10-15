@@ -1,6 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { ErrorState } from './ErrorState';
-import * as Sentry from '@sentry/react';
 import { logger } from '@/lib/logger';
 
 interface Props {

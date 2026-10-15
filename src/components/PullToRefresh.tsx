@@ -62,8 +62,6 @@ export function PullToRefresh({ onRefresh, children, disabled = false }: PullToR
   };
 
   // Blade spin: faster as you pull more; constant during refresh
-  const bladeRotationDeg = pullDistance * 3;
-  const refreshAnimDuration = isRefreshing ? 0.6 : null;
 
   return (
     <div

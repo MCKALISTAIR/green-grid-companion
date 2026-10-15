@@ -105,7 +105,7 @@ export const OctopusSettings = forwardRef<HTMLDivElement, OctopusSettingsProps>(
       try {
         await saveCredentials(result.data.apiKey, result.data.accountNumber);
         onSaved();
-      } catch (error) {
+      } catch {
         // Error handled in hook toast
       }
     };

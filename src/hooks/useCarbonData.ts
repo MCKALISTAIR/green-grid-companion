@@ -1,7 +1,6 @@
-import { useQuery, useQueryClient, useIsRestoring } from '@tanstack/react-query';
-import { useMemo, useEffect, useRef, useCallback, useState } from 'react';
+import { useQuery, useIsRestoring } from '@tanstack/react-query';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import {
-  getRegionalForecastById,
   getRegionalHistoryAndForecast,
   getNationalHistoryAndForecast,
   getRegionalIntensityById,
@@ -88,7 +87,6 @@ function useSmartRefetch(refetchFn: () => Promise<void>, enabled: boolean) {
 }
 
 export function useCarbonData(postcode: string) {
-  const queryClient = useQueryClient();
   // PersistQueryClient rehydrates async: before restore finishes, queries look
   // idle with no data (isLoading=false). Treat that window as loading so Index
   // doesn't flash ErrorState and shift the feed (CLS).

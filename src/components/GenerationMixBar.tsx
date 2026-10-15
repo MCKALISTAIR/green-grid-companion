@@ -1,4 +1,4 @@
-import { GenerationMix, getFuelColor } from '@/lib/carbonApi';
+import { getFuelColor } from '@/lib/carbonApi';
 import { Home, Factory } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useReducedMotion } from '@/hooks/useReducedMotion';

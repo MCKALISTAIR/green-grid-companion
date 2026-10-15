@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, useSpring, useTransform, AnimatePresence } from 'framer-motion';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -31,7 +31,6 @@ export function AnimatedIntensity({
   const [showArrow, setShowArrow] = useState(false);
   const [direction, setDirection] = useState<'up' | 'down' | null>(null);
   const shouldReduceMotion = useReducedMotion();
-  const hasAnimatedRef = useRef(false);
 
   // Spring animation for smooth number counting
   // Higher stiffness + lower damping = snappier "clunk" into place

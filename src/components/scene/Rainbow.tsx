@@ -34,7 +34,6 @@ export function Rainbow() {
 
         {/* Rainbow arc - each band slightly larger */}
         {[0, 1, 2, 3, 4, 5, 6].map((i) => {
-          const baseRadius = 180 + i * 8;
           const arcPath = `M -20,120 Q 200,${40 - i * 5} 420,120`;
 
           return (

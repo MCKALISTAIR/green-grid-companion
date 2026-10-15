@@ -32,8 +32,7 @@ describe('useYearWrapped Benchmark', () => {
 
     mockGetNationalHistoryAndForecast.mockImplementation(async () => {
       await new Promise((resolve) => setTimeout(resolve, 50)); // 50ms network delay per request
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return dummyData as any;
+      return dummyData as never;
     });
 
     const { result } = renderHook(() => useYearWrapped());

@@ -127,7 +127,7 @@ export function parseEdgeFunctionError(error: unknown, context?: ErrorContext): 
 /**
  * Get a contextual error message based on the feature and action
  */
-function getContextualErrorMessage(context?: ErrorContext, error?: unknown): string {
+function getContextualErrorMessage(context?: ErrorContext, _error?: unknown): string {
   if (!context?.feature) {
     return 'Something went wrong. Please try again.';
   }

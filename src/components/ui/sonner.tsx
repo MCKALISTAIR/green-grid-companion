@@ -44,5 +44,5 @@ const Toaster = ({ ...props }: ToasterProps) => {
   );
 };
 
-// eslint-disable-next-line react-refresh/only-export-components
+// eslint-disable-next-line react-refresh/only-export-components -- re-exports sonner's toast next to the Toaster (shadcn pattern).
 export { Toaster, toast };

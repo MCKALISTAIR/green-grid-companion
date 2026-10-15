@@ -15,12 +15,11 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
-  DialogClose,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { WashingMachine, Car, Utensils, Zap, Plus, PenLine, Leaf, X } from 'lucide-react';
-import { getIntensityColor, getIntensityTextColor } from '@/lib/carbonApi';
+import {} from '@/lib/carbonApi';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { plannerReminderId } from '@/lib/notificationIds';
 import { parseISO, subMinutes, isFuture } from 'date-fns';
@@ -36,7 +35,7 @@ import {
 } from '@/lib/nowOrWait';
 import { formatLondonTime, formatLondonTimeWithDay } from '@/lib/londonTime';
 import { PullToRefresh } from '@/components/PullToRefresh';
-import { TurbineSpinner } from '@/components/ui/turbine-spinner';
+import {} from '@/components/ui/turbine-spinner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SlowLoadingNotice } from '@/components/SlowLoadingNotice';
 import { plannerLiveIntensity } from '@/lib/plannerLive';

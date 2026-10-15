@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { ErrorState } from '@/components/ErrorState';
-import { EmptyState } from '@/components/EmptyState';
+import {} from '@/components/EmptyState';
 import { getErrorInfo } from '@/lib/errorUtils';
 
 import { PullToRefresh } from '@/components/PullToRefresh';

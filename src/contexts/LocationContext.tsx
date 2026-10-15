@@ -154,7 +154,7 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
+// eslint-disable-next-line react-refresh/only-export-components -- hook lives beside its provider by design.
 export function useAppLocation() {
   const context = useContext(LocationContext);
   if (context === undefined) {

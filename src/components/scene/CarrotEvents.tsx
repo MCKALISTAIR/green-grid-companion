@@ -1,12 +1,10 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useHaptics } from '@/hooks/useHaptics';
-import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useState } from 'react';
 
 // 🛸 UFO Component with click-to-abduct-sheep easter egg
 export function UFO({ onComplete }: { onComplete: () => void }) {
   const { impactLight: impactMedium } = useHaptics({ decorative: true });
-  const shouldReduceMotion = useReducedMotion();
   const [isAbducting, setIsAbducting] = useState(false);
   const [bubbleText, setBubbleText] = useState<string | null>(null);
 

@@ -1,4 +1,4 @@
-import { ForecastData } from './carbonApi';
+import {} from './carbonApi';
 
 export type FactCategory =
   'clean_energy' | 'dirty_energy' | 'windy' | 'night' | 'solar' | 'general' | 'rain' | 'cold';
@@ -423,7 +423,7 @@ export function getRandomFact(
           }
         }
       }
-    } catch (e) {
+    } catch {
       // fail-silent
     }
   }

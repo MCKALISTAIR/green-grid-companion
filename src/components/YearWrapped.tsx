@@ -12,7 +12,6 @@ import {
   Leaf,
   TrendingDown,
   TrendingUp,
-  Calendar,
   Sparkles,
   ChevronRight,
   ChevronLeft,
@@ -463,7 +462,7 @@ function HighlightsSlide({ data }: { data: YearWrappedData }) {
   );
 }
 
-function SummarySlide({ data, onClose }: { data: YearWrappedData; onClose: () => void }) {
+function SummarySlide({ data, onClose: _onClose }: { data: YearWrappedData; onClose: () => void }) {
   return (
     <div className="p-8 flex flex-col items-center justify-center flex-1 text-center gap-6">
       <motion.div

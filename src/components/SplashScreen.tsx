@@ -32,7 +32,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
     }, 2000); // Show for at least 2 seconds
 
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only timer; a new onComplete must not restart the splash.
   }, []);
 
   if (!isVisible) return null;

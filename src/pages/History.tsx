@@ -13,7 +13,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 
 import {
   ComposedChart,
-  Line,
   Area,
   Bar,
   XAxis,
@@ -23,14 +22,13 @@ import {
   ResponsiveContainer,
   Brush,
 } from 'recharts';
-import { format, parseISO, subDays, isSameHour, isSameDay } from 'date-fns';
-import { Loader2, TrendingDown, TrendingUp, Minus, Zap, BarChart3, Info, X } from 'lucide-react';
+import { format, parseISO, subDays } from 'date-fns';
+import { TrendingDown, TrendingUp, Minus, Zap, BarChart3, Info, X } from 'lucide-react';
 import { classifyHistoryTrend, historyTrendCopy } from '@/lib/historyTrend';
 import { ErrorState } from '@/components/ErrorState';
 import { EmptyState } from '@/components/EmptyState';
 import { getErrorInfo } from '@/lib/errorUtils';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon, RotateCcw } from 'lucide-react';
@@ -78,7 +76,6 @@ export default function HistoryPage() {
     error: regionError,
   } = useCarbonData(postcode);
   const { footprint, isLinked } = useOctopusEnergy();
-  const navigate = useNavigate();
 
   const [timeRange, setTimeRange] = useState<'24h' | '7d'>('7d');
   const [date, setDate] = useState<Date | undefined>(undefined); // If defined, we are in Time Machine mode
@@ -130,7 +127,6 @@ export default function HistoryPage() {
   const error = date ? null : historyQuery.error; // Historical hook handles its own error retrieval if needed
 
   // Logic for "Vintage" mode - just a flag for now, could be passed to scene later
-  const isVintage = !!date;
 
   const { unlock } = useAchievements();
 

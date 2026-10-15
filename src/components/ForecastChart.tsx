@@ -16,7 +16,7 @@ import { useRef, useLayoutEffect, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getForecastMax, getForecastDifferences, getSlotDisplayValue } from '@/lib/forecastUtils';
 import { createPortal } from 'react-dom';
-import { Target, ArrowUp, ArrowDown, Clock3, Leaf, Sparkles } from 'lucide-react';
+import { Target, ArrowUp, ArrowDown, Clock3, Leaf } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { findDefaultForecastIndex, getForecastHourInsight } from '@/lib/forecastHourInsight';

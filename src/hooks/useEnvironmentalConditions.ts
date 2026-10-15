@@ -4,7 +4,7 @@ import { useSceneDirector } from '@/hooks/useSceneDirector';
 import { getSkyTopColor, getCarbonIndex } from '@/lib/sceneUtils';
 
 export function useEnvironmentalConditions(postcode: string | null, intensity: number | null) {
-  const { timeOfDay: realTimeOfDay, isNight: realIsNight } = useTimeOfDay();
+  const { timeOfDay: realTimeOfDay } = useTimeOfDay();
   const { weather: realWeather } = useWeatherData(postcode);
   const { active: isDirectorMode, overrides } = useSceneDirector();
 

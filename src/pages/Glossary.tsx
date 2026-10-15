@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import {} from '@/components/ui/scroll-area';
 import { getFuelColor } from '@/lib/carbonApi';
 import { motion } from 'framer-motion';
 

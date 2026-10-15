@@ -100,7 +100,7 @@ export function AccountBackup({
             });
 
             if (!error && data?.migrated) {
-              const { credentials, meters, consumption_records, footprint_records } = data.migrated;
+              const { credentials, meters, footprint_records } = data.migrated;
               if (credentials || meters > 0) {
                 toast.success(
                   `Restored your Octopus data: ${meters} meter(s), ${footprint_records} footprint records`,
@@ -157,7 +157,7 @@ export function AccountBackup({
       if (error) {
         toast.error(`Sign in failed: ${error.message}`);
       }
-    } catch (err) {
+    } catch {
       toast.error('Sign in failed. Please try again.');
     } finally {
       setLoading(false);
@@ -170,7 +170,7 @@ export function AccountBackup({
     try {
       await supabase.auth.signOut();
       toast.success('Signed out successfully');
-    } catch (err) {
+    } catch {
       toast.error('Sign out failed');
     } finally {
       setLoading(false);
@@ -289,7 +289,7 @@ export function AccountBackup({
         localStorage.removeItem(ANON_USER_ID_KEY);
       }
       // On redirect, the onAuthStateChange SIGNED_IN handler will trigger migration
-    } catch (err) {
+    } catch {
       toast.error('Provider switch failed. Please try again.');
       localStorage.removeItem(ANON_USER_ID_KEY);
     } finally {

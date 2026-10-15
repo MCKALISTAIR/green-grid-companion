@@ -1,4 +1,4 @@
-import { useSceneDirector, SceneOverrides } from '@/hooks/useSceneDirector';
+import { useSceneDirector } from '@/hooks/useSceneDirector';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { X, CloudRain, Snowflake, CloudLightning, Sun, Moon } from 'lucide-react';
+import { X, CloudRain, Snowflake, CloudLightning } from 'lucide-react';
 import { TimeOfDay } from '@/hooks/useTimeOfDay';
 
 export function DirectorPanel() {

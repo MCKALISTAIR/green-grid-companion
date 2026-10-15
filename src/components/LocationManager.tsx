@@ -35,7 +35,7 @@ import { Label } from '@/components/ui/label';
 import { UK_REGIONS } from '@/lib/carbonApi';
 import { toast } from 'sonner';
 import { useSavedLocations } from '@/hooks/useSavedLocations';
-import { searchLocation, getRegionFromCoordinates, LocationSearchResult } from '@/lib/location';
+import { searchLocation, getRegionFromCoordinates } from '@/lib/location';
 import { setGenericSharedRegion } from '@/lib/sharedPrefs';
 import { logger } from '@/lib/logger';
 import { Capacitor } from '@capacitor/core';

@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { CITY_GROUND_Y, CITY_SCALE } from '@/lib/sceneScaleBible';
 
 // 🚗 Car/Vehicle on the road
@@ -855,7 +855,7 @@ export function CityTraffic({
       speed: 10 + Math.random() * 8,
     }));
     // cleanliness intentionally omitted: keep vehicle roles stable within each EV band.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- cleanliness omitted on purpose (see comment above).
   }, [isNight, maxVehicles, highEvShare]);
 
   return (

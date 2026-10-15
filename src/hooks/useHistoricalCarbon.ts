@@ -6,7 +6,7 @@ import {
   ForecastData,
 } from '@/lib/carbonApi';
 import { useCarbonData } from '@/hooks/useCarbonData';
-import { addDays, endOfDay, formatISO, startOfDay, subYears } from 'date-fns';
+import { endOfDay, startOfDay, subYears } from 'date-fns';
 
 export function useHistoricalCarbon(date: Date | undefined) {
   const postcode = appStorage.getItem('gridgreen-postcode') || '';

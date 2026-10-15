@@ -1,4 +1,4 @@
-import { AlertCircle, CloudOff, RefreshCw, WifiOff } from 'lucide-react';
+import { AlertCircle, CloudOff, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 

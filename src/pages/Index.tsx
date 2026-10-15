@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef, useMemo, useLayoutEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { NotificationType } from '@capacitor/haptics';
 import { toast } from 'sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { Button } from '@/components/ui/button';
+import {} from '@/components/ui/button';
 import { FootprintView } from '@/components/FootprintView';
 import { DemandView } from '@/components/DemandView';
 import { useCarbonData } from '@/hooks/useCarbonData';
@@ -42,7 +42,6 @@ import { formatLondonTime } from '@/lib/londonTime';
 const DASHBOARD_VIEWS: DashboardViewMode[] = ['intensity', 'demand', 'footprint'];
 
 const Index = () => {
-  const navigate = useNavigate();
   const { postcode, setPostcode } = useAppLocation();
   const [viewMode, setViewMode] = useState<DashboardViewMode>('intensity');
   const location = useLocation();
