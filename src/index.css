@@ -618,6 +618,13 @@
   box-shadow: 0 4px 8px -2px hsl(var(--foreground) / 0.1);
 }
 
+.gridsense-tour-popover .driver-popover-navigation-btns .driver-popover-prev-btn {
+  background: transparent;
+  color: hsl(var(--foreground));
+  border-color: hsl(var(--foreground) / 0.35);
+  text-shadow: none;
+}
+
 .gridsense-tour-popover .driver-popover-navigation-btns .driver-popover-next-btn {
   background: hsl(var(--primary));
   color: hsl(var(--primary-foreground));
@@ -632,9 +639,9 @@
 }
 
 .gridsense-tour-popover .driver-popover-close-btn {
-  color: hsl(var(--muted-foreground));
+  color: hsl(var(--foreground));
   transition: all 0.2s ease;
-  opacity: 0.6;
+  opacity: 0.85;
 }
 
 .gridsense-tour-popover .driver-popover-close-btn:hover {
