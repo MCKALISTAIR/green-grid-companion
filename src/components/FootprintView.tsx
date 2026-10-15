@@ -52,7 +52,8 @@ import {
 import { format, parseISO, startOfDay, getHours } from 'date-fns';
 import { ComponentErrorBoundary } from '@/components/ComponentErrorBoundary';
 import { EstimateDisclaimer } from '@/components/attribution/EstimateDisclaimer';
-import { GreenScoreExplainerContent, getGreenScoreRating } from '@/components/GreenScoreExplainer';
+import { GreenScoreExplainerContent } from '@/components/GreenScoreExplainer';
+import { getGreenScoreRating } from '@/lib/greenScore';
 
 const INTENSITY_COLORS: Record<string, string> = {
   'very low': 'hsl(var(--intensity-very-low))',
