@@ -402,7 +402,7 @@ export function FootprintView() {
 
   if (!isLinked) {
     return (
-      <div className="space-y-6 pt-2 max-w-2xl mx-auto animate-in fade-in duration-200">
+      <div className="space-y-6 pt-2 pb-8 max-w-2xl mx-auto animate-in fade-in duration-200">
         <Card className="p-6 space-y-4 border-primary/20 bg-primary/5">
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -554,7 +554,7 @@ export function FootprintView() {
   }
 
   return (
-    <div className="space-y-4 animate-in fade-in duration-200">
+    <div className="space-y-4 pb-8 animate-in fade-in duration-200">
       {/* Time Range Selector & Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

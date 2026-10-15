@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useLayoutEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { NotificationType } from '@capacitor/haptics';
@@ -40,6 +41,10 @@ const DASHBOARD_VIEWS: DashboardViewMode[] = ['intensity', 'demand', 'footprint'
 const Index = () => {
   const { postcode, setPostcode } = useAppLocation();
   const [viewMode, setViewMode] = useState<DashboardViewMode>('intensity');
+  const location = useLocation();
+  useLayoutEffect(() => {
+    if (location.state?.startProductTour) setViewMode('intensity');
+  }, [location.key, location.state]);
   const { showYearWrapped, setShowYearWrapped, wrappedYear } = useYearWrappedAutoShow();
   const { selection } = useHaptics();
   // Renewables milestones are a nice-to-have: skipped under Reduce Motion or Haptics off.

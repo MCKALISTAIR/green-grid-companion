@@ -43,6 +43,11 @@ describe('/history chart (South Scotland, 4 to 11 Oct)', () => {
     expect(isNearZeroRange([{ forecast: 209, actual: null }])).toBe(false);
   });
 
+  it('tightens a low series instead of keeping a fixed 300g top', () => {
+    expect(historyYAxisMax([{ forecast: 42, actual: 60 }])).toBe(100);
+    expect(historyYAxisMax([{ forecast: 105, actual: 120 }])).toBe(150);
+  });
+
   it('missing values are gaps (null), not 0, and do not drag the average down', () => {
     const rows = [
       { from: 'a', to: 'b', intensity: { forecast: 100, index: 'moderate' } },

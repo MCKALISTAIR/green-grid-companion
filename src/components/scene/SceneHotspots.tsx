@@ -1,6 +1,8 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useHaptics } from '@/hooks/useHaptics';
 
 export interface HotspotDef {
@@ -19,6 +21,7 @@ interface Props {
 /** Soft max width for fact bubbles; also used when clamping into the scene. */
 const BUBBLE_MAX_PX = 220;
 const BUBBLE_EDGE_PAD_PX = 8;
+const MotionButton = motion.create(Button);
 
 /**
  * Diegetic info layer — small tap targets anchored to "informative" scene props.
@@ -32,6 +35,7 @@ const BUBBLE_EDGE_PAD_PX = 8;
  * for short embeds like Time Machine.
  */
 export function SceneHotspots({ hotspots }: Props) {
+  const layer = useRef<HTMLDivElement>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const { selection } = useHaptics({ decorative: true });
 
@@ -56,9 +60,12 @@ export function SceneHotspots({ hotspots }: Props) {
 
   const active = visible.find((h) => h.id === activeId) ?? null;
   const flipY = active ? active.y > 55 : false;
+  // Home's HUD is a sibling stacking context; facts must sit above it, not behind its text.
+  const homeScene = layer.current?.closest('.home-scene');
+  const bubbleHost = homeScene ?? layer.current;
 
   return (
-    <div className="absolute inset-0 z-[35] pointer-events-none" aria-hidden={false}>
+    <div ref={layer} className="absolute inset-0 z-[35] pointer-events-none" aria-hidden={false}>
       {visible.map((h) => {
         const isActive = activeId === h.id;
         return (
@@ -67,9 +74,10 @@ export function SceneHotspots({ hotspots }: Props) {
             className="absolute"
             style={{ left: `${h.x}%`, top: `${h.y}%`, transform: 'translate(-50%, -50%)' }}
           >
-            <motion.button
+            <MotionButton
+              variant="ghost"
               type="button"
-              className="pointer-events-auto relative grid place-items-center w-7 h-7 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+              className="pointer-events-auto relative grid place-items-center min-w-11 min-h-11 w-11 h-11 p-0 rounded-full hover:bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
               onClick={() => {
                 selection();
                 setActiveId((prev) => (prev === h.id ? null : h.id));
@@ -83,7 +91,7 @@ export function SceneHotspots({ hotspots }: Props) {
               whileTap={{ scale: 0.92 }}
             >
               <motion.span
-                className="absolute inset-0 rounded-full border border-white/70"
+                className="absolute w-7 h-7 rounded-full border border-white/70"
                 animate={{ scale: [1, 1.6, 1], opacity: [0.7, 0, 0.7] }}
                 transition={{ duration: 2.4, repeat: Infinity, ease: 'easeOut' as const }}
               />
@@ -91,12 +99,12 @@ export function SceneHotspots({ hotspots }: Props) {
                 className="block w-2.5 h-2.5 rounded-full bg-white/95"
                 style={{ boxShadow: '0 0 8px rgba(255,255,255,0.7)' }}
               />
-            </motion.button>
+            </MotionButton>
           </div>
         );
       })}
 
-      <AnimatePresence>
+      {bubbleHost && createPortal(<AnimatePresence>
         {active && (
           <motion.div
             key={active.id}
@@ -106,33 +114,35 @@ export function SceneHotspots({ hotspots }: Props) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: flipY ? 6 : -6, scale: 0.95 }}
             transition={{ duration: 0.18, ease: 'easeOut' as const }}
-            className="pointer-events-auto absolute rounded-xl border border-white/15 bg-background/85 backdrop-blur-md shadow-2xl"
+            className="pointer-events-auto absolute z-[40] rounded-xl border border-border bg-background/95 backdrop-blur-md shadow-2xl"
             style={{
               // Center on the hotspot, then clamp so both edges stay inside the scene.
               left: `clamp(${BUBBLE_EDGE_PAD_PX}px, calc(${active.x}% - ${BUBBLE_MAX_PX / 2}px), calc(100% - ${BUBBLE_MAX_PX}px - ${BUBBLE_EDGE_PAD_PX}px))`,
               width: `min(${BUBBLE_MAX_PX}px, calc(100% - ${BUBBLE_EDGE_PAD_PX * 2}px))`,
               ...(flipY
-                ? { bottom: `calc(${100 - active.y}% + 20px)` }
-                : { top: `calc(${active.y}% + 20px)` }),
+                ? { bottom: homeScene ? `calc(${100 - active.y}% + ${20 + active.y * 0.4}px)` : `calc(${100 - active.y}% + 20px)` }
+                : { top: homeScene ? `calc(${active.y}% + ${20 - active.y * 0.4}px)` : `calc(${active.y}% + 20px)` }),
             }}
           >
             <div className="flex items-start gap-2 px-3 pt-2.5 pb-1.5">
               <h4 className="flex-1 text-xs font-semibold tracking-wide uppercase text-foreground/80">
                 {active.label}
               </h4>
-              <button
+               <Button
+                 variant="ghost"
+                 size="icon"
                 type="button"
                 onClick={close}
                 aria-label="Close"
-                className="text-foreground/60 hover:text-foreground transition-colors -mr-1 -mt-0.5"
+                 className="min-w-11 min-h-11 shrink-0 grid place-items-center text-foreground/60 hover:text-foreground transition-colors -mr-1 -mt-0.5"
               >
                 <X className="w-3.5 h-3.5" />
-              </button>
+               </Button>
             </div>
             <p className="px-3 pb-3 text-[13px] leading-snug text-foreground/90">{active.fact}</p>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>, bubbleHost)}
     </div>
   );
 }

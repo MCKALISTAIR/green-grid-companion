@@ -2,6 +2,17 @@ import { RegionListItem } from '@/lib/carbonApi';
 import { getIntensityColor } from '@/lib/carbonApi';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+const MotionButton = motion.create(Button);
+
+// Screen-space nudges preserve geographic centroids while separating southern targets.
+const SOUTHERN_OFFSETS: Record<string, { x: number; y: number }> = {
+  London: { x: -5, y: -12 },
+  'South East England': { x: 24, y: 22 },
+  'Southern England': { x: -20, y: 22 },
+  'South England': { x: -20, y: 22 },
+  'East England': { x: 20, y: -22 },
+};
 
 interface UKMapProps {
   regions: RegionListItem[];
@@ -371,7 +382,7 @@ c21 14 23 19 14 45 -8 23 -7 35 5 53 9 13 25 50 36 83 15 44 17 61 8 72 -9 11
         </svg>
       </div>
 
-      <div className="absolute bottom-2 right-4 text-[10px] text-muted-foreground/40 font-medium">
+      <div className="absolute bottom-14 sm:bottom-2 right-4 text-[10px] text-muted-foreground/40 font-medium">
         Geographic View
       </div>
 
@@ -389,40 +400,45 @@ c21 14 23 19 14 45 -8 23 -7 35 5 53 9 13 25 50 36 83 15 44 17 61 8 72 -9 11
 
         const { x, y } = getPosition(coords.lat, coords.lon);
         const colorClass = getIntensityColor(region.intensity.index);
+        const offset = SOUTHERN_OFFSETS[region.shortname] ?? { x: 0, y: 0 };
+        const lightBubble = ['low', 'moderate'].includes(region.intensity.index);
         const isSelected = selectedRegionId === region.regionid;
 
         return (
-          <motion.button
+          <MotionButton variant="ghost"
             key={region.regionid}
             initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: isSelected ? 1.4 : 1, opacity: 1, zIndex: isSelected ? 50 : 10 }}
+            animate={{ scale: isSelected ? 1.15 : 1, opacity: 1, zIndex: isSelected ? 50 : 10 }}
             transition={{ type: 'spring' as const, stiffness: 300, damping: 20 }}
             className={cn(
-              'absolute w-10 h-10 -ml-5 -mt-5 rounded-full flex items-center justify-center shadow-md transition-all duration-300',
+              'absolute min-w-10 min-h-10 w-10 h-10 p-0 -ml-5 -mt-5 rounded-full flex items-center justify-center shadow-md transition-all duration-300',
               colorClass,
+              lightBubble ? 'map-light-ink' : 'map-dark-ink',
               isSelected
                 ? 'ring-4 ring-background shadow-xl'
-                : 'opacity-90 hover:opacity-100 hover:scale-110 hover:z-20 border-2 border-background/50 text-white',
+                : 'opacity-90 hover:opacity-100 hover:scale-110 hover:z-20 border-2 border-background/50',
             )}
-            style={{ left: `${x}%`, top: `${y}%` }}
+            style={{ left: `calc(${x}% + ${offset.x}px)`, top: `calc(${y}% + ${offset.y}px)` }}
+            aria-label={`${region.shortname}: ${region.intensity.forecast} gCO₂/kWh`}
+            aria-pressed={isSelected}
             onClick={() => onRegionSelect?.(region.regionid)}
           >
             {isSelected && (
               <span className="absolute inset-0 rounded-full animate-ping bg-current opacity-30 pointer-events-none" />
             )}
-            <span className="text-[10px] font-bold drop-shadow-md z-10">
+            <span className="text-[10px] font-bold z-10">
               {region.intensity.forecast}
             </span>
             {isSelected && (
               <motion.div
                 initial={{ y: 5, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                className="absolute -bottom-8 bg-popover/95 backdrop-blur-md px-3 py-1.5 rounded-lg text-xs shadow-lg border border-border/50 font-semibold whitespace-nowrap text-popover-foreground z-50 pointer-events-none"
+                className={cn("absolute top-full mt-2 w-max max-w-[180px] bg-popover/95 backdrop-blur-md px-3 py-1.5 rounded-lg text-xs shadow-lg border border-border/50 font-semibold whitespace-normal text-center text-popover-foreground z-50 pointer-events-none", x > 65 ? "right-0" : x < 35 ? "left-0" : "left-1/2 -translate-x-1/2")}
               >
                 {region.shortname}
               </motion.div>
             )}
-          </motion.button>
+          </MotionButton>
         );
       })}
     </div>

@@ -49,6 +49,9 @@
     --intensity-moderate: 45 90% 55%;
     --intensity-high: 25 90% 55%;
     --intensity-very-high: 0 70% 50%;
+    --map-light-ink: 210 28% 10%;
+    --scene-hud-ink: 0 0% 0%;
+    --scene-hud-text: 0 0% 100%;
 
     /* Generation mix colors */
     --gen-wind: 200 80% 55%;
@@ -589,6 +592,7 @@
 }
 
 .gridsense-tour-popover .driver-popover-navigation-btns button {
+  min-height: 2.75rem;
   font-family: var(--font-sans);
   font-weight: 500;
   font-size: 0.875rem;
@@ -822,6 +826,17 @@ blockquote {
   min-height: 0;
   padding-bottom: 0;
 }
+
+.scene-hud-scrim {
+  background: linear-gradient(to bottom, hsl(var(--scene-hud-ink) / 0.5), hsl(var(--scene-hud-ink) / 0.25), transparent);
+}
+.scene-hud-radial {
+  background: radial-gradient(ellipse at center, hsl(var(--scene-hud-ink) / 0.35) 0%, transparent 70%);
+}
+.scene-hud-info { color: hsl(var(--scene-hud-text) / 0.8); }
+.scene-hud-info:hover { color: hsl(var(--scene-hud-text)); background: hsl(var(--scene-hud-text) / 0.1); }
+.map-light-ink { color: hsl(var(--map-light-ink)); }
+.map-dark-ink { color: hsl(var(--scene-hud-text)); }
 @media (min-width: 1024px) {
   .page-shell.page-shell--fit {
     padding-bottom: 1.5rem;

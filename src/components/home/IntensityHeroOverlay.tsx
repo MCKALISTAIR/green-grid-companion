@@ -122,7 +122,7 @@ export function IntensityHeroOverlay({
           hasLiveReading={hasFreshReading}
           compact={hideGauge}
           className="absolute inset-0 h-full"
-          style={{ height: '100%' }}
+          style={{ height: '100%', position: 'absolute' }}
         />
 
         <div
@@ -181,7 +181,7 @@ export function IntensityHeroOverlay({
               'absolute inset-x-0 top-0 h-56 pointer-events-none transition-opacity duration-700',
               needsHardScrim
                 ? 'bg-gradient-to-b from-black/55 via-black/28 to-transparent'
-                : 'bg-gradient-to-b from-black/35 via-black/15 to-transparent',
+                : 'scene-hud-scrim',
             )}
           />
           {/* Always mounted; opacity only — conditional mount was a CLS source when
@@ -189,12 +189,12 @@ export function IntensityHeroOverlay({
           <div
             aria-hidden
             className={cn(
-              'absolute inset-x-0 top-16 h-40 pointer-events-none bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.35)_0%,transparent_70%)] transition-opacity duration-700',
-              needsHardScrim ? 'opacity-100' : 'opacity-0',
+              'absolute inset-x-0 top-16 h-40 pointer-events-none scene-hud-radial transition-opacity duration-700',
+              needsHardScrim ? 'opacity-100' : 'opacity-50',
             )}
           />
 
-          <div className="relative flex flex-col items-center text-center w-full max-w-[22rem] min-[540px]:max-w-[40rem] px-4 pointer-events-auto">
+          <div className="relative flex flex-col items-center text-center w-full max-w-[22rem] min-[540px]:max-w-[40rem] px-4 pointer-events-none">
             <div
               className="lg:hidden mb-2 sm:mb-3 max-w-[calc(100vw-8.5rem)]"
               data-testid="hero-location"
@@ -203,9 +203,10 @@ export function IntensityHeroOverlay({
                 value={postcode}
                 onChange={setPostcode}
                 trigger={
-                  <button
+                  <Button
+                    variant="ghost"
                     type="button"
-                    className="inline-flex max-w-full items-center gap-1.5 text-white text-[13px] font-semibold tracking-wide hover:text-white/95 transition-colors drop-shadow-[0_1px_8px_rgba(0,0,0,0.65)]"
+                    className="pointer-events-auto min-h-11 h-auto max-w-full gap-1.5 px-0 text-primary-foreground text-[13px] font-semibold tracking-wide hover:bg-transparent hover:text-primary-foreground transition-colors drop-shadow-[0_1px_8px_rgba(0,0,0,0.65)]"
                     title={region || undefined}
                   >
                     <MapPin className="w-3.5 h-3.5 opacity-90 flex-shrink-0" />
@@ -217,7 +218,7 @@ export function IntensityHeroOverlay({
                     ) : (
                       <ChevronDown className="w-3 h-3 opacity-70" />
                     )}
-                  </button>
+                  </Button>
                 }
               />
             </div>
@@ -297,7 +298,7 @@ export function IntensityHeroOverlay({
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7 rounded-full p-0 text-white/80 hover:text-white hover:bg-white/10"
+                        className="pointer-events-auto min-h-11 min-w-11 h-11 w-11 rounded-full p-0 scene-hud-info"
                         aria-label="What is carbon intensity?"
                       >
                         <Info className="w-3.5 h-3.5" aria-hidden="true" />

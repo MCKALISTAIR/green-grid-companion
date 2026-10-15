@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
 import { buildProductTourSteps } from '@/data/product-tour';
@@ -64,6 +65,8 @@ function createTourDriver(onDone: () => void) {
 }
 
 export function useProductTour() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const driverObj = useRef<ReturnType<typeof driver> | null>(null);
   const lastIsMobile = useRef<boolean | null>(null);
   // The tips take a turn in the shared overlay queue (after the privacy choice).
@@ -97,10 +100,9 @@ export function useProductTour() {
   }, [releaseTurn]);
 
   useEffect(() => {
-    rebuildDriver();
-
     let resizeTimer: ReturnType<typeof setTimeout> | undefined;
     const onResize = () => {
+      if (!driverObj.current) return;
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(rebuildDriver, 150);
     };
@@ -130,6 +132,7 @@ export function useProductTour() {
           if (turn.current !== handle) return;
           rebuildDriver();
           driverObj.current?.drive();
+          if (driverObj.current?.isActive?.()) sessionStorage.removeItem('product_tour_replay');
           if (!driverObj.current?.isActive?.()) releaseTurn(); // nothing to show
         }, delayMs);
       });
@@ -138,17 +141,20 @@ export function useProductTour() {
   );
 
   const startTour = useCallback(() => {
+    if (location.pathname !== '/') return;
     const seen = localStorage.getItem('product_tour_seen');
     const onboardingComplete = localStorage.getItem('onboarding_complete');
+    const replayPending = sessionStorage.getItem('product_tour_replay') === 'true';
 
-    if (!seen && onboardingComplete === 'true') {
+    if (replayPending || (!seen && onboardingComplete === 'true')) {
       runWhenOurTurn(TOUR_START_DELAY_MS);
     }
-  }, [runWhenOurTurn]);
+  }, [runWhenOurTurn, location.pathname, location.key]);
 
   const replayTour = useCallback(() => {
-    runWhenOurTurn(300);
-  }, [runWhenOurTurn]);
+    sessionStorage.setItem('product_tour_replay', 'true');
+    navigate('/', { state: { startProductTour: true } });
+  }, [navigate]);
 
   return { startTour, replayTour };
 }
