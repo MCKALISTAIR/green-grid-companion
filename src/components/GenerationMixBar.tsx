@@ -13,6 +13,7 @@ import {
 import { DEFINITIONS } from '@/lib/definitions';
 import { ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { AnimatedNumber } from '@/components/AnimatedNumber';
 import {
   MixItem,
   getSortedMix,
@@ -27,6 +28,13 @@ interface GenerationMixBarProps {
   showMW?: boolean;
   frequency?: number | null;
   embeddedSolarMW?: number | null;
+  /**
+   * Where this mix applies — Intensity is regional (NESO), Demand is national
+   * (Elexon). Shown so the two tabs don’t look like contradictory numbers.
+   */
+  scopeLabel?: string;
+  /** Hide the in-bar heading when a parent section already titles the block. */
+  hideHeading?: boolean;
 }
 
 export function GenerationMixBar({
@@ -34,6 +42,8 @@ export function GenerationMixBar({
   showMW = false,
   frequency,
   embeddedSolarMW,
+  scopeLabel,
+  hideHeading = false,
 }: GenerationMixBarProps) {
   const sortedMix = getSortedMix(mix);
   const renewables = getRenewablesPercentage(mix);
@@ -43,6 +53,12 @@ export function GenerationMixBar({
 
   // The leading fuel source breathes very gently (only if > 10% share)
   const dominantFuel = sortedMix[0]?.fuel ?? null;
+  const breakdownTitle = scopeLabel
+    ? `Generation Mix Breakdown · ${scopeLabel}`
+    : 'Generation Mix Breakdown';
+  const triggerLabel = scopeLabel
+    ? `View ${scopeLabel} generation mix details`
+    : 'View generation mix details';
 
   return (
     <Dialog>
@@ -50,21 +66,41 @@ export function GenerationMixBar({
         <button
           type="button"
           className="w-full text-left space-y-4 cursor-pointer group transition-transform active:scale-[0.985] generation-mix-container"
-          aria-label="View generation mix details"
+          aria-label={triggerLabel}
         >
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
-              Generation Mix
-              <motion.span
-                className="inline-flex"
-                initial={false}
-                whileHover={{ x: 3 }}
-                transition={{ type: 'spring' as const, stiffness: 400, damping: 25 }}
-              >
-                <ChevronRight className="w-4 h-4 text-muted-foreground" />
-              </motion.span>
-            </h3>
-            <span className="text-xs text-primary font-medium">
+          <div className="flex items-center justify-between gap-3">
+            {!hideHeading ? (
+              <div className="min-w-0">
+                <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
+                  Generation Mix
+                  <motion.span
+                    className="inline-flex"
+                    initial={false}
+                    whileHover={{ x: 3 }}
+                    transition={{ type: 'spring' as const, stiffness: 400, damping: 25 }}
+                  >
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                  </motion.span>
+                </h3>
+                {scopeLabel && (
+                  <p
+                    className="text-[11px] text-muted-foreground mt-0.5 truncate"
+                    data-testid="mix-scope-label"
+                  >
+                    {scopeLabel}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <span className="sr-only">{triggerLabel}</span>
+            )}
+            <span
+              className={
+                hideHeading
+                  ? 'text-xs text-primary font-medium ml-auto shrink-0'
+                  : 'text-xs text-primary font-medium shrink-0'
+              }
+            >
               {showMW
                 ? `Total ${(mix.reduce((a, b) => a + (b.mw || 0), 0) / 1000).toFixed(1)} GW`
                 : `${renewables.toFixed(0)}% Renewable`}
@@ -246,35 +282,36 @@ export function GenerationMixBar({
 
       <DialogContent className="max-w-md max-h-[85vh] flex flex-col overflow-hidden">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>Generation Mix Breakdown</span>
-            {typeof frequency === 'number' && !isNaN(frequency) && (
-              <div className="flex items-center gap-2 text-sm font-normal bg-muted/50 px-2 py-1 rounded-md">
-                <span className="text-muted-foreground">Grid Freq:</span>
-                <div className="flex items-center gap-1.5">
+          <DialogTitle className="pr-10 leading-snug">{breakdownTitle}</DialogTitle>
+          {typeof frequency === 'number' && !isNaN(frequency) && (
+            <div
+              className="mr-10 flex w-fit items-center gap-2 text-sm font-normal bg-muted/50 px-2.5 py-1 rounded-md"
+              data-testid="grid-freq-pill"
+            >
+              <span className="text-muted-foreground">Grid Freq:</span>
+              <div className="flex items-center gap-1.5">
+                <span
+                  className={`font-mono font-medium ${
+                    frequency < 49.8 || frequency > 50.2 ? 'text-destructive' : 'text-emerald-500'
+                  }`}
+                >
+                  {frequency.toFixed(3)} Hz
+                </span>
+                <span className="relative flex h-2 w-2">
                   <span
-                    className={`font-mono font-medium ${
-                      frequency < 49.8 || frequency > 50.2 ? 'text-destructive' : 'text-emerald-500'
+                    className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                      frequency < 49.8 || frequency > 50.2 ? 'bg-destructive' : 'bg-emerald-500'
                     }`}
-                  >
-                    {frequency.toFixed(3)} Hz
-                  </span>
-                  <span className="relative flex h-2 w-2">
-                    <span
-                      className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                        frequency < 49.8 || frequency > 50.2 ? 'bg-destructive' : 'bg-emerald-500'
-                      }`}
-                    ></span>
-                    <span
-                      className={`relative inline-flex rounded-full h-2 w-2 ${
-                        frequency < 49.8 || frequency > 50.2 ? 'bg-destructive' : 'bg-emerald-500'
-                      }`}
-                    ></span>
-                  </span>
-                </div>
+                  />
+                  <span
+                    className={`relative inline-flex rounded-full h-2 w-2 ${
+                      frequency < 49.8 || frequency > 50.2 ? 'bg-destructive' : 'bg-emerald-500'
+                    }`}
+                  />
+                </span>
               </div>
-            )}
-          </DialogTitle>
+            </div>
+          )}
         </DialogHeader>
         <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain -mx-6 px-6">
           <div className="space-y-4 py-4">
@@ -310,17 +347,19 @@ export function GenerationMixBar({
                       <span className="font-semibold capitalize text-base">{item.fuel}</span>
                     </div>
                     <div className="text-right">
-                      <span className="block text-lg font-bold tabular-nums">
-                        {showMW && item.mw
-                          ? `${(item.mw / 1000).toFixed(2)} GW`
-                          : `${item.perc.toFixed(1)}%`}
+                      <span className="block text-lg font-bold">
+                        {showMW && item.mw != null ? (
+                          <AnimatedNumber value={item.mw / 1000} decimals={2} suffix=" GW" />
+                        ) : (
+                          <AnimatedNumber value={item.perc} decimals={1} suffix="%" />
+                        )}
                       </span>
-                      <span className="text-xs text-muted-foreground tabular-nums">
-                        {showMW
-                          ? `${item.perc.toFixed(1)}%`
-                          : item.mw
-                            ? `${(item.mw / 1000).toFixed(2)} GW`
-                            : ''}
+                      <span className="text-xs text-muted-foreground">
+                        {showMW ? (
+                          <AnimatedNumber value={item.perc} decimals={1} suffix="%" />
+                        ) : item.mw != null ? (
+                          <AnimatedNumber value={item.mw / 1000} decimals={2} suffix=" GW" />
+                        ) : null}
                       </span>
                     </div>
                   </div>

@@ -131,4 +131,9 @@ describe('IntensityScene', () => {
     const turbines = screen.getAllByRole('button', { name: /Wind Turbine/i });
     expect(turbines.length).toBeGreaterThan(0);
   });
+
+  it('renders vintage snapshot without crashing', () => {
+    render(<IntensityScene intensity={120} index="moderate" isVintage />);
+    expect(screen.getByRole('img')).toBeInTheDocument();
+  });
 });

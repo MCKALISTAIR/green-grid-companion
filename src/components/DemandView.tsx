@@ -236,9 +236,14 @@ export function DemandView() {
         )}
       </div>
 
-      {/* Generation Breakdown */}
+      {/* Generation Breakdown — national Elexon FUELINST (not the regional NESO mix on Intensity) */}
       <Card className="p-4">
-        <GenerationMixBar mix={sortedMix} showMW={true} embeddedSolarMW={embeddedSolarMW} />
+        <GenerationMixBar
+          mix={sortedMix}
+          showMW={true}
+          embeddedSolarMW={embeddedSolarMW}
+          scopeLabel="Great Britain · national grid"
+        />
       </Card>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">

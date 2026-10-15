@@ -2,7 +2,7 @@ import { useHaptics } from '@/hooks/useHaptics';
 import { NotificationType } from '@capacitor/haptics';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useMemo, useState, useEffect } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, useMotionValue, useScroll, useTransform } from 'framer-motion';
 import { useTimeOfDay, TimeOfDay } from '@/hooks/useTimeOfDay';
 import { useWeatherData, WeatherData } from '@/hooks/useWeatherData';
 import { useAchievements } from '@/hooks/useAchievements';
@@ -79,10 +79,18 @@ export function IntensityScene({
   const shouldReduceMotion = useReducedMotion();
   const { sceneType: autoSceneType } = useSceneType();
 
+  // Page-scroll parallax is for the home hero only. Vintage/Time Machine embeds
+  // the scene in a short card — tracking document scrollY makes clouds/sky slide
+  // down over the skyline as the History page scrolls.
+  const enableScrollParallax = !isVintage;
   const { scrollY } = useScroll();
-  const skyY = useTransform(scrollY, [0, 400], [0, 75]);
-  const backY = useTransform(scrollY, [0, 400], [0, 45]);
-  const midY = useTransform(scrollY, [0, 400], [0, 20]);
+  const skyYParallax = useTransform(scrollY, [0, 400], [0, 75]);
+  const backYParallax = useTransform(scrollY, [0, 400], [0, 45]);
+  const midYParallax = useTransform(scrollY, [0, 400], [0, 20]);
+  const staticY = useMotionValue(0);
+  const skyY = enableScrollParallax ? skyYParallax : staticY;
+  const backY = enableScrollParallax ? backYParallax : staticY;
+  const midY = enableScrollParallax ? midYParallax : staticY;
 
   // Scene type: override, director override or auto-detected
   const sceneType: SceneType =
