@@ -978,6 +978,16 @@ blockquote {
   /* Keep a classic floor on normal phones; allow growth for a11y text. */
   min-height: max(62dvh, 420px);
   max-height: none;
+  transition: min-height 0.35s ease, max-height 0.35s ease;
+}
+
+/*
+ * Demand (gauge hidden): shorter band so empty sky doesn't dominate and the
+ * shared silhouette reads above the scalloped sheet.
+ */
+.home-scene--compact {
+  min-height: max(38dvh, 280px);
+  max-height: min(46dvh, 360px);
 }
 
 .home-scene-gauge {
@@ -995,6 +1005,11 @@ blockquote {
     min-height: max(min(52dvh, 400px), 280px);
   }
 
+  .home-scene--compact {
+    min-height: max(min(40dvh, 300px), 240px);
+    max-height: min(42dvh, 320px);
+  }
+
   .home-scene-gauge {
     padding-top: calc(max(env(safe-area-inset-top), 12px) + 2.25rem) !important;
     padding-bottom: 2.75rem;
@@ -1004,6 +1019,11 @@ blockquote {
 @media (max-height: 640px) {
   .home-scene {
     min-height: max(min(52dvh, 340px), 280px);
+  }
+
+  .home-scene--compact {
+    min-height: max(min(36dvh, 280px), 220px);
+    max-height: min(40dvh, 300px);
   }
 
   .home-scene-gauge {
@@ -1049,7 +1069,8 @@ blockquote {
     overflow: hidden;
   }
 
-  .home-scene {
+  .home-scene,
+  .home-scene--compact {
     width: 48%;
     height: 100% !important;
     min-height: 0 !important;

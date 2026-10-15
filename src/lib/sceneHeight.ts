@@ -9,6 +9,9 @@
 export const SCENE_HEIGHT_FLOOR_PX = 280;
 export const SCENE_HEIGHT_CLASSIC_FLOOR_PX = 400;
 export const SCENE_HEIGHT_CAP_PX = 620;
+/** Demand / gauge-less compact band — mirrors `.home-scene--compact` in index.css. */
+export const SCENE_HEIGHT_COMPACT_FLOOR_PX = 280;
+export const SCENE_HEIGHT_COMPACT_CAP_PX = 360;
 /** Aspect below this (~Duo 1.42:1) uses the short-viewport floor. */
 export const SCENE_SHORT_ASPECT = 1.55;
 
@@ -43,6 +46,23 @@ export function getSceneIntrinsicHeight(viewportWidth: number, viewportHeight: n
     : SCENE_HEIGHT_CLASSIC_FLOOR_PX;
   const preferred = Math.min(viewportHeight * 0.55, viewportWidth * 0.75);
   const cap = Math.min(SCENE_HEIGHT_CAP_PX, viewportHeight * 0.7);
+  return Math.min(cap, Math.max(floor, preferred));
+}
+
+/**
+ * Shorter Demand band: less empty sky, silhouette nearer the sheet.
+ * Mirrors `.home-scene--compact` floors/caps.
+ */
+export function getCompactSceneIntrinsicHeight(
+  viewportWidth: number,
+  viewportHeight: number,
+): number {
+  const shortViewport = isShortWideViewport(viewportWidth, viewportHeight);
+  const floor = shortViewport
+    ? Math.min(240, viewportHeight * 0.4)
+    : SCENE_HEIGHT_COMPACT_FLOOR_PX;
+  const preferred = Math.min(viewportHeight * 0.38, viewportWidth * 0.55);
+  const cap = Math.min(SCENE_HEIGHT_COMPACT_CAP_PX, viewportHeight * 0.46);
   return Math.min(cap, Math.max(floor, preferred));
 }
 

@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+  getCompactSceneIntrinsicHeight,
   getSceneIntrinsicHeight,
   IPHONE_DUO_VIEWPORTS,
   SCENE_HEIGHT_CLASSIC_FLOOR_PX,
+  SCENE_HEIGHT_COMPACT_CAP_PX,
 } from './sceneHeight';
 
 describe('getSceneIntrinsicHeight', () => {
@@ -35,5 +37,15 @@ describe('getSceneIntrinsicHeight', () => {
     const h = getSceneIntrinsicHeight(width, height);
     expect(h).toBeGreaterThan(200);
     expect(h).toBeLessThan(height);
+  });
+});
+
+describe('getCompactSceneIntrinsicHeight', () => {
+  it('is shorter than the intensity band on a classic phone', () => {
+    const full = getSceneIntrinsicHeight(390, 844);
+    const compact = getCompactSceneIntrinsicHeight(390, 844);
+    expect(compact).toBeLessThan(full);
+    expect(compact).toBeLessThanOrEqual(SCENE_HEIGHT_COMPACT_CAP_PX);
+    expect(compact).toBeGreaterThanOrEqual(260);
   });
 });
