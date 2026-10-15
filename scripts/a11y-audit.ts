@@ -82,7 +82,10 @@ async function auditRoute(
   const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const page = await context.newPage();
   try {
-    await page.goto(url, { waitUntil: 'networkidle', timeout: 30_000 });
+    // 'networkidle' never settles on routes with long-lived requests (Supabase
+    // realtime/auth refresh on /settings, /help) and timed out in CI.
+    await page.goto(url, { waitUntil: 'load', timeout: 30_000 });
+    await page.waitForTimeout(2_500);
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
       .analyze();
