@@ -10,7 +10,7 @@ import {
   getCurrentIntensity,
   getAllRegions,
   pickLiveIntensity,
-  UK_REGIONS,
+  regionNameForPostcode,
   RegionalData,
   RegionListItem,
   ForecastData,
@@ -123,9 +123,7 @@ export function useCarbonData(postcode: string) {
 
   // Find region by matching postcode prefix (e.g. "EH1..." matches "EH")
   // We sort by length descending to ensure "BS" matches "BS" before "B" matches "B" (if both existed and overlapped)
-  const targetRegionName = UK_REGIONS.filter((r) =>
-    postcode.toUpperCase().startsWith(r.postcode),
-  ).sort((a, b) => b.postcode.length - a.postcode.length)[0]?.name;
+  const targetRegionName = regionNameForPostcode(postcode);
 
   const foundRegion = regionalListQuery.data?.find((r) => {
     if (!targetRegionName) return false;
