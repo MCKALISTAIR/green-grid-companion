@@ -72,6 +72,22 @@ export function ResponsiveDialog({ detents = 'content', children, ...props }: Ro
   const lastSnap = React.useRef<number | string | null>(TALL_DETENTS[0]);
 
   const { open, onOpenChange } = props;
+  // vaul doesn't hand focus back to the trigger when a sheet closes (it stays
+  // on the closing sheet), so remember what opened it and restore it ourselves.
+  const returnFocusTo = React.useRef<HTMLElement | null>(null);
+  React.useLayoutEffect(() => {
+    if (!sheet) return;
+    if (open) {
+      const active = document.activeElement;
+      if (active instanceof HTMLElement && active !== document.body) returnFocusTo.current = active;
+    } else if (returnFocusTo.current) {
+      const target = returnFocusTo.current;
+      returnFocusTo.current = null;
+      requestAnimationFrame(() => {
+        if (target.isConnected) target.focus({ preventScroll: true });
+      });
+    }
+  }, [open, sheet]);
   React.useEffect(() => {
     if (open === false) {
       setSnap(TALL_DETENTS[0]);
