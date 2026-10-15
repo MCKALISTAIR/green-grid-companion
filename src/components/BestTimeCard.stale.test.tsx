@@ -2,10 +2,10 @@ import { describe, expect, it, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import type { ForecastData } from '@/lib/carbonApi';
 
-const spy = vi.fn(() => ({ action: 'check_forecast' }));
+const spy = vi.fn((..._args: unknown[]) => ({ action: 'check_forecast' }));
 vi.mock('@/lib/nowOrWait', async (orig) => ({
   ...(await orig<typeof import('@/lib/nowOrWait')>()),
-  getNowOrWaitDecision: (...a: unknown[]) => spy(...(a as [])),
+  getNowOrWaitDecision: (...a: unknown[]) => spy(...a),
 }));
 
 import { WorstTimeSlot } from '@/components/BestTimeCard';
