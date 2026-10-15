@@ -19,7 +19,8 @@ import { useTimeOfDay } from '@/hooks/useTimeOfDay';
 import { getCleanlinessBand } from '@/hooks/useCleanlinessBand';
 import type { GenerationMix } from '@/lib/carbonApi';
 import { CompactDataAttribution } from '@/components/attribution/DataAttribution';
-import { isReadingFresh, shouldCelebrateZeroCarbon } from '@/lib/sceneUtils';
+import { getHeroTextTone, isReadingFresh, shouldCelebrateZeroCarbon } from '@/lib/sceneUtils';
+import { useWeatherData } from '@/hooks/useWeatherData';
 import { ZeroCarbonBadge } from '@/components/scene/NetZeroCelebration';
 
 interface IntensityHeroOverlayProps {
@@ -70,12 +71,17 @@ export function IntensityHeroOverlay({
   hideGauge,
 }: IntensityHeroOverlayProps) {
   const { tone } = useEnergyFacts();
-  const { isNight } = useTimeOfDay();
+  const { timeOfDay } = useTimeOfDay();
+  const { weather } = useWeatherData();
+  // AA: ink on light skies, white on dark skies (art pass v1 §3).
+  const heroTone = getHeroTextTone(timeOfDay, weather);
+  const isInk = heroTone === 'ink';
   // Only say 'Offline' when the device really is; otherwise the data source failed.
   const { isOffline } = useOffline();
   const band = getCleanlinessBand(intensity);
   const isDirty = band === 'dirty' || band === 'very-dirty';
-  const needsHardScrim = isNight || isDirty;
+  // Dark scrim only behind white text; ink sits on a light veil instead.
+  const needsHardScrim = !isInk && isDirty;
   // Zero-carbon badge + scene celebration only for a live reading that isn't stale.
   const hasFreshReading = !isLoading && !isError && isReadingFresh(lastUpdated);
   const showZeroCarbonBadge = shouldCelebrateZeroCarbon(intensity, hasFreshReading);
@@ -99,15 +105,17 @@ export function IntensityHeroOverlay({
   // Band name big, Cheeky line underneath, so neither wraps on small phones.
   const conditionParts = getConditionParts(index, tone, region ?? postcode);
 
-  const renewablesTone = needsHardScrim
-    ? 'text-white'
-    : renewablesPct >= 70
-      ? 'text-emerald-100'
-      : renewablesPct >= 50
-        ? 'text-lime-100'
-        : renewablesPct >= 30
-          ? 'text-amber-100'
-          : 'text-orange-100';
+  const renewablesTone = isInk
+    ? 'text-hero-ink'
+    : needsHardScrim
+      ? 'text-white'
+      : renewablesPct >= 70
+        ? 'text-emerald-100'
+        : renewablesPct >= 50
+          ? 'text-lime-100'
+          : renewablesPct >= 30
+            ? 'text-amber-100'
+            : 'text-orange-100';
 
   return (
     <div
@@ -171,6 +179,8 @@ export function IntensityHeroOverlay({
             'home-scene-gauge relative z-10 flex flex-col items-center pointer-events-none',
             'pt-[calc(max(env(safe-area-inset-top),12px)+3.25rem)]',
           )}
+          data-hero-tone={heroTone}
+          data-testid="hero-gauge"
         >
           <div
             aria-hidden
@@ -180,9 +190,11 @@ export function IntensityHeroOverlay({
               /* h-80 covers the full stack down to the "updated" line (was h-56,
                  which faded out above the renewable/status rows). */
               'absolute inset-x-0 top-0 h-80 pointer-events-none transition-opacity duration-700',
-              needsHardScrim
-                ? 'bg-gradient-to-b from-black/55 via-black/28 to-transparent'
-                : 'scene-hud-scrim',
+              isInk
+                ? 'bg-gradient-to-b from-white/30 via-white/15 to-transparent'
+                : needsHardScrim
+                  ? 'bg-gradient-to-b from-black/55 via-black/28 to-transparent'
+                  : 'scene-hud-scrim',
             )}
           />
           {/* Always mounted; opacity only — conditional mount was a CLS source when
@@ -191,7 +203,7 @@ export function IntensityHeroOverlay({
             aria-hidden
             className={cn(
               'absolute inset-x-0 top-16 h-64 pointer-events-none scene-hud-radial transition-opacity duration-700',
-              needsHardScrim ? 'opacity-100' : 'opacity-70',
+              isInk ? 'opacity-0' : needsHardScrim ? 'opacity-100' : 'opacity-70',
             )}
           />
 

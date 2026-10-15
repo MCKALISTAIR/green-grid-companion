@@ -251,3 +251,31 @@ export function isReadingFresh(
   if (!Number.isFinite(t)) return false;
   return now - t <= maxAgeMinutes * 60000;
 }
+
+/** Ink used for hero text on light skies (art pass v1, §3 AA rule). */
+export const HERO_INK = '#0f1a24';
+
+export type HeroTextTone = 'ink' | 'light';
+
+/**
+ * Hero text colour by the sky actually drawn behind it (mirrors getSkyParams order):
+ * light skies (morning, midday, afternoon, sunset, overcast/rain, fog) take ink;
+ * dark skies (dawn, dusk, night, thunder) take white over the dark scrim.
+ * Contrast for every state is asserted in sceneUtils.test.ts (>= 4.5:1).
+ */
+export function getHeroTextTone(
+  timeOfDay: TimeOfDay,
+  weather?: Pick<WeatherData, 'cloudCover' | 'isRaining' | 'isFoggy' | 'isThunderstorm'>,
+): HeroTextTone {
+  if (weather) {
+    if (weather.cloudCover > 70 || weather.isRaining) return 'ink';
+    if (weather.isFoggy) return 'ink';
+    if (weather.isThunderstorm) return 'light';
+  }
+  return timeOfDay === 'morning' ||
+    timeOfDay === 'midday' ||
+    timeOfDay === 'afternoon' ||
+    timeOfDay === 'sunset'
+    ? 'ink'
+    : 'light';
+}

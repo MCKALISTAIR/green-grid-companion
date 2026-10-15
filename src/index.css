@@ -1299,3 +1299,17 @@ body {
     animation: consent-sheet-fade var(--consent-sheet-enter-reduced) ease-out both;
   }
 }
+
+/* Art pass v1 §3: ink hero text on light skies (AA >= 4.5:1, see heroContrast.test.ts). */
+.text-hero-ink {
+  color: #0f1a24;
+}
+[data-hero-tone='ink'] .text-white,
+[data-hero-tone='ink'] .text-white\/85,
+[data-hero-tone='ink'] .text-white\/95,
+[data-hero-tone='ink'] .text-primary-foreground,
+[data-hero-tone='ink'] .scene-hud-info {
+  color: #0f1a24;
+  --tw-drop-shadow: drop-shadow(0 1px 6px rgba(255, 255, 255, 0.35));
+  text-shadow: none;
+}
