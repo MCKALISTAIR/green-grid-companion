@@ -55,6 +55,7 @@ const DesignSystemPage = DEV_ROUTES_ENABLED ? lazy(() => import('./pages/DesignS
 const ChargingHistory = lazy(() => import('./pages/ChargingHistory'));
 const AchievementsPage = lazy(() => import('./pages/Achievements'));
 import AuthCallback from './pages/AuthCallback';
+import { markCarbonDataRefreshed } from '@/hooks/usePeriodicRefresh';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -112,6 +113,7 @@ function AppContent() {
     const handleAppStateChange = async (state: { isActive: boolean }) => {
       if (state.isActive) {
         logger.info('App resumed, refreshing carbon data');
+        markCarbonDataRefreshed();
         // Force refetch of critical carbon data queries regardless of stale time
         await Promise.all([
           queryClient.refetchQueries({ queryKey: ['national'], type: 'active' }),
