@@ -2,11 +2,17 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
 import { sendPushNotifications } from '../_shared/push.ts';
 import {
-  verifySchedulerRequest,
-  cronAuthErrorResponse,
+  type MeterLink,
+  mpansByUser,
+  rowsForSubscriber,
+  subscriberUserIds,
+} from '../_shared/digest-scope.ts';
+import {
   createSchedulerSecretProvider,
+  cronAuthErrorResponse,
   fetchSchedulerSecret,
   type SchedulerSecretRpcClient,
+  verifySchedulerRequest,
 } from '../_shared/cron-auth.ts';
 import {
   claimSubscriptionsForPeriod,
@@ -26,6 +32,7 @@ interface FootprintRecord {
 
 interface PushSubscription {
   id: string;
+  user_id?: string | null;
   device_token: string;
   postcode: string;
   weekly_digest_enabled: boolean;
@@ -108,62 +115,6 @@ Deno.serve(async (req) => {
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
 
-    // Fetch footprint data for the past week
-    const { data: footprint, error: footprintError } = await supabase
-      .from('carbon_footprint')
-      .select('*')
-      .gte('interval_start', weekAgo.toISOString())
-      .order('interval_start', { ascending: true });
-
-    if (footprintError) {
-      console.error('Error fetching footprint:', footprintError);
-    }
-
-    // Calculate weekly stats
-    let totalCarbonG = 0;
-    let totalKwh = 0;
-    let totalIntensity = 0;
-    const byIndex: Record<string, { count: number; carbon_g: number; kwh: number }> = {};
-
-    for (const record of (footprint || []) as FootprintRecord[]) {
-      totalCarbonG += Number(record.carbon_g);
-      totalKwh += Number(record.consumption_kwh);
-      totalIntensity += record.intensity_gco2_kwh;
-
-      const idx = record.intensity_index;
-      if (!byIndex[idx]) {
-        byIndex[idx] = { count: 0, carbon_g: 0, kwh: 0 };
-      }
-      byIndex[idx].count++;
-      byIndex[idx].carbon_g += Number(record.carbon_g);
-      byIndex[idx].kwh += Number(record.consumption_kwh);
-    }
-
-    const avgIntensity = footprint?.length ? Math.round(totalIntensity / footprint.length) : 0;
-    const totalCarbonKg = totalCarbonG / 1000;
-
-    // Find best usage times from historical data
-    const hourlyUsage: Record<number, { count: number; avgIntensity: number }> = {};
-    for (const record of (footprint || []) as FootprintRecord[]) {
-      const hour = new Date(record.interval_start).getUTCHours();
-      if (!hourlyUsage[hour]) {
-        hourlyUsage[hour] = { count: 0, avgIntensity: 0 };
-      }
-      hourlyUsage[hour].count++;
-      hourlyUsage[hour].avgIntensity += record.intensity_gco2_kwh;
-    }
-
-    // Find the hour with lowest average intensity
-    let bestHour = 0;
-    let bestAvg = Infinity;
-    for (const [hour, data] of Object.entries(hourlyUsage)) {
-      const avg = data.avgIntensity / data.count;
-      if (avg < bestAvg) {
-        bestAvg = avg;
-        bestHour = parseInt(hour);
-      }
-    }
-
     // Fetch this week's forecast for best times
     const forecastResponse = await fetch('https://api.carbonintensity.org.uk/intensity/date');
     let bestTimeToday = 'N/A';
@@ -187,11 +138,6 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Calculate green energy percentage
-    const greenCount = (byIndex['very low']?.count || 0) + (byIndex['low']?.count || 0);
-    const totalCount = footprint?.length || 1;
-    const greenPercentage = Math.round((greenCount / totalCount) * 100);
-
     const notifications: Array<{
       token: string;
       title: string;
@@ -212,15 +158,101 @@ Deno.serve(async (req) => {
     );
     const dueSubscriptions = allSubs.filter((s) => claimed.has(s.id));
     console.log(
-      `Weekly digest ${periodKey}: ${dueSubscriptions.length} due, ${allSubs.length - dueSubscriptions.length} already sent`,
+      `Weekly digest ${periodKey}: ${dueSubscriptions.length} due, ${
+        allSubs.length - dueSubscriptions.length
+      } already sent`,
     );
+
+    // BH-26: only read rows for the due subscribers' own meters.
+    const userIds = subscriberUserIds(dueSubscriptions);
+    const { data: meters, error: metersError } = userIds.length
+      ? await supabase.from('octopus_meters').select('user_id, mpan').in('user_id', userIds)
+      : { data: [], error: null };
+    if (metersError) console.error('Error fetching meters:', metersError);
+    const byUser = mpansByUser((meters || []) as MeterLink[]);
+    const allMpans = [...new Set([...byUser.values()].flatMap((m) => [...m]))];
+    // Fetch footprint data for the past week
+    const { data: footprint, error: footprintError } = await supabase
+      .from('carbon_footprint')
+      .select('*')
+      .in('mpan', allMpans.length ? allMpans : ['__none__'])
+      .gte('interval_start', weekAgo.toISOString())
+      .order('interval_start', { ascending: true });
+
+    if (footprintError) {
+      console.error('Error fetching footprint:', footprintError);
+    }
+
+    // BH-26: stats are computed per subscriber from their own meter rows only.
+    const computeStats = (footprint: FootprintRecord[]) => {
+      // Calculate weekly stats
+      let totalCarbonG = 0;
+      let totalKwh = 0;
+      let totalIntensity = 0;
+      const byIndex: Record<string, { count: number; carbon_g: number; kwh: number }> = {};
+
+      for (const record of (footprint || []) as FootprintRecord[]) {
+        totalCarbonG += Number(record.carbon_g);
+        totalKwh += Number(record.consumption_kwh);
+        totalIntensity += record.intensity_gco2_kwh;
+
+        const idx = record.intensity_index;
+        if (!byIndex[idx]) {
+          byIndex[idx] = { count: 0, carbon_g: 0, kwh: 0 };
+        }
+        byIndex[idx].count++;
+        byIndex[idx].carbon_g += Number(record.carbon_g);
+        byIndex[idx].kwh += Number(record.consumption_kwh);
+      }
+
+      const avgIntensity = footprint?.length ? Math.round(totalIntensity / footprint.length) : 0;
+      const totalCarbonKg = totalCarbonG / 1000;
+
+      // Find best usage times from historical data
+      const hourlyUsage: Record<number, { count: number; avgIntensity: number }> = {};
+      for (const record of (footprint || []) as FootprintRecord[]) {
+        const hour = new Date(record.interval_start).getUTCHours();
+        if (!hourlyUsage[hour]) {
+          hourlyUsage[hour] = { count: 0, avgIntensity: 0 };
+        }
+        hourlyUsage[hour].count++;
+        hourlyUsage[hour].avgIntensity += record.intensity_gco2_kwh;
+      }
+
+      // Find the hour with lowest average intensity
+      let bestHour = 0;
+      let bestAvg = Infinity;
+      for (const [hour, data] of Object.entries(hourlyUsage)) {
+        const avg = data.avgIntensity / data.count;
+        if (avg < bestAvg) {
+          bestAvg = avg;
+          bestHour = parseInt(hour);
+        }
+      }
+
+      // Calculate green energy percentage
+      const greenCount = (byIndex['very low']?.count || 0) + (byIndex['low']?.count || 0);
+      const totalCount = footprint?.length || 1;
+      const greenPercentage = Math.round((greenCount / totalCount) * 100);
+
+      return {
+        totalCarbonKg,
+        totalKwh,
+        avgIntensity,
+        greenPercentage,
+        bestHour,
+      };
+    };
 
     // Generate notification for each subscription
     for (const sub of dueSubscriptions) {
+      const subFootprint = rowsForSubscriber(sub, byUser, (footprint || []) as FootprintRecord[]);
+      const { totalCarbonKg, totalKwh, avgIntensity, greenPercentage, bestHour } =
+        computeStats(subFootprint);
       const emoji = getIntensityEmoji(avgIntensity);
 
       let body: string;
-      if (footprint && footprint.length > 0) {
+      if (subFootprint.length > 0) {
         body =
           `📊 This week: ${totalCarbonKg.toFixed(1)}kg CO₂ from ${totalKwh.toFixed(1)}kWh. ` +
           `${greenPercentage}% green energy! ` +
@@ -241,9 +273,6 @@ Deno.serve(async (req) => {
     }
 
     console.log(`Generated ${notifications.length} weekly digest notifications`);
-    console.log(
-      `Stats: ${totalCarbonKg.toFixed(2)}kg CO₂, ${totalKwh.toFixed(2)}kWh, ${greenPercentage}% green`,
-    );
 
     // Actually deliver the push notifications to APNs/FCM
     try {
@@ -262,13 +291,10 @@ Deno.serve(async (req) => {
         already_sent: allSubs.length - dueSubscriptions.length,
         notifications_generated: notifications.length,
         weekly_stats: {
-          total_carbon_kg: totalCarbonKg,
-          total_kwh: totalKwh,
-          avg_intensity: avgIntensity,
-          green_percentage: greenPercentage,
-          best_hour: `${bestHour.toString().padStart(2, '0')}:00`,
-          best_time_today: bestTimeToday,
+          // BH-26: per-subscriber stats only; no cross-user totals in logs or responses.
           footprint_records: footprint?.length || 0,
+          metered_users: byUser.size,
+          best_time_today: bestTimeToday,
         },
       }),
       {
