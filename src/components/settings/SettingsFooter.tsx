@@ -2,13 +2,13 @@ import { Construction } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogTrigger,
+} from '@/components/ui/responsive-dialog';
 import { VERSION_STRING } from '@/lib/version';
 import { settingsItemVariants } from './settingsMotion';
 import { DataAttribution } from '@/components/attribution/DataAttribution';
@@ -37,20 +37,22 @@ export function SettingsFooter({ isLinked, unlocked, onVersionClick }: SettingsF
         </a>
       </p>
 
-      <Dialog>
-        <DialogTrigger asChild>
+      <ResponsiveDialog>
+        <ResponsiveDialogTrigger asChild>
           <button
             type="button"
             className="underline hover:text-foreground transition-colors bg-transparent border-0 p-0 cursor-pointer"
           >
             Data sources &amp; licences
           </button>
-        </DialogTrigger>
-        <DialogContent className="max-w-md max-h-[85dvh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Data sources &amp; licences</DialogTitle>
-            <DialogDescription>Credits for the live data GridSense shows.</DialogDescription>
-          </DialogHeader>
+        </ResponsiveDialogTrigger>
+        <ResponsiveDialogContent className="max-w-md max-h-[85dvh] overflow-y-auto">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Data sources &amp; licences</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
+              Credits for the live data GridSense shows.
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
           <div className="text-sm text-muted-foreground space-y-3 text-left">
             <DataAttribution />
             {isLinked && (
@@ -68,8 +70,8 @@ export function SettingsFooter({ isLinked, unlocked, onVersionClick }: SettingsF
               </p>
             )}
           </div>
-        </DialogContent>
-      </Dialog>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
 
       <div className="pt-2 flex flex-col items-center gap-1">
         <span

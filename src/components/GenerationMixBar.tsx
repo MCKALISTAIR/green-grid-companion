@@ -3,13 +3,13 @@ import { Home, Factory } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose,
-} from '@/components/ui/dialog';
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogTrigger,
+  ResponsiveDialogClose,
+} from '@/components/ui/responsive-dialog';
 import { DEFINITIONS } from '@/lib/definitions';
 import { ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -61,8 +61,8 @@ export function GenerationMixBar({
     : 'View generation mix details';
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
+    <ResponsiveDialog detents="tall">
+      <ResponsiveDialogTrigger asChild>
         <button
           type="button"
           className="w-full text-left space-y-4 cursor-pointer group transition-transform active:scale-[0.985] generation-mix-container"
@@ -278,11 +278,13 @@ export function GenerationMixBar({
             })}
           </div>
         </button>
-      </DialogTrigger>
+      </ResponsiveDialogTrigger>
 
-      <DialogContent className="max-w-md max-h-[85vh] flex flex-col overflow-hidden">
-        <DialogHeader>
-          <DialogTitle className="pr-14 leading-snug">{breakdownTitle}</DialogTitle>
+      <ResponsiveDialogContent className="max-w-md max-h-[85vh] flex flex-col overflow-hidden">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle className="pr-14 leading-snug">
+            {breakdownTitle}
+          </ResponsiveDialogTitle>
           {typeof frequency === 'number' && !isNaN(frequency) && (
             <div
               className="mr-14 flex w-fit items-center gap-2 text-sm font-normal bg-muted/50 px-2.5 py-1 rounded-md"
@@ -312,7 +314,7 @@ export function GenerationMixBar({
               </div>
             </div>
           )}
-        </DialogHeader>
+        </ResponsiveDialogHeader>
         <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain -mx-6 px-6">
           <div className="space-y-4 py-4">
             {sortedMix.map((item) => {
@@ -438,13 +440,13 @@ export function GenerationMixBar({
 
         {/* Close button for easier mobile interaction */}
         <div className="pt-2 pb-2 border-t">
-          <DialogClose asChild>
+          <ResponsiveDialogClose asChild>
             <Button variant="outline" className="w-full" size="lg">
               Close
             </Button>
-          </DialogClose>
+          </ResponsiveDialogClose>
         </div>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }
