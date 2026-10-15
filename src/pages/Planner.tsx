@@ -81,7 +81,7 @@ export default function Planner() {
   });
 
   const { postcode } = useAppLocation();
-  const { forecast, intensity, hasReading, refetch, isLoading, isError, error } =
+  const { forecast, intensity, hasReading, lastUpdated, refetch, isLoading, isError, error } =
     useCarbonData(postcode);
   // useCarbonData reports 0 until a live reading arrives; don't treat that as a reading.
   const liveIntensity = plannerLiveIntensity(intensity, { isLoading, isError, hasReading });
@@ -160,6 +160,8 @@ export default function Planner() {
   const plan = planLoad({
     forecast,
     liveIntensity,
+    // A stale live reading must never give "Now" (BH-59).
+    ...(liveIntensity !== null ? { liveFrom: lastUpdated ?? null } : {}),
     slots: Math.ceil(selectedAppliance.duration * 2),
     horizonHours: null,
   });
@@ -492,14 +494,18 @@ export default function Planner() {
               >
                 <Card className="sheet-surface p-6 space-y-3">
                   <p className="font-medium text-foreground">
-                    {plan.reason === 'missing_data'
-                      ? MISSING_DATA_TITLE
-                      : 'No forecast data available'}
+                    {plan.reason === 'stale_data'
+                      ? 'Waiting for fresh data'
+                      : plan.reason === 'missing_data'
+                        ? MISSING_DATA_TITLE
+                        : 'No forecast data available'}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {plan.reason === 'missing_data'
-                      ? `${MISSING_DATA_DETAIL} Pull to refresh, or try again later.`
-                      : 'We need a carbon intensity forecast to find your best window. Pull to refresh, or check your connection.'}
+                    {plan.reason === 'stale_data'
+                      ? "This reading is out of date, so we can't pick a time yet. Pull to refresh."
+                      : plan.reason === 'missing_data'
+                        ? `${MISSING_DATA_DETAIL} Pull to refresh, or try again later.`
+                        : 'We need a carbon intensity forecast to find your best window. Pull to refresh, or check your connection.'}
                   </p>
                 </Card>
               </motion.div>
