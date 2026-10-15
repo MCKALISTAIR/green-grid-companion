@@ -15,6 +15,8 @@ import { cn } from '@/lib/utils';
 import { getConditionLabel, getConditionParts } from '@/lib/conditionLabels';
 import { formatLondonTime } from '@/lib/londonTime';
 import { useEnergyFacts } from '@/hooks/useEnergyFacts';
+import { useAchievements } from '@/hooks/useAchievements';
+import { getTrophySeenAt, shouldShowTrophyChip } from '@/lib/trophyChip';
 import { useTimeOfDay } from '@/hooks/useTimeOfDay';
 import { getCleanlinessBand } from '@/hooks/useCleanlinessBand';
 import type { GenerationMix } from '@/lib/carbonApi';
@@ -71,6 +73,9 @@ export function IntensityHeroOverlay({
   hideGauge,
 }: IntensityHeroOverlayProps) {
   const { tone } = useEnergyFacts();
+  const { achievements } = useAchievements();
+  // Only while there's an unseen new badge (see lib/trophyChip.ts).
+  const showTrophyChip = shouldShowTrophyChip(achievements, getTrophySeenAt());
   const { timeOfDay } = useTimeOfDay();
   const { weather } = useWeatherData();
   // AA: ink on light skies, white on dark skies (art pass v1 §3).
@@ -159,16 +164,18 @@ export function IntensityHeroOverlay({
           />
         </div>
 
-        <div className="absolute top-[calc(max(env(safe-area-inset-top),24px)+0.5rem)] right-4 z-30 lg:top-6 lg:right-6">
-          {/* A single link (was <a><button>, a nested-interactive a11y failure). */}
-          <Link
-            to="/achievements"
-            className="hero-chip flex min-h-11 min-w-11 items-center justify-center transition-all cursor-pointer active:scale-95 hover:scale-105 rounded-full shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
-            aria-label="Trophy Room"
-          >
-            <Trophy className="hero-chip-icon w-4 h-4" aria-hidden="true" />
-          </Link>
-        </div>
+        {showTrophyChip && (
+          <div className="absolute top-[calc(max(env(safe-area-inset-top),24px)+0.5rem)] right-4 z-30 lg:top-6 lg:right-6">
+            {/* A single link (was <a><button>, a nested-interactive a11y failure). */}
+            <Link
+              to="/achievements"
+              className="hero-chip flex min-h-11 min-w-11 items-center justify-center transition-all cursor-pointer active:scale-95 hover:scale-105 rounded-full shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+              aria-label="Trophy Room"
+            >
+              <Trophy className="hero-chip-icon w-4 h-4" aria-hidden="true" />
+            </Link>
+          </div>
+        )}
       </ComponentErrorBoundary>
 
       {!hideGauge && (
