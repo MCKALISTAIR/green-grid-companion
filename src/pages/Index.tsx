@@ -299,6 +299,7 @@ const Index = () => {
               <div className="home-feed-fact px-1 pb-2 pt-0">
                 <EnergyFactBubble
                   intensity={intensity}
+                  hasReading={!isLoading && !isError}
                   generationMix={generationMix}
                   variant="plain"
                   className="mx-auto max-w-prose text-center"

@@ -1,0 +1,42 @@
+name: Edge functions (Deno)
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'supabase/functions/**'
+      - '.github/workflows/deno.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/functions/**'
+  workflow_dispatch:
+
+jobs:
+  deno:
+    name: Deno check + test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: supabase/functions
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Type-check every function
+        run: |
+          set -e
+          for f in */index.ts; do
+            echo "deno check $f"
+            deno check "$f"
+          done
+
+      - name: Unit tests
+        # No secrets and no network beyond localhost: tests must mock fetch.
+        run: deno test --allow-env --allow-net=127.0.0.1
