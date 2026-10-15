@@ -145,7 +145,7 @@ export function DemandView() {
                       className="min-h-11 min-w-11 rounded-full p-0 hover:bg-transparent"
                       aria-label="About Total Grid Demand"
                     >
-                      <Info className="w-3.5 h-3.5 text-muted-foreground/70 cursor-help" />
+                      <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-[280px] p-3 text-xs bg-card border-border">
@@ -348,7 +348,7 @@ export function DemandView() {
                                 className="min-h-11 min-w-11 flex-shrink-0 rounded-full p-0 flex items-center justify-center hover:bg-muted transition-colors"
                                 aria-label="More information about Biomass classification"
                               >
-                                <Info className="w-2.5 h-2.5 cursor-help text-muted-foreground" />
+                                <Info className="w-3.5 h-3.5 cursor-help text-muted-foreground" />
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-[240px] p-3 text-xs bg-card border-border z-50">

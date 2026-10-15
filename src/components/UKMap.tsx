@@ -402,7 +402,7 @@ c21 14 23 19 14 45 -8 23 -7 35 5 53 9 13 25 50 36 83 15 44 17 61 8 72 -9 11
         const { x, y } = getPosition(coords.lat, coords.lon);
         const colorClass = getIntensityColor(region.intensity.index);
         const offset = SOUTHERN_OFFSETS[region.shortname] ?? { x: 0, y: 0 };
-        const lightBubble = ['low', 'moderate'].includes(region.intensity.index);
+        const lightBubble = ['low', 'moderate', 'high'].includes(region.intensity.index);
         const isSelected = selectedRegionId === region.regionid;
 
         return (
