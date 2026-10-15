@@ -284,57 +284,71 @@ export function IntensityHeroOverlay({
               {!isLoading && !isError && conditionLabel && (
                 <motion.div
                   key={conditionLabel}
-                  className="mt-1 flex items-center gap-1.5"
+                  className="mt-1 flex flex-col items-center"
                   data-testid="hero-band"
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                 >
-                  <p
-                    className={cn(
-                      // Intensity band labels — Plus Jakarta Sans bold (same face as HUD).
-                      'font-sans text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight',
-                      needsHardScrim
-                        ? 'drop-shadow-[0_3px_16px_rgba(0,0,0,0.75)]'
-                        : 'drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)]',
-                      tone === 'plain' ? 'capitalize' : '',
-                    )}
-                  >
-                    <TypewriterText text={conditionParts.band} />
-                    {conditionParts.quip && (
-                      <span className="block mt-0.5 sm:mt-1 text-sm sm:text-base md:text-lg font-semibold text-white/95 normal-case">
-                        {conditionParts.quip}
-                      </span>
-                    )}
-                  </p>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="pointer-events-auto min-h-11 min-w-11 h-11 w-11 rounded-full p-0 scene-hud-info"
-                        aria-label="What is carbon intensity?"
-                      >
-                        <Info className="w-3.5 h-3.5" aria-hidden="true" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[260px] p-3 text-xs bg-card border-border backdrop-blur-xl space-y-2">
-                      <p className="font-semibold">Carbon intensity</p>
-                      <p>{DEFINITIONS['Carbon Intensity']}</p>
-                      <p className="text-muted-foreground">{DEFINITIONS['gCO2/kWh']}</p>
-                      {index && tone !== 'plain' && (
-                        <p className="text-muted-foreground">
-                          Official band:{' '}
-                          <span className="font-semibold capitalize text-foreground">{index}</span>
-                        </p>
+                  {/* Label is centred on its own; the (i) hangs off its right edge on the
+                      label's centre line so it never pulls the label off-centre. */}
+                  <div className="relative inline-flex items-center">
+                    <p
+                      data-testid="hero-band-label"
+                      className={cn(
+                        // Intensity band labels — Plus Jakarta Sans bold (same face as HUD).
+                        'font-sans text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight',
+                        needsHardScrim
+                          ? 'drop-shadow-[0_3px_16px_rgba(0,0,0,0.75)]'
+                          : 'drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)]',
+                        tone === 'plain' ? 'capitalize' : '',
                       )}
-                      <p className="text-muted-foreground">
-                        This is NESO&apos;s forecast for your region for this half hour. It updates
-                        every <span className="font-semibold text-foreground">30 minutes</span>.
-                      </p>
-                      <CompactDataAttribution />
-                    </PopoverContent>
-                  </Popover>
+                    >
+                      <TypewriterText text={conditionParts.band} />
+                    </p>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="pointer-events-auto absolute left-full top-1/2 -translate-y-1/2 min-h-11 min-w-11 h-11 w-11 rounded-full p-0 scene-hud-info"
+                          aria-label="What is carbon intensity?"
+                        >
+                          <Info className="w-3.5 h-3.5" aria-hidden="true" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[260px] p-3 text-xs bg-card border-border backdrop-blur-xl space-y-2">
+                        <p className="font-semibold">Carbon intensity</p>
+                        <p>{DEFINITIONS['Carbon Intensity']}</p>
+                        <p className="text-muted-foreground">{DEFINITIONS['gCO2/kWh']}</p>
+                        {index && tone !== 'plain' && (
+                          <p className="text-muted-foreground">
+                            Official band:{' '}
+                            <span className="font-semibold capitalize text-foreground">
+                              {index}
+                            </span>
+                          </p>
+                        )}
+                        <p className="text-muted-foreground">
+                          This is NESO&apos;s forecast for your region for this half hour. It
+                          updates every{' '}
+                          <span className="font-semibold text-foreground">30 minutes</span>.
+                        </p>
+                        <CompactDataAttribution />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  {conditionParts.quip && (
+                    // Own element with normal tracking: inheriting the label's tight
+                    // tracking (computed in px from 24px) squeezed the word gaps, and Plus Jakarta
+                    // Sans' space is only ~2px at 14px, so open it by 0.1em.
+                    <p
+                      data-testid="hero-quip"
+                      className="mt-0.5 sm:mt-1 font-sans text-sm sm:text-base md:text-lg font-semibold tracking-normal [word-spacing:0.1em] text-white/95 drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)]"
+                    >
+                      {conditionParts.quip}
+                    </p>
+                  )}
                 </motion.div>
               )}
               {showZeroCarbonBadge && <ZeroCarbonBadge />}

@@ -111,6 +111,84 @@ export async function checkHero(
     if (b.header.x < 0 || b.header.x + b.header.width > viewport.width + 1)
       fails.push(`${tag} location header runs off-screen (${fmt(b.header)})`);
   }
+  fails.push(...(await checkHeroText(page, { tag, viewport, expectMeta })));
+  return fails;
+}
+
+/**
+ * Design review of #94: hero subline keeps visible word gaps, the (i) sits on the
+ * band label's line with the label centred, and at <360px wide the compact meta
+ * row stacks into two centred lines.
+ */
+async function checkHeroText(page, { tag, viewport, expectMeta }) {
+  const r = await page.evaluate(() => {
+    const out = { gaps: [], text: null, info: null, meta: null };
+    const quip = document.querySelector("[data-testid='hero-quip']");
+    if (quip) {
+      out.text = quip.textContent;
+      const node = quip.firstChild;
+      if (node && node.nodeType === 3) {
+        const t = node.textContent;
+        for (let i = 1; i < t.length - 1; i++) {
+          if (t[i] !== ' ') continue;
+          const range = document.createRange();
+          range.setStart(node, i - 1);
+          range.setEnd(node, i);
+          const before = range.getBoundingClientRect();
+          range.setStart(node, i + 1);
+          range.setEnd(node, i + 2);
+          const after = range.getBoundingClientRect();
+          out.gaps.push(after.left - before.right);
+        }
+      }
+    }
+    const label = document.querySelector("[data-testid='hero-band-label']");
+    const info = document.querySelector("[aria-label='What is carbon intensity?']");
+    if (label && info) {
+      const l = label.getBoundingClientRect();
+      const i = info.getBoundingClientRect();
+      out.info = {
+        dy: Math.abs(i.top + i.height / 2 - (l.top + l.height / 2)),
+        labelCentre: l.left + l.width / 2,
+        right: i.left >= l.right - 1,
+      };
+    }
+    const meta = document.querySelector("[data-testid='hero-meta']");
+    if (meta && meta.children.length >= 2) {
+      const [a, b] = [...meta.children].map((c) => c.getBoundingClientRect());
+      out.meta = {
+        stacked: b.top >= a.bottom - 1,
+        aC: a.left + a.width / 2,
+        bC: b.left + b.width / 2,
+      };
+    }
+    return out;
+  });
+  const fails = [];
+  if (r.text !== null) {
+    if (r.text.trim().includes(' ') && r.gaps.length === 0)
+      fails.push(`${tag} hero quip lost its spaces in the DOM ("${r.text}")`);
+    const tight = r.gaps.filter((g) => g < 2.5);
+    if (tight.length)
+      fails.push(
+        `${tag} hero quip word gap collapsed (${tight.map((g) => g.toFixed(1)).join(', ')}px) in "${r.text}"`,
+      );
+  }
+  if (r.info) {
+    if (r.info.dy > 3)
+      fails.push(`${tag} info icon is off the band label's line (${r.info.dy.toFixed(1)}px)`);
+    if (!r.info.right) fails.push(`${tag} info icon overlaps the band label`);
+    // Phones only: on tablet/desktop the badge shares the band row by design.
+    if (viewport.width < 768 && Math.abs(r.info.labelCentre - viewport.width / 2) > 3)
+      fails.push(
+        `${tag} band label off-centre (${r.info.labelCentre.toFixed(1)} vs ${viewport.width / 2})`,
+      );
+  }
+  if (expectMeta && viewport.width < 360 && viewport.height <= 640 && r.meta) {
+    if (!r.meta.stacked) fails.push(`${tag} meta row should wrap to two lines below 360px`);
+    for (const c of [r.meta.aC, r.meta.bC])
+      if (Math.abs(c - viewport.width / 2) > 3) fails.push(`${tag} meta lines not centred`);
+  }
   return fails;
 }
 
