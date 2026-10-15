@@ -345,7 +345,15 @@ export function IntensityHeroOverlay({
             </div>
 
             {!isLoading && !isError && (
-              <div className="mt-3 flex flex-col items-center gap-2" data-testid="hero-meta">
+              <div
+                className={cn(
+                  /* Soft backing so the renewable + updated lines stay legible over
+                     whatever scene art sits behind them (the house, dark hills) (BH-22). */
+                  'mt-3 flex flex-col items-center gap-2 rounded-2xl px-3 py-1.5',
+                  isInk ? 'bg-white/55' : 'bg-black/35',
+                )}
+                data-testid="hero-meta"
+              >
                 <div className="relative">
                   <motion.p
                     className={cn(
@@ -363,7 +371,14 @@ export function IntensityHeroOverlay({
                 </div>
 
                 {lastUpdated && (
-                  <div className="flex items-center gap-1.5 text-[11px] text-white font-medium drop-shadow-[0_1px_8px_rgba(0,0,0,0.65)]">
+                  <div
+                    className={cn(
+                      'flex items-center gap-1.5 text-[11px] font-medium',
+                      isInk
+                        ? 'text-hero-ink'
+                        : 'text-white drop-shadow-[0_1px_8px_rgba(0,0,0,0.65)]',
+                    )}
+                  >
                     <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
                       <span
                         className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-60 ${freshnessColor}`}
