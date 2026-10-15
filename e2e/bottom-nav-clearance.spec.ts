@@ -8,6 +8,7 @@ for (const safeArea of [0, 34]) {
     const viewport = { width: 390, height: 844 };
     await page.setViewportSize(viewport);
     await page.goto('/');
+    await page.evaluate(() => localStorage.setItem('product_tour_seen', 'true'));
     if (page.url().includes('/onboarding')) {
       await page.getByRole('button', { name: 'Just show me the GB average' }).click();
     }
