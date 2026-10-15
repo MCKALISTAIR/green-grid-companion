@@ -279,3 +279,12 @@ export function getHeroTextTone(
     ? 'ink'
     : 'light';
 }
+
+/** Solid chip behind the hero location pill and trophy (see .hero-chip in index.css). */
+export const HERO_CHIP = {
+  fill: '#0f172a',
+  fillHover: '#1e293b',
+  border: '#e2e8f0',
+  text: '#ffffff',
+  icon: '#fcd34d',
+} as const;
