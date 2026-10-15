@@ -62,7 +62,9 @@ export function buildSceneConfig({
   const isDaytime = timeOfDay === 'morning' || timeOfDay === 'midday' || timeOfDay === 'afternoon';
   const isGoldenHour = timeOfDay === 'sunset' || timeOfDay === 'dawn';
   const isDarkPeriod = timeOfDay === 'night' || timeOfDay === 'dusk';
-  const showSun = isDaytime || timeOfDay === 'sunset';
+  // No sun behind an overcast bank, rain or fog (art pass v1 §7).
+  const skyHidden = weather.cloudCover > 70 || weather.isRaining || weather.isFoggy;
+  const showSun = (isDaytime || timeOfDay === 'sunset') && !skyHidden;
 
   const getTimeFilter = () => {
     if (synthwaveMode) return 'contrast(1.2) saturate(1.5) hue-rotate(-10deg)';

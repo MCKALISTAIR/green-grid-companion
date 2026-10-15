@@ -1349,3 +1349,86 @@ body {
     display: none;
   }
 }
+
+/* Art pass v1 motion (§8). Static frame under reduced motion. */
+@keyframes art-breathe {
+  50% {
+    transform: scale(1.02);
+  }
+}
+@keyframes art-drift {
+  from {
+    transform: translateX(-10%);
+  }
+  to {
+    transform: translateX(10%);
+  }
+}
+@keyframes art-rain {
+  from {
+    transform: translateY(-12px);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  to {
+    transform: translateY(28px);
+    opacity: 0;
+  }
+}
+@keyframes art-wind {
+  0%,
+  100% {
+    transform: translateX(0);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateX(12px);
+    opacity: 1;
+  }
+}
+@keyframes art-undulate {
+  50% {
+    transform: translateY(-4px) scaleY(1.04);
+  }
+}
+.art-breathe {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: art-breathe 6s cubic-bezier(0.2, 0.7, 0.2, 1) infinite;
+}
+.art-drift {
+  animation: art-drift var(--art-drift, 120s) linear infinite alternate;
+}
+.art-drift-slow {
+  animation: art-drift 180s linear infinite alternate;
+}
+.art-rain {
+  animation: art-rain 900ms linear infinite;
+}
+.art-wind {
+  animation: art-wind 3s cubic-bezier(0.2, 0.7, 0.2, 1) infinite;
+}
+.art-undulate {
+  transform-origin: top;
+  animation: art-undulate 20s ease-in-out infinite;
+}
+.art-fade {
+  transition:
+    background 1.2s cubic-bezier(0.2, 0.7, 0.2, 1),
+    backdrop-filter 1.2s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .art-breathe,
+  .art-drift,
+  .art-drift-slow,
+  .art-rain,
+  .art-wind,
+  .art-undulate {
+    animation: none;
+  }
+  .art-fade {
+    transition-duration: 200ms;
+  }
+}

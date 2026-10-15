@@ -1,12 +1,17 @@
 import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Cloud } from 'lucide-react';
 import { WeatherData } from '@/hooks/useWeatherData';
+import type { TimeOfDay } from '@/hooks/useTimeOfDay';
+import { CLOUD_COLOURS } from '@/lib/artPalette';
+import { CloudBank, FogVeil, RainCapsules, SceneCloud, WindStreaks } from './art/WeatherArt';
 
 interface WeatherEffectsProps {
   weather: WeatherData;
   isNight: boolean;
   cleanliness: number;
+  timeOfDay?: TimeOfDay;
+  /** sceneConfig.showWind (wind_speed_10m >= 25 km/h). */
+  showWind?: boolean;
 }
 
 function FogLayer({
@@ -135,63 +140,55 @@ function LightningBolt({ x, delay }: { x: number; delay: number }) {
   );
 }
 
+function cloudPalette(timeOfDay: TimeOfDay | undefined, isNight: boolean) {
+  if (isNight) return CLOUD_COLOURS.night;
+  if (timeOfDay === 'sunset') return CLOUD_COLOURS.sunset;
+  if (timeOfDay === 'dawn') return CLOUD_COLOURS.dawn;
+  return CLOUD_COLOURS.day;
+}
+
+/** Light cloud (40-70%): ceil(cover/25) flat-based clouds drifting 90-140s. */
 function WeatherClouds({
   cloudCover,
-  isRaining,
   isNight,
-  cleanliness,
+  timeOfDay,
 }: {
   cloudCover: number;
-  isRaining: boolean;
   isNight: boolean;
-  cleanliness: number;
+  timeOfDay?: TimeOfDay;
 }) {
-  const cloudCount = Math.ceil(cloudCover / 25);
-  const cloudOpacity = isNight ? 0.4 : 0.7;
-  const cloudColor = isRaining
-    ? cleanliness > 0.6
-      ? 'hsl(200 20% 75%)'
-      : 'hsl(220 10% 45%)'
-    : 'hsl(0 0% 95%)';
-
-  const clouds = useMemo(() => {
-    return Array.from({ length: cloudCount }, (_, i) => ({
-      id: i,
-      top: 15 + (i % 3) * 8,
-      size: 16 + (i % 2) * 8,
-      duration: 30 + i * 5,
-      delay: -i * 8,
-    }));
-  }, [cloudCount]);
-
+  const cloudCount = Math.min(4, Math.ceil(cloudCover / 25));
+  const colours = cloudPalette(timeOfDay, isNight);
+  const clouds = useMemo(
+    () =>
+      Array.from({ length: cloudCount }, (_, i) => ({
+        id: i,
+        top: 14 + (i % 3) * 9,
+        left: [6, 58, 30, 78][i % 4],
+        scale: [0.8, 0.6, 0.7, 0.55][i % 4],
+        duration: 90 + i * 15,
+      })),
+    [cloudCount],
+  );
   return (
     <>
-      {clouds.map((cloud) => (
+      {clouds.map((c) => (
         <motion.div
-          key={cloud.id}
-          className="absolute animate-cloud-drift"
-          style={{
-            top: `${cloud.top}%`,
-            animationDuration: `${cloud.duration}s`,
-            animationDelay: `${cloud.delay}s`,
-          }}
+          key={c.id}
+          className="absolute art-drift"
+          data-art-cloud
+          style={
+            {
+              top: `${c.top}%`,
+              left: `${c.left}%`,
+              '--art-drift': `${c.duration}s`,
+            } as React.CSSProperties
+          }
           initial={{ opacity: 0 }}
-          animate={{ opacity: cloudOpacity }}
-          transition={{ duration: 1 }}
+          animate={{ opacity: isNight ? 0.85 : 0.95 }}
+          transition={{ duration: 1.2 }}
         >
-          <Cloud
-            style={{
-              width: `${cloud.size * 4}px`,
-              height: `${cloud.size * 2.5}px`,
-              color: cloudColor,
-              filter: isRaining
-                ? cleanliness > 0.6
-                  ? 'brightness(0.95)'
-                  : 'brightness(0.65)'
-                : 'none',
-            }}
-            aria-hidden="true"
-          />
+          <SceneCloud scale={c.scale * 1.4} colours={colours} />
         </motion.div>
       ))}
     </>
@@ -250,7 +247,12 @@ function HeavyRain({
   );
 }
 
-export function WeatherEffects({ weather, isNight, cleanliness }: WeatherEffectsProps) {
+export function WeatherEffects({
+  weather,
+  isNight,
+  timeOfDay,
+  showWind = false,
+}: WeatherEffectsProps) {
   const lightningActive = useMemo(() => {
     if (!weather.isThunderstorm) return false;
     return true;
@@ -258,29 +260,24 @@ export function WeatherEffects({ weather, isNight, cleanliness }: WeatherEffects
 
   return (
     <>
-      <AnimatePresence>
-        {weather.isFoggy && (
-          <>
-            <FogLayer intensity={0.6} layer={1} cleanliness={cleanliness} />
-            <FogLayer intensity={0.4} layer={2} cleanliness={cleanliness} />
-            <FogLayer intensity={0.3} layer={3} cleanliness={cleanliness} />
-          </>
-        )}
-      </AnimatePresence>
+      <AnimatePresence>{weather.isFoggy && <FogVeil />}</AnimatePresence>
 
-      {weather.cloudCover > 40 && (
-        <WeatherClouds
-          cloudCover={weather.cloudCover}
-          isRaining={weather.isRaining}
-          isNight={isNight}
-          cleanliness={cleanliness}
-        />
+      {weather.cloudCover > 70 || weather.isRaining ? (
+        <CloudBank night={isNight} />
+      ) : (
+        weather.cloudCover > 40 && (
+          <WeatherClouds cloudCover={weather.cloudCover} isNight={isNight} timeOfDay={timeOfDay} />
+        )
+      )}
+
+      {showWind && (
+        <div className="absolute left-[6%] top-[22%] art-wind" data-art-wind>
+          <WindStreaks opacity={0.6} />
+        </div>
       )}
 
       <AnimatePresence>
-        {weather.isRaining && (
-          <HeavyRain intensity={weather.precipitationIntensity} cleanliness={cleanliness} />
-        )}
+        {weather.isRaining && <RainCapsules intensity={weather.precipitationIntensity} />}
       </AnimatePresence>
 
       <AnimatePresence>
