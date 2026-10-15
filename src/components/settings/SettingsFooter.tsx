@@ -23,7 +23,7 @@ export function SettingsFooter({ isLinked, unlocked, onVersionClick }: SettingsF
   return (
     <motion.div
       variants={settingsItemVariants}
-      className="text-xs text-muted-foreground text-center space-y-2 pt-8 pb-4"
+      className="text-xs text-muted-foreground text-center pt-8 pb-4"
     >
       <p>
         Developed by{' '}
@@ -31,7 +31,7 @@ export function SettingsFooter({ isLinked, unlocked, onVersionClick }: SettingsF
           href="https://alistairmckay.com"
           target="_blank"
           rel="noopener noreferrer"
-          className="underline hover:text-foreground transition-colors"
+          className="inline-flex min-h-11 items-center underline hover:text-foreground transition-colors"
         >
           Alistair McKay
         </a>
@@ -41,7 +41,7 @@ export function SettingsFooter({ isLinked, unlocked, onVersionClick }: SettingsF
         <DialogTrigger asChild>
           <button
             type="button"
-            className="underline hover:text-foreground transition-colors bg-transparent border-0 p-0 cursor-pointer"
+            className="inline-flex min-h-11 items-center underline hover:text-foreground transition-colors bg-transparent border-0 p-0 cursor-pointer"
           >
             Data sources &amp; licences
           </button>
@@ -83,7 +83,7 @@ export function SettingsFooter({ isLinked, unlocked, onVersionClick }: SettingsF
               onVersionClick();
             }
           }}
-          className="bg-transparent border-0 p-0 text-primary hover:underline cursor-pointer select-none"
+          className="inline-flex min-h-11 min-w-11 items-center justify-center bg-transparent border-0 p-0 text-primary hover:underline cursor-pointer select-none"
           role="button"
           aria-label="Tap version number multiple times to unlock developer features"
           tabIndex={0}
