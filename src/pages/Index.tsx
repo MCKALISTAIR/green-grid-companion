@@ -217,7 +217,8 @@ const Index = () => {
         style={{ background: skyColor }}
       >
         <PullToRefresh onRefresh={handleRefresh} disabled={isLoading}>
-          {/* Shared app-content inset lives inside home-feed to clear the dock without a sky-coloured gap. */}
+          {/* home-feed carries its own dock clearance (6.5rem + iOS safe area) so the sheet's last
+              card clears the nav without a sky-coloured gap below it. */}
           <main className="home-shell flex flex-col animate-in fade-in duration-700 lg:min-h-[100dvh] lg:pb-0">
             <h1 className="sr-only">Carbon Intensity Dashboard</h1>
 
@@ -243,7 +244,7 @@ const Index = () => {
               hideGauge={viewMode === 'demand'}
             />
 
-            <div className="home-feed flex-1 px-4 pt-5 pb-4 lg:pb-6 space-y-4 -mt-8 relative z-10 bg-card rounded-t-none shadow-[0_-12px_40px_-20px_rgba(15,23,42,0.18)] lg:max-w-7xl lg:mx-auto w-full lg:shadow-xl lg:-mt-10 lg:pt-8 lg:space-y-6">
+            <div className="home-feed flex-1 px-4 pt-5 pb-[calc(6.5rem+var(--bottom-safe-area))] lg:pb-6 space-y-4 -mt-8 relative z-10 bg-card rounded-t-none shadow-[0_-12px_40px_-20px_rgba(15,23,42,0.18)] lg:max-w-7xl lg:mx-auto w-full lg:shadow-xl lg:-mt-10 lg:pt-8 lg:space-y-6">
               {/* Scalloped top edge of the sheet. The sheet itself has square top corners so the
                   scallop meets both edges cleanly (no sliver or doubled half-circle). */}
               <div

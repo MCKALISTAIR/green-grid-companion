@@ -166,6 +166,14 @@ export async function checkSheetEdge(page, { viewport }) {
 export async function checkScrollSpace(page, { route, viewport, allowance = 128 }) {
   const tag = `[scroll ${route} ${viewport.width}x${viewport.height}]`;
   const r = await page.evaluate(() => {
+    // html sets scroll-behavior: smooth, so a scrollTo() would still be animating
+    // when these coordinates are read; measure with instant scrolling instead.
+    const force = (e) => {
+      if (e) e.style.scrollBehavior = 'auto';
+    };
+    force(document.documentElement);
+    force(document.body);
+    document.querySelectorAll('.app-content, main, .home-feed').forEach(force);
     window.scrollTo(0, document.scrollingElement.scrollHeight);
     const nav = document.querySelector('[data-testid="bottom-nav"], .nav-dock');
     const navBox =

@@ -829,9 +829,9 @@ blockquote {
   padding-bottom: 0;
 }
 
-.app-content--home .home-feed {
-  padding-bottom: var(--bottom-content-inset);
-}
+/* Home's clearance is set on .home-feed itself in Index.tsx
+   (pb-[calc(6.5rem+env(safe-area-inset-bottom))]) — no rule here, so that
+   utility is not outranked and does not stack on top of a second padding. */
 
 .page-shell {
   min-height: 100dvh;
@@ -862,9 +862,7 @@ blockquote {
     scroll-padding-bottom: 0;
   }
 
-  .app-content--home .home-feed {
-    padding-bottom: 1.5rem;
-  }
+  /* Home keeps its own lg:pb-6 in Index.tsx; nothing to outrank it here. */
 
   .page-shell.page-shell--fit {
     padding-bottom: 1.5rem;
