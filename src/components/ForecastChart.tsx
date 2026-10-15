@@ -233,7 +233,7 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
             <div className="flex items-center gap-2 flex-wrap text-xs text-muted-foreground">
               <span>{insight.vsNow}</span>
               {insight.inBestWindow && (
-                <span className="inline-flex items-center gap-1 text-intensity-very-low font-semibold">
+                <span className="inline-flex items-center gap-1 text-intensity-very-low-text font-semibold">
                   <Clock3 className="w-3 h-3" aria-hidden />
                   Best window
                 </span>
@@ -333,10 +333,10 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
                         className="absolute inset-x-0 top-1 bottom-6 rounded-2xl bg-intensity-very-low/[0.12] dark:bg-intensity-very-low/15 ring-1 ring-inset ring-intensity-very-low/35"
                       />
                       <div className="absolute -top-2 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-intensity-very-low/15 dark:bg-intensity-very-low/25 border border-intensity-very-low/30 px-2 py-0.5 rounded-full whitespace-nowrap shadow-sm z-10">
-                        <span className="text-[8px] font-bold tracking-wide text-intensity-very-low">
+                        <span className="text-[8px] font-bold tracking-wide text-intensity-very-low-text">
                           ★
                         </span>
-                        <span className="text-[8px] font-semibold text-intensity-very-low">
+                        <span className="text-[8px] font-semibold text-intensity-very-low-text">
                           Best · {startTime}–{endTime}
                         </span>
                       </div>
@@ -344,7 +344,9 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
                   </TooltipTrigger>
                   <TooltipContent side="top" className="text-xs max-w-[200px]">
                     <div className="flex flex-col gap-0.5">
-                      <span className="font-semibold text-intensity-very-low">★ Best window</span>
+                      <span className="font-semibold text-intensity-very-low-text">
+                        ★ Best window
+                      </span>
                       <span>
                         {startTime} → {endTime} ({slotCount * 0.5}h)
                       </span>
@@ -450,7 +452,7 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
                             'text-xs font-medium font-mono tabular-nums',
                             isSelected || isCurrentHour
                               ? 'text-primary font-bold'
-                              : 'text-foreground',
+                              : 'text-foreground dark:text-[#9fb0b5]',
                           )}
                         >
                           {isUnknown || displayValue === null ? '?' : displayValue}
@@ -477,7 +479,7 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
                             'text-[10px] whitespace-nowrap',
                             isSelected || isCurrentHour
                               ? 'text-primary font-bold'
-                              : 'text-muted-foreground',
+                              : 'text-muted-foreground dark:text-[#8a9ba1]',
                           )}
                         >
                           {isCurrentHour ? 'Now' : format(time, 'HH:mm')}
@@ -558,7 +560,7 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
                 }}
               >
                 <div className="flex flex-col gap-0.5 text-xs">
-                  <span className="font-semibold text-intensity-very-low">★ Best window</span>
+                  <span className="font-semibold text-intensity-very-low-text">★ Best window</span>
                   <span className="text-foreground">
                     {startTime} → {endTime} ({slotCount * 0.5}h)
                   </span>

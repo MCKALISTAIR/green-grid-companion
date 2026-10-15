@@ -31,7 +31,7 @@ export function EmptyState({
         className="mb-6"
       >
         <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center">
-          <Icon className="w-10 h-10 text-muted-foreground/60" />
+          <Icon className="w-10 h-10 text-muted-foreground" />
         </div>
       </motion.div>
 

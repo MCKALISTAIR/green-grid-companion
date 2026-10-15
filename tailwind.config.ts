@@ -76,6 +76,11 @@ export default {
           moderate: 'hsl(var(--intensity-moderate))',
           high: 'hsl(var(--intensity-high))',
           'very-high': 'hsl(var(--intensity-very-high))',
+          'very-low-text': 'hsl(var(--intensity-very-low-text))',
+          'low-text': 'hsl(var(--intensity-low-text))',
+          'moderate-text': 'hsl(var(--intensity-moderate-text))',
+          'high-text': 'hsl(var(--intensity-high-text))',
+          'very-high-text': 'hsl(var(--intensity-very-high-text))',
         },
         gen: {
           wind: 'hsl(var(--gen-wind))',

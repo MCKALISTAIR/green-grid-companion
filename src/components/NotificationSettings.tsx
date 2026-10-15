@@ -187,7 +187,7 @@ export function NotificationSettings({ onClose }: NotificationSettingsProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-intensity-very-low/20 flex items-center justify-center">
-              <Zap className="w-5 h-5 text-intensity-very-low" />
+              <Zap className="w-5 h-5 text-intensity-very-low-text" />
             </div>
             <div>
               <h3 className="font-medium text-foreground">Best Time to Use Energy</h3>

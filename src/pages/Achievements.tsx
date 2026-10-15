@@ -57,7 +57,7 @@ export default function AchievementsPage() {
                     className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center text-2xl ${
                       achievement.unlocked
                         ? 'bg-primary/10'
-                        : 'bg-muted text-muted-foreground/50 grayscale'
+                        : 'bg-muted text-muted-foreground grayscale'
                     }`}
                   >
                     {achievement.unlocked ? (
@@ -88,7 +88,7 @@ export default function AchievementsPage() {
                         </Badge>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground/80 leading-snug">
+                    <p className="text-sm text-muted-foreground leading-snug">
                       {achievement.description}
                     </p>
                   </div>

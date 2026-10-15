@@ -167,12 +167,10 @@ export function DemandView() {
                 {demandGW ? (
                   <>
                     <motion.span key={demandGW}>{displayDemandGW}</motion.span>{' '}
-                    <span className="text-lg font-medium font-sans text-muted-foreground/80">
-                      GW
-                    </span>
+                    <span className="text-lg font-medium font-sans text-muted-foreground">GW</span>
                   </>
                 ) : (
-                  <span className="text-2xl text-muted-foreground/50 font-sans">Unavailable</span>
+                  <span className="text-2xl text-muted-foreground font-sans">Unavailable</span>
                 )}
               </h2>
               {lastUpdated && (
@@ -216,14 +214,14 @@ export function DemandView() {
                       <h2 className="text-4xl font-bold font-mono tabular-nums tracking-tight text-primary">
                         {gridFrequency.toFixed(3)}
                       </h2>
-                      <span className="text-lg font-medium text-muted-foreground/80">Hz</span>
+                      <span className="text-lg font-medium text-muted-foreground">Hz</span>
                     </div>
                     <p className="text-xs text-muted-foreground mt-2">Target: 50.00 Hz</p>
                   </>
                 ) : (
                   <div className="mt-2">
-                    <p className="text-sm text-muted-foreground/70">Live frequency unavailable</p>
-                    <p className="text-xs text-muted-foreground/50 mt-1">
+                    <p className="text-sm text-muted-foreground">Live frequency unavailable</p>
+                    <p className="text-xs text-muted-foreground mt-1">
                       Real-time data temporarily inaccessible
                     </p>
                   </div>
