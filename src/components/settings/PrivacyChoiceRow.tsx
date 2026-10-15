@@ -14,7 +14,7 @@ export function PrivacyChoiceRow() {
 
   const choose = (next: ConsentChoice) => {
     setConsent(next);
-    toast.success(CONSENT_SETTINGS_COPY.saved[next]);
+    toast(CONSENT_SETTINGS_COPY.saved[next]);
   };
 
   return (
@@ -41,7 +41,7 @@ export function PrivacyChoiceRow() {
             key={c}
             type="button"
             variant="outline"
-            className="min-h-11 h-auto"
+            className={`min-h-11 h-auto hover:bg-muted hover:text-foreground ${choice === c ? 'bg-muted border-primary' : ''}`}
             aria-pressed={choice === c}
             onClick={() => choose(c)}
           >

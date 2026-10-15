@@ -1,5 +1,6 @@
 import { Activity, Leaf, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
 
 export type DashboardViewMode = 'intensity' | 'footprint' | 'demand';
 
@@ -28,12 +29,12 @@ function TabButton({
   const isActive = viewMode === mode;
 
   return (
-    <button
+    <Button variant="ghost"
       role="tab"
       tabIndex={isActive ? 0 : -1}
       aria-selected={isActive}
       aria-controls="dashboard-tabpanel"
-      className={`relative flex-1 min-w-0 h-9 rounded-xl text-[11px] sm:text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 z-10 ${
+      className={`relative flex-1 min-w-0 min-h-11 h-11 p-0 rounded-xl text-[11px] sm:text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 z-10 ${
         isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
       }`}
       onClick={onSelect}
@@ -58,7 +59,7 @@ function TabButton({
         </motion.span>
         <span className="truncate">{label}</span>
       </span>
-    </button>
+    </Button>
   );
 }
 

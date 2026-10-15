@@ -85,7 +85,7 @@ export default function Settings() {
   return (
     <div className="page-shell page-shell--fit">
       <motion.div
-        className="page-shell-inner space-y-8"
+        className="page-shell-inner space-y-8 pb-8"
         variants={settingsContainerVariants}
         initial="hidden"
         animate="show"

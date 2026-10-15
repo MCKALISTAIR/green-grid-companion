@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useHaptics } from '@/hooks/useHaptics';
 
 export interface HotspotDef {
@@ -19,6 +20,7 @@ interface Props {
 /** Soft max width for fact bubbles; also used when clamping into the scene. */
 const BUBBLE_MAX_PX = 220;
 const BUBBLE_EDGE_PAD_PX = 8;
+const MotionButton = motion.create(Button);
 
 /**
  * Diegetic info layer — small tap targets anchored to "informative" scene props.
@@ -67,9 +69,10 @@ export function SceneHotspots({ hotspots }: Props) {
             className="absolute"
             style={{ left: `${h.x}%`, top: `${h.y}%`, transform: 'translate(-50%, -50%)' }}
           >
-            <motion.button
+            <MotionButton
+              variant="ghost"
               type="button"
-              className="pointer-events-auto relative grid place-items-center w-7 h-7 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+              className="pointer-events-auto relative grid place-items-center min-w-11 min-h-11 w-11 h-11 p-0 rounded-full hover:bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
               onClick={() => {
                 selection();
                 setActiveId((prev) => (prev === h.id ? null : h.id));
@@ -83,7 +86,7 @@ export function SceneHotspots({ hotspots }: Props) {
               whileTap={{ scale: 0.92 }}
             >
               <motion.span
-                className="absolute inset-0 rounded-full border border-white/70"
+                className="absolute w-7 h-7 rounded-full border border-white/70"
                 animate={{ scale: [1, 1.6, 1], opacity: [0.7, 0, 0.7] }}
                 transition={{ duration: 2.4, repeat: Infinity, ease: 'easeOut' as const }}
               />
@@ -91,7 +94,7 @@ export function SceneHotspots({ hotspots }: Props) {
                 className="block w-2.5 h-2.5 rounded-full bg-white/95"
                 style={{ boxShadow: '0 0 8px rgba(255,255,255,0.7)' }}
               />
-            </motion.button>
+            </MotionButton>
           </div>
         );
       })}
@@ -120,14 +123,16 @@ export function SceneHotspots({ hotspots }: Props) {
               <h4 className="flex-1 text-xs font-semibold tracking-wide uppercase text-foreground/80">
                 {active.label}
               </h4>
-              <button
+               <Button
+                 variant="ghost"
+                 size="icon"
                 type="button"
                 onClick={close}
                 aria-label="Close"
-                className="text-foreground/60 hover:text-foreground transition-colors -mr-1 -mt-0.5"
+                 className="min-w-11 min-h-11 shrink-0 grid place-items-center text-foreground/60 hover:text-foreground transition-colors -mr-1 -mt-0.5"
               >
                 <X className="w-3.5 h-3.5" />
-              </button>
+               </Button>
             </div>
             <p className="px-3 pb-3 text-[13px] leading-snug text-foreground/90">{active.fact}</p>
           </motion.div>

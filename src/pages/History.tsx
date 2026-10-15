@@ -345,14 +345,14 @@ export default function HistoryPage() {
               {showChartTip && (
                 <motion.div variants={itemVariants}>
                   <Card className="sheet-surface mb-4 bg-muted/30 border-dashed relative animate-in fade-in slide-in-from-top-2">
-                    <button
+                    <Button variant="ghost" size="icon"
                       onClick={dismissChartTip}
-                      className="absolute top-2 right-2 p-1 text-muted-foreground hover:text-foreground transition-colors"
+                      className="absolute top-2 right-2 min-h-11 min-w-11 p-1 text-muted-foreground hover:text-foreground transition-colors"
                       aria-label="Dismiss tip"
                     >
                       <X className="w-4 h-4" />
-                    </button>
-                    <div className="p-4 flex gap-3 pr-8">
+                    </Button>
+                    <div className="p-4 flex gap-3 pr-14">
                       <div className="p-2 bg-background rounded-full border shadow-sm h-fit">
                         <Info className="w-4 h-4 text-primary shrink-0" />
                       </div>
@@ -530,7 +530,7 @@ export default function HistoryPage() {
               <motion.div variants={itemVariants}>
                 <Card className="sheet-surface p-4">
                   <CardHeader className="p-0 pb-4">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
                         <CardTitle>{timeRange === '24h' ? '24 Hour' : '7 Day'} View</CardTitle>
                         <CardDescription>
@@ -552,18 +552,18 @@ export default function HistoryPage() {
                         </CardDescription>
                       </div>
                       <div className="flex bg-muted rounded-md p-1">
-                        <button
+                        <Button variant="ghost"
                           onClick={() => setTimeRange('24h')}
-                          className={`px-3 py-1 text-xs rounded-sm transition-all ${timeRange === '24h' ? 'bg-background shadow-sm font-medium' : 'text-muted-foreground'}`}
+                          className={`min-h-11 px-4 py-1 text-xs rounded-sm transition-all ${timeRange === '24h' ? 'bg-background shadow-sm font-medium' : 'text-muted-foreground'}`}
                         >
                           24h
-                        </button>
-                        <button
+                        </Button>
+                        <Button variant="ghost"
                           onClick={() => setTimeRange('7d')}
-                          className={`px-3 py-1 text-xs rounded-sm transition-all ${timeRange === '7d' ? 'bg-background shadow-sm font-medium' : 'text-muted-foreground'}`}
+                          className={`min-h-11 px-4 py-1 text-xs rounded-sm transition-all ${timeRange === '7d' ? 'bg-background shadow-sm font-medium' : 'text-muted-foreground'}`}
                         >
                           7d
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   </CardHeader>

@@ -151,27 +151,27 @@ export function SettingsPreferencesSection({
           <RadioGroup
             value={scenePreference}
             onValueChange={(val) => setScenePreference(val as ScenePreference)}
-            className="flex flex-wrap gap-4 pt-1"
+            className="grid grid-cols-2 gap-x-2 gap-y-1 pt-1"
           >
-            <div className="flex items-center space-x-2">
+            <Label className="flex min-h-11 items-center gap-2 cursor-pointer" htmlFor="scene-auto">
               <RadioGroupItem value="auto" id="scene-auto" />
-              <Label htmlFor="scene-auto" className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-primary" />
                 Auto
-              </Label>
-            </div>
-            <div className="flex items-center space-x-2">
+              </span>
+            </Label>
+            <Label className="flex min-h-11 items-center gap-2 cursor-pointer" htmlFor="scene-countryside">
               <RadioGroupItem value="countryside" id="scene-countryside" />
-              <Label htmlFor="scene-countryside">🌿 Countryside</Label>
-            </div>
-            <div className="flex items-center space-x-2">
+              <span>🌿 Countryside</span>
+            </Label>
+            <Label className="flex min-h-11 items-center gap-2 cursor-pointer" htmlFor="scene-city">
               <RadioGroupItem value="city" id="scene-city" />
-              <Label htmlFor="scene-city">🏙️ City</Label>
-            </div>
-            <div className="flex items-center space-x-2">
+              <span>🏙️ City</span>
+            </Label>
+            <Label className="flex min-h-11 items-center gap-2 cursor-pointer" htmlFor="scene-coastal">
               <RadioGroupItem value="coastal" id="scene-coastal" />
-              <Label htmlFor="scene-coastal">🌊 Coastal</Label>
-            </div>
+              <span>🌊 Coastal</span>
+            </Label>
           </RadioGroup>
         </div>
 
@@ -214,7 +214,7 @@ export function SettingsPreferencesSection({
             size="sm"
             onClick={() => {
               replayTour();
-              toast.success('Starting tour...');
+              toast('Starting tour…');
             }}
           >
             Start
