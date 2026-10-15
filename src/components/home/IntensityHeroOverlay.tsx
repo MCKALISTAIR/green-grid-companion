@@ -110,13 +110,17 @@ export function IntensityHeroOverlay({
           : 'text-orange-100';
 
   return (
-    <div className="home-scene relative w-full">
+    <div
+      className={cn('home-scene relative w-full', hideGauge && 'home-scene--compact')}
+      data-compact-scene={hideGauge ? 'true' : undefined}
+    >
       <ComponentErrorBoundary name="Scene">
         <IntensityScene
           intensity={intensity}
           index={index}
           generationMix={generationMix}
           hasLiveReading={hasFreshReading}
+          compact={hideGauge}
           className="absolute inset-0 h-full"
           style={{ height: '100%' }}
         />

@@ -47,6 +47,11 @@ interface IntensitySceneProps {
    * Gates milestone effects such as the zero-carbon celebration.
    */
   hasLiveReading?: boolean;
+  /**
+   * Demand (and other gauge-less) modes: pull silhouettes up in a shorter band
+   * so skyline reads above the scalloped sheet instead of empty sky.
+   */
+  compact?: boolean;
 }
 
 export function IntensityScene({
@@ -60,6 +65,7 @@ export function IntensityScene({
   weatherOverride,
   style,
   hasLiveReading = true,
+  compact = false,
 }: IntensitySceneProps) {
   const {
     timeOfDay: realTimeOfDay,
@@ -299,8 +305,15 @@ export function IntensityScene({
         />
       )}
 
-      {/* Wrapper to shift scenery up and protect it from being cut off by the bottom wave/cards */}
-      <div className="absolute inset-0 bottom-[40px] pointer-events-none">
+      {/* Wrapper to shift scenery up and protect it from being cut off by the bottom wave/cards.
+          Compact (Demand): lift + scale so bottom-aligned silhouettes clear the sheet overlap. */}
+      <div
+        className={
+          compact
+            ? 'absolute inset-0 bottom-0 origin-bottom scale-[1.45] -translate-y-[22%] pointer-events-none'
+            : 'absolute inset-0 bottom-[40px] pointer-events-none'
+        }
+      >
         {/* Sky/Celestial Parallax Group */}
         <SceneSkyLayer
           skyY={skyY}
