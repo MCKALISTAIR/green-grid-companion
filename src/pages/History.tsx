@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
   getRegionalHistoryAndForecast,
   getNationalHistoryAndForecast,
@@ -89,6 +89,7 @@ export default function HistoryPage() {
   };
 
   // Standard History Query (Live/Recent)
+  // keepPreviousData: 24h ↔ 7d must not unmount the chart for a skeleton (layout shift).
   const historyQuery = useQuery<ForecastData[]>({
     queryKey: ['history', regionId, timeRange],
     queryFn: () => {
@@ -103,6 +104,7 @@ export default function HistoryPage() {
       }
     },
     enabled: !date, // Only fetch if NOT in time machine mode
+    placeholderData: keepPreviousData,
     refetchInterval: false,
     staleTime: 1000 * 60 * 30, // 30 mins
     gcTime: 1000 * 60 * 60, // 1 hour - keep in cache
@@ -118,6 +120,10 @@ export default function HistoryPage() {
   // Determine which data to show
   const displayData = date ? historicalData : historyQuery.data || [];
   const isLoading = date ? isHistoricalLoading : historyQuery.isLoading;
+  // Only the first paint (or a true empty fetch) may swap to skeletons — not range toggles.
+  const showHistorySkeleton =
+    isRegionLoading || (isLoading && (displayData?.length ?? 0) === 0);
+  const isRangeRefreshing = !date && historyQuery.isFetching && historyQuery.isPlaceholderData;
   const isError = date ? isHistoricalError : historyQuery.isError;
   const error = date ? null : historyQuery.error; // Historical hook handles its own error retrieval if needed
 
@@ -165,7 +171,8 @@ export default function HistoryPage() {
         actual,
         consumption: consumptionRecord ? consumptionRecord.consumption_kwh : null,
         carbonMass: consumptionRecord ? consumptionRecord.carbon_g : null,
-        formattedTime: format(itemDate, timeRange === '24h' ? 'HH:mm' : 'dd MMM HH:mm'),
+        // 7d uses date-only ticks so label height stays stable vs 24h HH:mm.
+        formattedTime: format(itemDate, timeRange === '24h' ? 'HH:mm' : 'dd MMM'),
       };
     });
   }, [data, footprint, timeRange]);
@@ -296,7 +303,7 @@ export default function HistoryPage() {
                 <p>Please enter a postcode in Settings to see regional history.</p>
               </Card>
             </motion.div>
-          ) : isRegionLoading || isLoading ? (
+          ) : showHistorySkeleton ? (
             <motion.div
               key="loading"
               initial={{ opacity: 0 }}
@@ -587,16 +594,24 @@ export default function HistoryPage() {
                       </tbody>
                     </table>
                   </div>
-                  {nearZeroRegion && (
-                    <p
-                      className="px-6 pb-2 text-xs text-muted-foreground"
-                      data-testid="history-near-zero-note"
-                    >
-                      NESO's regional forecast for {region} stayed near 0 for most of this period,
-                      because local power was almost all wind and nuclear.
-                    </p>
-                  )}
-                  <div className="h-[300px] w-full">
+                  {/* Reserved slot so the near-zero note appearing/disappearing doesn't shove the chart. */}
+                  <div className="min-h-[2.5rem] px-6 pb-2" aria-live="polite">
+                    {nearZeroRegion ? (
+                      <p
+                        className="text-xs text-muted-foreground"
+                        data-testid="history-near-zero-note"
+                      >
+                        NESO's regional forecast for {region} stayed near 0 for most of this period,
+                        because local power was almost all wind and nuclear.
+                      </p>
+                    ) : null}
+                  </div>
+                  <div
+                    className={cn(
+                      'h-[300px] w-full transition-opacity duration-200',
+                      isRangeRefreshing && 'opacity-60',
+                    )}
+                  >
                     <ResponsiveContainer width="100%" height="100%">
                       <ComposedChart data={chartData}>
                         <defs>
