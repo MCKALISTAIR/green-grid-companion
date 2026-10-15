@@ -310,14 +310,15 @@ export function DemandView() {
                         !isZero && fuelKey === 'solar'
                           ? { rotate: [0, 8, -8, 0] }
                           : !isZero && fuelKey === 'wind'
-                            ? { rotate: [0, 360] }
+                            ? // Blow, don't spin — Lucide Wind is a gust glyph, not a rotor
+                              { x: [0, 3, -1.5, 2.5, 0], rotate: [0, 6, -4, 5, 0] }
                             : !isZero && fuelKey === 'gas'
                               ? { scale: [1, 1.08, 1] }
                               : {}
                       }
                       transition={
                         fuelKey === 'wind'
-                          ? { duration: 8, repeat: Infinity, ease: 'linear' as const }
+                          ? { duration: 2.4, repeat: Infinity, ease: 'easeInOut' as const }
                           : {
                               duration: fuelKey === 'gas' ? 1.6 : 4,
                               repeat: Infinity,
