@@ -55,7 +55,13 @@ describe('LocationMismatchPrompt', () => {
     const { unmount } = render(<LocationMismatchPrompt currentPostcode="GB" onUpdate={vi.fn()} />);
     await flush();
     expect(screen.getByText(LOCATION_PROMPT_COPY.optInTitle)).toBeTruthy();
-    fireEvent.click(screen.getByText(LOCATION_PROMPT_COPY.optInDismiss));
+    expect(screen.queryByText(/national averages/i)).toBeNull();
+    const use = screen.getByRole('button', { name: LOCATION_PROMPT_COPY.optInActionLabel });
+    expect(use.textContent).toBe(LOCATION_PROMPT_COPY.optInAction);
+    expect(use.className).toContain('min-h-11');
+    const notNow = screen.getByRole('button', { name: LOCATION_PROMPT_COPY.optInDismiss });
+    expect(notNow.className).toContain('min-h-11');
+    fireEvent.click(notNow);
     expect(screen.queryByText(LOCATION_PROMPT_COPY.optInTitle)).toBeNull();
     expect(localStorage.getItem(NATIONAL_OPT_IN_DISMISSED_KEY)).toBe('1');
     unmount();

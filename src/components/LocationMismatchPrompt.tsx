@@ -19,9 +19,10 @@ export const PROMPT_DELAY_MS = 3000;
 
 export const LOCATION_PROMPT_COPY = {
   mismatchTitle: 'Update Location?',
-  optInTitle: 'Want results for your area?',
-  optInBody: 'You’re seeing national averages. Set your region any time for local readings.',
-  optInAction: 'Set your region',
+  // Design-final (same for Cheeky and Plain tones).
+  optInTitle: 'Showing the GB average',
+  optInAction: 'Use my area',
+  optInActionLabel: 'Set your region for local figures',
   optInDismiss: 'Not now',
 } as const;
 
@@ -136,7 +137,6 @@ export function LocationMismatchPrompt({ currentPostcode, onUpdate }: LocationMi
             </div>
             <div className="flex-1 space-y-1">
               <h4 className="font-medium text-sm">{LOCATION_PROMPT_COPY.optInTitle}</h4>
-              <p className="text-xs text-muted-foreground">{LOCATION_PROMPT_COPY.optInBody}</p>
               <div className="flex gap-2 mt-3">
                 <LocationManager
                   value={currentPostcode}
@@ -145,16 +145,20 @@ export function LocationMismatchPrompt({ currentPostcode, onUpdate }: LocationMi
                     onUpdate(next);
                   }}
                   trigger={
-                    <Button size="sm" className="min-h-11 text-xs">
+                    <Button
+                      size="sm"
+                      className="min-h-11 min-w-11 flex-1 text-sm font-medium"
+                      aria-label={LOCATION_PROMPT_COPY.optInActionLabel}
+                    >
                       {LOCATION_PROMPT_COPY.optInAction}
                     </Button>
                   }
                 />
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   onClick={dismissOptIn}
-                  className="min-h-11 text-xs"
+                  className="min-h-11 min-w-11 flex-1 text-sm font-medium"
                 >
                   {LOCATION_PROMPT_COPY.optInDismiss}
                 </Button>
@@ -162,7 +166,7 @@ export function LocationMismatchPrompt({ currentPostcode, onUpdate }: LocationMi
             </div>
             <button
               onClick={dismissOptIn}
-              className="-m-3 p-3 text-muted-foreground hover:text-foreground"
+              className="-m-3 p-3 min-h-11 min-w-11 flex items-center justify-center text-muted-foreground hover:text-foreground"
               aria-label="Dismiss region suggestion"
             >
               <X className="w-4 h-4" />
