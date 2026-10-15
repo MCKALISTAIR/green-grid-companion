@@ -37,7 +37,7 @@ export function SettingsDesktopCompanion() {
           <p className="text-[10px] text-muted-foreground mt-2 text-center sm:text-left">
             Requires macOS 11.0 or later.
           </p>
-          <p className="text-[10px] text-muted-foreground/80 mt-1 bg-accent/20 p-2 rounded border border-accent/10 max-w-md text-center sm:text-left">
+          <p className="text-[10px] text-muted-foreground mt-1 bg-accent/20 p-2 rounded border border-accent/10 max-w-md text-center sm:text-left">
             💡 <strong>Tip:</strong> To show your local region in the menu bar app, create a file at{' '}
             <code>~/.gridsense</code> containing your postcode prefix (e.g., <code>EH1</code> or{' '}
             <code>SW1</code>).

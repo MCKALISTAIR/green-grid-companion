@@ -70,12 +70,18 @@ export default {
           '4': 'hsl(var(--chart-4))',
           '5': 'hsl(var(--chart-5))',
         },
+        'primary-on-tint': 'hsl(var(--primary-on-tint))',
         intensity: {
           'very-low': 'hsl(var(--intensity-very-low))',
           low: 'hsl(var(--intensity-low))',
           moderate: 'hsl(var(--intensity-moderate))',
           high: 'hsl(var(--intensity-high))',
           'very-high': 'hsl(var(--intensity-very-high))',
+          'very-low-text': 'hsl(var(--intensity-very-low-text))',
+          'low-text': 'hsl(var(--intensity-low-text))',
+          'moderate-text': 'hsl(var(--intensity-moderate-text))',
+          'high-text': 'hsl(var(--intensity-high-text))',
+          'very-high-text': 'hsl(var(--intensity-very-high-text))',
         },
         gen: {
           wind: 'hsl(var(--gen-wind))',

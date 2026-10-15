@@ -626,7 +626,7 @@ export function FootprintView() {
       {!dailyData.length ? (
         <Card className="p-6">
           <div className="text-center mb-4">
-            <Leaf className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+            <Leaf className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="font-medium text-foreground mb-2">
               No Footprint Data
               {timeRange === 'day' && selectedDate ? ` for ${format(selectedDate, 'PPP')}` : ''}
@@ -1049,7 +1049,7 @@ export function FootprintView() {
                   </Popover>
                 </div>
 
-                <p className="text-xs text-center text-muted-foreground/80 mt-1">
+                <p className="text-xs text-center text-muted-foreground mt-1">
                   You avoided this much carbon by using energy when the grid was greener.
                 </p>
               </div>

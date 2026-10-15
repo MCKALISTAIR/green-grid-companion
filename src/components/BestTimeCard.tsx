@@ -26,16 +26,16 @@ export function BestTimeSlot({ forecast }: BestTimeCardProps) {
       <Card className="p-4 bg-intensity-very-low/[0.08] border-intensity-very-low/20 cursor-pointer shadow-none hover:bg-intensity-very-low/[0.12] transition-colors rounded-2xl">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl bg-intensity-very-low/15 flex items-center justify-center shrink-0">
-            <TrendingDown className="w-5 h-5 text-intensity-very-low" />
+            <TrendingDown className="w-5 h-5 text-intensity-very-low-text" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <BatteryCharging className="w-4 h-4 text-intensity-very-low" />
+              <BatteryCharging className="w-4 h-4 text-intensity-very-low-text" />
               <span className="text-sm font-medium text-foreground">
                 {isNow ? "Load-shift now. It's the best time." : 'Best time to load-shift'}
               </span>
               {isNow && (
-                <span className="flex items-center gap-1.5 bg-intensity-very-low/20 text-intensity-very-low px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider">
+                <span className="flex items-center gap-1.5 bg-intensity-very-low/20 text-intensity-very-low-text px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider">
                   <span className="relative flex h-1.5 w-1.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-intensity-very-low opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-intensity-very-low"></span>
@@ -44,12 +44,12 @@ export function BestTimeSlot({ forecast }: BestTimeCardProps) {
                 </span>
               )}
               {!isNow && countdown && (
-                <span className="text-[10px] font-semibold bg-intensity-very-low/15 text-intensity-very-low px-1.5 py-0.5 rounded-full tabular-nums">
+                <span className="text-[10px] font-semibold bg-intensity-very-low/15 text-intensity-very-low-text px-1.5 py-0.5 rounded-full tabular-nums">
                   {countdown}
                 </span>
               )}
             </div>
-            <p className="text-lg font-bold text-intensity-very-low">
+            <p className="text-lg font-bold text-intensity-very-low-text">
               {formatLondonTime(data.bestStart)} → {formatLondonTime(data.bestEnd)}{' '}
               <span className="text-sm font-medium ml-1 text-muted-foreground">
                 {londonDayLabel(data.bestStart)}
@@ -86,13 +86,13 @@ export function WorstTimeSlot({ forecast, intensity }: BestTimeCardProps) {
       <Card className="p-4 bg-intensity-high/[0.08] border-intensity-high/20 cursor-pointer shadow-none hover:bg-intensity-high/[0.12] transition-colors rounded-2xl">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl bg-intensity-high/15 flex items-center justify-center shrink-0">
-            <TrendingUp className="w-5 h-5 text-intensity-high" />
+            <TrendingUp className="w-5 h-5 text-intensity-high-text" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm font-medium text-foreground">{title}</span>
               {isNow && (
-                <span className="flex items-center gap-1.5 bg-intensity-high/20 text-intensity-high px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider">
+                <span className="flex items-center gap-1.5 bg-intensity-high/20 text-intensity-high-text px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider">
                   <span className="relative flex h-1.5 w-1.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-intensity-high opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-intensity-high"></span>
@@ -101,12 +101,12 @@ export function WorstTimeSlot({ forecast, intensity }: BestTimeCardProps) {
                 </span>
               )}
               {!isNow && countdown && (
-                <span className="text-[10px] font-semibold bg-intensity-high/15 text-intensity-high px-1.5 py-0.5 rounded-full tabular-nums">
+                <span className="text-[10px] font-semibold bg-intensity-high/15 text-intensity-high-text px-1.5 py-0.5 rounded-full tabular-nums">
                   {countdown}
                 </span>
               )}
             </div>
-            <p className="text-lg font-bold text-intensity-high">
+            <p className="text-lg font-bold text-intensity-high-text">
               {formatLondonTime(data.worstStart)} → {formatLondonTime(data.worstEnd)}{' '}
               <span className="text-sm font-medium ml-1 text-muted-foreground">
                 {londonDayLabel(data.worstStart)}

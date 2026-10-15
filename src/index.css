@@ -22,24 +22,26 @@
     --popover-foreground: 210 28% 14%;
 
     /* Primary green for clean energy */
-    --primary: 158 64% 36%;
+    --primary: 157.2 66.7% 27.1%; /* #177350 — white on it 5.83:1 */
     --primary-foreground: 0 0% 100%;
+    /* Primary text on primary/10 tints (active tab): #136546, 5.36:1 on #d6e3e2 */
+    --primary-on-tint: 157.3 68.3% 23.5%;
 
     --secondary: 198 28% 90%;
     --secondary-foreground: 210 28% 14%;
 
     --muted: 198 22% 92%;
-    --muted-foreground: 205 12% 40%;
+    --muted-foreground: 204 9.5% 41.2%; /* #5f6b73 — 5.47:1 on white, 5.06:1 on background */
 
     --accent: 38 92% 58%;
     --accent-foreground: 32 70% 18%;
 
-    --destructive: 0 72% 50%;
+    --destructive: 0 72% 45%; /* #c52020 — light text on it 5.29:1, 5.83:1 as text on white */
     --destructive-foreground: 0 85% 97%;
 
     --border: 200 18% 88%;
     --input: 200 18% 88%;
-    --ring: 158 64% 36%;
+    --ring: 157.2 66.7% 27.1%;
 
     --radius: 1.25rem;
 
@@ -49,6 +51,13 @@
     --intensity-moderate: 45 90% 55%;
     --intensity-high: 25 90% 55%;
     --intensity-very-high: 0 70% 50%;
+    /* Band colours above are for fills, bars and art only — never text.
+       Text uses these (each ≥4.5:1 on white and on its own /20 tint). */
+    --intensity-very-low-text: 152.6 73% 27.6%; /* #137a4b */
+    --intensity-low-text: 86.2 69% 22.7%; /* #3f6212 */
+    --intensity-moderate-text: 31.8 81% 28.8%; /* #854d0e */
+    --intensity-high-text: 15 79.1% 33.7%; /* #9a3412 */
+    --intensity-very-high-text: 0 73.7% 41.8%; /* #b91c1c */
     --map-light-ink: 210 28% 10%;
     --scene-hud-ink: 0 0% 0%;
     --scene-hud-text: 0 0% 100%;
@@ -144,6 +153,7 @@
 
     --primary: 158 55% 48%;
     --primary-foreground: 220 25% 10%;
+    --primary-on-tint: 158 55% 48%;
 
     --secondary: 220 18% 22%;
     --secondary-foreground: 0 0% 95%;
@@ -154,12 +164,18 @@
     --accent: 38 90% 55%;
     --accent-foreground: 38 90% 10%;
 
-    --destructive: 0 70% 55%;
-    --destructive-foreground: 0 85% 97%;
+    --destructive: 0 90.6% 70.8%; /* #f87171 — text 5.9:1 on card */
+    --destructive-foreground: 208.6 41.2% 10%; /* #0f1a24 on #f87171 6.36:1 */
 
     --border: 220 16% 22%;
     --input: 220 16% 22%;
     --ring: 158 55% 48%;
+
+    --intensity-very-low-text: 150 70% 45%;
+    --intensity-low-text: 85 60% 50%;
+    --intensity-moderate-text: 45 90% 55%;
+    --intensity-high-text: 25 90% 55%;
+    --intensity-very-high-text: 0 84% 71%;
 
     --sidebar-background: 220 25% 12%;
     --sidebar-foreground: 0 0% 95%;
@@ -1337,4 +1353,39 @@ body {
 }
 .hero-chip .hero-chip-icon {
   color: #fcd34d;
+}
+
+/* Reduced transparency (OS setting; add `.reduce-transparency` on <html> for an
+   in-app toggle): frosted surfaces become solid, no blur, 1px card edge. */
+@media (prefers-reduced-transparency: reduce) {
+  .nav-dock,
+  .glass-card,
+  .sheet-surface,
+  [class*='backdrop-blur'] {
+    background-color: var(--paper-2, hsl(var(--card))) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid var(--card-edge, hsl(var(--border)));
+  }
+  .dark .nav-dock,
+  .dark .glass-card,
+  .dark .sheet-surface,
+  .dark [class*='backdrop-blur'] {
+    background-color: #1c3134 !important;
+  }
+}
+.reduce-transparency .nav-dock,
+.reduce-transparency .glass-card,
+.reduce-transparency .sheet-surface,
+.reduce-transparency [class*='backdrop-blur'] {
+  background-color: var(--paper-2, hsl(var(--card))) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid var(--card-edge, hsl(var(--border)));
+}
+.dark.reduce-transparency .nav-dock,
+.dark.reduce-transparency .glass-card,
+.dark.reduce-transparency .sheet-surface,
+.dark.reduce-transparency [class*='backdrop-blur'] {
+  background-color: #1c3134 !important;
 }

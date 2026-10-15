@@ -117,7 +117,7 @@ export default function ManageLocations() {
 
           {savedLocations.length === 0 ? (
             <div className="rounded-2xl border border-border/50 bg-card/60 px-4 py-8 text-center">
-              <MapPin className="mx-auto mb-3 h-8 w-8 text-muted-foreground/50" />
+              <MapPin className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
               <p className="font-medium text-foreground">No saved locations yet</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 Save locations from the home screen to see them here.
@@ -236,7 +236,7 @@ export default function ManageLocations() {
 
           {recentLocations.length === 0 ? (
             <div className="rounded-2xl border border-border/50 bg-card/60 px-4 py-6 text-center">
-              <Clock className="mx-auto mb-2 h-7 w-7 text-muted-foreground/50" />
+              <Clock className="mx-auto mb-2 h-7 w-7 text-muted-foreground" />
               <p className="font-medium text-foreground">No recent searches</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 Locations you look up from Home will show up here.
