@@ -39,6 +39,7 @@ export type NowOrWaitAction = 'use_now' | 'wait' | 'check_forecast';
  * - near_zero: the whole window is at or near zero carbon, so any time works
  * - flat: the whole window stays about the same, so any time works
  * - missing_data: half hours needed to judge "start now" are missing, so no answer
+ * - stale_data: the live reading is out of date, so never say "now" from it
  */
 export type NowOrWaitReason =
   | 'no_forecast'
@@ -47,7 +48,14 @@ export type NowOrWaitReason =
   | 'cleaner_later'
   | 'near_zero'
   | 'flat'
-  | 'missing_data';
+  | 'missing_data'
+  | 'stale_data';
+
+/**
+ * A live reading older than this (from its half-hour start) no longer
+ * describes "now". NESO can publish a little late, so allow one extra slot.
+ */
+export const LIVE_READING_MAX_AGE_MINUTES = 60;
 
 export interface LoadWindow {
   start: Date;
@@ -80,6 +88,12 @@ export interface PlanLoadOptions {
   forecast: ForecastData[] | null | undefined;
   /** Live gCO₂/kWh for the current half hour, preferred over the forecast. */
   liveIntensity?: number | null;
+  /**
+   * Half-hour start of the live reading. When given and older than
+   * LIVE_READING_MAX_AGE_MINUTES (or unparseable), the plan is stale_data:
+   * stale data must never produce a "use now".
+   */
+  liveFrom?: string | Date | null;
   now?: Date;
   /** Load length in 30-minute slots. */
   slots?: number;
@@ -146,11 +160,18 @@ function emptyPlan(nowAvg: number | null): LoadPlan {
 export function planLoad({
   forecast,
   liveIntensity = null,
+  liveFrom,
   now = new Date(),
   slots: requestedSlots = HOME_LOAD_SLOTS,
   horizonHours = DECISION_HORIZON_HOURS,
 }: PlanLoadOptions): LoadPlan {
   const nowMs = now.getTime();
+  if (liveFrom !== undefined) {
+    const t = liveFrom == null ? NaN : new Date(liveFrom).getTime();
+    if (!Number.isFinite(t) || nowMs - t > LIVE_READING_MAX_AGE_MINUTES * 60_000) {
+      return { ...emptyPlan(null), reason: 'stale_data' };
+    }
+  }
   const live = isUsableNumber(liveIntensity) ? liveIntensity : null;
   const all = toSlots(forecast ?? []);
   const upcoming = all.filter((s) => s.to > nowMs);
@@ -355,8 +376,9 @@ export function getNowOrWaitDecision(
   intensity: number | null | undefined,
   forecast: ForecastData[] | null | undefined,
   now: Date = new Date(),
+  liveFrom?: string | Date | null,
 ): NowOrWaitDecision {
-  const plan = planLoad({ forecast, liveIntensity: intensity, now });
+  const plan = planLoad({ forecast, liveIntensity: intensity, now, liveFrom });
   const loadHours = HOME_LOAD_SLOTS / 2;
   const basis = plan.partial
     ? `Based on the ${plan.coveredHours === 1 ? '1 hour' : `${plan.coveredHours} hours`} of forecast we have so far.`
@@ -375,6 +397,15 @@ export function getNowOrWaitDecision(
   const tip = plan.missingSlots > 0 ? MISSING_SLOTS_NOTE : basis;
 
   switch (plan.reason) {
+    // Always Plain (stale data), whatever the tone setting.
+    case 'stale_data':
+      return {
+        ...common,
+        headline: 'Waiting for fresh data',
+        detail: "This reading is out of date, so we can't say yet whether now is a good time.",
+        tip: 'Pull down to refresh.',
+      };
+
     case 'missing_data':
       return {
         ...common,
