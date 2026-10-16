@@ -57,6 +57,7 @@ const ChargingHistory = lazy(() => import('./pages/ChargingHistory'));
 const AchievementsPage = lazy(() => import('./pages/Achievements'));
 import AuthCallback from './pages/AuthCallback';
 import { RESUME_REFETCH_KEYS } from '@/lib/resumeRefetch';
+import { QUERY_CACHE_BUSTER } from '@/lib/version';
 import { markCarbonDataRefreshed } from '@/hooks/usePeriodicRefresh';
 
 const queryClient = new QueryClient({
@@ -181,7 +182,7 @@ function AppContent() {
 const App = () => (
   <PersistQueryClientProvider
     client={queryClient}
-    persistOptions={{ persister, maxAge: 1000 * 60 * 60 * 24 }}
+    persistOptions={{ persister, maxAge: 1000 * 60 * 60 * 24, buster: QUERY_CACHE_BUSTER }}
   >
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <TooltipProvider>
