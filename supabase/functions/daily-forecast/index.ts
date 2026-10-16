@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
 import { sendPushNotifications } from '../_shared/push.ts';
+import { formatUKTime, isTomorrowUK } from '../_shared/uk-time.ts';
 import {
   verifySchedulerRequest,
   cronAuthErrorResponse,
@@ -178,23 +179,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Helper: format time in UK timezone and add "tomorrow" if needed
-    function formatUKTime(isoStr: string): string {
-      const d = new Date(isoStr);
-      const ukH = (d.getUTCHours() + ukOffset) % 24;
-      const ukM = d.getUTCMinutes();
-      return `${ukH.toString().padStart(2, '0')}:${ukM.toString().padStart(2, '0')}`;
-    }
-
-    function isTomorrowSlot(isoStr: string): boolean {
-      const d = new Date(isoStr);
-      // Adjust to UK date
-      const ukDate = new Date(d.getTime() + ukOffset * 60 * 60 * 1000);
-      const nowUK = new Date(now.getTime() + ukOffset * 60 * 60 * 1000);
-      return (
-        ukDate.getUTCDate() !== nowUK.getUTCDate() || ukDate.getUTCMonth() !== nowUK.getUTCMonth()
-      );
-    }
+    // BH-33: format each slot in Europe/London (per-slot offset, DST-safe).
+    const isTomorrowSlot = (isoStr: string) => isTomorrowUK(isoStr, now);
 
     // Idempotency: claim each subscription for today's UK date before sending
     // so a duplicate/replayed run never sends the same outlook twice.
