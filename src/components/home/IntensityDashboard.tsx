@@ -88,7 +88,12 @@ export function IntensityDashboard({
       {forecast.length > 0 && (
         <section className={cn('sheet-surface p-3', glowClass)} data-tour="forecast-chart">
           <ComponentErrorBoundary name="Hourly Forecast">
-            <ForecastChart forecast={forecast} showNext={24} currentIntensity={intensity} />
+            <ForecastChart
+              forecast={forecast}
+              showNext={24}
+              currentIntensity={intensity}
+              lastUpdated={lastUpdated}
+            />
           </ComponentErrorBoundary>
         </section>
       )}
@@ -106,7 +111,7 @@ export function IntensityDashboard({
           </CollapsibleTrigger>
           <CollapsibleContent className="space-y-3 pt-2 data-[state=open]:animate-in data-[state=closed]:animate-out">
             <ComponentErrorBoundary name="Worst Time">
-              <WorstTimeSlot forecast={forecast} intensity={intensity} />
+              <WorstTimeSlot forecast={forecast} intensity={intensity} lastUpdated={lastUpdated} />
             </ComponentErrorBoundary>
 
             <ComponentErrorBoundary name="Daily Forecast">

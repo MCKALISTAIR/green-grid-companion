@@ -70,3 +70,29 @@ for (const viewport of [
     });
   });
 }
+
+for (const viewport of [
+  { width: 390, height: 844 },
+  { width: 320, height: 568 },
+]) {
+  test(`Planner: stale reading never shows "Now" at ${viewport.width}x${viewport.height}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport);
+    await mockNeso(page);
+    await page.goto('/');
+    await page.evaluate(() => localStorage.setItem('product_tour_seen', 'true'));
+    if (page.url().includes('/onboarding')) {
+      await page.getByRole('button', { name: 'Just show me the GB average' }).click();
+    }
+    await page.goto('/planner');
+    const decline = page.getByRole('button', { name: 'Decline', exact: true });
+    await decline.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
+    if (await decline.isVisible()) await decline.click();
+    await expect(page.getByText('Waiting for fresh data')).toBeVisible({ timeout: 20000 });
+    await expect(page.getByText('Now', { exact: true })).toHaveCount(0);
+    await expect(page.getByText('Any time', { exact: true })).toHaveCount(0);
+    await page.getByText('Waiting for fresh data').scrollIntoViewIfNeeded();
+    await page.screenshot({ path: `test-results/stale-never-go-planner-${viewport.width}.png` });
+  });
+}
