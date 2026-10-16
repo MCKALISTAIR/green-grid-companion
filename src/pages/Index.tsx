@@ -95,6 +95,8 @@ const Index = () => {
     isLoading,
     isBackgroundFetching,
     isDegraded,
+    usingNationalFallback,
+    fallbackRegionName,
     offGridArea: offGrid,
     isError,
     error,
@@ -230,6 +232,8 @@ const Index = () => {
               postcode={postcode}
               setPostcode={setPostcode}
               region={region}
+              usingNationalFallback={usingNationalFallback}
+              fallbackRegionName={fallbackRegionName}
               intensity={intensity}
               previousIntensity={previousIntensity}
               index={index}
