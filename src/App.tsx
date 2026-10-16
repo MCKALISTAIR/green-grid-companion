@@ -56,6 +56,7 @@ const DesignSystemPage = DEV_ROUTES_ENABLED ? lazy(() => import('./pages/DesignS
 const ChargingHistory = lazy(() => import('./pages/ChargingHistory'));
 const AchievementsPage = lazy(() => import('./pages/Achievements'));
 import AuthCallback from './pages/AuthCallback';
+import { RESUME_REFETCH_KEYS } from '@/lib/resumeRefetch';
 import { markCarbonDataRefreshed } from '@/hooks/usePeriodicRefresh';
 
 const queryClient = new QueryClient({
@@ -116,12 +117,11 @@ function AppContent() {
         logger.info('App resumed, refreshing carbon data');
         markCarbonDataRefreshed();
         // Force refetch of critical carbon data queries regardless of stale time
-        await Promise.all([
-          queryClient.refetchQueries({ queryKey: ['national'], type: 'active' }),
-          queryClient.refetchQueries({ queryKey: ['regional'], type: 'active' }),
-          queryClient.refetchQueries({ queryKey: ['forecast'], type: 'active' }),
-          queryClient.refetchQueries({ queryKey: ['generationMix'], type: 'active' }),
-        ]);
+        await Promise.all(
+          RESUME_REFETCH_KEYS.map((queryKey) =>
+            queryClient.refetchQueries({ queryKey: [...queryKey], type: 'active' }),
+          ),
+        );
       }
     };
 
