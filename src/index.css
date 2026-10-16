@@ -1444,3 +1444,21 @@ body {
   height: max(100%, 44px);
   transform: translate(-50%, -50%);
 }
+
+/* Bottom sheets (vaul) under Reduce Motion: fade in place, no slide (motion spec §2.3). Drag still works. */
+@media (prefers-reduced-motion: reduce) {
+  [data-vaul-drawer][data-vaul-snap-points='false'][data-state='open'] {
+    animation-name: fadeIn !important;
+    animation-duration: 160ms !important;
+  }
+  [data-vaul-drawer][data-vaul-snap-points='false'][data-state='closed'] {
+    animation-name: fadeOut !important;
+    animation-duration: 160ms !important;
+  }
+  [data-vaul-drawer][data-vaul-snap-points='true'] {
+    transition-duration: 0ms !important;
+  }
+  [data-vaul-drawer][data-vaul-snap-points='true'][data-state='open'] {
+    animation: fadeIn 160ms ease-out;
+  }
+}

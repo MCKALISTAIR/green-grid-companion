@@ -9,14 +9,14 @@ import { easeOutExpo, stateTransition } from '@/lib/motion';
 import { ErrorState } from '@/components/ErrorState';
 import { getErrorInfo } from '@/lib/errorUtils';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-  DialogClose,
-} from '@/components/ui/dialog';
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogTrigger,
+  ResponsiveDialogFooter,
+  ResponsiveDialogClose,
+} from '@/components/ui/responsive-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { WashingMachine, Car, Utensils, Zap, Plus, PenLine, Leaf, X } from 'lucide-react';
@@ -285,8 +285,8 @@ export default function Planner() {
             ))}
 
             {/* Custom Event Button */}
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
+            <ResponsiveDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <ResponsiveDialogTrigger asChild>
                 <Button
                   variant={selectedAppliance.id === 'custom' ? 'default' : 'outline'}
                   className={`h-auto py-4 flex flex-col gap-2 border-dashed ${APPLIANCES.length % 2 === 0 ? 'col-span-2' : ''}`}
@@ -312,11 +312,11 @@ export default function Planner() {
                     )}
                   </div>
                 </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md top-[20%] translate-y-0">
-                <DialogHeader>
-                  <DialogTitle>Add Custom Event</DialogTitle>
-                </DialogHeader>
+              </ResponsiveDialogTrigger>
+              <ResponsiveDialogContent className="sm:max-w-md top-[20%] translate-y-0">
+                <ResponsiveDialogHeader>
+                  <ResponsiveDialogTitle>Add Custom Event</ResponsiveDialogTitle>
+                </ResponsiveDialogHeader>
                 <div className="grid gap-4 py-4">
                   <div className="grid gap-2">
                     <Label htmlFor="name">Event Name</Label>
@@ -352,13 +352,13 @@ export default function Planner() {
                     </div>
                   </div>
                 </div>
-                <DialogFooter className="sm:justify-start">
+                <ResponsiveDialogFooter className="sm:justify-start">
                   <Button type="button" onClick={handleCustomSubmit} className="w-full">
                     Calculate Best Time
                   </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+                </ResponsiveDialogFooter>
+              </ResponsiveDialogContent>
+            </ResponsiveDialog>
           </div>
 
           <AnimatePresence mode="wait" initial={false}>
