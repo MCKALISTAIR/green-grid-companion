@@ -204,6 +204,21 @@
     scroll-behavior: smooth;
   }
 
+  /*
+   * Dynamic Type (BH-55): on iOS WebKit, -apple-system-body follows the user's
+   * text size setting, and every rem in the app scales with it. Only iOS WebKit
+   * supports this keyword, so other browsers keep 16px. Note: the iOS default
+   * "Large" size is 17px, so the app is ~6% larger than today on iPhone.
+   */
+  @supports (font: -apple-system-body) and (-webkit-touch-callout: none) {
+    html {
+      font: -apple-system-body;
+    }
+    body {
+      font-family: var(--font-sans);
+    }
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-sans);
