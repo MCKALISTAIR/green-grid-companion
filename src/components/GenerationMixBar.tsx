@@ -103,7 +103,7 @@ export function GenerationMixBar({
             >
               {showMW
                 ? `Total ${(mix.reduce((a, b) => a + (b.mw || 0), 0) / 1000).toFixed(1)} GW`
-                : `${renewables.toFixed(0)}% Renewable`}
+                : `${renewables.toFixed(0)}% renewable (incl. biomass)`}
             </span>
           </div>
 
