@@ -1,3 +1,4 @@
+import { openExternal } from '@/lib/openExternal';
 import { Download, Monitor } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -28,7 +29,7 @@ export function SettingsDesktopCompanion() {
           <Button
             className="w-full sm:w-auto gap-2 shadow-sm"
             onClick={() =>
-              window.open('https://github.com/MCKALISTAIR/green-grid-companion/releases', '_blank')
+              void openExternal('https://github.com/MCKALISTAIR/green-grid-companion/releases')
             }
           >
             <Download className="w-4 h-4" />

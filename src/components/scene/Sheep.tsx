@@ -94,7 +94,7 @@ export function Sheep({ x, y, scale = 1, isNight, delay = 0 }: SheepProps) {
         whileHover={{ scale: 1.12 }}
         transition={{ duration: 0.8, ease: 'easeInOut' }}
       >
-        <svg width="40" height="30" viewBox="0 0 40 30" overflow="visible">
+        <svg width="40" height="30" viewBox="0 0 40 30" overflow="visible" aria-hidden="true">
           {/* Internal Definitions */}
           <defs>
             <radialGradient id={`wool-${id}`} cx="50%" cy="50%" r="50%">
