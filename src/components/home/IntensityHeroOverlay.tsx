@@ -7,6 +7,7 @@ import { regionalFallbackMessage } from '@/lib/regionalFallback';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { LocationManager } from '@/components/LocationManager';
 import { LastKnownChip } from '@/components/errors/LastKnownChip';
+import { setHeroStatusSlot } from '@/lib/heroStatusSlot';
 import { AnimatedIntensity } from '@/components/AnimatedIntensity';
 import { TypewriterText } from '@/components/TypewriterText';
 import { RenewableSparkle } from '@/components/RenewableSparkle';
@@ -241,6 +242,13 @@ export function IntensityHeroOverlay({
                 <FallbackInfoDot message={regionalFallbackMessage(fallbackRegionName)} />
               )}
             </div>
+
+            {/* Offline / back-online pill portals in here (OfflineIndicator). */}
+            <div
+              ref={setHeroStatusSlot}
+              data-testid="hero-status-slot"
+              className="empty:hidden mb-2"
+            />
 
             <div
               className="flex items-end justify-center gap-1.5 sm:gap-2 min-h-[4.5rem] sm:min-h-[5.5rem]"
