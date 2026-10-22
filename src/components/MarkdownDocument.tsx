@@ -1,5 +1,7 @@
 import { parseMarkdown, renderInline } from '@/lib/simpleMarkdown';
 
+const LINK_ONLY = /^\[[^\]]+\]\([^)]+\)$/;
+
 /** Renders our own legal Markdown (see src/lib/simpleMarkdown.tsx). */
 export function MarkdownDocument({ source }: { source: string }) {
   return (
@@ -25,7 +27,17 @@ export function MarkdownDocument({ source }: { source: string }) {
             return (
               <ul key={k} className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
                 {b.items.map((it, j) => (
-                  <li key={`${k}-${j}`}>{renderInline(it, `${k}-${j}`)}</li>
+                  <li
+                    key={`${k}-${j}`}
+                    // A list item that is just a link is a nav target: give it a 44pt row.
+                    className={
+                      LINK_ONLY.test(it.trim())
+                        ? '[&>a]:inline-flex [&>a]:min-h-11 [&>a]:items-center'
+                        : undefined
+                    }
+                  >
+                    {renderInline(it, `${k}-${j}`)}
+                  </li>
                 ))}
               </ul>
             );
