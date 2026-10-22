@@ -164,8 +164,13 @@ export interface PushNotificationPayload {
 export interface PushDeliveryResult {
   key?: string;
   token: string;
-  /** True when the provider accepted the message (or in console mock mode). */
+  /** True only when APNs/FCM accepted the message. Never true without secrets. */
   delivered: boolean;
+  /**
+   * 'not_configured' when the secrets for this token's provider are missing:
+   * nothing was sent, and callers must not treat it as a success.
+   */
+  status: 'delivered' | 'failed' | 'not_configured';
   attempts: number;
 }
 
@@ -196,14 +201,20 @@ export async function sendPushNotifications(
 
   if (!apnsConfigured && !fcmConfigured) {
     console.warn(
-      `[PUSH] Warning: Push notification credentials are not configured. APNS_PRIVATE_KEY/FCM_PRIVATE_KEY is missing. Notifications generated: ${notifications.length}. Logging them to console instead.`,
+      `[PUSH] Warning: Push notification credentials are not configured. APNS_PRIVATE_KEY/FCM_PRIVATE_KEY is missing. Notifications generated: ${notifications.length}. Nothing is sent; logging them to console and reporting 'not_configured'.`,
     );
     notifications.forEach((n) => {
       console.log(
         `[PUSH MOCK] To: ${n.token.substring(0, 10)}... | Title: "${n.title}" | Body: "${n.body}"`,
       );
     });
-    return notifications.map((n) => ({ key: n.key, token: n.token, delivered: true, attempts: 0 }));
+    return notifications.map((n) => ({
+      key: n.key,
+      token: n.token,
+      delivered: false,
+      status: 'not_configured' as const,
+      attempts: 0,
+    }));
   }
 
   // Pre-generate tokens to avoid redundant crypto operations
@@ -273,7 +284,7 @@ export async function sendPushNotifications(
         console.log(
           `[PUSH] Sent APNs notification to ${n.token.substring(0, 10)}... (attempts: ${attempts})`,
         );
-        return { key: n.key, token: n.token, delivered: true, attempts };
+        return { key: n.key, token: n.token, delivered: true, status: 'delivered', attempts };
       }
       if (result.kind === 'http') {
         console.error(
@@ -286,7 +297,7 @@ export async function sendPushNotifications(
           result.error,
         );
       }
-      return { key: n.key, token: n.token, delivered: false, attempts };
+      return { key: n.key, token: n.token, delivered: false, status: 'failed', attempts };
     }
     // Fallback to FCM for everything else, or if APNs is not configured
     else if (fcmConfigured && fcmAccessToken) {
@@ -322,7 +333,7 @@ export async function sendPushNotifications(
         console.log(
           `[PUSH] Sent FCM notification to ${n.token.substring(0, 10)}... (attempts: ${attempts})`,
         );
-        return { key: n.key, token: n.token, delivered: true, attempts };
+        return { key: n.key, token: n.token, delivered: true, status: 'delivered', attempts };
       }
       if (result.kind === 'http') {
         console.error(
@@ -335,12 +346,18 @@ export async function sendPushNotifications(
           result.error,
         );
       }
-      return { key: n.key, token: n.token, delivered: false, attempts };
+      return { key: n.key, token: n.token, delivered: false, status: 'failed', attempts };
     } else {
       console.warn(
         `[PUSH] No delivery pathway configured for platform ${platform} and token ${n.token.substring(0, 10)}...`,
       );
-      return { key: n.key, token: n.token, delivered: false, attempts: 0 };
+      return {
+        key: n.key,
+        token: n.token,
+        delivered: false,
+        status: 'not_configured',
+        attempts: 0,
+      };
     }
   });
 

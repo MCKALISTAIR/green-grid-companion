@@ -7,8 +7,8 @@ import {
   type SyncOptions,
 } from './dailyOutlookServer';
 
-function okResponse(data: Record<string, unknown>) {
-  return new Response(JSON.stringify({ data }), { status: 200 });
+function okResponse(data: Record<string, unknown>, pushDelivery: unknown = 'configured') {
+  return new Response(JSON.stringify({ data, push_delivery: pushDelivery }), { status: 200 });
 }
 
 function opts(over: Partial<SyncOptions> = {}): SyncOptions {
@@ -172,5 +172,41 @@ describe('isServerOutlookActive', () => {
     expect(
       isServerOutlookActive(null, { dailyForecastEnabled: true, dailyForecastTime: '07:30' }),
     ).toBe(false);
+  });
+});
+
+describe('syncDailyOutlookSubscription: server push not configured', () => {
+  beforeEach(() => localStorage.clear());
+  const echo = {
+    device_token: 'tok-123',
+    postcode: 'SW1A',
+    daily_forecast_enabled: true,
+    daily_forecast_time: '07:30:00',
+  };
+
+  it("treats push_delivery 'not_configured' as not confirmed, so the phone push stays", async () => {
+    localStorage.setItem(
+      SERVER_OUTLOOK_KEY,
+      JSON.stringify({ deviceToken: 'tok-123', time: '07:30', postcode: 'SW1A', confirmedAt: 'x' }),
+    );
+    const fetchImpl = vi.fn(async () => okResponse(echo, 'not_configured'));
+    const r = await syncDailyOutlookSubscription(opts({ fetchImpl }));
+    expect(r).toEqual({ status: 'not-configured', confirmation: null });
+    expect(readServerOutlook()).toBeNull();
+    expect(
+      isServerOutlookActive(readServerOutlook(), {
+        dailyForecastEnabled: true,
+        dailyForecastTime: '07:30',
+      }),
+    ).toBe(false);
+  });
+
+  it('treats a response without push_delivery (older server) as not confirmed', async () => {
+    const fetchImpl = vi.fn(
+      async () => new Response(JSON.stringify({ data: echo }), { status: 200 }),
+    );
+    const r = await syncDailyOutlookSubscription(opts({ fetchImpl }));
+    expect(r.status).toBe('not-configured');
+    expect(readServerOutlook()).toBeNull();
   });
 });
