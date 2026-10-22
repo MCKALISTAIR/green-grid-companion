@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   formatLondonDateTime,
   formatLondonDayMonth,
+  formatLondonSlotSpoken,
   formatLondonSlotTime,
+  londonRepeatedZone,
   isRepeatedLondonTime,
   londonDateKey,
   londonDayBounds,
@@ -49,9 +51,10 @@ describe('London day bounds (BH-68)', () => {
 });
 
 describe('repeated 01:00 / 01:30 on 25 Oct 2026 (BH-72)', () => {
-  it('labels the second pass GMT and leaves the first alone', () => {
-    expect(formatLondonSlotTime(new Date('2026-10-25T00:00:00Z'))).toBe('01:00');
-    expect(formatLondonSlotTime(new Date('2026-10-25T00:30:00Z'))).toBe('01:30');
+  it('tags the first pass BST and the second GMT', () => {
+    expect(formatLondonSlotTime(new Date('2026-10-25T00:00:00Z'))).toBe('01:00 BST');
+    expect(formatLondonSlotTime(new Date('2026-10-25T00:30:00Z'))).toBe('01:30 BST');
+    expect(formatLondonSlotTime(new Date('2026-10-24T23:30:00Z'))).toBe('00:30');
     expect(formatLondonSlotTime(new Date('2026-10-25T01:00:00Z'))).toBe('01:00 GMT');
     expect(formatLondonSlotTime(new Date('2026-10-25T01:30:00Z'))).toBe('01:30 GMT');
     expect(formatLondonSlotTime(new Date('2026-10-25T02:00:00Z'))).toBe('02:00');
@@ -69,6 +72,32 @@ describe('repeated 01:00 / 01:30 on 25 Oct 2026 (BH-72)', () => {
     expect(flagged).toEqual([]);
     expect(isRepeatedLondonTime(new Date('2026-10-25T01:59:00Z'))).toBe(true);
     expect(isRepeatedLondonTime(new Date('2026-10-25T02:00:00Z'))).toBe(false);
+  });
+
+  it('spoken labels say which side of the change', () => {
+    expect(formatLondonSlotSpoken(new Date('2026-10-25T00:00:00Z'))).toBe(
+      '1 am BST, before the clocks went back',
+    );
+    expect(formatLondonSlotSpoken(new Date('2026-10-25T00:30:00Z'))).toBe(
+      '1:30 am BST, before the clocks went back',
+    );
+    expect(formatLondonSlotSpoken(new Date('2026-10-25T01:00:00Z'))).toBe(
+      '1 am GMT, after the clocks went back',
+    );
+    expect(formatLondonSlotSpoken(new Date('2026-10-25T01:30:00Z'))).toBe(
+      '1:30 am GMT, after the clocks went back',
+    );
+    expect(formatLondonSlotSpoken(new Date('2026-10-25T02:00:00Z'))).toBe('02:00');
+  });
+
+  it('no tag anywhere on spring-forward day 28 Mar 2027', () => {
+    for (
+      let t = Date.parse('2027-03-27T23:00:00Z');
+      t < Date.parse('2027-03-28T23:00:00Z');
+      t += 1800_000
+    ) {
+      expect(londonRepeatedZone(new Date(t))).toBeNull();
+    }
   });
 
   it('table and day labels', () => {

@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 
-// BH-72: on 25 Oct 2026 the repeated 01:00/01:30 (GMT) slots are labelled "GMT",
+// BH-72: on 25 Oct 2026 the repeated 01:00/01:30 slots are tagged BST (first) and GMT (second),
 // in UK time even on a phone set to New York. NESO is mocked.
 test.use({ serviceWorkers: 'block', timezoneId: 'America/New_York' });
 
@@ -58,18 +58,34 @@ for (const viewport of [
     await decline.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
     if (await decline.isVisible()) await decline.click();
 
-    const gmt = page.getByRole('option', { name: /^01:00 GMT/ }).first();
-    await expect(gmt).toBeAttached({ timeout: 20000 });
-    await expect(page.getByRole('option', { name: /^01:30 GMT/ }).first()).toBeAttached();
-    // First pass (BST) stays plain.
-    await expect(page.getByRole('option', { name: /^01:00(?! GMT)/ }).first()).toBeAttached();
-    await gmt.scrollIntoViewIfNeeded();
-    // Label must not overflow its slot at small widths.
-    const label = gmt.locator('span', { hasText: /^01:00\s*GMT$/ }).first();
-    const box = await label.boundingBox();
-    const slot = await gmt.boundingBox();
-    console.log(`label ${box?.width}px in slot ${slot?.width}px`);
-    expect(box!.width).toBeLessThanOrEqual(slot!.width + 1);
+    const names = [
+      '1 am BST, before the clocks went back',
+      '1:30 am BST, before the clocks went back',
+      '1 am GMT, after the clocks went back',
+      '1:30 am GMT, after the clocks went back',
+    ];
+    for (const name of names) {
+      const slot = page
+        .getByRole('option', {
+          name: new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`),
+        })
+        .first();
+      await expect(slot).toBeAttached({ timeout: 20000 });
+      await slot.scrollIntoViewIfNeeded();
+      const zone = name.includes('BST') ? 'BST' : 'GMT';
+      const time = name.startsWith('1:30') ? '01:30' : '01:00';
+      // Visible label is "01:00" + small tag; it must fit its 48px slot.
+      const label = slot.locator('span', { hasText: new RegExp(`^${time}\\s*${zone}$`) }).first();
+      await expect(label).toBeVisible();
+      const box = await label.boundingBox();
+      const slotBox = await slot.boundingBox();
+      console.log(`${time} ${zone}: label ${box?.width}px in slot ${slotBox?.width}px`);
+      expect(box!.width).toBeLessThanOrEqual(slotBox!.width + 1);
+    }
+    await page
+      .getByRole('option', { name: /^1 am BST/ })
+      .first()
+      .scrollIntoViewIfNeeded();
     // Table keeps a plain-text record too.
     await expect(page.getByRole('cell', { name: '25 Oct 2026, 01:30 GMT' })).toBeAttached();
     await page.screenshot({ path: `test-results/clock-change-labels-${viewport.width}.png` });

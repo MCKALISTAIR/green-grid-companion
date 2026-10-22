@@ -140,10 +140,37 @@ export function isRepeatedLondonTime(date: Date): boolean {
   return formatLondonTime(date) === formatLondonTime(new Date(date.getTime() - HOUR_MS));
 }
 
-/** "14:30", or "01:30 GMT" for the repeated hour on clock-change day. */
+/**
+ * Zone tag for a wall time that happens twice on the October clock-change day:
+ * 'BST' on the first pass, 'GMT' on the second, null otherwise (including the
+ * spring missing hour, which never appears).
+ */
+export function londonRepeatedZone(date: Date): 'BST' | 'GMT' | null {
+  if (isRepeatedLondonTime(date)) return 'GMT';
+  const time = formatLondonTime(date);
+  return time === formatLondonTime(new Date(date.getTime() + HOUR_MS)) ? 'BST' : null;
+}
+
+/** "14:30", or "01:30 BST" / "01:30 GMT" for the repeated hour on clock-change day. */
 export function formatLondonSlotTime(date: Date): string {
   const time = formatLondonTime(date);
-  return isRepeatedLondonTime(date) ? `${time} GMT` : time;
+  const zone = londonRepeatedZone(date);
+  return zone ? `${time} ${zone}` : time;
+}
+
+/**
+ * Screen-reader time: "14:30", or for the repeated hour
+ * "1 am BST, before the clocks went back" / "1:30 am GMT, after the clocks went back".
+ */
+export function formatLondonSlotSpoken(date: Date): string {
+  const time = formatLondonTime(date);
+  const zone = londonRepeatedZone(date);
+  if (!zone) return time;
+  const [h, m] = time.split(':').map(Number);
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  const clock = m === 0 ? `${h12}` : `${h12}:${String(m).padStart(2, '0')}`;
+  const when = zone === 'BST' ? 'before' : 'after';
+  return `${clock} ${h < 12 ? 'am' : 'pm'} ${zone}, ${when} the clocks went back`;
 }
 
 const dayMonthFormatter = new Intl.DateTimeFormat('en-GB', {

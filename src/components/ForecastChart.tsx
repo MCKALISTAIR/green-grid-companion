@@ -9,8 +9,8 @@ import {
   formatLondonDateTime,
   formatLondonLongDate,
   formatLondonShortDay,
-  formatLondonSlotTime,
-  isRepeatedLondonTime,
+  formatLondonSlotSpoken,
+  londonRepeatedZone,
   formatLondonTime,
   londonDateKey,
   londonDayLabel,
@@ -405,7 +405,7 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
                   data-slot-index={i}
                   role="option"
                   aria-selected={isSelected}
-                  aria-label={`${formatLondonSlotTime(time)}${isCurrentHour ? ' (now)' : ''}: ${
+                  aria-label={`${formatLondonSlotSpoken(time)}${isCurrentHour ? ' (now)' : ''}: ${
                     isUnknown ? 'no data' : `${displayValue} gCO₂/kWh`
                   }`}
                   className={cn(
@@ -498,11 +498,13 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
                   >
                     {isCurrentHour ? (
                       'Now'
-                    ) : isRepeatedLondonTime(time) ? (
-                      // BH-72: second 01:xx on 25 Oct. Small suffix so it fits the 48px slot.
+                    ) : londonRepeatedZone(time) ? (
+                      // BH-72: both passes of 01:xx on 25 Oct get a small muted zone tag (fits 48px).
                       <>
                         {formatLondonTime(time)}
-                        <span className="ml-px text-[8px] tracking-tight">GMT</span>
+                        <span className="ml-px text-[8px] tracking-tight opacity-70">
+                          {londonRepeatedZone(time)}
+                        </span>
                       </>
                     ) : (
                       formatLondonTime(time)
