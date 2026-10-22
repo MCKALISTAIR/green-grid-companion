@@ -112,6 +112,10 @@ export async function checkHero(
       fails.push(`${tag} location header runs off-screen (${fmt(b.header)})`);
   }
   fails.push(...(await checkHeroText(page, { tag, viewport, expectMeta })));
+  // Hero sun never sits behind the trophy chip (bug: 15 Oct, S3).
+  const sun = await firstVisibleBox(page, ['[data-scene-sun]']);
+  if (sun && b.trophy && intersects(sun, b.trophy))
+    fails.push(`${tag} hero sun overlaps the trophy chip (${fmt(sun)} vs ${fmt(b.trophy)})`);
   return fails;
 }
 

@@ -14,6 +14,7 @@ import {
   ArrowRightLeft,
   Trash2,
   Download,
+  Lock,
 } from 'lucide-react';
 import { lovable } from '@/integrations/lovable/index';
 import { supabase } from '@/integrations/supabase/client';
@@ -566,14 +567,14 @@ export function AccountBackup({
           <CloudOff className="w-5 h-5 text-muted-foreground" />
         </div>
         <div>
-          <h3 className="font-medium">Backup Your Data</h3>
-          <p className="text-sm text-muted-foreground">Sign in to sync across devices</p>
+          <h3 className="font-medium">Backup</h3>
+          <p className="text-sm text-muted-foreground">Sync across devices</p>
         </div>
       </div>
 
-      <p className="text-sm text-muted-foreground">
-        Your Octopus Energy data is stored encrypted for this session. Sign in to keep it linked if
-        you switch devices.
+      <p className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Lock className="w-4 h-4 shrink-0" aria-hidden="true" />
+        Octopus data is encrypted. Sign in to keep it.
       </p>
 
       <div className="space-y-2">

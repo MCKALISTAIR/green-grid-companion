@@ -26,6 +26,7 @@ import { installMocks, seedStorage, SCENARIOS } from './layout/mock-api.mjs';
 import { GUARD_VIEWPORTS, checkHero, checkSheetEdge, checkScrollSpace } from './layout/checks.mjs';
 
 const PORT = 4183;
+const DAYTIME_CLOCKS = ['2026-10-15T09:00:00', '2026-10-15T12:30:00', '2026-10-15T15:00:00'];
 const HERO_STATES = [
   { scenario: 'zero-carbon', expectBadge: true },
   { scenario: 'stale', expectBadge: false },
@@ -87,15 +88,20 @@ async function startPreview() {
   throw new Error('vite preview did not start within 30s');
 }
 
-async function openPage(browser, base, { viewport, scenario, route = '/' }) {
+async function openPage(browser, base, { viewport, scenario, route = '/', clock }) {
   const context = await browser.newContext({
     viewport,
     serviceWorkers: 'block',
     reducedMotion: 'reduce',
+    timezoneId: 'Europe/London',
   });
   await installMocks(context, SCENARIOS[scenario]);
   await context.addInitScript(seedStorage());
   const page = await context.newPage();
+  if (clock) {
+    await page.clock.install({ time: new Date(clock) });
+    await page.clock.resume();
+  }
   await page.goto(base + route, { waitUntil: 'domcontentloaded' });
   return { context, page };
 }
@@ -140,6 +146,25 @@ async function main() {
         );
         if (st.scenario === 'zero-carbon')
           failures.push(...(await checkSheetEdge(page, { viewport })));
+        checks++;
+        await context.close();
+      }
+      // Daytime hero (sun visible): the sun must clear the trophy chip, so these
+      // run on a fixed Europe/London clock instead of whatever time CI runs at.
+      for (const clock of DAYTIME_CLOCKS) {
+        const { context, page } = await openPage(browser, base, {
+          viewport,
+          scenario: 'zero-carbon',
+          clock,
+        });
+        await waitForHero(page);
+        failures.push(
+          ...(await checkHero(page, {
+            scenario: `zero-carbon @${clock.slice(11, 16)}`,
+            expectBadge: true,
+            viewport,
+          })),
+        );
         checks++;
         await context.close();
       }

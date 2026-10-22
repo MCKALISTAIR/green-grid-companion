@@ -98,3 +98,14 @@ export async function hapticSelectionChanged(opts?: HapticGateOptions): Promise<
   if (!canHaptic(opts)) return;
   await safely(() => Haptics.selectionChanged());
 }
+
+/** Opens a selection gesture (scrubbing); pair with hapticSelectionEnd. */
+export async function hapticSelectionStart(opts?: HapticGateOptions): Promise<void> {
+  if (!canHaptic(opts)) return;
+  await safely(() => Haptics.selectionStart());
+}
+
+export async function hapticSelectionEnd(opts?: HapticGateOptions): Promise<void> {
+  if (!canHaptic(opts)) return;
+  await safely(() => Haptics.selectionEnd());
+}

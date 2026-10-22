@@ -1,3 +1,4 @@
+import { appStorage } from '@/lib/appStorage';
 import { useQuery } from '@tanstack/react-query';
 import {
   getRegionalHistoryAndForecast,
@@ -5,10 +6,11 @@ import {
   ForecastData,
 } from '@/lib/carbonApi';
 import { useCarbonData } from '@/hooks/useCarbonData';
-import { addDays, endOfDay, formatISO, startOfDay, subYears } from 'date-fns';
+import { subYears } from 'date-fns';
+import { londonDayBounds, pickedDateKey } from '@/lib/londonTime';
 
 export function useHistoricalCarbon(date: Date | undefined) {
-  const postcode = localStorage.getItem('gridgreen-postcode') || '';
+  const postcode = appStorage.getItem('gridgreen-postcode') || '';
   const { regionId } = useCarbonData(postcode);
 
   const query = useQuery<ForecastData[]>({
@@ -16,10 +18,11 @@ export function useHistoricalCarbon(date: Date | undefined) {
     queryFn: async ({ signal }) => {
       if (!date) return [];
 
-      // Format dates for API: YYYY-MM-DDThh:mmZ
-      // We want the full 24h of the selected day
-      const from = startOfDay(date).toISOString();
-      const to = endOfDay(date).toISOString();
+      // BH-68: the picked calendar day is a UK day (London midnight to midnight),
+      // whatever zone the phone is in. 23 or 25 hours on clock-change days.
+      const bounds = londonDayBounds(pickedDateKey(date));
+      const from = bounds.from.toISOString();
+      const to = bounds.to.toISOString();
 
       if (regionId) {
         return getRegionalHistoryAndForecast(regionId, from, to, signal);
@@ -40,8 +43,9 @@ export function useHistoricalCarbon(date: Date | undefined) {
       // Compare with 1 year prior to the selected date
       // or if selected date is today, 1 year ago from today
       const compareDate = subYears(date, 1);
-      const from = startOfDay(compareDate).toISOString();
-      const to = endOfDay(compareDate).toISOString();
+      const bounds = londonDayBounds(pickedDateKey(compareDate));
+      const from = bounds.from.toISOString();
+      const to = bounds.to.toISOString();
 
       if (regionId) {
         return getRegionalHistoryAndForecast(regionId, from, to, signal);

@@ -80,6 +80,7 @@ export function SceneSkyLayer({
         {sceneConfig.showSun && (
           <motion.div
             className="absolute z-20 pointer-events-auto"
+            data-scene-sun
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{
               opacity: sceneConfig.cleanliness * 0.3 + 0.7,
@@ -90,14 +91,17 @@ export function SceneSkyLayer({
             style={{
               // Position via style — Framer `animate` top/right % was resolving to 0px
               // and parking the sun mid-frame (and duplicating under grid capture).
-              top:
+              // Never above the trophy chip's bottom edge (top: safe-area + 0.5rem, 44px
+              // tall), so the sun can't sit behind it on phones.
+              top: `max(${
                 timeOfDay === 'sunset'
                   ? '35%'
                   : timeOfDay === 'morning'
                     ? '15%'
                     : timeOfDay === 'afternoon'
                       ? '12%'
-                      : '8%',
+                      : '8%'
+              }, calc(max(env(safe-area-inset-top), 24px) + 4.25rem))`,
               right: timeOfDay === 'sunset' ? '15%' : timeOfDay === 'morning' ? '20%' : '8%',
               left: 'auto',
               filter: `brightness(${sceneConfig.solarBrightness + 0.5})`,
@@ -106,7 +110,7 @@ export function SceneSkyLayer({
             <motion.div
               className="cursor-pointer relative select-none"
               role="button"
-              tabIndex={0}
+              tabIndex={-1}
               aria-label={`Toggle synthwave mode ${synthwaveMode ? 'off' : 'on'}. Double click for cool sunglasses.`}
               onClick={() => {
                 impactMedium();

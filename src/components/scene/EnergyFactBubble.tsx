@@ -13,6 +13,8 @@ interface EnergyFactBubbleProps {
   generationMix?: GenerationMix[];
   className?: string;
   variant?: 'bubble' | 'plain';
+  /** False while loading or after a failure: no fact until there's a real reading. */
+  hasReading?: boolean;
 }
 
 export function EnergyFactBubble({
@@ -20,6 +22,7 @@ export function EnergyFactBubble({
   generationMix,
   className,
   variant = 'bubble',
+  hasReading = true,
 }: EnergyFactBubbleProps) {
   const { currentFact, refreshFact, tone } = useEnergyFacts();
   const { isNight } = useTimeOfDay();
@@ -30,6 +33,8 @@ export function EnergyFactBubble({
 
   // Refresh fact on mount and when interactions occur
   const handleRefresh = useCallback(() => {
+    // A 0 placeholder would pick 'pure oxygen' style facts for data we don't have.
+    if (!hasReading) return;
     refreshFact({
       intensity,
       windSpeed: weather?.windSpeed ?? 0,
@@ -40,7 +45,7 @@ export function EnergyFactBubble({
       temperature: weather?.temperature,
     });
     setIsVisible(true);
-  }, [refreshFact, intensity, weather, isNight, generationMix]);
+  }, [refreshFact, intensity, weather, isNight, generationMix, hasReading]);
 
   // Initial load
   useEffect(() => {
@@ -53,7 +58,7 @@ export function EnergyFactBubble({
     return () => clearInterval(interval);
   }, [handleRefresh]);
 
-  if (!currentFact) return null;
+  if (!hasReading || !currentFact) return null;
 
   return (
     <AnimatePresence>
