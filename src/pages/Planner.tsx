@@ -11,14 +11,14 @@ import { ErrorActionButton, ErrorStateCard } from '@/components/errors/ErrorStat
 import { PLANNER_ERROR_COPY } from '@/lib/voice/errorStatesCopy';
 import { readTone } from '@/lib/tone';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-  DialogClose,
-} from '@/components/ui/dialog';
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogTrigger,
+  ResponsiveDialogFooter,
+  ResponsiveDialogClose,
+} from '@/components/ui/responsive-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -59,18 +59,26 @@ import { logger } from '@/lib/logger';
 import { PageHeader } from '@/components/layout/PageHeader';
 
 const DEFAULT_APPLIANCES = [
-  { id: 'ev', name: 'EV Charge', icon: Car, power: 7.4, duration: 4, label: 'Full Charge (4h)' },
+  { id: 'ev', name: 'EV Charge', icon: Car, power: 7.4, duration: 4, label: '4h' },
   {
     id: 'washing',
     name: 'Washing',
     icon: WashingMachine,
     power: 1.0,
     duration: 2,
-    label: 'Eco Cycle (2h)',
+    label: '2h',
   },
-  { id: 'dish', name: 'Dishwasher', icon: Utensils, power: 1.5, duration: 2, label: 'Auto (2h)' },
-  { id: 'dryer', name: 'Dryer', icon: Zap, power: 2.5, duration: 1, label: 'Cotton (1h)' },
+  { id: 'dish', name: 'Dishwasher', icon: Utensils, power: 1.5, duration: 2, label: '2h' },
+  { id: 'dryer', name: 'Dryer', icon: Zap, power: 2.5, duration: 1, label: '1h' },
 ];
+
+// Copy cut: tiles show duration only; the programme name stays for screen readers.
+const PROGRAMME: Record<string, string> = {
+  ev: 'Full charge',
+  washing: 'Eco cycle',
+  dish: 'Auto',
+  dryer: 'Cotton',
+};
 
 import { useAppLocation } from '@/contexts/LocationContext';
 import { EstimateDisclaimer } from '@/components/attribution/EstimateDisclaimer';
@@ -93,7 +101,8 @@ export default function Planner() {
   });
 
   const { postcode } = useAppLocation();
-  const { forecast, intensity, hasReading, refetch, isLoading, isError } = useCarbonData(postcode);
+  const { forecast, intensity, hasReading, lastUpdated, refetch, isLoading, isError } =
+    useCarbonData(postcode);
   // useCarbonData reports 0 until a live reading arrives; don't treat that as a reading.
   const liveIntensity = plannerLiveIntensity(intensity, { isLoading, isError, hasReading });
 
@@ -171,6 +180,8 @@ export default function Planner() {
   const plan = planLoad({
     forecast,
     liveIntensity,
+    // A stale live reading must never give "Now" (BH-59).
+    ...(liveIntensity !== null ? { liveFrom: lastUpdated ?? null } : {}),
     slots: Math.ceil(selectedAppliance.duration * 2),
     horizonHours: null,
   });
@@ -235,40 +246,9 @@ export default function Planner() {
         }}
       >
         <div className="page-shell-inner space-y-6">
-          <PageHeader
-            title="Power Planner"
-            description="Schedule high-energy tasks for cleaner grid windows."
-          />
+          <PageHeader title="Power Planner" />
 
-          {showOnboarding && (
-            <Card className="sheet-surface p-4 bg-primary/10 border-primary/20 relative animate-in fade-in slide-in-from-top-4 duration-500">
-              <button
-                onClick={dismissOnboarding}
-                className="tap-target absolute top-2 right-2 p-2 text-muted-foreground hover:text-foreground transition-colors"
-                aria-label="Dismiss onboarding"
-              >
-                <X className="w-4 h-4" />
-              </button>
-              <div className="flex items-start gap-4 pr-6">
-                <div className="p-3 bg-primary/20 rounded-full text-primary mt-1 shrink-0">
-                  <Leaf className="w-6 h-6" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-foreground text-lg">
-                    Welcome to Power Planner
-                  </h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    Schedule high-energy tasks like EV charging or washing for when the grid is
-                    greenest. Simply tap an appliance below to find the best time to run it and save
-                    carbon.
-                  </p>
-                  <Button size="sm" onClick={dismissOnboarding} className="mt-2 font-medium">
-                    Got it
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          )}
+          {showOnboarding && <p className="text-sm text-muted-foreground">Tap an appliance</p>}
 
           <div className="grid grid-cols-2 gap-3">
             {APPLIANCES.map((app) => (
@@ -276,7 +256,11 @@ export default function Planner() {
                 key={app.id}
                 variant={selectedAppliance.id === app.id ? 'default' : 'outline'}
                 className="h-auto py-4 flex flex-col gap-2 relative overflow-hidden transition-all duration-200"
-                onClick={() => setSelectedAppliance(app)}
+                onClick={() => {
+                  setSelectedAppliance(app);
+                  dismissOnboarding();
+                }}
+                aria-label={`${app.name}, ${PROGRAMME[app.id] ? `${PROGRAMME[app.id]}, ` : ''}${app.duration} hours`}
               >
                 <motion.div
                   key={selectedAppliance.id === app.id ? 'active' : 'idle'}
@@ -297,11 +281,16 @@ export default function Planner() {
             ))}
 
             {/* Custom Event Button */}
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
+            <ResponsiveDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <ResponsiveDialogTrigger asChild>
                 <Button
                   variant={selectedAppliance.id === 'custom' ? 'default' : 'outline'}
                   className={`h-auto py-4 flex flex-col gap-2 border-dashed ${APPLIANCES.length % 2 === 0 ? 'col-span-2' : ''}`}
+                  aria-label={
+                    selectedAppliance.id === 'custom'
+                      ? `${selectedAppliance.name}, tap to edit`
+                      : 'Add your own appliance'
+                  }
                   onClick={() => {
                     // If already active, just reopen edit? or select?
                     // Let's open dialog always on click for now to allow editing
@@ -314,16 +303,16 @@ export default function Planner() {
                     <div className="font-semibold">
                       {selectedAppliance.id === 'custom' ? selectedAppliance.name : 'Custom'}
                     </div>
-                    <div className="text-[10px] opacity-70 font-normal">
-                      {selectedAppliance.id === 'custom' ? 'Tap to edit' : 'Add your own'}
-                    </div>
+                    {selectedAppliance.id === 'custom' && (
+                      <div className="text-[10px] opacity-70 font-normal">Tap to edit</div>
+                    )}
                   </div>
                 </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md top-[20%] translate-y-0">
-                <DialogHeader>
-                  <DialogTitle>Add Custom Event</DialogTitle>
-                </DialogHeader>
+              </ResponsiveDialogTrigger>
+              <ResponsiveDialogContent className="sm:max-w-md top-[20%] translate-y-0">
+                <ResponsiveDialogHeader>
+                  <ResponsiveDialogTitle>Add Custom Event</ResponsiveDialogTitle>
+                </ResponsiveDialogHeader>
                 <div className="grid gap-4 py-4">
                   <div className="grid gap-2">
                     <Label htmlFor="name">Event Name</Label>
@@ -359,13 +348,13 @@ export default function Planner() {
                     </div>
                   </div>
                 </div>
-                <DialogFooter className="sm:justify-start">
+                <ResponsiveDialogFooter className="sm:justify-start">
                   <Button type="button" onClick={handleCustomSubmit} className="w-full">
                     Calculate Best Time
                   </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+                </ResponsiveDialogFooter>
+              </ResponsiveDialogContent>
+            </ResponsiveDialog>
           </div>
 
           <AnimatePresence mode="wait" initial={false}>
@@ -524,14 +513,18 @@ export default function Planner() {
               >
                 <Card className="sheet-surface p-6 space-y-3">
                   <p className="font-medium text-foreground">
-                    {plan.reason === 'missing_data'
-                      ? MISSING_DATA_TITLE
-                      : 'No forecast data available'}
+                    {plan.reason === 'stale_data'
+                      ? 'Waiting for fresh data'
+                      : plan.reason === 'missing_data'
+                        ? MISSING_DATA_TITLE
+                        : 'No forecast data available'}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {plan.reason === 'missing_data'
-                      ? `${MISSING_DATA_DETAIL} Pull to refresh, or try again later.`
-                      : 'We need a carbon intensity forecast to find your best window. Pull to refresh, or check your connection.'}
+                    {plan.reason === 'stale_data'
+                      ? "This reading is out of date, so we can't pick a time yet. Pull to refresh."
+                      : plan.reason === 'missing_data'
+                        ? `${MISSING_DATA_DETAIL} Pull to refresh, or try again later.`
+                        : 'We need a carbon intensity forecast to find your best window. Pull to refresh, or check your connection.'}
                   </p>
                 </Card>
               </motion.div>

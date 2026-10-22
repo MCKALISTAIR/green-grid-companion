@@ -75,3 +75,29 @@ export function createHorizontalStateVariants(reduceMotion: boolean): Variants {
     },
   };
 }
+
+/* ── Motion spec v1 tokens (§1). Prefer these over inline literals. ── */
+export const dur = {
+  pressIn: 0.09,
+  pressOut: 0.16,
+  fast: 0.16,
+  /** Hero headline swap: 200ms opacity-only fade (approved, keep). */
+  hero: 0.2,
+  base: 0.22,
+  page: 0.28,
+  /** Reduced-motion replacement for any translate/scale/spring. */
+  reduced: 0.12,
+} as const;
+
+export const ease = {
+  out: [0.16, 1, 0.3, 1] as [number, number, number, number],
+  in: [0.4, 0, 1, 1] as [number, number, number, number],
+  ios: [0.32, 0.72, 0, 1] as [number, number, number, number],
+};
+
+export const spring = {
+  snappy: { type: 'spring' as const, stiffness: 500, damping: 32, mass: 1 },
+  sheet: { type: 'spring' as const, stiffness: 380, damping: 36 },
+  number: { type: 'spring' as const, stiffness: 170, damping: 26 },
+  bounce: { type: 'spring' as const, stiffness: 420, damping: 18 },
+};

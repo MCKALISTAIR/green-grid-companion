@@ -47,7 +47,9 @@ export function OfflineIndicator() {
 
   // Refetch in place: a full reload lost scroll position, open sheets and form state.
   const handleRefresh = () => {
-    void queryClient.refetchQueries({ type: 'active' });
+    // cancelRefetch: false, so a double tap joins the in-flight refetch instead of
+    // cancelling it and firing every request again.
+    void queryClient.refetchQueries({ type: 'active' }, { cancelRefetch: false });
     setShowReconnected(false);
     clearWasOffline();
   };
