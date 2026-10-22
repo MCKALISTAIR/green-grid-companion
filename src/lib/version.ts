@@ -19,3 +19,11 @@ export const APP_VERSION = {
 export const VERSION_STRING = `v${APP_VERSION.major}.${APP_VERSION.minor}.${APP_VERSION.patch} ${APP_VERSION.stage.charAt(0).toUpperCase() + APP_VERSION.stage.slice(1)}`;
 
 export const BUILD_DATE = new Date().toISOString().split('T')[0];
+
+/**
+ * Bump when a persisted query's data shape changes. Together with the app
+ * version it busts the saved query cache after an update (BH-67).
+ */
+export const QUERY_CACHE_VERSION = 1;
+
+export const QUERY_CACHE_BUSTER = `${APP_VERSION.major}.${APP_VERSION.minor}.${APP_VERSION.patch}-q${QUERY_CACHE_VERSION}`;

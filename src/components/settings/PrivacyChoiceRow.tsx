@@ -28,7 +28,7 @@ export function PrivacyChoiceRow() {
           <p className="text-sm text-muted-foreground">{CONSENT_SETTINGS_COPY.helper}</p>
           <p id={descId} className="mt-1 text-sm font-medium text-foreground">
             {CONSENT_SETTINGS_COPY.current[choice ?? 'unset']}{' '}
-            <Link to="/privacy" className="text-primary underline underline-offset-2">
+            <Link to="/privacy" className="tap-target text-primary underline underline-offset-2">
               {CONSENT_COPY.privacyLink}
             </Link>
           </p>

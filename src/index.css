@@ -204,9 +204,37 @@
     scroll-behavior: smooth;
   }
 
+  /*
+   * Dynamic Type (BH-55): on iOS WebKit, -apple-system-body follows the user's
+   * text size setting, and every rem in the app scales with it. Only iOS WebKit
+   * supports this keyword, so other browsers keep 16px. Note: the iOS default
+   * "Large" size is 17px, so the app is ~6% larger than today on iPhone.
+   */
+  @supports (font: -apple-system-body) and (-webkit-touch-callout: none) {
+    html {
+      font: -apple-system-body;
+    }
+    body {
+      font-family: var(--font-sans);
+    }
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-sans);
+    /* Native feel (BH-49): no text selection, long-press callout or link preview on app chrome. */
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  /* Text people type or may want to copy stays selectable. */
+  input,
+  textarea,
+  [contenteditable='true'],
+  .selectable {
+    -webkit-user-select: text;
+    user-select: text;
   }
 }
 
@@ -1017,7 +1045,10 @@ blockquote {
 
 /* Floating bottom dock — same paper as the home sheet (seam test) */
 .nav-dock {
-  margin: 0 14px calc(var(--bottom-nav-gap) + var(--bottom-safe-area));
+  /* Centred: a 14px side margin overrode mx-auto, so on tablet widths the
+     max-w-md dock sat at the left edge (BH-24). */
+  width: calc(100% - 28px);
+  margin: 0 auto calc(var(--bottom-nav-gap) + var(--bottom-safe-area));
   border-radius: 1.5rem;
   background: hsl(var(--card) / 0.96);
   backdrop-filter: blur(16px) saturate(140%);
@@ -1412,4 +1443,22 @@ body {
   width: max(100%, 44px);
   height: max(100%, 44px);
   transform: translate(-50%, -50%);
+}
+
+/* Bottom sheets (vaul) under Reduce Motion: fade in place, no slide (motion spec §2.3). Drag still works. */
+@media (prefers-reduced-motion: reduce) {
+  [data-vaul-drawer][data-vaul-snap-points='false'][data-state='open'] {
+    animation-name: fadeIn !important;
+    animation-duration: 160ms !important;
+  }
+  [data-vaul-drawer][data-vaul-snap-points='false'][data-state='closed'] {
+    animation-name: fadeOut !important;
+    animation-duration: 160ms !important;
+  }
+  [data-vaul-drawer][data-vaul-snap-points='true'] {
+    transition-duration: 0ms !important;
+  }
+  [data-vaul-drawer][data-vaul-snap-points='true'][data-state='open'] {
+    animation: fadeIn 160ms ease-out;
+  }
 }

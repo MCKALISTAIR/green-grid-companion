@@ -28,6 +28,7 @@ import { useIndexPageEffects } from '@/hooks/useIndexPageEffects';
 import { useThrottledRefetch } from '@/hooks/useThrottledRefetch';
 import { useRelativeTime } from '@/hooks/useRelativeTime';
 import { DashboardSkeleton } from '@/components/home/DashboardSkeleton';
+import { SlowLoadingNotice } from '@/components/SlowLoadingNotice';
 import { OffGridNotice } from '@/components/home/OffGridNotice';
 import { DashboardViewTabs, type DashboardViewMode } from '@/components/home/DashboardViewTabs';
 import { IntensityDashboard } from '@/components/home/IntensityDashboard';
@@ -37,6 +38,7 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { createHorizontalStateVariants, stateTransition } from '@/lib/motion';
 
 import { formatLondonTime } from '@/lib/londonTime';
+import { signalFirstContent } from '@/lib/firstContent';
 
 const DASHBOARD_VIEWS: DashboardViewMode[] = ['intensity', 'demand', 'footprint'];
 
@@ -94,6 +96,8 @@ const Index = () => {
     isLoading,
     isBackgroundFetching,
     isDegraded,
+    usingNationalFallback,
+    fallbackRegionName,
     offGridArea: offGrid,
     isError,
     error,
@@ -101,6 +105,12 @@ const Index = () => {
     getNextUpdate,
     nextUpdate,
   } = useCarbonData(postcode);
+
+  // Splash fades as soon as the home screen has something real to show
+  // (a reading from cache or network, an off-grid notice, or an error state).
+  useEffect(() => {
+    if (!isLoading) signalFirstContent();
+  }, [isLoading]);
 
   const { frequency: gridFrequency } = useGridDemand();
   const renewablesPct = getRenewablesPercentage(generationMix);
@@ -229,6 +239,8 @@ const Index = () => {
               postcode={postcode}
               setPostcode={setPostcode}
               region={region}
+              usingNationalFallback={usingNationalFallback}
+              fallbackRegionName={fallbackRegionName}
               intensity={intensity}
               previousIntensity={previousIntensity}
               index={index}
@@ -281,6 +293,7 @@ const Index = () => {
               <div className="home-feed-fact px-1 pb-2 pt-0">
                 <EnergyFactBubble
                   intensity={intensity}
+                  hasReading={!isLoading && !isError}
                   generationMix={generationMix}
                   variant="plain"
                   className="mx-auto max-w-prose text-center"
@@ -294,7 +307,10 @@ const Index = () => {
                 {/* Prefer skeleton over error while loading/restoring so a brief
                     no-reading frame never mounts ErrorState and shifts the feed. */}
                 {isLoading && forecast.length === 0 ? (
-                  <DashboardSkeleton />
+                  <div className="space-y-3">
+                    <SlowLoadingNotice active onRetry={() => void refetch()} />
+                    <DashboardSkeleton />
+                  </div>
                 ) : isError ? (
                   <div className="py-8 bg-card rounded-2xl border border-border shadow-lg">
                     <ErrorState

@@ -4,7 +4,11 @@
 // Local in-memory store for fallback
 const localStore = new Map<string, { count: number; resetAt: number; blockedUntil?: number }>();
 
-async function redisPipeline(url: string, token: string, commands: string[][]): Promise<unknown[]> {
+async function redisPipeline(
+  url: string,
+  token: string,
+  commands: string[][],
+): Promise<Array<{ result?: number; error?: string }>> {
   const response = await fetch(`${url}/pipeline`, {
     method: 'POST',
     headers: {
@@ -73,7 +77,13 @@ export async function checkRateLimit(
       ]);
 
       const count = results[0]?.result;
-      let ttl = results[1]?.result;
+      let ttl = results[1]?.result ?? -1;
+      // A Redis error comes back as { error } with no result. Treat it as a
+      // failed call so the in-memory limiter applies, rather than letting
+      // `undefined > limit` (false) wave every request through.
+      if (typeof count !== 'number') {
+        throw new Error(`Unexpected INCR reply: ${results[0]?.error ?? 'no result'}`);
+      }
 
       // If TTL is -1, it means the key was just created and has no expiry.
       // Set the expiry to the window.

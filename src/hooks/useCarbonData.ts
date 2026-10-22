@@ -1,3 +1,4 @@
+import { REGIONAL_FALLBACK_LABEL } from '@/lib/regionalFallback';
 import { useQuery, useQueryClient, useIsRestoring } from '@tanstack/react-query';
 import { useMemo, useEffect, useRef, useCallback, useState } from 'react';
 import {
@@ -255,12 +256,18 @@ export function useCarbonData(postcode: string) {
   // Regional endpoints usually have forecast only. `intensity` is 0 only when
   // there is no reading yet (hasReading = false); isLoading/isError cover that
   // so the UI never shows 0 / 'moderate' as if it were real.
-  const liveIntensity =
-    pickLiveIntensity(regionalData?.intensity) ?? pickLiveIntensity(nationalQuery.data?.intensity);
+  const regionalLive = pickLiveIntensity(regionalData?.intensity);
+  const nationalLive = pickLiveIntensity(nationalQuery.data?.intensity);
+  // BH-29: when the region loaded but has no figure, we fall back to the GB
+  // number. Then the label, index and mix must be GB too, never the region's.
+  const usingNationalFallback = !!regionalData && regionalLive === null && nationalLive !== null;
+  const liveIntensity = regionalLive ?? nationalLive;
   const hasReading = liveIntensity !== null;
   const intensity = hasReading ? liveIntensity : 0;
   const index =
-    regionalData?.intensity?.index ?? nationalQuery.data?.intensity?.index ?? 'moderate';
+    (usingNationalFallback ? undefined : regionalData?.intensity?.index) ??
+    nationalQuery.data?.intensity?.index ??
+    'moderate';
 
   // Track intensity changes for animation
   useEffect(() => {
@@ -272,14 +279,16 @@ export function useCarbonData(postcode: string) {
 
   // Use the name from the found region metadata (from list) or fallback
   // If regional data failed to load, explicit fallback to "National"
-  const region =
-    regionalDataQuery.data?.shortname ??
-    postcodeQuery.data?.shortname ??
-    foundRegion?.shortname ??
-    (nationalQuery.data ? 'National' : '');
+  const region = usingNationalFallback
+    ? REGIONAL_FALLBACK_LABEL
+    : (regionalDataQuery.data?.shortname ??
+      postcodeQuery.data?.shortname ??
+      foundRegion?.shortname ??
+      (nationalQuery.data ? 'National' : ''));
 
   // Generation mix from regional or national
-  const generationMix = regionalData?.generationmix ?? generationQuery.data ?? [];
+  const generationMix =
+    (usingNationalFallback ? undefined : regionalData?.generationmix) ?? generationQuery.data ?? [];
 
   // Determine if this is an initial load (no data yet) vs background refetch
   const isInitialLoad = postcode
@@ -329,6 +338,10 @@ export function useCarbonData(postcode: string) {
     previousIntensity,
     index,
     region,
+    /** True when the regional figure is missing and the GB figure is shown (BH-29). */
+    usingNationalFallback,
+    /** The region whose figure is missing, for the fallback explanation. */
+    fallbackRegionName: usingNationalFallback ? regionalDataQuery.data?.shortname : undefined,
     regionId, // Export regionId for use in other hooks/pages
     // Half-hour period start from the API reading (for staleness / next update).
     lastUpdated: regionalData?.from || nationalQuery.data?.from,
@@ -391,3 +404,5 @@ export function useCarbonData(postcode: string) {
     },
   };
 }
+
+export { REGIONAL_FALLBACK_LABEL };
