@@ -18,7 +18,6 @@ import {
 import { SmogBand } from '../CityElements';
 import { ValleyMist } from '../ValleyMist';
 import { JumpingFish } from '../JumpingFish';
-import { SceneHotspots, type HotspotDef } from '../SceneHotspots';
 import { SCENE_SILHOUETTE_ASPECT } from '@/lib/sceneScaleBible';
 
 export interface CoastalSceneLayersProps {
@@ -232,46 +231,6 @@ export function CoastalSceneLayers({
           </div>
         )}
       </AnimatePresence>
-
-      {/* Coastal: Diegetic info hotspots */}
-      <SceneHotspots
-        hotspots={
-          [
-            {
-              id: 'coastal-wind',
-              label: 'Offshore Wind',
-              x: 38,
-              y: 55,
-              visible: windPercentage > 5 && sceneConfig.cleanliness > 0.25,
-              fact: 'Offshore wind turbines benefit from stronger, more consistent sea winds to generate vast amounts of clean energy.',
-            },
-            {
-              id: 'coastal-rockpools',
-              label: 'Rock Pools',
-              x: 68,
-              y: 80,
-              visible: sceneConfig.cleanliness > 0.5,
-              fact: 'At low tide, rock pools reveal a rich ecosystem. Keeping the grid clean helps prevent ocean acidification and protects marine life.',
-            },
-            {
-              id: 'coastal-tidal',
-              label: 'Tidal Energy',
-              x: 50,
-              y: 88,
-              visible: hydroPercentage > 5 || marinePercentage > 0,
-              fact: 'Tidal and wave energy harnesses the predictable movement of tides and ocean currents to generate reliable, clean power.',
-            },
-            {
-              id: 'coastal-stack',
-              label: 'Coastal Peaker',
-              x: 55,
-              y: 48,
-              visible: sceneConfig.cleanliness < 0.35,
-              fact: 'When the grid is dirty, coastal gas peakers and shipping emissions push local carbon intensity up — the water and sky tell the story.',
-            },
-          ] satisfies HotspotDef[]
-        }
-      />
     </>
   );
 }

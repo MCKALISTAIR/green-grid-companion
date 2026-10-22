@@ -17,14 +17,16 @@ import { useHaptics } from '@/hooks/useHaptics';
 import { markFirstNumberPending } from '@/lib/firstLaunch';
 import {
   NATIONAL_POSTCODE,
-  isNorthernIrelandPostcode,
+  offGridArea,
+  type OffGridArea,
   isValidPostcode,
   toOutwardCode,
 } from '@/lib/postcode';
 import { ONBOARDING_COPY } from '@/lib/voice/onboardingCopy';
 
 type Notice = {
-  kind: 'denied' | 'deniedForever' | 'failed' | 'invalid' | 'northernIreland';
+  kind: 'denied' | 'deniedForever' | 'failed' | 'invalid' | 'offGrid';
+  area?: OffGridArea;
 } | null;
 
 const Onboarding = () => {
@@ -45,9 +47,11 @@ const Onboarding = () => {
   };
 
   const finishWithPostcode = (postcode: string) => {
-    if (isNorthernIrelandPostcode(postcode)) {
-      // Say so before switching to the GB average, rather than in a toast that vanishes.
-      setNotice({ kind: 'northernIreland' });
+    const area = offGridArea(postcode);
+    if (area) {
+      // Not on the GB grid (NI, Channel Islands, Isle of Man, BFPO): say so before
+      // switching to the GB average, never show another region's figure.
+      setNotice({ kind: 'offGrid', area });
       return;
     }
     setAppPostcode(toOutwardCode(postcode));
@@ -120,7 +124,7 @@ const Onboarding = () => {
     e.preventDefault();
     const value = manualPostcode.trim();
     if (!value) return;
-    if (!isValidPostcode(value)) {
+    if (!isValidPostcode(value) && !offGridArea(value)) {
       setNotice({ kind: 'invalid' });
       void notification(NotificationType.Error);
       return;
@@ -170,7 +174,7 @@ const Onboarding = () => {
           </Button>
 
           <div id="onboarding-postcode-notice" aria-live="polite" className="empty:hidden">
-            {notice && notice.kind !== 'northernIreland' && (
+            {notice && notice.kind !== 'offGrid' && (
               <p
                 className="text-sm text-white/85 text-center"
                 role={notice.kind === 'invalid' ? 'alert' : undefined}
@@ -183,11 +187,11 @@ const Onboarding = () => {
                 {notice.kind === 'deniedForever' && <> {c.deniedForever}</>}
               </p>
             )}
-            {notice?.kind === 'northernIreland' && (
+            {notice?.kind === 'offGrid' && notice.area && (
               <div className="rounded-xl bg-white/10 p-3 space-y-2 text-center">
-                <p className="text-sm text-white/90">{c.northernIreland}</p>
+                <p className="text-sm text-white/90">{c[notice.area]}</p>
                 <Button size="sm" variant="secondary" onClick={showNational}>
-                  {c.northernIrelandCta}
+                  {c.offGridCta}
                 </Button>
               </div>
             )}
@@ -227,7 +231,7 @@ const Onboarding = () => {
             {c.keepNote}{' '}
             <a
               href="/privacy"
-              className="inline-block min-h-11 py-2 underline hover:text-white/95 transition-colors"
+              className="inline-block min-h-11 min-w-11 py-2 text-center underline hover:text-white/95 transition-colors"
             >
               Privacy Policy
             </a>
@@ -246,14 +250,14 @@ const Onboarding = () => {
             By continuing you agree to the{' '}
             <a
               href="/terms"
-              className="inline-block min-h-11 py-2 underline hover:text-white/95 transition-colors"
+              className="inline-block min-h-11 min-w-11 py-2 text-center underline hover:text-white/95 transition-colors"
             >
               Terms
             </a>{' '}
             and have read the{' '}
             <a
               href="/privacy"
-              className="inline-block min-h-11 py-2 underline hover:text-white/95 transition-colors"
+              className="inline-block min-h-11 min-w-11 py-2 text-center underline hover:text-white/95 transition-colors"
             >
               Privacy Policy
             </a>

@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef, useMemo, useLayoutEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { NotificationType } from '@capacitor/haptics';
 import { toast } from 'sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { Button } from '@/components/ui/button';
 import { FootprintView } from '@/components/FootprintView';
 import { DemandView } from '@/components/DemandView';
 import { useCarbonData } from '@/hooks/useCarbonData';
@@ -28,6 +29,8 @@ import { useThrottledRefetch } from '@/hooks/useThrottledRefetch';
 import { useRelativeTime } from '@/hooks/useRelativeTime';
 import { DashboardSkeleton } from '@/components/home/DashboardSkeleton';
 import { StaleReadingNotice } from '@/components/home/StaleReadingNotice';
+import { SlowLoadingNotice } from '@/components/SlowLoadingNotice';
+import { OffGridNotice } from '@/components/home/OffGridNotice';
 import { DashboardViewTabs, type DashboardViewMode } from '@/components/home/DashboardViewTabs';
 import { IntensityDashboard } from '@/components/home/IntensityDashboard';
 import { IntensityHeroOverlay } from '@/components/home/IntensityHeroOverlay';
@@ -36,10 +39,12 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { createHorizontalStateVariants, stateTransition } from '@/lib/motion';
 
 import { formatLondonTime } from '@/lib/londonTime';
+import { signalFirstContent } from '@/lib/firstContent';
 
 const DASHBOARD_VIEWS: DashboardViewMode[] = ['intensity', 'demand', 'footprint'];
 
 const Index = () => {
+  const navigate = useNavigate();
   const { postcode, setPostcode } = useAppLocation();
   const [viewMode, setViewMode] = useState<DashboardViewMode>('intensity');
   const location = useLocation();
@@ -92,12 +97,21 @@ const Index = () => {
     isLoading,
     isBackgroundFetching,
     isDegraded,
+    usingNationalFallback,
+    fallbackRegionName,
+    offGridArea: offGrid,
     isError,
     error,
     refetch,
     getNextUpdate,
     nextUpdate,
   } = useCarbonData(postcode);
+
+  // Splash fades as soon as the home screen has something real to show
+  // (a reading from cache or network, an off-grid notice, or an error state).
+  useEffect(() => {
+    if (!isLoading) signalFirstContent();
+  }, [isLoading]);
 
   const { frequency: gridFrequency } = useGridDemand();
   const renewablesPct = getRenewablesPercentage(generationMix);
@@ -226,6 +240,8 @@ const Index = () => {
               postcode={postcode}
               setPostcode={setPostcode}
               region={region}
+              usingNationalFallback={usingNationalFallback}
+              fallbackRegionName={fallbackRegionName}
               intensity={intensity}
               previousIntensity={previousIntensity}
               index={index}
@@ -262,7 +278,11 @@ const Index = () => {
                 <StaleReadingNotice readingFrom={lastUpdated} onRetry={() => void refetch()} />
               )}
 
-              {isDegraded && (
+              {offGrid && (
+                <OffGridNotice area={offGrid} postcode={postcode} onChangePostcode={setPostcode} />
+              )}
+
+              {isDegraded && !offGrid && (
                 <div className="mx-2 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-lg flex items-start gap-3 text-sm text-amber-800 dark:text-amber-200 animate-in fade-in">
                   <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-500" />
                   <div>
@@ -278,6 +298,7 @@ const Index = () => {
               <div className="home-feed-fact px-1 pb-2 pt-0">
                 <EnergyFactBubble
                   intensity={intensity}
+                  hasReading={!isLoading && !isError}
                   generationMix={generationMix}
                   variant="plain"
                   className="mx-auto max-w-prose text-center"
@@ -291,7 +312,10 @@ const Index = () => {
                 {/* Prefer skeleton over error while loading/restoring so a brief
                     no-reading frame never mounts ErrorState and shifts the feed. */}
                 {isLoading && forecast.length === 0 ? (
-                  <DashboardSkeleton />
+                  <div className="space-y-3">
+                    <SlowLoadingNotice active onRetry={() => void refetch()} />
+                    <DashboardSkeleton />
+                  </div>
                 ) : isError ? (
                   <div className="py-8 bg-card rounded-2xl border border-border shadow-lg">
                     <ErrorState

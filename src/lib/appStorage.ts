@@ -36,6 +36,8 @@ export const MIGRATED_KEYS = [
   'fuel-streaks-v3',
   'fuel-streak-records-v2',
   'fuel-last-seen-v1',
+  'gridsense-national-optin-dismissed',
+  'gridsense-daily-outlook-server',
 ] as const;
 
 export const MIGRATION_FLAG = 'gridsense-storage-migrated-v1';

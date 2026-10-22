@@ -36,3 +36,20 @@ export function isReadingStale(fromIso: string | undefined, nowMs: number = Date
   const from = Date.parse(fromIso);
   return Number.isFinite(from) && nowMs - from > STALE_READING_MS;
 }
+/** Shown when a load has taken longer than ~8s (the request gives up at 10s). */
+export const SLOW_LOADING_COPY = {
+  title: 'Still waiting for NESO…',
+  body: 'The grid data service is slow right now.',
+  retry: 'Try again',
+} as const;
+
+/** Home notice when the saved postcode is not on the GB grid (figures are the GB average). */
+export const OFF_GRID_HOME_COPY = {
+  northernIreland: 'Northern Ireland is on the all-island grid',
+  channelIslands: "The Channel Islands aren't on the GB grid",
+  isleOfMan: 'The Isle of Man has its own grid',
+  bfpo: "We can't place a Forces (BFPO) address",
+  body: "NESO's data only covers Great Britain, so this is the GB average.",
+  bodyCheeky: "NESO's data stops at Great Britain, so you're seeing the GB average.",
+  action: 'Change location',
+} as const;

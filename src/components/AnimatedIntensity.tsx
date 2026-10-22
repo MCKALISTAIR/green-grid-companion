@@ -99,11 +99,11 @@ export function AnimatedIntensity({
         : 'transparent';
 
   return (
-    <div
-      className={cn('relative flex items-center gap-1', className)}
-      aria-live="polite"
-      aria-atomic="true"
-    >
+    <div className={cn('relative flex items-center gap-1', className)}>
+      {/* Announce the settled value with its unit, never the spring's interim digits. */}
+      <span className="sr-only" aria-live="polite" aria-atomic="true">
+        {`${Math.round(value)} grams of CO₂ per kilowatt hour`}
+      </span>
       {/* Band-change halo — fires once per transition, ignored under reduced motion */}
       <AnimatePresence>
         {transition && !shouldReduceMotion && (
@@ -124,6 +124,7 @@ export function AnimatedIntensity({
           layer and reads as a flashing rectangle behind the digit (esp. hero 0).
           Background refresh is already signaled by “Updating…” in the meta row. */}
       <motion.span
+        aria-hidden
         className={cn(
           'font-bold tabular-nums tracking-tighter',
           size === 'hero'

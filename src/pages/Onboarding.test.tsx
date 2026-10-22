@@ -66,7 +66,25 @@ describe('first launch', () => {
     renderOnboarding();
     fireEvent.change(field(), { target: { value: 'BT1 1AA' } });
     submit();
-    expect(await screen.findByText(/Northern Ireland has its own grid/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Northern Ireland is on the all-island grid it shares with Ireland/),
+    ).toBeInTheDocument();
+    expect(localStorage.getItem('gridgreen-postcode')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Show the GB average' }));
+    await screen.findByText('HOME');
+    expect(localStorage.getItem('gridgreen-postcode')).toBe('GB');
+  });
+
+  it.each([
+    ['GY1 1AA', /The Channel Islands aren't on the GB grid/],
+    ['JE2 3AB', /The Channel Islands aren't on the GB grid/],
+    ['IM1 1AA', /Isle of Man has its own grid/],
+    ['BFPO 1', /We can't tell where a Forces \(BFPO\) address is/],
+  ])('%s is not on the GB grid: says so and offers the GB average', async (pc, text) => {
+    renderOnboarding();
+    fireEvent.change(field(), { target: { value: pc } });
+    submit();
+    expect(await screen.findByText(text)).toBeInTheDocument();
     expect(localStorage.getItem('gridgreen-postcode')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Show the GB average' }));
     await screen.findByText('HOME');
