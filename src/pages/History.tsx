@@ -58,6 +58,12 @@ const itemVariants = {
 
 import { useHistoricalCarbon } from '@/hooks/useHistoricalCarbon';
 import {
+  formatLondonDayMonth,
+  formatLondonSlotTime,
+  londonDateKey,
+  pickedDateKey,
+} from '@/lib/londonTime';
+import {
   averageForecast,
   historyYAxisMax,
   isNearZeroRange,
@@ -188,7 +194,8 @@ export default function HistoryPage() {
         consumption: consumptionRecord ? consumptionRecord.consumption_kwh : null,
         carbonMass: consumptionRecord ? consumptionRecord.carbon_g : null,
         // 7d uses date-only ticks so label height stays stable vs 24h HH:mm.
-        formattedTime: format(itemDate, timeRange === '24h' ? 'HH:mm' : 'dd MMM'),
+        formattedTime:
+          timeRange === '24h' ? formatLondonSlotTime(itemDate) : formatLondonDayMonth(itemDate),
       };
     });
   }, [data, footprint, timeRange]);
@@ -280,7 +287,9 @@ export default function HistoryPage() {
                       }
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" aria-hidden="true" />
-                      {format(date ?? new Date(), 'd MMM')}
+                      {date
+                        ? format(date, 'd MMM')
+                        : formatLondonDayMonth(new Date()).replace(/^0/, '')}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="end">
@@ -288,7 +297,9 @@ export default function HistoryPage() {
                       mode="single"
                       selected={date}
                       onSelect={setDate}
-                      disabled={(d) => d > new Date() || d < new Date('1900-01-01')}
+                      disabled={(d) =>
+                        pickedDateKey(d) > londonDateKey(new Date()) || d < new Date('1900-01-01')
+                      }
                       initialFocus
                     />
                   </PopoverContent>

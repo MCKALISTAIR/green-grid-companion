@@ -94,3 +94,77 @@ export function formatLondonLongDate(date: Date): string {
   const get = (t: string) => parts.find((p) => p.type === t)?.value ?? '';
   return `${get('weekday')}, ${get('day')} ${get('month')}`;
 }
+
+// --- BH-68 / BH-72: London day bounds and clock-change-aware slot labels ---
+
+const HOUR_MS = 60 * 60 * 1000;
+
+/** "2026-10-25" for the calendar day the user tapped in a device-local date picker. */
+export function pickedDateKey(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+/** The instant of 00:00 Europe/London on `dateKey` (YYYY-MM-DD). UK midnight is never skipped or repeated. */
+export function londonMidnight(dateKey: string): Date {
+  const [y, m, d] = dateKey.split('-').map(Number);
+  const utcMidnight = Date.UTC(y, m - 1, d);
+  // UK is UTC+0 or UTC+1, so London midnight is UTC midnight or one hour before.
+  for (const candidate of [utcMidnight, utcMidnight - HOUR_MS]) {
+    const at = new Date(candidate);
+    if (londonDateKey(at) === dateKey && formatLondonTime(at) === '00:00') return at;
+  }
+  return new Date(utcMidnight);
+}
+
+/** Next calendar day key, stepping noon to noon so clock changes can't skip a day. */
+export function nextDateKey(dateKey: string): string {
+  const [y, m, d] = dateKey.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d + 1, 12)).toISOString().slice(0, 10);
+}
+
+/** Start (London midnight) and inclusive end (1 ms before the next London midnight) of a UK day. */
+export function londonDayBounds(dateKey: string): { from: Date; to: Date } {
+  const from = londonMidnight(dateKey);
+  const to = new Date(londonMidnight(nextDateKey(dateKey)).getTime() - 1);
+  return { from, to };
+}
+
+/**
+ * True for instants in the second pass of a repeated hour (01:00–01:59 GMT on
+ * the last Sunday of October): the same wall time already happened an hour ago.
+ */
+export function isRepeatedLondonTime(date: Date): boolean {
+  return formatLondonTime(date) === formatLondonTime(new Date(date.getTime() - HOUR_MS));
+}
+
+/** "14:30", or "01:30 GMT" for the repeated hour on clock-change day. */
+export function formatLondonSlotTime(date: Date): string {
+  const time = formatLondonTime(date);
+  return isRepeatedLondonTime(date) ? `${time} GMT` : time;
+}
+
+const dayMonthFormatter = new Intl.DateTimeFormat('en-GB', {
+  timeZone: LONDON_TZ,
+  day: '2-digit',
+  month: 'short',
+});
+
+/** "05 Oct" in UK time. */
+export function formatLondonDayMonth(date: Date): string {
+  return dayMonthFormatter.format(date);
+}
+
+const mediumDateFormatter = new Intl.DateTimeFormat('en-GB', {
+  timeZone: LONDON_TZ,
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+});
+
+/** "25 Oct 2026, 01:30 GMT" in UK time (GMT suffix only on the repeated hour). */
+export function formatLondonDateTime(date: Date): string {
+  return `${mediumDateFormatter.format(date)}, ${formatLondonSlotTime(date)}`;
+}

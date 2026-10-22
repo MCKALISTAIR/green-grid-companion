@@ -6,8 +6,11 @@ import {
 } from '@/lib/carbonApi';
 import { format, parseISO } from 'date-fns';
 import {
+  formatLondonDateTime,
   formatLondonLongDate,
   formatLondonShortDay,
+  formatLondonSlotTime,
+  isRepeatedLondonTime,
   formatLondonTime,
   londonDateKey,
   londonDayLabel,
@@ -101,7 +104,7 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
     const prevItem = forecast[i - 1];
     const time = parseISO(item.from);
     const prevTime = prevItem ? parseISO(prevItem.from) : null;
-    return !prevTime || time.getDate() !== prevTime.getDate();
+    return !prevTime || londonDateKey(time) !== londonDateKey(prevTime);
   });
 
   const bestBlocks: { start: number; end: number }[] = [];
@@ -284,7 +287,7 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
           <tbody>
             {forecast.map((item, i) => (
               <tr key={i}>
-                <td>{format(parseISO(item.from), 'PPpp')}</td>
+                <td>{formatLondonDateTime(parseISO(item.from))}</td>
                 <td>{item.intensity.forecast}</td>
                 <td>
                   {item.intensity.actual ?? 'N/A'}
@@ -402,7 +405,7 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
                   data-slot-index={i}
                   role="option"
                   aria-selected={isSelected}
-                  aria-label={`${formatLondonTime(time)}${isCurrentHour ? ' (now)' : ''}: ${
+                  aria-label={`${formatLondonSlotTime(time)}${isCurrentHour ? ' (now)' : ''}: ${
                     isUnknown ? 'no data' : `${displayValue} gCO₂/kWh`
                   }`}
                   className={cn(
@@ -493,7 +496,17 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
                         : 'text-muted-foreground dark:text-[#8a9ba1]',
                     )}
                   >
-                    {isCurrentHour ? 'Now' : formatLondonTime(time)}
+                    {isCurrentHour ? (
+                      'Now'
+                    ) : isRepeatedLondonTime(time) ? (
+                      // BH-72: second 01:xx on 25 Oct. Small suffix so it fits the 48px slot.
+                      <>
+                        {formatLondonTime(time)}
+                        <span className="ml-px text-[8px] tracking-tight">GMT</span>
+                      </>
+                    ) : (
+                      formatLondonTime(time)
+                    )}
                   </span>
                 </button>
               </div>
