@@ -30,13 +30,19 @@ interface ForecastChartProps {
   showNext?: number;
   /** Live intensity — drives vs-now copy in the hour insight strip. */
   currentIntensity?: number;
+  /** Half-hour start of the live reading; a stale one never gives a "use now". */
+  lastUpdated?: string | null;
 }
 
 /**
  * Carrot-style cross-linked forecast: tapping an hour updates chart emphasis
  * and the insight strip (condition + vs-now + action) together.
  */
-export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartProps) {
+export function ForecastChart({
+  forecast,
+  currentIntensity = 0,
+  lastUpdated = null,
+}: ForecastChartProps) {
   const { tone } = useEnergyFacts();
   const reduceMotion = useReducedMotion();
   const [visibleDate, setVisibleDate] = useState<Date>(new Date());
@@ -127,7 +133,9 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
 
   // Same engine as the now-or-wait card, so the current-hour line agrees with it.
   const nowAction =
-    currentIntensity > 0 ? getNowOrWaitDecision(currentIntensity, forecast, now).action : undefined;
+    currentIntensity > 0
+      ? getNowOrWaitDecision(currentIntensity, forecast, now, lastUpdated).action
+      : undefined;
 
   const insight = getForecastHourInsight(
     forecast,
