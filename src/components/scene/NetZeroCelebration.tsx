@@ -1,6 +1,10 @@
+import type { CommentaryTone } from '@/lib/tone';
+import { zeroCarbonBadgeText } from '@/lib/zeroCarbonBadge';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 export function NetZeroCelebration() {
+  const reduced = useReducedMotion();
   return (
     <motion.div
       className="absolute inset-0 pointer-events-none overflow-hidden"
@@ -13,59 +17,63 @@ export function NetZeroCelebration() {
       {/* Golden glow overlay */}
       <motion.div
         className="absolute inset-0 bg-gradient-radial from-yellow-400/20 via-amber-300/10 to-transparent"
-        animate={{
-          opacity: [0.4, 0.7, 0.4],
-          scale: [1, 1.05, 1],
-        }}
-        transition={{
-          duration: 4,
-          repeat: Infinity,
-          ease: 'easeInOut' as const,
-        }}
+        animate={reduced ? { opacity: 0.55 } : { opacity: [0.4, 0.7, 0.4], scale: [1, 1.05, 1] }}
+        transition={
+          reduced
+            ? { duration: 0 }
+            : {
+                duration: 4,
+                repeat: Infinity,
+                ease: 'easeInOut' as const,
+              }
+        }
       />
 
       {/* Sparkle particles raining down */}
-      {[...Array(20)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute"
-          style={{
-            left: `${5 + i * 4.5}%`,
-            top: '-5%',
-          }}
-          initial={{ y: 0, opacity: 0 }}
-          animate={{
-            y: ['0%', '120%'],
-            opacity: [0, 1, 1, 0],
-            rotate: [0, 180, 360],
-          }}
-          transition={{
-            duration: 3 + Math.random() * 2,
-            delay: i * 0.2,
-            repeat: Infinity,
-            ease: 'linear' as const,
-          }}
-        >
-          <svg width="12" height="12" viewBox="0 0 12 12">
-            <path d="M6 0 L7 5 L12 6 L7 7 L6 12 L5 7 L0 6 L5 5 Z" fill="#fbbf24" opacity="0.8" />
-          </svg>
-        </motion.div>
-      ))}
+      {!reduced &&
+        [...Array(20)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute"
+            style={{
+              left: `${5 + i * 4.5}%`,
+              top: '-5%',
+            }}
+            initial={{ y: 0, opacity: 0 }}
+            animate={{
+              y: ['0%', '120%'],
+              opacity: [0, 1, 1, 0],
+              rotate: [0, 180, 360],
+            }}
+            transition={{
+              duration: 3 + Math.random() * 2,
+              delay: i * 0.2,
+              repeat: Infinity,
+              ease: 'linear' as const,
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12">
+              <path d="M6 0 L7 5 L12 6 L7 7 L6 12 L5 7 L0 6 L5 5 Z" fill="#fbbf24" opacity="0.8" />
+            </svg>
+          </motion.div>
+        ))}
 
       {/* Center burst effect */}
-      <motion.div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: [0, 1.5, 0], opacity: [0, 0.6, 0] }}
-        transition={{
-          duration: 2,
-          repeat: Infinity,
-          repeatDelay: 3,
-          ease: 'easeOut' as const,
-        }}
-      >
-        <div className="w-64 h-64 rounded-full bg-gradient-radial from-yellow-300/40 to-transparent" />
-      </motion.div>
+      {!reduced && (
+        <motion.div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: [0, 1.5, 0], opacity: [0, 0.6, 0] }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            repeatDelay: 3,
+            ease: 'easeOut' as const,
+          }}
+        >
+          <div className="w-64 h-64 rounded-full bg-gradient-radial from-yellow-300/40 to-transparent" />
+        </motion.div>
+      )}
 
       {/* The "Zero-carbon power right now" badge is rendered by the hero HUD
                 (ZeroCarbonBadge, below the band label) so it can't cover the location
@@ -75,12 +83,18 @@ export function NetZeroCelebration() {
 }
 
 /**
- * "Zero-carbon power right now" badge. Same look as before; it now sits in the
+ * Zero-carbon badge (text: zeroCarbonBadgeText, BH-30). Same look as before; it now sits in the
  * hero HUD's normal flow (IntensityHeroOverlay) instead of absolutely at the top
  * of the scene, where it covered the location header. Final placement/style is
  * GridSense Design's (home-screen mockups).
  */
-export function ZeroCarbonBadge() {
+export function ZeroCarbonBadge({
+  isRegional = true,
+  tone = 'cheeky',
+}: {
+  isRegional?: boolean;
+  tone?: CommentaryTone;
+}) {
   return (
     <motion.div
       className="mt-2 flex justify-center"
@@ -98,7 +112,7 @@ export function ZeroCarbonBadge() {
             clipRule="evenodd"
           />
         </svg>
-        <span className="font-semibold">Zero-carbon power right now</span>
+        <span className="font-semibold">{zeroCarbonBadgeText(isRegional, tone)}</span>
       </div>
     </motion.div>
   );

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { londonDateKey } from '@/lib/londonTime';
 import { MixItem } from '@/lib/generationUtils';
 
 const HISTORY_KEY = 'fuel-history-v1';
@@ -33,7 +34,7 @@ export function useFuelMilestones(mix: MixItem[]) {
   useEffect(() => {
     if (!mix || mix.length === 0) return;
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = londonDateKey(new Date());
 
     // Load existing history
     const stored = localStorage.getItem(HISTORY_KEY);
@@ -60,9 +61,7 @@ export function useFuelMilestones(mix: MixItem[]) {
       }
 
       // Prune old entries
-      const cutoffDate = new Date();
-      cutoffDate.setDate(cutoffDate.getDate() - HISTORY_DAYS);
-      const cutoffStr = cutoffDate.toISOString().split('T')[0];
+      const cutoffStr = londonDateKey(new Date(Date.now() - HISTORY_DAYS * 86_400_000));
       history[fuel] = history[fuel].filter((e) => e.date >= cutoffStr);
 
       // Calculate milestones

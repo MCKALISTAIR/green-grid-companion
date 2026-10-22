@@ -11,6 +11,8 @@ interface BestTimeCardProps {
   forecast: ForecastData[];
   /** Live intensity, so the worst-window card agrees with the now-or-wait card. */
   intensity?: number;
+  /** Half-hour start of the live reading; a stale one never gives a "use now". */
+  lastUpdated?: string | null;
 }
 
 export function BestTimeSlot({ forecast }: BestTimeCardProps) {
@@ -63,7 +65,7 @@ export function BestTimeSlot({ forecast }: BestTimeCardProps) {
   );
 }
 
-export function WorstTimeSlot({ forecast, intensity }: BestTimeCardProps) {
+export function WorstTimeSlot({ forecast, intensity, lastUpdated = null }: BestTimeCardProps) {
   const data = getBestWorstWindows(forecast);
   const now = new Date();
   const isNow = data ? now >= data.worstStart && now <= data.worstEnd : false;
@@ -76,7 +78,7 @@ export function WorstTimeSlot({ forecast, intensity }: BestTimeCardProps) {
   // much cleaner soon), don't tell people to avoid it.
   const nowAction =
     isNow && intensity && intensity > 0
-      ? getNowOrWaitDecision(intensity, forecast, now).action
+      ? getNowOrWaitDecision(intensity, forecast, now, lastUpdated).action
       : null;
   const title =
     isNow && nowAction === 'use_now' ? 'Dirtiest stretch of the forecast' : 'Avoid high usage';

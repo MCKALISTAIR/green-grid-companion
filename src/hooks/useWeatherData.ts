@@ -116,6 +116,21 @@ async function fetchWeather(lat: number, lon: number): Promise<WeatherData> {
 // Default UK coordinates (London) as fallback
 const DEFAULT_COORDS = { lat: 51.5074, lon: -0.1278 };
 
+// Default weather until the first response. Module-level so its identity is
+// stable: a fresh object per render re-fired every effect that depends on it.
+const defaultWeather: WeatherData = {
+  condition: 'clear',
+  temperature: 15,
+  humidity: 50,
+  windSpeed: 10,
+  cloudCover: 30,
+  isRaining: false,
+  isSnowing: false,
+  isFoggy: false,
+  isThunderstorm: false,
+  precipitationIntensity: 0,
+};
+
 export function useWeatherData(postcode?: string) {
   const [coords, setCoords] = useState<{ lat: number; lon: number } | null>(null);
   const [coordsError, setCoordsError] = useState<string | null>(null);
@@ -207,20 +222,6 @@ export function useWeatherData(postcode?: string) {
     refetchInterval: 1000 * 60 * 30, // 30 minutes
     retry: 2,
   });
-
-  // Return default weather if no data yet
-  const defaultWeather: WeatherData = {
-    condition: 'clear',
-    temperature: 15,
-    humidity: 50,
-    windSpeed: 10,
-    cloudCover: 30,
-    isRaining: false,
-    isSnowing: false,
-    isFoggy: false,
-    isThunderstorm: false,
-    precipitationIntensity: 0,
-  };
 
   return {
     weather: query.data ?? defaultWeather,

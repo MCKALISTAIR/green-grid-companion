@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface StarsProps {
   count?: number;
@@ -16,6 +17,7 @@ interface Star {
 }
 
 export function Stars({ count = 30, visibility = 1 }: StarsProps) {
+  const reduced = useReducedMotion();
   const stars = useMemo<Star[]>(() => {
     return Array.from({ length: count }, (_, i) => ({
       id: i,
@@ -45,16 +47,17 @@ export function Stars({ count = 30, visibility = 1 }: StarsProps) {
             width: star.size,
             height: star.size,
           }}
-          animate={{
-            opacity: [0.3, 1, 0.3],
-            scale: [0.8, 1.2, 0.8],
-          }}
-          transition={{
-            duration: star.duration,
-            delay: star.delay,
-            repeat: Infinity,
-            ease: 'easeInOut' as const,
-          }}
+          animate={reduced ? { opacity: 0.8 } : { opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }}
+          transition={
+            reduced
+              ? { duration: 0 }
+              : {
+                  duration: star.duration,
+                  delay: star.delay,
+                  repeat: Infinity,
+                  ease: 'easeInOut' as const,
+                }
+          }
         />
       ))}
     </motion.div>

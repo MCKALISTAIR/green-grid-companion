@@ -26,11 +26,10 @@ export function OctopusBenefitsIntro({ onContinue }: OctopusBenefitsIntroProps) 
           </div>
           <div className="space-y-1">
             <h3 className="font-display text-lg font-semibold text-foreground tracking-tight">
-              Prove your green shifts
+              Octopus Energy
             </h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Link Octopus to multiply your real half-hourly usage by grid intensity — then see
-              whether you used power at cleaner times.
+              See when you used power, from your meter.
             </p>
           </div>
         </div>
@@ -84,7 +83,7 @@ export function OctopusBenefitsIntro({ onContinue }: OctopusBenefitsIntroProps) 
               href="https://share.octopus.energy/light-sheep-695"
               target="_blank"
               rel="noreferrer"
-              className="underline font-medium text-primary hover:text-primary/80"
+              className="tap-target underline font-medium text-primary hover:text-primary/80"
             >
               Join with £50 free credit
             </a>

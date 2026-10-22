@@ -1,3 +1,4 @@
+import { parseRetryAfter, sendWithRetry, type RetryOptions } from './push-retry.ts';
 // Push Notification Utility for Deno Edge Functions
 // Supports APNs (Apple Push Notification service) and FCM v1 (Firebase Cloud Messaging)
 
@@ -156,12 +157,25 @@ export interface PushNotificationPayload {
   body: string;
   platform?: string; // 'ios' | 'android' | 'web'
   isSandbox?: boolean;
+  /** Optional caller key, echoed back in the delivery result. */
+  key?: string;
 }
 
-export async function sendPushNotifications(notifications: PushNotificationPayload[]) {
+export interface PushDeliveryResult {
+  key?: string;
+  token: string;
+  /** True when the provider accepted the message (or in console mock mode). */
+  delivered: boolean;
+  attempts: number;
+}
+
+export async function sendPushNotifications(
+  notifications: PushNotificationPayload[],
+  retryOptions: RetryOptions = {},
+): Promise<PushDeliveryResult[]> {
   if (!notifications || notifications.length === 0) {
     console.log('[PUSH] No notifications to send.');
-    return;
+    return [];
   }
 
   // Load APNs configuration
@@ -189,7 +203,7 @@ export async function sendPushNotifications(notifications: PushNotificationPaylo
         `[PUSH MOCK] To: ${n.token.substring(0, 10)}... | Title: "${n.title}" | Body: "${n.body}"`,
       );
     });
-    return;
+    return notifications.map((n) => ({ key: n.key, token: n.token, delivered: true, attempts: 0 }));
   }
 
   // Pre-generate tokens to avoid redundant crypto operations
@@ -216,7 +230,7 @@ export async function sendPushNotifications(notifications: PushNotificationPaylo
   const deadTokens: string[] = [];
 
   // Send notifications in parallel batches
-  const promises = notifications.map(async (n) => {
+  const promises = notifications.map(async (n): Promise<PushDeliveryResult> => {
     const platform = n.platform || 'ios';
 
     // Standard APNs path (if direct APNs is configured for iOS platform)
@@ -225,13 +239,16 @@ export async function sendPushNotifications(notifications: PushNotificationPaylo
       const apnsHost = isSandbox ? 'api.sandbox.push.apple.com' : 'api.push.apple.com';
       const url = `https://${apnsHost}/3/device/${n.token}`;
 
-      try {
+      // Same apns-id on every attempt: APNs de-duplicates a retried message it already accepted.
+      const apnsId = crypto.randomUUID();
+      const { result, attempts } = await sendWithRetry(async () => {
         const response = await fetch(url, {
           method: 'POST',
           headers: {
             authorization: `bearer ${apnsToken}`,
             'apns-topic': apnsBundleId,
             'apns-push-type': 'alert',
+            'apns-id': apnsId,
           },
           body: JSON.stringify({
             aps: {
@@ -243,27 +260,39 @@ export async function sendPushNotifications(notifications: PushNotificationPaylo
             },
           }),
         });
+        if (response.ok) return { kind: 'ok' } as const;
+        return {
+          kind: 'http',
+          status: response.status,
+          text: await response.text(),
+          retryAfterSec: parseRetryAfter(response.headers.get('retry-after')),
+        } as const;
+      }, retryOptions);
 
-        if (response.ok) {
-          console.log(
-            `[PUSH] Sent APNs notification successfully to ${n.token.substring(0, 10)}...`,
-          );
-        } else {
-          const text = await response.text();
-          console.error(
-            `[PUSH] Failed APNs send to ${n.token.substring(0, 10)}... Status: ${response.status}. Reason: ${text}`,
-          );
-          if (isDeadPushToken('apns', response.status, text)) deadTokens.push(n.token);
-        }
-      } catch (err) {
-        console.error(`[PUSH] APNs fetch error for ${n.token.substring(0, 10)}...`, err);
+      if (result.kind === 'ok') {
+        console.log(
+          `[PUSH] Sent APNs notification to ${n.token.substring(0, 10)}... (attempts: ${attempts})`,
+        );
+        return { key: n.key, token: n.token, delivered: true, attempts };
       }
+      if (result.kind === 'http') {
+        console.error(
+          `[PUSH] Failed APNs send to ${n.token.substring(0, 10)}... Status: ${result.status}. Reason: ${result.text} (attempts: ${attempts})`,
+        );
+        if (isDeadPushToken('apns', result.status, result.text)) deadTokens.push(n.token);
+      } else {
+        console.error(
+          `[PUSH] APNs fetch error for ${n.token.substring(0, 10)}... (attempts: ${attempts})`,
+          result.error,
+        );
+      }
+      return { key: n.key, token: n.token, delivered: false, attempts };
     }
     // Fallback to FCM for everything else, or if APNs is not configured
     else if (fcmConfigured && fcmAccessToken) {
       const url = `https://fcm.googleapis.com/v1/projects/${fcmProjectId}/messages:send`;
 
-      try {
+      const { result, attempts } = await sendWithRetry(async () => {
         const response = await fetch(url, {
           method: 'POST',
           headers: {
@@ -280,30 +309,44 @@ export async function sendPushNotifications(notifications: PushNotificationPaylo
             },
           }),
         });
+        if (response.ok) return { kind: 'ok' } as const;
+        return {
+          kind: 'http',
+          status: response.status,
+          text: await response.text(),
+          retryAfterSec: parseRetryAfter(response.headers.get('retry-after')),
+        } as const;
+      }, retryOptions);
 
-        if (response.ok) {
-          console.log(
-            `[PUSH] Sent FCM notification successfully to ${n.token.substring(0, 10)}...`,
-          );
-        } else {
-          const text = await response.text();
-          console.error(
-            `[PUSH] Failed FCM send to ${n.token.substring(0, 10)}... Status: ${response.status}. Reason: ${text}`,
-          );
-          if (isDeadPushToken('fcm', response.status, text)) deadTokens.push(n.token);
-        }
-      } catch (err) {
-        console.error(`[PUSH] FCM fetch error for ${n.token.substring(0, 10)}...`, err);
+      if (result.kind === 'ok') {
+        console.log(
+          `[PUSH] Sent FCM notification to ${n.token.substring(0, 10)}... (attempts: ${attempts})`,
+        );
+        return { key: n.key, token: n.token, delivered: true, attempts };
       }
+      if (result.kind === 'http') {
+        console.error(
+          `[PUSH] Failed FCM send to ${n.token.substring(0, 10)}... Status: ${result.status}. Reason: ${result.text} (attempts: ${attempts})`,
+        );
+        if (isDeadPushToken('fcm', result.status, result.text)) deadTokens.push(n.token);
+      } else {
+        console.error(
+          `[PUSH] FCM fetch error for ${n.token.substring(0, 10)}... (attempts: ${attempts})`,
+          result.error,
+        );
+      }
+      return { key: n.key, token: n.token, delivered: false, attempts };
     } else {
       console.warn(
         `[PUSH] No delivery pathway configured for platform ${platform} and token ${n.token.substring(0, 10)}...`,
       );
+      return { key: n.key, token: n.token, delivered: false, attempts: 0 };
     }
   });
 
-  await Promise.all(promises);
+  const results: PushDeliveryResult[] = await Promise.all(promises);
 
   // Clean up subscriptions for uninstalled apps / revoked permissions.
   await removeDeadPushTokens(deadTokens, deleteSubscriptionsByToken);
+  return results;
 }

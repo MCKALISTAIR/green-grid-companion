@@ -1,4 +1,4 @@
-import { format } from 'date-fns';
+import { formatLondonTime, formatLondonWeekday } from '@/lib/londonTime';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
@@ -39,10 +39,10 @@ export function GreenerNightsCard() {
             >
               <div className="flex flex-col">
                 <span className="font-medium text-sm">
-                  {idx === 0 && isCrown ? 'Tonight' : format(from, 'EEEE')} Night
+                  {idx === 0 && isCrown ? 'Tonight' : formatLondonWeekday(from)} Night
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {format(from, 'HH:mm')} - 06:00
+                  {formatLondonTime(from)} - 06:00
                 </span>
               </div>
 
