@@ -1,5 +1,12 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
+import {
+  londonHour,
+  londonMonthBounds,
+  londonParts,
+  londonWeekOfMonth,
+  previousLondonMonth,
+} from '../_shared/london-month.ts';
 import { sendPushNotifications } from '../_shared/push.ts';
 import {
   type MeterLink,
@@ -76,11 +83,6 @@ function getIntensityEmoji(avgIntensity: number): string {
   return '💨';
 }
 
-function getWeekOfMonth(date: Date): number {
-  const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
-  return Math.ceil((date.getDate() + firstDay.getDay()) / 7);
-}
-
 // Scheduler secret lives in the database (see 20261003120000 migration);
 // read with the service role and cached per instance.
 const getSchedulerSecret = createSchedulerSecretProvider(() =>
@@ -110,9 +112,9 @@ Deno.serve(async (req) => {
 
     // Get current date info
     const now = new Date();
-    const currentDay = now.getUTCDate();
-    const lastMonth = now.getUTCMonth() === 0 ? 11 : now.getUTCMonth() - 1;
-    const lastMonthYear = now.getUTCMonth() === 0 ? now.getUTCFullYear() - 1 : now.getUTCFullYear();
+    // BH-71: day and month by the London calendar, not UTC.
+    const currentDay = londonParts(now).day;
+    const { year: lastMonthYear, month: lastMonth } = previousLondonMonth(now);
 
     console.log(
       `Monthly Report - Running on day ${currentDay} for ${getMonthName(
@@ -135,8 +137,11 @@ Deno.serve(async (req) => {
     console.log(`Found ${subscriptions?.length || 0} subscriptions for monthly report`);
 
     // Calculate date range for last month
-    const monthStart = new Date(lastMonthYear, lastMonth, 1);
-    const monthEnd = new Date(lastMonthYear, lastMonth + 1, 0, 23, 59, 59);
+    // BH-71: London midnight on the 1st to London midnight on the next 1st.
+    const { start: monthStart, endExclusive: monthEnd } = londonMonthBounds(
+      lastMonthYear,
+      lastMonth,
+    );
 
     const notifications: Array<{
       token: string;
@@ -177,7 +182,7 @@ Deno.serve(async (req) => {
       .select('*')
       .in('mpan', allMpans.length ? allMpans : ['__none__'])
       .gte('interval_start', monthStart.toISOString())
-      .lte('interval_start', monthEnd.toISOString())
+      .lt('interval_start', monthEnd.toISOString())
       .order('interval_start', { ascending: true });
 
     if (footprintError) {
@@ -204,7 +209,7 @@ Deno.serve(async (req) => {
 
       for (const record of (footprint || []) as FootprintRecord[]) {
         const recordDate = new Date(record.interval_start);
-        const weekNum = getWeekOfMonth(recordDate);
+        const weekNum = londonWeekOfMonth(recordDate);
 
         totalCarbonG += Number(record.carbon_g);
         totalKwh += Number(record.consumption_kwh);
@@ -272,7 +277,7 @@ Deno.serve(async (req) => {
       // Find best time of day
       const hourlyUsage: Record<number, { count: number; avgIntensity: number }> = {};
       for (const record of (footprint || []) as FootprintRecord[]) {
-        const hour = new Date(record.interval_start).getUTCHours();
+        const hour = londonHour(new Date(record.interval_start));
         if (!hourlyUsage[hour]) {
           hourlyUsage[hour] = { count: 0, avgIntensity: 0 };
         }
