@@ -67,7 +67,7 @@ describe('OfflineIndicator offline banner (Design state 12)', () => {
     expect(banner).toHaveTextContent("You're offline.");
     expect(banner).toHaveTextContent('We will refresh automatically when you are back online.');
     fireEvent.click(screen.getByRole('button', { name: 'Try now' }));
-    expect(refetch).toHaveBeenCalledWith({ type: 'active' });
+    expect(refetch).toHaveBeenCalledWith({ type: 'active' }, { cancelRefetch: false });
     await act(async () => {
       window.dispatchEvent(new Event('online'));
     });
