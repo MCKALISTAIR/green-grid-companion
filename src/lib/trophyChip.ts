@@ -15,27 +15,30 @@ export const BADGE_SEEN_PATHS = ['/achievements', '/map'];
 
 type Unlock = { unlocked: boolean; unlockedAt?: string };
 
-export function hasUnseenBadge(achievements: Unlock[], seenAt: string | null): boolean {
-  const newest = achievements
+/** How many unlocked badges are newer than the last Trophy Room visit. */
+export function countUnseenBadges(achievements: Unlock[], seenAt: string | null): number {
+  const seen = seenAt ? Date.parse(seenAt) : NaN;
+  return achievements
     .filter((a) => a.unlocked && a.unlockedAt)
     .map((a) => Date.parse(a.unlockedAt as string))
     .filter(Number.isFinite)
-    .sort((a, b) => b - a)[0];
-  if (newest === undefined) return false;
-  const seen = seenAt ? Date.parse(seenAt) : NaN;
-  return !(Number.isFinite(seen) && seen >= newest);
+    .filter((t) => !(Number.isFinite(seen) && seen >= t)).length;
+}
+
+export function hasUnseenBadge(achievements: Unlock[], seenAt: string | null): boolean {
+  return countUnseenBadges(achievements, seenAt) > 0;
 }
 
 export function getTrophySeenAt(): string | null {
   return appStorage.getItem(TROPHY_SEEN_KEY);
 }
 
-function readUnseen(): boolean {
+function readUnseenCount(): number {
   try {
     const raw = appStorage.getItem(ACHIEVEMENTS_KEY);
-    return hasUnseenBadge(raw ? (JSON.parse(raw) as Unlock[]) : [], getTrophySeenAt());
+    return countUnseenBadges(raw ? (JSON.parse(raw) as Unlock[]) : [], getTrophySeenAt());
   } catch {
-    return false;
+    return 0;
   }
 }
 
@@ -52,9 +55,14 @@ export function notifyBadgesChanged(): void {
 
 /** Live "is there an unseen badge?" for the pill and the Rank-tab dot. */
 export function useUnseenBadge(): boolean {
-  const [unseen, setUnseen] = useState(readUnseen);
+  return useUnseenBadgeCount() > 0;
+}
+
+/** Live count of unseen badges (the compact pill's count dot). */
+export function useUnseenBadgeCount(): number {
+  const [unseen, setUnseen] = useState(readUnseenCount);
   useEffect(() => {
-    const update = () => setUnseen(readUnseen());
+    const update = () => setUnseen(readUnseenCount());
     window.addEventListener(EVENT, update);
     window.addEventListener('storage', update);
     return () => {

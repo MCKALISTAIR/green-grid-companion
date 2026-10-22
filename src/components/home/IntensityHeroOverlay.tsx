@@ -16,7 +16,8 @@ import { cn } from '@/lib/utils';
 import { getConditionLabel, getConditionParts } from '@/lib/conditionLabels';
 import { formatLondonTime } from '@/lib/londonTime';
 import { useEnergyFacts } from '@/hooks/useEnergyFacts';
-import { useUnseenBadge } from '@/lib/trophyChip';
+import { useUnseenBadgeCount } from '@/lib/trophyChip';
+import { useHeroTopRowFit } from '@/hooks/useHeroTopRowFit';
 import { useTimeOfDay } from '@/hooks/useTimeOfDay';
 import { getCleanlinessBand } from '@/hooks/useCleanlinessBand';
 import type { GenerationMix } from '@/lib/carbonApi';
@@ -79,7 +80,16 @@ export function IntensityHeroOverlay({
 }: IntensityHeroOverlayProps) {
   const { tone } = useEnergyFacts();
   // "New badge" pill only while an unseen badge exists (hero-v2 §4).
-  const showTrophyChip = useUnseenBadge();
+  const unseenBadges = useUnseenBadgeCount();
+  const showTrophyChip = unseenBadges > 0;
+  // Design: the top row never wraps or truncates. If the full pill, location
+  // chip and GB-average dot don't all fit, the pill collapses to icon + count.
+  const {
+    rowRef,
+    pillSlotRef,
+    measureRef,
+    compact: compactBadge,
+  } = useHeroTopRowFit(showTrophyChip, [region, isLoading, usingNationalFallback]);
   const { timeOfDay } = useTimeOfDay();
   const { weather } = useWeatherData();
   // AA: ink on light skies, white on dark skies (art pass v1 §3).
@@ -162,17 +172,47 @@ export function IntensityHeroOverlay({
         </div>
 
         {showTrophyChip && (
-          <div className="absolute top-[calc(max(env(safe-area-inset-top),24px)+0.5rem)] right-4 z-30 lg:top-6 lg:right-6">
-            {/* A single link (was <a><button>, a nested-interactive a11y failure). */}
-            <Link
-              to="/achievements"
-              data-testid="new-badge-pill"
-              className="flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full bg-white px-3.5 text-[13px] max-[359px]:gap-1 max-[359px]:px-3 max-[359px]:text-xs font-bold leading-none text-[#0f1a24] shadow-md transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f1a24] focus-visible:ring-offset-2"
-              aria-label="New badge: open the Trophy Room"
+          <div
+            ref={pillSlotRef}
+            className="absolute top-[calc(max(env(safe-area-inset-top),24px)+0.5rem)] right-4 z-30 lg:top-6 lg:right-6"
+          >
+            {/* Off-screen copy of the full pill, measured to decide on collapse. */}
+            <span
+              ref={measureRef}
+              aria-hidden="true"
+              className="pointer-events-none invisible absolute right-0 top-0 flex min-h-11 items-center gap-1.5 whitespace-nowrap px-3.5 text-[13px] font-bold leading-none"
             >
-              <Trophy className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <Trophy className="h-4 w-4 shrink-0" />
               <span>New badge</span>
-            </Link>
+            </span>
+            {/* A single link (was <a><button>, a nested-interactive a11y failure). */}
+            {compactBadge ? (
+              <Link
+                to="/achievements"
+                data-testid="new-badge-pill"
+                data-compact="true"
+                className="relative flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#0f1a24] shadow-md transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f1a24] focus-visible:ring-offset-2"
+                aria-label={`New badge, ${unseenBadges} unseen`}
+              >
+                <Trophy className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <span
+                  aria-hidden="true"
+                  className="absolute right-0.5 top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#d93a2b] px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white"
+                >
+                  {unseenBadges > 9 ? '9+' : unseenBadges}
+                </span>
+              </Link>
+            ) : (
+              <Link
+                to="/achievements"
+                data-testid="new-badge-pill"
+                className="flex min-h-11 min-w-11 items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-white px-3.5 text-[13px] font-bold leading-none text-[#0f1a24] shadow-md transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f1a24] focus-visible:ring-offset-2"
+                aria-label="New badge: open the Trophy Room"
+              >
+                <Trophy className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <span>New badge</span>
+              </Link>
+            )}
           </div>
         )}
       </ComponentErrorBoundary>
@@ -215,11 +255,15 @@ export function IntensityHeroOverlay({
 
           <div className="relative flex flex-col items-center text-center w-full max-w-[22rem] min-[540px]:max-w-[40rem] px-4 pointer-events-none">
             <div
+              ref={rowRef}
               className={cn(
-                'lg:hidden mb-2 sm:mb-3 flex items-center justify-center',
-                // With the pill top-right, the chip moves left and narrows to clear it.
+                'lg:hidden mb-2 sm:mb-3 flex flex-nowrap items-center justify-center',
+                // With the pill top-right, the chip moves left and keeps its full
+                // name; the pill collapses instead (useHeroTopRowFit).
+                // 5.25rem = 1rem side + 0.5rem gap + 44px compact pill + 1rem side: a
+                // last-resort cap for names too long even beside the compact pill.
                 showTrophyChip
-                  ? 'self-start max-w-[calc(100vw-13rem)] max-[359px]:max-w-[calc(100vw-10rem)]'
+                  ? 'self-start max-w-[calc(100vw-5.25rem)]'
                   : 'max-w-[calc(100vw-8.5rem)]',
               )}
               data-testid="hero-location"
@@ -235,7 +279,11 @@ export function IntensityHeroOverlay({
                     title={region || undefined}
                   >
                     <MapPin className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
-                    <span className={usingNationalFallback ? 'whitespace-nowrap' : 'truncate'}>
+                    <span
+                      className={
+                        usingNationalFallback && !showTrophyChip ? 'whitespace-nowrap' : 'truncate'
+                      }
+                    >
                       {isLoading ? 'Loading…' : region || 'Select location'}
                     </span>
                     {isBackgroundFetching ? (
