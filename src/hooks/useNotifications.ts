@@ -7,6 +7,14 @@ import { Capacitor } from '@capacitor/core';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
 import { londonDateKey } from '@/lib/londonTime';
+import {
+  isServerOutlookActive,
+  readServerOutlook,
+  syncDailyOutlookSubscription,
+  type ServerOutlookConfirmation,
+} from '@/lib/dailyOutlookServer';
+import { getNativePushToken } from '@/lib/nativePushToken';
+import { supabase } from '@/integrations/supabase/client';
 import { readTone } from '@/lib/tone';
 import {
   cleanWindowNotification,
@@ -95,6 +103,10 @@ export function useNotifications() {
   });
 
   const isNative = Capacitor.isNativePlatform();
+  // BH-73: set once the server confirms it will send the daily outlook.
+  const [serverOutlook, setServerOutlook] = useState<ServerOutlookConfirmation | null>(() =>
+    readServerOutlook(),
+  );
   // Allow notifications on web if supported
   const isSupported = isNative || (typeof window !== 'undefined' && 'Notification' in window);
 
@@ -276,8 +288,53 @@ export function useNotifications() {
     [prefs.lowIntensityThreshold],
   );
 
+  // BH-73: keep the server subscription in step with the switch and time.
+  // Debounced so typing in the time field sends one request.
+  useEffect(() => {
+    if (!isNative) return;
+    if (prefs.dailyForecastEnabled && permissionStatus !== 'granted') return;
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const result = await syncDailyOutlookSubscription({
+        enabled: prefs.dailyForecastEnabled,
+        time: prefs.dailyForecastTime,
+        postcode: appStorage.getItem('gridgreen-postcode'),
+        getToken: () => getNativePushToken(),
+        platform: Capacitor.getPlatform(),
+        isSandbox: import.meta.env.DEV,
+        baseUrl: import.meta.env.VITE_SUPABASE_URL,
+        apiKey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        accessToken: session?.access_token ?? null,
+      });
+      if (cancelled) return;
+      logger.info('Daily outlook server subscription', { status: result.status });
+      setServerOutlook(result.confirmation);
+    }, 800);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [isNative, permissionStatus, prefs.dailyForecastEnabled, prefs.dailyForecastTime]);
+
   const scheduleDailyForecast = useCallback(
     async (forecast: ForecastData[]) => {
+      // BH-73: never both. Once the server is confirmed for this time, drop
+      // the phone-scheduled copy.
+      if (
+        isServerOutlookActive(serverOutlook, {
+          dailyForecastEnabled: prefs.dailyForecastEnabled,
+          dailyForecastTime: prefs.dailyForecastTime,
+        })
+      ) {
+        await LocalNotifications.cancel({
+          notifications: [{ id: NOTIFICATION_IDS.DAILY_FORECAST }],
+        }).catch(() => {});
+        logger.info('Daily forecast sent by server; phone copy skipped');
+        return;
+      }
       if (!prefs.dailyForecastEnabled || permissionStatus !== 'granted') {
         logger.info('Daily forecast not scheduled', {
           enabled: prefs.dailyForecastEnabled,
@@ -328,6 +385,7 @@ export function useNotifications() {
     [
       prefs.dailyForecastEnabled,
       prefs.dailyForecastTime,
+      serverOutlook,
       permissionStatus,
       generateForecastSummary,
     ],
@@ -534,6 +592,7 @@ export function useNotifications() {
     updatePreference,
     scheduleGreenAlerts,
     scheduleDailyForecast,
+    dailyOutlookViaServer: isServerOutlookActive(serverOutlook, prefs),
     scheduleHighIntensityAlerts,
     digestDeliveryAvailable: DIGEST_DELIVERY_AVAILABLE,
     highIntensityBounds: { min: HIGH_INTENSITY_MIN, max: HIGH_INTENSITY_MAX },
