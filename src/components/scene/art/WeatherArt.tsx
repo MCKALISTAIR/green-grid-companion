@@ -124,7 +124,7 @@ export function CloudBank({ night = false }: { night?: boolean }) {
   const [front, back] = night ? CLOUD_BANK_COLOURS.night : CLOUD_BANK_COLOURS.day;
   return (
     <svg
-      className="absolute inset-x-0 top-0 w-full h-[40%] art-drift-slow"
+      className="absolute inset-x-0 top-0 w-full h-[40%]"
       viewBox="0 0 400 120"
       preserveAspectRatio="none"
       aria-hidden="true"

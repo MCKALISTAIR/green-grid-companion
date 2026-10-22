@@ -1411,14 +1411,6 @@ body {
     transform: scale(1.02);
   }
 }
-@keyframes art-drift {
-  from {
-    transform: translateX(-10%);
-  }
-  to {
-    transform: translateX(10%);
-  }
-}
 @keyframes art-rain {
   from {
     transform: translateY(-12px);
@@ -1453,12 +1445,6 @@ body {
   transform-origin: center;
   animation: art-breathe 6s cubic-bezier(0.2, 0.7, 0.2, 1) infinite;
 }
-.art-drift {
-  animation: art-drift var(--art-drift, 120s) linear infinite alternate;
-}
-.art-drift-slow {
-  animation: art-drift 180s linear infinite alternate;
-}
 .art-rain {
   animation: art-rain 900ms linear infinite;
 }
@@ -1476,8 +1462,6 @@ body {
 }
 @media (prefers-reduced-motion: reduce) {
   .art-breathe,
-  .art-drift,
-  .art-drift-slow,
   .art-rain,
   .art-wind,
   .art-undulate {

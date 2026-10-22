@@ -152,7 +152,8 @@ function cloudPalette(timeOfDay: TimeOfDay | undefined, isNight: boolean) {
   return CLOUD_COLOURS.day;
 }
 
-/** Light cloud (40-70%): ceil(cover/25) flat-based clouds drifting 90-140s. */
+/** Light cloud (40-70%): ceil(cover/25) flat-based clouds. Full scene-width
+ * drift from main (#133, `animate-cloud-drift`); static under reduced motion. */
 function WeatherClouds({
   cloudCover,
   isNight,
@@ -169,9 +170,11 @@ function WeatherClouds({
       Array.from({ length: cloudCount }, (_, i) => ({
         id: i,
         top: 14 + (i % 3) * 9,
-        left: [6, 58, 30, 78][i % 4],
+        // Static spot under reduced motion; the drift keyframes override `left`.
+        left: 8 + ((i * 31) % 70),
         scale: [0.8, 0.6, 0.7, 0.55][i % 4],
-        duration: 90 + i * 15,
+        duration: 30 + i * 5,
+        delay: -i * 8,
       })),
     [cloudCount],
   );
@@ -180,15 +183,14 @@ function WeatherClouds({
       {clouds.map((c) => (
         <motion.div
           key={c.id}
-          className="absolute art-drift"
+          className="absolute animate-cloud-drift"
           data-art-cloud
-          style={
-            {
-              top: `${c.top}%`,
-              left: `${c.left}%`,
-              '--art-drift': `${c.duration}s`,
-            } as React.CSSProperties
-          }
+          style={{
+            top: `${c.top}%`,
+            left: `${c.left}%`,
+            animationDuration: `${c.duration}s`,
+            animationDelay: `${c.delay}s`,
+          }}
           initial={{ opacity: 0 }}
           animate={{ opacity: isNight ? 0.85 : 0.95 }}
           transition={{ duration: 1.2 }}
