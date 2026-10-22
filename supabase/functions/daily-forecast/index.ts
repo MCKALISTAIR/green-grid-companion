@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
 import { sendPushNotifications } from '../_shared/push.ts';
+import { formatUKTime, isTomorrowUK } from '../_shared/uk-time.ts';
 import {
   verifySchedulerRequest,
   cronAuthErrorResponse,
@@ -10,9 +11,9 @@ import {
 } from '../_shared/cron-auth.ts';
 import {
   claimSubscriptionsForPeriod,
-  ukDatePeriodKey,
   type NotificationLogClient,
 } from '../_shared/notification-periods.ts';
+import { londonWallClock, selectDueSubscriptions } from '../_shared/daily-forecast-schedule.ts';
 
 interface ForecastData {
   from: string;
@@ -89,31 +90,23 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get current time in UK timezone
+    // BH-69/70: cron runs every 15 min; pick subscriptions whose London wall
+    // time has passed (first run at or after it), with per-day claims below.
     const now = new Date();
     const ukOffset = getUKOffset(now);
-    const ukHour = (now.getUTCHours() + ukOffset) % 24;
-    const ukMinute = now.getUTCMinutes();
-    const currentHour = ukHour.toString().padStart(2, '0');
+    const wall = londonWallClock(now);
 
-    // Get subscriptions that should receive daily forecast this hour
     const { data: allSubscriptions, error: subError } = await supabase
       .from('push_subscriptions')
       .select('*')
-      .eq('daily_forecast_enabled', true)
-      .gte('daily_forecast_time', `${currentHour}:00`)
-      .lt('daily_forecast_time', `${currentHour}:59`);
+      .eq('daily_forecast_enabled', true);
 
     if (subError) {
       throw subError;
     }
 
-    // Filter to only include subscriptions where the scheduled minute has passed
-    const subscriptions =
-      allSubscriptions?.filter((sub) => {
-        const [, minute] = sub.daily_forecast_time.split(':');
-        return parseInt(minute) <= ukMinute;
-      }) || [];
+    const dueBySlot = selectDueSubscriptions((allSubscriptions || []) as PushSubscription[], now);
+    const subscriptions = dueBySlot.map((d) => d.sub);
 
     const notifications: Array<{
       token: string;
@@ -178,34 +171,27 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Helper: format time in UK timezone and add "tomorrow" if needed
-    function formatUKTime(isoStr: string): string {
-      const d = new Date(isoStr);
-      const ukH = (d.getUTCHours() + ukOffset) % 24;
-      const ukM = d.getUTCMinutes();
-      return `${ukH.toString().padStart(2, '0')}:${ukM.toString().padStart(2, '0')}`;
-    }
+    // BH-33: format each slot in Europe/London (per-slot offset, DST-safe).
+    const isTomorrowSlot = (isoStr: string) => isTomorrowUK(isoStr, now);
 
-    function isTomorrowSlot(isoStr: string): boolean {
-      const d = new Date(isoStr);
-      // Adjust to UK date
-      const ukDate = new Date(d.getTime() + ukOffset * 60 * 60 * 1000);
-      const nowUK = new Date(now.getTime() + ukOffset * 60 * 60 * 1000);
-      return (
-        ukDate.getUTCDate() !== nowUK.getUTCDate() || ukDate.getUTCMonth() !== nowUK.getUTCMonth()
+    // Idempotency: claim each subscription for its slot's London date before
+    // sending, so a repeated hour (25 Oct) or replayed run never sends twice.
+    const periodKey = wall.date;
+    const byPeriod = new Map<string, string[]>();
+    for (const d of dueBySlot) {
+      byPeriod.set(d.periodKey, [...(byPeriod.get(d.periodKey) ?? []), d.sub.id]);
+    }
+    const claimed = new Set<string>();
+    for (const [key, ids] of byPeriod) {
+      const got = await claimSubscriptionsForPeriod(
+        supabase as unknown as NotificationLogClient,
+        'daily-forecast',
+        key,
+        ids,
       );
+      got.forEach((id) => claimed.add(id));
     }
-
-    // Idempotency: claim each subscription for today's UK date before sending
-    // so a duplicate/replayed run never sends the same outlook twice.
-    const periodKey = ukDatePeriodKey(now, ukOffset);
-    const claimed = await claimSubscriptionsForPeriod(
-      supabase as unknown as NotificationLogClient,
-      'daily-forecast',
-      periodKey,
-      (subscriptions as PushSubscription[]).map((s) => s.id),
-    );
-    const dueSubscriptions = (subscriptions as PushSubscription[]).filter((s) => claimed.has(s.id));
+    const dueSubscriptions = subscriptions.filter((s) => claimed.has(s.id));
     console.log(
       `Daily forecast ${periodKey}: ${dueSubscriptions.length} due, ${subscriptions.length - dueSubscriptions.length} already sent`,
     );
@@ -277,7 +263,7 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        ukTime: `${currentHour}:${ukMinute.toString().padStart(2, '0')}`,
+        ukTime: `${String(Math.floor(wall.minutes / 60)).padStart(2, '0')}:${String(wall.minutes % 60).padStart(2, '0')}`,
         isDST: ukOffset === 1,
         checked: allSubscriptions?.length || 0,
         filtered: subscriptions.length,

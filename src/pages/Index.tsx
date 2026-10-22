@@ -43,6 +43,7 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { createHorizontalStateVariants, stateTransition } from '@/lib/motion';
 
 import { formatLondonTime } from '@/lib/londonTime';
+import { signalFirstContent } from '@/lib/firstContent';
 
 const DASHBOARD_VIEWS: DashboardViewMode[] = ['intensity', 'demand', 'footprint'];
 
@@ -100,6 +101,8 @@ const Index = () => {
     isLoading,
     isBackgroundFetching,
     isDegraded,
+    usingNationalFallback,
+    fallbackRegionName,
     offGridArea: offGrid,
     isError,
     hasReading,
@@ -114,6 +117,12 @@ const Index = () => {
   const { isOffline } = useOffline();
   const showLastKnown =
     hasReading && (isError || isOffline || isReadingStale(lastUpdated ?? undefined));
+
+  // Splash fades as soon as the home screen has something real to show
+  // (a reading from cache or network, an off-grid notice, or an error state).
+  useEffect(() => {
+    if (!isLoading) signalFirstContent();
+  }, [isLoading]);
 
   const { frequency: gridFrequency } = useGridDemand();
   const renewablesPct = getRenewablesPercentage(generationMix);
@@ -242,6 +251,8 @@ const Index = () => {
               postcode={postcode}
               setPostcode={setPostcode}
               region={region}
+              usingNationalFallback={usingNationalFallback}
+              fallbackRegionName={fallbackRegionName}
               intensity={intensity}
               previousIntensity={previousIntensity}
               index={index}
@@ -311,6 +322,7 @@ const Index = () => {
               <div className="home-feed-fact px-1 pb-2 pt-0">
                 <EnergyFactBubble
                   intensity={intensity}
+                  hasReading={!isLoading && !isError}
                   generationMix={generationMix}
                   variant="plain"
                   className="mx-auto max-w-prose text-center"

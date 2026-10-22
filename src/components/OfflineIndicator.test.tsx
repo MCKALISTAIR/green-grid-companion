@@ -28,7 +28,7 @@ describe('OfflineIndicator back-online Refresh', () => {
       window.dispatchEvent(new Event('online'));
     });
     fireEvent.click(await screen.findByRole('button', { name: /refresh/i }));
-    expect(refetch).toHaveBeenCalledWith({ type: 'active' });
+    expect(refetch).toHaveBeenCalledWith({ type: 'active' }, { cancelRefetch: false });
     expect(reload).not.toHaveBeenCalled();
   });
 

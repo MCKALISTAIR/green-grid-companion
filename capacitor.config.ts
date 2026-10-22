@@ -27,6 +27,12 @@ const config: CapacitorConfig = {
       showSpinner: false,
     },
     StatusBar: {},
+    // BH-54: resize the body (not the whole WKWebView) when the keyboard opens, so
+    // fixed elements like the tab bar don't jump, and the page doesn't scroll behind it.
+    Keyboard: {
+      resize: 'body',
+      resizeOnFullScreen: true,
+    },
     SignInWithApple: {
       clientId: `${appId}.web`,
       redirectURI: `${appUrl}/auth/callback`,

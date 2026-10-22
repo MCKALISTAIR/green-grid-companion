@@ -263,7 +263,7 @@ export function DemandView() {
               case 'hydro':
                 return 'Renewable';
               case 'biomass':
-                return 'Kind of Renewable';
+                return 'Renewable, not zero carbon';
               case 'nuclear':
                 return 'Low Carbon';
               case 'gas':
@@ -350,7 +350,7 @@ export function DemandView() {
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-[240px] p-3 text-xs bg-card border-border z-50">
-                              <p className="font-semibold mb-1">Kind of Renewable?</p>
+                              <p className="font-semibold mb-1">Renewable, not zero carbon</p>
                               <p>
                                 Biomass is officially classified as a renewable energy source by
                                 grid standards since the organic matter burned can be replenished.
