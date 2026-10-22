@@ -54,7 +54,7 @@ export function IntensityDashboard({
 
   return (
     <div className="space-y-5">
-      <NowOrWaitDecision intensity={intensity} forecast={forecast} />
+      <NowOrWaitDecision intensity={intensity} forecast={forecast} lastUpdated={lastUpdated} />
 
       <GardenStageUpLine growthStage={growthStage} gardenDays={gardenDays} />
 
@@ -88,7 +88,12 @@ export function IntensityDashboard({
       {forecast.length > 0 && (
         <section className={cn('sheet-surface p-3', glowClass)} data-tour="forecast-chart">
           <ComponentErrorBoundary name="Hourly Forecast">
-            <ForecastChart forecast={forecast} showNext={24} currentIntensity={intensity} />
+            <ForecastChart
+              forecast={forecast}
+              showNext={24}
+              currentIntensity={intensity}
+              lastUpdated={lastUpdated}
+            />
           </ComponentErrorBoundary>
         </section>
       )}
@@ -96,7 +101,7 @@ export function IntensityDashboard({
       {forecast.length > 0 && (
         <Collapsible open={moreOpen} onOpenChange={setMoreOpen}>
           <CollapsibleTrigger
-            className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+            className="flex w-full min-h-11 items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
             aria-expanded={moreOpen}
           >
             <span>More insights</span>
@@ -106,7 +111,7 @@ export function IntensityDashboard({
           </CollapsibleTrigger>
           <CollapsibleContent className="space-y-3 pt-2 data-[state=open]:animate-in data-[state=closed]:animate-out">
             <ComponentErrorBoundary name="Worst Time">
-              <WorstTimeSlot forecast={forecast} intensity={intensity} />
+              <WorstTimeSlot forecast={forecast} intensity={intensity} lastUpdated={lastUpdated} />
             </ComponentErrorBoundary>
 
             <ComponentErrorBoundary name="Daily Forecast">

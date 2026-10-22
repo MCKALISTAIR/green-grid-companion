@@ -4,7 +4,7 @@
  * Anything that pops up over the app uninvited (the privacy choice, the
  * first-launch tips/tour, the notification ask, other one-off popovers) asks
  * this queue for a turn instead of showing itself. Only one is active at once,
- * picked by priority: consent > tips > other. An active overlay keeps its turn
+ * picked by priority: consent > location > tips > other. An active overlay keeps its turn
  * until it releases it; then the highest-priority waiting one goes next.
  *
  * Consent is special: while the user hasn't chosen yet (`setConsentPending`),
@@ -15,10 +15,12 @@
  * `useOverlayQueue()` / `useOverlayTurn()` in src/hooks/useOverlayQueue.ts.
  */
 
-export type OverlayKind = 'consent' | 'tips' | 'other';
+export type OverlayKind = 'consent' | 'location' | 'tips' | 'other';
 
 export const OVERLAY_PRIORITY: Record<OverlayKind, number> = {
   consent: 300,
+  // The location suggestion follows the privacy choice and goes before tips.
+  location: 250,
   tips: 200,
   other: 100,
 };

@@ -67,7 +67,6 @@ export default function MapPage() {
         <div className="page-shell-inner space-y-4">
           <PageHeader
             title="Leaderboard"
-            description="Regional carbon intensity ranking."
             actions={
               <Button
                 variant={showMap ? 'default' : 'outline'}

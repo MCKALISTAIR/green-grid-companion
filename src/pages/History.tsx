@@ -58,6 +58,12 @@ const itemVariants = {
 
 import { useHistoricalCarbon } from '@/hooks/useHistoricalCarbon';
 import {
+  formatLondonDayMonth,
+  formatLondonSlotTime,
+  londonDateKey,
+  pickedDateKey,
+} from '@/lib/londonTime';
+import {
   averageForecast,
   historyYAxisMax,
   isNearZeroRange,
@@ -67,6 +73,20 @@ import { IntensityScene } from '@/components/IntensityScene';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useAppLocation } from '@/contexts/LocationContext';
 import { PageHeader } from '@/components/layout/PageHeader';
+
+function RegionChip({ region, className }: { region?: string | null; className?: string }) {
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center rounded-full border border-border/60 bg-muted/40 px-2.5 py-0.5 text-xs font-medium text-muted-foreground',
+        className,
+      )}
+    >
+      <span className="sr-only">Carbon intensity over time for </span>
+      {region || 'National'}
+    </span>
+  );
+}
 
 export default function HistoryPage() {
   const { postcode } = useAppLocation();
@@ -174,7 +194,8 @@ export default function HistoryPage() {
         consumption: consumptionRecord ? consumptionRecord.consumption_kwh : null,
         carbonMass: consumptionRecord ? consumptionRecord.carbon_g : null,
         // 7d uses date-only ticks so label height stays stable vs 24h HH:mm.
-        formattedTime: format(itemDate, timeRange === '24h' ? 'HH:mm' : 'dd MMM'),
+        formattedTime:
+          timeRange === '24h' ? formatLondonSlotTime(itemDate) : formatLondonDayMonth(itemDate),
       };
     });
   }, [data, footprint, timeRange]);
@@ -204,9 +225,7 @@ export default function HistoryPage() {
         <div className="p-4 space-y-6 pt-[calc(max(env(safe-area-inset-top),59px)+2rem)]">
           <div>
             <h1 className="text-2xl font-bold">Grid History</h1>
-            <p className="text-muted-foreground">
-              {region || 'National'} carbon intensity over time.
-            </p>
+            <RegionChip region={region} />
           </div>
           <ErrorState
             title={errorInfo.title}
@@ -225,9 +244,7 @@ export default function HistoryPage() {
         <div className="p-4 space-y-6 pt-[calc(max(env(safe-area-inset-top),59px)+2rem)]">
           <div>
             <h1 className="text-2xl font-bold">Grid History</h1>
-            <p className="text-muted-foreground">
-              {region || 'National'} carbon intensity over time.
-            </p>
+            <RegionChip region={region} />
           </div>
           <EmptyState
             icon={BarChart3}
@@ -252,11 +269,7 @@ export default function HistoryPage() {
         <motion.div variants={itemVariants}>
           <PageHeader
             title={date ? 'Time Machine' : 'Grid History'}
-            description={
-              date
-                ? `Archives for ${format(date, 'MMMM do, yyyy')}`
-                : `${region || 'National'} carbon intensity over time.`
-            }
+            description={date ? `Archives for ${format(date, 'MMMM do, yyyy')}` : undefined}
             actions={
               <div className="flex items-center gap-2">
                 <Popover>
@@ -264,12 +277,19 @@ export default function HistoryPage() {
                     <Button
                       variant={'outline'}
                       className={cn(
-                        'justify-start text-left font-normal w-[240px]',
+                        'justify-start text-left font-normal min-h-11',
                         !date && 'text-muted-foreground',
                       )}
+                      aria-label={
+                        date
+                          ? `Viewing ${format(date, 'PPP')}. Pick a past date`
+                          : 'Pick a past date'
+                      }
                     >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {date ? format(date, 'PPP') : <span>Pick a past date</span>}
+                      <CalendarIcon className="mr-2 h-4 w-4" aria-hidden="true" />
+                      {date
+                        ? format(date, 'd MMM')
+                        : formatLondonDayMonth(new Date()).replace(/^0/, '')}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="end">
@@ -277,7 +297,9 @@ export default function HistoryPage() {
                       mode="single"
                       selected={date}
                       onSelect={setDate}
-                      disabled={(d) => d > new Date() || d < new Date('1900-01-01')}
+                      disabled={(d) =>
+                        pickedDateKey(d) > londonDateKey(new Date()) || d < new Date('1900-01-01')
+                      }
                       initialFocus
                     />
                   </PopoverContent>
@@ -297,6 +319,7 @@ export default function HistoryPage() {
               </div>
             }
           />
+          {!date && <RegionChip region={region} className="mt-2" />}
         </motion.div>
 
         <AnimatePresence mode="wait" initial={false}>
@@ -346,7 +369,7 @@ export default function HistoryPage() {
               exit="hidden"
               className="space-y-4"
             >
-              {showChartTip && (
+              {showChartTip && isLinked && (
                 <motion.div variants={itemVariants}>
                   <Card className="sheet-surface mb-4 bg-muted/30 border-dashed relative animate-in fade-in slide-in-from-top-2">
                     <Button
@@ -363,14 +386,6 @@ export default function HistoryPage() {
                         <Info className="w-4 h-4 text-primary shrink-0" />
                       </div>
                       <div className="text-sm space-y-1">
-                        <p className="font-semibold">Understanding the Graph</p>
-                        <p className="text-muted-foreground leading-relaxed">
-                          The <span className="font-medium text-foreground">solid line</span> shows{' '}
-                          {actualLabel === 'Estimate' ? "GridSense's estimate of past" : 'actual'}{' '}
-                          carbon intensity, while the{' '}
-                          <span className="font-medium text-foreground">dotted line</span> shows the
-                          forecast. Compare them to see how accurate the predictions were!
-                        </p>
                         {isLinked && (
                           <p className="text-muted-foreground leading-relaxed pt-1">
                             Yellow <span className="font-medium text-foreground">usage bars</span>{' '}
@@ -472,7 +487,7 @@ export default function HistoryPage() {
                       <span className="text-sm font-normal text-muted-foreground">gCO2/kWh</span>
                     </div>
                     <div className="text-xs text-muted-foreground mt-1">
-                      Last {timeRange === '7d' ? '7 Days' : '24 Hours'}
+                      {timeRange === '7d' ? '7 days' : '24h'}
                     </div>
                   </Card>
                 </motion.div>
