@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useOffline } from '@/hooks/useOffline';
+import { regionalFallbackMessage } from '@/lib/regionalFallback';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { LocationManager } from '@/components/LocationManager';
 import { AnimatedIntensity } from '@/components/AnimatedIntensity';
@@ -27,6 +28,9 @@ interface IntensityHeroOverlayProps {
   postcode: string;
   setPostcode: (value: string) => void;
   region: string | undefined;
+  /** BH-29: GB figure standing in for a missing regional one. */
+  usingNationalFallback?: boolean;
+  fallbackRegionName?: string;
   intensity: number;
   previousIntensity: number | null | undefined;
   index: string;
@@ -53,6 +57,8 @@ export function IntensityHeroOverlay({
   postcode,
   setPostcode,
   region,
+  usingNationalFallback = false,
+  fallbackRegionName,
   intensity,
   previousIntensity,
   index,
@@ -124,7 +130,7 @@ export function IntensityHeroOverlay({
     >
       <ComponentErrorBoundary name="Scene">
         <div
-          className="absolute top-6 left-6 z-30 hidden lg:block max-w-[calc(50%-13rem)]"
+          className="absolute top-6 left-6 z-30 hidden lg:flex items-center max-w-[calc(50%-13rem)]"
           data-testid="hero-location-desktop"
         >
           <LocationManager
@@ -136,7 +142,7 @@ export function IntensityHeroOverlay({
                 title={region || undefined}
               >
                 <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
-                <span className="truncate">
+                <span className={usingNationalFallback ? 'whitespace-nowrap' : 'truncate'}>
                   {isLoading ? 'Loading...' : region || 'Select location'}
                 </span>
                 {isBackgroundFetching ? (
@@ -147,6 +153,9 @@ export function IntensityHeroOverlay({
               </button>
             }
           />
+          {usingNationalFallback && !isLoading && (
+            <FallbackInfoDot message={regionalFallbackMessage(fallbackRegionName)} />
+          )}
         </div>
 
         <div className="absolute top-[calc(max(env(safe-area-inset-top),24px)+0.5rem)] right-4 z-30 lg:top-6 lg:right-6">
@@ -199,7 +208,7 @@ export function IntensityHeroOverlay({
 
           <div className="relative flex flex-col items-center text-center w-full max-w-[22rem] min-[540px]:max-w-[40rem] px-4 pointer-events-none">
             <div
-              className="lg:hidden mb-2 sm:mb-3 max-w-[calc(100vw-8.5rem)]"
+              className="lg:hidden mb-2 sm:mb-3 max-w-[calc(100vw-8.5rem)] flex items-center justify-center"
               data-testid="hero-location"
             >
               <LocationManager
@@ -213,7 +222,7 @@ export function IntensityHeroOverlay({
                     title={region || undefined}
                   >
                     <MapPin className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
-                    <span className="truncate">
+                    <span className={usingNationalFallback ? 'whitespace-nowrap' : 'truncate'}>
                       {isLoading ? 'Loading…' : region || 'Select location'}
                     </span>
                     {isBackgroundFetching ? (
@@ -224,6 +233,9 @@ export function IntensityHeroOverlay({
                   </Button>
                 }
               />
+              {usingNationalFallback && !isLoading && (
+                <FallbackInfoDot message={regionalFallbackMessage(fallbackRegionName)} />
+              )}
             </div>
 
             <div
@@ -341,7 +353,12 @@ export function IntensityHeroOverlay({
                   )}
                 </motion.div>
               )}
-              {showZeroCarbonBadge && <ZeroCarbonBadge />}
+              {showZeroCarbonBadge && (
+                <ZeroCarbonBadge
+                  tone={tone}
+                  isRegional={!!postcode && region !== 'National' && !region?.startsWith('GB')}
+                />
+              )}
             </div>
 
             {!isLoading && !isError && (
@@ -422,5 +439,28 @@ export function IntensityHeroOverlay({
         />
       </ComponentErrorBoundary>
     </div>
+  );
+}
+
+/** BH-29: small info dot beside the location pill (44px target). */
+function FallbackInfoDot({ message }: { message: string }) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          type="button"
+          className="pointer-events-auto min-h-11 min-w-11 h-11 w-11 rounded-full p-0 scene-hud-info flex-shrink-0"
+          aria-label={message}
+          data-testid="regional-fallback-info"
+        >
+          <Info className="w-3.5 h-3.5" aria-hidden="true" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[240px] p-3 text-xs bg-card border-border">
+        <p>{message}</p>
+      </PopoverContent>
+    </Popover>
   );
 }
