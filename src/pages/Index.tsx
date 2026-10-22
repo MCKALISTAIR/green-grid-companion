@@ -28,6 +28,7 @@ import { useIndexPageEffects } from '@/hooks/useIndexPageEffects';
 import { useThrottledRefetch } from '@/hooks/useThrottledRefetch';
 import { useRelativeTime } from '@/hooks/useRelativeTime';
 import { DashboardSkeleton } from '@/components/home/DashboardSkeleton';
+import { StaleReadingNotice } from '@/components/home/StaleReadingNotice';
 import { SlowLoadingNotice } from '@/components/SlowLoadingNotice';
 import { OffGridNotice } from '@/components/home/OffGridNotice';
 import { DashboardViewTabs, type DashboardViewMode } from '@/components/home/DashboardViewTabs';
@@ -272,6 +273,10 @@ const Index = () => {
               <div className="flex justify-center pt-0.5 pb-1 lg:hidden" aria-hidden>
                 <div className="h-1 w-10 rounded-full bg-muted-foreground/25" />
               </div>
+
+              {!isLoading && !isError && (
+                <StaleReadingNotice readingFrom={lastUpdated} onRetry={() => void refetch()} />
+              )}
 
               {offGrid && (
                 <OffGridNotice area={offGrid} postcode={postcode} onChangePostcode={setPostcode} />
