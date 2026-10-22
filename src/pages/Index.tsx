@@ -31,6 +31,7 @@ import { DashboardSkeleton } from '@/components/home/DashboardSkeleton';
 import { StaleReadingNotice } from '@/components/home/StaleReadingNotice';
 import { SlowLoadingNotice } from '@/components/SlowLoadingNotice';
 import { OffGridNotice } from '@/components/home/OffGridNotice';
+import { PostcodeNotFoundNotice } from '@/components/home/PostcodeNotFoundNotice';
 import { DashboardViewTabs, type DashboardViewMode } from '@/components/home/DashboardViewTabs';
 import { IntensityDashboard } from '@/components/home/IntensityDashboard';
 import { IntensityHeroOverlay } from '@/components/home/IntensityHeroOverlay';
@@ -97,6 +98,7 @@ const Index = () => {
     isLoading,
     isBackgroundFetching,
     isDegraded,
+    postcodeNotFound,
     usingNationalFallback,
     fallbackRegionName,
     offGridArea: offGrid,
@@ -282,7 +284,11 @@ const Index = () => {
                 <OffGridNotice area={offGrid} postcode={postcode} onChangePostcode={setPostcode} />
               )}
 
-              {isDegraded && !offGrid && (
+              {postcodeNotFound && !offGrid && (
+                <PostcodeNotFoundNotice postcode={postcode} onChangePostcode={setPostcode} />
+              )}
+
+              {isDegraded && !offGrid && !postcodeNotFound && (
                 <div className="mx-2 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-lg flex items-start gap-3 text-sm text-amber-800 dark:text-amber-200 animate-in fade-in">
                   <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-500" />
                   <div>

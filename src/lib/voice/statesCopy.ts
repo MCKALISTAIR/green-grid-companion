@@ -53,3 +53,13 @@ export const OFF_GRID_HOME_COPY = {
   bodyCheeky: "NESO's data stops at Great Britain, so you're seeing the GB average.",
   action: 'Change location',
 } as const;
+
+/**
+ * Home notice when the saved postcode doesn't exist (#108; Design call 22 Oct).
+ * Same wording in Cheeky and Plain. The action opens the location picker.
+ */
+export const POSTCODE_NOT_FOUND_COPY = {
+  title: (postcode: string) => `We couldn't find ${postcode}`,
+  body: 'Showing the GB average for now.',
+  action: 'Fix postcode',
+} as const;
