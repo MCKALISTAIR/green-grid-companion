@@ -96,40 +96,11 @@ export default defineConfig(({ mode }) => {
             cleanupOutdatedCaches: true,
             clientsClaim: true,
             skipWaiting: true,
-            runtimeCaching: [
-              {
-                // Carbon Intensity API - network first, fall back to cache
-                urlPattern: /^https:\/\/api\.carbonintensity\.org\.uk\/.*/i,
-                handler: 'NetworkFirst',
-                options: {
-                  cacheName: 'carbon-api-cache',
-                  expiration: {
-                    maxEntries: 50,
-                    maxAgeSeconds: 60 * 60 * 24, // 24 hours
-                  },
-                  networkTimeoutSeconds: 10,
-                  cacheableResponse: {
-                    statuses: [0, 200],
-                  },
-                },
-              },
-              {
-                // Supabase edge functions - network first
-                urlPattern: /^https:\/\/.*\.supabase\.co\/functions\/.*/i,
-                handler: 'NetworkFirst',
-                options: {
-                  cacheName: 'edge-functions-cache',
-                  expiration: {
-                    maxEntries: 30,
-                    maxAgeSeconds: 60 * 60 * 4, // 4 hours
-                  },
-                  networkTimeoutSeconds: 15,
-                  cacheableResponse: {
-                    statuses: [0, 200],
-                  },
-                },
-              },
-            ],
+            // No runtime caching for API responses. The service worker used to
+            // serve NESO responses up to 24h old (and edge-function responses up
+            // to 4h old) as if fresh, so "Last checked" and the hero age lied.
+            // Offline figures come from the persisted React Query cache instead,
+            // which keeps the real fetch time.
           },
           // Single web manifest: public/manifest.json (linked from index.html).
           // The plugin used to generate a second, conflicting manifest.webmanifest
