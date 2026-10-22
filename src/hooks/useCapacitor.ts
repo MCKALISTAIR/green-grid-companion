@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
+import { Keyboard } from '@capacitor/keyboard';
 import { logger } from '@/lib/logger';
 
 export function useCapacitor() {
@@ -12,6 +13,8 @@ export function useCapacitor() {
           // On iOS, make status bar overlay the webview for edge-to-edge design
           if (Capacitor.getPlatform() === 'ios') {
             await StatusBar.setOverlaysWebView({ overlay: true });
+            // No web-style prev/next/done bar above the keyboard (BH-54).
+            await Keyboard.setAccessoryBarVisible({ isVisible: false });
           }
 
           // Configure status bar style

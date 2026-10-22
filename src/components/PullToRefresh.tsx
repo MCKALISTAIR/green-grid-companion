@@ -1,6 +1,9 @@
-import { useState, useRef, ReactNode } from 'react';
+import { useRef, useState, ReactNode } from 'react';
+import { animate, motion, useMotionValue, useTransform } from 'framer-motion';
 import { useHaptics } from '@/hooks/useHaptics';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { TurbineLogo } from '@/components/TurbineLogo';
+import { spring } from '@/lib/motion';
 
 interface PullToRefreshProps {
   onRefresh: () => Promise<void> | void;
@@ -8,106 +11,144 @@ interface PullToRefreshProps {
   disabled?: boolean;
 }
 
+/** Indicator travel at which a release refreshes (~110pt of finger travel). */
+export const PTR_THRESHOLD = 72;
+/** Max indicator travel. */
+export const PTR_MAX = 120;
+/** Where the indicator rests while refreshing. */
+export const PTR_HOLD = 56;
+
+/**
+ * Resistance curve, shape from the motion spec (§2.4): d = k·dy / (1 + dy/600), capped.
+ * The spec's k = 0.55 would need ~167pt of finger travel to reach 72pt, which
+ * contradicts its own "~110pt finger" target; k = 0.775 puts the line at 110pt.
+ */
+const PTR_K = 0.775;
+export function ptrResistance(dy: number): number {
+  if (dy <= 0) return 0;
+  return Math.min(PTR_MAX, (PTR_K * dy) / (1 + dy / 600));
+}
+
+function isAtTop(el: HTMLElement | null): boolean {
+  if ((window.scrollY || document.scrollingElement?.scrollTop || 0) > 0) return false;
+  // A nested scroller between the touch target and the container must also be at the top.
+  for (let n = el; n && n !== document.body; n = n.parentElement) {
+    if (n.scrollTop > 0) return false;
+  }
+  return true;
+}
+
+/**
+ * Pull-to-refresh driven by a motion value (no React state per frame, no CSS
+ * transition while dragging), so the content tracks the finger exactly.
+ * One Medium impact when the threshold is crossed; crossing back re-arms it
+ * silently (max one haptic per gesture). No fixed delay after refresh.
+ * Reduced motion: the content doesn't move and the turbine doesn't spin;
+ * only the indicator fades in.
+ */
 export function PullToRefresh({ onRefresh, children, disabled = false }: PullToRefreshProps) {
-  const [startY, setStartY] = useState(0);
-  const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const reduced = useReducedMotion();
   const { impactMedium } = useHaptics();
 
-  const THRESHOLD = 120;
-  const MAX_PULL = 160;
+  const d = useMotionValue(0);
+  const startY = useRef<number | null>(null);
+  const firedHaptic = useRef(false);
+  const past = useRef(false);
 
-  const handleTouchStart = (e: React.TouchEvent) => {
+  const indicatorY = useTransform(d, (v) => v - 100);
+  const opacity = useTransform(d, [0, 40], [0, 1]);
+  const rotate = useTransform(d, (v) => v * 3);
+  const contentY = useTransform(d, (v) => (reduced ? 0 : v));
+
+  const onTouchStart = (e: React.TouchEvent) => {
     if (disabled || isRefreshing) return;
-    if (window.scrollY > 0) return;
-    setStartY(e.touches[0].clientY);
+    // React touch events bubble through portals, so a drag in a sheet, popover or
+    // toast rendered outside this tree still reaches here. Only DOM descendants count.
+    if (!(e.target instanceof Node) || !e.currentTarget.contains(e.target)) return;
+    if (!isAtTop(e.target as HTMLElement)) return;
+    startY.current = e.touches[0].clientY;
+    firedHaptic.current = false;
+    past.current = false;
+    d.stop();
   };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (disabled || isRefreshing || startY === 0) return;
-    if (window.scrollY > 0) {
-      setStartY(0);
-      setPullDistance(0);
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (startY.current === null || disabled || isRefreshing) return;
+    const dy = e.touches[0].clientY - startY.current;
+    if (dy <= 0 || !isAtTop(e.target as HTMLElement)) {
+      if (dy <= 0) d.set(0);
       return;
     }
-    const currentY = e.touches[0].clientY;
-    const diff = currentY - startY;
-    if (diff > 0) {
-      const damped = Math.min(diff * 0.5, MAX_PULL);
-      setPullDistance(damped);
-    }
-  };
-
-  const handleTouchEnd = async () => {
-    if (disabled || isRefreshing) return;
-    if (pullDistance > THRESHOLD) {
+    const v = ptrResistance(dy);
+    d.set(v);
+    const nowPast = v >= PTR_THRESHOLD;
+    if (nowPast && !past.current && !firedHaptic.current) {
+      firedHaptic.current = true;
       impactMedium();
-      setIsRefreshing(true);
-      setPullDistance(THRESHOLD);
-      try {
-        await onRefresh();
-      } catch (error) {
-        console.error('PullToRefresh error:', error);
-      } finally {
-        setTimeout(() => {
-          setIsRefreshing(false);
-          setPullDistance(0);
-        }, 500);
-      }
-    } else {
-      setPullDistance(0);
     }
-    setStartY(0);
+    past.current = nowPast;
   };
 
-  // Blade spin: faster as you pull more; constant during refresh
+  const settle = () => animate(d, 0, reduced ? { duration: 0.12 } : spring.snappy);
+
+  const onTouchEnd = async () => {
+    if (startY.current === null) return;
+    startY.current = null;
+    if (disabled || isRefreshing) return;
+    if (d.get() < PTR_THRESHOLD) {
+      settle();
+      return;
+    }
+    setIsRefreshing(true);
+    animate(d, PTR_HOLD, reduced ? { duration: 0.12 } : spring.snappy);
+    try {
+      await onRefresh();
+    } catch (error) {
+      console.error('PullToRefresh error:', error);
+    } finally {
+      setIsRefreshing(false);
+      settle();
+    }
+  };
 
   return (
     <div
-      ref={containerRef}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+      onTouchCancel={onTouchEnd}
       className="relative"
+      data-testid="ptr-root"
     >
-      {/* Refresh Indicator */}
-      <div
-        className="fixed top-0 left-0 right-0 flex justify-center pointer-events-none z-50 transition-all duration-300"
+      <motion.div
+        className="fixed top-0 left-0 right-0 flex justify-center pointer-events-none z-50"
         style={{
           paddingTop: 'calc(max(env(safe-area-inset-top), 59px) + 1rem)',
-          transform: `translateY(${Math.max(pullDistance, isRefreshing ? THRESHOLD : 0) - 100}px)`,
-          opacity: Math.min(pullDistance / (THRESHOLD * 0.5), 1),
+          y: indicatorY,
+          opacity,
         }}
+        data-testid="ptr-indicator"
+        aria-hidden
       >
         <div className="bg-background/90 backdrop-blur shadow-md rounded-full p-2 border border-border">
-          {/* Turbine blades spin proportionally to pull distance;
-                        once refreshing, blades keep spinning via TurbineLogo's built-in animation. */}
-          <div
+          <motion.div
             className="w-6 h-6 text-primary"
-            style={
-              isRefreshing
-                ? undefined
-                : {
-                    transform: `rotate(${pullDistance * 3}deg)`,
-                    transition: 'transform 0.05s linear',
-                  }
-            }
+            style={isRefreshing || reduced ? undefined : { rotate }}
           >
-            <TurbineLogo className={`w-6 h-6 ${isRefreshing ? '' : '[&_g]:!animate-none'}`} />
-          </div>
+            <TurbineLogo
+              className={`w-6 h-6 ${isRefreshing && !reduced ? '' : '[&_g]:!animate-none'}`}
+            />
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
+      <span className="sr-only" role="status">
+        {isRefreshing ? 'Refreshing' : ''}
+      </span>
 
-      {/* Main Content with transform */}
-      <div
-        style={{
-          transform: `translateY(${pullDistance}px)`,
-          transition: isRefreshing ? 'transform 0.3s ease' : 'transform 0.1s ease-out',
-        }}
-      >
+      <motion.div style={{ y: contentY }} data-testid="ptr-content">
         {children}
-      </div>
+      </motion.div>
     </div>
   );
 }

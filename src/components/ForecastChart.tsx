@@ -4,10 +4,13 @@ import {
   getIntensityTextColor,
   isEstimatedActual,
 } from '@/lib/carbonApi';
-import { format, parseISO } from 'date-fns';
+import { parseISO } from 'date-fns';
 import {
+  formatLondonDateTime,
   formatLondonLongDate,
   formatLondonShortDay,
+  formatLondonSlotSpoken,
+  londonRepeatedZone,
   formatLondonTime,
   londonDateKey,
   londonDayLabel,
@@ -15,40 +18,50 @@ import {
 import { useRef, useLayoutEffect, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getForecastMax, getForecastDifferences, getSlotDisplayValue } from '@/lib/forecastUtils';
-import { createPortal } from 'react-dom';
-import { Target, ArrowUp, ArrowDown, Clock3, Leaf } from 'lucide-react';
+
+import { Star, Target, ArrowUp, ArrowDown, Clock3, Leaf } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { findDefaultForecastIndex, getForecastHourInsight } from '@/lib/forecastHourInsight';
 import { getNowOrWaitDecision } from '@/lib/nowOrWait';
 import { useEnergyFacts } from '@/hooks/useEnergyFacts';
 import { cn } from '@/lib/utils';
-import { useHaptics } from '@/hooks/useHaptics';
+import { hapticSelectionChanged } from '@/lib/haptics';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { useChartScrub } from '@/hooks/useChartScrub';
 
 interface ForecastChartProps {
   forecast: ForecastData[];
   showNext?: number;
   /** Live intensity — drives vs-now copy in the hour insight strip. */
   currentIntensity?: number;
+  /** Half-hour start of the live reading; a stale one never gives a "use now". */
+  lastUpdated?: string | null;
 }
 
 /**
  * Carrot-style cross-linked forecast: tapping an hour updates chart emphasis
  * and the insight strip (condition + vs-now + action) together.
  */
-export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartProps) {
+export function ForecastChart({
+  forecast,
+  currentIntensity = 0,
+  lastUpdated = null,
+}: ForecastChartProps) {
   const { tone } = useEnergyFacts();
-  const { selection } = useHaptics();
+  const reduceMotion = useReducedMotion();
   const [visibleDate, setVisibleDate] = useState<Date>(new Date());
   const [selectedIndex, setSelectedIndex] = useState<number>(() =>
     findDefaultForecastIndex(forecast),
   );
   const [selectedBestBlock, setSelectedBestBlock] = useState<number | null>(null);
-  const [bestBlockPopupPos, setBestBlockPopupPos] = useState<{ x: number; y: number } | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const currentHourRef = useRef<HTMLButtonElement>(null);
   const selectedItemRefs = useRef<Map<number, HTMLButtonElement>>(new Map());
-  const bestBlockRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  // Scrubbing pins the readout to the slot under the finger; release keeps it.
+  const scrubbing = useChartScrub(scrollContainerRef, (i) => {
+    setSelectedIndex(i);
+    setSelectedBestBlock(null);
+  });
 
   // Keep selection valid when forecast refreshes; prefer current hour on first load.
   useEffect(() => {
@@ -64,12 +77,12 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
       const container = scrollContainerRef.current;
       const element = currentHourRef.current;
       const scrollLeft = element.offsetLeft - container.clientWidth / 2 + element.clientWidth / 2;
-      container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+      container.scrollTo({ left: scrollLeft, behavior: reduceMotion ? 'auto' : 'smooth' });
     }
     const nowIdx = findDefaultForecastIndex(forecast);
     setSelectedIndex(nowIdx);
     setSelectedBestBlock(null);
-    selection();
+    void hapticSelectionChanged();
   };
 
   const handleScroll = () => {
@@ -81,36 +94,6 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
       setVisibleDate(parseISO(forecast[index].from));
     }
   };
-
-  useEffect(() => {
-    if (selectedBestBlock !== null && bestBlockRefs.current.has(selectedBestBlock)) {
-      const element = bestBlockRefs.current.get(selectedBestBlock);
-      if (element) {
-        const rect = element.getBoundingClientRect();
-        setBestBlockPopupPos({
-          x: rect.left + rect.width / 2,
-          y: rect.top - 8,
-        });
-      }
-    } else {
-      setBestBlockPopupPos(null);
-    }
-  }, [selectedBestBlock]);
-
-  useEffect(() => {
-    if (selectedBestBlock === null) return;
-    const dismiss = () => setSelectedBestBlock(null);
-    window.addEventListener('scroll', dismiss, { passive: true });
-    const handleTap = (e: MouseEvent | TouchEvent) => {
-      const container = scrollContainerRef.current;
-      if (container && !container.contains(e.target as Node)) dismiss();
-    };
-    document.addEventListener('pointerdown', handleTap);
-    return () => {
-      window.removeEventListener('scroll', dismiss);
-      document.removeEventListener('pointerdown', handleTap);
-    };
-  }, [selectedBestBlock]);
 
   useLayoutEffect(() => {
     if (scrollContainerRef.current && currentHourRef.current) {
@@ -128,7 +111,7 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
     const prevItem = forecast[i - 1];
     const time = parseISO(item.from);
     const prevTime = prevItem ? parseISO(prevItem.from) : null;
-    return !prevTime || time.getDate() !== prevTime.getDate();
+    return !prevTime || londonDateKey(time) !== londonDateKey(prevTime);
   });
 
   const bestBlocks: { start: number; end: number }[] = [];
@@ -154,7 +137,9 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
 
   // Same engine as the now-or-wait card, so the current-hour line agrees with it.
   const nowAction =
-    currentIntensity > 0 ? getNowOrWaitDecision(currentIntensity, forecast, now).action : undefined;
+    currentIntensity > 0
+      ? getNowOrWaitDecision(currentIntensity, forecast, now, lastUpdated).action
+      : undefined;
 
   const insight = getForecastHourInsight(
     forecast,
@@ -177,8 +162,23 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
   const selectHour = (i: number) => {
     setSelectedIndex(i);
     setSelectedBestBlock(null);
-    selection();
+    void hapticSelectionChanged();
   };
+
+  const pinnedBlock = selectedBestBlock !== null ? bestBlocks[selectedBestBlock] : undefined;
+  const pinnedBlockInfo = pinnedBlock
+    ? {
+        start: formatLondonTime(parseISO(forecast[pinnedBlock.start].from)),
+        end: formatLondonTime(parseISO(forecast[pinnedBlock.end].to)),
+        hours: (pinnedBlock.end - pinnedBlock.start + 1) * 0.5,
+        avg: Math.round(
+          forecast
+            .slice(pinnedBlock.start, pinnedBlock.end + 1)
+            .reduce((sum, f) => sum + f.intensity.forecast, 0) /
+            (pinnedBlock.end - pinnedBlock.start + 1),
+        ),
+      }
+    : null;
 
   return (
     <div className="space-y-3">
@@ -194,7 +194,7 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6 rounded-full hover:bg-accent"
+            className="h-11 w-11 -my-2.5 -mr-2.5 rounded-full hover:bg-accent"
             onClick={scrollToNow}
             title="Jump to now"
             aria-label="Jump to now"
@@ -223,10 +223,10 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
         {insight && (
           <motion.div
             key={insight.index}
-            initial={{ opacity: 0, y: 6 }}
+            initial={scrubbing ? false : { opacity: 0, y: reduceMotion ? 0 : 6 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            exit={scrubbing ? undefined : { opacity: 0, y: reduceMotion ? 0 : -4 }}
+            transition={{ duration: scrubbing ? 0 : 0.22, ease: [0.16, 1, 0.3, 1] }}
             className={cn('rounded-2xl border px-3.5 py-3 space-y-1', insight.washClass)}
             data-testid="forecast-hour-insight"
           >
@@ -266,6 +266,19 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
                 </span>
               )}
             </div>
+            {pinnedBlockInfo && (
+              <p
+                role="note"
+                aria-label={`Best window, forecast, ${pinnedBlockInfo.start} to ${pinnedBlockInfo.end}, ${pinnedBlockInfo.hours} hours, average ${pinnedBlockInfo.avg} grams CO2 per kilowatt hour.`}
+                className="inline-flex items-center gap-1 text-xs font-semibold text-intensity-very-low-text"
+                data-testid="best-window-readout"
+              >
+                <Star className="h-3 w-3 fill-current" aria-hidden />
+                <span aria-hidden>
+                  {pinnedBlockInfo.start}–{pinnedBlockInfo.end} · avg {pinnedBlockInfo.avg} g
+                </span>
+              </p>
+            )}
             <p className="text-sm text-foreground/90 leading-snug">{insight.action}</p>
           </motion.div>
         )}
@@ -283,7 +296,7 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
           <tbody>
             {forecast.map((item, i) => (
               <tr key={i}>
-                <td>{format(parseISO(item.from), 'PPpp')}</td>
+                <td>{formatLondonDateTime(parseISO(item.from))}</td>
                 <td>{item.intensity.forecast}</td>
                 <td>
                   {item.intensity.actual ?? 'N/A'}
@@ -297,244 +310,221 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
         </table>
       </div>
 
-      <TooltipProvider delayDuration={200}>
-        <div
-          ref={scrollContainerRef}
-          onScroll={handleScroll}
-          className={cn(
-            'overflow-x-auto pb-4 pt-4 -mt-2 scrollbar-thin scrollbar-thumb-muted-foreground/20 rounded-xl transition-colors duration-500',
-            insight?.washClass,
-          )}
-          role="listbox"
-          aria-label="Select a forecast hour"
-          aria-activedescendant={selectedIndex >= 0 ? `forecast-hour-${selectedIndex}` : undefined}
-        >
-          <div className="flex gap-2 min-w-max px-4 relative">
-            {bestBlocks.map((block, idx) => {
-              const sepsBeforeStart = hasSeparatorArray
-                .slice(0, block.start + 1)
-                .filter(Boolean).length;
-              const sepsInBlock = hasSeparatorArray
-                .slice(block.start + 1, block.end + 1)
-                .filter(Boolean).length;
+      <div
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
+        className={cn(
+          'overflow-x-auto pb-4 pt-4 -mt-2 scrollbar-thin scrollbar-thumb-muted-foreground/20 rounded-xl transition-colors duration-500',
+          insight?.washClass,
+        )}
+        role="listbox"
+        aria-label="Select a forecast hour"
+        aria-activedescendant={selectedIndex >= 0 ? `forecast-hour-${selectedIndex}` : undefined}
+        data-testid="forecast-strip"
+        data-scrubbing={scrubbing || undefined}
+        style={{ WebkitTouchCallout: 'none' }}
+      >
+        <div className="flex gap-2 min-w-max px-4 relative">
+          {bestBlocks.map((block, idx) => {
+            const sepsBeforeStart = hasSeparatorArray
+              .slice(0, block.start + 1)
+              .filter(Boolean).length;
+            const sepsInBlock = hasSeparatorArray
+              .slice(block.start + 1, block.end + 1)
+              .filter(Boolean).length;
 
-              const leftRem = 1.0 + block.start * 3.5 + sepsBeforeStart * 2.0;
-              const widthRem = (block.end - block.start) * 3.5 + sepsInBlock * 2.0 + 3.0;
+            const leftRem = 1.0 + block.start * 3.5 + sepsBeforeStart * 2.0;
+            const widthRem = (block.end - block.start) * 3.5 + sepsInBlock * 2.0 + 3.0;
 
-              const startTime = formatLondonTime(parseISO(forecast[block.start].from));
-              const endTime = formatLondonTime(parseISO(forecast[block.end].to));
-              const slotCount = block.end - block.start + 1;
-              const avgIntensity = Math.round(
-                forecast
-                  .slice(block.start, block.end + 1)
-                  .reduce((s, f) => s + f.intensity.forecast, 0) / slotCount,
-              );
+            const startTime = formatLondonTime(parseISO(forecast[block.start].from));
+            const endTime = formatLondonTime(parseISO(forecast[block.end].to));
 
-              return (
-                <Tooltip key={`best-block-${idx}`}>
-                  <TooltipTrigger asChild>
-                    <div
-                      className="absolute top-0 bottom-0 cursor-pointer"
-                      ref={(el) => {
-                        if (el) bestBlockRefs.current.set(idx, el);
+            return (
+              <div
+                key={`best-block-${idx}`}
+                className="absolute top-0 bottom-0 cursor-pointer"
+                data-testid="best-window-block"
+                onClick={() => {
+                  selectHour(block.start);
+                  setSelectedBestBlock(idx);
+                }}
+                style={{
+                  left: `${leftRem}rem`,
+                  width: `${widthRem}rem`,
+                }}
+              >
+                {/* Soft wash + one rounded band — same “best window” job as the
+                          old hand-drawn [ ] bracket, without competing with Now. */}
+                <div
+                  aria-hidden
+                  className="absolute inset-x-0 top-1 bottom-6 rounded-2xl bg-intensity-very-low/[0.12] dark:bg-intensity-very-low/15 ring-1 ring-inset ring-intensity-very-low/35"
+                />
+                <div className="absolute -top-2 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-intensity-very-low/15 dark:bg-intensity-very-low/25 border border-intensity-very-low/30 px-2 py-0.5 rounded-full whitespace-nowrap shadow-sm z-10">
+                  <span className="text-[8px] font-bold tracking-wide text-intensity-very-low-text">
+                    ★
+                  </span>
+                  <span className="text-[8px] font-semibold text-intensity-very-low-text">
+                    Best · {startTime}–{endTime}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+          {forecast.map((item, i) => {
+            const {
+              time,
+              isUnknown,
+              isPast,
+              isCurrentHour,
+              hasActual,
+              difference,
+              showDifference,
+            } = getForecastDifferences(item, now);
+
+            const prevItem = forecast[i - 1];
+            const prevTime = prevItem ? parseISO(prevItem.from) : null;
+            const showSeparator = !prevTime || londonDateKey(time) !== londonDateKey(prevTime);
+            const displayValue = getSlotDisplayValue(item, now);
+            const isSelected = selectedIndex === i;
+            const dimOthers = selectedIndex !== null && !isSelected;
+
+            let dateLabel = '';
+            if (showSeparator) {
+              const day = londonDayLabel(time);
+              if (day === '') dateLabel = 'Today';
+              else if (day === 'tomorrow') dateLabel = 'Tomorrow';
+              else dateLabel = formatLondonShortDay(time);
+            }
+
+            return (
+              <div key={i} className="flex gap-2">
+                {showSeparator && (
+                  <div className="flex flex-col items-center justify-end w-6 border-l border-dashed border-border/40 pl-2 opacity-70">
+                    <span
+                      className="sideways-text text-[10px] font-medium tracking-widest text-muted-foreground uppercase mb-8"
+                      style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
+                    >
+                      {dateLabel}
+                    </span>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  id={`forecast-hour-${i}`}
+                  data-slot-index={i}
+                  role="option"
+                  aria-selected={isSelected}
+                  aria-label={`${formatLondonSlotSpoken(time)}${isCurrentHour ? ' (now)' : ''}: ${
+                    isUnknown ? 'no data' : `${displayValue} gCO₂/kWh`
+                  }`}
+                  className={cn(
+                    'relative flex flex-col items-center gap-1 w-12 transition-all duration-300 motion-reduce:transition-none rounded-lg py-1 cursor-pointer',
+                    scrubbing && 'transition-none',
+                    isPast && '[&>div:first-child]:opacity-80',
+                    isCurrentHour && !isSelected && 'bg-accent/20 scale-105 z-10',
+                    isSelected && 'bg-accent/30 ring-2 ring-primary/55 scale-110 shadow-sm z-20',
+                    dimOthers && '[&>div:first-child]:opacity-45',
+                  )}
+                  ref={(el) => {
+                    if (isCurrentHour && el) currentHourRef.current = el;
+                    if (el) selectedItemRefs.current.set(i, el);
+                  }}
+                  onClick={() => selectHour(i)}
+                >
+                  {scrubbing && isSelected && (
+                    <span
+                      aria-hidden
+                      data-testid="scrub-rule"
+                      className="pointer-events-none absolute -top-3 bottom-0 left-1/2 w-px -translate-x-1/2 bg-primary"
+                    >
+                      <span className="absolute -top-1 left-1/2 h-2 w-2 -translate-x-1/2 rounded-full bg-primary" />
+                    </span>
+                  )}
+                  <div className="relative h-24 w-8 flex items-end justify-center mt-2">
+                    <motion.div
+                      className={cn(
+                        'relative w-full rounded-t-md border-x border-t',
+                        hasActual ? 'border-white/30' : 'border-white/10',
+                        getIntensityColor(item.intensity.index),
+                        isSelected && 'brightness-110',
+                      )}
+                      initial={reduceMotion ? false : { height: 0, opacity: 0 }}
+                      animate={{
+                        height: `${Math.max(((displayValue ?? 0) / maxForecast) * 100, 10)}%`,
+                        opacity: 1,
                       }}
-                      onClick={() => {
-                        selectHour(block.start);
-                        setSelectedBestBlock(selectedBestBlock === idx ? null : idx);
-                      }}
-                      style={{
-                        left: `${leftRem}rem`,
-                        width: `${widthRem}rem`,
+                      transition={{
+                        height: {
+                          duration: 0.5,
+                          ease: [0.34, 1.2, 0.64, 1],
+                          delay: i * 0.018,
+                        },
+                        opacity: { duration: 0.25, delay: i * 0.018 },
                       }}
                     >
-                      {/* Soft wash + one rounded band — same “best window” job as the
-                          old hand-drawn [ ] bracket, without competing with Now. */}
-                      <div
-                        aria-hidden
-                        className="absolute inset-x-0 top-1 bottom-6 rounded-2xl bg-intensity-very-low/[0.12] dark:bg-intensity-very-low/15 ring-1 ring-inset ring-intensity-very-low/35"
-                      />
-                      <div className="absolute -top-2 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-intensity-very-low/15 dark:bg-intensity-very-low/25 border border-intensity-very-low/30 px-2 py-0.5 rounded-full whitespace-nowrap shadow-sm z-10">
-                        <span className="text-[8px] font-bold tracking-wide text-intensity-very-low-text">
-                          ★
-                        </span>
-                        <span className="text-[8px] font-semibold text-intensity-very-low-text">
-                          Best · {startTime}–{endTime}
-                        </span>
-                      </div>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="text-xs max-w-[200px]">
-                    <div className="flex flex-col gap-0.5">
-                      <span className="font-semibold text-intensity-very-low-text">
-                        ★ Best window
-                      </span>
-                      <span>
-                        {startTime} → {endTime} ({slotCount * 0.5}h)
-                      </span>
-                      <span className="text-muted-foreground">Avg: {avgIntensity} gCO₂/kWh</span>
-                    </div>
-                  </TooltipContent>
-                </Tooltip>
-              );
-            })}
-            {forecast.map((item, i) => {
-              const {
-                time,
-                isUnknown,
-                isPast,
-                isCurrentHour,
-                hasActual,
-                difference,
-                showDifference,
-              } = getForecastDifferences(item, now);
+                      {hasActual && (
+                        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNCIgaGVpZ2h0PSI0IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxjaXJjbGUgY3g9IjIiIGN5PSIyIiByPSIxIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMTUpIi8+PC9zdmc+')] opacity-30" />
+                      )}
+                      {isCurrentHour && (
+                        <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-primary rounded-full animate-pulse shadow-[0_0_8px_rgba(var(--primary),0.5)] z-25" />
+                      )}
+                    </motion.div>
+                  </div>
+                  <span
+                    className={cn(
+                      'text-xs font-medium font-mono tabular-nums',
+                      isSelected || isCurrentHour
+                        ? 'text-primary-on-tint font-bold dark:text-foreground'
+                        : 'text-foreground dark:text-[#9fb0b5]',
+                    )}
+                  >
+                    {isUnknown || displayValue === null ? '?' : displayValue}
+                  </span>
 
-              const prevItem = forecast[i - 1];
-              const prevTime = prevItem ? parseISO(prevItem.from) : null;
-              const showSeparator = !prevTime || londonDateKey(time) !== londonDateKey(prevTime);
-              const displayValue = getSlotDisplayValue(item, now);
-              const isSelected = selectedIndex === i;
-              const dimOthers = selectedIndex !== null && !isSelected;
-
-              let dateLabel = '';
-              if (showSeparator) {
-                const day = londonDayLabel(time);
-                if (day === '') dateLabel = 'Today';
-                else if (day === 'tomorrow') dateLabel = 'Tomorrow';
-                else dateLabel = formatLondonShortDay(time);
-              }
-
-              return (
-                <div key={i} className="flex gap-2">
-                  {showSeparator && (
-                    <div className="flex flex-col items-center justify-end w-6 border-l border-dashed border-border/40 pl-2 opacity-70">
-                      <span
-                        className="sideways-text text-[10px] font-medium tracking-widest text-muted-foreground uppercase mb-8"
-                        style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
-                      >
-                        {dateLabel}
-                      </span>
+                  {showDifference && (
+                    <div
+                      className={cn(
+                        'flex items-center gap-0.5 text-[9px] font-medium',
+                        difference > 0 ? 'text-destructive' : 'text-primary',
+                      )}
+                    >
+                      {difference > 0 ? (
+                        <ArrowUp className="w-2.5 h-2.5" />
+                      ) : (
+                        <ArrowDown className="w-2.5 h-2.5" />
+                      )}
+                      <span>{Math.abs(difference)}</span>
                     </div>
                   )}
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        id={`forecast-hour-${i}`}
-                        role="option"
-                        aria-selected={isSelected}
-                        aria-label={`${formatLondonTime(time)}${isCurrentHour ? ' (now)' : ''}: ${
-                          isUnknown ? 'no data' : `${displayValue} gCO₂/kWh`
-                        }`}
-                        className={cn(
-                          'relative flex flex-col items-center gap-1 w-12 transition-all duration-300 rounded-lg py-1 cursor-pointer',
-                          isPast && '[&>div:first-child]:opacity-80',
-                          isCurrentHour && !isSelected && 'bg-accent/20 scale-105 z-10',
-                          isSelected &&
-                            'bg-accent/30 ring-2 ring-primary/55 scale-110 shadow-sm z-20',
-                          dimOthers && '[&>div:first-child]:opacity-45',
-                        )}
-                        ref={(el) => {
-                          if (isCurrentHour && el) currentHourRef.current = el;
-                          if (el) selectedItemRefs.current.set(i, el);
-                        }}
-                        onClick={() => selectHour(i)}
-                      >
-                        <div className="relative h-24 w-8 flex items-end justify-center mt-2">
-                          <motion.div
-                            className={cn(
-                              'relative w-full rounded-t-md border-x border-t',
-                              hasActual ? 'border-white/30' : 'border-white/10',
-                              getIntensityColor(item.intensity.index),
-                              isSelected && 'brightness-110',
-                            )}
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{
-                              height: `${Math.max(((displayValue ?? 0) / maxForecast) * 100, 10)}%`,
-                              opacity: 1,
-                            }}
-                            transition={{
-                              height: {
-                                duration: 0.5,
-                                ease: [0.34, 1.2, 0.64, 1],
-                                delay: i * 0.018,
-                              },
-                              opacity: { duration: 0.25, delay: i * 0.018 },
-                            }}
-                          >
-                            {hasActual && (
-                              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNCIgaGVpZ2h0PSI0IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxjaXJjbGUgY3g9IjIiIGN5PSIyIiByPSIxIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMTUpIi8+PC9zdmc+')] opacity-30" />
-                            )}
-                            {isCurrentHour && (
-                              <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-primary rounded-full animate-pulse shadow-[0_0_8px_rgba(var(--primary),0.5)] z-25" />
-                            )}
-                          </motion.div>
-                        </div>
-                        <span
-                          className={cn(
-                            'text-xs font-medium font-mono tabular-nums',
-                            isSelected || isCurrentHour
-                              ? 'text-primary-on-tint font-bold dark:text-foreground'
-                              : 'text-foreground dark:text-[#9fb0b5]',
-                          )}
-                        >
-                          {isUnknown || displayValue === null ? '?' : displayValue}
-                        </span>
 
-                        {showDifference && (
-                          <div
-                            className={cn(
-                              'flex items-center gap-0.5 text-[9px] font-medium',
-                              difference > 0 ? 'text-destructive' : 'text-primary',
-                            )}
-                          >
-                            {difference > 0 ? (
-                              <ArrowUp className="w-2.5 h-2.5" />
-                            ) : (
-                              <ArrowDown className="w-2.5 h-2.5" />
-                            )}
-                            <span>{Math.abs(difference)}</span>
-                          </div>
-                        )}
-
-                        <span
-                          className={cn(
-                            'text-[10px] whitespace-nowrap',
-                            isSelected || isCurrentHour
-                              ? 'text-primary-on-tint font-bold dark:text-foreground'
-                              : 'text-muted-foreground dark:text-[#8a9ba1]',
-                          )}
-                        >
-                          {isCurrentHour ? 'Now' : formatLondonTime(time)}
+                  <span
+                    className={cn(
+                      'text-[10px] whitespace-nowrap',
+                      isSelected || isCurrentHour
+                        ? 'text-primary-on-tint font-bold dark:text-foreground'
+                        : 'text-muted-foreground dark:text-[#8a9ba1]',
+                    )}
+                  >
+                    {isCurrentHour ? (
+                      'Now'
+                    ) : londonRepeatedZone(time) ? (
+                      // BH-72: both passes of 01:xx on 25 Oct get a small muted zone tag (fits 48px).
+                      <>
+                        {formatLondonTime(time)}
+                        <span className="ml-px text-[8px] tracking-tight opacity-70">
+                          {londonRepeatedZone(time)}
                         </span>
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="text-xs">
-                      <div className="flex flex-col gap-1">
-                        <span className="font-semibold capitalize">{item.intensity.index}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-muted-foreground">Forecast:</span>
-                          <span className="font-medium">
-                            {isUnknown ? 'No data' : `${item.intensity.forecast}g`}
-                          </span>
-                        </div>
-                        {hasActual && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground">
-                              {isEstimatedActual(item) ? 'Estimate (GridSense):' : 'Actual:'}
-                            </span>
-                            <span className="font-medium">{item.intensity.actual}g</span>
-                          </div>
-                        )}
-                        <span className="text-muted-foreground">Tap to explore this hour</span>
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-              );
-            })}
-          </div>
+                      </>
+                    ) : (
+                      formatLondonTime(time)
+                    )}
+                  </span>
+                </button>
+              </div>
+            );
+          })}
         </div>
-      </TooltipProvider>
+      </div>
 
       <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground flex-wrap">
         <div className="flex items-center gap-1">
@@ -557,42 +547,10 @@ export function ForecastChart({ forecast, currentIntensity = 0 }: ForecastChartP
           <div className="w-2 h-2 rounded-full bg-intensity-very-high" />
           <span>Very High</span>
         </div>
+        <span className="text-muted-foreground/80" data-testid="forecast-unit">
+          Values in gCO₂/kWh
+        </span>
       </div>
-
-      {selectedBestBlock !== null &&
-        bestBlockPopupPos &&
-        bestBlocks[selectedBestBlock] &&
-        createPortal(
-          (() => {
-            const block = bestBlocks[selectedBestBlock];
-            const startTime = formatLondonTime(parseISO(forecast[block.start].from));
-            const endTime = formatLondonTime(parseISO(forecast[block.end].to));
-            const slotCount = block.end - block.start + 1;
-            const avgIntensity = Math.round(
-              forecast
-                .slice(block.start, block.end + 1)
-                .reduce((s, f) => s + f.intensity.forecast, 0) / slotCount,
-            );
-            return (
-              <div
-                className="fixed bg-popover border border-intensity-very-low/30 rounded-lg p-2.5 shadow-lg z-50 min-w-[140px] -translate-x-1/2 -translate-y-full pointer-events-none"
-                style={{
-                  left: `${bestBlockPopupPos.x}px`,
-                  top: `${bestBlockPopupPos.y}px`,
-                }}
-              >
-                <div className="flex flex-col gap-0.5 text-xs">
-                  <span className="font-semibold text-intensity-very-low-text">★ Best window</span>
-                  <span className="text-foreground">
-                    {startTime} → {endTime} ({slotCount * 0.5}h)
-                  </span>
-                  <span className="text-muted-foreground">Avg: {avgIntensity} gCO₂/kWh</span>
-                </div>
-              </div>
-            );
-          })(),
-          document.body,
-        )}
     </div>
   );
 }

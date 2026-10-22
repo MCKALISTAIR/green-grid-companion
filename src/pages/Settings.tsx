@@ -91,7 +91,7 @@ export default function Settings() {
         animate="show"
       >
         <motion.div variants={settingsItemVariants}>
-          <PageHeader title="Settings" description="Notifications, meter link, and preferences." />
+          <PageHeader title="Settings" />
         </motion.div>
 
         <motion.div variants={settingsItemVariants} className="space-y-4">

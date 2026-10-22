@@ -23,13 +23,15 @@ import {
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogTrigger,
+  useIsSheetLayout,
+} from '@/components/ui/responsive-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { UK_REGIONS } from '@/lib/carbonApi';
@@ -54,6 +56,11 @@ export function LocationManager({
   showPostcode = true,
   trigger,
 }: LocationManagerProps) {
+  // Phones: the picker is a bottom sheet (motion spec §2.3); desktop keeps the popover.
+  const sheet = useIsSheetLayout();
+  const PickerRoot = (sheet ? ResponsiveDialog : Popover) as React.ElementType;
+  const PickerTrigger = (sheet ? ResponsiveDialogTrigger : PopoverTrigger) as React.ElementType;
+  const PickerContent = (sheet ? ResponsiveDialogContent : PopoverContent) as React.ElementType;
   const [open, setOpen] = React.useState(false);
   const [loadingLocation, setLoadingLocation] = React.useState(false);
   const [isSearching, setIsSearching] = React.useState(false);
@@ -201,14 +208,15 @@ export function LocationManager({
 
   return (
     <>
-      <Popover
+      <PickerRoot
         open={open}
-        onOpenChange={(isOpen) => {
+        onOpenChange={(isOpen: boolean) => {
           setOpen(isOpen);
           if (!isOpen) setSearchQuery(''); // Reset search on close
         }}
+        {...(sheet ? { detents: 'tall' as const } : {})}
       >
-        <PopoverTrigger asChild>
+        <PickerTrigger asChild>
           {trigger ? (
             trigger
           ) : (
@@ -239,8 +247,14 @@ export function LocationManager({
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" aria-hidden="true" />
             </Button>
           )}
-        </PopoverTrigger>
-        <PopoverContent className="w-[320px] p-0 bg-card border-border backdrop-blur-xl">
+        </PickerTrigger>
+        <PickerContent
+          className="w-[320px] p-0 bg-card border-border backdrop-blur-xl"
+          {...(sheet ? { sheetClassName: 'bg-background' } : {})}
+        >
+          {sheet && (
+            <ResponsiveDialogTitle className="sr-only">Choose location</ResponsiveDialogTitle>
+          )}
           <Command shouldFilter={false}>
             <CommandInput
               placeholder="Search postcode, town, or region..."
@@ -412,18 +426,18 @@ export function LocationManager({
               </CommandGroup>
             </CommandList>
           </Command>
-        </PopoverContent>
-      </Popover>
+        </PickerContent>
+      </PickerRoot>
 
       {/* Save Location Dialog */}
-      <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
-        <DialogContent className="sm:max-w-[340px]">
-          <DialogHeader>
-            <DialogTitle>Save Location</DialogTitle>
-            <DialogDescription>
+      <ResponsiveDialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
+        <ResponsiveDialogContent className="sm:max-w-[340px]">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Save Location</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
               Give this location a name (e.g., "Home", "Work", "Mum's house")
-            </DialogDescription>
-          </DialogHeader>
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="location-name">Name</Label>
@@ -444,14 +458,14 @@ export function LocationManager({
               Region: {selectedRegion?.name || 'Local Region'} ({value})
             </p>
           </div>
-          <DialogFooter>
+          <ResponsiveDialogFooter>
             <Button variant="outline" onClick={() => setSaveDialogOpen(false)}>
               Cancel
             </Button>
             <Button onClick={handleSaveLocation}>Save</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </>
   );
 }

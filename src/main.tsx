@@ -17,6 +17,10 @@ initMonitoring({
 
 import { logger } from './lib/logger';
 import { hydrateAppStorage } from './lib/appStorage';
+import { installExternalLinkHandler } from './lib/openExternal';
+
+// Native: external links open in SFSafariViewController, not Safari (BH-51).
+installExternalLinkHandler();
 
 // Log startup in development
 if (import.meta.env.DEV) {

@@ -1,3 +1,5 @@
+import type { CommentaryTone } from '@/lib/tone';
+import { zeroCarbonBadgeText } from '@/lib/zeroCarbonBadge';
 import { motion } from 'framer-motion';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 
@@ -81,12 +83,18 @@ export function NetZeroCelebration() {
 }
 
 /**
- * "Zero-carbon power right now" badge. Same look as before; it now sits in the
+ * Zero-carbon badge (text: zeroCarbonBadgeText, BH-30). Same look as before; it now sits in the
  * hero HUD's normal flow (IntensityHeroOverlay) instead of absolutely at the top
  * of the scene, where it covered the location header. Final placement/style is
  * GridSense Design's (home-screen mockups).
  */
-export function ZeroCarbonBadge() {
+export function ZeroCarbonBadge({
+  isRegional = true,
+  tone = 'cheeky',
+}: {
+  isRegional?: boolean;
+  tone?: CommentaryTone;
+}) {
   return (
     <motion.div
       className="mt-2 flex justify-center"
@@ -104,7 +112,7 @@ export function ZeroCarbonBadge() {
             clipRule="evenodd"
           />
         </svg>
-        <span className="font-semibold">Zero-carbon power right now</span>
+        <span className="font-semibold">{zeroCarbonBadgeText(isRegional, tone)}</span>
       </div>
     </motion.div>
   );

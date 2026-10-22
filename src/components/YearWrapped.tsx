@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { ResponsiveDialog, ResponsiveDialogContent } from '@/components/ui/responsive-dialog';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useYearWrapped } from '@/hooks/useYearWrapped';
@@ -67,8 +67,8 @@ export function YearWrapped({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg p-0 overflow-hidden bg-gradient-to-br from-background via-background to-primary/5 border-primary/20">
+    <ResponsiveDialog detents="tall" open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent className="max-w-lg p-0 overflow-hidden bg-gradient-to-br from-background via-background to-primary/5 border-primary/20">
         {isLoading ? (
           <LoadingSlide progress={progress} year={year} />
         ) : error ? (
@@ -135,8 +135,8 @@ export function YearWrapped({
             </motion.div>
           </AnimatePresence>
         ) : null}
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }
 
@@ -414,7 +414,7 @@ function HighlightsSlide({ data }: { data: YearWrappedData }) {
                 {format(parse(data.greenestDay.date, 'yyyy-MM-dd', new Date()), 'MMMM d')}
               </p>
               <p className="text-xs text-primary">
-                {data.greenestDay.renewableShare.toFixed(1)}% renewable
+                {data.greenestDay.renewableShare.toFixed(1)}% renewable (incl. biomass)
               </p>
             </div>
           </motion.div>
