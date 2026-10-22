@@ -302,7 +302,7 @@ const Onboarding = () => {
             {c.keepNote}{' '}
             <a
               href="/privacy"
-              className="inline-block min-h-11 py-2 underline hover:text-white/95 transition-colors"
+              className="inline-block min-h-11 min-w-11 py-2 text-center underline hover:text-white/95 transition-colors"
             >
               Privacy Policy
             </a>
@@ -321,14 +321,14 @@ const Onboarding = () => {
             By continuing you agree to the{' '}
             <a
               href="/terms"
-              className="inline-block min-h-11 py-2 underline hover:text-white/95 transition-colors"
+              className="inline-block min-h-11 min-w-11 py-2 text-center underline hover:text-white/95 transition-colors"
             >
               Terms
             </a>{' '}
             and have read the{' '}
             <a
               href="/privacy"
-              className="inline-block min-h-11 py-2 underline hover:text-white/95 transition-colors"
+              className="inline-block min-h-11 min-w-11 py-2 text-center underline hover:text-white/95 transition-colors"
             >
               Privacy Policy
             </a>

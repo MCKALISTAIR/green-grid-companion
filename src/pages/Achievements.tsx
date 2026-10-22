@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useAchievements } from '@/hooks/useAchievements';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -11,23 +12,25 @@ export default function AchievementsPage() {
 
   const unlockedCount = achievements.filter((a) => a.unlocked).length;
   const totalCount = achievements.length;
+  const [openId, setOpenId] = useState<string | null>(null);
   const progressPercent = Math.round((unlockedCount / totalCount) * 100);
 
   return (
     <div className="page-shell page-shell--fit">
       <div className="page-shell-inner space-y-6">
-        <PageHeader
-          title="Trophy Room"
-          description="Unlock achievements by exploring and shifting to greener windows."
-        />
+        <PageHeader title="Trophy Room" />
 
         <Card className="bg-primary/5 border-primary/20">
           <CardContent className="p-4 py-6 text-center space-y-2">
             <div className="text-4xl font-bold font-mono tabular-nums text-primary">
-              {unlockedCount}{' '}
-              <span className="text-xl text-muted-foreground font-semibold">/ {totalCount}</span>
+              <span aria-hidden="true">
+                {unlockedCount}
+                <span className="text-xl text-muted-foreground font-semibold">/{totalCount}</span>
+              </span>
+              <span className="sr-only">
+                {unlockedCount} of {totalCount} achievements unlocked
+              </span>
             </div>
-            <div className="text-sm font-medium text-muted-foreground">Achievements unlocked</div>
             <Progress
               value={progressPercent}
               className="h-2 mt-4 max-w-xs mx-auto"
@@ -52,7 +55,14 @@ export default function AchievementsPage() {
                     : 'bg-muted/30 border-dashed'
                 }`}
               >
-                <CardContent className="p-4 flex gap-4 items-start">
+                <button
+                  type="button"
+                  className="w-full text-left p-4 flex gap-4 items-start min-h-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-[inherit]"
+                  aria-expanded={openId === achievement.id}
+                  onClick={() =>
+                    setOpenId((cur) => (cur === achievement.id ? null : achievement.id))
+                  }
+                >
                   <div
                     className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center text-2xl ${
                       achievement.unlocked
@@ -88,11 +98,18 @@ export default function AchievementsPage() {
                         </Badge>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground leading-snug">
+                    {/* Copy cut: how-to-earn shows on tap; screen readers always get it. */}
+                    <p
+                      className={
+                        openId === achievement.id
+                          ? 'text-sm text-muted-foreground leading-snug'
+                          : 'sr-only'
+                      }
+                    >
                       {achievement.description}
                     </p>
                   </div>
-                </CardContent>
+                </button>
               </Card>
             </motion.div>
           ))}

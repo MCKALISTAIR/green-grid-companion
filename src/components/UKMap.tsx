@@ -59,7 +59,11 @@ const getPosition = (lat: number, lon: number) => {
 
 export function UKMap({ regions, onRegionSelect, selectedRegionId }: UKMapProps) {
   return (
-    <div className="relative w-full aspect-[0.61] max-w-sm mx-auto my-4 select-none">
+    <div
+      className="relative w-full aspect-[0.61] max-w-sm mx-auto my-4 select-none"
+      role="group"
+      aria-label="Map of regional carbon intensity"
+    >
       {/* Detailed UK Map SVG */}
       <div className="absolute inset-0 -z-10 group">
         <svg
@@ -380,11 +384,6 @@ c21 14 23 19 14 45 -8 23 -7 35 5 53 9 13 25 50 36 83 15 44 17 61 8 72 -9 11
             />
           </g>
         </svg>
-      </div>
-
-      {/* bottom-14 clears the floating phone dock; muted (not /40) keeps the label legible */}
-      <div className="absolute bottom-14 sm:bottom-2 right-4 z-10 text-[10px] text-muted-foreground font-medium pointer-events-none">
-        Geographic View
       </div>
 
       {/* Region Markers */}
