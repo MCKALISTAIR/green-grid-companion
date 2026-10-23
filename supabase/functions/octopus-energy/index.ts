@@ -5,7 +5,15 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 declare const Deno: any;
 
 import { corsHeaders } from '../_shared/cors.ts';
-import { buildIntensityMap } from '../_shared/footprint-records.ts';
+import {
+  calculateMeterFootprint,
+  credentialsUnavailableResult,
+  summarise,
+  supabaseOctopusStore,
+  syncMeter,
+  type MeterCalcResult,
+  type MeterSyncResult,
+} from '../_shared/octopus-sync.ts';
 import {
   verifySchedulerRequest,
   cronAuthErrorResponse,
@@ -181,12 +189,6 @@ function cleanupAuthFailureTracker() {
   }
 }
 
-interface OctopusConsumption {
-  consumption: number;
-  interval_start: string;
-  interval_end: string;
-}
-
 interface OctopusMeterPoint {
   mpan?: string;
   mprn?: string;
@@ -206,29 +208,6 @@ interface FootprintRecord {
   carbon_g: number;
   intensity_index: string;
   mpan: string;
-}
-
-// Static helper for MPAN → region mapping (used in cron sync)
-function getRegionIdFromMpanStatic(mpan: string): number | null {
-  if (!mpan || mpan.length < 2) return null;
-  const areaCode = mpan.substring(0, 2);
-  const mapping: Record<string, number> = {
-    '10': 10,
-    '11': 9,
-    '12': 13,
-    '13': 6,
-    '14': 8,
-    '15': 4,
-    '16': 3,
-    '17': 2,
-    '18': 1,
-    '19': 12,
-    '20': 11,
-    '21': 7,
-    '22': 14,
-    '23': 5,
-  };
-  return mapping[areaCode] || null;
 }
 
 Deno.serve(async (req: Request) => {
@@ -276,6 +255,7 @@ Deno.serve(async (req: Request) => {
     if (cronAction === 'sync-all-users' || cronAction === 'calculate-all-footprints') {
       console.log(`[${requestId}] Cron job triggered: ${cronAction}`);
       const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      const store = supabaseOctopusStore(supabase);
 
       // Get all users with active meters and credentials
       const { data: allMeters, error: metersErr } = await supabase
@@ -283,10 +263,23 @@ Deno.serve(async (req: Request) => {
         .select('user_id, mpan, serial_number')
         .eq('is_active', true);
 
-      if (metersErr || !allMeters?.length) {
+      if (metersErr) {
+        console.error(`[${requestId}] ${cronAction}: could not read octopus_meters:`, metersErr);
+        return new Response(
+          JSON.stringify({ success: false, error: 'meters_query_failed', errors: 1 }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        );
+      }
+      if (!allMeters?.length) {
         console.log('No active meters found for cron sync');
         return new Response(
-          JSON.stringify({ success: true, users_synced: 0, message: 'No active meters' }),
+          JSON.stringify({
+            success: true,
+            users_synced: 0,
+            errors: 0,
+            meters: [],
+            message: 'No active meters',
+          }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
         );
       }
@@ -301,7 +294,10 @@ Deno.serve(async (req: Request) => {
       // Optimize: Fetch all credentials at once if needed to avoid N+1 queries
       const credsMap = new Map();
       if (cronAction === 'sync-all-users') {
-        const { rows: allCreds } = await selectCredentialRows(supabase, { userIds });
+        const { rows: allCreds, error: credsErr } = await selectCredentialRows(supabase, {
+          userIds,
+        });
+        if (credsErr) console.error(`[${requestId}] credential lookup failed:`, credsErr);
 
         if (allCreds) {
           for (const cred of allCreds) {
@@ -310,8 +306,9 @@ Deno.serve(async (req: Request) => {
         }
       }
 
-      let successCount = 0;
-      let errorCount = 0;
+      const meterResults: Array<MeterSyncResult | MeterCalcResult> = [];
+      let usersSynced = 0;
+      const deps = { fetch: (input: string, init?: RequestInit) => fetch(input, init), store };
 
       // Process users in parallel batches to prevent timeouts
       const BATCH_SIZE = 10;
@@ -320,228 +317,71 @@ Deno.serve(async (req: Request) => {
 
         await Promise.all(
           batch.map(async (uid) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const userMeters = allMeters.filter((m: any) => m.user_id === uid);
+            const userResults: Array<MeterSyncResult | MeterCalcResult> = [];
             try {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const userMeters = allMeters.filter((m: any) => m.user_id === uid);
-
               if (cronAction === 'sync-all-users') {
-                // Get credentials for this user from pre-fetched map
+                // A user with active meters but no usable key is a failure to
+                // sync, not a success: count it, and leave last_sync_at alone.
                 const creds = credsMap.get(uid);
-
-                if (!creds) {
-                  console.log(`No credentials for user ${uid.substring(0, 8)}..., skipping`);
-                  return; // Replaces continue in map
-                }
-
-                const cronApiKey = await resolveApiKey(supabase, creds);
+                const cronApiKey = creds ? await resolveApiKey(supabase, creds) : null;
                 if (!cronApiKey) {
-                  console.log(
-                    `Credentials for user ${uid.substring(0, 8)}... unavailable, skipping`,
-                  );
-                  return;
-                }
-                const authHeaderOctopus = 'Basic ' + btoa(cronApiKey + ':');
-
-                for (const meter of userMeters) {
-                  const daysBack = 3;
-                  const periodTo = new Date();
-                  const periodFrom = new Date();
-                  periodFrom.setDate(periodFrom.getDate() - daysBack);
-
-                  const consumptionUrl = `https://api.octopus.energy/v1/electricity-meter-points/${meter.mpan}/meters/${meter.serial_number}/consumption/?period_from=${periodFrom.toISOString()}&period_to=${periodTo.toISOString()}&page_size=25000`;
-
-                  const response = await fetch(consumptionUrl, {
-                    headers: { Authorization: authHeaderOctopus },
-                  });
-                  if (!response.ok) {
-                    console.error(`Octopus API error for meter ${meter.mpan}: ${response.status}`);
-                    errorCount++;
-                    continue;
+                  const reason = creds ? 'credentials_unavailable' : 'no_credentials';
+                  console.error(`[SYNC] user ${uid.substring(0, 8)}...: ${reason}`);
+                  for (const meter of userMeters) {
+                    userResults.push(credentialsUnavailableResult(meter.mpan, reason));
                   }
-
-                  const consumptionData = await response.json();
-                  const consumption: OctopusConsumption[] = consumptionData.results || [];
-
-                  if (!consumption?.length) continue;
-
-                  const firstRecord = consumption[consumption.length - 1];
-                  const lastRecord = consumption[0];
-                  const minTime = new Date(firstRecord.interval_start);
-                  const maxTime = new Date(lastRecord.interval_end);
-
-                  const mpan = meter.mpan;
-                  const regionId = getRegionIdFromMpanStatic(mpan);
-
-                  let intensityUrl = `https://api.carbonintensity.org.uk/intensity/${minTime.toISOString()}/${maxTime.toISOString()}`;
-                  let isRegional = false;
-
-                  if (regionId) {
-                    intensityUrl = `https://api.carbonintensity.org.uk/regional/intensity/${minTime.toISOString()}/${maxTime.toISOString()}/regionid/${regionId}`;
-                    isRegional = true;
+                } else {
+                  const authHeaderOctopus = 'Basic ' + btoa(cronApiKey + ':');
+                  for (const meter of userMeters) {
+                    const r = await syncMeter(deps, {
+                      userId: uid,
+                      mpan: meter.mpan,
+                      serial: meter.serial_number,
+                      authHeader: authHeaderOctopus,
+                    });
+                    userResults.push(r);
                   }
-
-                  const intensityResponse = await fetch(intensityUrl);
-                  if (!intensityResponse.ok) {
-                    console.error(
-                      `Carbon intensity API error for ${mpan}: ${intensityResponse.status}`,
-                    );
-                    // Still store consumption even if intensity fetch fails
-                  } else {
-                    const intensityJson = await intensityResponse.json();
-                    const intensityMap = new Map<string, { intensity: number; index: string }>();
-
-                    // Shared rules (actual → forecast, skip unusable half-hours): _shared/footprint-records.ts
-                    const built = buildIntensityMap(intensityJson, isRegional);
-                    for (const [k, v] of built.map) intensityMap.set(k, v);
-                    if (built.skipped > 0)
-                      console.warn(
-                        `[FOOTPRINT] Skipped ${built.skipped} half-hour(s) with no usable intensity data`,
-                      );
-
-                    // Store footprint records if intensity was found
-                    const footprintRecords: FootprintRecord[] = [];
-                    for (const record of consumption) {
-                      const data = intensityMap.get(record.interval_start);
-                      if (data) {
-                        footprintRecords.push({
-                          interval_start: record.interval_start,
-                          interval_end: record.interval_end,
-                          consumption_kwh: record.consumption,
-                          intensity_gco2_kwh: data.intensity,
-                          carbon_g: record.consumption * data.intensity,
-                          intensity_index: data.index,
-                          mpan: mpan,
-                        });
-                      }
-                    }
-
-                    if (footprintRecords.length > 0) {
-                      await supabase
-                        .from('carbon_footprint')
-                        .upsert(footprintRecords, { onConflict: 'mpan,interval_start' });
-                    }
-                  }
-
-                  let insertedCount = 0;
-                  const records = consumption.map((reading) => ({
-                    interval_start: reading.interval_start,
-                    interval_end: reading.interval_end,
-                    consumption_kwh: reading.consumption,
-                    mpan: meter.mpan,
-                    serial_number: meter.serial_number,
-                  }));
-
-                  // Process in chunks of 1000 to avoid request size limits
-                  const CHUNK_SIZE = 1000;
-                  for (let j = 0; j < records.length; j += CHUNK_SIZE) {
-                    const chunk = records.slice(j, j + CHUNK_SIZE);
-                    const { error } = await supabase
-                      .from('octopus_consumption')
-                      .upsert(chunk, { onConflict: 'mpan,interval_start' });
-
-                    if (!error) {
-                      insertedCount += chunk.length;
-                    } else {
-                      console.error(`Error upserting chunk ${j / CHUNK_SIZE}:`, error);
-                    }
-                  }
-
-                  // Update last sync time
-                  await supabase
-                    .from('octopus_meters')
-                    .update({ last_sync_at: new Date().toISOString() })
-                    .eq('mpan', meter.mpan)
-                    .eq('user_id', uid);
-
-                  console.log(`Synced ${insertedCount} readings for meter ${meter.mpan}`);
                 }
               } else {
                 // calculate-all-footprints
                 for (const meter of userMeters) {
-                  const { data: consumption } = await supabase
-                    .from('octopus_consumption')
-                    .select('*')
-                    .eq('mpan', meter.mpan)
-                    .order('interval_start', { ascending: false })
-                    .limit(500);
-
-                  if (!consumption?.length) continue;
-
-                  const firstRecord = consumption[consumption.length - 1];
-                  const lastRecord = consumption[0];
-                  const minTime = new Date(firstRecord.interval_start);
-                  const maxTime = new Date(lastRecord.interval_end);
-
-                  const mpan = meter.mpan;
-                  const regionId = getRegionIdFromMpanStatic(mpan);
-
-                  let intensityUrl = `https://api.carbonintensity.org.uk/intensity/${minTime.toISOString()}/${maxTime.toISOString()}`;
-                  let isRegional = false;
-
-                  if (regionId) {
-                    intensityUrl = `https://api.carbonintensity.org.uk/regional/intensity/${minTime.toISOString()}/${maxTime.toISOString()}/regionid/${regionId}`;
-                    isRegional = true;
-                  }
-
-                  const intensityResponse = await fetch(intensityUrl);
-                  if (!intensityResponse.ok) {
-                    console.error(
-                      `Carbon intensity API error for ${mpan}: ${intensityResponse.status}`,
-                    );
-                    errorCount++;
-                    continue;
-                  }
-
-                  const intensityJson = await intensityResponse.json();
-                  const intensityMap = new Map<string, { intensity: number; index: string }>();
-
-                  // Shared rules (actual → forecast, skip unusable half-hours): _shared/footprint-records.ts
-                  const built = buildIntensityMap(intensityJson, isRegional);
-                  for (const [k, v] of built.map) intensityMap.set(k, v);
-                  if (built.skipped > 0)
-                    console.warn(
-                      `[FOOTPRINT] Skipped ${built.skipped} half-hour(s) with no usable intensity data`,
-                    );
-
-                  const footprintRecords: FootprintRecord[] = [];
-                  for (const record of consumption) {
-                    const data = intensityMap.get(record.interval_start);
-                    if (data) {
-                      footprintRecords.push({
-                        interval_start: record.interval_start,
-                        interval_end: record.interval_end,
-                        consumption_kwh: record.consumption_kwh,
-                        intensity_gco2_kwh: data.intensity,
-                        carbon_g: record.consumption_kwh * data.intensity,
-                        intensity_index: data.index,
-                        mpan: record.mpan,
-                      });
-                    }
-                  }
-
-                  if (footprintRecords.length > 0) {
-                    await supabase
-                      .from('carbon_footprint')
-                      .upsert(footprintRecords, { onConflict: 'mpan,interval_start' });
-                  }
-
-                  console.log(
-                    `Calculated ${footprintRecords.length} footprint records for meter ${mpan}`,
-                  );
+                  userResults.push(await calculateMeterFootprint(deps, meter.mpan));
                 }
               }
-
-              successCount++;
             } catch (err) {
               console.error(`Error processing user ${uid.substring(0, 8)}...:`, err);
-              errorCount++;
+              userResults.push({
+                mpan: '…',
+                ok: false,
+                readings: 0,
+                footprints_written: 0,
+                intensity_status: 0,
+                error: `exception: ${err instanceof Error ? err.message : String(err)}`,
+              });
             }
+            for (const r of userResults) {
+              const line = `[${cronAction}] meter ${r.mpan}: ${JSON.stringify(r)}`;
+              if (r.ok) console.log(line);
+              else console.error(line);
+            }
+            if (userResults.length > 0 && userResults.every((r) => r.ok)) usersSynced++;
+            meterResults.push(...userResults);
           }),
         );
       }
 
+      const summary = summarise(meterResults);
+      console.log(`[${requestId}] ${cronAction} summary: ${JSON.stringify(summary)}`);
+
       return new Response(
-        JSON.stringify({ success: true, users_synced: successCount, errors: errorCount }),
+        JSON.stringify({
+          ...summary,
+          users_processed: userIds.length,
+          users_synced: usersSynced,
+          meters: meterResults,
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
@@ -1067,6 +907,11 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    const pipelineDeps = {
+      fetch: (input: string, init?: RequestInit) => fetch(input, init),
+      store: supabaseOctopusStore(supabase),
+    };
+
     async function performSyncConsumption(userId: string, authHeaderOctopus: string, days: number) {
       if (!authHeaderOctopus) throw new Error('Missing credentials');
 
@@ -1082,179 +927,64 @@ Deno.serve(async (req: Request) => {
         throw new Error('No linked meter found. Please link your meter first.');
       }
 
-      const daysBack = days;
-      const periodTo = new Date();
-      const periodFrom = new Date();
-      periodFrom.setDate(periodFrom.getDate() - daysBack);
-
-      let totalInserted = 0;
-
+      const meters: MeterSyncResult[] = [];
       for (const meter of allMeterData) {
-        const { mpan, serial_number } = meter;
-
-        const consumptionUrl = `https://api.octopus.energy/v1/electricity-meter-points/${mpan}/meters/${serial_number}/consumption/?period_from=${periodFrom.toISOString()}&period_to=${periodTo.toISOString()}&page_size=25000`;
-
-        console.log(`Fetching consumption for meter ${mpan}`);
-
-        const response = await fetch(consumptionUrl, {
-          headers: { Authorization: authHeaderOctopus },
+        const r = await syncMeter(pipelineDeps, {
+          userId,
+          mpan: meter.mpan,
+          serial: meter.serial_number,
+          authHeader: authHeaderOctopus,
+          requestedDays: days,
         });
-
-        if (!response.ok) {
-          console.error(`Octopus API error for meter ${mpan}: ${response.status}`);
-          continue; // Skip this meter but continue with others
-        }
-
-        const consumptionData = await response.json();
-        const readings: OctopusConsumption[] = consumptionData.results || [];
-
-        console.log(`Received ${readings.length} readings for meter ${mpan}`);
-
-        let insertedCount = 0;
-        const records = readings.map((reading) => ({
-          interval_start: reading.interval_start,
-          interval_end: reading.interval_end,
-          consumption_kwh: reading.consumption,
-          mpan,
-          serial_number,
-        }));
-
-        // Process in chunks of 1000 to avoid request size limits
-        const CHUNK_SIZE = 1000;
-        for (let i = 0; i < records.length; i += CHUNK_SIZE) {
-          const chunk = records.slice(i, i + CHUNK_SIZE);
-          const { error } = await supabase
-            .from('octopus_consumption')
-            .upsert(chunk, { onConflict: 'mpan,interval_start' });
-
-          if (!error) {
-            insertedCount += chunk.length;
-          } else {
-            console.error(`Error upserting chunk ${i / CHUNK_SIZE}:`, error);
-          }
-        }
-
-        // Update last sync time for this meter
-        await supabase
-          .from('octopus_meters')
-          .update({ last_sync_at: new Date().toISOString() })
-          .eq('mpan', mpan)
-          .eq('user_id', userId);
-
-        totalInserted += insertedCount;
-        console.log(`Synced ${insertedCount} readings for meter ${mpan}`);
+        const line = `[sync-consumption] meter ${r.mpan}: ${JSON.stringify(r)}`;
+        if (r.ok) console.log(line);
+        else console.error(line);
+        meters.push(r);
       }
+      const summary = summarise(meters);
 
       return {
-        success: true,
-        readings_synced: totalInserted,
-        meters_synced: allMeterData.length,
-        period_from: periodFrom.toISOString(),
-        period_to: periodTo.toISOString(),
+        ...summary,
+        readings_synced: summary.readings_stored,
+        meters_synced: summary.meters_ok,
+        meters,
+        period_from:
+          meters
+            .map((m) => m.period_from)
+            .filter(Boolean)
+            .sort()[0] ?? null,
+        period_to: new Date().toISOString(),
       };
     }
 
     async function performCalculateFootprint(userId: string) {
       // Find ALL user meters to process both import and export
-      const { data: userMeters } = await supabase
+      const { data: userMeters, error: metersError } = await supabase
         .from('octopus_meters')
         .select('mpan, meter_type')
         .eq('user_id', userId)
         .eq('is_active', true);
 
+      if (metersError) throw new Error('Could not read your meters. Please try again.');
       if (!userMeters?.length) {
         throw new Error('No meter linked');
       }
 
-      let totalCalculated = 0;
-
+      const meters: MeterCalcResult[] = [];
       for (const meter of userMeters) {
-        // Get consumption data for this meter
-        const { data: consumption, error: consumptionError } = await supabase
-          .from('octopus_consumption')
-          .select('*')
-          .eq('mpan', meter.mpan)
-          .order('interval_start', { ascending: false })
-          .limit(500);
-
-        if (consumptionError || !consumption?.length) {
-          console.log(`No consumption data for meter ${meter.mpan}, skipping`);
-          continue;
-        }
-
-        // Determine Date Range
-        const lastRecord = consumption[0];
-        const firstRecord = consumption[consumption.length - 1];
-        const minTime = new Date(firstRecord.interval_start);
-        const maxTime = new Date(lastRecord.interval_end);
-
-        // Determine Region
-        const mpan = consumption[0].mpan;
-        const regionId = getRegionIdFromMpanStatic(mpan);
-
-        let intensityUrl = `https://api.carbonintensity.org.uk/intensity/${minTime.toISOString()}/${maxTime.toISOString()}`;
-        let isRegional = false;
-
-        if (regionId) {
-          intensityUrl = `https://api.carbonintensity.org.uk/regional/intensity/${minTime.toISOString()}/${maxTime.toISOString()}/regionid/${regionId}`;
-          isRegional = true;
-        }
-
-        const intensityMap = new Map<string, { intensity: number; index: string }>();
-
-        try {
-          const intensityResponse = await fetch(intensityUrl);
-          if (!intensityResponse.ok)
-            throw new Error(`Failed to fetch batch intensity: ${intensityResponse.status}`);
-
-          const intensityJson = await intensityResponse.json();
-          // Shared rules (actual → forecast, skip unusable half-hours): _shared/footprint-records.ts
-          const built = buildIntensityMap(intensityJson, isRegional);
-          for (const [k, v] of built.map) intensityMap.set(k, v);
-          if (built.skipped > 0)
-            console.warn(
-              `[FOOTPRINT] Skipped ${built.skipped} half-hour(s) with no usable intensity data`,
-            );
-        } catch (error) {
-          console.error(`Batch fetch failed for meter ${mpan}:`, error);
-          continue;
-        }
-
-        // Process records
-        const footprintRecords: FootprintRecord[] = [];
-
-        for (const record of consumption) {
-          const data = intensityMap.get(record.interval_start);
-          if (data) {
-            const carbonG = record.consumption_kwh * data.intensity;
-            footprintRecords.push({
-              interval_start: record.interval_start,
-              interval_end: record.interval_end,
-              consumption_kwh: record.consumption_kwh,
-              intensity_gco2_kwh: data.intensity,
-              carbon_g: carbonG,
-              intensity_index: data.index,
-              mpan: record.mpan,
-            });
-          }
-        }
-
-        if (footprintRecords.length > 0) {
-          const { error } = await supabase
-            .from('carbon_footprint')
-            .upsert(footprintRecords, { onConflict: 'mpan,interval_start' });
-          if (!error) totalCalculated += footprintRecords.length;
-        }
-
-        console.log(
-          `Calculated ${footprintRecords.length} footprint records for meter ${mpan} (${meter.meter_type})`,
-        );
+        const r = await calculateMeterFootprint(pipelineDeps, meter.mpan);
+        const line = `[calculate-footprint] meter ${r.mpan} (${meter.meter_type}): ${JSON.stringify(r)}`;
+        if (r.ok) console.log(line);
+        else console.error(line);
+        meters.push(r);
       }
+      const summary = summarise(meters);
 
       return {
-        success: true,
-        records_calculated: totalCalculated,
+        ...summary,
+        records_calculated: summary.footprints_written,
         meters_processed: userMeters.length,
+        meters,
       };
     }
 
@@ -1302,7 +1032,7 @@ Deno.serve(async (req: Request) => {
 
         return new Response(
           JSON.stringify({
-            success: true,
+            success: syncResult.success && calcResult.success,
             sync: syncResult,
             calculation: calcResult,
           }),

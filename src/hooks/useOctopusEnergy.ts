@@ -477,7 +477,10 @@ export function useOctopusEnergy(days: number = 30) {
 
         if (error) throw new Error(error.message || 'Failed to sync consumption');
 
-        toast.success(`Synced ${data.readings_synced} consumption readings`);
+        // BH-91: the function now reports per-meter failures instead of a blanket success.
+        if (data?.success === false)
+          toast.error('Failed to sync consumption data. Please try again.');
+        else toast.success(`Synced ${data.readings_synced} consumption readings`);
         await refetchStatus();
         return data;
       } catch (error: unknown) {
@@ -509,7 +512,9 @@ export function useOctopusEnergy(days: number = 30) {
 
       if (error) throw new Error(error.message || 'Failed to calculate footprint');
 
-      toast.success(`Calculated carbon footprint for ${data.records_calculated} periods`);
+      if (data?.success === false)
+        toast.error('Failed to calculate carbon footprint. Please try again.');
+      else toast.success(`Calculated carbon footprint for ${data.records_calculated} periods`);
       await refetchFootprint();
       return data;
     } catch (error: unknown) {
@@ -546,6 +551,11 @@ export function useOctopusEnergy(days: number = 30) {
           toast.success(
             `Synced ${readings} readings and calculated ${calculations} footprint records`,
           );
+          await refetchStatus();
+          await refetchFootprint();
+        } else if (data) {
+          // Some meters failed (BH-91). Show what did sync, and say it didn't all work.
+          toast.error('Failed to sync consumption data. Please try again.');
           await refetchStatus();
           await refetchFootprint();
         }
