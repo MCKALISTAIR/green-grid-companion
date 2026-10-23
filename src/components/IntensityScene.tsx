@@ -1,7 +1,7 @@
 import { useHaptics } from '@/hooks/useHaptics';
 import { NotificationType } from '@capacitor/haptics';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { motion, useMotionValue, useScroll, useTransform } from 'framer-motion';
 import { useTimeOfDay, TimeOfDay } from '@/hooks/useTimeOfDay';
 import { useWeatherData, WeatherData } from '@/hooks/useWeatherData';
@@ -16,6 +16,7 @@ import { SceneHeroSpotlight, SceneAtmosphericDepth } from './scene/SceneComposit
 import { SceneTemporalLife } from './scene/SceneTemporalLife';
 import { GenerationMix } from '@/lib/carbonApi';
 import { buildSceneConfig } from '@/lib/sceneConfig';
+import { useTapCount } from '@/lib/useTapCount';
 import { cityWeatherState } from '@/lib/cityLandmarkPalette';
 import { buildTurbineLayout } from '@/lib/turbineLayout';
 import { useSceneType, SceneType } from '@/hooks/useSceneType';
@@ -59,6 +60,8 @@ interface IntensitySceneProps {
    * text bottom + 34 (village REDRAW-PLAN), so no cloud edge crosses the text.
    */
   cloudTopPx?: number;
+  /** Design review of #184: tells the hero when synthwave is on, so its text goes white. */
+  onSynthwaveChange?: (on: boolean) => void;
 }
 
 export function IntensityScene({
@@ -74,6 +77,7 @@ export function IntensityScene({
   hasLiveReading = true,
   compact = false,
   cloudTopPx,
+  onSynthwaveChange,
 }: IntensitySceneProps) {
   const {
     timeOfDay: realTimeOfDay,
@@ -83,7 +87,7 @@ export function IntensityScene({
   const { weather: realWeather, weatherKnown: realWeatherKnown } = useWeatherData();
   const { unlock } = useAchievements();
   const { active: isDirectorMode, overrides } = useSceneDirector();
-  const { impactLight: impactMedium, notification } = useHaptics({ decorative: true }); // scene taps: light, decorative
+  const { impactLight, impactMedium, notification } = useHaptics({ decorative: true }); // scene taps: decorative
   const shouldReduceMotion = useReducedMotion();
   const { sceneType: autoSceneType, cityVariant } = useSceneType();
 
@@ -133,8 +137,16 @@ export function IntensityScene({
   const weatherKnown =
     realWeatherKnown || Boolean(weatherOverride) || (isDirectorMode && Boolean(overrides.weather));
 
+  // BH-96: synthwave is in memory only (never persisted), so it resets on reload
+  // and next launch.
   const [synthwaveMode, setSynthwaveMode] = useState(false);
-  const [sunGlassesActive, setSunGlassesActive] = useState(false);
+  useEffect(() => {
+    onSynthwaveChange?.(synthwaveMode);
+  }, [synthwaveMode, onSynthwaveChange]);
+  // Bumped on every sun tap; SceneSkyLayer replays the small sun reaction.
+  const [sunReactionKey, setSunReactionKey] = useState(0);
+  const registerSunTap = useTapCount();
+  const lastSunHapticRef = useRef(0);
 
   // Apply Intensity Override (guarantee a valid number, default to 150 moderate if propIntensity is undefined/null/NaN)
   const rawIntensity =
@@ -264,11 +276,23 @@ export function IntensityScene({
     setTimeout(() => setShowMeteorShower(false), 8000);
   };
 
-  const handleSunDoubleClick = () => {
-    if (shouldReduceMotion) return;
-    notification(NotificationType.Success);
-    setSunGlassesActive(true);
-    setTimeout(() => setSunGlassesActive(false), 4000);
+  // BH-96 (Design brief Q1): every tap on the sun gives a small reaction (disc
+  // pulse + light haptic, haptic at most once per 1.2 s). Three taps within 1.5 s
+  // toggle synthwave (medium haptic); a single or double tap never does.
+  // Design review of #184: the third tap toggles synthwave only, without
+  // replaying the small sun reaction.
+  const handleSunTap = () => {
+    if (registerSunTap()) {
+      impactMedium();
+      setSynthwaveMode((on) => !on);
+      return;
+    }
+    setSunReactionKey((k) => k + 1);
+    const now = Date.now();
+    if (now - lastSunHapticRef.current >= 1200) {
+      lastSunHapticRef.current = now;
+      impactLight();
+    }
   };
 
   const biomassPercentage = getGenerationPercentage('biomass');
@@ -307,6 +331,7 @@ export function IntensityScene({
       // region (not img): scene contains focusable tap targets (moon, cooling tower,
       // fact bubble...); role="img" forbids that
       role="region"
+      data-synthwave={synthwaveMode ? 'on' : 'off'}
       aria-label={`Animated landscape representing ${index} carbon intensity`}
       data-scene-type={sceneType}
       data-time-of-day={timeOfDay}
@@ -341,11 +366,9 @@ export function IntensityScene({
           sunPosition={sunPosition}
           timeOfDay={timeOfDay}
           synthwaveMode={synthwaveMode}
-          setSynthwaveMode={setSynthwaveMode}
-          sunGlassesActive={sunGlassesActive}
+          sunReactionKey={sunReactionKey}
           handleMoonDoubleClick={handleMoonDoubleClick}
-          handleSunDoubleClick={handleSunDoubleClick}
-          impactMedium={impactMedium}
+          onSunTap={handleSunTap}
           cloudTopPx={cloudTopPx}
         />
 

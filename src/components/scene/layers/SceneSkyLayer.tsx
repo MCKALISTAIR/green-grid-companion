@@ -17,12 +17,13 @@ export interface SceneSkyLayerProps {
   sceneConfig: SceneVisualConfig;
   sunPosition: number;
   timeOfDay: TimeOfDay;
+  /** BH-96: in synthwave the sun wears the sunglasses, statically. */
   synthwaveMode: boolean;
-  setSynthwaveMode: (value: boolean | ((prev: boolean) => boolean)) => void;
-  sunGlassesActive: boolean;
+  /** BH-96: bumped on every sun tap; replays the small sun reaction. 0 = no tap yet. */
+  sunReactionKey: number;
   handleMoonDoubleClick: () => void;
-  handleSunDoubleClick: () => void;
-  impactMedium: () => void;
+  /** BH-96: every tap on the sun (pointerup). The scene counts taps (useTapCount). */
+  onSunTap: () => void;
   /** BH-90: where unknown-weather clouds may start (hero text bottom + 34). */
   cloudTopPx?: number;
 }
@@ -37,11 +38,9 @@ export function SceneSkyLayer({
   sunPosition,
   timeOfDay,
   synthwaveMode,
-  setSynthwaveMode,
-  sunGlassesActive,
+  sunReactionKey,
   handleMoonDoubleClick,
-  handleSunDoubleClick,
-  impactMedium,
+  onSunTap,
   cloudTopPx,
 }: SceneSkyLayerProps) {
   return (
@@ -93,7 +92,8 @@ export function SceneSkyLayer({
           <motion.div
             className="absolute z-20 pointer-events-auto"
             data-scene-sun
-            initial={{ opacity: 0, scale: 0.8 }}
+            // Reduce Motion: appears in place, no scale-in (BH-96).
+            initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.8 }}
             animate={{
               opacity: sceneConfig.cleanliness * 0.3 + 0.7,
               scale: 1,
@@ -116,103 +116,96 @@ export function SceneSkyLayer({
               }, calc(max(env(safe-area-inset-top), 24px) + 4.25rem))`,
               right: timeOfDay === 'sunset' ? '15%' : timeOfDay === 'morning' ? '20%' : '8%',
               left: 'auto',
-              filter: `brightness(${sceneConfig.solarBrightness + 0.5})`,
+              // BH-96 (brief Q1): no CSS filter on the sun; its colour comes from the art.
             }}
           >
-            <motion.div
-              className="cursor-pointer relative select-none"
-              role="button"
-              tabIndex={-1}
-              aria-label={`Toggle synthwave mode ${synthwaveMode ? 'off' : 'on'}. Double click for cool sunglasses.`}
-              onClick={() => {
-                impactMedium();
-                setSynthwaveMode(!synthwaveMode);
-              }}
-              onDoubleClick={handleSunDoubleClick}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  impactMedium();
-                  setSynthwaveMode(!synthwaveMode);
-                }
-              }}
-              whileHover={{ scale: 1.15 }}
-              whileTap={{ scale: 0.95 }}
-              animate={{
-                y: [0, -4, 0], // Gentle floating action
-              }}
-              transition={{
-                y: {
-                  repeat: Infinity,
-                  duration: 4,
-                  ease: 'easeInOut' as const,
-                },
-                scale: { type: 'spring' as const, stiffness: 400, damping: 15 },
-              }}
+            {/* BH-96 (Design brief Q1): decorative easter egg, so it is not a VoiceOver
+                or keyboard control (aria-hidden, no role, no tabIndex, no key handler).
+                No hover, press spring or endless float. The invisible 44x44 hit area
+                is centred on the disc. */}
+            <div
+              className="cursor-pointer relative select-none touch-manipulation"
+              aria-hidden="true"
+              data-scene-sun-tap
+              onPointerUp={onSunTap}
             >
-              {/* Art pass v1 sun: flat disc, rim light, soft halo; no rays, no spin. */}
-              <div className="relative z-10 pointer-events-none -m-11">
+              <span
+                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-11 h-11"
+                data-scene-sun-hit
+              />
+              {/* Small sun reaction: disc 1 -> 1.08 -> 1 and halo +0.15 over 320 ms
+                  (ease.out). Reduce Motion: no scale or halo change. */}
+              <motion.div
+                key={sunReactionKey}
+                className="relative z-10 pointer-events-none -m-11"
+                data-sun-reaction={sunReactionKey > 0 && !shouldReduceMotion ? 'on' : 'off'}
+                data-sun-reactions={sunReactionKey}
+                initial={false}
+                animate={
+                  sunReactionKey > 0 && !shouldReduceMotion ? { scale: [1, 1.08, 1] } : { scale: 1 }
+                }
+                transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+              >
                 <SceneSun
                   r={timeOfDay === 'midday' ? 20 : 23}
                   tone={timeOfDay === 'sunset' ? 'sunset' : timeOfDay === 'dawn' ? 'dawn' : 'day'}
                 />
-              </div>
-
-              {/* Sunglasses Overlay */}
-              <AnimatePresence>
-                {sunGlassesActive && (
-                  <motion.div
-                    className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none"
-                    initial={{ scale: 0, rotate: -45, opacity: 0 }}
-                    animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                    exit={{ scale: 0, rotate: 45, opacity: 0 }}
-                    transition={{ type: 'spring', stiffness: 350, damping: 15 }}
-                  >
-                    <svg
-                      width="40"
-                      height="15"
-                      viewBox="0 0 40 15"
-                      fill="none"
-                      className="drop-shadow-md"
-                    >
-                      {/* Left Lens */}
-                      <rect
-                        x="3"
-                        y="3"
-                        width="12"
-                        height="9"
-                        rx="2"
-                        fill="#0f172a"
-                        stroke="#ffffff"
-                        strokeWidth="1.2"
-                      />
-                      <path d="M5 5H11" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" />
-                      {/* Right Lens */}
-                      <rect
-                        x="25"
-                        y="3"
-                        width="12"
-                        height="9"
-                        rx="2"
-                        fill="#0f172a"
-                        stroke="#ffffff"
-                        strokeWidth="1.2"
-                      />
-                      <path d="M27 5H33" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" />
-                      {/* Bridge */}
-                      <rect
-                        x="15"
-                        y="5"
-                        width="10"
-                        height="2"
-                        fill="#0f172a"
-                        stroke="#ffffff"
-                        strokeWidth="0.5"
-                      />
-                    </svg>
-                  </motion.div>
+                {sunReactionKey > 0 && !shouldReduceMotion && (
+                  <motion.span
+                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-100"
+                    style={{ width: 128, height: 128 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: [0, 0.15, 0] }}
+                    transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+                  />
                 )}
-              </AnimatePresence>
-            </motion.div>
+              </motion.div>
+
+              {/* BH-96: in synthwave the sun wears the sunglasses, statically. */}
+              {synthwaveMode && (
+                <div
+                  className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none"
+                  data-sun-sunglasses
+                >
+                  <svg width="40" height="15" viewBox="0 0 40 15" fill="none">
+                    {/* Left Lens */}
+                    <rect
+                      x="3"
+                      y="3"
+                      width="12"
+                      height="9"
+                      rx="2"
+                      fill="#0f172a"
+                      stroke="#ffffff"
+                      strokeWidth="1.2"
+                    />
+                    <path d="M5 5H11" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" />
+                    {/* Right Lens */}
+                    <rect
+                      x="25"
+                      y="3"
+                      width="12"
+                      height="9"
+                      rx="2"
+                      fill="#0f172a"
+                      stroke="#ffffff"
+                      strokeWidth="1.2"
+                    />
+                    <path d="M27 5H33" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" />
+                    {/* Bridge */}
+                    <rect
+                      x="15"
+                      y="5"
+                      width="10"
+                      height="2"
+                      fill="#0f172a"
+                      stroke="#ffffff"
+                      strokeWidth="0.5"
+                    />
+                  </svg>
+                </div>
+              )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
