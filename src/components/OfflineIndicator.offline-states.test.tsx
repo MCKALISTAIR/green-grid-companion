@@ -58,7 +58,7 @@ describe('Offline: pill vs full state (Design call)', () => {
     expect(card).not.toHaveTextContent(/you're offline/i);
     expect(card.querySelector('h3')).toBeNull();
     expect(card).toHaveTextContent('Nothing saved yet.');
-    expect(card).toHaveTextContent('We will refresh automatically when you are back online.');
+    expect(card).toHaveTextContent("We'll refresh automatically when you're back online.");
     fireEvent.click(screen.getByRole('button', { name: 'Try now' }));
     expect(refetch).toHaveBeenCalledWith({ type: 'active' }, { cancelRefetch: false });
     await act(async () => {
@@ -95,7 +95,12 @@ describe('Offline pill Retry (Design call, BH-78)', () => {
     });
     const pill = screen.getByTestId('connection-pill');
     expect(pill).toHaveTextContent('Offline · nothing saved yet');
-    expect(screen.getAllByText(/offline/i)).toHaveLength(1);
+    // One visible offline message; the sr-only full form is for screen readers.
+    const visible = screen
+      .getAllByText(/offline/i)
+      .filter((el) => !el.classList.contains('sr-only'));
+    expect(visible).toHaveLength(1);
+    expect(pill).toHaveTextContent('Offline. Nothing saved yet.');
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
     expect(refetch).toHaveBeenCalledWith({ type: 'active' }, { cancelRefetch: false });
     await act(async () => {

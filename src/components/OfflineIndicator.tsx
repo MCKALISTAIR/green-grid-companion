@@ -7,7 +7,7 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { NotificationType } from '@capacitor/haptics';
 import { useOfflineEmptyStateShown } from '@/lib/offlineEmptyState';
 import { useQueryClient } from '@tanstack/react-query';
-import { BACK_ONLINE_PILL, offlinePillText } from '@/lib/voice/statesCopy';
+import { BACK_ONLINE_PILL, offlinePillLabel, offlinePillText } from '@/lib/voice/statesCopy';
 import { cachedReadingAt, useHeroReadingAt } from '@/lib/offlineReadingTime';
 import { useHeroStatusSlot } from '@/lib/heroStatusSlot';
 import { dur, spring } from '@/lib/motion';
@@ -95,7 +95,14 @@ export function OfflineIndicator() {
             aria-hidden="true"
           />
           <motion.span layout={!reduced ? 'position' : false} role="status" aria-live="polite">
-            {state === 'offline' ? offlinePillText(readingAt) : BACK_ONLINE_PILL}
+            {state === 'offline' ? (
+              <>
+                <span aria-hidden="true">{offlinePillText(readingAt)}</span>
+                <span className="sr-only">{offlinePillLabel(readingAt)}</span>
+              </>
+            ) : (
+              BACK_ONLINE_PILL
+            )}
           </motion.span>
           {state === 'offline' && (
             <button

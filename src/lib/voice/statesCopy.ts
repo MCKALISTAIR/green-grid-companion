@@ -3,15 +3,98 @@
  * Plain in both tones (clarity wins). Times are Europe/London. Error-state
  * cards (slow, outage, stale, offline, rank, planner) live in errorStatesCopy.
  */
-import { formatLondonSlotTime } from '@/lib/londonTime';
+import {
+  formatLondonDayLongMonth,
+  formatLondonDayShortMonth,
+  formatLondonShortWeekday,
+  formatLondonSlotSpoken,
+  formatLondonSlotTime,
+  formatLondonWeekday,
+  londonDateKey,
+} from '@/lib/londonTime';
 
 /**
- * Compact hero pill (motion spec §2.7). `readingAt` is the reading's own time (BH-88), shown in UK time. On
- * clock-change day the repeated hour carries BST or GMT ("01:30 GMT").
+ * Offline pill (motion spec §2.7). Says how old the figure is, so it uses the
+ * reading's own time (BH-88), in UK time. Day labels are Design's call (#178):
+ * today is the time only, then "Yesterday 07:00", "Tue 07:00" for 2 to 6 days
+ * ago, and the date ("12 Oct") for anything older. The repeated hour on
+ * clock-change night keeps its BST/GMT tag.
  */
-export function offlinePillText(readingAt: number | null): string {
-  if (!readingAt) return 'Offline · nothing saved yet';
-  return `Offline · figures from ${formatLondonSlotTime(new Date(readingAt))}`;
+export const OFFLINE_PILL_COPY = {
+  prefix: 'Offline · figures from',
+  nothingSaved: 'Offline · nothing saved yet',
+  yesterday: 'Yesterday',
+  /** Screen-reader form, e.g. "Offline. Reading from yesterday at 07:00" (Design call, #178). */
+  ariaOffline: 'Offline.',
+  ariaPrefix: 'Reading from',
+  ariaYesterday: 'yesterday',
+  ariaAt: 'at',
+  ariaNothingSaved: 'Offline. Nothing saved yet.',
+} as const;
+
+export type ReadingDayBand = 'today' | 'yesterday' | 'weekday' | 'date';
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Whole UK calendar days between the reading and now (0 = same UK day). */
+export function londonDaysAgo(readingAt: number, now: number): number {
+  const day = (t: number) => {
+    const [y, m, d] = londonDateKey(new Date(t)).split('-').map(Number);
+    return Date.UTC(y, m - 1, d);
+  };
+  return Math.round((day(now) - day(readingAt)) / DAY_MS);
+}
+
+export function readingDayBand(readingAt: number, now: number): ReadingDayBand {
+  const days = londonDaysAgo(readingAt, now);
+  if (days <= 0) return 'today';
+  if (days === 1) return 'yesterday';
+  if (days <= 6) return 'weekday';
+  return 'date';
+}
+
+/** "07:00", "Yesterday 07:00", "Tue 07:00" or "12 Oct", in UK time. */
+export function readingWhen(readingAt: number, now: number): string {
+  const at = new Date(readingAt);
+  const time = formatLondonSlotTime(at);
+  switch (readingDayBand(readingAt, now)) {
+    case 'today':
+      return time;
+    case 'yesterday':
+      return `${OFFLINE_PILL_COPY.yesterday} ${time}`;
+    case 'weekday':
+      return `${formatLondonShortWeekday(at)} ${time}`;
+    case 'date':
+      return formatLondonDayShortMonth(at);
+  }
+}
+
+/** "07:00", "yesterday at 07:00", "Tuesday at 07:00" or "12 October", for screen readers. */
+export function readingWhenSpoken(readingAt: number, now: number): string {
+  const at = new Date(readingAt);
+  const time = formatLondonSlotSpoken(at);
+  const { ariaAt } = OFFLINE_PILL_COPY;
+  switch (readingDayBand(readingAt, now)) {
+    case 'today':
+      return time;
+    case 'yesterday':
+      return `${OFFLINE_PILL_COPY.ariaYesterday} ${ariaAt} ${time}`;
+    case 'weekday':
+      return `${formatLondonWeekday(at)} ${ariaAt} ${time}`;
+    case 'date':
+      return formatLondonDayLongMonth(at);
+  }
+}
+
+export function offlinePillText(readingAt: number | null, now: number = Date.now()): string {
+  if (!readingAt) return OFFLINE_PILL_COPY.nothingSaved;
+  return `${OFFLINE_PILL_COPY.prefix} ${readingWhen(readingAt, now)}`;
+}
+
+/** e.g. "Offline. Reading from yesterday at 07:00". */
+export function offlinePillLabel(readingAt: number | null, now: number = Date.now()): string {
+  if (!readingAt) return OFFLINE_PILL_COPY.ariaNothingSaved;
+  return `${OFFLINE_PILL_COPY.ariaOffline} ${OFFLINE_PILL_COPY.ariaPrefix} ${readingWhenSpoken(readingAt, now)}`;
 }
 
 export const BACK_ONLINE_PILL = 'Back online';

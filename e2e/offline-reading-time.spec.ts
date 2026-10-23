@@ -24,11 +24,11 @@ function row(fromMs: number, value: number) {
   };
 }
 
-async function mockNeso(page: Page) {
+async function mockNeso(page: Page, readingFrom = READING_FROM) {
   const nowSlot = Math.floor(SAVED_AT / SLOT) * SLOT;
   await page.route('https://api.carbonintensity.org.uk/**', async (route) => {
     const path = new URL(route.request().url()).pathname;
-    if (path === '/intensity') return route.fulfill({ json: { data: [row(READING_FROM, 150)] } });
+    if (path === '/intensity') return route.fulfill({ json: { data: [row(readingFrom, 150)] } });
     if (path.startsWith('/intensity/')) {
       const rows = Array.from({ length: 100 }, (_, i) => row(nowSlot + (i - 2) * SLOT, 150));
       return route.fulfill({ json: { data: rows } });
@@ -78,6 +78,27 @@ test('BH-88: offline pill shows the reading time (07:00), not the save time (08:
   await page.screenshot({ path: shot('bh88-offline-pill') });
   await expect(pill).toContainText('Offline · figures from 07:00');
   await expect(pill).not.toContainText('08:30');
+  await expect(pill.getByRole('status')).toContainText('Offline. Reading from 07:00');
+  await context.setOffline(false);
+});
+
+test('BH-88: a reading from yesterday says "Yesterday 07:00" (Design call, #178)', async ({
+  page,
+  context,
+}) => {
+  await page.clock.install({ time: SAVED_AT });
+  await page.setViewportSize({ width: 390, height: 844 });
+  // Thu 22 Oct 2026 07:00 BST, seen on Fri 23 Oct at 08:30 BST.
+  await mockNeso(page, READING_FROM - 24 * 60 * 60_000);
+  await openHome(page);
+  await expect(page.getByTestId('hero-status-slot')).toBeAttached({ timeout: 20000 });
+  await page.waitForTimeout(1500);
+  await context.setOffline(true);
+  const pill = page.getByTestId('hero-status-slot').getByTestId('connection-pill');
+  await expect(pill).toContainText('Offline · figures from Yesterday 07:00');
+  await expect(pill.getByRole('status')).toContainText('Offline. Reading from yesterday at 07:00');
+  await page.waitForTimeout(800);
+  await page.screenshot({ path: shot('bh88-offline-pill-yesterday') });
   await context.setOffline(false);
 });
 
@@ -103,9 +124,14 @@ test('BH-89: offline with nothing cached says "Offline" once, in the hero', asyn
   await page.screenshot({ path: shot('bh89-offline-empty') });
   await expect(card).not.toContainText("You're offline");
   await expect(card).toContainText('Nothing saved yet.');
+  await expect(card).toContainText("We'll refresh automatically when you're back online.");
   await expect(card.getByRole('button', { name: 'Try now' })).toBeVisible();
+  // Design call (#178): the icon is top-aligned with the first line of text.
+  const icon = await card.locator('span[aria-hidden="true"]').first().boundingBox();
+  const text = await card.locator('p').first().boundingBox();
+  expect(Math.abs(icon!.y - text!.y)).toBeLessThanOrEqual(1);
   // One offline message on screen: the hero's.
-  await expect(page.getByText(/offline/i)).toHaveCount(1);
+  await expect(page.getByText(/offline/i).and(page.locator(':not(.sr-only)'))).toHaveCount(1);
   await expect(page.getByTestId('connection-pill')).toHaveCount(0);
   await context.setOffline(false);
 });
