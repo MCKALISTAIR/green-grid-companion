@@ -84,6 +84,7 @@ Do not reintroduce competing numeric overlays on the scene. Do not put marketing
 4. **Aspect integrity** — silhouette SVGs use `SCENE_SILHOUETTE_ASPECT` (`xMidYMax meet`); washes may use `SCENE_WASH_ASPECT` (`none`). Never stretch landmark geometry to fill the frame.
 5. **Diegetic first** — trains when dirty, drones when clean renewables; wildlife from garden stage — not UFO roulette.
 6. **Temporal life** — garden stages 0–4 from coal-free + clean hours. Hours stay under the hood. UI shows a **stage-up line only** (“Garden woke up · day N”), never persistent garden chrome.
+7. **City sets** (PR-B1, Design brief §11) — London keeps its landmark set (glass towers, clock tower, dome, Eye). Every other city gets the neutral GB skyline (`NeutralCity*` in `CityLandscape.tsx`): brick terraces, plain blocks, one flat-topped tower, a church spire; no domes, wheels, tapered towers or clock faces. Edinburgh swaps the tower for `EdinburghCastle` in the far landmark layer. The very-clean landmark (NESO very low) is the Eye, the castle or the spire; the castle and spire only get a static warm rim (or lit windows after dark).
 
 ---
 
