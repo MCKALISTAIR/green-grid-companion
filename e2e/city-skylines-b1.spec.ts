@@ -169,3 +169,17 @@ test('the new city art uses no CSS filter or blur', async ({ page }) => {
     expect(filtered).toEqual([]);
   }
 });
+
+// #187: Greater London districts map to London, so CR0 must get London's
+// skyline art (dome, clock tower, Eye) and none of the neutral set.
+test('Greater London CR0 shows the London skyline art at 390x844', async ({ page }) => {
+  test.setTimeout(90_000);
+  const scene = await openCity(page, 'CR0', 'midday');
+  await expect(scene.locator('[data-city-variant="london"]')).toHaveCount(1);
+  const lms = await landmarks(scene);
+  for (const lm of ['dome', 'london-eye', 'clock-tower']) expect(lms).toContain(lm);
+  const art = await cityArt(scene);
+  for (const a of ['church-spire', 'terrace', 'neutral-tower', 'edinburgh-castle']) {
+    expect(art).not.toContain(a);
+  }
+});
