@@ -103,8 +103,10 @@ function ChargingHistory() {
   };
 
   return (
+    // No pb-24 here: AppLayout's <main> already reserves room for the bottom nav,
+    // and the extra 96px let the page scroll past its last item (BH-77).
     <motion.div
-      className="max-w-lg mx-auto pb-24 px-4"
+      className="max-w-lg mx-auto px-4"
       variants={containerVariants}
       initial="hidden"
       animate="show"
