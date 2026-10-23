@@ -3,6 +3,9 @@ import type { WeatherData } from '@/hooks/useWeatherData';
 import type { SceneType } from '@/hooks/useSceneType';
 import { getSkyGradient } from '@/lib/sceneUtils';
 
+/** Wind state threshold, km/h (Open-Meteo default unit). Alistair, 15 Oct 2026. */
+export const WIND_STATE_KMH = 25;
+
 export interface SceneVisualConfig {
   cleanliness: number;
   skyGradient: string;
@@ -11,7 +14,8 @@ export interface SceneVisualConfig {
   showFactories: boolean;
   showBirds: boolean;
   showSmoke: boolean;
-  showRain: boolean;
+  /** Wind state (art pass v1 §9): Open-Meteo wind_speed_10m >= WIND_STATE_KMH. */
+  showWind: boolean;
   showSunRays: boolean;
   showStars: boolean;
   showMoon: boolean;
@@ -122,7 +126,8 @@ export function buildSceneConfig({
     showFactories: cleanliness < 0.85,
     showBirds: cleanliness > 0.6 && isDaytime && !weatherReducesBirds,
     showSmoke: cleanliness < 0.5,
-    showRain: cleanliness < 0.35 && !weather.isRaining,
+    // Intensity never invents weather (art pass v1 §9); rain comes only from weather.isRaining.
+    showWind: !synthwaveMode && weather.windSpeed >= WIND_STATE_KMH,
     showSunRays:
       cleanliness > 0.7 &&
       (timeOfDay === 'morning' || timeOfDay === 'midday' || timeOfDay === 'afternoon') &&

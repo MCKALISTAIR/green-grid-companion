@@ -5,6 +5,7 @@ import { Geolocation } from '@capacitor/geolocation';
 import { logger } from '@/lib/logger';
 import { resolvePostcode } from '@/lib/location';
 import { coordParams, roundCoords } from '@/lib/coords';
+import { setSceneLocation } from '@/lib/sceneLocation';
 
 // Weather condition types based on WMO codes
 export type WeatherCondition =
@@ -204,6 +205,11 @@ export function useWeatherData(postcode?: string) {
 
     getLocation();
   }, [postcode]);
+
+  // Share the resolved location with the scene's sunrise/sunset (no extra lookup).
+  useEffect(() => {
+    if (coords) setSceneLocation(coords);
+  }, [coords]);
 
   const query = useQuery<WeatherData>({
     queryKey: ['weather', coords?.lat, coords?.lon],
