@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { appStorage } from '@/lib/appStorage';
 import { useState, useEffect, useMemo } from 'react';
 import { useCarbonData } from '@/hooks/useCarbonData';
@@ -6,8 +7,9 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { easeOutExpo, stateTransition } from '@/lib/motion';
-import { ErrorState } from '@/components/ErrorState';
-import { getErrorInfo } from '@/lib/errorUtils';
+import { ErrorActionButton, ErrorStateCard } from '@/components/errors/ErrorStateCard';
+import { PLANNER_ERROR_COPY } from '@/lib/voice/errorStatesCopy';
+import { readTone } from '@/lib/tone';
 import {
   ResponsiveDialog,
   ResponsiveDialogContent,
@@ -18,7 +20,16 @@ import {
 } from '@/components/ui/responsive-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { WashingMachine, Car, Utensils, Zap, Plus, PenLine, Leaf } from 'lucide-react';
+import {
+  AlertTriangle,
+  WashingMachine,
+  Car,
+  Utensils,
+  Zap,
+  Plus,
+  PenLine,
+  Leaf,
+} from 'lucide-react';
 import {} from '@/lib/carbonApi';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { plannerReminderId } from '@/lib/notificationIds';
@@ -35,7 +46,6 @@ import {
 } from '@/lib/nowOrWait';
 import { formatLondonTime, formatLondonTimeWithDay } from '@/lib/londonTime';
 import { PullToRefresh } from '@/components/PullToRefresh';
-import {} from '@/components/ui/turbine-spinner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SlowLoadingNotice } from '@/components/SlowLoadingNotice';
 import { plannerLiveIntensity } from '@/lib/plannerLive';
@@ -88,7 +98,7 @@ export default function Planner() {
   });
 
   const { postcode } = useAppLocation();
-  const { forecast, intensity, hasReading, lastUpdated, refetch, isLoading, isError, error } =
+  const { forecast, intensity, hasReading, lastUpdated, refetch, isLoading, isError } =
     useCarbonData(postcode);
   // useCarbonData reports 0 until a live reading arrives; don't treat that as a reading.
   const liveIntensity = plannerLiveIntensity(intensity, { isLoading, isError, hasReading });
@@ -183,24 +193,6 @@ export default function Planner() {
     plan.action === 'wait'
       ? Math.round(plan.gramsCleaner * selectedAppliance.power * selectedAppliance.duration)
       : 0;
-
-  // Handle error state
-  if (isError) {
-    const errorInfo = getErrorInfo(error);
-    return (
-      <div className="page-shell page-shell--fit">
-        <div className="page-shell-inner space-y-6">
-          <PageHeader title="Power Planner" />
-          <ErrorState
-            title={errorInfo.title}
-            description={errorInfo.description}
-            retry={() => refetch()}
-            fullScreen
-          />
-        </div>
-      </div>
-    );
-  }
 
   const scheduleReminder = async () => {
     if (!bestSlot) return;
@@ -393,6 +385,48 @@ export default function Planner() {
                   </div>
                   <Skeleton className="h-10 w-full rounded-xl" />
                 </Card>
+              </motion.div>
+            ) : isError ? (
+              // Design state 6: the picker and selection stay; the error lives in the
+              // result card only.
+              <motion.div
+                key="error"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={stateTransition}
+              >
+                <ErrorStateCard
+                  testId="planner-error"
+                  role="alert"
+                  tint="amber"
+                  icon={AlertTriangle}
+                  title={PLANNER_ERROR_COPY.title}
+                  body={PLANNER_ERROR_COPY.body(selectedAppliance.name, readTone())}
+                  actions={[{ label: PLANNER_ERROR_COPY.action, onClick: () => void refetch() }]}
+                />
+                {/* Short screens (320x568): a sticky Retry above the dock so the primary
+                    action is on screen without scrolling. Portalled: a transformed
+                    ancestor (pull-to-refresh) would otherwise trap position: fixed. */}
+                {createPortal(
+                  <div
+                    data-testid="planner-error-sticky"
+                    style={{
+                      bottom:
+                        'calc(var(--bottom-nav-height) + var(--bottom-nav-gap) + var(--bottom-safe-area) + 8px)',
+                    }}
+                    className="fixed inset-x-4 z-30 flex items-center justify-between gap-3 rounded-[20px] border border-border/60 bg-white p-2 pl-4 shadow-lg dark:bg-card [@media(min-height:701px)]:hidden"
+                  >
+                    <span className="text-sm font-bold text-foreground">
+                      {PLANNER_ERROR_COPY.title}
+                    </span>
+                    <ErrorActionButton
+                      label={PLANNER_ERROR_COPY.action}
+                      onClick={() => void refetch()}
+                    />
+                  </div>,
+                  document.body,
+                )}
               </motion.div>
             ) : startNow ? (
               <motion.div

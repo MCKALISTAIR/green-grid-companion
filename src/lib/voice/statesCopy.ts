@@ -12,6 +12,14 @@ export function offlineBannerText(savedAt: number | null): string {
 
 export const BACK_ONLINE_TEXT = "You're back online.";
 
+/** Compact hero pill (motion spec §2.7). */
+export function offlinePillText(savedAt: number | null): string {
+  if (!savedAt) return 'Offline · nothing saved yet';
+  return `Offline · figures from ${formatLondonTime(new Date(savedAt))}`;
+}
+
+export const BACK_ONLINE_PILL = 'Back online';
+
 /** Query keys (first element) that hold carbon intensity figures. */
 export const CARBON_QUERY_ROOTS = new Set(['national', 'regional', 'forecast']);
 
@@ -31,4 +39,22 @@ export const OFF_GRID_HOME_COPY = {
   body: "NESO's data only covers Great Britain, so this is the GB average.",
   bodyCheeky: "NESO's data stops at Great Britain, so you're seeing the GB average.",
   action: 'Change location',
+} as const;
+
+/** Reading periods are 30 min; older than this means refreshes are failing. */
+export const STALE_READING_MS = 60 * 60 * 1000;
+
+export function isReadingStale(fromIso: string | undefined, nowMs: number = Date.now()): boolean {
+  if (!fromIso) return false;
+  const from = Date.parse(fromIso);
+  return Number.isFinite(from) && nowMs - from > STALE_READING_MS;
+}
+/**
+ * Home notice when the saved postcode doesn't exist (#108; Design call 22 Oct).
+ * Same wording in Cheeky and Plain. The action opens the location picker.
+ */
+export const POSTCODE_NOT_FOUND_COPY = {
+  title: (postcode: string) => `We couldn't find ${postcode}`,
+  body: 'Showing the GB average for now.',
+  action: 'Fix postcode',
 } as const;

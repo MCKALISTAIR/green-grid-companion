@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { getHeroTextTone, HERO_CHIP, HERO_INK, TIME_SKY_COLORS } from './sceneUtils';
 import type { TimeOfDay } from '@/hooks/useTimeOfDay';
+import { MOOD } from './artPalette';
 
 type RGB = [number, number, number];
 const parseHsl = (s: string): RGB => {
@@ -94,5 +95,24 @@ describe('hero location pill + trophy chip AA on every sky (light and dark mode)
         expect(edge).toBeGreaterThanOrEqual(3);
       }
     }
+  });
+});
+
+// Art pass PR 3: the intensity mood haze sits over the sky. Its gradient starts at
+// 30% of the scene; take the worst case (full haze alpha) at the 40% sky stop.
+describe('hero text AA with the intensity mood haze', () => {
+  const sat = (c: RGB, k: number): RGB => {
+    const l = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+    return c.map((v) => Math.max(0, Math.min(255, l + (v - l) * k))) as RGB;
+  };
+  const cases = skies.flatMap(([n, t, w, stops]) =>
+    Object.entries(MOOD).map(([band, m]) => [`${n} / ${band}`, t, w, stops[1], m] as const),
+  );
+  it.each(cases)('%s passes 4.5:1', (_n, t, w, stop, m) => {
+    const tone = getHeroTextTone(t, w);
+    const sky = mix(sat(parseHsl(stop), m.sat), hex(m.haze), m.a);
+    const r =
+      tone === 'ink' ? ratio(hex(HERO_INK), sky) : ratio(WHITE, mix(sky, BLACK, DARK_SCRIM));
+    expect(r).toBeGreaterThanOrEqual(4.5);
   });
 });

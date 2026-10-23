@@ -1,3 +1,4 @@
+import { notifyBadgesChanged } from '@/lib/trophyChip';
 import { appStorage } from '@/lib/appStorage';
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
@@ -110,6 +111,7 @@ export function useAchievements() {
       );
 
       appStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify(updated));
+      notifyBadgesChanged();
 
       // Toast notification
       toast.success(`Achievement Unlocked: ${achievement.title}`, {
@@ -142,6 +144,7 @@ export function useAchievements() {
             : a,
         );
         appStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify(updated));
+        notifyBadgesChanged();
 
         toast.success(`Achievement Unlocked: ${achievement.title}`, {
           description: achievement.description,
@@ -154,6 +157,7 @@ export function useAchievements() {
       // Just update progress
       const updated = prev.map((a) => (a.id === id ? { ...a, progress: newProgress } : a));
       appStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify(updated));
+      notifyBadgesChanged();
       return updated;
     });
   }, []);
