@@ -218,13 +218,10 @@ export const FEATURE_GUIDES = [
     description: 'Connect Octopus Energy for real meter-based footprint',
     content: (
       <div className="space-y-4">
-        <p>Supercharge GridSense by connecting your energy account.</p>
-
-        <h3 className="text-lg font-semibold pt-2">Octopus Energy</h3>
+        <h3 className="text-lg font-semibold">Octopus Energy</h3>
         <p>
-          Connect your Octopus account to sync smart-meter consumption and calculate your{' '}
-          <strong>real carbon footprint</strong> and Green Score from timing — not just how much you
-          use.
+          Link your Octopus account to pull in your smart meter&apos;s half-hourly usage. We work
+          out your real footprint, and a Green Score for how much of it landed in cleaner hours.
         </p>
       </div>
     ),

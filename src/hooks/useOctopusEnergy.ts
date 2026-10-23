@@ -9,15 +9,40 @@ import { takeLegacyOctopusCredentials } from '@/lib/octopusLegacyStorage';
 import { readTone } from '@/lib/tone';
 import { OCTOPUS_SYNC_COPY, toneBody } from '@/lib/voice/errorStatesCopy';
 import {
+  isDeviceOffline,
   readFunctionErrorBody,
   syncErrorOutcome,
   syncFailureMessage,
   syncOutcome,
   withOfflineCheck,
+  type SyncOutcome,
 } from '@/lib/octopusSyncOutcome';
+import {
+  functionErrorStatus,
+  parseGetMetersAnswer,
+  parseSaveFailure,
+  type LinkResult,
+} from '@/lib/octopusLink';
 
 /** Thrown after the sync toast has already been shown, so the catch doesn't show a second one. */
 class SyncToastShown extends Error {}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SyncData = any;
+
+type FullSyncRun =
+  | { kind: 'no_session' }
+  | {
+      kind: 'http_error';
+      outcome: 'credentials' | 'failed' | 'offline';
+      error: { message?: string };
+    }
+  | { kind: 'done'; outcome: SyncOutcome; data: SyncData; readings: number };
+
+export interface FirstSyncResult {
+  outcome: SyncOutcome;
+  readings: number;
+}
 
 /** Toast for a non-2xx sync response; returns an error to throw. No automatic retry. */
 async function toastSyncHttpError(error: { message?: string }): Promise<SyncToastShown> {
@@ -149,7 +174,7 @@ function migrateLegacyCredentialsOnce(): Promise<boolean> {
       logger.warn('Could not upload legacy Octopus credentials; user must re-enter them', {
         error,
       });
-      toast.info('Please re-enter your Octopus API key in Settings to reconnect.');
+      toast.info("Please relink Octopus in Settings. We couldn't move your old details across.");
       return false;
     }
   })();
@@ -356,7 +381,7 @@ export function useOctopusEnergy(days: number = 30) {
         if (error) throw new Error(error.message || 'Failed to migrate data');
 
         if (data.migrated?.credentials || data.migrated?.meters > 0) {
-          toast.success('Your Octopus data has been restored to this account!');
+          toast.success('Your Octopus data is back on this account.');
           await refetchStatus();
         }
         return data;
@@ -372,75 +397,87 @@ export function useOctopusEnergy(days: number = 30) {
     [refetchStatus],
   );
 
-  // Helper function to link meters (internal use)
-  const linkMeterInternal = useCallback(async (): Promise<boolean> => {
+  // get-meters, read properly (PR-O1): wrong key, wrong account, Octopus down and
+  // "no meter" each come back as their own reason. Same request as before.
+  // Never toasts: the caller decides where the message goes.
+  const checkMeters = useCallback(async (): Promise<LinkResult> => {
     try {
       const { data, error } = await supabase.functions.invoke('octopus-energy', {
         body: { action: 'get-meters' },
       });
 
       if (error) {
-        logger.warn('Failed to auto-link meters', { error: error.message });
-        return false;
+        logger.warn('Failed to link meters', { error: error.message });
+        return { ok: false, reason: isDeviceOffline() ? 'offline' : 'unknown' };
       }
 
-      if (data.meters?.length > 0) {
-        logger.info(`Auto-linked ${data.meters.length} meter(s)`);
-        return true;
+      const result = parseGetMetersAnswer(data);
+      if (result.ok) {
+        logger.info(`Linked ${result.meters.length} meter(s)`);
+        localStorage.setItem(LOCAL_STORAGE_KEYS.isLinked, 'true');
+        setCachedIsLinked(true);
       }
-      return false;
+      return result;
     } catch (error) {
-      logger.warn('Error auto-linking meters', { error });
-      return false;
+      logger.warn('Error linking meters', { error });
+      return { ok: false, reason: isDeviceOffline() ? 'offline' : 'unknown' };
     }
   }, []);
 
   // Save Credentials - sent once to the server (stored encrypted there), never
-  // persisted on the device. Auto-links meters on success. Throws on failure so
-  // the form can keep the user's input (in memory only) for a retry.
+  // persisted on the device, then links meters. Returns a typed result instead
+  // of toasting (PR-O1): the linking sheet owns these errors, so the user's
+  // input (in memory only) stays put for a retry. Same two calls, same bodies.
   const saveCredentials = useCallback(
-    async (apiKey: string, accountNumber: string) => {
+    async (apiKey: string, accountNumber: string): Promise<LinkResult> => {
       setIsSyncing(true);
       try {
         const session = await ensureAuthSession();
-        if (!session) {
-          throw new Error('Could not start a secure session. Check your connection and try again.');
-        }
+        if (!session) return { ok: false, reason: 'no_session' };
 
         const { error } = await supabase.functions.invoke('octopus-energy', {
           body: { action: 'save-credentials', apiKey, accountNumber },
         });
 
         if (error) {
-          throw error;
+          logger.warn('Error saving Octopus credentials', { error: error.message });
+          return parseSaveFailure(
+            functionErrorStatus(error),
+            await readFunctionErrorBody(error),
+            isDeviceOffline(),
+          );
         }
 
         localStorage.setItem(LOCAL_STORAGE_KEYS.hasCreds, 'true');
         setCachedHasCreds(true);
 
-        // Auto-link meters immediately after saving credentials
-        const metersLinked = await linkMeterInternal();
-
-        if (metersLinked) {
-          toast.success('Account connected and meter(s) linked!');
-          localStorage.setItem(LOCAL_STORAGE_KEYS.isLinked, 'true');
-          setCachedIsLinked(true);
-        } else {
-          toast.success('Credentials saved. Could not find meters - check your account.');
-        }
-
+        // Link meters straight after saving the details
+        const result = await checkMeters();
         await refetchStatus();
+        return result;
       } catch (error: unknown) {
         logger.warn('Error saving Octopus credentials', { error });
-        const message = parseEdgeFunctionError(error, { feature: 'octopus', action: 'save' });
-        toast.error(message);
-        throw error;
+        return { ok: false, reason: isDeviceOffline() ? 'offline' : 'unknown' };
       } finally {
         setIsSyncing(false);
       }
     },
-    [refetchStatus, linkMeterInternal],
+    [refetchStatus, checkMeters],
   );
+
+  // "Check again" (linking sheet banner and the Not linked yet card): get-meters only.
+  const recheckMeters = useCallback(async (): Promise<LinkResult> => {
+    setIsSyncing(true);
+    try {
+      const session = await ensureAuthSession();
+      if (!session) return { ok: false, reason: 'no_session' };
+      const result = await checkMeters();
+      await refetchStatus();
+      return result;
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [checkMeters, refetchStatus]);
 
   // Link meter (fetch from Octopus API)
   const linkMeter = useCallback(async () => {
@@ -547,40 +584,58 @@ export function useOctopusEnergy(days: number = 30) {
     }
   }, [refetchFootprint]);
 
-  // Full sync: consumption + footprint calculation
+  // Full sync: consumption + footprint calculation. Same request as Sync Now;
+  // returns the outcome without toasting so callers can choose where it shows.
+  const runFullSync = useCallback(
+    async (syncDays: number = 7): Promise<FullSyncRun> => {
+      const session = await ensureAuthSession();
+      if (!session) return { kind: 'no_session' };
+
+      const { data, error } = await supabase.functions.invoke('octopus-energy', {
+        body: { action: 'full-sync', days: syncDays },
+      });
+
+      if (error) {
+        const outcome = withOfflineCheck(syncErrorOutcome(await readFunctionErrorBody(error)));
+        return { kind: 'http_error', outcome, error };
+      }
+
+      const outcome = withOfflineCheck(syncOutcome(data));
+      // Refresh either way to show whatever did sync (BH-91).
+      await refetchStatus();
+      await refetchFootprint();
+      return { kind: 'done', outcome, data, readings: data?.sync?.readings_synced || 0 };
+    },
+    [refetchStatus, refetchFootprint],
+  );
+
   const fullSync = useCallback(
     async (syncDays: number = 7) => {
       setIsSyncing(true);
       try {
-        // Ensure we have a session
-        const session = await ensureAuthSession();
+        const run = await runFullSync(syncDays);
 
-        if (!session) {
+        if (run.kind === 'no_session') {
           toast.error('Please sign in to sync data');
           return null;
         }
 
-        const { data, error } = await supabase.functions.invoke('octopus-energy', {
-          body: { action: 'full-sync', days: syncDays },
-        });
+        if (run.kind === 'http_error') {
+          toast.error(syncFailureMessage(run.outcome, readTone()));
+          throw new SyncToastShown(run.error.message || 'Octopus sync failed');
+        }
 
-        if (error) throw await toastSyncHttpError(error);
-
-        const outcome = withOfflineCheck(syncOutcome(data));
-        if (outcome === 'ok') {
-          const readings = data.sync?.readings_synced || 0;
-          const calculations = data.calculation?.records_calculated || 0;
+        if (run.outcome === 'ok') {
+          const calculations = run.data.calculation?.records_calculated || 0;
           toast.success(
-            `Synced ${readings} readings and calculated ${calculations} footprint records`,
+            `Synced ${run.readings} readings and calculated ${calculations} footprint records`,
           );
         } else {
-          // Some or all meters failed (BH-91). Refresh anyway to show whatever did sync.
-          toast.error(syncFailureMessage(outcome, readTone()));
+          // Some or all meters failed (BH-91).
+          toast.error(syncFailureMessage(run.outcome, readTone()));
         }
-        await refetchStatus();
-        await refetchFootprint();
 
-        return data;
+        return run.data;
       } catch (error: unknown) {
         if (!(error instanceof SyncToastShown)) {
           logger.warn('Octopus full sync failed', { error });
@@ -591,8 +646,22 @@ export function useOctopusEnergy(days: number = 30) {
         setIsSyncing(false);
       }
     },
-    [refetchStatus, refetchFootprint],
+    [runFullSync],
   );
+
+  // First sync after linking (PR-O1): the same full-sync call, 30 days like Sync
+  // Now, no toast. The linking sheet shows the result in place.
+  const firstSync = useCallback(async (): Promise<FirstSyncResult> => {
+    try {
+      const run = await runFullSync(30);
+      if (run.kind === 'no_session') return { outcome: 'failed', readings: 0 };
+      if (run.kind === 'http_error') return { outcome: run.outcome, readings: 0 };
+      return { outcome: run.outcome, readings: run.readings };
+    } catch (error) {
+      logger.warn('Octopus first sync failed', { error });
+      return { outcome: withOfflineCheck('failed'), readings: 0 };
+    }
+  }, [runFullSync]);
 
   // Disconnect Account
   const disconnect = useCallback(async () => {
@@ -643,6 +712,8 @@ export function useOctopusEnergy(days: number = 30) {
     hasCredentials: status?.has_credentials ?? cachedHasCreds,
     apiKeyHint: status?.api_key_hint ?? null,
     saveCredentials,
+    recheckMeters,
+    firstSync,
     linkMeter,
     syncConsumption,
     calculateFootprint,

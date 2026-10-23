@@ -10,6 +10,7 @@ import {
 import { motion } from 'framer-motion';
 import { DataAttribution } from '@/components/attribution/DataAttribution';
 import { NI_ALL_ISLAND_GRID } from '@/lib/voice/errorStatesCopy';
+import { OCTOPUS_API_PAGE_URL, OCTOPUS_HELP_COPY } from '@/lib/voice/octopusLinkCopy';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -334,10 +335,35 @@ export default function Help() {
                   <p className="pt-2">
                     <strong>Integration issues:</strong>
                   </p>
+                  <p>{OCTOPUS_HELP_COPY.troubleshooting}</p>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </motion.div>
+
+          <motion.div variants={itemVariants}>
+            <AccordionItem
+              value="linking-octopus"
+              className="border rounded-lg px-3 bg-card/40 hover:bg-card/70 transition-colors duration-200"
+            >
+              <AccordionTrigger>{OCTOPUS_HELP_COPY.itemTitle}</AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-3 text-sm">
+                  <p>{OCTOPUS_HELP_COPY.need}</p>
                   <p>
-                    For Octopus connections, check that your API key is valid and meters are linked
-                    in Settings.
+                    {OCTOPUS_HELP_COPY.apiKey}{' '}
+                    <a
+                      href={OCTOPUS_API_PAGE_URL}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="tap-target font-medium text-primary underline"
+                    >
+                      {OCTOPUS_HELP_COPY.apiKeyLink}
+                    </a>
                   </p>
+                  <p>{OCTOPUS_HELP_COPY.account}</p>
+                  <p>{OCTOPUS_HELP_COPY.electricityOnly}</p>
+                  <p>{OCTOPUS_HELP_COPY.noUsage}</p>
                 </div>
               </AccordionContent>
             </AccordionItem>

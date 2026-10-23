@@ -4,10 +4,10 @@ import { Card } from '@/components/ui/card';
 import { SettingsSectionHeading } from '@/components/settings/SettingsSectionHeading';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 import {
   Wind,
   Check,
-  AlertCircle,
   Zap,
   Leaf,
   MoreVertical,
@@ -27,8 +27,14 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 
 import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
 import { formatDistanceToNow } from 'date-fns';
-import { OctopusSettings } from './OctopusSettings';
 import { OctopusBenefitsIntro } from './OctopusBenefitsIntro';
+import { OctopusLinkSheet } from './OctopusLinkSheet';
+import { linkFailureMessage } from '@/lib/octopusLink';
+import {
+  OCTOPUS_LINKED_CARD_COPY as LINKED,
+  OCTOPUS_MPAN_COPY as MPAN,
+  OCTOPUS_NOT_LINKED_COPY as NOT_LINKED,
+} from '@/lib/voice/octopusLinkCopy';
 
 const OctopusLogo = ({ className }: { className?: string }) => (
   <img
@@ -45,21 +51,40 @@ export function OctopusIntegration() {
     isSyncing,
     isLinked,
     hasCredentials,
-    linkMeter,
+    recheckMeters,
     fullSync,
     disconnect,
     apiKeyHint,
   } = useOctopusEnergy();
 
+  // BH-93 (PR-O2; the brief calls it BH-92): Switch Account still only sets
+  // this, which does nothing while linked, exactly as on main. PR-O2 replaces
+  // it with a confirm, then the sheet.
   const [isEditing, setIsEditing] = useState(false);
-  const [showCredentialsForm, setShowCredentialsForm] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [checking, setChecking] = useState(false);
   const navigate = useNavigate();
+  const openSheet = () => setSheetOpen(true);
+  const sheet = (
+    <OctopusLinkSheet
+      open={sheetOpen || (isEditing && !isLinked)}
+      onOpenChange={(open) => {
+        setSheetOpen(open);
+        if (!open) setIsEditing(false);
+      }}
+    />
+  );
 
-  const handleLinkMeter = async () => {
+  // "Check again" on the Not linked yet card: get-meters only. The card has no
+  // banner, so the reason goes in a toast (same copy as the sheet).
+  const handleCheckAgain = async () => {
+    setChecking(true);
     try {
-      await linkMeter();
-    } catch {
-      // Error handled in hook
+      const result = await recheckMeters();
+      if (result.ok) toast.success(`Linked ${result.meters.length} meter(s) successfully!`);
+      else toast.error(linkFailureMessage(result));
+    } finally {
+      setChecking(false);
     }
   };
 
@@ -81,55 +106,39 @@ export function OctopusIntegration() {
     }
   };
 
-  // 1. Loading State
+  // The sheet sits at the same place in the tree in every state. Saving the
+  // details flips the card from the entry state to the dashboard state while
+  // the sheet is still open, and a moved sheet would remount and lose its
+  // success screen.
+  let body: JSX.Element;
   if (isLoading && !status) {
-    return (
-      <div className="space-y-4">
-        <SettingsSectionHeading>Energy Integrations</SettingsSectionHeading>
-        <Card className="p-4 h-32 flex items-center justify-center border-border">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <TurbineSpinner size="sm" />
-            <span>Loading status...</span>
-          </div>
-        </Card>
-      </div>
+    // 1. Loading State
+    body = (
+      <Card className="p-4 h-32 flex items-center justify-center border-border">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <TurbineSpinner size="sm" />
+          <span>Loading status...</span>
+        </div>
+      </Card>
     );
+  } else if (!hasCredentials && !isLinked) {
+    // 2. Nothing saved yet -> entry card; the button opens the linking sheet.
+    body = <OctopusBenefitsIntro onContinue={openSheet} />;
+  } else {
+    // 3. Has Credentials -> Show Integration Dashboard
+    body = dashboardCard();
   }
 
-  // 2. No Credentials OR (Editing AND not linked) -> Benefits intro, then settings form
-  // Local credential re-link UI removed: keys are server-side only after security hardening.
-  if ((!hasCredentials && !isLinked) || (isEditing && !isLinked)) {
-    if (!isEditing && !showCredentialsForm) {
-      return <OctopusBenefitsIntro onContinue={() => setShowCredentialsForm(true)} />;
-    }
-
-    return (
-      <div className="space-y-4">
-        <SettingsSectionHeading>Energy Integrations</SettingsSectionHeading>
-        <OctopusSettings
-          onSaved={() => {
-            setIsEditing(false);
-            setShowCredentialsForm(false);
-          }}
-          onCancel={
-            isEditing || showCredentialsForm
-              ? () => {
-                  setIsEditing(false);
-                  setShowCredentialsForm(false);
-                }
-              : undefined
-          }
-        />
-      </div>
-    );
-  }
-
-  // 3. Has Credentials -> Show Integration Dashboard
   return (
     <div className="space-y-4">
       <SettingsSectionHeading>Energy Integrations</SettingsSectionHeading>
+      {body}
+      {sheet}
+    </div>
+  );
 
-      {/* Octopus Energy Card */}
+  function dashboardCard() {
+    return (
       <Card className="p-4 border-primary/15 bg-primary/5">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
@@ -145,74 +154,49 @@ export function OctopusIntegration() {
                     className="bg-green-500/10 text-green-600 border-green-500/20 px-1.5 py-0 h-5 text-[10px]"
                   >
                     <Check className="w-3 h-3 mr-1" />
-                    Meters linked
+                    {LINKED.badge}
                   </Badge>
                 ) : hasCredentials ? (
                   <Badge
                     variant="outline"
-                    className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20 px-1.5 py-0 h-5 text-[10px]"
+                    className="whitespace-nowrap bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20 px-1.5 py-0 h-5 text-[10px]"
                   >
-                    Credentials saved
+                    {NOT_LINKED.badge}
                   </Badge>
                 ) : null}
               </div>
               <p className="text-xs text-muted-foreground max-w-[220px] mt-1">
-                {isLinked
-                  ? 'Tracking carbon footprint from smart meter data'
-                  : hasCredentials
-                    ? 'Next step: link your electricity meter(s) to sync usage'
-                    : 'Unlock your personal Carbon Footprint & Green Score'}
+                {isLinked ? LINKED.line : NOT_LINKED.line}
               </p>
               {hasCredentials && apiKeyHint && (
                 <p className="text-[11px] text-muted-foreground mt-1">
-                  API key ending <span className="font-mono">••••{apiKeyHint}</span>
+                  {NOT_LINKED.keyEnding} <span className="font-mono">••••{apiKeyHint}</span>
                 </p>
               )}
             </div>
           </div>
 
           {!isLinked ? (
-            <div className="flex items-center gap-1">
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleLinkMeter}
-                disabled={isLoading || isSyncing}
-                className="bg-primary hover:bg-primary/90"
-              >
-                {isSyncing ? (
-                  <>
-                    <TurbineSpinner size="sm" className="mr-2" />
-                    Linking...
-                  </>
-                ) : (
-                  <>
-                    <Wind className="w-4 h-4 mr-2" />
-                    Link Meter
-                  </>
-                )}
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setIsEditing(true)}>
-                    <ArrowRightLeft className="w-4 h-4 mr-2" />
-                    Change Credentials
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={handleDisconnect}
-                    className="text-red-600 focus:text-red-600"
-                  >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Clear Credentials
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-11 w-11 -mr-2 -mt-2">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={openSheet}>
+                  <ArrowRightLeft className="w-4 h-4 mr-2" />
+                  {NOT_LINKED.change}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={handleDisconnect}
+                  className="text-red-600 focus:text-red-600"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  {NOT_LINKED.remove}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -245,6 +229,30 @@ export function OctopusIntegration() {
           )}
         </div>
 
+        {/* Not linked yet (3.4): details saved, no meter from Octopus */}
+        {!isLinked && (
+          <div className="mt-4 flex flex-col gap-2" data-testid="octopus-not-linked-actions">
+            <Button className="h-11 w-full font-semibold" onClick={openSheet}>
+              {NOT_LINKED.fix}
+            </Button>
+            <Button
+              variant="outline"
+              className="h-11 w-full"
+              onClick={handleCheckAgain}
+              disabled={checking || isSyncing}
+            >
+              {checking ? (
+                <>
+                  <TurbineSpinner size="sm" className="mr-2" />
+                  {NOT_LINKED.checking}
+                </>
+              ) : (
+                NOT_LINKED.checkAgain
+              )}
+            </Button>
+          </div>
+        )}
+
         {/* Meter Status */}
         {isLinked && status && (
           <div className="mt-4 pt-4 border-t border-border/50 space-y-2">
@@ -258,17 +266,14 @@ export function OctopusIntegration() {
                       <PopoverTrigger asChild>
                         <button
                           className="inline-flex items-center justify-center rounded-full hover:bg-muted p-0.5"
-                          aria-label="What is an MPAN?"
+                          aria-label={MPAN.trigger}
                         >
                           <Info className="w-3 h-3 text-muted-foreground" />
                         </button>
                       </PopoverTrigger>
                       <PopoverContent className="w-[280px] p-3 text-xs" align="start">
-                        <p className="font-medium mb-1">What's an MPAN?</p>
-                        <p className="text-muted-foreground">
-                          MPAN (Meter Point Administration Number) is a unique 13-digit number that
-                          identifies your electricity meter. You can find it on your energy bill.
-                        </p>
+                        <p className="font-medium mb-1">{MPAN.title}</p>
+                        <p className="text-muted-foreground">{MPAN.body}</p>
                       </PopoverContent>
                     </Popover>
                     {meter.meter_type === 'export' && (
@@ -283,8 +288,9 @@ export function OctopusIntegration() {
                 </div>
                 {meter.last_sync_at && (
                   <span className="text-xs text-muted-foreground">
-                    Last sync:{' '}
-                    {formatDistanceToNow(new Date(meter.last_sync_at), { addSuffix: true })}
+                    {LINKED.lastSynced(
+                      formatDistanceToNow(new Date(meter.last_sync_at), { addSuffix: true }),
+                    )}
                   </span>
                 )}
               </div>
@@ -328,28 +334,6 @@ export function OctopusIntegration() {
           </div>
         )}
       </Card>
-
-      {/* Info Message - only show when not linked */}
-      {!isLinked && (
-        <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800 text-xs text-muted-foreground flex items-start gap-2">
-          <AlertCircle className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-          <div>
-            <p className="font-medium text-foreground mb-1">Unlock Smart Features</p>
-            <ul className="list-disc pl-4 space-y-1 mt-1">
-              <li>
-                See your <strong>Real Carbon Footprint</strong> based on actual usage.
-              </li>
-              <li>
-                Get your <strong>Green Energy Score</strong> and personalized insights.
-              </li>
-              <li>
-                Your API key is sent once over HTTPS and stored encrypted on our servers. It's never
-                kept on your device.
-              </li>
-            </ul>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+    );
+  }
 }

@@ -57,6 +57,8 @@ const Index = () => {
   const location = useLocation();
   useLayoutEffect(() => {
     if (location.state?.startProductTour) setViewMode('intensity');
+    // "See my footprint" after linking Octopus (PR-O1).
+    else if (location.state?.dashboardView === 'footprint') setViewMode('footprint');
   }, [location.key, location.state]);
   const { showYearWrapped, setShowYearWrapped, wrappedYear } = useYearWrappedAutoShow();
   const { selection } = useHaptics();
