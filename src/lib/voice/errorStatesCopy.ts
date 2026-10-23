@@ -60,6 +60,16 @@ export const STALE_COPY = {
   action: 'Retry',
 } as const;
 
+/** State 6: Planner forecast error; the picker and selection stay. */
+export const PLANNER_ERROR_COPY = {
+  title: "Couldn't load the forecast",
+  body: (appliance: string, tone: CommentaryTone) =>
+    tone === 'cheeky'
+      ? `Your ${appliance} choice is saved. The forecast is dragging its feet.`
+      : 'Your choice is saved. We will find the best time as soon as the forecast loads.',
+  action: 'Retry',
+} as const;
+
 /** Only when our own API answers and NESO 5xx'd or timed out. */
 export const OUTAGE_COPY = {
   heroTitle: "NESO isn't answering",
