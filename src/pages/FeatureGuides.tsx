@@ -1,17 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import {
-  ChevronLeft,
-  ChevronRight,
-  Home,
-  Calendar,
-  Bell,
-  Map,
-  LineChart,
-  Sparkles,
-  Plug,
-  MapPin,
-  Zap,
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 

@@ -433,7 +433,8 @@ async function lookupPlaceName(query: string): Promise<LocationSearchResult | nu
     if (!data || data.length === 0) return null;
 
     const place = data[0];
-    const name =
+    // Unused, but kept (as _name) so a malformed place still fails exactly as before.
+    const _name =
       place.address?.city ||
       place.address?.town ||
       place.address?.village ||

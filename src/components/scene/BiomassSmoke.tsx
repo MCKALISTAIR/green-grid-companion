@@ -5,7 +5,7 @@ interface BiomassSmokeProps {
   intensity: number; // 0-1, based on biomass %
 }
 
-export function BiomassSmoke({ x, intensity }: BiomassSmokeProps) {
+export function BiomassSmoke({ x }: BiomassSmokeProps) {
   // Grounded at Y=110 (same as factory/nuclear)
   // Green-tinted smoke for biomass generation
 

@@ -90,25 +90,21 @@ vi.mock('framer-motion', async () => {
     'drag',
     'dragConstraints',
   ]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const strip = (props: Record<string, any>) =>
+  const strip = (props: Record<string, unknown>) =>
     Object.fromEntries(Object.entries(props).filter(([k]) => !MOTION_PROPS.has(k)));
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const wrap = (Tag: any) =>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    R.forwardRef(({ children, ...props }: any, ref) =>
+  const wrap = (Tag: React.ElementType) =>
+    R.forwardRef(({ children, ...props }: { children?: React.ReactNode }, ref) =>
       R.createElement(Tag, { ...strip(props), ref }, children),
     );
   const cache = new Map<unknown, unknown>();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const create = (Component: any) => {
+  const create = (Component: React.ElementType) => {
     if (!cache.has(Component)) cache.set(Component, wrap(Component));
     return cache.get(Component);
   };
   const motion = new Proxy(
     {},
     {
-      get: (_target, prop) => (prop === 'create' ? create : create(prop)),
+      get: (_target, prop) => (prop === 'create' ? create : create(prop as React.ElementType)),
     },
   );
 

@@ -24,7 +24,7 @@ export function useCountdown(target: Date | null): string {
     setLabel(getLabel());
     const id = setInterval(() => setLabel(getLabel()), 60_000);
     return () => clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- getLabel is rebuilt every render; re-run only when the target changes.
   }, [target]);
 
   return label;

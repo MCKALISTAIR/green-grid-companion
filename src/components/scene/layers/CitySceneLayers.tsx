@@ -44,7 +44,6 @@ export function CitySceneLayers({
   windSpeed,
   timeOfDay,
   cleanlinessBand,
-  intensity,
 }: CitySceneLayersProps) {
   const hero = getCityHeroEmphasis(cleanlinessBand);
   const showStack =

@@ -13,7 +13,6 @@ export interface SceneAmbientLifeProps {
 
 export function SceneAmbientLife({
   sceneConfig,
-  shouldReduceMotion,
   birdConfig,
   fireflyConfig,
 }: SceneAmbientLifeProps) {

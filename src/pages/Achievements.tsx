@@ -3,7 +3,7 @@ import { useAchievements } from '@/hooks/useAchievements';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Trophy, Lock } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { PageHeader } from '@/components/layout/PageHeader';
 

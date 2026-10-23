@@ -48,8 +48,6 @@ export function CoastalSceneLayers({
   windSpeed,
   timeOfDay,
   windPercentage,
-  hydroPercentage,
-  marinePercentage,
 }: CoastalSceneLayersProps) {
   return (
     <>

@@ -4,7 +4,7 @@ import {
   getIntensityTextColor,
   isEstimatedActual,
 } from '@/lib/carbonApi';
-import { format, parseISO } from 'date-fns';
+import { parseISO } from 'date-fns';
 import {
   formatLondonDateTime,
   formatLondonLongDate,
@@ -18,7 +18,8 @@ import {
 import { useRef, useLayoutEffect, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getForecastMax, getForecastDifferences, getSlotDisplayValue } from '@/lib/forecastUtils';
-import { Star, Target, ArrowUp, ArrowDown, Clock3, Leaf, Sparkles } from 'lucide-react';
+
+import { Star, Target, ArrowUp, ArrowDown, Clock3, Leaf } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { findDefaultForecastIndex, getForecastHourInsight } from '@/lib/forecastHourInsight';
 import { getNowOrWaitDecision } from '@/lib/nowOrWait';

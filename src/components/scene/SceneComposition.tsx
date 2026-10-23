@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { CleanlinessBand } from '@/hooks/useCleanlinessBand';
-import { SceneType } from '@/hooks/useSceneType';
+import {} from '@/hooks/useSceneType';
 
 interface SpotlightProps {
   band: CleanlinessBand;

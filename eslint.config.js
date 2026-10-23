@@ -21,8 +21,24 @@ export default tseslint.config(
     rules: {
       ...reactHooks.configs.recommended.rules,
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
-      '@typescript-eslint/no-unused-vars': 'off',
+      // Unused code is an error; prefix with _ to mark an intentionally unused binding.
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+          destructuredArrayIgnorePattern: '^_',
+          ignoreRestSiblings: true,
+        },
+      ],
     },
+  },
+  {
+    // Edge functions: warn only for now. Cleaning them up touches backend code
+    // (needs Alistair + a redeploy), so it's tracked separately.
+    files: ['supabase/functions/**/*.ts'],
+    rules: { '@typescript-eslint/no-unused-vars': 'warn' },
   },
   // Disable ESLint stylistic rules that conflict with Prettier (must be last).
   eslintConfigPrettier,

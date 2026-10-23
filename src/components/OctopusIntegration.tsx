@@ -58,7 +58,7 @@ export function OctopusIntegration() {
   const handleLinkMeter = async () => {
     try {
       await linkMeter();
-    } catch (error) {
+    } catch {
       // Error handled in hook
     }
   };
@@ -66,7 +66,7 @@ export function OctopusIntegration() {
   const handleSync = async () => {
     try {
       await fullSync(30); // Sync last 30 days
-    } catch (error) {
+    } catch {
       // Error handled in hook
     }
   };

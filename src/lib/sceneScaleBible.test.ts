@@ -3,7 +3,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 import {
-  CITY_GROUND_Y,
   CITY_SCALE,
   COUNTRYSIDE_SCALE,
   SCENE_VIEWBOX,

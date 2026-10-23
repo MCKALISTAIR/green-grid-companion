@@ -74,7 +74,7 @@ export function useSettings() {
             user_id: userId,
             settings: newSettings as unknown as Record<string, unknown>,
             updated_at: new Date().toISOString(),
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generated Supabase types lag the user_preferences JSON columns.
           } as any,
           { onConflict: 'user_id' },
         );

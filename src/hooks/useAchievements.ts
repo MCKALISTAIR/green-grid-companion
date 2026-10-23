@@ -1,6 +1,6 @@
 import { notifyBadgesChanged } from '@/lib/trophyChip';
 import { appStorage } from '@/lib/appStorage';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 
 export interface Achievement {
@@ -100,11 +100,6 @@ export function useAchievements() {
     }
     return ACHIEVEMENT_LIST.map((def) => ({ ...def, unlocked: false, progress: 0 }));
   });
-
-  const saveAchievements = (newAchievements: Achievement[]) => {
-    setAchievements(newAchievements);
-    appStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify(newAchievements));
-  };
 
   const unlock = useCallback((id: string) => {
     setAchievements((prev) => {

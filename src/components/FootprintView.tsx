@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Leaf,
@@ -77,7 +77,7 @@ export type TimeRange = 'day' | 'week' | 'month' | 'year';
 export function FootprintView() {
   const navigate = useNavigate();
   const [timeRange, setTimeRange] = useState<TimeRange>('month');
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate] = useState<Date | null>(null);
   const { houseType, customAnnualKwh } = useSettings();
   const [showScoreTip, setShowScoreTip] = useState(
     () => !localStorage.getItem('green-score-tip-seen'),
@@ -1276,7 +1276,7 @@ export function FootprintView() {
                           fontSize: '12px',
                           zIndex: 50,
                         }}
-                        formatter={(value: number, name: string) => [`${value} kWh`, 'Energy Used']}
+                        formatter={(value: number) => [`${value} kWh`, 'Energy Used']}
                       />
                       <Bar dataKey="kwh" radius={[0, 4, 4, 0]}>
                         {intensityBreakdown.map((entry, index) => (

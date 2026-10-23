@@ -1,5 +1,5 @@
 import type { ForecastData } from '@/lib/carbonApi';
-import { LONDON_TZ, formatLondonTime, londonDateKey } from '@/lib/londonTime';
+import { LONDON_TZ, londonDateKey } from '@/lib/londonTime';
 import { classifySpread, type SpreadKind } from '@/lib/forecastWindows';
 
 /**
@@ -10,8 +10,6 @@ import { classifySpread, type SpreadKind } from '@/lib/forecastWindows';
  */
 
 export const SLOT_MS = 30 * 60_000;
-
-type IntensityIndex = ForecastData['intensity']['index'];
 
 function isUsable(n: unknown): n is number {
   return typeof n === 'number' && Number.isFinite(n) && n >= 0;

@@ -1,4 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
+/* eslint-disable react-refresh/only-export-components -- shadcn exports badgeVariants alongside the component. */
 import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 

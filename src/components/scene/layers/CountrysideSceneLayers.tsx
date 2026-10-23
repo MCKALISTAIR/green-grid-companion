@@ -34,10 +34,6 @@ export function CountrysideSceneLayers({
   skipIntro,
   windSpeed,
   timeOfDay,
-  windPercentage,
-  nuclearPercentage,
-  hydroPercentage,
-  isRaining,
 }: CountrysideSceneLayersProps) {
   return (
     <>

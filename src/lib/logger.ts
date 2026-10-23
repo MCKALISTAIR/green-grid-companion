@@ -116,7 +116,6 @@ class Logger {
     }
 
     // Prepare log message
-    const timestamp = new Date().toISOString();
     const prefix = this.isNative ? '[Native]' : '[Web]';
     const formattedMessage = `${prefix} ${message}`;
 

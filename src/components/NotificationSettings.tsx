@@ -24,7 +24,7 @@ interface NotificationSettingsProps {
   onClose?: () => void;
 }
 
-export function NotificationSettings({ onClose }: NotificationSettingsProps) {
+export function NotificationSettings({ onClose: _onClose }: NotificationSettingsProps) {
   const {
     isNative,
     isSupported,

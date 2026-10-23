@@ -70,7 +70,7 @@ export function useSavedLocations() {
             saved_locations: locations as unknown as Record<string, unknown>[],
             recent_locations: recent,
             updated_at: new Date().toISOString(),
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generated Supabase types lag the user_preferences JSON columns.
           } as any,
           { onConflict: 'user_id' },
         );

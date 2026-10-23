@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { useState, useId } from 'react';
+import { useState } from 'react';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 
@@ -19,7 +19,6 @@ export function NuclearCoolingTower({
   steamIntensity = 0.7,
   isNight,
 }: NuclearCoolingTowerProps) {
-  const id = useId();
   const { impactLight } = useHaptics({ decorative: true });
   const shouldReduceMotion = useReducedMotion();
 

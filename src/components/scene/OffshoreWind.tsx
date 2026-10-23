@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion';
-import { useId } from 'react';
 
 interface OffshoreWindProps {
   count?: number; // How many turbines to show
@@ -7,8 +6,6 @@ interface OffshoreWindProps {
 }
 
 export function OffshoreWind({ count = 3, windSpeed = 10 }: OffshoreWindProps) {
-  const id = useId();
-
   // Grounded at Y=60 (background/horizon layer)
   const baseY = 60;
 

@@ -44,7 +44,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
       clearTimeout(cap);
       if (doneTimer) clearTimeout(doneTimer);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only: a new onComplete must not restart the splash.
   }, []);
 
   if (gone) return null;
