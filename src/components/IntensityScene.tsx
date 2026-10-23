@@ -309,6 +309,7 @@ export function IntensityScene({
       role="region"
       aria-label={`Animated landscape representing ${index} carbon intensity`}
       data-scene-type={sceneType}
+      data-time-of-day={timeOfDay}
     >
       {isVintage && (
         <div

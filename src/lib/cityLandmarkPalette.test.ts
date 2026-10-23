@@ -3,6 +3,8 @@ import type { TimeOfDay } from '@/hooks/useTimeOfDay';
 import {
   cityWeatherState,
   contrastRatio,
+  darkenHex,
+  EDINBURGH_CASTLE_AFTER_DARK,
   EDINBURGH_CASTLE_TOKENS,
   getEdinburghCastleColours,
   getLandmarkLight,
@@ -135,5 +137,49 @@ describe('getLandmarkLight (very-clean hero, PR-B1 decisions)', () => {
     expect(
       getLandmarkLight({ timeOfDay: 'sunset', weather: 'overcast', heroLit: false }).rim,
     ).toBeNull();
+  });
+});
+
+describe('Design review of #190', () => {
+  const colours = (
+    timeOfDay: TimeOfDay,
+    weather: Parameters<typeof getEdinburghCastleColours>[0]['weather'],
+  ) => getEdinburghCastleColours({ timeOfDay, weather, nesoIndex: 'low', heroLit: false });
+  const lightness = (hex: string) => {
+    const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+    return (Math.max(r, g, b) + Math.min(r, g, b)) / 2;
+  };
+
+  it('uses the darker sunset set (Design hexes, L -3 after pixel measurement)', () => {
+    expect(EDINBURGH_CASTLE_TOKENS.sunset).toEqual({
+      rock: darkenHex('#5a3f4f', 3),
+      walls: darkenHex('#6b4a52', 3),
+      roofs: darkenHex('#4a3442', 3),
+    });
+    expect(colours('sunset', 'clear').walls).toBe(EDINBURGH_CASTLE_TOKENS.sunset.walls);
+  });
+
+  it('clear dusk takes the night lit-stone set; cloudy dusk keeps the dark set', () => {
+    expect(colours('dusk', 'clear').walls).toBe(EDINBURGH_CASTLE_AFTER_DARK.night.walls);
+    expect(colours('dusk', 'clear').rock).toBe(EDINBURGH_CASTLE_AFTER_DARK.night.rock);
+    for (const w of ['overcast', 'rain', 'snow', 'storm'] as const) {
+      expect(lightness(colours('dusk', w).walls)).toBeLessThan(
+        lightness(EDINBURGH_CASTLE_AFTER_DARK.night.walls),
+      );
+    }
+  });
+
+  it('darkens the castle under cloud by day and at night, deepest in daytime snow; fog is exempt', () => {
+    for (const t of ['morning', 'midday', 'afternoon'] as const) {
+      const clear = lightness(colours(t, 'clear').walls);
+      const overcast = lightness(colours(t, 'overcast').walls);
+      const snow = lightness(colours(t, 'snow').walls);
+      expect(clear - overcast).toBeGreaterThan(0.15);
+      expect(snow).toBeLessThan(overcast);
+      expect(lightness(colours(t, 'fog').walls)).toBeGreaterThan(clear);
+    }
+    expect(lightness(colours('night', 'snow').walls)).toBeLessThan(
+      lightness(colours('night', 'clear').walls) - 0.15,
+    );
   });
 });

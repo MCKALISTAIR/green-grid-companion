@@ -1369,7 +1369,8 @@ function NeutralCityBack(props: CityLandscapeProps & { cityVariant: CityVariant 
   const fill = `url(#${id}-gradCityFar)`;
   const flicker = props.timeOfDay === 'dusk' || props.timeOfDay === 'night';
   return (
-    <g opacity={0.72} data-city-art={`${props.cityVariant}-back`}>
+    // Design review of #190: opaque in Edinburgh so the castle never shows through the back row.
+    <g opacity={isEdinburgh ? 1 : 0.72} data-city-art={`${props.cityVariant}-back`}>
       <defs>
         <linearGradient id={`${id}-gradCityFar`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={palette.skylineFarHighlight} />

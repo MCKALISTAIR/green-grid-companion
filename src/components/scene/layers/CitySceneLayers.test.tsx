@@ -89,6 +89,17 @@ describe('CitySceneLayers city variant', () => {
     expect(art(container)).not.toContain('neutral-tower');
   });
 
+  it('draws the Edinburgh back row opaque so the castle never shows through (generic stays 0.72)', () => {
+    const edi = renderCity('edinburgh').container;
+    expect(edi.querySelector('[data-city-art="edinburgh-back"]')?.getAttribute('opacity')).toBe(
+      '1',
+    );
+    const gen = renderCity('generic').container;
+    expect(gen.querySelector('[data-city-art="generic-back"]')?.getAttribute('opacity')).toBe(
+      '0.72',
+    );
+  });
+
   it('generic gets the one plain tower and no castle', () => {
     const { container } = renderCity('generic');
     expect(art(container)).toContain('neutral-tower');

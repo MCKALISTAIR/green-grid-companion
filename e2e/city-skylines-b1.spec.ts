@@ -17,6 +17,7 @@ const SHOTS = Boolean(process.env.B1_SHOTS);
 // 23 Oct 2026. The postcode mock geocodes everything to EH1 (55.95N), so sun
 // times are Edinburgh's: sunrise ~07:52, sunset ~17:53 BST.
 const TIMES = {
+  dawn: '2026-10-23T08:00:00+01:00',
   midday: '2026-10-23T12:55:00+01:00',
   dusk: '2026-10-23T18:40:00+01:00',
   night: '2026-10-23T21:30:00+01:00',
@@ -38,8 +39,11 @@ async function openCity(
   slot: Slot,
   { viewport = { width: 390, height: 844 }, veryClean = false } = {},
 ) {
-  pinNodeClock(TIMES[slot]);
+  // Install the page clock BEFORE pinning Node's Date.now: Playwright reads
+  // Node's clock during install, and a pinned clock makes past instants (dawn,
+  // morning) collapse to wall time.
   await page.clock.install({ time: new Date(TIMES[slot]) });
+  pinNodeClock(TIMES[slot]);
   await page.setViewportSize(viewport);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await installMocks(
@@ -53,6 +57,7 @@ async function openCity(
   const scene = page.getByRole('region', { name: /Animated landscape/ });
   await expect(scene).toBeVisible({ timeout: 30_000 });
   await expect(scene).toHaveAttribute('data-scene-type', 'city');
+  await expect(scene).toHaveAttribute('data-time-of-day', slot);
   return scene;
 }
 
@@ -103,7 +108,9 @@ const CITIES = [
 for (const viewport of VIEWPORTS) {
   const size = `${viewport.width}x${viewport.height}`;
   for (const city of CITIES) {
-    for (const slot of SHOTS ? (['midday', 'dusk', 'night'] as const) : (['midday'] as const)) {
+    for (const slot of SHOTS
+      ? (['dawn', 'midday', 'dusk', 'night'] as const)
+      : (['dawn', 'midday'] as const)) {
       test(`${city.name} skyline at ${slot}, ${size}`, async ({ page }) => {
         test.setTimeout(90_000);
         const scene = await openCity(page, city.postcode, slot, { viewport });
