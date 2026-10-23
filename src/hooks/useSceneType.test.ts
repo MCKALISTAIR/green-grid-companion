@@ -238,12 +238,28 @@ describe('Greater London (by district)', () => {
   });
 
   it.each([
-    ['TN16', 'Biggin Hill vs Westerham, 48.6% London'],
-    ['UB9', 'Harefield vs Denham, 47.6% London'],
     ['IG7', 'Chigwell, 36.9% London'],
+    ['DA1', 'Dartford, 21.2% London'],
   ])('minority-London straddlers follow the majority and stay out: %s (%s)', (pc) => {
     expect(isGreaterLondon(pc)).toBe(false);
     expect(detectCityVariant(pc)).toBe('generic');
+  });
+
+  // Alistair, 23 Oct 2026: Biggin Hill (TN16, 48.6% London) and Harefield
+  // (UB9, 47.6% London) are in, as exceptions to the majority rule.
+  it.each(['TN16', 'UB9', 'TN16 3AA', 'ub91aa', 'tn16'])(
+    "Alistair's exceptions are Greater London: %s → london + city",
+    (pc) => {
+      expect(isGreaterLondon(pc)).toBe(true);
+      expect(detectCityVariant(pc)).toBe('london');
+      expect(detectSceneFromPostcode(pc)).toBe('city');
+    },
+  );
+
+  it('the exceptions do not pull in their neighbours', () => {
+    for (const pc of ['TN14', 'TN15', 'TN13', 'SL0', 'UB19']) {
+      expect(isGreaterLondon(pc)).toBe(false);
+    }
   });
 
   it.each(['HA6', 'KT4', 'CR5', 'KT6', 'RM14'])('majority-London straddlers are in: %s', (pc) => {
@@ -263,7 +279,7 @@ describe('Greater London (by district)', () => {
 
   it('every listed district is a well-formed outer-area district', () => {
     for (const d of GREATER_LONDON_OUTER_DISTRICTS) {
-      expect(d).toMatch(/^(BR|CR|DA|EN|HA|IG|KT|RM|SM|TW|UB)\d{1,2}$/);
+      expect(d).toMatch(/^(BR|CR|DA|EN|HA|IG|KT|RM|SM|TN|TW|UB)\d{1,2}$/);
     }
   });
 

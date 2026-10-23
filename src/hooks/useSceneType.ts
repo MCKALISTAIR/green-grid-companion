@@ -103,11 +103,12 @@ export const LONDON_POSTCODE_AREAS: ReadonlySet<string> = new Set([
  *        HA6 (73.1%), HA7 (99.9%), IG8 (93.5%), KT4 (76.3%), KT6 (87.7%),
  *        KT9 (99.0%), RM14 (92.2%), SM2 (93.6%), SM3 (99.2%), SM5 (99.9%),
  *        TW6 (99.2%), TW12 (99.8%), TW14 (99.4%), UB8 (99.8%)
- *   out: TN16 (48.6%, Biggin Hill in Bromley vs Westerham and Tatsfield),
- *        UB9 (47.6%, Harefield in Hillingdon vs Denham), IG7 (36.9%),
- *        DA1 (21.2%), RM4 (17.5%), IG9 (11.0%), and BR8, CR3, CR6, EN6 to EN9,
- *        KT7, KT8, KT17 to KT19, KT22, RM15, SM7, TN14, TW15, TW19, WD3, WD6,
- *        WD23, CM13 and CM14 (each under 5%)
+ *   out: IG7 (36.9%), DA1 (21.2%), RM4 (17.5%), IG9 (11.0%), and BR8, CR3,
+ *        CR6, EN6 to EN9, KT7, KT8, KT17 to KT19, KT22, RM15, SM7, TN14, TW15,
+ *        TW19, WD3, WD6, WD23, CM13 and CM14 (each under 5%)
+ * Exceptions on Alistair's request (23 Oct 2026), added although just under
+ * half their postcodes are in London: TN16 (48.6%, Biggin Hill in Bromley vs
+ * Westerham and Tatsfield) and UB9 (47.6%, Harefield in Hillingdon vs Denham).
  * CR9, CR90 and UB18 are non-geographic (PO box) districts, all in London.
  */
 export const GREATER_LONDON_OUTER_DISTRICTS: ReadonlySet<string> = new Set([
@@ -119,6 +120,7 @@ export const GREATER_LONDON_OUTER_DISTRICTS: ReadonlySet<string> = new Set([
   'BR5',
   'BR6',
   'BR7',
+  'TN16', // Biggin Hill (Alistair's exception, see above)
   // Croydon
   'CR0',
   'CR2',
@@ -217,6 +219,7 @@ export const GREATER_LONDON_OUTER_DISTRICTS: ReadonlySet<string> = new Set([
   'UB6',
   'UB7',
   'UB8',
+  'UB9', // Harefield (Alistair's exception, see above)
   'UB10',
   'UB11',
   'UB18',
