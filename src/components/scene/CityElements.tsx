@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { CITY_GROUND_Y, CITY_SCALE } from '@/lib/sceneScaleBible';
+import type { CityVariant } from '@/hooks/useSceneType';
 
 // 🚗 Car/Vehicle on the road
 export function CityVehicle({
@@ -117,13 +118,21 @@ export function CityBus({
 /**
  * Diegetic playful beat — a Tube carriage flashes across the road
  * once a minute (low frequency, never a traffic jam).
+ * London only (PR-B2): other cities have no Tube, so it never runs there.
  */
-export function TubeFlash({ enabled = true }: { enabled?: boolean }) {
-  if (!enabled) return null;
+export function TubeFlash({
+  enabled = true,
+  cityVariant = 'generic',
+}: {
+  enabled?: boolean;
+  cityVariant?: CityVariant;
+}) {
+  if (!enabled || cityVariant !== 'london') return null;
   const y = CITY_GROUND_Y - 4;
   return (
     <motion.g
       aria-hidden="true"
+      data-city-landmark="tube-flash"
       initial={{ x: -50, opacity: 0 }}
       animate={{
         x: [-50, 450],
@@ -522,7 +531,8 @@ export function ConstructionCrane({ x = 350, isNight }: { x?: number; isNight: b
   );
 }
 
-// 🎡 London Eye / Ferris Wheel — grounded with A-frame legs touching the road
+// 🎡 London Eye / Ferris Wheel — grounded with A-frame legs touching the road.
+// London only: CitySceneLayers mounts it for the 'london' city variant (PR-B2).
 export function LondonEye({
   x = 75,
   y = CITY_SCALE.londonEye.hubY,
@@ -554,6 +564,7 @@ export function LondonEye({
 
   return (
     <motion.g
+      data-city-landmark="london-eye"
       initial={skipIntro ? { opacity: 1 } : { opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={skipIntro ? { duration: 0 } : { duration: 1.5, delay: 0.3 }}
