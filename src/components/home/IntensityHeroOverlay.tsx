@@ -119,6 +119,9 @@ export function IntensityHeroOverlay({
   // Offline with nothing to show is the hero's offline error state instead.
   const showLoading = isLoading && !isOffline;
   const offlineWithoutReading = isLoading && isOffline;
+  // Design (BH-90): offline or with the weather unknown, the warning icon holds
+  // steady at full opacity. Only the online outage with known weather pulses.
+  const steadyWarningIcon = isOffline || !weatherKnown;
   const showFetchSpinner = isBackgroundFetching && !isOffline;
   const showZeroCarbonBadge = shouldCelebrateZeroCarbon(intensity, hasFreshReading);
   const conditionLabel = getConditionLabel(index, tone, region ?? postcode);
@@ -343,7 +346,13 @@ export function IntensityHeroOverlay({
                 />
               ) : isError || offlineWithoutReading ? (
                 <div className="flex flex-col items-center py-1">
-                  <AlertTriangle className="w-10 h-10 text-white animate-pulse mb-1 drop-shadow-md" />
+                  <AlertTriangle
+                    data-testid="hero-warning-icon"
+                    className={cn(
+                      'w-10 h-10 text-white mb-1 drop-shadow-md',
+                      !steadyWarningIcon && 'animate-pulse',
+                    )}
+                  />
                   <span className="text-sm font-bold text-white/95 uppercase tracking-[0.18em]">
                     {heroErrorTitle(isOffline, nesoRequestFailed)}
                   </span>

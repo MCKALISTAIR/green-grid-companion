@@ -121,6 +121,36 @@ async function expectOvercastHero(page: Page) {
   expect(stats.white, `near-white sky pixel at ${JSON.stringify(stats.first)}`).toBe(0);
 }
 
+// Design (BH-90): offline / unknown weather, the hero warning icon holds steady:
+// no CSS or WAAPI animation, and full opacity (sampled across a pulse cycle).
+async function expectSteadyWarningIcon(page: Page) {
+  const icon = page.getByTestId('hero-warning-icon');
+  await expect(icon).toBeVisible();
+  for (let i = 0; i < 5; i += 1) {
+    const state = await icon.evaluate((el) => {
+      let opacity = 1;
+      for (let node: Element | null = el; node; node = node.parentElement) {
+        opacity *= Number(getComputedStyle(node).opacity);
+      }
+      return {
+        animationName: getComputedStyle(el).animationName,
+        animations: el.getAnimations().length,
+        opacity: getComputedStyle(el).opacity,
+        effectiveOpacity: opacity,
+        pulseClass: el.classList.contains('animate-pulse'),
+      };
+    });
+    expect(state).toEqual({
+      animationName: 'none',
+      animations: 0,
+      opacity: '1',
+      effectiveOpacity: 1,
+      pulseClass: false,
+    });
+    await page.waitForTimeout(450);
+  }
+}
+
 for (const viewport of [
   { width: 390, height: 844 },
   { width: 320, height: 568 },
@@ -146,6 +176,7 @@ for (const viewport of [
     await expect(page.getByText(/Loading/)).toHaveCount(0);
     await expect(page.getByRole('button', { name: /Select location/ }).first()).toBeVisible();
     await expect(page.locator('.animate-spin:visible')).toHaveCount(0);
+    await expectSteadyWarningIcon(page);
     await expectOvercastHero(page);
     await page.screenshot({
       path: `test-results/bh90-offline-empty-${viewport.width}x${viewport.height}.png`,
@@ -175,6 +206,7 @@ test('offline at night: the overcast sky darkens and the hero turns white', asyn
     .evaluate((el) => getComputedStyle(el).backgroundImage);
   // Night overcast top is #232944, not the day grey-blue.
   expect(skyTop).toContain('rgb(35, 41, 68)');
+  await expectSteadyWarningIcon(page);
   await expectOvercastHero(page);
   await context.setOffline(false);
 });
