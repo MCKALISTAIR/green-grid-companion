@@ -528,6 +528,7 @@ export function IntensityScene({
       <div
         className="absolute bottom-0 left-0 right-0 h-10 pointer-events-none z-[45]"
         style={{ backgroundColor: sceneConfig.groundColor }}
+        data-land="ground"
         aria-hidden="true"
       />
     </motion.div>
