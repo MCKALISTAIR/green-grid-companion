@@ -7,7 +7,13 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { NotificationType } from '@capacitor/haptics';
 import { useOfflineEmptyStateShown } from '@/lib/offlineEmptyState';
 import { useQueryClient } from '@tanstack/react-query';
-import { BACK_ONLINE_PILL, offlinePillLabel, offlinePillText } from '@/lib/voice/statesCopy';
+import {
+  BACK_ONLINE_PILL,
+  offlinePillLabel,
+  offlinePillText,
+  readingDayBand,
+} from '@/lib/voice/statesCopy';
+import { useStableAnnouncement } from '@/hooks/useStableAnnouncement';
 import { cachedReadingAt, useHeroReadingAt } from '@/lib/offlineReadingTime';
 import { useHeroStatusSlot } from '@/lib/heroStatusSlot';
 import { dur, spring } from '@/lib/motion';
@@ -15,6 +21,9 @@ import { STALE_COPY } from '@/lib/voice/errorStatesCopy';
 
 /** How long "Back online" stays before fading (motion spec §2.7). */
 export const BACK_ONLINE_MS = 1600;
+
+/** How often the offline pill rechecks the day band (UK midnight rollover). */
+export const PILL_TICK_MS = 60_000;
 
 /** One Warning haptic per app session, not per drop. */
 let warnedThisSession = false;
@@ -48,6 +57,16 @@ export function OfflineIndicator() {
     ? (heroReadingAt ?? cachedReadingAt(queryClient.getQueryCache().getAll()))
     : null;
 
+  // While offline, tick once a minute so the day band rolls over at UK
+  // midnight ("07:00" becomes "yesterday 07:00") without a re-render elsewhere.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!isOffline) return;
+    setNow(Date.now());
+    const id = setInterval(() => setNow(Date.now()), PILL_TICK_MS);
+    return () => clearInterval(id);
+  }, [isOffline]);
+
   useEffect(() => {
     if (isOffline && !warnedThisSession) {
       warnedThisSession = true;
@@ -76,6 +95,21 @@ export function OfflineIndicator() {
       ? 'online'
       : null;
 
+  // Screen readers: announce only when the state, the day band or the reading
+  // itself changes, never on a re-render or tick within the same band.
+  const announceKey =
+    state === 'offline'
+      ? `offline:${readingAt ? readingDayBand(readingAt, now) : 'none'}:${readingAt ?? ''}`
+      : (state ?? 'none');
+  const announced = useStableAnnouncement(
+    announceKey,
+    state === 'offline'
+      ? offlinePillLabel(readingAt, now)
+      : state === 'online'
+        ? BACK_ONLINE_PILL
+        : '',
+  );
+
   const pill = (
     <AnimatePresence>
       {state && (
@@ -97,8 +131,10 @@ export function OfflineIndicator() {
           <motion.span layout={!reduced ? 'position' : false} role="status" aria-live="polite">
             {state === 'offline' ? (
               <>
-                <span aria-hidden="true">{offlinePillText(readingAt)}</span>
-                <span className="sr-only">{offlinePillLabel(readingAt)}</span>
+                <span aria-hidden="true">{offlinePillText(readingAt, now)}</span>
+                <span className="sr-only" data-testid="connection-pill-announcement">
+                  {announced}
+                </span>
               </>
             ) : (
               BACK_ONLINE_PILL

@@ -82,7 +82,7 @@ test('BH-88: offline pill shows the reading time (07:00), not the save time (08:
   await context.setOffline(false);
 });
 
-test('BH-88: a reading from yesterday says "Yesterday 07:00" (Design call, #178)', async ({
+test('BH-88: a reading from yesterday says "yesterday 07:00" (Design call, #178)', async ({
   page,
   context,
 }) => {
@@ -95,7 +95,7 @@ test('BH-88: a reading from yesterday says "Yesterday 07:00" (Design call, #178)
   await page.waitForTimeout(1500);
   await context.setOffline(true);
   const pill = page.getByTestId('hero-status-slot').getByTestId('connection-pill');
-  await expect(pill).toContainText('Offline · figures from Yesterday 07:00');
+  await expect(pill).toContainText('Offline · figures from yesterday 07:00');
   await expect(pill.getByRole('status')).toContainText('Offline. Reading from yesterday at 07:00');
   await page.waitForTimeout(800);
   await page.screenshot({ path: shot('bh88-offline-pill-yesterday') });

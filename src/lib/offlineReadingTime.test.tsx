@@ -2,7 +2,12 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cachedReadingAt, setHeroReadingAt, type CachedQueryLike } from './offlineReadingTime';
-import { londonDaysAgo, offlinePillLabel, offlinePillText } from '@/lib/voice/statesCopy';
+import {
+  londonDaysAgo,
+  offlinePillLabel,
+  offlinePillText,
+  readingWhen,
+} from '@/lib/voice/statesCopy';
 import { OfflineIndicator, resetOfflineWarningForTests } from '@/components/OfflineIndicator';
 
 // BH-88: the offline pill shows the reading's own time in UK time, never when
@@ -42,8 +47,8 @@ describe('offlinePillText (BH-88)', () => {
     it('today: time only', () => {
       expect(pill('2026-10-22T23:00Z')).toBe('Offline · figures from 00:00'); // 00:00 BST today
     });
-    it('yesterday: "Yesterday 07:00"', () => {
-      expect(pill('2026-10-22T06:00Z')).toBe('Offline · figures from Yesterday 07:00');
+    it('yesterday: lower case mid-line, "yesterday 07:00"', () => {
+      expect(pill('2026-10-22T06:00Z')).toBe('Offline · figures from yesterday 07:00');
       expect(label('2026-10-22T06:00Z')).toBe('Offline. Reading from yesterday at 07:00');
     });
     it('2 to 6 days ago: short weekday', () => {
@@ -51,22 +56,31 @@ describe('offlinePillText (BH-88)', () => {
       expect(label('2026-10-21T06:00Z')).toBe('Offline. Reading from Wednesday at 07:00');
       expect(pill('2026-10-17T06:00Z')).toBe('Offline · figures from Sat 07:00'); // 6 days
     });
+    it('readingWhen capitalises "Yesterday" only when it starts the text', () => {
+      const r = utc('2026-10-22T06:00Z');
+      expect(readingWhen(r, NOW_0830_BST)).toBe('yesterday 07:00');
+      expect(readingWhen(r, NOW_0830_BST, { atStart: true })).toBe('Yesterday 07:00');
+      expect(readingWhen(utc('2026-10-21T06:00Z'), NOW_0830_BST, { atStart: true })).toBe(
+        'Wed 07:00',
+      );
+    });
     it('7 or more days ago: the date', () => {
       expect(pill('2026-10-16T06:00Z')).toBe('Offline · figures from 16 Oct'); // 7 days
       expect(pill('2026-10-05T06:00Z')).toBe('Offline · figures from 5 Oct');
       expect(label('2026-10-12T06:00Z')).toBe('Offline. Reading from 12 October');
+      expect(pill('2026-10-12T06:00Z')).toBe('Offline · figures from 12 Oct');
     });
   });
 
   describe('around UK midnight', () => {
     // 23:59 BST on Thu 22 Oct is 22:59 UTC; 00:00 BST on Fri 23 Oct is 23:00 UTC on the 22nd.
     it('23:59 the day before is yesterday, 00:00 is today', () => {
-      expect(pill('2026-10-22T22:59Z')).toBe('Offline · figures from Yesterday 23:59');
+      expect(pill('2026-10-22T22:59Z')).toBe('Offline · figures from yesterday 23:59');
       expect(pill('2026-10-22T23:00Z')).toBe('Offline · figures from 00:00');
     });
     it('just after midnight, a 23:30 reading is yesterday', () => {
       const now = utc('2026-10-22T23:00:30Z'); // 00:00:30 BST Fri
-      expect(pill('2026-10-22T22:30Z', now)).toBe('Offline · figures from Yesterday 23:30');
+      expect(pill('2026-10-22T22:30Z', now)).toBe('Offline · figures from yesterday 23:30');
     });
     it('just before midnight, a 00:00 reading is still today', () => {
       const now = utc('2026-10-23T22:59:59Z'); // 23:59:59 BST Fri
@@ -87,7 +101,7 @@ describe('offlinePillText (BH-88)', () => {
       expect(pill('2026-10-25T06:00Z', SUN_0830_GMT)).toBe('Offline · figures from 06:00');
       // Saturday 24 Oct, still BST: 06:00 UTC is 07:00.
       expect(pill('2026-10-24T06:00Z', SUN_0830_GMT)).toBe(
-        'Offline · figures from Yesterday 07:00',
+        'Offline · figures from yesterday 07:00',
       );
     });
     it('the repeated 01:00 hour says BST or GMT', () => {
@@ -97,19 +111,19 @@ describe('offlinePillText (BH-88)', () => {
         'Offline. Reading from 1:30 am GMT, after the clocks went back',
       );
     });
-    it('the repeated hour keeps its tag the next day, with Yesterday', () => {
+    it('the repeated hour keeps its tag the next day, with yesterday', () => {
       const MON_0830_GMT = utc('2026-10-26T08:30Z');
       expect(pill('2026-10-25T00:30Z', MON_0830_GMT)).toBe(
-        'Offline · figures from Yesterday 01:30 BST',
+        'Offline · figures from yesterday 01:30 BST',
       );
       expect(pill('2026-10-25T01:30Z', MON_0830_GMT)).toBe(
-        'Offline · figures from Yesterday 01:30 GMT',
+        'Offline · figures from yesterday 01:30 GMT',
       );
     });
     it('midnight on the 25-hour day: 00:00 BST and 23:59 GMT are the same UK day', () => {
       const now = utc('2026-10-25T23:59Z'); // 23:59 GMT Sun
       expect(pill('2026-10-24T23:00Z', now)).toBe('Offline · figures from 00:00'); // 00:00 BST Sun
-      expect(pill('2026-10-24T22:59Z', now)).toBe('Offline · figures from Yesterday 23:59');
+      expect(pill('2026-10-24T22:59Z', now)).toBe('Offline · figures from yesterday 23:59');
     });
   });
 });

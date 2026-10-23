@@ -16,14 +16,15 @@ import {
 /**
  * Offline pill (motion spec §2.7). Says how old the figure is, so it uses the
  * reading's own time (BH-88), in UK time. Day labels are Design's call (#178):
- * today is the time only, then "Yesterday 07:00", "Tue 07:00" for 2 to 6 days
+ * today is the time only, then "yesterday 07:00", "Tue 07:00" for 2 to 6 days
  * ago, and the date ("12 Oct") for anything older. The repeated hour on
  * clock-change night keeps its BST/GMT tag.
  */
 export const OFFLINE_PILL_COPY = {
   prefix: 'Offline · figures from',
   nothingSaved: 'Offline · nothing saved yet',
-  yesterday: 'Yesterday',
+  /** Lower case mid-line; `readingWhen(…, { atStart: true })` capitalises it. */
+  yesterday: 'yesterday',
   /** Screen-reader form, e.g. "Offline. Reading from yesterday at 07:00" (Design call, #178). */
   ariaOffline: 'Offline.',
   ariaPrefix: 'Reading from',
@@ -53,8 +54,26 @@ export function readingDayBand(readingAt: number, now: number): ReadingDayBand {
   return 'date';
 }
 
-/** "07:00", "Yesterday 07:00", "Tue 07:00" or "12 Oct", in UK time. */
-export function readingWhen(readingAt: number, now: number): string {
+/** Upper-cases the first letter, for copy that starts a line. */
+export function capitaliseFirst(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+/**
+ * "07:00", "yesterday 07:00", "Tue 07:00" or "12 Oct", in UK time. Lower case
+ * mid-line (Design call, #178); pass `atStart` when it starts the text
+ * ("Yesterday 07:00").
+ */
+export function readingWhen(
+  readingAt: number,
+  now: number,
+  { atStart = false }: { atStart?: boolean } = {},
+): string {
+  const text = readingWhenMidLine(readingAt, now);
+  return atStart ? capitaliseFirst(text) : text;
+}
+
+function readingWhenMidLine(readingAt: number, now: number): string {
   const at = new Date(readingAt);
   const time = formatLondonSlotTime(at);
   switch (readingDayBand(readingAt, now)) {
