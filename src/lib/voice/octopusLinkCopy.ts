@@ -58,7 +58,7 @@ export const OCTOPUS_SHEET_COPY = {
   pasteAccountLabel: 'Paste account number',
   pasteKeyLabel: 'Paste API key',
   privacy:
-    "We only read from Octopus: your electricity meter details, half-hourly usage, Octopus's greenness forecast and, if you're on Intelligent, your charging slots. Nothing we do changes your Octopus account. Your key goes to our server once, is stored encrypted, and never stays on this phone. You can disconnect any time.",
+    "We only read from Octopus: your electricity meter details, half-hourly usage, Octopus's greenness forecast and, if you're on Intelligent, your charging slots. Nothing we do changes your Octopus account. Your key goes to our server once, is stored encrypted, and never stays on this device. You can disconnect any time.",
   submit: 'Link my meter',
   submitting: 'Checking with Octopus...',
   cancel: 'Cancel',
@@ -88,7 +88,7 @@ export const OCTOPUS_BANNER_COPY = {
   rateLimitedOneMinute: "That's a lot of tries. Give it 1 minute, then try again.",
   rateLimitedUnknown: "That's a lot of tries. Give it a few minutes, then try again.",
   saveFailed: "We couldn't save your details just now. Nothing's linked yet. Try again in a bit.",
-  noSession: "We couldn't start a secure connection. Check your signal and try again.",
+  noSession: "We couldn't start a secure connection. Check your connection and try again.",
   offline: "You're offline. Link your meter when you're back online.",
   unknown: "That didn't work, and we're not sure why. Try again in a bit.",
 } as const;
@@ -117,7 +117,7 @@ export const OCTOPUS_SUCCESS_COPY = {
   readingsIn: (readings: number) =>
     `Got ${readings.toLocaleString('en-GB')} half-hours of usage. Your footprint's ready.`,
   zeroReadings:
-    "Linked, but Octopus hasn't sent any half-hourly readings for this meter yet. If your smart meter is new, or isn't sending readings, this is what you'll see. Tap Sync now later to check again.",
+    "Linked, but Octopus hasn't sent any half-hourly readings for this meter yet. If your smart meter is new, or isn't sending readings, this is what you'll see. Tap Sync Now later to check again.",
   seeFootprint: 'See my footprint',
   done: 'Done',
   closedEarlyToast: 'Linked. Your usage is on its way.',
@@ -138,8 +138,9 @@ export const OCTOPUS_MPAN_COPY = {
 
 /** 3.10 Help item "Linking Octopus" and the troubleshooting line. */
 export const OCTOPUS_HELP_COPY = {
+  // PR-O2 adds Relink and switches this back to "tap Relink and paste a fresh key".
   troubleshooting:
-    'Octopus not working? Open Settings. If it says your link has stopped working, tap Relink and paste a fresh key from Octopus.',
+    'Octopus not working? Open Settings. If your link has expired, disconnect it, then link it again with a fresh key from Octopus.',
   itemTitle: 'Linking Octopus',
   need: 'You need two things: your API key and your account number.',
   apiKey:
@@ -148,5 +149,5 @@ export const OCTOPUS_HELP_COPY = {
   account: "Account number: it's on your main Octopus dashboard, not the API page. It starts A-.",
   electricityOnly: "Electricity only? That's fine. GridSense only uses your electricity meter.",
   noUsage:
-    "Linked but no usage? Octopus hasn't sent half-hourly readings for your meter yet. Tap Sync now later to check again.",
+    "Linked but no usage? Octopus hasn't sent half-hourly readings for your meter yet. Tap Sync Now later to check again.",
 } as const;

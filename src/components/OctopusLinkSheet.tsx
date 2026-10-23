@@ -221,7 +221,10 @@ function LinkSheetBody({ onClose }: { onClose: () => void }) {
     <>
       <ResponsiveDialogHeader className="text-left">
         <ResponsiveDialogTitle className="font-display text-xl">{COPY.title}</ResponsiveDialogTitle>
-        <ResponsiveDialogDescription>{COPY.subtitle}</ResponsiveDialogDescription>
+        {/* Full sheet width: the header's right padding only has to clear the close button beside the title. */}
+        <ResponsiveDialogDescription className="-mr-12 md:mr-0">
+          {COPY.subtitle}
+        </ResponsiveDialogDescription>
       </ResponsiveDialogHeader>
 
       <div className="grid gap-3 lg:grid-cols-2 lg:items-start">

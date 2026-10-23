@@ -190,6 +190,10 @@ for (const vp of [
       await expect(page.getByTestId('octopus-link-submit')).toBeInViewport({ ratio: 1 });
     };
     await onScreen(vp.height);
+    // Subtitle uses the full sheet width: one line, not wrapped at half width.
+    const sub = page.getByText("Two things to copy, then you're done.");
+    const lh = await sub.evaluate((el) => parseFloat(getComputedStyle(el).lineHeight));
+    expect((await sub.boundingBox())!.height).toBeLessThan(lh * 1.5);
     const overflow = await page.evaluate(() => {
       const s = document.querySelector('[data-testid=octopus-link-sheet]')!;
       const wide = [...s.querySelectorAll('*')].filter(

@@ -170,3 +170,22 @@ describe('voice rules', () => {
     expect(src).not.toMatch(/personaliz|color|center\b|£/i);
   });
 });
+
+describe('Design review fixes on #194 (23 Oct 2026)', () => {
+  it('matches the Sync Now button label', () => {
+    expect(COPY.OCTOPUS_SUCCESS_COPY.zeroReadings).toContain('Tap Sync Now later to check again.');
+    expect(COPY.OCTOPUS_HELP_COPY.noUsage).toContain('Tap Sync Now later to check again.');
+  });
+  it('help troubleshooting has no Relink until PR-O2', () => {
+    expect(COPY.OCTOPUS_HELP_COPY.troubleshooting).toBe(
+      'Octopus not working? Open Settings. If your link has expired, disconnect it, then link it again with a fresh key from Octopus.',
+    );
+  });
+  it('privacy says device, not phone; no session says connection', () => {
+    expect(COPY.OCTOPUS_SHEET_COPY.privacy).toContain('never stays on this device.');
+    expect(COPY.OCTOPUS_SHEET_COPY.privacy).not.toMatch(/phone/);
+    expect(COPY.OCTOPUS_BANNER_COPY.noSession).toBe(
+      "We couldn't start a secure connection. Check your connection and try again.",
+    );
+  });
+});
