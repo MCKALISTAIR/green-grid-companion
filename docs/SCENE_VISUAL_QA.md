@@ -20,7 +20,7 @@ Guards: `scene-theme-integrity`, `sceneConfig` ground dialects, `cityHeroDemotio
 Deep scrutiny across theme × intensity × time found recurring failures:
 
 1. **Sun parking mid-frame** — Framer `animate` of `top`/`right` % resolved to `0px`; sun is now positioned via `style`.
-2. **Theme bleed** — Lucide leaves/flames/droplets, hydro dam, biomass, and dual offshore wind stacks painted on city/coastal. Gated in `SceneGenerationOverlay` / `SceneAdvancedLayer`.
+2. **Theme bleed** — Lucide leaves/flames/droplets (since removed from the scene, BH-102), hydro dam, biomass, and dual offshore wind stacks painted on city/coastal. Gated in `SceneGenerationOverlay` / `SceneAdvancedLayer`.
 3. **London Eye ungrounded** — rendered in the back skyline so mid/front towers buried the legs/plinth; moved to the front/road layer.
 4. **Coastal beach hard edge** — vertical sand/water cut replaced with a curved shoreline.
 5. **Hero halo miss** — coastal very-clean halo aimed at empty sky (~70% x); retargeted to offshore wind cluster (~38% x).
