@@ -3,6 +3,7 @@ import { parseWeatherResponse } from '@/hooks/useWeatherData';
 import {
   SCENE_TEST_WEATHER,
   SCENE_TEST_WEATHER_KEYS,
+  SCENE_TEST_WEATHER_LABELS,
   SCENE_TEST_WMO,
   sceneTestWeather,
 } from './sceneTestWeather';
@@ -35,5 +36,15 @@ describe('/__scene-test weather presets', () => {
     expect(SCENE_TEST_WEATHER.clear.cloudCover).toBeLessThan(
       SCENE_TEST_WEATHER.overcast.cloudCover,
     );
+  });
+});
+
+describe('scene test copy (Design copy review, 23 Oct 2026)', () => {
+  it('labels every weather button in sentence case', () => {
+    expect(SCENE_TEST_WEATHER_LABELS['partly-cloudy']).toBe('Partly cloudy');
+    for (const key of SCENE_TEST_WEATHER_KEYS) {
+      const label = SCENE_TEST_WEATHER_LABELS[key];
+      expect(label).toMatch(/^[A-Z][a-z ]+$/);
+    }
   });
 });

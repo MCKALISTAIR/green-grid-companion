@@ -85,7 +85,7 @@ async function main() {
   await clickLabel(page, 'Scene type', 'city');
   await clickLabel(page, 'Intensity state', 'Very dirty');
   await clickLabel(page, 'Time of day', 'night');
-  await clickLabel(page, 'Weather condition', 'thunderstorm');
+  await clickLabel(page, 'Weather condition', 'Thunderstorm');
   await page.waitForTimeout(800);
   await page
     .locator('[aria-label*="iPhone 14 viewport preview"]')
@@ -95,7 +95,7 @@ async function main() {
   await clickLabel(page, 'Scene type', 'coastal');
   await clickLabel(page, 'Intensity state', 'Clean');
   await clickLabel(page, 'Time of day', 'dawn');
-  await clickLabel(page, 'Weather condition', 'clear');
+  await clickLabel(page, 'Weather condition', 'Clear');
   await page.waitForTimeout(800);
   await page
     .locator('[aria-label*="iPhone 14 viewport preview"]')

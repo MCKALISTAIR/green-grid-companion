@@ -53,6 +53,18 @@ export const SCENE_TEST_WMO: Record<SceneTestWeatherKey, number> = {
   thunderstorm: 95,
 };
 
+/** Button labels in sentence case (Design copy review: 'Partly cloudy', not 'Partly-Cloudy'). */
+export const SCENE_TEST_WEATHER_LABELS: Record<SceneTestWeatherKey, string> = {
+  clear: 'Clear',
+  'partly-cloudy': 'Partly cloudy',
+  overcast: 'Overcast',
+  fog: 'Fog',
+  drizzle: 'Drizzle',
+  rain: 'Rain',
+  snow: 'Snow',
+  thunderstorm: 'Thunderstorm',
+};
+
 export const SCENE_TEST_WEATHER_KEYS = Object.keys(SCENE_TEST_WEATHER) as SceneTestWeatherKey[];
 
 /** The full WeatherData for a button, with the page's temperature and wind slider. */

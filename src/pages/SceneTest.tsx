@@ -5,12 +5,13 @@ import { getSceneIntrinsicHeight, IPHONE_DUO_VIEWPORTS, SCENE_HEIGHT_CSS } from 
 import {
   sceneTestWeather,
   SCENE_TEST_WEATHER_KEYS,
+  SCENE_TEST_WEATHER_LABELS,
   type SceneTestWeatherKey,
 } from '@/lib/sceneTestWeather';
 
 /**
  * Dev-only visual regression test page for IntensityScene.
- * Renders the scene at multiple viewport sizes side-by-side so visual issues
+ * Renders the scene at multiple viewport sizes side by side so visual issues
  * (tall phones, iPhone Duo cover/inner, tablets) are easy to spot.
  *
  * Visit at /__scene-test
@@ -56,14 +57,15 @@ type SceneTypeOpt = 'auto' | 'countryside' | 'city' | 'coastal';
 const SCENE_TYPES: SceneTypeOpt[] = ['auto', 'countryside', 'city', 'coastal'];
 const PREFERENCE_KEY = 'gridgreen-scene-preference';
 
+// Day order (Design copy review, 23 Oct 2026).
 const TIMES_OF_DAY: TimeOfDay[] = [
-  'midday',
-  'sunset',
-  'night',
   'dawn',
-  'dusk',
   'morning',
+  'midday',
   'afternoon',
+  'sunset',
+  'dusk',
+  'night',
 ];
 export default function SceneTest() {
   const [scaleToFit, setScaleToFit] = useState(true);
@@ -82,7 +84,7 @@ export default function SceneTest() {
 
   useEffect(() => {
     const prev = document.title;
-    document.title = 'Scene Visual Test — GridSense Dev';
+    document.title = 'Scene test: GridSense dev';
     return () => {
       document.title = prev;
     };
@@ -108,11 +110,11 @@ export default function SceneTest() {
   return (
     <div className="min-h-screen bg-background p-6">
       <header className="mb-6 max-w-4xl">
-        <h1 className="text-2xl font-bold mb-2">Scene Visual Test</h1>
+        <h1 className="text-2xl font-bold mb-2">Scene test</h1>
         <p className="text-muted-foreground text-sm">
           Renders <code>IntensityScene</code> at common device viewports so vertical stretching,
-          ridge alignment, and sky-to-ground ratio can be eyeballed side-by-side. Resize the browser
-          to test responsive behavior of the scene container itself; the cards below show fixed
+          ridge alignment, and sky-to-ground ratio can be compared side by side. Resize the browser
+          to test responsive behaviour of the scene container itself; the cards below show fixed
           device sizes.
         </p>
 
@@ -151,7 +153,7 @@ export default function SceneTest() {
             <div className="h-4 w-[1px] bg-border hidden md:block" />
 
             <div className="flex items-center gap-1.5" role="group" aria-label="Scene type">
-              <span className="text-xs text-muted-foreground font-medium mr-1">Theme:</span>
+              <span className="text-xs text-muted-foreground font-medium mr-1">Theme</span>
               {SCENE_TYPES.map((t) => (
                 <button
                   key={t}
@@ -197,13 +199,13 @@ export default function SceneTest() {
                   key={w}
                   onClick={() => setSelectedWeather(w)}
                   aria-pressed={selectedWeather === w}
-                  className={`px-2.5 py-1 text-xs rounded-md border capitalize font-medium transition-colors ${
+                  className={`px-2.5 py-1 text-xs rounded-md border font-medium transition-colors ${
                     selectedWeather === w
                       ? 'bg-blue-600 text-white border-blue-600'
                       : 'bg-card hover:bg-accent'
                   }`}
                 >
-                  {w}
+                  {SCENE_TEST_WEATHER_LABELS[w]}
                 </button>
               ))}
             </div>
@@ -215,7 +217,7 @@ export default function SceneTest() {
                 htmlFor="wind-slider"
                 className="text-xs text-muted-foreground font-medium whitespace-nowrap"
               >
-                Wind: <span className="font-mono text-foreground font-bold">{windSpeed}m/s</span>
+                Wind <span className="font-mono text-foreground font-bold">{windSpeed} m/s</span>
               </label>
               <input
                 id="wind-slider"

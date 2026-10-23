@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { installMocks, seedStorage } from '../scripts/layout/mock-api.mjs';
+import { SCENE_TEST_WEATHER_LABELS } from '../src/lib/sceneTestWeather';
 
 /**
  * Scene visual regression (BH-94). Reviewed baselines live in
@@ -116,13 +117,13 @@ test.describe('Scene VRT', () => {
       await page.clock.pauseAt(new Date(PINNED.getTime() + 1000));
 
       await page.goto('/__scene-test');
-      await expect(page.getByRole('heading', { name: 'Scene Visual Test' })).toBeVisible({
+      await expect(page.getByRole('heading', { name: 'Scene test' })).toBeVisible({
         timeout: 30_000,
       });
       await press(page, 'Scene type', tc.theme);
       await press(page, 'Intensity state', tc.intensity);
       await press(page, 'Time of day', tc.time);
-      await press(page, 'Weather condition', tc.weather);
+      await press(page, 'Weather condition', SCENE_TEST_WEATHER_LABELS[tc.weather]);
       // Let the intro and sky transitions finish on the paused clock.
       await page.clock.runFor(6000);
 
@@ -133,6 +134,45 @@ test.describe('Scene VRT', () => {
           animations: 'disabled',
           maxDiffPixelRatio: 0.01,
         });
+      }
+    });
+  }
+});
+
+// Design copy review (23 Oct 2026): page copy and day-ordered times, checked at
+// 390x844 and 320x568. Shots go to SCENE_COPY_SHOTS when set (PR evidence only).
+test.describe('Scene test copy', () => {
+  for (const [w, h] of [
+    [390, 844],
+    [320, 568],
+  ] as const) {
+    test(`copy at ${w}x${h}`, async ({ page }) => {
+      await page.setViewportSize({ width: w, height: h });
+      await installMocks(page.context(), {});
+      await page.context().addInitScript(seedStorage());
+      await page.goto('/__scene-test');
+      await expect(page.getByRole('heading', { name: 'Scene test', exact: true })).toBeVisible({
+        timeout: 30_000,
+      });
+      await expect(page).toHaveTitle('Scene test: GridSense dev');
+      const header = page.locator('header');
+      await expect(header).toContainText('compared side by side');
+      await expect(header).toContainText('responsive behaviour');
+      await expect(header).toContainText(/Theme(?!:)/);
+      await expect(page.locator('label[for="wind-slider"]')).toHaveText('Wind 5 m/s');
+      await expect(
+        page.getByRole('group', { name: 'Weather condition' }).getByRole('button', {
+          name: 'Partly cloudy',
+          exact: true,
+        }),
+      ).toBeVisible();
+      const times = await page
+        .getByRole('group', { name: 'Time of day' })
+        .getByRole('button')
+        .evaluateAll((els) => els.map((el) => (el as HTMLElement).innerText.trim()));
+      expect(times).toEqual(['Dawn', 'Morning', 'Midday', 'Afternoon', 'Sunset', 'Dusk', 'Night']);
+      if (process.env.SCENE_COPY_SHOTS) {
+        await header.screenshot({ path: `${process.env.SCENE_COPY_SHOTS}/189-copy-${w}x${h}.png` });
       }
     });
   }
