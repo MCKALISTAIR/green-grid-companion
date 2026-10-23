@@ -59,7 +59,7 @@ export async function heroBoxes(page, { region = 'South Scotland', band = 'Very 
       '[data-testid="hero-band"]',
       `.home-scene-gauge p:has-text("${band}")`,
     ]),
-    trophy: await firstVisibleBox(page, ['[aria-label="Trophy Room"]']),
+    trophy: await firstVisibleBox(page, ['[data-testid="new-badge-pill"]']),
     meta: await firstVisibleBox(page, ['[data-testid="hero-meta"]']),
     sheetTop: await page.evaluate(() => {
       const el = document.querySelector('.home-feed');
@@ -107,10 +107,15 @@ export async function checkHero(
   }
   if (b.header) {
     if (b.trophy && intersects(b.header, b.trophy))
-      fails.push(`${tag} location header overlaps the trophy button`);
+      fails.push(`${tag} location header overlaps the New badge pill`);
     if (b.header.x < 0 || b.header.x + b.header.width > viewport.width + 1)
       fails.push(`${tag} location header runs off-screen (${fmt(b.header)})`);
   }
+  // Design: the New badge pill keeps a 44pt+ tap target.
+  if (b.trophy && (b.trophy.width < 44 || b.trophy.height < 44))
+    fails.push(`${tag} New badge pill tap target under 44px (${fmt(b.trophy)})`);
+  if (b.trophy && b.trophy.x + b.trophy.width > viewport.width + 1)
+    fails.push(`${tag} New badge pill runs off-screen (${fmt(b.trophy)})`);
   fails.push(...(await checkHeroText(page, { tag, viewport, expectMeta })));
   // Hero sun never sits behind the trophy chip (bug: 15 Oct, S3).
   const sun = await firstVisibleBox(page, ['[data-scene-sun]']);
