@@ -85,22 +85,45 @@ export const GET_METERS_PREFIX = {
 } as const;
 const OCTOPUS_STATUS = /Octopus API error \((\d{3})\)/;
 
+/** Machine codes on get-meters errors (C2-13). Matched before the message prefixes. */
+export const GET_METERS_CODE = {
+  wrongKey: 'invalid_api_key',
+  wrongAccount: 'account_not_found',
+  octopusError: 'octopus_error',
+} as const;
+
+function fromOctopusStatus(status: number): LinkResult | undefined {
+  if (status >= 500 || status === 429) return { ok: false, reason: 'octopus_down' };
+  if (status >= 400) return { ok: false, reason: 'octopus_refused' };
+  return undefined;
+}
+
 /** Reads a 2xx get-meters answer: `{ meters }` or `{ error, meters: [] }`. */
 export function parseGetMetersAnswer(data: unknown): LinkResult {
   const d = (data && typeof data === 'object' ? data : {}) as {
     error?: unknown;
+    code?: unknown;
+    octopus_status?: unknown;
     meters?: unknown;
   };
   if (typeof d.error === 'string' && d.error) {
+    // Newer deploys send a code; match on it so the message text can change freely.
+    if (d.code === GET_METERS_CODE.wrongKey)
+      return { ok: false, reason: 'wrong_key', field: 'apiKey' };
+    if (d.code === GET_METERS_CODE.wrongAccount)
+      return { ok: false, reason: 'wrong_account', field: 'accountNumber' };
+    if (d.code === GET_METERS_CODE.octopusError && typeof d.octopus_status === 'number') {
+      return fromOctopusStatus(d.octopus_status) ?? { ok: false, reason: 'unknown' };
+    }
+    // Fallback for older deploys without a code: match the message prefix.
     if (d.error.startsWith(GET_METERS_PREFIX.wrongKey))
       return { ok: false, reason: 'wrong_key', field: 'apiKey' };
     if (d.error.startsWith(GET_METERS_PREFIX.wrongAccount))
       return { ok: false, reason: 'wrong_account', field: 'accountNumber' };
     const m = OCTOPUS_STATUS.exec(d.error);
     if (m) {
-      const status = Number(m[1]);
-      if (status >= 500 || status === 429) return { ok: false, reason: 'octopus_down' };
-      if (status >= 400) return { ok: false, reason: 'octopus_refused' };
+      const r = fromOctopusStatus(Number(m[1]));
+      if (r) return r;
     }
     return { ok: false, reason: 'unknown' };
   }

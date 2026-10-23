@@ -325,7 +325,7 @@ Deno.serve(async (req) => {
       } else {
         body =
           `📊 Your ${getMonthName(lastMonth)} report is ready! ` +
-          `Link your Octopus meter for detailed carbon insights.`;
+          `Link your Octopus meter to see your own carbon numbers.`;
       }
 
       notifications.push({
