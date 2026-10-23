@@ -475,9 +475,7 @@ Deno.serve(async (req: Request) => {
       if (!sanitizedApiKey) {
         errors.push('API key is required');
       } else if (!apiKeyPattern.test(sanitizedApiKey)) {
-        errors.push(
-          'API key must start with sk_live_ followed by at least 20 alphanumeric characters',
-        );
+        errors.push('API keys start with sk_live_ followed by at least 20 letters or numbers.');
       }
 
       // Additional security checks
@@ -520,7 +518,7 @@ Deno.serve(async (req: Request) => {
         });
         return new Response(
           JSON.stringify({
-            error: 'Too many attempts. Please try again later.',
+            error: "That's a lot of tries. Try again later.",
             retry_after: rateLimit.retryAfter,
           }),
           {
@@ -766,7 +764,7 @@ Deno.serve(async (req: Request) => {
         console.error('[DISCONNECT] Some Octopus data could not be deleted:', removed.errors);
         return new Response(
           JSON.stringify({
-            error: 'Disconnected, but some stored data could not be deleted. Please try again.',
+            error: "Disconnected, but we couldn't delete some stored data. Please try again.",
           }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
         );
@@ -854,10 +852,22 @@ Deno.serve(async (req: Request) => {
             : response.status === 401
               ? 'Invalid API key. Please check your Octopus Energy API key.'
               : `Octopus API error (${response.status}). Please try again later.`;
-        return new Response(JSON.stringify({ error: userMessage, meters: [] }), {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        // Machine-readable code so the app can route the error without parsing the
+        // message text (C2-13). The app still falls back to the message prefixes for
+        // answers from older deploys.
+        const code =
+          response.status === 404
+            ? 'account_not_found'
+            : response.status === 401
+              ? 'invalid_api_key'
+              : 'octopus_error';
+        return new Response(
+          JSON.stringify({ error: userMessage, code, octopus_status: response.status, meters: [] }),
+          {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          },
+        );
       }
 
       const accountData = await response.json();
@@ -1264,7 +1274,7 @@ Deno.serve(async (req: Request) => {
               JSON.stringify({
                 planned: [],
                 completed: [],
-                message: 'Intelligent tariff not detected',
+                message: 'No Intelligent Octopus tariff found',
               }),
               { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
             );

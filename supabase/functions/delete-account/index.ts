@@ -115,7 +115,7 @@ Deno.serve(async (req: Request) => {
       console.error('Failed to delete auth user:', deleteUserError.message);
       return new Response(
         JSON.stringify({
-          error: 'Data deleted but failed to remove auth account. Please contact support.',
+          error: "Data deleted, but we couldn't remove your sign-in. Please contact support.",
         }),
         {
           status: 500,
@@ -129,7 +129,7 @@ Deno.serve(async (req: Request) => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Account and all associated data have been permanently deleted.',
+        message: 'Your account and all its data have been deleted for good.',
         apple_revocation: appleRevocation,
       }),
       {
@@ -139,12 +139,9 @@ Deno.serve(async (req: Request) => {
     );
   } catch (error) {
     console.error('Account deletion error:', error);
-    return new Response(
-      JSON.stringify({ error: 'An unexpected error occurred during account deletion.' }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      },
-    );
+    return new Response(JSON.stringify({ error: 'Something went wrong deleting your account.' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });
