@@ -7,6 +7,14 @@ import { unknownWeatherSkyGradient } from '@/lib/artPalette';
 /** Wind state threshold, km/h (Open-Meteo default unit). Alistair, 15 Oct 2026. */
 export const WIND_STATE_KMH = 25;
 
+/**
+ * Base contrast, saturation and sepia for the whole-scene time-of-day filter.
+ * Carbon-independent (grass never reacts to carbon, Design decision 12): these
+ * are the values the cleanest band used to get (contrast 1.2, saturation 1.2,
+ * no sepia).
+ */
+export const SCENE_FILTER_BASE = { contrast: 1.2, saturation: 1.2, sepia: 0 } as const;
+
 export interface SceneVisualConfig {
   cleanliness: number;
   skyGradient: string;
@@ -74,9 +82,14 @@ export function buildSceneConfig({
 
   const getTimeFilter = () => {
     if (synthwaveMode) return 'contrast(1.2) saturate(1.5) hue-rotate(-10deg)';
-    const baseContrast = 0.8 + cleanliness * 0.4;
-    const baseSaturation = 0.7 + cleanliness * 0.5;
-    const baseSepia = Math.max(0, (0.5 - cleanliness) * 0.5);
+    // Grass never reacts to carbon (Design decision 12): this filter covers the
+    // whole scene, land included, so it no longer dulls or browns it by carbon.
+    // Fixed at the former cleanest values; carbon shows as haze and smoke only.
+    const {
+      contrast: baseContrast,
+      saturation: baseSaturation,
+      sepia: baseSepia,
+    } = SCENE_FILTER_BASE;
     switch (timeOfDay) {
       case 'dawn':
         return `contrast(${baseContrast * 0.95}) saturate(${baseSaturation * 1.1}) sepia(${baseSepia + 0.08}) hue-rotate(-5deg) brightness(0.9)`;
@@ -97,6 +110,7 @@ export function buildSceneConfig({
     }
   };
 
+  // Ground never reacts to carbon (Design decision 12): time, weather and snow only.
   const getGroundColor = (): string => {
     if (synthwaveMode) return '#3c096c';
     if (weather.isSnowing) return isNight ? '#334155' : '#f1f5f9';
@@ -106,22 +120,21 @@ export function buildSceneConfig({
       if (isNight || timeOfDay === 'dusk') return '#0f172a';
       if (timeOfDay === 'dawn') return '#1e293b';
       if (timeOfDay === 'sunset') return '#334155';
-      return cleanliness > 0.5 ? '#4b5563' : '#44403c';
+      return '#4b5563';
     }
 
     // Coastal: wet sand / shore
     if (sceneType === 'coastal') {
       if (isNight || timeOfDay === 'dusk') return '#1c1917';
       if (timeOfDay === 'dawn' || timeOfDay === 'sunset') return '#57534e';
-      return cleanliness > 0.5 ? '#a8a29e' : '#78716c';
+      return '#a8a29e';
     }
 
     if (isNight) return '#0f172a';
-    const isClean = cleanliness > 0.5;
-    if (timeOfDay === 'dawn') return isClean ? '#204d30' : '#4d3215';
-    if (timeOfDay === 'sunset') return isClean ? '#365a18' : '#5c3209';
-    if (timeOfDay === 'dusk') return isClean ? '#1e293b' : '#3a2818';
-    return isClean ? '#16a34a' : '#713f12';
+    if (timeOfDay === 'dawn') return '#204d30';
+    if (timeOfDay === 'sunset') return '#365a18';
+    if (timeOfDay === 'dusk') return '#1e293b';
+    return '#16a34a';
   };
 
   return {

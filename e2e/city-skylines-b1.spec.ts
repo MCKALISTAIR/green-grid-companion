@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { installMocks, seedStorage } from '../scripts/layout/mock-api.mjs';
+import { pinClocks, restoreNodeClock } from './support/pinClocks';
 
 // PR-B1 city skyline art (Design brief §11, PLAN.md "PR-B1 decisions"):
 // - London keeps its set (dome, clock tower, glass towers, Eye).
@@ -24,14 +25,7 @@ const TIMES = {
 } as const;
 type Slot = keyof typeof TIMES;
 
-const realNow = Date.now.bind(Date);
-function pinNodeClock(iso: string) {
-  const offset = new Date(iso).getTime() - realNow();
-  Date.now = () => realNow() + offset;
-}
-test.afterEach(() => {
-  Date.now = realNow;
-});
+test.afterEach(restoreNodeClock);
 
 async function openCity(
   page: Page,
@@ -39,11 +33,8 @@ async function openCity(
   slot: Slot,
   { viewport = { width: 390, height: 844 }, veryClean = false } = {},
 ) {
-  // Install the page clock BEFORE pinning Node's Date.now: Playwright reads
-  // Node's clock during install, and a pinned clock makes past instants (dawn,
-  // morning) collapse to wall time.
-  await page.clock.install({ time: new Date(TIMES[slot]) });
-  pinNodeClock(TIMES[slot]);
+  // Page clock first, then Node's (BH-113, see support/pinClocks.ts).
+  await pinClocks(page, TIMES[slot]);
   await page.setViewportSize(viewport);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await installMocks(
