@@ -17,6 +17,7 @@ import { SceneHeroSpotlight, SceneAtmosphericDepth } from './scene/SceneComposit
 import { SceneTemporalLife } from './scene/SceneTemporalLife';
 import { GenerationMix } from '@/lib/carbonApi';
 import { buildSceneConfig } from '@/lib/sceneConfig';
+import type { BirdFlightBand } from '@/lib/birdFlightBand';
 import { useTapCount } from '@/lib/useTapCount';
 import { cityWeatherState } from '@/lib/cityLandmarkPalette';
 import { buildTurbineLayout } from '@/lib/turbineLayout';
@@ -61,6 +62,12 @@ interface IntensitySceneProps {
    * text bottom + 34 (village REDRAW-PLAN), so no cloud edge crosses the text.
    */
   cloudTopPx?: number;
+  /**
+   * BH-116: the lane (px from the scene top) ambient birds fly in, below the
+   * hero text + 12 px. null: no birds (no room, or not measured yet). Omitted
+   * (no hero text over the scene): birds fly at their usual 10-40% heights.
+   */
+  birdBand?: BirdFlightBand | null;
   /** Design review of #184: tells the hero when synthwave is on, so its text goes white. */
   onSynthwaveChange?: (on: boolean) => void;
 }
@@ -78,6 +85,7 @@ export function IntensityScene({
   hasLiveReading = true,
   compact = false,
   cloudTopPx,
+  birdBand,
   onSynthwaveChange,
 }: IntensitySceneProps) {
   const {
@@ -392,6 +400,7 @@ export function IntensityScene({
           sceneConfig={sceneConfig}
           shouldReduceMotion={shouldReduceMotion}
           birdConfig={birdConfig}
+          birdBand={birdBand}
           fireflyConfig={fireflyConfig}
         />
 
