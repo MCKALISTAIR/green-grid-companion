@@ -2,6 +2,11 @@ import { useMemo, useId } from 'react';
 import { motion } from 'framer-motion';
 import { getWindowLitColor } from '@/lib/windowLitColor';
 import type { CityVariant } from '@/hooks/useSceneType';
+import {
+  getLandmarkLight,
+  LANDMARK_WINDOW_LIT,
+  type CityWeatherState,
+} from '@/lib/cityLandmarkPalette';
 
 export type TimeOfDayCityLandscape =
   'night' | 'dawn' | 'morning' | 'midday' | 'afternoon' | 'sunset' | 'dusk';
@@ -20,23 +25,14 @@ export interface CityLandscapeProps {
    * Defaults to 'generic' so a missing prop never shows London anywhere else.
    */
   cityVariant?: CityVariant;
-}
-
-/**
- * Landmark slot for the non-London variants. Empty until the art PR (PR-B1,
- * to Design's spec) adds the neutral skyline hero and, for 'edinburgh',
- * Edinburgh Castle in the background. Keeping the slot in one place means the
- * art PR changes only this component, not the layer or mapping code.
- */
-function CityVariantLandmarkSlot({
-  cityVariant,
-  layer,
-}: {
-  cityVariant: CityVariant;
-  layer: 'back' | 'mid' | 'front';
-}) {
-  if (cityVariant === 'london') return null;
-  return <g data-city-landmark-slot={`${cityVariant}-${layer}`} />;
+  /**
+   * Very-clean hero (PR-B1): the NESO band is very low. The generic church
+   * spire gets a warm rim light (or lit windows after dark). London's hero
+   * stays the Eye; Edinburgh's is the castle in the far layer.
+   */
+  landmarkHero?: boolean;
+  /** Real weather for the landmark light (no sun rim under cloud, none in fog). */
+  weatherState?: CityWeatherState;
 }
 
 function useCityPalette(
@@ -157,6 +153,7 @@ function Building({
   delay = 0,
   skipIntro,
   windowsFlicker = false,
+  antenna = true,
 }: {
   x: number;
   width: number;
@@ -169,6 +166,8 @@ function Building({
   delay?: number;
   skipIntro?: boolean;
   windowsFlicker?: boolean;
+  /** Rooftop mast on tall blocks. Off for the neutral skyline (brief §11.1: no antennae). */
+  antenna?: boolean;
 }) {
   // Window grid
   const windowRows = Math.floor(height / 12);
@@ -290,7 +289,7 @@ function Building({
           );
         })()}
 
-      {height > 60 && (
+      {antenna && height > 60 && (
         <line
           x1={x + width / 2}
           y1={150 - height}
@@ -769,6 +768,12 @@ function CityRoad({ fill, skipIntro }: { fill: string; skipIntro?: boolean }) {
 // Far skyline (background buildings)
 export function CityLandscapeBack(props: CityLandscapeProps) {
   const cityVariant = props.cityVariant ?? 'generic';
+  if (cityVariant !== 'london') return <NeutralCityBack {...props} cityVariant={cityVariant} />;
+  return <LondonCityBack {...props} />;
+}
+
+/** London set, back row (brief §11.4: unchanged shapes). */
+function LondonCityBack(props: CityLandscapeProps) {
   const palette = useCityPalette(
     props.cleanliness,
     props.isNight,
@@ -832,23 +837,19 @@ export function CityLandscapeBack(props: CityLandscapeProps) {
         skipIntro={props.skipIntro}
       />
       {/* London landmark: Glass tower silhouette (London only, PR-B2) */}
-      {cityVariant === 'london' ? (
-        <g data-city-landmark="glass-tower-far">
-          <GlassTower
-            x={85}
-            width={14}
-            height={100}
-            fill={`url(#${id}-gradCityFar)`}
-            windowLit={palette.windowLit}
-            isNight={props.isNight}
-            cleanliness={props.cleanliness}
-            delay={0.12}
-            skipIntro={props.skipIntro}
-          />
-        </g>
-      ) : (
-        <CityVariantLandmarkSlot cityVariant={cityVariant} layer="back" />
-      )}
+      <g data-city-landmark="glass-tower-far">
+        <GlassTower
+          x={85}
+          width={14}
+          height={100}
+          fill={`url(#${id}-gradCityFar)`}
+          windowLit={palette.windowLit}
+          isNight={props.isNight}
+          cleanliness={props.cleanliness}
+          delay={0.12}
+          skipIntro={props.skipIntro}
+        />
+      </g>
       {/* Snow layer */}
       {props.isSnowing && (
         <rect x={0} y={133} width={400} height={17} fill="white" fillOpacity={0.15} />
@@ -860,6 +861,12 @@ export function CityLandscapeBack(props: CityLandscapeProps) {
 // Mid skyline
 export function CityLandscapeMid(props: CityLandscapeProps) {
   const cityVariant = props.cityVariant ?? 'generic';
+  if (cityVariant !== 'london') return <NeutralCityMid {...props} cityVariant={cityVariant} />;
+  return <LondonCityMid {...props} />;
+}
+
+/** London set, mid row: the dome (reads as St Paul's) and the clock tower. */
+function LondonCityMid(props: CityLandscapeProps) {
   const palette = useCityPalette(
     props.cleanliness,
     props.isNight,
@@ -909,31 +916,29 @@ export function CityLandscapeMid(props: CityLandscapeProps) {
           windowsFlicker={props.timeOfDay === 'dusk' || props.timeOfDay === 'night'}
         />
       ))}
-      {/* Landmark: Dome building (museum) */}
-      <DomeBuilding
-        x={160}
-        width={36}
-        height={70}
-        fill={`url(#${id}-gradCityMid)`}
-        isNight={props.isNight}
-        delay={0.25}
-        skipIntro={props.skipIntro}
-      />
+      {/* London landmark: Dome building. London only (PR-B1): it reads as St Paul's. */}
+      <g data-city-landmark="dome">
+        <DomeBuilding
+          x={160}
+          width={36}
+          height={70}
+          fill={`url(#${id}-gradCityMid)`}
+          isNight={props.isNight}
+          delay={0.25}
+          skipIntro={props.skipIntro}
+        />
+      </g>
       {/* London landmark: Clock tower (London only, PR-B2) */}
-      {cityVariant === 'london' ? (
-        <g data-city-landmark="clock-tower">
-          <ClockTower
-            x={300}
-            height={82}
-            fill={`url(#${id}-gradCityMid)`}
-            isNight={props.isNight}
-            delay={0.28}
-            skipIntro={props.skipIntro}
-          />
-        </g>
-      ) : (
-        <CityVariantLandmarkSlot cityVariant={cityVariant} layer="mid" />
-      )}
+      <g data-city-landmark="clock-tower">
+        <ClockTower
+          x={300}
+          height={82}
+          fill={`url(#${id}-gradCityMid)`}
+          isNight={props.isNight}
+          delay={0.28}
+          skipIntro={props.skipIntro}
+        />
+      </g>
     </g>
   );
 }
@@ -941,6 +946,12 @@ export function CityLandscapeMid(props: CityLandscapeProps) {
 // Near skyline (foreground buildings)
 export function CityLandscapeFront(props: CityLandscapeProps) {
   const cityVariant = props.cityVariant ?? 'generic';
+  if (cityVariant !== 'london') return <NeutralCityFront {...props} cityVariant={cityVariant} />;
+  return <LondonCityFront {...props} />;
+}
+
+/** London set, front row. */
+function LondonCityFront(props: CityLandscapeProps) {
   const palette = useCityPalette(
     props.cleanliness,
     props.isNight,
@@ -1009,23 +1020,19 @@ export function CityLandscapeFront(props: CityLandscapeProps) {
           skipIntro={props.skipIntro}
         />
         {/* London landmark: Glass tower (Shard-like) in the foreground (London only, PR-B2) */}
-        {cityVariant === 'london' ? (
-          <g data-city-landmark="glass-tower-near">
-            <GlassTower
-              x={195}
-              width={22}
-              height={65}
-              fill={`url(#${id}-gradCityNear)`}
-              windowLit={palette.windowLit}
-              isNight={props.isNight}
-              cleanliness={props.cleanliness}
-              delay={0.48}
-              skipIntro={props.skipIntro}
-            />
-          </g>
-        ) : (
-          <CityVariantLandmarkSlot cityVariant={cityVariant} layer="front" />
-        )}
+        <g data-city-landmark="glass-tower-near">
+          <GlassTower
+            x={195}
+            width={22}
+            height={65}
+            fill={`url(#${id}-gradCityNear)`}
+            windowLit={palette.windowLit}
+            isNight={props.isNight}
+            cleanliness={props.cleanliness}
+            delay={0.48}
+            skipIntro={props.skipIntro}
+          />
+        </g>
       </g>
 
       {/* Road rendered on top */}
@@ -1048,6 +1055,479 @@ export function CityLandscapeFront(props: CityLandscapeProps) {
       <StreetLight x={330} isNight={props.isNight} />
     </>
   );
+}
+
+// ─── Neutral GB skyline (PR-B1, Design brief §11.1) ─────────────────────────
+// Every city except London; Edinburgh uses the same vocabulary with the castle
+// in the far layer and low buildings under it (§11.2). Heights in the tables
+// below are units above the ground line (y 138); Building draws to y 150, so
+// it gets u + 12. Nothing identifiable: no domes, no Eye, no tapered or pointed
+// towers, no clock faces, no gasholders or mill chimneys. Static art only.
+
+const NEUTRAL_GROUND_Y = 138;
+const toBuilding = (u: number) => u + (150 - NEUTRAL_GROUND_Y);
+
+type Block = { x: number; width: number; u: number };
+
+/** Back row: 1960s-80s slabs and modern flats, 30-60u, flat tops; one plain tower. */
+const NEUTRAL_BACK: Block[] = [
+  { x: 0, width: 30, u: 30 },
+  { x: 32, width: 24, u: 36 },
+  { x: 58, width: 34, u: 33 },
+  { x: 94, width: 26, u: 42 },
+  { x: 122, width: 36, u: 38 },
+  { x: 160, width: 28, u: 46 },
+  { x: 190, width: 34, u: 41 },
+  { x: 248, width: 30, u: 52 },
+  { x: 280, width: 34, u: 47 },
+  { x: 316, width: 28, u: 40 },
+  { x: 346, width: 30, u: 35 },
+  { x: 378, width: 22, u: 31 },
+];
+/** The one tower: flat top, vertical banding, at 60-70% of the visible width (off-centre). */
+const NEUTRAL_TOWER: Block = { x: 226, width: 20, u: 70 };
+
+/**
+ * Edinburgh back row: the castle (x 110-198) replaces the tower, and blocks in
+ * its span are capped at 14u so the rock face reads (§11.2).
+ */
+const EDINBURGH_BACK: Block[] = [
+  { x: 0, width: 30, u: 30 },
+  { x: 32, width: 24, u: 36 },
+  { x: 58, width: 34, u: 33 },
+  { x: 94, width: 14, u: 26 },
+  { x: 150, width: 16, u: 9 },
+  { x: 168, width: 22, u: 13 },
+  { x: 198, width: 26, u: 38 },
+  { x: 226, width: 20, u: 48 },
+  { x: 248, width: 30, u: 52 },
+  { x: 280, width: 34, u: 45 },
+  { x: 316, width: 28, u: 40 },
+  { x: 346, width: 30, u: 35 },
+  { x: 378, width: 22, u: 31 },
+];
+
+/** Mid row: 3-5 storey commercial blocks, 18-40u, flat or shallow roofs. */
+const NEUTRAL_MID: Block[] = [
+  { x: 4, width: 30, u: 20 },
+  { x: 36, width: 28, u: 26 },
+  { x: 66, width: 34, u: 22 },
+  { x: 102, width: 34, u: 31 },
+  { x: 172, width: 32, u: 27 },
+  { x: 206, width: 28, u: 36 },
+  { x: 236, width: 38, u: 30 },
+  { x: 276, width: 30, u: 38 },
+  { x: 308, width: 36, u: 29 },
+  { x: 346, width: 28, u: 24 },
+  { x: 376, width: 24, u: 19 },
+];
+const NEUTRAL_SPIRE_X = 140;
+
+/** Edinburgh mid row: nothing in front of the castle; the town climbs the tail on the east. */
+const EDINBURGH_MID: Block[] = [
+  { x: 4, width: 30, u: 20 },
+  { x: 36, width: 28, u: 26 },
+  { x: 66, width: 34, u: 22 },
+  { x: 188, width: 10, u: 9 },
+  { x: 198, width: 14, u: 14 },
+  { x: 212, width: 18, u: 20 },
+  { x: 264, width: 30, u: 36 },
+  { x: 296, width: 34, u: 29 },
+  { x: 332, width: 30, u: 24 },
+  { x: 364, width: 36, u: 20 },
+];
+const EDINBURGH_SPIRE_X = 232;
+
+/** Front row: brick terraces, 12-20u, in runs of 3-6 houses with 2-3 gaps. */
+type Run = { x: number; houses: number; u: number };
+const HOUSE_W = 16;
+const NEUTRAL_FRONT: Run[] = [
+  { x: 0, houses: 5, u: 14 },
+  { x: 96, houses: 5, u: 18 },
+  { x: 190, houses: 6, u: 13 },
+  { x: 300, houses: 6, u: 17 },
+];
+const NEUTRAL_TREES = [
+  { x: 88, scale: 0.8 },
+  { x: 183, scale: 0.7 },
+  { x: 293, scale: 0.75 },
+];
+/** Edinburgh: a garden gap under the castle (x 110-190), then the town resumes at the tail. */
+const EDINBURGH_FRONT: Run[] = [
+  { x: 14, houses: 6, u: 14 },
+  { x: 190, houses: 4, u: 17 },
+  { x: 264, houses: 5, u: 13 },
+  { x: 352, houses: 3, u: 16 },
+];
+const EDINBURGH_TREES = [
+  { x: 6, scale: 0.6 },
+  { x: 122, scale: 0.6 },
+  { x: 166, scale: 0.55 },
+  { x: 259, scale: 0.6 },
+  { x: 348, scale: 0.55 },
+];
+
+/** Plain tower: flat top, vertical banding. No taper, point, crown or mast. */
+function NeutralTower({
+  block,
+  fill,
+  palette,
+  isNight,
+  cleanliness,
+  skipIntro,
+  windowsFlicker,
+}: {
+  block: Block;
+  fill: string;
+  palette: ReturnType<typeof useCityPalette>;
+  isNight: boolean;
+  cleanliness: number;
+  skipIntro?: boolean;
+  windowsFlicker: boolean;
+}) {
+  const h = toBuilding(block.u);
+  return (
+    <g data-city-art="neutral-tower">
+      <Building
+        x={block.x}
+        width={block.width}
+        height={h}
+        fill={fill}
+        windowLit={palette.windowLit}
+        windowDark={palette.windowDark}
+        isNight={isNight}
+        cleanliness={cleanliness}
+        delay={0.12}
+        skipIntro={skipIntro}
+        windowsFlicker={windowsFlicker}
+        antenna={false}
+      />
+      {[0.25, 0.5, 0.75].map((f) => (
+        <rect
+          key={f}
+          x={block.x + block.width * f - 0.4}
+          y={150 - h}
+          width={0.8}
+          height={h - 12}
+          fill="rgba(255,255,255,0.08)"
+        />
+      ))}
+    </g>
+  );
+}
+
+/** One static tower crane in the back row; dropped at 340 px wide and below (Q8). */
+function NeutralFarCrane({ x, fill }: { x: number; fill: string }) {
+  return (
+    <g data-city-art="far-crane" className="max-[340px]:hidden" opacity={0.85}>
+      <rect x={x} y={84} width={1.4} height={54} fill={fill} />
+      <rect x={x - 22} y={84} width={46} height={1} fill={fill} />
+      <rect x={x + 16} y={85} width={5} height={2.2} fill={fill} />
+      <polygon points={`${x - 1},84 ${x + 0.7},79 ${x + 2.4},84`} fill={fill} />
+      <line x1={x - 14} y1={85} x2={x - 14} y2={96} stroke={fill} strokeWidth={0.4} />
+    </g>
+  );
+}
+
+/**
+ * Plain parish church: nave with a pitched roof (body 14u), a square tower and
+ * a simple spire to 52u. No clock face, nothing recognisable. It is the generic
+ * very-clean hero: a warm rim light by day, floodlit edge and lit windows after
+ * dark (static, decorative).
+ */
+function NeutralChurchSpire({
+  x,
+  fill,
+  windowLit,
+  windowDark,
+  isNight,
+  light,
+}: {
+  x: number;
+  fill: string;
+  windowLit: string;
+  windowDark: string;
+  isNight: boolean;
+  light: ReturnType<typeof getLandmarkLight>;
+}) {
+  const g = NEUTRAL_GROUND_Y;
+  const naveTop = g - 14;
+  const towerX = x + 22;
+  const towerTop = g - 30;
+  const apexY = g - 52;
+  const lit = isNight || light.heroWindows;
+  return (
+    <>
+      <rect x={x} y={naveTop} width={22} height={150 - naveTop} fill={fill} />
+      <polygon
+        points={`${x},${naveTop} ${x + 11},${naveTop - 5} ${x + 22},${naveTop}`}
+        fill={fill}
+      />
+      <rect x={towerX} y={towerTop} width={8} height={150 - towerTop} fill={fill} />
+      <polygon
+        points={`${towerX - 0.5},${towerTop} ${towerX + 4},${apexY} ${towerX + 8.5},${towerTop}`}
+        fill={fill}
+      />
+      {/* Belfry louvre and nave windows */}
+      <rect
+        x={towerX + 3}
+        y={towerTop + 2}
+        width={2}
+        height={4}
+        rx={1}
+        fill={light.heroWindows ? LANDMARK_WINDOW_LIT : windowDark}
+        opacity={light.heroWindows ? 0.95 : 0.35}
+      />
+      {[x + 4, x + 10, x + 16].map((wx) => (
+        <rect
+          key={wx}
+          x={wx}
+          y={naveTop + 4}
+          width={2}
+          height={4}
+          rx={1}
+          fill={light.heroWindows ? LANDMARK_WINDOW_LIT : lit ? windowLit : windowDark}
+          opacity={light.heroWindows ? 0.95 : lit ? 0.7 : 0.35}
+        />
+      ))}
+      {light.rim && (
+        <path
+          data-spire-rim="true"
+          d={`M${x},${naveTop} L${x + 11},${naveTop - 5} L${x + 22},${naveTop} M${towerX - 0.5},${towerTop} L${towerX + 4},${apexY} L${towerX + 8.5},${towerTop} M${towerX},${towerTop} V${naveTop}`}
+          fill="none"
+          stroke={light.rim.color}
+          strokeOpacity={light.rim.opacity}
+          strokeWidth={0.6}
+          strokeLinejoin="round"
+        />
+      )}
+    </>
+  );
+}
+
+/** A run of terraced houses with one pitched roof line and chimney stubs at the party walls. */
+function TerraceRun({
+  run,
+  fill,
+  palette,
+  isNight,
+}: {
+  run: Run;
+  fill: string;
+  palette: ReturnType<typeof useCityPalette>;
+  isNight: boolean;
+}) {
+  const top = NEUTRAL_GROUND_Y - run.u;
+  const w = run.houses * HOUSE_W;
+  const roof = 4;
+  return (
+    <g data-city-art="terrace">
+      <rect x={run.x} y={top} width={w} height={150 - top} fill={fill} />
+      <polygon
+        points={`${run.x},${top} ${run.x + 1.5},${top - roof} ${run.x + w - 1.5},${top - roof} ${run.x + w},${top}`}
+        fill={fill}
+      />
+      <rect x={run.x} y={top - roof} width={w} height={0.6} fill="rgba(0,0,0,0.12)" />
+      {Array.from({ length: run.houses + 1 }).map((_, i) => {
+        const cx = Math.min(run.x + w - 2.2, Math.max(run.x + 0.6, run.x + i * HOUSE_W - 0.8));
+        return (
+          <rect key={`c${i}`} x={cx} y={top - roof - 2} width={1.6} height={2.2} fill={fill} />
+        );
+      })}
+      {Array.from({ length: run.houses }).map((_, i) =>
+        [4, 10].map((dx) => {
+          const seed = (run.x * 7 + i * 13 + dx) % 10;
+          const on = isNight && seed < 5;
+          return (
+            <rect
+              key={`w${i}-${dx}`}
+              x={run.x + i * HOUSE_W + dx - 1}
+              y={top + 3}
+              width={2}
+              height={3}
+              fill={on ? palette.windowLit : palette.windowDark}
+              opacity={on ? 0.85 : 0.35}
+            />
+          );
+        }),
+      )}
+    </g>
+  );
+}
+
+function NeutralCityBack(props: CityLandscapeProps & { cityVariant: CityVariant }) {
+  const palette = useCityPalette(
+    props.cleanliness,
+    props.isNight,
+    props.synthwaveMode,
+    props.isSnowing,
+    props.timeOfDay,
+  );
+  const id = useId();
+  const isEdinburgh = props.cityVariant === 'edinburgh';
+  const blocks = isEdinburgh ? EDINBURGH_BACK : NEUTRAL_BACK;
+  const fill = `url(#${id}-gradCityFar)`;
+  const flicker = props.timeOfDay === 'dusk' || props.timeOfDay === 'night';
+  return (
+    // Design review of #190: opaque in Edinburgh so the castle never shows through the back row.
+    <g opacity={isEdinburgh ? 1 : 0.72} data-city-art={`${props.cityVariant}-back`}>
+      <defs>
+        <linearGradient id={`${id}-gradCityFar`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={palette.skylineFarHighlight} />
+          <stop offset="100%" stopColor={palette.skylineFarShadow} />
+        </linearGradient>
+      </defs>
+      <NeutralFarCrane x={322} fill={palette.skylineFarShadow} />
+      {blocks.map((b, i) => (
+        <Building
+          key={i}
+          x={b.x}
+          width={b.width}
+          height={toBuilding(b.u)}
+          fill={fill}
+          windowLit={palette.windowLit}
+          windowDark={palette.windowDark}
+          isNight={props.isNight}
+          cleanliness={props.cleanliness}
+          delay={i * 0.03}
+          skipIntro={props.skipIntro}
+          windowsFlicker={flicker}
+          antenna={false}
+        />
+      ))}
+      {!isEdinburgh && (
+        <NeutralTower
+          block={NEUTRAL_TOWER}
+          fill={fill}
+          palette={palette}
+          isNight={props.isNight}
+          cleanliness={props.cleanliness}
+          skipIntro={props.skipIntro}
+          windowsFlicker={flicker}
+        />
+      )}
+      {props.isSnowing && (
+        <rect x={0} y={133} width={400} height={17} fill="white" fillOpacity={0.15} />
+      )}
+    </g>
+  );
+}
+
+function NeutralCityMid(props: CityLandscapeProps & { cityVariant: CityVariant }) {
+  const palette = useCityPalette(
+    props.cleanliness,
+    props.isNight,
+    props.synthwaveMode,
+    props.isSnowing,
+    props.timeOfDay,
+  );
+  const id = useId();
+  const isEdinburgh = props.cityVariant === 'edinburgh';
+  const blocks = isEdinburgh ? EDINBURGH_MID : NEUTRAL_MID;
+  const fill = `url(#${id}-gradCityMid)`;
+  // Edinburgh's very-clean hero is the castle, so its spire is never rim-lit.
+  const heroLit = !isEdinburgh && Boolean(props.landmarkHero);
+  const light = getLandmarkLight({
+    timeOfDay: props.timeOfDay ?? 'midday',
+    weather: props.weatherState ?? 'clear',
+    heroLit,
+    synthwaveMode: props.synthwaveMode,
+  });
+  return (
+    <g opacity={0.9} data-city-art={`${props.cityVariant}-mid`}>
+      <defs>
+        <linearGradient id={`${id}-gradCityMid`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={palette.skylineMidHighlight} />
+          <stop offset="100%" stopColor={palette.skylineMidShadow} />
+        </linearGradient>
+      </defs>
+      {blocks.map((b, i) => (
+        <Building
+          key={i}
+          x={b.x}
+          width={b.width}
+          height={toBuilding(b.u)}
+          fill={fill}
+          windowLit={palette.windowLit}
+          windowDark={palette.windowDark}
+          isNight={props.isNight}
+          cleanliness={props.cleanliness}
+          delay={0.2 + i * 0.03}
+          skipIntro={props.skipIntro}
+          windowsFlicker={props.timeOfDay === 'dusk' || props.timeOfDay === 'night'}
+          antenna={false}
+        />
+      ))}
+      <g data-city-art="church-spire" data-landmark-hero={heroLit ? 'lit' : 'off'}>
+        <NeutralChurchSpire
+          x={isEdinburgh ? EDINBURGH_SPIRE_X : NEUTRAL_SPIRE_X}
+          fill={fill}
+          windowLit={palette.windowLit}
+          windowDark={palette.windowDark}
+          isNight={props.isNight}
+          light={light}
+        />
+      </g>
+    </g>
+  );
+}
+
+function NeutralCityFront(props: CityLandscapeProps & { cityVariant: CityVariant }) {
+  const palette = useCityPalette(
+    props.cleanliness,
+    props.isNight,
+    props.synthwaveMode,
+    props.isSnowing,
+    props.timeOfDay,
+  );
+  const id = useId();
+  const isEdinburgh = props.cityVariant === 'edinburgh';
+  const runs = isEdinburgh ? EDINBURGH_FRONT : NEUTRAL_FRONT;
+  const trees = isEdinburgh ? EDINBURGH_TREES : NEUTRAL_TREES;
+  return (
+    <>
+      <defs>
+        <clipPath id={`${id}-foreground-building-clip`}>
+          <rect x={0} y={0} width={400} height={133} />
+        </clipPath>
+        <linearGradient id={`${id}-gradCityNear`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={palette.skylineNearHighlight} />
+          <stop offset="100%" stopColor={palette.skylineNearShadow} />
+        </linearGradient>
+      </defs>
+      <g
+        clipPath={`url(#${id}-foreground-building-clip)`}
+        data-city-art={`${props.cityVariant}-front`}
+      >
+        {runs.map((r) => (
+          <TerraceRun
+            key={r.x}
+            run={r}
+            fill={`url(#${id}-gradCityNear)`}
+            palette={palette}
+            isNight={props.isNight}
+          />
+        ))}
+      </g>
+      <CityRoad fill={palette.road} skipIntro={props.skipIntro} />
+      {props.cleanliness > 0.5 && (
+        <g>
+          {trees.map((t) => (
+            <NeutralStreetTree key={t.x} x={t.x} scale={t.scale} isNight={props.isNight} />
+          ))}
+        </g>
+      )}
+      <StreetLight x={30} isNight={props.isNight} />
+      <StreetLight x={130} isNight={props.isNight} />
+      <StreetLight x={230} isNight={props.isNight} />
+      <StreetLight x={330} isNight={props.isNight} />
+    </>
+  );
+}
+
+/** Street trees in the terrace gaps (same UrbanTree art, scales 0.6-0.8). */
+function NeutralStreetTree({ x, scale, isNight }: { x: number; scale: number; isNight: boolean }) {
+  return <UrbanTree x={x} y={133} scale={scale} isNight={isNight} />;
 }
 
 // Urban tree (small, trimmed)

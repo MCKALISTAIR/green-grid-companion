@@ -9,7 +9,7 @@ describe('getCityHeroEmphasis', () => {
     for (const band of BANDS) {
       const e = getCityHeroEmphasis(band);
       expect(e.hero).toBeTruthy();
-      expect(e.eyeOpacity).toBeGreaterThanOrEqual(0.32);
+      expect(e.landmarkOpacity).toBeGreaterThanOrEqual(0.32);
       expect(e.frontOpacity).toBeGreaterThanOrEqual(0.75);
       expect(e.skylineOpacity).toBeGreaterThanOrEqual(0.7);
     }
@@ -17,9 +17,9 @@ describe('getCityHeroEmphasis', () => {
 
   it('makes London Eye the hero when very clean without emptying the road', () => {
     const e = getCityHeroEmphasis('very-clean');
-    expect(e.hero).toBe('london-eye');
-    expect(e.eyeOpacity).toBe(1);
-    expect(e.eyeScale).toBeGreaterThan(1);
+    expect(e.hero).toBe('landmark');
+    expect(e.landmarkOpacity).toBe(1);
+    expect(e.landmarkScale).toBeGreaterThan(1);
     expect(e.bessOpacity).toBeLessThan(0.5);
     expect(e.trafficCount).toBeGreaterThanOrEqual(1);
     expect(e.pigeonCount).toBeGreaterThanOrEqual(1);
@@ -31,7 +31,7 @@ describe('getCityHeroEmphasis', () => {
     expect(e.hero).toBe('bess');
     expect(e.bessOpacity).toBe(1);
     expect(e.bessScale).toBeGreaterThan(1);
-    expect(e.eyeOpacity).toBeGreaterThanOrEqual(0.35);
+    expect(e.landmarkOpacity).toBeGreaterThanOrEqual(0.35);
     expect(e.trafficCount).toBeGreaterThanOrEqual(1);
   });
 });

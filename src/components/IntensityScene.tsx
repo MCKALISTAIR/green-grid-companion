@@ -17,6 +17,7 @@ import { SceneHeroSpotlight, SceneAtmosphericDepth } from './scene/SceneComposit
 import { SceneTemporalLife } from './scene/SceneTemporalLife';
 import { GenerationMix } from '@/lib/carbonApi';
 import { buildSceneConfig } from '@/lib/sceneConfig';
+import { cityWeatherState } from '@/lib/cityLandmarkPalette';
 import { buildTurbineLayout } from '@/lib/turbineLayout';
 import { useSceneType, SceneType } from '@/hooks/useSceneType';
 import {
@@ -403,6 +404,12 @@ export function IntensityScene({
             cleanlinessBand={cleanlinessBand}
             intensity={intensity}
             cityVariant={cityVariant}
+            nesoIndex={
+              hasLiveReading || (isDirectorMode && overrides.intensity !== undefined)
+                ? rawIndex || undefined
+                : undefined
+            }
+            weatherState={cityWeatherState(weatherKnown, weather)}
           />
         ) : (
           <CountrysideSceneLayers
