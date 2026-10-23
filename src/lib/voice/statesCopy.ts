@@ -12,6 +12,14 @@ export function offlineBannerText(savedAt: number | null): string {
 
 export const BACK_ONLINE_TEXT = "You're back online.";
 
+/** Compact hero pill (motion spec §2.7). */
+export function offlinePillText(savedAt: number | null): string {
+  if (!savedAt) return 'Offline · nothing saved yet';
+  return `Offline · figures from ${formatLondonTime(new Date(savedAt))}`;
+}
+
+export const BACK_ONLINE_PILL = 'Back online';
+
 /** Query keys (first element) that hold carbon intensity figures. */
 export const CARBON_QUERY_ROOTS = new Set(['national', 'regional', 'forecast']);
 

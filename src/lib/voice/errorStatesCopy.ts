@@ -47,6 +47,50 @@ export const OUTAGE_COPY = {
   action: 'Try again',
 } as const;
 
+/** State 3: location outside GB (or a VPN). Follows the tone setting. */
+export const OUTSIDE_COPY = {
+  title: 'Outside Great Britain',
+  body: {
+    plain:
+      'Your location looks like it is outside GB, or you are on a VPN. GridSense only covers the GB grid.',
+    cheeky:
+      'Bonjour? Your location looks like it is outside GB, or you are on a VPN. We only cover the GB grid.',
+  },
+  enterPostcode: 'Enter a GB postcode',
+  useAverage: 'Use GB average',
+  niNote: 'Northern Ireland runs on a separate grid, so it is not covered.',
+} as const;
+
+/** State 4: unknown postcode (inline field error). Always Plain. */
+export const POSTCODE_COPY = {
+  notFound: (outward: string) => `We couldn't find ${outward}. Check it, or use the GB average.`,
+  tryAgain: 'Try again',
+  useAverage: 'Use GB average',
+/**
+ * State 12: Offline with nothing cached at all (full Home state). When cached
+ * figures are on screen the in-hero pill from #137 says "Offline · figures
+ * from HH:MM" instead, so this card never shows alongside it.
+ */
+export const OFFLINE_COPY = {
+  title: "You're offline.",
+  body: {
+    plain: 'Nothing saved yet.',
+    cheeky: 'Nothing saved yet. The grid carries on without us.',
+  },
+  auto: 'We will refresh automatically when you are back online.',
+  action: 'Try now',
+} as const;
+
+/** State 5: Rank map with no regional figures. Follows the tone setting. */
+export const RANK_EMPTY_COPY = {
+  title: 'No regional figures right now',
+  body: {
+    plain: 'NESO has not sent regional data yet. National figures are still available on Home.',
+    cheeky: 'The regions are being shy. National figures are still on Home.',
+  },
+  action: 'Retry',
+} as const;
+
 /** State 6: Planner forecast error; the picker and selection stay. */
 export const PLANNER_ERROR_COPY = {
   title: "Couldn't load the forecast",
