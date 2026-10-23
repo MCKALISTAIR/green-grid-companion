@@ -4,6 +4,8 @@ import {
   INLAND_POSTCODE_AREAS,
   detectCityVariant,
   detectSceneFromPostcode,
+  GREATER_LONDON_OUTER_DISTRICTS,
+  isGreaterLondon,
   postcodeArea,
   postcodeDistrict,
 } from './useSceneType';
@@ -98,7 +100,7 @@ describe('detectCityVariant', () => {
     ['CF10', 'Cardiff'],
     ['BS1', 'Bristol'],
     ['NE1', 'Newcastle'],
-    ['EN1', 'Enfield (EN, not E)'],
+    ['EN6', 'Potters Bar (EN, not E, and outside Greater London)'],
     ['WA1', 'Warrington (WA, not W)'],
     ['SN1', 'Swindon (SN, not S or N)'],
     ['DN1', 'Doncaster'],
@@ -180,4 +182,119 @@ describe('detectSceneFromPostcode', () => {
       expect(detectSceneFromPostcode(pc)).toBe('countryside');
     },
   );
+});
+
+// Alistair, 23 Oct 2026: all of London gets London's landmarks, including
+// Greater London (BR, CR, HA...), not just the London postal area. The outer
+// areas also cover places outside London, so the mapping is by district.
+describe('Greater London (by district)', () => {
+  const INSIDE = [
+    'BR1',
+    'CR0',
+    'HA1',
+    'KT1',
+    'TW1',
+    'UB1',
+    'EN1',
+    'IG1',
+    'RM1',
+    'SM1',
+    'DA5',
+    'E1',
+  ];
+  const OUTSIDE = [
+    ['WD17', 'Watford'],
+    ['DA1', 'Dartford'],
+    ['KT17', 'Epsom'],
+    ['TW20', 'Egham'],
+    ['EN6', 'Potters Bar'],
+    ['RM16', 'Grays'],
+    ['CM1', 'Chelmsford'],
+  ] as const;
+
+  it.each(INSIDE)('%s is Greater London: london variant and city scene', (pc) => {
+    expect(isGreaterLondon(pc)).toBe(true);
+    expect(detectCityVariant(pc)).toBe('london');
+    expect(detectSceneFromPostcode(pc)).toBe('city');
+  });
+
+  it.each(OUTSIDE)('%s (%s) is outside Greater London: not london', (pc) => {
+    expect(isGreaterLondon(pc)).toBe(false);
+    expect(detectCityVariant(pc)).toBe('generic');
+    expect(detectSceneFromPostcode(pc)).not.toBe('city');
+  });
+
+  it.each([
+    ['CR0 1AA', true],
+    ['cr01aa', true], // CR0 1AA without the space, not CR01
+    ['ha1', true],
+    ['kt171aa', false], // KT17 1AA
+    ['KT1 7AA', true],
+    ['DA1 5AA', false],
+    ['DA5 1AA', true],
+  ] as const)('full postcodes and lowercase: %s → %s', (pc, inside) => {
+    expect(isGreaterLondon(pc)).toBe(inside);
+    expect(detectCityVariant(pc)).toBe(inside ? 'london' : 'generic');
+  });
+
+  it.each([
+    ['IG7', 'Chigwell, 36.9% London'],
+    ['DA1', 'Dartford, 21.2% London'],
+  ])('minority-London straddlers follow the majority and stay out: %s (%s)', (pc) => {
+    expect(isGreaterLondon(pc)).toBe(false);
+    expect(detectCityVariant(pc)).toBe('generic');
+  });
+
+  // Alistair, 23 Oct 2026: Biggin Hill (TN16, 48.6% London) and Harefield
+  // (UB9, 47.6% London) are in, as exceptions to the majority rule.
+  it.each(['TN16', 'UB9', 'TN16 3AA', 'ub91aa', 'tn16'])(
+    "Alistair's exceptions are Greater London: %s → london + city",
+    (pc) => {
+      expect(isGreaterLondon(pc)).toBe(true);
+      expect(detectCityVariant(pc)).toBe('london');
+      expect(detectSceneFromPostcode(pc)).toBe('city');
+    },
+  );
+
+  it('the exceptions do not pull in their neighbours', () => {
+    for (const pc of ['TN14', 'TN15', 'TN13', 'SL0', 'UB19']) {
+      expect(isGreaterLondon(pc)).toBe(false);
+    }
+  });
+
+  it.each(['HA6', 'KT4', 'CR5', 'KT6', 'RM14'])('majority-London straddlers are in: %s', (pc) => {
+    expect(isGreaterLondon(pc)).toBe(true);
+  });
+
+  it('matches district, not just area: the outer-area letters alone are not London', () => {
+    for (const area of ['BR', 'CR', 'DA', 'EN', 'HA', 'IG', 'KT', 'RM', 'SM', 'TW', 'UB', 'WD']) {
+      expect(isGreaterLondon(area)).toBe(false);
+      expect(detectCityVariant(area)).toBe('generic');
+    }
+  });
+
+  it('no WD district is in Greater London', () => {
+    for (const d of GREATER_LONDON_OUTER_DISTRICTS) expect(d.startsWith('WD')).toBe(false);
+  });
+
+  it('every listed district is a well-formed outer-area district', () => {
+    for (const d of GREATER_LONDON_OUTER_DISTRICTS) {
+      expect(d).toMatch(/^(BR|CR|DA|EN|HA|IG|KT|RM|SM|TN|TW|UB)\d{1,2}$/);
+    }
+  });
+
+  it('inner London is unchanged', () => {
+    for (const pc of ['EC1A', 'WC2N', 'E1', 'E14', 'N1', 'NW1', 'SE1', 'SW1A', 'W1A']) {
+      expect(detectCityVariant(pc)).toBe('london');
+      expect(detectSceneFromPostcode(pc)).toBe('city');
+    }
+  });
+
+  it('GPS-only users (no postcode stored) get the generic variant, never London', () => {
+    // LocationContext stores '' when the user relies on device location only.
+    expect(isGreaterLondon('')).toBe(false);
+    expect(detectCityVariant('')).toBe('generic');
+    expect(detectCityVariant(null)).toBe('generic');
+    expect(detectCityVariant(undefined)).toBe('generic');
+  });
 });
