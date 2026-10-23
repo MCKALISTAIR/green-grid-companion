@@ -28,6 +28,7 @@ import { CompactDataAttribution } from '@/components/attribution/DataAttribution
 import { getHeroTextTone, isReadingFresh, shouldCelebrateZeroCarbon } from '@/lib/sceneUtils';
 import { useWeatherData } from '@/hooks/useWeatherData';
 import { ZeroCarbonBadge } from '@/components/scene/NetZeroCelebration';
+import { heroErrorTitle } from '@/lib/voice/errorStatesCopy';
 
 interface IntensityHeroOverlayProps {
   postcode: string;
@@ -43,6 +44,8 @@ interface IntensityHeroOverlayProps {
   isLoading: boolean;
   isBackgroundFetching: boolean;
   isError: boolean;
+  /** With isError: the Carbon Intensity API request itself failed (timeout, network, 5xx). */
+  nesoRequestFailed?: boolean;
   lastUpdated: string | null | undefined;
   /** When set, the number is a cached one: show the amber Last known chip. */
   lastKnownAt?: string | null;
@@ -73,6 +76,7 @@ export function IntensityHeroOverlay({
   isLoading,
   isBackgroundFetching,
   isError,
+  nesoRequestFailed = false,
   lastKnownAt,
   lastUpdated,
   nextUpdate,
@@ -103,7 +107,7 @@ export function IntensityHeroOverlay({
   // weather unknown the overcast sky follows the time of day, and so does the tone.
   const heroTone = getHeroTextTone(timeOfDay, weatherKnown ? weather : undefined);
   const isInk = heroTone === 'ink';
-  // Only say 'Offline' when the device really is; otherwise the data source failed.
+  // Only say "Offline" when the device really is, and only blame NESO when its request failed.
   const { isOffline } = useOffline();
   const band = getCleanlinessBand(intensity);
   const isDirty = band === 'dirty' || band === 'very-dirty';
@@ -341,7 +345,7 @@ export function IntensityHeroOverlay({
                 <div className="flex flex-col items-center py-1">
                   <AlertTriangle className="w-10 h-10 text-white animate-pulse mb-1 drop-shadow-md" />
                   <span className="text-sm font-bold text-white/95 uppercase tracking-[0.18em]">
-                    {isOffline ? 'Offline' : 'Data unavailable'}
+                    {heroErrorTitle(isOffline, nesoRequestFailed)}
                   </span>
                 </div>
               ) : (

@@ -66,7 +66,7 @@ for (const viewport of [
     await expect(page.getByTestId('connection-pill')).toHaveCount(1);
     await expect(page.getByTestId('offline-empty-state')).toHaveCount(0);
     // Exactly one offline message: the pill (no card, chip or stale card too).
-    await expect(page.getByText(/offline/i)).toHaveCount(1);
+    await expect(page.getByText(/offline/i).and(page.locator(':not(.sr-only)'))).toHaveCount(1);
     await expect(page.getByTestId('last-known-chip')).toHaveCount(0);
     await expect(page.getByTestId('stale-reading-notice')).toHaveCount(0);
     await page.screenshot({ path: `test-results/offline-cached-${viewport.width}.png` });
@@ -83,15 +83,21 @@ for (const viewport of [
     await context.setOffline(true);
     const card = page.getByTestId('offline-empty-state');
     await expect(card).toBeVisible({ timeout: 20000 });
-    await expect(card).toContainText("You're offline.");
+    // BH-89: no "You're offline." title; the hero says "Offline" once it errors.
+    await expect(card).not.toContainText("You're offline");
     await expect(card).toContainText('Nothing saved yet.');
     // Try now must sit fully above the bottom nav, no scrolling, even at 320x568.
     const btn = await card.getByRole('button', { name: 'Try now' }).boundingBox();
     const nav = await page.locator('[data-testid="bottom-nav"], .nav-dock').first().boundingBox();
     expect(btn!.y + btn!.height).toBeLessThanOrEqual(nav!.y);
     await expect(page.getByTestId('connection-pill')).toHaveCount(0);
-    // Exactly one offline message: the full state's title.
-    await expect(page.getByText(/offline/i)).toHaveCount(1);
+    // At most one offline message: the hero's "Offline" (none while it loads).
+    expect(
+      await page
+        .getByText(/offline/i)
+        .and(page.locator(':not(.sr-only)'))
+        .count(),
+    ).toBeLessThanOrEqual(1);
     await page.screenshot({ path: `test-results/offline-empty-${viewport.width}.png` });
     await context.setOffline(false);
   });

@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/accordion';
 import { motion } from 'framer-motion';
 import { DataAttribution } from '@/components/attribution/DataAttribution';
+import { NI_ALL_ISLAND_GRID } from '@/lib/voice/errorStatesCopy';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -231,8 +232,7 @@ export default function Help() {
                     <strong>Northern Ireland</strong>
                   </p>
                   <p>
-                    Northern Ireland has its own grid, which NESO doesn't cover. For BT postcodes we
-                    show the Great Britain average instead.
+                    {NI_ALL_ISLAND_GRID} For BT postcodes, we&apos;ll show the GB average instead.
                   </p>
 
                   <p className="pt-2">

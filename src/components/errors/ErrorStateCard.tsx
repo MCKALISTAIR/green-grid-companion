@@ -37,7 +37,8 @@ export function ErrorActionButton({ label, onClick, kind = 'primary' }: ErrorAct
 interface ErrorStateCardProps {
   tint: ErrorTint;
   icon: LucideIcon;
-  title: string;
+  /** Optional: without one, the icon sits beside the body (BH-89's offline card). */
+  title?: string;
   body?: ReactNode;
   actions?: ErrorAction[];
   children?: ReactNode;
@@ -58,6 +59,47 @@ export function ErrorStateCard({
   testId,
   role = 'status',
 }: ErrorStateCardProps) {
+  const badge = (
+    <span
+      className={cn(
+        'inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg',
+        TINT[tint],
+      )}
+      aria-hidden="true"
+    >
+      <Icon className="h-4 w-4" />
+    </span>
+  );
+  if (!title) {
+    return (
+      <div
+        role={role}
+        data-testid={testId}
+        data-tint={tint}
+        className={cn(
+          'flex items-start gap-2.5 rounded-[20px] border border-border/60 bg-white p-4 shadow-sm dark:bg-card',
+          className,
+        )}
+      >
+        {badge}
+        <div className="min-w-0 flex-1">
+          {body && (
+            <p className="text-sm leading-[1.4] text-[#3c4752] dark:text-muted-foreground">
+              {body}
+            </p>
+          )}
+          {children}
+          {actions && actions.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {actions.map((a) => (
+                <ErrorActionButton key={a.label} {...a} />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
   return (
     <div
       role={role}
@@ -69,15 +111,7 @@ export function ErrorStateCard({
       )}
     >
       <h3 className="flex items-center gap-2.5 text-base font-extrabold leading-tight text-foreground">
-        <span
-          className={cn(
-            'inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg',
-            TINT[tint],
-          )}
-          aria-hidden="true"
-        >
-          <Icon className="h-4 w-4" />
-        </span>
+        {badge}
         {title}
       </h3>
       {body && (

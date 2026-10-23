@@ -9,6 +9,8 @@ import { setOfflineEmptyStateShown } from '@/lib/offlineEmptyState';
 /**
  * Design state 12, full version: offline and nothing cached at all. With
  * cached figures on screen the in-hero offline pill (#137) is used instead.
+ * No title (BH-89, Design call): the hero already says "Offline", so the card
+ * keeps only its body and Try now.
  */
 export function OfflineEmptyState() {
   const queryClient = useQueryClient();
@@ -19,13 +21,8 @@ export function OfflineEmptyState() {
   // Try now sits beside the copy (as in #146's banner) so it stays above the
   // bottom nav at 320x568 without scrolling.
   return (
-    <ErrorStateCard
-      testId="offline-empty-state"
-      tint="blue"
-      icon={WifiOff}
-      title={OFFLINE_COPY.title}
-    >
-      <div className="mt-2 flex items-start gap-3">
+    <ErrorStateCard testId="offline-empty-state" tint="blue" icon={WifiOff}>
+      <div className="flex items-start gap-3">
         <p className="min-w-0 flex-1 text-sm leading-[1.4] text-[#3c4752] dark:text-muted-foreground">
           {toneBody(OFFLINE_COPY.body, readTone())} {OFFLINE_COPY.auto}
         </p>

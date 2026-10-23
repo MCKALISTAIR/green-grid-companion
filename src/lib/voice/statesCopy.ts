@@ -3,12 +3,117 @@
  * Plain in both tones (clarity wins). Times are Europe/London. Error-state
  * cards (slow, outage, stale, offline, rank, planner) live in errorStatesCopy.
  */
-import { formatLondonTime } from '@/lib/londonTime';
+import {
+  formatLondonDayLongMonth,
+  formatLondonDayShortMonth,
+  formatLondonShortWeekday,
+  formatLondonSlotSpoken,
+  formatLondonSlotTime,
+  formatLondonWeekday,
+  londonDateKey,
+} from '@/lib/londonTime';
 
-/** Compact hero pill (motion spec §2.7). `savedAt` is when the newest cached carbon figures were fetched (ms), or null. */
-export function offlinePillText(savedAt: number | null): string {
-  if (!savedAt) return 'Offline · nothing saved yet';
-  return `Offline · figures from ${formatLondonTime(new Date(savedAt))}`;
+/**
+ * Offline pill (motion spec §2.7). Says how old the figure is, so it uses the
+ * reading's own time (BH-88), in UK time. Day labels are Design's call (#178):
+ * today is the time only, then "yesterday 07:00", "Tue 07:00" for 2 to 6 days
+ * ago, and the date ("12 Oct") for anything older. The repeated hour on
+ * clock-change night keeps its BST/GMT tag.
+ */
+export const OFFLINE_PILL_COPY = {
+  prefix: 'Offline · figures from',
+  nothingSaved: 'Offline · nothing saved yet',
+  /** Lower case mid-line; `readingWhen(…, { atStart: true })` capitalises it. */
+  yesterday: 'yesterday',
+  /** Screen-reader form, e.g. "Offline. Reading from yesterday at 07:00" (Design call, #178). */
+  ariaOffline: 'Offline.',
+  ariaPrefix: 'Reading from',
+  ariaYesterday: 'yesterday',
+  ariaAt: 'at',
+  ariaNothingSaved: 'Offline. Nothing saved yet.',
+} as const;
+
+export type ReadingDayBand = 'today' | 'yesterday' | 'weekday' | 'date';
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Whole UK calendar days between the reading and now (0 = same UK day). */
+export function londonDaysAgo(readingAt: number, now: number): number {
+  const day = (t: number) => {
+    const [y, m, d] = londonDateKey(new Date(t)).split('-').map(Number);
+    return Date.UTC(y, m - 1, d);
+  };
+  return Math.round((day(now) - day(readingAt)) / DAY_MS);
+}
+
+export function readingDayBand(readingAt: number, now: number): ReadingDayBand {
+  const days = londonDaysAgo(readingAt, now);
+  if (days <= 0) return 'today';
+  if (days === 1) return 'yesterday';
+  if (days <= 6) return 'weekday';
+  return 'date';
+}
+
+/** Upper-cases the first letter, for copy that starts a line. */
+export function capitaliseFirst(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+/**
+ * "07:00", "yesterday 07:00", "Tue 07:00" or "12 Oct", in UK time. Lower case
+ * mid-line (Design call, #178); pass `atStart` when it starts the text
+ * ("Yesterday 07:00").
+ */
+export function readingWhen(
+  readingAt: number,
+  now: number,
+  { atStart = false }: { atStart?: boolean } = {},
+): string {
+  const text = readingWhenMidLine(readingAt, now);
+  return atStart ? capitaliseFirst(text) : text;
+}
+
+function readingWhenMidLine(readingAt: number, now: number): string {
+  const at = new Date(readingAt);
+  const time = formatLondonSlotTime(at);
+  switch (readingDayBand(readingAt, now)) {
+    case 'today':
+      return time;
+    case 'yesterday':
+      return `${OFFLINE_PILL_COPY.yesterday} ${time}`;
+    case 'weekday':
+      return `${formatLondonShortWeekday(at)} ${time}`;
+    case 'date':
+      return formatLondonDayShortMonth(at);
+  }
+}
+
+/** "07:00", "yesterday at 07:00", "Tuesday at 07:00" or "12 October", for screen readers. */
+export function readingWhenSpoken(readingAt: number, now: number): string {
+  const at = new Date(readingAt);
+  const time = formatLondonSlotSpoken(at);
+  const { ariaAt } = OFFLINE_PILL_COPY;
+  switch (readingDayBand(readingAt, now)) {
+    case 'today':
+      return time;
+    case 'yesterday':
+      return `${OFFLINE_PILL_COPY.ariaYesterday} ${ariaAt} ${time}`;
+    case 'weekday':
+      return `${formatLondonWeekday(at)} ${ariaAt} ${time}`;
+    case 'date':
+      return formatLondonDayLongMonth(at);
+  }
+}
+
+export function offlinePillText(readingAt: number | null, now: number = Date.now()): string {
+  if (!readingAt) return OFFLINE_PILL_COPY.nothingSaved;
+  return `${OFFLINE_PILL_COPY.prefix} ${readingWhen(readingAt, now)}`;
+}
+
+/** e.g. "Offline. Reading from yesterday at 07:00". */
+export function offlinePillLabel(readingAt: number | null, now: number = Date.now()): string {
+  if (!readingAt) return OFFLINE_PILL_COPY.ariaNothingSaved;
+  return `${OFFLINE_PILL_COPY.ariaOffline} ${OFFLINE_PILL_COPY.ariaPrefix} ${readingWhenSpoken(readingAt, now)}`;
 }
 
 export const BACK_ONLINE_PILL = 'Back online';

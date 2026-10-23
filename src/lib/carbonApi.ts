@@ -142,6 +142,22 @@ export class RequestTimeoutError extends Error {
 }
 
 /**
+ * Errors where the Carbon Intensity API request itself failed: a network error
+ * to that host or an HTTP 5xx (timeouts are RequestTimeoutError). Tagged where
+ * they're thrown, without changing the error's type or message, so the hero
+ * only says "NESO isn't answering" when NESO really didn't (BH-80).
+ */
+const nesoRequestFailures = new WeakSet<object>();
+
+/** True for a timeout, network error or 5xx from the Carbon Intensity API. */
+export function isNesoRequestFailure(error: unknown): boolean {
+  return (
+    error instanceof RequestTimeoutError ||
+    (typeof error === 'object' && error !== null && nesoRequestFailures.has(error))
+  );
+}
+
+/**
  * fetch with the caller's AbortSignal plus a hard timeout. A hung request used
  * to leave the UI loading for 90s+ (retry: 2, no timeout).
  */
@@ -165,6 +181,8 @@ export async function fetchWithTimeout(
     return await fetch(url, { signal: controller.signal });
   } catch (e) {
     if (timedOut) throw new RequestTimeoutError();
+    // A network error to the host (not the caller cancelling the query).
+    if (!signal?.aborted && typeof e === 'object' && e !== null) nesoRequestFailures.add(e);
     throw e;
   } finally {
     clearTimeout(timer);
@@ -178,7 +196,9 @@ const fetchWithNoCache = (url: string, signal?: AbortSignal) => fetchWithTimeout
 function assertOk(response: Response, what: string): void {
   if (response.ok) return;
   if (response.status === 429) throw new Error(`Too many requests (${what}: 429)`);
-  throw new Error(`Failed to fetch ${what}: ${response.status}`);
+  const error = new Error(`Failed to fetch ${what}: ${response.status}`);
+  if (response.status >= 500) nesoRequestFailures.add(error);
+  throw error;
 }
 
 // Get current national intensity

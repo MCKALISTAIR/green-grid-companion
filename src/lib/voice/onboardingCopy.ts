@@ -2,6 +2,8 @@
  * First launch: one screen, straight to the number.
  * Copy is the same in Cheeky and Plain (it's a permission moment).
  */
+import { NI_ALL_ISLAND_GRID } from '@/lib/voice/errorStatesCopy';
+
 export const ONBOARDING_COPY = {
   title: 'How clean is your power right now?',
   body: "Tell us roughly where you are and you'll see your local number straight away.",
@@ -16,8 +18,7 @@ export const ONBOARDING_COPY = {
   failed: "Couldn't find you just now. A postcode works just as well.",
   invalid: "That doesn't look like a postcode. Try something like SW1A or SW1A 1AA.",
   checking: 'Checking…',
-  northernIreland:
-    "Northern Ireland is on the all-island grid it shares with Ireland, which this data doesn't cover. We'll show the GB average instead.",
+  northernIreland: `${NI_ALL_ISLAND_GRID} We'll show the GB average instead.`,
   offGridCta: 'Show the GB average',
   channelIslands:
     "The Channel Islands aren't on the GB grid, so this data doesn't cover them. We'll show the GB average instead.",
