@@ -20,6 +20,7 @@ import { formatLondonTime } from '@/lib/londonTime';
 import { useEnergyFacts } from '@/hooks/useEnergyFacts';
 import { useUnseenBadgeCount } from '@/lib/trophyChip';
 import { useHeroTopRowFit } from '@/hooks/useHeroTopRowFit';
+import { useHeroCloudTop } from '@/hooks/useHeroCloudTop';
 import { useTimeOfDay } from '@/hooks/useTimeOfDay';
 import { getCleanlinessBand } from '@/hooks/useCleanlinessBand';
 import type { GenerationMix } from '@/lib/carbonApi';
@@ -95,10 +96,12 @@ export function IntensityHeroOverlay({
     measureRef,
     compact: compactBadge,
   } = useHeroTopRowFit(showTrophyChip, [region, isLoading, usingNationalFallback]);
+  const { sceneRef, textRef, cloudTopPx } = useHeroCloudTop();
   const { timeOfDay } = useTimeOfDay();
-  const { weather } = useWeatherData();
-  // AA: ink on light skies, white on dark skies (art pass v1 §3).
-  const heroTone = getHeroTextTone(timeOfDay, weather);
+  const { weather, weatherKnown } = useWeatherData();
+  // AA: ink on light skies, white on dark skies (art pass v1 §3). BH-90: with the
+  // weather unknown the overcast sky follows the time of day, and so does the tone.
+  const heroTone = getHeroTextTone(timeOfDay, weatherKnown ? weather : undefined);
   const isInk = heroTone === 'ink';
   // Only say 'Offline' when the device really is; otherwise the data source failed.
   const { isOffline } = useOffline();
@@ -148,6 +151,7 @@ export function IntensityHeroOverlay({
 
   return (
     <div
+      ref={sceneRef}
       className={cn('home-scene relative w-full', hideGauge && 'home-scene--compact')}
       data-compact-scene={hideGauge ? 'true' : undefined}
     >
@@ -246,11 +250,14 @@ export function IntensityHeroOverlay({
               /* h-80 covers the full stack down to the "updated" line (was h-56,
                  which faded out above the renewable/status rows). */
               'absolute inset-x-0 top-0 h-80 pointer-events-none transition-opacity duration-700',
-              isInk
-                ? 'bg-gradient-to-b from-white/30 via-white/15 to-transparent'
-                : needsHardScrim
-                  ? 'bg-gradient-to-b from-black/55 via-black/28 to-transparent'
-                  : 'scene-hud-scrim',
+              // BH-90: no white veil over the unknown-weather overcast sky.
+              isInk && !weatherKnown
+                ? 'bg-transparent'
+                : isInk
+                  ? 'bg-gradient-to-b from-white/30 via-white/15 to-transparent'
+                  : needsHardScrim
+                    ? 'bg-gradient-to-b from-black/55 via-black/28 to-transparent'
+                    : 'scene-hud-scrim',
             )}
           />
           {/* Always mounted; opacity only — conditional mount was a CLS source when
@@ -263,7 +270,11 @@ export function IntensityHeroOverlay({
             )}
           />
 
-          <div className="relative flex flex-col items-center text-center w-full max-w-[22rem] min-[540px]:max-w-[40rem] px-4 pointer-events-none">
+          <div
+            ref={textRef}
+            data-testid="hero-text-block"
+            className="relative flex flex-col items-center text-center w-full max-w-[22rem] min-[540px]:max-w-[40rem] px-4 pointer-events-none"
+          >
             <div
               ref={rowRef}
               className={cn(
@@ -516,6 +527,7 @@ export function IntensityHeroOverlay({
           generationMix={generationMix}
           hasLiveReading={hasFreshReading}
           compact={hideGauge}
+          cloudTopPx={hideGauge ? undefined : cloudTopPx}
           className="absolute inset-0 h-full"
           style={{ height: '100%', position: 'absolute' }}
         />

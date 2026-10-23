@@ -23,6 +23,8 @@ export interface SceneSkyLayerProps {
   handleMoonDoubleClick: () => void;
   handleSunDoubleClick: () => void;
   impactMedium: () => void;
+  /** BH-90: where unknown-weather clouds may start (hero text bottom + 34). */
+  cloudTopPx?: number;
 }
 
 export function SceneSkyLayer({
@@ -40,6 +42,7 @@ export function SceneSkyLayer({
   handleMoonDoubleClick,
   handleSunDoubleClick,
   impactMedium,
+  cloudTopPx,
 }: SceneSkyLayerProps) {
   return (
     <motion.div
@@ -52,6 +55,8 @@ export function SceneSkyLayer({
         cleanliness={sceneConfig.cleanliness}
         timeOfDay={timeOfDay}
         showWind={sceneConfig.showWind}
+        weatherKnown={sceneConfig.weatherKnown}
+        cloudTopPx={cloudTopPx}
       />
 
       {/* Aurora for magically clean nights (Phase 1: cleanliness > 0.85) */}

@@ -68,6 +68,53 @@ export async function heroBoxes(page, { region = 'South Scotland', band = 'Very 
   };
 }
 
+/** Village REDRAW-PLAN / CONTRAST.md guard rail: clouds no higher than text bottom + 34. */
+export const CLOUD_TEXT_CLEARANCE = 34;
+
+/**
+ * BH-90: cloud tops must stay clear of the hero text block, never above its
+ * bottom + 34 px. Text bottom is the lowest visible text or icon in the hero
+ * gauge; a cloud's top is the top of its box (the unknown-weather bank clips to
+ * its box, so that is its highest cloud top). Returns failure strings and the
+ * measured numbers.
+ */
+export async function checkCloudClearance(
+  page,
+  {
+    clouds = '[data-art="cloud-bank"][data-variant="unknown-weather"]',
+    clearance = CLOUD_TEXT_CLEARANCE,
+  } = {},
+) {
+  const m = await page.evaluate((sel) => {
+    const gauge = document.querySelector('.home-scene-gauge');
+    let textBottom = null;
+    if (gauge) {
+      for (const el of gauge.querySelectorAll('*')) {
+        if (el.closest('[aria-hidden="true"]') && el.tagName.toLowerCase() !== 'svg') continue;
+        const cs = getComputedStyle(el);
+        if (cs.visibility === 'hidden' || cs.display === 'none' || Number(cs.opacity) === 0)
+          continue;
+        const own = [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim());
+        if (!own && el.tagName.toLowerCase() !== 'svg') continue;
+        const r = el.getBoundingClientRect();
+        if (!r.width || !r.height) continue;
+        textBottom = Math.max(textBottom ?? -Infinity, r.bottom);
+      }
+    }
+    const tops = [...document.querySelectorAll(sel)].map((el) => el.getBoundingClientRect().top);
+    return { textBottom, cloudTop: tops.length ? Math.min(...tops) : null };
+  }, clouds);
+  const failures = [];
+  if (m.textBottom == null) failures.push('[cloud-clearance] no hero text found');
+  if (m.cloudTop == null) failures.push(`[cloud-clearance] no clouds match ${clouds}`);
+  if (m.textBottom != null && m.cloudTop != null && m.cloudTop < m.textBottom + clearance - 0.5) {
+    failures.push(
+      `[cloud-clearance] cloud top ${m.cloudTop.toFixed(1)} is above text bottom ${m.textBottom.toFixed(1)} + ${clearance}`,
+    );
+  }
+  return { failures, ...m };
+}
+
 /**
  * Hero checks for one scenario. Returns a list of failure strings.
  * expectBadge: true = must be visible (zero-carbon, fresh); false = must be hidden (stale).

@@ -53,6 +53,11 @@ interface IntensitySceneProps {
    * so skyline reads above the scalloped sheet instead of empty sky.
    */
   compact?: boolean;
+  /**
+   * BH-90: px from the scene top where unknown-weather clouds may start: the hero
+   * text bottom + 34 (village REDRAW-PLAN), so no cloud edge crosses the text.
+   */
+  cloudTopPx?: number;
 }
 
 export function IntensityScene({
@@ -67,6 +72,7 @@ export function IntensityScene({
   style,
   hasLiveReading = true,
   compact = false,
+  cloudTopPx,
 }: IntensitySceneProps) {
   const {
     timeOfDay: realTimeOfDay,
@@ -337,6 +343,7 @@ export function IntensityScene({
           handleMoonDoubleClick={handleMoonDoubleClick}
           handleSunDoubleClick={handleSunDoubleClick}
           impactMedium={impactMedium}
+          cloudTopPx={cloudTopPx}
         />
 
         <SceneAtmosphericDepth cleanliness={sceneConfig.cleanliness} isNight={isNight} />

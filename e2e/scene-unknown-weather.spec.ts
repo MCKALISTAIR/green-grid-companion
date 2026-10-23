@@ -1,5 +1,6 @@
 import { test, expect, type Page, type Route } from '@playwright/test';
 import { installMocks, seedStorage } from '../scripts/layout/mock-api.mjs';
+import { checkCloudClearance } from '../scripts/layout/checks.mjs';
 
 // BH-90 (Design ruling): with no weather data the scene shows the neutral
 // overcast state (no sun, rain or wind effects) and keeps the time of day.
@@ -43,6 +44,83 @@ async function expectNeutralSky(page: Page) {
   if (speeds.length > 0) expect(speeds[0]).toBe(IDLE_TURBINE_SECONDS);
 }
 
+// Near-white: every channel at or above this. The overcast sky's lightest
+// rendered pixel is about rgb(201, 216, 231) at midday.
+const NEAR_WHITE = 235;
+
+/**
+ * Design review (BH-90): the sky band above the cloud bank is a soft overcast
+ * gradient with no white in it, the cloud tops stay clear of the hero text
+ * (never above text bottom + 34), and nothing flies across the empty sky.
+ */
+async function expectOvercastHero(page: Page) {
+  const scene = page.getByRole('region', { name: /Animated landscape/ });
+  await expect(
+    scene.locator('[data-art="cloud-bank"][data-variant="unknown-weather"]'),
+  ).toHaveCount(1);
+  await expect(scene.locator('[data-ambient]')).toHaveCount(0);
+
+  const clearance = await checkCloudClearance(page);
+  expect(clearance.failures).toEqual([]);
+
+  // Sky band: scene top down to the cloud tops, with the hero text, chip and pill masked.
+  const width = page.viewportSize()!.width;
+  const bandHeight = Math.floor(clearance.cloudTop!);
+  const masks = await page.locator('[data-testid="hero-text-block"] *').evaluateAll((els) =>
+    els
+      .filter((el) => {
+        const own = [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent?.trim());
+        const tag = el.tagName.toLowerCase();
+        // Text, icons, and anything with its own fill (chip, renewable pill).
+        const fill = getComputedStyle(el).backgroundColor;
+        const filled = fill !== 'rgba(0, 0, 0, 0)' && fill !== 'transparent';
+        return own || tag === 'svg' || tag === 'button' || filled;
+      })
+      .map((el) => {
+        const r = el.getBoundingClientRect();
+        return [r.left - 4, r.top - 4, r.right + 4, r.bottom + 4];
+      }),
+  );
+  const png = await page.screenshot({ clip: { x: 0, y: 0, width, height: bandHeight } });
+  // Decode on a blank page (no app CSP) and count near-white sky pixels.
+  const blank = await page.context().newPage();
+  const stats = await blank.evaluate(
+    async ({ b64, masks, nearWhite, cssWidth }) => {
+      const img = new Image();
+      img.src = `data:image/png;base64,${b64}`;
+      await img.decode();
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(img, 0, 0);
+      const { data } = ctx.getImageData(0, 0, img.width, img.height);
+      const scale = img.width / cssWidth;
+      let white = 0;
+      let total = 0;
+      let first: number[] | null = null;
+      for (let y = 0; y < img.height; y++) {
+        for (let x = 0; x < img.width; x++) {
+          const cx = x / scale;
+          const cy = y / scale;
+          if (masks.some(([l, t, r, b]) => cx >= l && cx <= r && cy >= t && cy <= b)) continue;
+          const i = (y * img.width + x) * 4;
+          total++;
+          if (data[i] >= nearWhite && data[i + 1] >= nearWhite && data[i + 2] >= nearWhite) {
+            white++;
+            first ??= [x, y, data[i], data[i + 1], data[i + 2]];
+          }
+        }
+      }
+      return { white, total, first };
+    },
+    { b64: png.toString('base64'), masks, nearWhite: NEAR_WHITE, cssWidth: width },
+  );
+  await blank.close();
+  expect(stats.total).toBeGreaterThan(1000);
+  expect(stats.white, `near-white sky pixel at ${JSON.stringify(stats.first)}`).toBe(0);
+}
+
 for (const viewport of [
   { width: 390, height: 844 },
   { width: 320, height: 568 },
@@ -68,12 +146,38 @@ for (const viewport of [
     await expect(page.getByText(/Loading/)).toHaveCount(0);
     await expect(page.getByRole('button', { name: /Select location/ }).first()).toBeVisible();
     await expect(page.locator('.animate-spin:visible')).toHaveCount(0);
+    await expectOvercastHero(page);
     await page.screenshot({
       path: `test-results/bh90-offline-empty-${viewport.width}x${viewport.height}.png`,
     });
     await context.setOffline(false);
   });
 }
+
+test('offline at night: the overcast sky darkens and the hero turns white', async ({
+  page,
+  context,
+}) => {
+  test.setTimeout(90_000);
+  // 23:00 BST in October: night, and clear of the December Wrapped sheet.
+  await page.clock.install({ time: new Date('2026-10-21T22:00:00Z') });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await installMocks(context, { mode: 'loading' });
+  await page.route(OPEN_METEO, () => {});
+  await context.addInitScript(seedStorage());
+  await openHome(page);
+  await context.setOffline(true);
+  await page.waitForTimeout(2500);
+  await expectNeutralSky(page);
+  await expect(page.getByTestId('hero-gauge')).toHaveAttribute('data-hero-tone', 'light');
+  const skyTop = await page
+    .getByRole('region', { name: /Animated landscape/ })
+    .evaluate((el) => getComputedStyle(el).backgroundImage);
+  // Night overcast top is #232944, not the day grey-blue.
+  expect(skyTop).toContain('rgb(35, 41, 68)');
+  await expectOvercastHero(page);
+  await context.setOffline(false);
+});
 
 test('online but the weather fetch failed: the same neutral overcast', async ({
   page,
@@ -94,6 +198,7 @@ test('online but the weather fetch failed: the same neutral overcast', async ({
   await expect.poll(() => calls, { timeout: 30_000 }).toBeGreaterThanOrEqual(3);
   await page.waitForTimeout(1500);
   await expectNeutralSky(page);
+  await expectOvercastHero(page);
   await page.screenshot({ path: 'test-results/bh90-weather-failed-390x844.png' });
 });
 

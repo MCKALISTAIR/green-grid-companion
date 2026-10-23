@@ -5,6 +5,7 @@ export function Firefly({ delay, x, y }: { delay: number; x: number; y: number }
   const reduced = useReducedMotion();
   return (
     <motion.div
+      data-ambient="firefly"
       className="absolute w-1 h-1 bg-yellow-400 rounded-full shadow-[0_0_8px_2px_rgba(250,204,21,0.6)]"
       style={{ left: `${x}%`, bottom: `${y}%` }}
       animate={

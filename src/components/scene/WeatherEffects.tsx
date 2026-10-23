@@ -3,7 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { WeatherData } from '@/hooks/useWeatherData';
 import type { TimeOfDay } from '@/hooks/useTimeOfDay';
 import { CLOUD_COLOURS } from '@/lib/artPalette';
-import { CloudBank, FogVeil, RainCapsules, SceneCloud, WindStreaks } from './art/WeatherArt';
+import {
+  CloudBank,
+  FogVeil,
+  RainCapsules,
+  SceneCloud,
+  UnknownWeatherCloudBank,
+  WindStreaks,
+} from './art/WeatherArt';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface WeatherEffectsProps {
@@ -13,6 +20,10 @@ interface WeatherEffectsProps {
   timeOfDay?: TimeOfDay;
   /** sceneConfig.showWind (wind_speed_10m >= 25 km/h). */
   showWind?: boolean;
+  /** BH-90: false when the weather is unknown (offline / Open-Meteo failed). */
+  weatherKnown?: boolean;
+  /** BH-90: px from the scene top where unknown-weather clouds may start. */
+  cloudTopPx?: number;
 }
 
 function FogLayer({
@@ -259,6 +270,8 @@ export function WeatherEffects({
   isNight,
   timeOfDay,
   showWind = false,
+  weatherKnown = true,
+  cloudTopPx,
 }: WeatherEffectsProps) {
   const lightningActive = useMemo(() => {
     if (!weather.isThunderstorm) return false;
@@ -269,7 +282,9 @@ export function WeatherEffects({
     <>
       <AnimatePresence>{weather.isFoggy && <FogVeil />}</AnimatePresence>
 
-      {weather.cloudCover > 70 || weather.isRaining ? (
+      {!weatherKnown ? (
+        <UnknownWeatherCloudBank topPx={cloudTopPx} timeOfDay={timeOfDay} />
+      ) : weather.cloudCover > 70 || weather.isRaining ? (
         <CloudBank night={isNight} />
       ) : (
         weather.cloudCover > 40 && (
