@@ -18,7 +18,14 @@ export interface ServerOutlookConfirmation {
   confirmedAt: string;
 }
 
-export type ServerOutlookStatus = 'confirmed' | 'disabled' | 'no-token' | 'no-postcode' | 'failed';
+export type ServerOutlookStatus =
+  | 'confirmed'
+  | 'disabled'
+  | 'no-token'
+  | 'no-postcode'
+  /** Subscription saved, but the server has no APNs/FCM secrets, so it can't deliver yet. */
+  | 'not-configured'
+  | 'failed';
 
 export interface SyncResult {
   status: ServerOutlookStatus;
@@ -81,7 +88,7 @@ async function upsert(
   token: string,
   postcode: string,
   enabled: boolean,
-): Promise<Record<string, unknown> | null> {
+): Promise<{ data: Record<string, unknown> | null; pushDelivery: unknown } | null> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     apikey: opts.apiKey,
@@ -107,15 +114,20 @@ async function upsert(
     },
   );
   if (!res.ok) return null;
-  const json = (await res.json().catch(() => null)) as { data?: Record<string, unknown> } | null;
-  return json?.data ?? null;
+  const json = (await res.json().catch(() => null)) as {
+    data?: Record<string, unknown>;
+    push_delivery?: unknown;
+  } | null;
+  return { data: json?.data ?? null, pushDelivery: json?.push_delivery };
 }
 
 /**
  * Create, update or switch off this device's server daily-outlook
  * subscription. Only a 200 that echoes back this token, enabled and the same
- * time counts as confirmed; anything else clears the confirmation so the phone
- * fallback runs.
+ * time, and says the server can deliver (`push_delivery: 'configured'`), counts
+ * as confirmed; anything else clears the confirmation so the phone fallback
+ * runs. A server without APNs/FCM secrets answers 'not_configured', and an
+ * older server sends no push_delivery at all: both keep the phone push.
  */
 export async function syncDailyOutlookSubscription(opts: SyncOptions): Promise<SyncResult> {
   const previous = readServerOutlook();
@@ -154,8 +166,11 @@ export async function syncDailyOutlookSubscription(opts: SyncOptions): Promise<S
   }
 
   let data: Record<string, unknown> | null = null;
+  let pushDelivery: unknown;
   try {
-    data = await upsert(opts, token, postcode, true);
+    const res = await upsert(opts, token, postcode, true);
+    data = res?.data ?? null;
+    pushDelivery = res?.pushDelivery;
   } catch {
     data = null;
   }
@@ -168,6 +183,10 @@ export async function syncDailyOutlookSubscription(opts: SyncOptions): Promise<S
   if (!ok) {
     writeServerOutlook(null);
     return { status: 'failed', confirmation: null };
+  }
+  if (pushDelivery !== 'configured') {
+    writeServerOutlook(null);
+    return { status: 'not-configured', confirmation: null };
   }
 
   const confirmation: ServerOutlookConfirmation = {

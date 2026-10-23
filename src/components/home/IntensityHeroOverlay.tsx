@@ -7,6 +7,7 @@ import { regionalFallbackMessage } from '@/lib/regionalFallback';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { LocationManager } from '@/components/LocationManager';
 import { setHeroStatusSlot } from '@/lib/heroStatusSlot';
+import { LastKnownChip } from '@/components/errors/LastKnownChip';
 import { AnimatedIntensity } from '@/components/AnimatedIntensity';
 import { TypewriterText } from '@/components/TypewriterText';
 import { RenewableSparkle } from '@/components/RenewableSparkle';
@@ -17,6 +18,8 @@ import { cn } from '@/lib/utils';
 import { getConditionLabel, getConditionParts } from '@/lib/conditionLabels';
 import { formatLondonTime } from '@/lib/londonTime';
 import { useEnergyFacts } from '@/hooks/useEnergyFacts';
+import { useUnseenBadgeCount } from '@/lib/trophyChip';
+import { useHeroTopRowFit } from '@/hooks/useHeroTopRowFit';
 import { useTimeOfDay } from '@/hooks/useTimeOfDay';
 import { getCleanlinessBand } from '@/hooks/useCleanlinessBand';
 import type { GenerationMix } from '@/lib/carbonApi';
@@ -40,6 +43,8 @@ interface IntensityHeroOverlayProps {
   isBackgroundFetching: boolean;
   isError: boolean;
   lastUpdated: string | null | undefined;
+  /** When set, the number is a cached one: show the amber Last known chip. */
+  lastKnownAt?: string | null;
   nextUpdate: string | Date | null | undefined;
   getNextUpdate: (lastUpdated?: string) => Date | null;
   relativeTime: string;
@@ -67,6 +72,7 @@ export function IntensityHeroOverlay({
   isLoading,
   isBackgroundFetching,
   isError,
+  lastKnownAt,
   lastUpdated,
   nextUpdate,
   getNextUpdate,
@@ -78,6 +84,17 @@ export function IntensityHeroOverlay({
   hideGauge,
 }: IntensityHeroOverlayProps) {
   const { tone } = useEnergyFacts();
+  // "New badge" pill only while an unseen badge exists (hero-v2 §4).
+  const unseenBadges = useUnseenBadgeCount();
+  const showTrophyChip = unseenBadges > 0;
+  // Design: the top row never wraps or truncates. If the full pill, location
+  // chip and GB-average dot don't all fit, the pill collapses to icon + count.
+  const {
+    rowRef,
+    pillSlotRef,
+    measureRef,
+    compact: compactBadge,
+  } = useHeroTopRowFit(showTrophyChip, [region, isLoading, usingNationalFallback]);
   const { timeOfDay } = useTimeOfDay();
   const { weather } = useWeatherData();
   // AA: ink on light skies, white on dark skies (art pass v1 §3).
@@ -159,16 +176,50 @@ export function IntensityHeroOverlay({
           )}
         </div>
 
-        <div className="absolute top-[calc(max(env(safe-area-inset-top),24px)+0.5rem)] right-4 z-30 lg:top-6 lg:right-6">
-          {/* A single link (was <a><button>, a nested-interactive a11y failure). */}
-          <Link
-            to="/achievements"
-            className="hero-chip flex min-h-11 min-w-11 items-center justify-center transition-all cursor-pointer active:scale-95 hover:scale-105 rounded-full shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
-            aria-label="Trophy Room"
+        {showTrophyChip && (
+          <div
+            ref={pillSlotRef}
+            className="absolute top-[calc(max(env(safe-area-inset-top),24px)+0.5rem)] right-4 z-30 lg:top-6 lg:right-6"
           >
-            <Trophy className="hero-chip-icon w-4 h-4" aria-hidden="true" />
-          </Link>
-        </div>
+            {/* Off-screen copy of the full pill, measured to decide on collapse. */}
+            <span
+              ref={measureRef}
+              aria-hidden="true"
+              className="pointer-events-none invisible absolute right-0 top-0 flex min-h-11 items-center gap-1.5 whitespace-nowrap px-3.5 text-[13px] font-bold leading-none"
+            >
+              <Trophy className="h-4 w-4 shrink-0" />
+              <span>New badge</span>
+            </span>
+            {/* A single link (was <a><button>, a nested-interactive a11y failure). */}
+            {compactBadge ? (
+              <Link
+                to="/achievements"
+                data-testid="new-badge-pill"
+                data-compact="true"
+                className="relative flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#0f1a24] shadow-md transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f1a24] focus-visible:ring-offset-2"
+                aria-label={`New badge, ${unseenBadges} unseen`}
+              >
+                <Trophy className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <span
+                  aria-hidden="true"
+                  className="absolute right-0.5 top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#d93a2b] px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white"
+                >
+                  {unseenBadges > 9 ? '9+' : unseenBadges}
+                </span>
+              </Link>
+            ) : (
+              <Link
+                to="/achievements"
+                data-testid="new-badge-pill"
+                className="flex min-h-11 min-w-11 items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-white px-3.5 text-[13px] font-bold leading-none text-[#0f1a24] shadow-md transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f1a24] focus-visible:ring-offset-2"
+                aria-label="New badge: open the Trophy Room"
+              >
+                <Trophy className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <span>New badge</span>
+              </Link>
+            )}
+          </div>
+        )}
       </ComponentErrorBoundary>
 
       {!hideGauge && (
@@ -209,7 +260,17 @@ export function IntensityHeroOverlay({
 
           <div className="relative flex flex-col items-center text-center w-full max-w-[22rem] min-[540px]:max-w-[40rem] px-4 pointer-events-none">
             <div
-              className="lg:hidden mb-2 sm:mb-3 max-w-[calc(100vw-8.5rem)] flex items-center justify-center"
+              ref={rowRef}
+              className={cn(
+                'lg:hidden mb-2 sm:mb-3 flex flex-nowrap items-center justify-center',
+                // With the pill top-right, the chip moves left and keeps its full
+                // name; the pill collapses instead (useHeroTopRowFit).
+                // 5.25rem = 1rem side + 0.5rem gap + 44px compact pill + 1rem side: a
+                // last-resort cap for names too long even beside the compact pill.
+                showTrophyChip
+                  ? 'self-start max-w-[calc(100vw-5.25rem)]'
+                  : 'max-w-[calc(100vw-8.5rem)]',
+              )}
               data-testid="hero-location"
             >
               <LocationManager
@@ -223,7 +284,11 @@ export function IntensityHeroOverlay({
                     title={region || undefined}
                   >
                     <MapPin className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
-                    <span className={usingNationalFallback ? 'whitespace-nowrap' : 'truncate'}>
+                    <span
+                      className={
+                        usingNationalFallback && !showTrophyChip ? 'whitespace-nowrap' : 'truncate'
+                      }
+                    >
                       {isLoading ? 'Loading…' : region || 'Select location'}
                     </span>
                     {isBackgroundFetching ? (
@@ -395,37 +460,41 @@ export function IntensityHeroOverlay({
                   <RenewableSparkle trigger={sparkleTrigger} onComplete={onSparkleComplete} />
                 </div>
 
-                {lastUpdated && (
-                  <div
-                    className={cn(
-                      'flex items-center gap-1.5 text-[11px] font-medium',
-                      isInk
-                        ? 'text-hero-ink'
-                        : 'text-white drop-shadow-[0_1px_8px_rgba(0,0,0,0.65)]',
-                    )}
-                  >
-                    <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
-                      <span
-                        className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-60 ${freshnessColor}`}
-                      />
-                      <span
-                        className={`relative inline-flex h-1.5 w-1.5 rounded-full ${freshnessColor}`}
-                      />
-                    </span>
-                    {isBackgroundFetching ? (
-                      <span>Updating…</span>
-                    ) : (
-                      <>
-                        <span>{relativeTime}</span>
-                        {nextUpdateLabel && (
-                          <>
-                            <span className="opacity-60">·</span>
-                            <span>{nextUpdateLabel}</span>
-                          </>
-                        )}
-                      </>
-                    )}
-                  </div>
+                {lastKnownAt ? (
+                  <LastKnownChip at={new Date(lastKnownAt)} />
+                ) : (
+                  lastUpdated && (
+                    <div
+                      className={cn(
+                        'flex items-center gap-1.5 text-[11px] font-medium',
+                        isInk
+                          ? 'text-hero-ink'
+                          : 'text-white drop-shadow-[0_1px_8px_rgba(0,0,0,0.65)]',
+                      )}
+                    >
+                      <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
+                        <span
+                          className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-60 ${freshnessColor}`}
+                        />
+                        <span
+                          className={`relative inline-flex h-1.5 w-1.5 rounded-full ${freshnessColor}`}
+                        />
+                      </span>
+                      {isBackgroundFetching ? (
+                        <span>Updating…</span>
+                      ) : (
+                        <>
+                          <span>{relativeTime}</span>
+                          {nextUpdateLabel && (
+                            <>
+                              <span className="opacity-60">·</span>
+                              <span>{nextUpdateLabel}</span>
+                            </>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )
                 )}
               </div>
             )}

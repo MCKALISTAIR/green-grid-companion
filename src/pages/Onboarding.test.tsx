@@ -4,7 +4,11 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { LocationProvider } from '@/contexts/LocationContext';
 import Onboarding from './Onboarding';
 
-vi.mock('@/lib/location', () => ({ resolvePostcode: vi.fn(async () => null) }));
+const loc = vi.hoisted(() => ({ checkPostcodeExists: vi.fn(async () => 'ok') }));
+vi.mock('@/lib/location', () => ({
+  resolvePostcode: vi.fn(async () => null),
+  checkPostcodeExists: loc.checkPostcodeExists,
+}));
 const geo = vi.hoisted(() => ({
   checkPermissions: vi.fn(),
   requestPermissions: vi.fn(),
@@ -53,6 +57,25 @@ describe('first launch', () => {
     expect(localStorage.getItem('onboarding_complete')).toBe('true');
     expect(localStorage.getItem('gridsense-first-number-pending')).toBe('1');
     expect(localStorage.getItem('cookie-consent')).toBeNull();
+  });
+
+  it('says so inline for a well-formed postcode that does not exist (ZZ99 9ZZ)', async () => {
+    loc.checkPostcodeExists.mockResolvedValueOnce('missing');
+    renderOnboarding();
+    fireEvent.change(field(), { target: { value: 'ZZ99 9ZZ' } });
+    submit();
+    expect(await screen.findByRole('alert')).toHaveTextContent("We couldn't find that postcode");
+    expect(localStorage.getItem('gridgreen-postcode')).toBeNull();
+    expect(localStorage.getItem('onboarding_complete')).toBeNull();
+  });
+
+  it("does not block when the postcode can't be checked (offline)", async () => {
+    loc.checkPostcodeExists.mockResolvedValueOnce('unknown');
+    renderOnboarding();
+    fireEvent.change(field(), { target: { value: 'EX4 4QJ' } });
+    submit();
+    await screen.findByText('HOME');
+    expect(localStorage.getItem('gridgreen-postcode')).toBe('EX4');
   });
 
   it('skip stores the national mode so home does not bounce back', async () => {

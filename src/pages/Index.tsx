@@ -28,9 +28,13 @@ import { useIndexPageEffects } from '@/hooks/useIndexPageEffects';
 import { useThrottledRefetch } from '@/hooks/useThrottledRefetch';
 import { useRelativeTime } from '@/hooks/useRelativeTime';
 import { DashboardSkeleton } from '@/components/home/DashboardSkeleton';
-import { StaleReadingNotice } from '@/components/home/StaleReadingNotice';
 import { SlowLoadingNotice } from '@/components/SlowLoadingNotice';
 import { OffGridNotice } from '@/components/home/OffGridNotice';
+import { StaleReadingNotice } from '@/components/home/StaleReadingNotice';
+import { OutageCard } from '@/components/home/OutageCard';
+import { useGridFailureKind } from '@/hooks/useGridFailureKind';
+import { isReadingStale } from '@/lib/voice/statesCopy';
+import { PostcodeNotFoundNotice } from '@/components/home/PostcodeNotFoundNotice';
 import { DashboardViewTabs, type DashboardViewMode } from '@/components/home/DashboardViewTabs';
 import { IntensityDashboard } from '@/components/home/IntensityDashboard';
 import { IntensityHeroOverlay } from '@/components/home/IntensityHeroOverlay';
@@ -97,15 +101,21 @@ const Index = () => {
     isLoading,
     isBackgroundFetching,
     isDegraded,
+    postcodeNotFound,
     usingNationalFallback,
     fallbackRegionName,
     offGridArea: offGrid,
     isError,
+    hasReading,
     error,
     refetch,
     getNextUpdate,
     nextUpdate,
   } = useCarbonData(postcode);
+  // Design error states: keep the last known number (with its chip) when a
+  // refresh fails or the reading is old, and only blame NESO when it's NESO.
+  const failureKind = useGridFailureKind(isError, error);
+  const showLastKnown = hasReading && (isError || isReadingStale(lastUpdated ?? undefined));
 
   // Splash fades as soon as the home screen has something real to show
   // (a reading from cache or network, an off-grid notice, or an error state).
@@ -248,7 +258,8 @@ const Index = () => {
               generationMix={generationMix}
               isLoading={isLoading}
               isBackgroundFetching={isBackgroundFetching}
-              isError={isError}
+              isError={isError && !hasReading}
+              lastKnownAt={showLastKnown ? lastUpdated : undefined}
               lastUpdated={lastUpdated}
               nextUpdate={nextUpdate}
               getNextUpdate={getNextUpdate}
@@ -274,15 +285,31 @@ const Index = () => {
                 <div className="h-1 w-10 rounded-full bg-muted-foreground/25" />
               </div>
 
-              {!isLoading && !isError && (
-                <StaleReadingNotice readingFrom={lastUpdated} onRetry={() => void refetch()} />
-              )}
-
               {offGrid && (
                 <OffGridNotice area={offGrid} postcode={postcode} onChangePostcode={setPostcode} />
               )}
 
-              {isDegraded && !offGrid && (
+              {isError && hasReading ? (
+                failureKind === 'outage' ? (
+                  <OutageCard onRetry={() => void refetch()} />
+                ) : (
+                  <StaleReadingNotice
+                    force
+                    readingFrom={lastUpdated}
+                    onRetry={() => void refetch()}
+                  />
+                )
+              ) : (
+                !isLoading && (
+                  <StaleReadingNotice readingFrom={lastUpdated} onRetry={() => void refetch()} />
+                )
+              )}
+
+              {postcodeNotFound && !offGrid && (
+                <PostcodeNotFoundNotice postcode={postcode} onChangePostcode={setPostcode} />
+              )}
+
+              {isDegraded && !offGrid && !postcodeNotFound && (
                 <div className="mx-2 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-lg flex items-start gap-3 text-sm text-amber-800 dark:text-amber-200 animate-in fade-in">
                   <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-500" />
                   <div>
@@ -316,7 +343,9 @@ const Index = () => {
                     <SlowLoadingNotice active onRetry={() => void refetch()} />
                     <DashboardSkeleton />
                   </div>
-                ) : isError ? (
+                ) : isError && !hasReading && failureKind === 'outage' ? (
+                  <OutageCard onRetry={() => void refetch()} />
+                ) : isError && !hasReading ? (
                   <div className="py-8 bg-card rounded-2xl border border-border shadow-lg">
                     <ErrorState
                       title={getErrorInfo(error).title}
