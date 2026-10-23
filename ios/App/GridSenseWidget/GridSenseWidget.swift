@@ -146,7 +146,7 @@ struct GridSenseWidgetEntryView : View {
                     Image(systemName: "leaf.fill")
                         .font(.caption)
                         .foregroundColor(.white.opacity(0.9))
-                    Text("GRID UK")
+                    Text("GRID GB")
                         .font(.caption)
                         .fontWeight(.bold)
                         .foregroundColor(.white.opacity(0.9))
