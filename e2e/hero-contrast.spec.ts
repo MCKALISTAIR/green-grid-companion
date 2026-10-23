@@ -111,6 +111,13 @@ async function open(
   await installMocks(context, { mode, weather: { ...weather, is_day: isDay } });
   await context.addInitScript(seedStorage());
   await page.goto('/');
+  // BH-113: the page clock is installed before anything else (Node's Date.now is
+  // never pinned), so past instants apply. Prove the scene is at the intended time.
+  await expect(page.getByRole('region', { name: /Animated landscape/ })).toHaveAttribute(
+    'data-time-of-day',
+    t,
+    { timeout: 30_000 },
+  );
 }
 
 function log(row: Record<string, unknown>) {
