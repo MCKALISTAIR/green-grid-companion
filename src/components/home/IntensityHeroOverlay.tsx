@@ -101,7 +101,7 @@ export function IntensityHeroOverlay({
     measureRef,
     compact: compactBadge,
   } = useHeroTopRowFit(showTrophyChip, [region, isLoading, usingNationalFallback]);
-  const { sceneRef, textRef, cloudTopPx } = useHeroCloudTop();
+  const { sceneRef, textRef, cloudTopPx, birdBand } = useHeroCloudTop();
   const { timeOfDay } = useTimeOfDay();
   const { weather, weatherKnown } = useWeatherData();
   // AA: ink on light skies, white on dark skies (art pass v1 §3). BH-90: with the
@@ -553,6 +553,7 @@ export function IntensityHeroOverlay({
           hasLiveReading={hasFreshReading}
           compact={hideGauge}
           cloudTopPx={hideGauge ? undefined : cloudTopPx}
+          birdBand={hideGauge ? undefined : birdBand}
           onSynthwaveChange={setSynthwave}
           className="absolute inset-0 h-full"
           style={{ height: '100%', position: 'absolute' }}

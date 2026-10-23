@@ -10,7 +10,8 @@ export function FlyingBird({
   delay: number;
   duration: number;
   startX: number;
-  top: number;
+  /** CSS top: a % of the scene, or px inside the hero-safe lane (BH-116). */
+  top: string;
   scale: number;
 }) {
   return (
@@ -29,7 +30,7 @@ export function FlyingBird({
         ease: 'linear' as const,
       }}
       style={{
-        top: `${top}%`,
+        top,
         transform: `scale(${scale})`, // Use transform style for scaling to avoid conflicting with framer-motion props if any
       }}
       viewBox="0 0 24 24"
