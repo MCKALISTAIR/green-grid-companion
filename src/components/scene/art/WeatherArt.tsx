@@ -8,18 +8,31 @@ import { useEffect, useId, useRef, useState } from 'react';
 import {
   CLOUD_BANK_COLOURS,
   CLOUD_BANK_DAY_BELOW_TEXT,
-  MOOD,
   SUN_COLOURS,
-  type MoodBand,
   type SunTone,
   UNKNOWN_WEATHER_PALETTE,
   unknownWeatherTone,
 } from '@/lib/artPalette';
 import { bankRim, irregularBankEdge } from './bankEdge';
+import { SUN_DISC_HAZE, SUN_HALO_FACTOR, type HazeBand } from '@/lib/sceneHaze';
 
-export function SceneSun({ r = 22, tone = 'day' }: { r?: number; tone?: SunTone }) {
+export function SceneSun({
+  r = 22,
+  tone = 'day',
+  haze = 'none',
+}: {
+  r?: number;
+  tone?: SunTone;
+  /** PR-2b: haze dims the halo (x0.80 / 0.65 / 0.50) and warms the disc at high and above. */
+  haze?: HazeBand;
+}) {
   const id = useId().replace(/:/g, '');
   const [c0, c1] = SUN_COLOURS[tone];
+  // The disc's light top warms under high and very high haze, by day only (dawn
+  // and sunset discs are already warmer). The lower stop is unchanged, so the
+  // disc is never brown and never darker than the day disc.
+  const discTop = tone === 'day' ? (SUN_DISC_HAZE[haze] ?? c0) : c0;
+  const halo = SUN_HALO_FACTOR[haze];
   const s = r * 3;
   return (
     <svg
@@ -36,15 +49,15 @@ export function SceneSun({ r = 22, tone = 'day' }: { r?: number; tone?: SunTone 
           <stop offset="1" stopColor={c0} stopOpacity="0" />
         </radialGradient>
         <linearGradient id={`${id}d`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor={c0} />
+          <stop offset="0" stopColor={discTop} />
           <stop offset="1" stopColor={c1} />
         </linearGradient>
       </defs>
-      <g className="art-breathe">
+      <g className="art-breathe" opacity={halo === 1 ? undefined : halo} data-sun-halo={halo}>
         <circle r={r * 3} fill={`url(#${id}h)`} />
         <circle r={r * 1.55} fill={c0} opacity=".18" />
       </g>
-      <circle r={r} fill={`url(#${id}d)`} />
+      <circle r={r} fill={`url(#${id}d)`} data-sun-disc={discTop} />
       <path
         d={`M${-r * 0.72} ${-r * 0.5} A${r} ${r} 0 0 1 ${r * 0.3} ${-r * 0.95}`}
         stroke="#fff"
@@ -350,35 +363,6 @@ export function AuroraRibbon({ opacity = 0.38 }: { opacity?: number }) {
       />
     </svg>
   );
-}
-
-/**
- * Intensity mood (replaces the sepia/teal SceneColorGrade): a horizon haze plus a
- * saturation change, by band only. Zero adds a mint glow. No smoke, no yellow cast.
- */
-export function IntensityMood({ band }: { band: MoodBand }) {
-  const m = MOOD[band];
-  return (
-    <div
-      className="absolute inset-0 z-[22] pointer-events-none art-fade"
-      aria-hidden="true"
-      data-art="mood"
-      data-mood={band}
-      style={{
-        backdropFilter: m.sat === 1 ? undefined : `saturate(${m.sat})`,
-        WebkitBackdropFilter: m.sat === 1 ? undefined : `saturate(${m.sat})`,
-        background:
-          m.a > 0
-            ? `linear-gradient(to bottom, transparent 30%, ${hexA(m.haze, m.a)} 78%, ${hexA(m.haze, m.a * 1.1)} 100%)`
-            : 'transparent',
-      }}
-    />
-  );
-}
-
-function hexA(hex: string, a: number) {
-  const n = parseInt(hex.slice(1), 16);
-  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${Math.min(1, a).toFixed(3)})`;
 }
 
 function useWidth<T extends HTMLElement>(fallback: number) {

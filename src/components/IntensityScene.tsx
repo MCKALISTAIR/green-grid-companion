@@ -10,10 +10,9 @@ import { useAchievements } from '@/hooks/useAchievements';
 import { useSceneDirector } from '@/hooks/useSceneDirector';
 import { useCleanlinessBand } from '@/hooks/useCleanlinessBand';
 import { useSceneGrowth } from '@/hooks/useSceneGrowth';
-import { IntensityMood } from './scene/art/WeatherArt';
-import { getMoodBand } from '@/lib/artPalette';
+import { SceneHaze } from './scene/art/SceneHaze';
+import { getHazeBand } from '@/lib/sceneHaze';
 import { StateTransitionFX } from './scene/StateTransitionFX';
-import { SceneHeroSpotlight, SceneAtmosphericDepth } from './scene/SceneComposition';
 import { SceneTemporalLife } from './scene/SceneTemporalLife';
 import { GenerationMix } from '@/lib/carbonApi';
 import { buildSceneConfig } from '@/lib/sceneConfig';
@@ -165,6 +164,10 @@ export function IntensityScene({
               : 'very high'
       : propIndex;
   const index = rawIndex || 'moderate';
+  // PR-2b: haze and smoke follow the NESO band only, and need a real reading
+  // (or a Director override). No data means no haze and no smoke.
+  const hasBandReading = hasLiveReading || (isDirectorMode && overrides.intensity !== undefined);
+  const hazeBand = hasBandReading ? getHazeBand(rawIndex, intensity) : 'none';
 
   // Cleanliness band + transition flourish trigger
   const { band: cleanlinessBand, transition: bandTransition } = useCleanlinessBand(intensity);
@@ -307,8 +310,19 @@ export function IntensityScene({
         isNight,
         sceneType,
         weatherKnown,
+        hazeBand,
       }),
-    [intensity, index, timeOfDay, weather, synthwaveMode, isNight, sceneType, weatherKnown],
+    [
+      intensity,
+      index,
+      timeOfDay,
+      weather,
+      synthwaveMode,
+      isNight,
+      sceneType,
+      weatherKnown,
+      hazeBand,
+    ],
   );
 
   return (
@@ -372,19 +386,15 @@ export function IntensityScene({
           cloudTopPx={cloudTopPx}
         />
 
-        <SceneAtmosphericDepth cleanliness={sceneConfig.cleanliness} isNight={isNight} />
-        {/* The halo's screen blend reads as a sun behind the cloud, so it stays
-            off while the weather is unknown (BH-90). */}
-        {sceneConfig.weatherKnown && (
-          <SceneHeroSpotlight
-            band={cleanlinessBand}
-            isCity={isCity}
-            isCoastal={isCoastal}
-            isNight={isNight}
-          />
-        )}
-        <IntensityMood
-          band={getMoodBand(hasLiveReading ? intensity : Math.max(1, intensity), index)}
+        {/* PR-2b: one horizon-weighted haze by NESO band replaces IntensityMood, the
+            depth band and the hero spotlight glow (retired: it read as a pale
+            smudge behind the hero text on grey days). */}
+        <SceneHaze
+          band={sceneConfig.hazeBand}
+          sceneType={sceneType}
+          timeOfDay={timeOfDay}
+          isFoggy={sceneConfig.weatherKnown && weather.isFoggy}
+          synthwaveMode={synthwaveMode}
         />
         <StateTransitionFX transition={bandTransition} />
 
@@ -450,6 +460,7 @@ export function IntensityScene({
             nuclearPercentage={nuclearPercentage}
             hydroPercentage={hydroPercentage}
             isRaining={isRaining}
+            hazeBand={sceneConfig.hazeBand}
           />
         )}
 

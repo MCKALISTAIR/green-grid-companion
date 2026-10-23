@@ -1,29 +1,22 @@
 /**
  * Art pass v1 palettes (from GridSense Design's src/art.js / art2.js).
  * Intensity drives only the mood (haze + saturation), never the weather.
+ *
+ * PR-2b: the scene haze itself now comes from src/lib/sceneHaze.ts (NESO band
+ * only). MOOD stays as the far-landmark haze tint (cityLandmarkPalette), with
+ * no haze at very low and low.
  */
 export type MoodBand = 'zero' | 'very low' | 'low' | 'moderate' | 'high' | 'very high';
 
 export const MOOD: Record<MoodBand, { haze: string; a: number; sat: number }> = {
   zero: { haze: '#c9f7e3', a: 0.14, sat: 1.08 },
   'very low': { haze: '#ffffff', a: 0, sat: 1 },
-  low: { haze: '#f1e7d0', a: 0.12, sat: 0.95 },
+  // PR-2b (truth rule): no haze at very low or low.
+  low: { haze: '#f1e7d0', a: 0, sat: 1 },
   moderate: { haze: '#e6d3a8', a: 0.24, sat: 0.85 },
   high: { haze: '#cfa877', a: 0.34, sat: 0.72 },
   'very high': { haze: '#a8846a', a: 0.44, sat: 0.6 },
 };
-
-/** NESO index → mood band; a live 0 g reading gets the mint 'zero' glow. */
-export function getMoodBand(intensity: number, index: string): MoodBand {
-  if (intensity <= 0) return 'zero';
-  const k = (index || '').toLowerCase();
-  if (k in MOOD) return k as MoodBand;
-  if (intensity < 40) return 'very low';
-  if (intensity < 120) return 'low';
-  if (intensity < 200) return 'moderate';
-  if (intensity < 290) return 'high';
-  return 'very high';
-}
 
 export type SunTone = 'day' | 'dawn' | 'sunset';
 export const SUN_COLOURS: Record<SunTone, [string, string]> = {

@@ -3,12 +3,11 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useId } from 'react';
 
 interface ValleyMistProps {
-  cleanliness: number;
   timeOfDay?: string;
   isNight?: boolean;
 }
 
-export function ValleyMist({ cleanliness, timeOfDay, isNight }: ValleyMistProps) {
+export function ValleyMist({ timeOfDay, isNight }: ValleyMistProps) {
   const reduced = useReducedMotion();
   const id = useId();
 
@@ -20,9 +19,10 @@ export function ValleyMist({ cleanliness, timeOfDay, isNight }: ValleyMistProps)
     timeOfDay === 'dusk';
   if (!isVisible) return null;
 
-  // Tint of mist: cool blue on clean days, warm sepia on dirty days
-  const hue = cleanliness > 0.5 ? 200 : 35;
-  const sat = cleanliness > 0.5 ? '25%' : '18%';
+  // PR-2b: mist is weather and time only, always cool. Carbon never tints it
+  // (haze is warm and lives in SceneHaze, so the two can't be confused).
+  const hue = 200;
+  const sat = '25%';
   const light = isNight ? 25 : 88;
   const mistColor = `hsl(${hue} ${sat} ${light}% / 0.15)`;
 

@@ -165,11 +165,12 @@ for (const [vw, vh] of VIEWPORTS) {
           // The composed scene, for the eye.
           if (OUT)
             await page.screenshot({ path: `${OUT}/bank-${state}-${vw}x${vh}-${t}-${wn}.png` });
-          // Sky, bank and the scene-wide hazes only; the rim is hidden (the one allowed exception).
+          // Sky, bank and the scene-wide haze only (PR-2b: SceneHaze replaced the mood
+          // and depth layers); the rim is hidden (the one allowed exception).
           await page.addStyleTag({
             content: [
               '[data-scene-type] * { visibility: hidden !important; }',
-              '[data-art="cloud-bank"], [data-art="cloud-bank"] *, [data-art="mood"], [data-scene-depth] { visibility: visible !important; }',
+              '[data-art="cloud-bank"], [data-art="cloud-bank"] *, [data-art="haze"], [data-art="haze"] * { visibility: visible !important; }',
               '[data-bank-rim], [data-bank-rim] * { visibility: hidden !important; }',
               '[data-art="cloud-bank"].bank-off, [data-art="cloud-bank"].bank-off * { visibility: hidden !important; }',
             ].join('\n'),

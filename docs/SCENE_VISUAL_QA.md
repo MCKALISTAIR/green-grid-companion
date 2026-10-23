@@ -128,36 +128,29 @@ that must not be violated.
 
 ## Game-design composition (Phase 2)
 
-### Hero per cleanliness band
+### Carbon haze and gas-plant smoke (PR-2b)
 
-`SceneHeroSpotlight` is **universal** — it renders for all three scene types (city,
-countryside, coastal). Each band has ONE focal element per theme receiving a soft
-radial halo. Verify the eye is drawn to the correct prop before other elements.
+`SceneHeroSpotlight`, `SceneAtmosphericDepth` and `IntensityMood` are retired. Carbon
+shows only as haze (`SceneHaze`, z-[22]) and smoke from the one gas plant
+(`GasPlant`, countryside back hill). Both follow the **NESO band only**
+(`getHazeBand` in `src/lib/sceneHaze.ts`); grams are used only when a reading has
+no index, with the HUD cut-offs.
 
-Layering note: spotlight sits at **z-[3]**, above `SceneAtmosphericDepth` (z-[2]) so
-heavy haze on dirty days does not mute the halo.
+| Band      | Haze tint (day) | Far / back / village / front | Sky wash | Smoke puffs per stack |
+| --------- | --------------- | ---------------------------- | -------- | --------------------- |
+| very low  | none            | none                         | none     | none                  |
+| low       | none            | none                         | none     | none                  |
+| moderate  | `#d8c9a6`       | .22 / .14 / .06 / 0          | .22      | 3 (`#e8e4dc` at .55)  |
+| high      | `#c9b08a`       | .32 / .20 / .10 / .03        | .32      | 4 (`#cfc8bc` at .65)  |
+| very high | `#b39a7c`       | .42 / .28 / .14 / .05        | .42      | 5 (`#b8b0a3` at .75)  |
 
-| Band       | Intensity (gCO₂/kWh) | City hero         | Countryside hero     | Coastal hero   | Halo tint  |
-| ---------- | -------------------- | ----------------- | -------------------- | -------------- | ---------- |
-| very-clean | < 50                 | London Eye        | wind turbine cluster | offshore wind  | mint       |
-| clean      | 50–149               | upper-mid skyline | hillside             | sailing boat   | green-mint |
-| moderate   | 150–249              | BESS container    | hydro dam            | rock pool area | amber      |
-| dirty      | 250–349              | distant stack     | factory smoke        | horizon smog   | rust       |
-| very-dirty | ≥ 350                | smog band (upper) | smog band            | smog band      | red-brown  |
-
-- [ ] Halo follows band changes when cycling all 5 intensity presets in `/__scene-test`
-- [ ] Halo is visible in **all three themes** (countryside, city, coastal)
-- [ ] Halo never overlaps the intensity card or fact bubble
-- [ ] At night, halo is dimmed but still visible
-
-### Atmospheric depth band
-
-`SceneAtmosphericDepth` adds a horizontal haze across the horizon (z-[2], below spotlight).
-
-- [ ] Cool blue tint on clean days, warm sepia on dirty days
-- [ ] Visible near the horizon only (~42–64% vertical) — must **not** form an opaque muddy bar
-- [ ] Peak haze opacity capped (~0.24) so live UK dirty/high intensities still show landmarks
-- [ ] Distant skyline reads as further away than mid skyline
+- [ ] Very low, low and no data (loading, outage): no haze and no smoke at all
+- [ ] The gas plant is always there; smoke only ever comes out of its two stacks
+- [ ] Sky wash peaks at the horizon and is gone by 55% of the sky height (day)
+- [ ] Dawn, dusk, night: low warm glow (`#8a6e5a`) in the lowest 25% of the sky only
+- [ ] Fog plus haze: the fog grade wins (sky wash at 50%)
+- [ ] Hero text still >= 4.5:1 and the warning icon >= 3:1 at very high (hero-contrast)
+- [ ] No haze opacity above 0.45; no filters or blur (transform/opacity only)
 
 ### Scale bible (locked)
 

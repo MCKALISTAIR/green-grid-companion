@@ -11,7 +11,6 @@ import {
   Pigeon,
   ConstructionCrane,
   LondonEye,
-  SmogBand,
   DistantStack,
   BatteryStorageContainer,
   TubeFlash,
@@ -69,8 +68,9 @@ export function CitySceneLayers({
   const isLondon = cityVariant === 'london';
   const hero = getCityHeroEmphasis(cleanlinessBand);
   const landmarkHero = isLandmarkHeroLit(nesoIndex, cleanlinessBand);
-  const showStack =
-    sceneConfig.cleanliness < 0.2 || hero.hero === 'distant-stack' || hero.hero === 'smog';
+  // PR-2b: the distant stack (and its plume) follows the NESO band, high and
+  // above, never the cleanliness formula. Haze comes from SceneHaze.
+  const showStack = sceneConfig.hazeBand === 'high' || sceneConfig.hazeBand === 'very high';
 
   return (
     <>
@@ -114,7 +114,6 @@ export function CitySceneLayers({
           preserveAspectRatio={SCENE_SILHOUETTE_ASPECT}
           aria-hidden="true"
         >
-          <SmogBand cleanliness={sceneConfig.cleanliness} isNight={isNight} />
           {showStack && <DistantStack isNight={isNight} />}
           <CityLandscapeBack
             cleanliness={sceneConfig.cleanliness}
@@ -161,7 +160,7 @@ export function CitySceneLayers({
         </svg>
       </motion.div>
 
-      <ValleyMist cleanliness={sceneConfig.cleanliness} timeOfDay={timeOfDay} isNight={isNight} />
+      <ValleyMist timeOfDay={timeOfDay} isNight={isNight} />
 
       {/* City: Foreground buildings + road + BESS (+ London Eye for London only) */}
       <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-20 overflow-hidden">

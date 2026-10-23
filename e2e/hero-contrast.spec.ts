@@ -14,6 +14,10 @@ import { installMocks, seedStorage } from '../scripts/layout/mock-api.mjs';
  *   hero number, band label, error title ("NESO ISN'T ANSWERING"): >= 4.5:1
  *   warning icon (non-text graphic): >= 3:1
  *
+ * PR-2b: the reading tests also run at the very high band (340 g, NESO "very
+ * high"), the heaviest haze, so the haze can never cost the hero its contrast.
+ * The outage state has no reading, so it never shows haze.
+ *
  * Everything is mocked and the service worker is blocked. Set HERO_CONTRAST_OUT
  * to a directory to log the table (JSONL) and save 390/320 shots there.
  */
@@ -47,6 +51,13 @@ const VIEWPORTS = [
   [390, 844],
   [320, 568],
 ] as const;
+
+// PR-2b: the default very low reading (no haze) and the heaviest haze.
+const BANDS = ['very low', 'very high'] as const;
+const READINGS = {
+  'very low': { intensity: 0, index: 'very low' },
+  'very high': { intensity: 340, index: 'very high' },
+} as const;
 
 const TEXT_MIN = 4.5;
 const ICON_MIN = 3;
@@ -104,11 +115,12 @@ async function open(
   iso: string,
   weather: object,
   mode: 'ok' | 'error',
+  reading: { intensity: number; index: string } = { intensity: 0, index: 'very low' },
 ) {
   await page.clock.install({ time: new Date(iso) });
   await page.setViewportSize({ width: vw, height: vh });
   const isDay = t === 'night' || t === 'dusk' ? 0 : 1;
-  await installMocks(context, { mode, weather: { ...weather, is_day: isDay } });
+  await installMocks(context, { mode, ...reading, weather: { ...weather, is_day: isDay } });
   await context.addInitScript(seedStorage());
   await page.goto('/');
   // BH-113: the page clock is installed before anything else (Node's Date.now is
@@ -128,35 +140,51 @@ function log(row: Record<string, unknown>) {
 for (const [vw, vh] of VIEWPORTS) {
   for (const [t, iso] of TIMES) {
     for (const [wn, weather] of WEATHERS) {
-      test(`${vw}x${vh} ${t} ${wn}: reading text >= 4.5:1`, async ({ page, context }) => {
-        test.setTimeout(90_000);
-        await open(page, context, vw, vh, t, iso, weather, 'ok');
-        const band = page.getByTestId('hero-band-label');
-        await expect(band).toBeVisible({ timeout: 60_000 });
-        await page.waitForTimeout(3000); // sky (2 s), scrim (0.7 s) and typewriter settle
-        const tone = await page.getByTestId('hero-gauge').getAttribute('data-hero-tone');
-        // The digits: the largest-font element inside the hero number.
-        const digits = page.getByTestId('hero-number').locator('[data-hero-digits]');
-        await expect(digits).toHaveCount(1);
-        const number = await measure(page, digits, await colourOf(digits));
-        const label = await measure(page, band, await colourOf(band));
-        if (OUT && (wn === 'storm' || wn === 'snow' || wn === 'overcast')) {
-          await page.screenshot({ path: `${OUT}/reading-${vw}x${vh}-${t}-${wn}.png` });
-        }
-        // The #179 rule for every cloud bank: cloud tops at the hero text bottom + 34.
-        const bank = page.locator('[data-art="cloud-bank"]');
-        let cloudGap: number | null = null;
-        if ((await bank.count()) > 0) {
-          const text = (await page.getByTestId('hero-text-block').boundingBox())!;
-          const bankBox = (await bank.first().boundingBox())!;
-          cloudGap = Math.round(bankBox.y - (text.y + text.height));
-          expect(cloudGap, `${vw} ${t} ${wn} cloud gap`).toBeGreaterThanOrEqual(33);
-        }
-        log({ vw, t, wn, state: 'reading', tone, number, label, cloudGap });
-        expect(number, `${vw} ${t} ${wn} number`).toBeGreaterThanOrEqual(TEXT_MIN);
-        expect(label, `${vw} ${t} ${wn} band label`).toBeGreaterThanOrEqual(TEXT_MIN);
-        if (t === 'dusk' || t === 'night') expect(tone).toBe('light');
-      });
+      for (const band of BANDS) {
+        const suffix = band === 'very high' ? ' (very high haze)' : '';
+        test(`${vw}x${vh} ${t} ${wn}: reading text >= 4.5:1${suffix}`, async ({
+          page,
+          context,
+        }) => {
+          test.setTimeout(90_000);
+          await open(page, context, vw, vh, t, iso, weather, 'ok', READINGS[band]);
+          if (band === 'very high')
+            await expect(page.locator('[data-art="haze"]')).toHaveAttribute(
+              'data-haze-band',
+              'very high',
+              { timeout: 30_000 },
+            );
+          const band = page.getByTestId('hero-band-label');
+          await expect(band).toBeVisible({ timeout: 60_000 });
+          await page.waitForTimeout(3000); // sky (2 s), scrim (0.7 s) and typewriter settle
+          const tone = await page.getByTestId('hero-gauge').getAttribute('data-hero-tone');
+          // The digits: the largest-font element inside the hero number.
+          const digits = page.getByTestId('hero-number').locator('[data-hero-digits]');
+          await expect(digits).toHaveCount(1);
+          const number = await measure(page, digits, await colourOf(digits));
+          const label = await measure(page, band, await colourOf(band));
+          if (
+            OUT &&
+            (wn === 'storm' || wn === 'snow' || wn === 'overcast' || band !== 'very low')
+          ) {
+            const b = band === 'very low' ? '' : '-very-high';
+            await page.screenshot({ path: `${OUT}/reading-${vw}x${vh}-${t}-${wn}${b}.png` });
+          }
+          // The #179 rule for every cloud bank: cloud tops at the hero text bottom + 34.
+          const bank = page.locator('[data-art="cloud-bank"]');
+          let cloudGap: number | null = null;
+          if ((await bank.count()) > 0) {
+            const text = (await page.getByTestId('hero-text-block').boundingBox())!;
+            const bankBox = (await bank.first().boundingBox())!;
+            cloudGap = Math.round(bankBox.y - (text.y + text.height));
+            expect(cloudGap, `${vw} ${t} ${wn} cloud gap`).toBeGreaterThanOrEqual(33);
+          }
+          log({ vw, t, wn, band, state: 'reading', tone, number, label, cloudGap });
+          expect(number, `${vw} ${t} ${wn} number`).toBeGreaterThanOrEqual(TEXT_MIN);
+          expect(label, `${vw} ${t} ${wn} band label`).toBeGreaterThanOrEqual(TEXT_MIN);
+          if (t === 'dusk' || t === 'night') expect(tone).toBe('light');
+        });
+      }
 
       test(`${vw}x${vh} ${t} ${wn}: outage icon >= 3:1, title >= 4.5:1`, async ({
         page,

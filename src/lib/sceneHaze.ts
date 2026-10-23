@@ -1,0 +1,153 @@
+/**
+ * PR-2b (Design brief §3 and Q5): carbon shows as haze and gas-plant smoke, driven
+ * by the NESO band only (the `index` string the hero shows), never by a gram
+ * cut-off or the cleanliness formula.
+ *
+ * - Very low and low: no haze, no smoke.
+ * - No reading (loading, failed, outage): no haze, no smoke.
+ * - Only when there is a reading but no index string are grams used, with the
+ *   same cut-offs as the HUD (`getCarbonIndex`), so the scene matches the number.
+ */
+import type { TimeOfDay } from '@/hooks/useTimeOfDay';
+import { getCarbonIndex } from '@/lib/sceneUtils';
+
+export type HazeBand = 'none' | 'moderate' | 'high' | 'very high';
+
+const HAZE_BANDS: ReadonlySet<string> = new Set(['moderate', 'high', 'very high']);
+const KNOWN_INDEX: ReadonlySet<string> = new Set([
+  'very low',
+  'low',
+  'moderate',
+  'high',
+  'very high',
+]);
+
+/** NESO index → haze band. `index` undefined or empty with no intensity means no data. */
+export function getHazeBand(index: string | undefined | null, intensity?: number | null): HazeBand {
+  let k = (index || '').trim().toLowerCase();
+  if (!KNOWN_INDEX.has(k)) {
+    if (typeof intensity !== 'number' || !Number.isFinite(intensity)) return 'none';
+    k = getCarbonIndex(intensity);
+  }
+  return HAZE_BANDS.has(k) ? (k as HazeBand) : 'none';
+}
+
+/** Dawn, dusk and night use the low light-pollution glow instead of the day wash. */
+export function isHazeDim(timeOfDay: TimeOfDay | string): boolean {
+  return timeOfDay === 'dawn' || timeOfDay === 'dusk' || timeOfDay === 'night';
+}
+
+export type ActiveHazeBand = Exclude<HazeBand, 'none'>;
+
+/** LIFE-LIST A2 ceiling: no haze opacity anywhere above this. */
+export const HAZE_MAX_OPACITY = 0.45;
+
+/**
+ * Day (morning to sunset), Q5 table. Opacity per depth layer plus the sky wash,
+ * which peaks at the horizon and is 0 at 55% of the sky height.
+ */
+export const HAZE_DAY: Record<
+  ActiveHazeBand,
+  { tint: string; far: number; back: number; village: number; front: number; sky: number }
+> = {
+  moderate: { tint: '#d8c9a6', far: 0.22, back: 0.14, village: 0.06, front: 0, sky: 0.22 },
+  high: { tint: '#c9b08a', far: 0.32, back: 0.2, village: 0.1, front: 0.03, sky: 0.32 },
+  'very high': { tint: '#b39a7c', far: 0.42, back: 0.28, village: 0.14, front: 0.05, sky: 0.42 },
+};
+
+/** Dawn, dusk, night: low light-pollution glow in the lowest 25% of the sky. */
+export const HAZE_DIM_TINT = '#8a6e5a';
+export const HAZE_DIM_SKY_PEAK: Record<ActiveHazeBand, number> = {
+  moderate: 0.2,
+  high: 0.28,
+  'very high': 0.36,
+};
+/** Hills get 60% of the day values after dark. */
+export const HAZE_DIM_HILL_FACTOR = 0.6;
+
+/** Fraction of the sky height (up from the horizon) where the sky wash reaches 0. */
+export const HAZE_SKY_REACH = { day: 0.55, dim: 0.25 } as const;
+
+/** When fog and haze are both true the fog grade wins: the sky wash is capped at 50%. */
+export const HAZE_FOG_SKY_FACTOR = 0.5;
+
+export interface HazeTokens {
+  band: ActiveHazeBand;
+  dim: boolean;
+  tint: string;
+  sky: number;
+  skyReach: number;
+  far: number;
+  back: number;
+  village: number;
+  front: number;
+}
+
+/** Resolved haze for a band, time of day and fog flag; null when there is no haze. */
+export function getHazeTokens(
+  band: HazeBand,
+  timeOfDay: TimeOfDay | string,
+  isFoggy = false,
+): HazeTokens | null {
+  if (band === 'none') return null;
+  const day = HAZE_DAY[band];
+  const dim = isHazeDim(timeOfDay);
+  const hill = dim ? HAZE_DIM_HILL_FACTOR : 1;
+  const sky = (dim ? HAZE_DIM_SKY_PEAK[band] : day.sky) * (isFoggy ? HAZE_FOG_SKY_FACTOR : 1);
+  const cap = (v: number) => Math.min(HAZE_MAX_OPACITY, Math.round(v * 1000) / 1000);
+  return {
+    band,
+    dim,
+    tint: dim ? HAZE_DIM_TINT : day.tint,
+    sky: cap(sky),
+    skyReach: dim ? HAZE_SKY_REACH.dim : HAZE_SKY_REACH.day,
+    far: cap(day.far * hill),
+    back: cap(day.back * hill),
+    village: cap(day.village * hill),
+    front: cap(day.front * hill),
+  };
+}
+
+/** Sun halo opacity multiplier (day): × 0.80 / 0.65 / 0.50. */
+export const SUN_HALO_FACTOR: Record<HazeBand, number> = {
+  none: 1,
+  moderate: 0.8,
+  high: 0.65,
+  'very high': 0.5,
+};
+
+/** The sun disc warms under heavy haze; never brown, never darker than the day disc. */
+export const SUN_DISC_HAZE: Partial<Record<HazeBand, string>> = {
+  high: '#ffe1a8',
+  'very high': '#ffd08a',
+};
+
+/** Stars thinned by 30% / 60% / all hidden at moderate / high / very high. */
+export const STAR_HAZE_FACTOR: Record<HazeBand, number> = {
+  none: 1,
+  moderate: 0.7,
+  high: 0.4,
+  'very high': 0,
+};
+
+/** Gas-plant smoke per band (Q5 smoke table). Never black. */
+export const SMOKE_BY_BAND: Record<
+  ActiveHazeBand,
+  { puffs: number; day: string; opacity: number }
+> = {
+  moderate: { puffs: 3, day: '#e8e4dc', opacity: 0.55 },
+  high: { puffs: 4, day: '#cfc8bc', opacity: 0.65 },
+  'very high': { puffs: 5, day: '#b8b0a3', opacity: 0.75 },
+};
+export const SMOKE_NIGHT_FILL = '#8f8794';
+export const SMOKE_NIGHT_UNDERLIGHT = '#f2b36b';
+export const SMOKE_NIGHT_UNDERLIGHT_OPACITY = 0.35;
+/** Puff motion (LIFE-LIST A1): 6 px start, grows to 1.8×, rises 18 px, fades over 6 s. */
+export const SMOKE_PUFF = { startPx: 6, endScale: 1.8, risePx: 18, seconds: 6 } as const;
+/** Reduce Motion: 3 static puffs per stack at the band opacity. */
+export const SMOKE_STATIC_PUFFS = 3;
+
+/** Smoke shows only at moderate and above. */
+export function showsSmoke(band: HazeBand): band is ActiveHazeBand {
+  return band !== 'none';
+}

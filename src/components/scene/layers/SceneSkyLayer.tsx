@@ -5,6 +5,7 @@ import type { SceneVisualConfig } from '@/lib/sceneConfig';
 import { WeatherEffects } from '../WeatherEffects';
 import { AuroraRibbon, SceneSun } from '../art/WeatherArt';
 import { Stars } from '../Stars';
+import { STAR_HAZE_FACTOR } from '@/lib/sceneHaze';
 import { Moon } from '../Moon';
 import { SunRay } from '../SunRay';
 
@@ -68,7 +69,13 @@ export function SceneSkyLayer({
       </AnimatePresence>
 
       <AnimatePresence>
-        {sceneConfig.showStars && <Stars count={40} visibility={sceneConfig.starVisibility} />}
+        {/* PR-2b: haze thins the stars by band (-30% / -60% / hidden at very high). */}
+        {sceneConfig.showStars && (
+          <Stars
+            count={Math.round(40 * STAR_HAZE_FACTOR[sceneConfig.hazeBand])}
+            visibility={sceneConfig.starVisibility}
+          />
+        )}
       </AnimatePresence>
 
       <AnimatePresence>
@@ -149,6 +156,7 @@ export function SceneSkyLayer({
                 <SceneSun
                   r={timeOfDay === 'midday' ? 20 : 23}
                   tone={timeOfDay === 'sunset' ? 'sunset' : timeOfDay === 'dawn' ? 'dawn' : 'day'}
+                  haze={synthwaveMode ? 'none' : sceneConfig.hazeBand}
                 />
                 {sunReactionKey > 0 && !shouldReduceMotion && (
                   <motion.span
