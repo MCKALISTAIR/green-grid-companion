@@ -127,3 +127,28 @@ export const POSTCODE_COPY = {
   tryAgain: 'Try again',
   useAverage: 'Use GB average',
 } as const;
+
+/**
+ * Octopus sync toasts (Design call on #180, BH-91). The same line in Plain and
+ * Cheeky. Neither line promises an automatic retry: nothing retries a failed
+ * in-app sync. Which line shows is decided in src/lib/octopusSyncOutcome.ts.
+ */
+export const OCTOPUS_SYNC_COPY = {
+  /** Any sync failure that isn't about the user's Octopus key. */
+  failed: {
+    plain: "Couldn't get your Octopus usage just now. Try again in a bit.",
+    cheeky: "Couldn't get your Octopus usage just now. Try again in a bit.",
+  },
+  /** Octopus said 401/403 to the user's key, or the stored key is missing or unreadable. */
+  credentials: {
+    plain: 'Your Octopus link has expired. Sign in again to see your use.',
+    cheeky: 'Your Octopus link has expired. Sign in again to see your use.',
+  },
+  /**
+   * The separate calculate-footprint action (no UI caller today). Wording
+   * unchanged from errorUtils; not part of Design's #180 ruling.
+   */
+  calculateFailed: {
+    plain: 'Failed to calculate carbon footprint. Please try again.',
+  },
+} as const;

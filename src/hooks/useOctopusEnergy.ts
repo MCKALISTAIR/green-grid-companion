@@ -6,6 +6,24 @@ import { logger } from '@/lib/logger';
 import { parseEdgeFunctionError } from '@/lib/errorUtils';
 import { ensureAuthSession, hasValidSession } from '@/lib/auth-utils';
 import { takeLegacyOctopusCredentials } from '@/lib/octopusLegacyStorage';
+import { readTone } from '@/lib/tone';
+import { OCTOPUS_SYNC_COPY, toneBody } from '@/lib/voice/errorStatesCopy';
+import {
+  readFunctionErrorBody,
+  syncErrorOutcome,
+  syncFailureMessage,
+  syncOutcome,
+} from '@/lib/octopusSyncOutcome';
+
+/** Thrown after the sync toast has already been shown, so the catch doesn't show a second one. */
+class SyncToastShown extends Error {}
+
+/** Toast for a non-2xx sync response; returns an error to throw. No automatic retry. */
+async function toastSyncHttpError(error: { message?: string }): Promise<SyncToastShown> {
+  const outcome = syncErrorOutcome(await readFunctionErrorBody(error));
+  toast.error(syncFailureMessage(outcome === 'ok' ? 'failed' : outcome, readTone()));
+  return new SyncToastShown(error.message || 'Octopus sync failed');
+}
 
 export interface OctopusMeter {
   id: string;
@@ -475,17 +493,19 @@ export function useOctopusEnergy(days: number = 30) {
           body: { action: 'sync-consumption', days: syncDays },
         });
 
-        if (error) throw new Error(error.message || 'Failed to sync consumption');
+        if (error) throw await toastSyncHttpError(error);
 
-        // BH-91: the function now reports per-meter failures instead of a blanket success.
-        if (data?.success === false)
-          toast.error('Failed to sync consumption data. Please try again.');
-        else toast.success(`Synced ${data.readings_synced} consumption readings`);
+        // BH-91: the function reports per-meter failures instead of a blanket success.
+        const outcome = syncOutcome(data);
+        if (outcome === 'ok') toast.success(`Synced ${data.readings_synced} consumption readings`);
+        else toast.error(syncFailureMessage(outcome, readTone()));
         await refetchStatus();
         return data;
       } catch (error: unknown) {
-        const message = parseEdgeFunctionError(error, { feature: 'octopus', action: 'sync' });
-        toast.error(message);
+        if (!(error instanceof SyncToastShown)) {
+          logger.warn('Octopus sync failed', { error });
+          toast.error(syncFailureMessage('failed', readTone()));
+        }
         throw error;
       } finally {
         setIsSyncing(false);
@@ -513,7 +533,7 @@ export function useOctopusEnergy(days: number = 30) {
       if (error) throw new Error(error.message || 'Failed to calculate footprint');
 
       if (data?.success === false)
-        toast.error('Failed to calculate carbon footprint. Please try again.');
+        toast.error(toneBody(OCTOPUS_SYNC_COPY.calculateFailed, readTone()));
       else toast.success(`Calculated carbon footprint for ${data.records_calculated} periods`);
       await refetchFootprint();
       return data;
@@ -543,27 +563,28 @@ export function useOctopusEnergy(days: number = 30) {
           body: { action: 'full-sync', days: syncDays },
         });
 
-        if (error) throw new Error(error.message || 'Failed to sync data');
+        if (error) throw await toastSyncHttpError(error);
 
-        if (data?.success) {
+        const outcome = syncOutcome(data);
+        if (outcome === 'ok') {
           const readings = data.sync?.readings_synced || 0;
           const calculations = data.calculation?.records_calculated || 0;
           toast.success(
             `Synced ${readings} readings and calculated ${calculations} footprint records`,
           );
-          await refetchStatus();
-          await refetchFootprint();
-        } else if (data) {
-          // Some meters failed (BH-91). Show what did sync, and say it didn't all work.
-          toast.error('Failed to sync consumption data. Please try again.');
-          await refetchStatus();
-          await refetchFootprint();
+        } else {
+          // Some or all meters failed (BH-91). Refresh anyway to show whatever did sync.
+          toast.error(syncFailureMessage(outcome, readTone()));
         }
+        await refetchStatus();
+        await refetchFootprint();
 
         return data;
       } catch (error: unknown) {
-        const message = parseEdgeFunctionError(error, { feature: 'octopus', action: 'sync' });
-        toast.error(message);
+        if (!(error instanceof SyncToastShown)) {
+          logger.warn('Octopus full sync failed', { error });
+          toast.error(syncFailureMessage('failed', readTone()));
+        }
         throw error;
       } finally {
         setIsSyncing(false);

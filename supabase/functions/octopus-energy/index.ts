@@ -818,10 +818,17 @@ Deno.serve(async (req: Request) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      return new Response(JSON.stringify({ error: 'Octopus Energy credentials not configured' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      // code lets the app show "Your Octopus link has expired" (BH-91, src/lib/octopusSyncOutcome.ts).
+      return new Response(
+        JSON.stringify({
+          error: 'Octopus Energy credentials not configured',
+          code: 'credentials_unavailable',
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      );
     }
 
     const { api_key: OCTOPUS_API_KEY, account_number: OCTOPUS_ACCOUNT_NUMBER } = credentials || {};
@@ -1020,10 +1027,13 @@ Deno.serve(async (req: Request) => {
 
     if (action === 'full-sync') {
       if (!authHeaderOctopus) {
-        return new Response(JSON.stringify({ error: 'Missing credentials' }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return new Response(
+          JSON.stringify({ error: 'Missing credentials', code: 'credentials_unavailable' }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          },
+        );
       }
 
       try {
