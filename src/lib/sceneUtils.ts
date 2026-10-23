@@ -261,12 +261,17 @@ export type HeroTextTone = 'ink' | 'light';
  * Hero text colour by the sky actually drawn behind it (mirrors getSkyParams order):
  * light skies (morning, midday, afternoon, sunset, overcast/rain, fog) take ink;
  * dark skies (dawn, dusk, night, thunder) take white over the dark scrim.
- * Contrast for every state is asserted in sceneUtils.test.ts (>= 4.5:1).
+ *
+ * Design review of #185 (23 Oct 2026, incl. BH-107): at dusk and night the
+ * hero is white in EVERY weather. Overcast, fog, rain, storm and snow skies are
+ * dark then too, and ink measured about 2.4:1 on them (pixel-measured in
+ * e2e/hero-contrast.spec.ts). The weather only decides the tone by day.
  */
 export function getHeroTextTone(
   timeOfDay: TimeOfDay,
   weather?: Pick<WeatherData, 'cloudCover' | 'isRaining' | 'isFoggy' | 'isThunderstorm'>,
 ): HeroTextTone {
+  if (timeOfDay === 'dusk' || timeOfDay === 'night') return 'light';
   if (weather) {
     if (weather.cloudCover > 70 || weather.isRaining) return 'ink';
     if (weather.isFoggy) return 'ink';

@@ -22,7 +22,10 @@ interface WeatherEffectsProps {
   showWind?: boolean;
   /** BH-90: false when the weather is unknown (offline / Open-Meteo failed). */
   weatherKnown?: boolean;
-  /** BH-90: px from the scene top where unknown-weather clouds may start. */
+  /**
+   * BH-90: px from the scene top where clouds may start (hero text bottom + 34).
+   * Used by the unknown-weather bank and, since the #185 review, the overcast bank.
+   */
   cloudTopPx?: number;
 }
 
@@ -237,6 +240,7 @@ function HeavyRain({
   return (
     <motion.div
       className="absolute inset-0 overflow-hidden pointer-events-none"
+      data-art-precip="rain"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -285,7 +289,7 @@ export function WeatherEffects({
       {!weatherKnown ? (
         <UnknownWeatherCloudBank topPx={cloudTopPx} timeOfDay={timeOfDay} />
       ) : weather.cloudCover > 70 || weather.isRaining ? (
-        <CloudBank night={isNight} />
+        <CloudBank night={isNight} topPx={cloudTopPx} />
       ) : (
         weather.cloudCover > 40 && (
           <WeatherClouds cloudCover={weather.cloudCover} isNight={isNight} timeOfDay={timeOfDay} />
@@ -309,6 +313,7 @@ export function WeatherEffects({
         {weather.isSnowing && (
           <motion.div
             className="absolute inset-0 overflow-hidden pointer-events-none"
+            data-art-precip="snow"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

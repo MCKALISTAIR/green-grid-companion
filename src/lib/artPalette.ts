@@ -45,6 +45,21 @@ export const CLOUD_BANK_COLOURS = {
 } as const;
 
 /**
+ * Design review of #185 (23 Oct 2026): by day (dawn to sunset) the overcast bank
+ * that sits below the hero text (overcast, rain, snow) is a mid-grey close to the
+ * overcast sky above it (sky ~hsl(220 7% 59%), see getSkyGradient), never a
+ * lighter mass: its body stays within ~1.15:1 of that sky and steps darker toward
+ * the horizon. Only the top lobes carry a lit rim. Pixel-measured in
+ * e2e/cloud-bank-day.spec.ts.
+ */
+export const CLOUD_BANK_DAY_BELOW_TEXT = {
+  back: 'hsl(220 8% 57.5%)',
+  front: 'hsl(220 8% 58.5%)',
+  base: 'hsl(220 9% 54.5%)',
+  rim: 'rgba(255,255,255,0.38)',
+} as const;
+
+/**
  * BH-90: weather unknown (offline or Open-Meteo failed). A soft overcast sky,
  * light grey-blue at the top fading into the cloud tone, never white; darker at
  * dusk and night. `bank` is [back (paler), front, base shade]; `rim` is the lit

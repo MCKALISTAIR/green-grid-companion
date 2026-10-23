@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { getHeroTextTone, HERO_CHIP, HERO_INK, TIME_SKY_COLORS } from './sceneUtils';
+import type { WeatherData } from '@/hooks/useWeatherData';
 import type { TimeOfDay } from '@/hooks/useTimeOfDay';
 import { MOOD } from './artPalette';
 
@@ -114,5 +115,49 @@ describe('hero text AA with the intensity mood haze', () => {
     const r =
       tone === 'ink' ? ratio(hex(HERO_INK), sky) : ratio(WHITE, mix(sky, BLACK, DARK_SCRIM));
     expect(r).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
+// Design review of #185 (23 Oct 2026, incl. BH-107): the hero tone rule. The
+// contrast itself is pixel-measured on the rendered scene in
+// e2e/hero-contrast.spec.ts (every weather by time of day at 390 and 320); this
+// only pins the rule. White at dusk and night in EVERY weather.
+describe('hero tone rule (text and warning icon)', () => {
+  const WEATHERS: Array<[string, Partial<WeatherData>]> = [
+    ['clear', { cloudCover: 0 }],
+    ['partly cloudy', { cloudCover: 40 }],
+    ['overcast', { cloudCover: 100 }],
+    ['rain', { cloudCover: 95, isRaining: true }],
+    ['fog', { cloudCover: 100, isFoggy: true }],
+    ['storm', { cloudCover: 90, isRaining: true, isThunderstorm: true }],
+    ['snow', { cloudCover: 90, isSnowing: true }],
+  ];
+  const full = (w: Partial<WeatherData>) =>
+    ({
+      condition: 'clear',
+      temperature: 2,
+      windSpeed: 5,
+      cloudCover: 0,
+      isRaining: false,
+      isSnowing: false,
+      isFoggy: false,
+      isThunderstorm: false,
+      ...w,
+    }) as WeatherData;
+
+  it.each(WEATHERS)('%s: white at dusk and night', (_n, w) => {
+    expect(getHeroTextTone('dusk', full(w))).toBe('light');
+    expect(getHeroTextTone('night', full(w))).toBe('light');
+  });
+
+  it('white at dusk and night with the weather unknown too', () => {
+    expect(getHeroTextTone('dusk', undefined)).toBe('light');
+    expect(getHeroTextTone('night', undefined)).toBe('light');
+  });
+
+  it('by day the weather still decides: ink under cloud, rain, fog and snow', () => {
+    for (const t of ['morning', 'midday', 'afternoon', 'sunset'] as TimeOfDay[]) {
+      for (const [, w] of WEATHERS) expect(getHeroTextTone(t, full(w))).toBe('ink');
+    }
   });
 });

@@ -81,9 +81,11 @@ describe('scene state for unknown weather', () => {
     expect(neutral.groundColor).toBe(known.groundColor);
   });
 
-  it('the hero text tone follows the overcast sky it sits on', () => {
+  it('the hero text tone follows the overcast sky it sits on (white at dusk and night)', () => {
     for (const t of TIMES) {
-      expect(getHeroTextTone(t, NEUTRAL_OVERCAST_WEATHER)).toBe('ink');
+      // Design review of #185: the overcast sky is dark at dusk and night, so white.
+      const expected = t === 'dusk' || t === 'night' ? 'light' : 'ink';
+      expect(getHeroTextTone(t, NEUTRAL_OVERCAST_WEATHER)).toBe(expected);
     }
   });
 
