@@ -230,6 +230,8 @@ for (const viewport of [
       await page.goto('/');
       const scene = page.getByRole('region', { name: /Animated landscape/ });
       await expect(scene.locator('[data-scene-sun-tap]')).toBeVisible({ timeout: 30_000 });
+      // BH-113: page clock installed first, so this past instant applies.
+      await expect(scene).toHaveAttribute('data-time-of-day', label);
       await expect(page.getByTestId('hero-band-label')).toBeVisible({ timeout: 30_000 });
       const gauge = page.getByTestId('hero-gauge');
       const before = await gauge.getAttribute('data-hero-tone');
@@ -259,6 +261,7 @@ for (const viewport of [
       const outageScene = outage.getByRole('region', { name: /Animated landscape/ });
       await expect(outage.getByTestId('hero-warning-icon')).toBeVisible({ timeout: 30_000 });
       await expect(outageScene.locator('[data-scene-sun-tap]')).toBeVisible({ timeout: 15_000 });
+      await expect(outageScene).toHaveAttribute('data-time-of-day', label);
       await tripleTapSunDirect(outage);
       await expect(outageScene).toHaveAttribute('data-synthwave', 'on');
       await expect(outage.getByTestId('hero-gauge')).toHaveAttribute('data-hero-tone', 'light');
