@@ -27,6 +27,7 @@ import { CompactDataAttribution } from '@/components/attribution/DataAttribution
 import { getHeroTextTone, isReadingFresh, shouldCelebrateZeroCarbon } from '@/lib/sceneUtils';
 import { useWeatherData } from '@/hooks/useWeatherData';
 import { ZeroCarbonBadge } from '@/components/scene/NetZeroCelebration';
+import { OFFLINE_COPY, OUTAGE_COPY } from '@/lib/voice/errorStatesCopy';
 
 interface IntensityHeroOverlayProps {
   postcode: string;
@@ -100,7 +101,7 @@ export function IntensityHeroOverlay({
   // AA: ink on light skies, white on dark skies (art pass v1 §3).
   const heroTone = getHeroTextTone(timeOfDay, weather);
   const isInk = heroTone === 'ink';
-  // Only say 'Offline' when the device really is; otherwise the data source failed.
+  // Only say "Offline" when the device really is; otherwise NESO isn't answering.
   const { isOffline } = useOffline();
   const band = getCleanlinessBand(intensity);
   const isDirty = band === 'dirty' || band === 'very-dirty';
@@ -325,7 +326,7 @@ export function IntensityHeroOverlay({
                 <div className="flex flex-col items-center py-1">
                   <AlertTriangle className="w-10 h-10 text-white animate-pulse mb-1 drop-shadow-md" />
                   <span className="text-sm font-bold text-white/95 uppercase tracking-[0.18em]">
-                    {isOffline ? 'Offline' : 'Data unavailable'}
+                    {isOffline ? OFFLINE_COPY.heroOffline : OUTAGE_COPY.heroTitle}
                   </span>
                 </div>
               ) : (

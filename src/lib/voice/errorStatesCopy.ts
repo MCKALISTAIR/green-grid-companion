@@ -38,6 +38,8 @@ export const OFFLINE_COPY = {
   },
   auto: 'We will refresh automatically when you are back online.',
   action: 'Try now',
+  /** Hero title when there's no reading and the device is offline (BH-80). */
+  heroOffline: 'Offline',
 } as const;
 
 export const lastKnownChip = (at: Date) => `Last known · ${formatLondonTime(at)}`;
@@ -72,6 +74,7 @@ export const PLANNER_ERROR_COPY = {
 
 /** Only when our own API answers and NESO 5xx'd or timed out. */
 export const OUTAGE_COPY = {
+  /** Hero title when there's no reading, the device is online and NESO isn't responding (BH-80). */
   heroTitle: "NESO isn't answering",
   title: 'Grid data unavailable',
   body: {
@@ -81,6 +84,14 @@ export const OUTAGE_COPY = {
   },
   action: 'Try again',
 } as const;
+
+/**
+ * Northern Ireland, long version (Design call, BH-87): onboarding, the
+ * outside-GB note, Help and the Demand popover. The short version, "Northern
+ * Ireland is on the all-island grid", is OFF_GRID_HOME_COPY in statesCopy.
+ */
+export const NI_ALL_ISLAND_GRID =
+  "Northern Ireland is on the all-island grid it shares with Ireland, which this data doesn't cover.";
 
 /** State 3: location outside GB (or a VPN). Follows the tone setting. */
 export const OUTSIDE_COPY = {
@@ -93,7 +104,7 @@ export const OUTSIDE_COPY = {
   },
   enterPostcode: 'Enter a GB postcode',
   useAverage: 'Use GB average',
-  niNote: 'Northern Ireland runs on a separate grid, so it is not covered.',
+  niNote: NI_ALL_ISLAND_GRID,
 } as const;
 
 /** State 4: unknown postcode (inline field error). Always Plain. */

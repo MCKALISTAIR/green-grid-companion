@@ -18,6 +18,7 @@ import { useRelativeTime } from '@/hooks/useRelativeTime';
 import { useEffect, useState } from 'react';
 import { DemandConfetti } from '@/components/DemandConfetti';
 import { GridMixAttribution } from '@/components/attribution/DataAttribution';
+import { NI_ALL_ISLAND_GRID } from '@/lib/voice/errorStatesCopy';
 
 export function DemandView() {
   const {
@@ -152,8 +153,7 @@ export function DemandView() {
                     <p className="font-semibold mb-1">Great Britain</p>
                     <p>
                       This is total demand on Great Britain&apos;s electricity grid, which runs as
-                      one synchronised system. Northern Ireland has its own grid and isn&apos;t
-                      included.
+                      one synchronised system. {NI_ALL_ISLAND_GRID}
                     </p>
 
                     <div className="mt-3 pt-2 border-t border-border/50">
