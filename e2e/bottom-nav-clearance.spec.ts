@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { checkScrollSpace } from '../scripts/layout/checks.mjs';
 
 // Every page with the bottom nav, scrolled to the bottom, must keep its last
@@ -10,8 +10,68 @@ import { checkScrollSpace } from '../scripts/layout/checks.mjs';
 // BH-77: checkScrollSpace now jumps to the bottom instantly. html has
 // `scroll-behavior: smooth`, so the old scrollTo had not moved yet when it
 // measured, and any page taller than the screen "failed".
+//
+// BH-118: under full-suite load a page could be measured while its content was
+// still arriving (Demand at 320x568 showed ~590px of "empty scroll": the
+// scroll height was already reserved, the content wasn't drawn yet). Each page
+// now waits until its layout has settled (scroll height and last content edge
+// unchanged across three reads 250ms apart), and the check itself is retried
+// for up to 10s, so only a layout that stays wrong fails. Under the same load
+// the Vite dev server sometimes failed a lazy route chunk ("Failed to fetch
+// dynamically imported module"), which shows the error boundary instead of the
+// page; that is a dev-server hiccup, not a layout result, so the route is
+// reloaded (up to 3 tries) until its heading is up before anything is measured.
 
 test.use({ serviceWorkers: 'block' });
+
+/** Wait until the page's scroll height and lowest content edge stop changing (BH-118). */
+async function waitForSettledLayout(page: Page) {
+  let prev = '';
+  let stable = 0;
+  await expect
+    .poll(
+      async () => {
+        const now = await page.evaluate(() => {
+          const root = document.querySelector('main') || document.body;
+          let last = 0;
+          for (const el of root.querySelectorAll('*')) {
+            const r = el.getBoundingClientRect();
+            if (r.width >= 2 && r.height >= 2) last = Math.max(last, r.bottom + scrollY);
+          }
+          return `${document.scrollingElement!.scrollHeight}:${Math.round(last)}`;
+        });
+        stable = now === prev ? stable + 1 : 0;
+        prev = now;
+        return stable;
+      },
+      { timeout: 20_000, intervals: [250] },
+    )
+    .toBeGreaterThanOrEqual(2);
+}
+
+/** Open a route and wait for its heading, reloading if a lazy chunk failed to load (BH-118). */
+async function gotoRoute(page: Page, route: string) {
+  for (let attempt = 1; ; attempt++) {
+    await page.goto(route);
+    try {
+      await expect(page.locator('main h1').first()).toBeVisible({ timeout: 15_000 });
+      return;
+    } catch (err) {
+      if (attempt >= 3) throw err;
+    }
+  }
+}
+
+async function expectClearsDock(
+  page: Page,
+  route: string,
+  viewport: { width: number; height: number },
+) {
+  await waitForSettledLayout(page);
+  await expect
+    .poll(() => checkScrollSpace(page, { route, viewport }), { timeout: 10_000, intervals: [500] })
+    .toEqual([]);
+}
 
 const VIEWPORTS = [
   { width: 390, height: 844 },
@@ -58,17 +118,14 @@ for (const viewport of VIEWPORTS) {
       for (const view of ['Intensity', 'Demand', 'Footprint']) {
         await page.getByRole('tab', { name: view, exact: true }).click();
         await expect(page.getByRole('tabpanel', { name: view, exact: true })).toBeVisible();
-        await page.waitForTimeout(1500);
-        expect(await checkScrollSpace(page, { route: `/${view}`, viewport })).toEqual([]);
+        await expectClearsDock(page, `/${view}`, viewport);
       }
 
       for (const route of ROUTES) {
-        await page.goto(route);
-        await expect(page.locator('main h1').first()).toBeVisible();
+        await gotoRoute(page, route);
         await expect(page.getByTestId('bottom-nav')).toBeVisible();
         await page.addStyleTag({ content: `:root { --bottom-safe-area: ${safeArea}px; }` });
-        await page.waitForTimeout(1500);
-        expect(await checkScrollSpace(page, { route, viewport })).toEqual([]);
+        await expectClearsDock(page, route, viewport);
       }
     });
   }

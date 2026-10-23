@@ -133,7 +133,7 @@ export default function SceneTest() {
             <div className="h-4 w-[1px] bg-border hidden sm:block" />
 
             <div className="flex items-center gap-1.5" role="group" aria-label="Intensity state">
-              <span className="text-xs text-muted-foreground font-medium mr-1">Intensity:</span>
+              <span className="text-xs text-muted-foreground font-medium mr-1">Intensity</span>
               {SCENE_CASES.map((c) => (
                 <button
                   key={c.label}
@@ -173,7 +173,7 @@ export default function SceneTest() {
 
           <div className="flex flex-wrap gap-3 items-center pt-2 border-t border-border/40">
             <div className="flex items-center gap-1.5" role="group" aria-label="Time of day">
-              <span className="text-xs text-muted-foreground font-medium mr-1">Time:</span>
+              <span className="text-xs text-muted-foreground font-medium mr-1">Time</span>
               {TIMES_OF_DAY.map((t) => (
                 <button
                   key={t}
@@ -193,7 +193,7 @@ export default function SceneTest() {
             <div className="h-4 w-[1px] bg-border hidden sm:block" />
 
             <div className="flex items-center gap-1.5" role="group" aria-label="Weather condition">
-              <span className="text-xs text-muted-foreground font-medium mr-1">Weather:</span>
+              <span className="text-xs text-muted-foreground font-medium mr-1">Weather</span>
               {SCENE_TEST_WEATHER_KEYS.map((w) => (
                 <button
                   key={w}
