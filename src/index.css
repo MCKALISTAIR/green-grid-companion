@@ -1394,14 +1394,11 @@ body {
   color: #fcd34d;
 }
 
-/* 320 follow-ups (Design review): keep the meta line off the skyline and the
-   tappable scene dots out of the text on narrow, short phones. */
+/* 320 follow-up (Design review): keep the meta line off the skyline on
+   narrow, short phones. */
 @media (max-width: 359px) and (max-height: 640px) {
   .home-scene-gauge {
     padding-bottom: 6.75rem;
-  }
-  .home-scene [data-scene-hotspot] {
-    display: none;
   }
 }
 

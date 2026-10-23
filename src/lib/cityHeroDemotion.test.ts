@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getCityHeroEmphasis, isCityHotspotActive } from './cityHeroDemotion';
+import { getCityHeroEmphasis } from './cityHeroDemotion';
 import type { CleanlinessBand } from '@/hooks/useCleanlinessBand';
 
 const BANDS: CleanlinessBand[] = ['very-clean', 'clean', 'moderate', 'dirty', 'very-dirty'];
@@ -33,16 +33,5 @@ describe('getCityHeroEmphasis', () => {
     expect(e.bessScale).toBeGreaterThan(1);
     expect(e.eyeOpacity).toBeGreaterThanOrEqual(0.35);
     expect(e.trafficCount).toBeGreaterThanOrEqual(1);
-  });
-
-  it('only activates the hero hotspot by default for competing landmarks', () => {
-    const clean = getCityHeroEmphasis('very-clean');
-    expect(isCityHotspotActive('london-eye', 'london-eye', clean)).toBe(true);
-    // BESS is still faintly visible but below hotspot threshold when Eye is hero
-    expect(isCityHotspotActive('london-eye', 'bess', clean)).toBe(false);
-
-    const moderate = getCityHeroEmphasis('moderate');
-    expect(isCityHotspotActive('bess', 'bess', moderate)).toBe(true);
-    expect(isCityHotspotActive('bess', 'london-eye', moderate)).toBe(true);
   });
 });

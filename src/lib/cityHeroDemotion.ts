@@ -103,23 +103,3 @@ const CITY_HERO_EMPHASIS: Record<CleanlinessBand, CityHeroEmphasis> = {
 export function getCityHeroEmphasis(band: CleanlinessBand): CityHeroEmphasis {
   return CITY_HERO_EMPHASIS[band];
 }
-
-/** Hotspot affordance: hero prop always; other props if still readable. */
-export function isCityHotspotActive(
-  hero: CityHeroEmphasis['hero'],
-  hotspot: 'london-eye' | 'bess' | 'distant-stack' | 'ev-charger',
-  emphasis: CityHeroEmphasis,
-): boolean {
-  switch (hotspot) {
-    case 'london-eye':
-      return hero === 'london-eye' || emphasis.eyeOpacity >= 0.4;
-    case 'bess':
-      return hero === 'bess' || emphasis.bessOpacity >= 0.4;
-    case 'distant-stack':
-      return hero === 'distant-stack' || hero === 'smog';
-    case 'ev-charger':
-      return hero === 'london-eye' || hero === 'bess';
-    default:
-      return false;
-  }
-}
