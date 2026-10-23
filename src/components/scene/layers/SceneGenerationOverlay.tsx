@@ -1,4 +1,3 @@
-import { Leaf, Flame, Droplets } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { SceneVisualConfig } from '@/lib/sceneConfig';
 import { turbineRotationSeconds } from '@/lib/turbineSpeed';
@@ -177,79 +176,9 @@ export function SceneGenerationOverlay({
         )}
       </AnimatePresence>
 
-      {/* Floating leaves for very clean — countryside diegetic only (reads as UI chrome elsewhere) */}
-      <AnimatePresence>
-        {!isCity && !isCoastal && sceneConfig.cleanliness > 0.75 && sceneConfig.isDaytime && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Leaf
-              className="absolute bottom-24 left-[25%] w-5 h-5 text-primary animate-leaf-float"
-              style={{ animationDelay: '0s' }}
-              aria-hidden="true"
-            />
-            <Leaf
-              className="absolute bottom-28 right-[35%] w-4 h-4 text-primary/80 animate-leaf-float"
-              style={{ animationDelay: '1.5s' }}
-              aria-hidden="true"
-            />
-            <Leaf
-              className="absolute bottom-20 left-[50%] w-3 h-3 text-primary/70 animate-leaf-float"
-              style={{ animationDelay: '3s' }}
-              aria-hidden="true"
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Fire/flames for very dirty — countryside only; city/coastal use smog + grade */}
-      <AnimatePresence>
-        {!isCity && !isCoastal && sceneConfig.cleanliness < 0.2 && (
-          <motion.div
-            className="absolute bottom-10 left-24 flex gap-2"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.3 }}
-          >
-            <motion.div
-              animate={{ scale: [1, 1.1, 0.95, 1], rotate: [-2, 2, -2] }}
-              transition={{ duration: 0.5, repeat: Infinity }}
-            >
-              <Flame className="w-7 h-7 text-destructive" aria-hidden="true" />
-            </motion.div>
-            <motion.div
-              animate={{ scale: [1, 0.95, 1.1, 1], rotate: [2, -2, 2] }}
-              transition={{ duration: 0.6, repeat: Infinity, delay: 0.15 }}
-            >
-              <Flame className="w-5 h-5 text-destructive/80" aria-hidden="true" />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Water/hydro indicator — countryside / coastal only */}
-      <AnimatePresence>
-        {!isCity && sceneConfig.cleanliness > 0.6 && (
-          <motion.div
-            className="absolute bottom-3 right-20"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            transition={{ duration: 0.5 }}
-          >
-            <motion.div
-              animate={{ scale: [1, 1.1, 1], opacity: [0.6, 1, 0.6] }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' as const }}
-            >
-              <Droplets className="w-6 h-6 text-gen-hydro/60" aria-hidden="true" />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* BH-102 (Design): no Lucide leaf, flame or droplet icons in the scene. They read
+          as UI chrome, not world. Cleanliness shows through the world itself (sky, smoke,
+          grass) and the hero; nothing replaces them. */}
 
       {/* Nuclear Cooling Towers - Show when nuclear % > 5 */}
       <AnimatePresence>
