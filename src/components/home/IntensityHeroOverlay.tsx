@@ -6,6 +6,7 @@ import { useOffline } from '@/hooks/useOffline';
 import { regionalFallbackMessage } from '@/lib/regionalFallback';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { LocationManager } from '@/components/LocationManager';
+import { LastKnownChip } from '@/components/errors/LastKnownChip';
 import { AnimatedIntensity } from '@/components/AnimatedIntensity';
 import { TypewriterText } from '@/components/TypewriterText';
 import { RenewableSparkle } from '@/components/RenewableSparkle';
@@ -41,6 +42,8 @@ interface IntensityHeroOverlayProps {
   isBackgroundFetching: boolean;
   isError: boolean;
   lastUpdated: string | null | undefined;
+  /** When set, the number is a cached one: show the amber Last known chip. */
+  lastKnownAt?: string | null;
   nextUpdate: string | Date | null | undefined;
   getNextUpdate: (lastUpdated?: string) => Date | null;
   relativeTime: string;
@@ -68,6 +71,7 @@ export function IntensityHeroOverlay({
   isLoading,
   isBackgroundFetching,
   isError,
+  lastKnownAt,
   lastUpdated,
   nextUpdate,
   getNextUpdate,
@@ -448,37 +452,41 @@ export function IntensityHeroOverlay({
                   <RenewableSparkle trigger={sparkleTrigger} onComplete={onSparkleComplete} />
                 </div>
 
-                {lastUpdated && (
-                  <div
-                    className={cn(
-                      'flex items-center gap-1.5 text-[11px] font-medium',
-                      isInk
-                        ? 'text-hero-ink'
-                        : 'text-white drop-shadow-[0_1px_8px_rgba(0,0,0,0.65)]',
-                    )}
-                  >
-                    <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
-                      <span
-                        className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-60 ${freshnessColor}`}
-                      />
-                      <span
-                        className={`relative inline-flex h-1.5 w-1.5 rounded-full ${freshnessColor}`}
-                      />
-                    </span>
-                    {isBackgroundFetching ? (
-                      <span>Updating…</span>
-                    ) : (
-                      <>
-                        <span>{relativeTime}</span>
-                        {nextUpdateLabel && (
-                          <>
-                            <span className="opacity-60">·</span>
-                            <span>{nextUpdateLabel}</span>
-                          </>
-                        )}
-                      </>
-                    )}
-                  </div>
+                {lastKnownAt ? (
+                  <LastKnownChip at={new Date(lastKnownAt)} />
+                ) : (
+                  lastUpdated && (
+                    <div
+                      className={cn(
+                        'flex items-center gap-1.5 text-[11px] font-medium',
+                        isInk
+                          ? 'text-hero-ink'
+                          : 'text-white drop-shadow-[0_1px_8px_rgba(0,0,0,0.65)]',
+                      )}
+                    >
+                      <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
+                        <span
+                          className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-60 ${freshnessColor}`}
+                        />
+                        <span
+                          className={`relative inline-flex h-1.5 w-1.5 rounded-full ${freshnessColor}`}
+                        />
+                      </span>
+                      {isBackgroundFetching ? (
+                        <span>Updating…</span>
+                      ) : (
+                        <>
+                          <span>{relativeTime}</span>
+                          {nextUpdateLabel && (
+                            <>
+                              <span className="opacity-60">·</span>
+                              <span>{nextUpdateLabel}</span>
+                            </>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )
                 )}
               </div>
             )}
