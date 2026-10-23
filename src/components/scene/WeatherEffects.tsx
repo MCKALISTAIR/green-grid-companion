@@ -12,6 +12,7 @@ import {
   WindStreaks,
 } from './art/WeatherArt';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { hasCloudBank } from '@/lib/cloudBank';
 
 interface WeatherEffectsProps {
   weather: WeatherData;
@@ -27,6 +28,12 @@ interface WeatherEffectsProps {
    * Used by the unknown-weather bank and, since the #185 review, the overcast bank.
    */
   cloudTopPx?: number;
+  /**
+   * BH-117: leave the full cloud bank out of the sky layer. City scenes draw it
+   * in its own layer behind the skyline (SceneCloudBankLayer), so the castle,
+   * London's landmarks and the neutral skyline sit in front of it.
+   */
+  omitBank?: boolean;
 }
 
 function FogLayer({
@@ -269,6 +276,22 @@ function HeavyRain({
   );
 }
 
+/** The full cloud bank for this weather, or nothing (see hasCloudBank). */
+export function WeatherCloudBank({
+  weather,
+  isNight,
+  timeOfDay,
+  weatherKnown = true,
+  cloudTopPx,
+}: Pick<WeatherEffectsProps, 'weather' | 'isNight' | 'timeOfDay' | 'weatherKnown' | 'cloudTopPx'>) {
+  if (!hasCloudBank(weather, weatherKnown)) return null;
+  return !weatherKnown ? (
+    <UnknownWeatherCloudBank topPx={cloudTopPx} timeOfDay={timeOfDay} />
+  ) : (
+    <CloudBank night={isNight} topPx={cloudTopPx} />
+  );
+}
+
 export function WeatherEffects({
   weather,
   isNight,
@@ -276,6 +299,7 @@ export function WeatherEffects({
   showWind = false,
   weatherKnown = true,
   cloudTopPx,
+  omitBank = false,
 }: WeatherEffectsProps) {
   const lightningActive = useMemo(() => {
     if (!weather.isThunderstorm) return false;
@@ -286,15 +310,23 @@ export function WeatherEffects({
     <>
       <AnimatePresence>{weather.isFoggy && <FogVeil />}</AnimatePresence>
 
-      {!weatherKnown ? (
-        <UnknownWeatherCloudBank topPx={cloudTopPx} timeOfDay={timeOfDay} />
-      ) : weather.cloudCover > 70 || weather.isRaining ? (
-        <CloudBank night={isNight} topPx={cloudTopPx} />
-      ) : (
-        weather.cloudCover > 40 && (
-          <WeatherClouds cloudCover={weather.cloudCover} isNight={isNight} timeOfDay={timeOfDay} />
-        )
-      )}
+      {hasCloudBank(weather, weatherKnown)
+        ? !omitBank && (
+            <WeatherCloudBank
+              weather={weather}
+              isNight={isNight}
+              timeOfDay={timeOfDay}
+              weatherKnown={weatherKnown}
+              cloudTopPx={cloudTopPx}
+            />
+          )
+        : weather.cloudCover > 40 && (
+            <WeatherClouds
+              cloudCover={weather.cloudCover}
+              isNight={isNight}
+              timeOfDay={timeOfDay}
+            />
+          )}
 
       {showWind && (
         <div

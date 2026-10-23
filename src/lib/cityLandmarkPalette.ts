@@ -86,6 +86,21 @@ const CLOUD_DARKEN_L = 26;
  * leaving the pale walls on the grey sky (1.28-1.42:1 at 26).
  */
 const DAY_SNOW_DARKEN_L = 34;
+/**
+ * BH-117: since the castle stands in front of the cloud bank, a daytime storm
+ * castle sits on the mid-grey bank, not the storm sky, and measured 1.47-1.49:1
+ * at 390 with the storm's 16. It takes a further L drop after the storm mix.
+ */
+export const DAY_STORM_EXTRA_DARKEN_L = 4;
+
+/**
+ * BH-117: after dark on the cloud bank the lit stone is lifted toward this pale
+ * stone (pixel-measured, e2e/castle-contrast-b1.spec.ts). Snow lifts further: at
+ * 320 the snow ground veils the rock, leaving the walls on the grey sky.
+ */
+export const NIGHT_BANK_STONE = '#e9e6f2';
+export const NIGHT_BANK_LIFT = 0.2;
+export const NIGHT_BANK_SNOW_LIFT = 0.75;
 
 /** Far-layer haze by NESO band (brief §11.2 / Q5). None at very low or low. */
 const FAR_HAZE: Record<string, number> = { moderate: 0.22, high: 0.32, 'very high': 0.42 };
@@ -242,9 +257,19 @@ export function getEdinburghCastleColours({
   const floodlit = afterDark && heroLit && weather !== 'fog';
   // Design review of #190: a clear dusk sky is as dark as the castle's dusk
   // silhouette at the horizon (measured 1.24:1), so clear dusk uses the night
-  // lit-stone set. Cloudy dusk skies are lighter, so they keep the dark set.
+  // lit-stone set.
+  // BH-117: overcast, rain, snow and storm draw the night-tone cloud bank
+  // directly behind the castle (it stands in front of the bank). The dark
+  // silhouette set measured 1.08-1.26:1 on it and can't get darker, so after dark
+  // under the bank the castle is the lit-stone set, like clear dusk, and skips
+  // the under-cloud darkening below.
+  const onNightBank =
+    afterDark &&
+    (weather === 'overcast' || weather === 'rain' || weather === 'snow' || weather === 'storm');
   const afterDarkSet =
-    timeOfDay === 'dusk' && weather === 'clear' ? 'night' : (timeOfDay as 'dusk' | 'night');
+    (timeOfDay === 'dusk' && weather === 'clear') || onNightBank
+      ? 'night'
+      : (timeOfDay as 'dusk' | 'night');
   const base = synthwaveMode
     ? SYNTHWAVE_CASTLE
     : floodlit
@@ -266,7 +291,14 @@ export function getEdinburghCastleColours({
       walls = darkenHex(walls, points);
       roofs = darkenHex(roofs, points);
     };
-    switch (weather) {
+    // BH-117: at 390 the whole castle is on the night bank; at 320 the bank's top
+    // sits below the roofline, so the upper castle is on the grey overcast night
+    // sky. The lit stone is lifted toward pale stone so it clears both, and the
+    // weather mixes toward the horizon sky (which only lower contrast) are skipped.
+    if (onNightBank) {
+      mixAll(NIGHT_BANK_STONE, weather === 'snow' ? NIGHT_BANK_SNOW_LIFT : NIGHT_BANK_LIFT);
+    }
+    switch (onNightBank ? 'bank' : weather) {
       case 'overcast':
         mixAll(horizon, 0.25);
         break;
@@ -277,8 +309,10 @@ export function getEdinburghCastleColours({
         mixAll(horizon, 0.35);
         break;
       case 'storm':
+        // Daytime only: after dark a storm is on the night bank (above).
         darkenAll(STORM_DARKEN_L);
         mixAll(STORM_SKY, 0.2);
+        darkenAll(DAY_STORM_EXTRA_DARKEN_L);
         break;
       case 'fog':
         mixAll(FOG_SKY, 0.7);
@@ -292,11 +326,11 @@ export function getEdinburghCastleColours({
     // Design review of #190: under cloud (overcast, rain, snow) by day and at
     // night the grey sky sat within 1.0-1.4:1 of the castle, so darken it like
     // the storm case. Applied after the weather mix so the mix toward the light
-    // horizon can't undo it. Fog is exempt and may soften. Cloudy dusk already
-    // clears 2:1 with the dark set.
+    // horizon can't undo it. Fog is exempt and may soften. After dark the castle
+    // is on the night bank instead (BH-117, above), so this is daytime only.
     const underCloud = weather === 'overcast' || weather === 'rain' || weather === 'snow';
-    if (underCloud && timeOfDay !== 'dusk' && !floodlit) {
-      darkenAll(weather === 'snow' && !afterDark ? DAY_SNOW_DARKEN_L : CLOUD_DARKEN_L);
+    if (underCloud && !afterDark && !floodlit) {
+      darkenAll(weather === 'snow' ? DAY_SNOW_DARKEN_L : CLOUD_DARKEN_L);
     }
     const k = (nesoIndex || '').toLowerCase();
     const haze = FAR_HAZE[k];

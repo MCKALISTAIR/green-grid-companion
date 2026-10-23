@@ -24,6 +24,7 @@ import { buildTurbineLayout } from '@/lib/turbineLayout';
 import { useSceneType, SceneType } from '@/hooks/useSceneType';
 import {
   SceneSkyLayer,
+  SceneCloudBankLayer,
   SceneAmbientLife,
   CoastalSceneLayers,
   CitySceneLayers,
@@ -378,6 +379,7 @@ export function IntensityScene({
           handleMoonDoubleClick={handleMoonDoubleClick}
           onSunTap={handleSunTap}
           cloudTopPx={cloudTopPx}
+          bankBehindSkyline={isCity}
         />
 
         <SceneAtmosphericDepth cleanliness={sceneConfig.cleanliness} isNight={isNight} />
@@ -403,6 +405,21 @@ export function IntensityScene({
           birdBand={birdBand}
           fireflyConfig={fireflyConfig}
         />
+
+        {/* BH-117: city skylines (castle, London landmarks, neutral skyline) stand in
+            front of the cloud bank, so in city scenes it is drawn here, just
+            before CitySceneLayers, instead of inside the sky layer. */}
+        {isCity && (
+          <SceneCloudBankLayer
+            skyY={skyY}
+            shouldReduceMotion={shouldReduceMotion}
+            weather={weather}
+            isNight={isNight}
+            timeOfDay={timeOfDay}
+            weatherKnown={sceneConfig.weatherKnown}
+            cloudTopPx={cloudTopPx}
+          />
+        )}
 
         {/* ===== LANDSCAPE LAYERS ===== */}
         {isCoastal ? (
