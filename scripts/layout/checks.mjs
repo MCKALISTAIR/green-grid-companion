@@ -316,7 +316,9 @@ export async function checkScrollSpace(
 ) {
   const tag = `[scroll ${route} ${viewport.width}x${viewport.height}]`;
   const r = await page.evaluate(() => {
-    window.scrollTo(0, document.scrollingElement.scrollHeight);
+    // html has `scroll-behavior: smooth`, so a plain scrollTo animates and
+    // scrollY is still 0 when we measure. Jump instantly (BH-77).
+    window.scrollTo({ top: document.scrollingElement.scrollHeight, behavior: 'instant' });
     const nav = document.querySelector('[data-testid="bottom-nav"], .nav-dock');
     const navBox =
       nav && nav.getBoundingClientRect().height > 0 ? nav.getBoundingClientRect() : null;
@@ -354,6 +356,12 @@ export async function checkScrollSpace(
     };
   });
   const fails = [];
+  // Measuring before the page reaches the bottom compares content below the
+  // fold with the dock's on-screen position, a false failure (BH-77).
+  if (r.scrollY + r.innerH < r.scrollH - 1)
+    fails.push(
+      `${tag} did not reach the bottom (scrollY ${Math.round(r.scrollY)} + ${r.innerH} < scrollHeight ${r.scrollH})`,
+    );
   if (r.navTop !== null && r.last > r.navTop + 1 - minClearance)
     fails.push(
       `${tag} last content (bottom ${Math.round(r.last)}) sits under the bottom nav (top ${Math.round(r.navTop)})` +
