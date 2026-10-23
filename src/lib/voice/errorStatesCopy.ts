@@ -25,7 +25,32 @@ export const SLOW_COPY = {
   action: 'Try again',
 } as const;
 
+/**
+ * State 12: Offline with nothing cached at all (full Home state). When cached
+ * figures are on screen the in-hero pill from #137 says "Offline · figures
+ * from HH:MM" instead, so this card never shows alongside it.
+ */
+export const OFFLINE_COPY = {
+  title: "You're offline.",
+  body: {
+    plain: 'Nothing saved yet.',
+    cheeky: 'Nothing saved yet. The grid carries on without us.',
+  },
+  auto: 'We will refresh automatically when you are back online.',
+  action: 'Try now',
+} as const;
+
 export const lastKnownChip = (at: Date) => `Last known · ${formatLondonTime(at)}`;
+
+/** State 5: Rank map with no regional figures. Follows the tone setting. */
+export const RANK_EMPTY_COPY = {
+  title: 'No regional figures right now',
+  body: {
+    plain: 'NESO has not sent regional data yet. National figures are still available on Home.',
+    cheeky: 'The regions are being shy. National figures are still on Home.',
+  },
+  action: 'Retry',
+} as const;
 
 /** Always Plain. */
 export const STALE_COPY = {
@@ -66,29 +91,6 @@ export const POSTCODE_COPY = {
   notFound: (outward: string) => `We couldn't find ${outward}. Check it, or use the GB average.`,
   tryAgain: 'Try again',
   useAverage: 'Use GB average',
-/**
- * State 12: Offline with nothing cached at all (full Home state). When cached
- * figures are on screen the in-hero pill from #137 says "Offline · figures
- * from HH:MM" instead, so this card never shows alongside it.
- */
-export const OFFLINE_COPY = {
-  title: "You're offline.",
-  body: {
-    plain: 'Nothing saved yet.',
-    cheeky: 'Nothing saved yet. The grid carries on without us.',
-  },
-  auto: 'We will refresh automatically when you are back online.',
-  action: 'Try now',
-} as const;
-
-/** State 5: Rank map with no regional figures. Follows the tone setting. */
-export const RANK_EMPTY_COPY = {
-  title: 'No regional figures right now',
-  body: {
-    plain: 'NESO has not sent regional data yet. National figures are still available on Home.',
-    cheeky: 'The regions are being shy. National figures are still on Home.',
-  },
-  action: 'Retry',
 } as const;
 
 /** State 6: Planner forecast error; the picker and selection stay. */
