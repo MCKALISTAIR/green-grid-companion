@@ -7,6 +7,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import {
   CLOUD_BANK_COLOURS,
+  CLOUD_BANK_DAY_BELOW_TEXT,
   MOOD,
   SUN_COLOURS,
   type MoodBand,
@@ -127,6 +128,29 @@ function risingBankPath(w: number, y: number, bottom: number) {
   return bankPath(w, y).replace(/ V0 H0Z$/, ` V${bottom} H0Z`);
 }
 
+/** CSS mask: the front lobes' scalloped edge over the top 120 px, solid below. */
+const FRONT_LOBES_MASK = (() => {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120" preserveAspectRatio="none"><path d="${risingBankPath(400, 46, 120)}"/></svg>`;
+  const image = `url("data:image/svg+xml,${encodeURIComponent(svg)}"), linear-gradient(#000, #000)`;
+  const size = '100% 120px, 100% calc(100% - 119px)';
+  const position = 'top, bottom';
+  return {
+    maskImage: image,
+    WebkitMaskImage: image,
+    maskSize: size,
+    WebkitMaskSize: size,
+    maskPosition: position,
+    WebkitMaskPosition: position,
+    maskRepeat: 'no-repeat',
+    WebkitMaskRepeat: 'no-repeat',
+  } as const;
+})();
+
+/** Just the scalloped edge (for the lit rim on the top lobes). */
+function bankEdgePath(w: number, y: number) {
+  return bankPath(w, y).replace(/ V0 H0Z$/, '');
+}
+
 /**
  * Full-width overcast bank (overcast >70% or raining).
  *
@@ -134,12 +158,19 @@ function risingBankPath(w: number, y: number, bottom: number) {
  * follows the #179 rule, like the unknown-weather bank: its cloud tops start at
  * the hero text bottom + 34, so no cloud edge crosses the number, label or
  * warning icon (at 320x568 the hanging deck's edge sat right on the icon).
+ * By day that bank is a mid-grey close to the sky above it, stepping darker
+ * toward the horizon, with a lit rim on the top lobes only
+ * (CLOUD_BANK_DAY_BELOW_TEXT); at dusk and night it keeps the night colours.
  * Without `topPx` (scene test page, compact scenes) it hangs from the top as before.
  */
 export function CloudBank({ night = false, topPx }: { night?: boolean; topPx?: number }) {
   const [front, back] = night ? CLOUD_BANK_COLOURS.night : CLOUD_BANK_COLOURS.day;
   if (topPx != null) {
     const top = Math.round(topPx);
+    const day = CLOUD_BANK_DAY_BELOW_TEXT;
+    const c = night
+      ? { back, front, base: front, rim: undefined }
+      : { back: day.back, front: day.front, base: day.base, rim: day.rim };
     return (
       <div
         aria-hidden
@@ -147,6 +178,7 @@ export function CloudBank({ night = false, topPx }: { night?: boolean; topPx?: n
         style={{ top: `${top}px` }}
         data-art="cloud-bank"
         data-variant="below-text"
+        data-tone={night ? 'night' : 'day'}
         data-cloud-top={top}
       >
         <svg
@@ -154,14 +186,53 @@ export function CloudBank({ night = false, topPx }: { night?: boolean; topPx?: n
           viewBox="0 0 400 120"
           preserveAspectRatio="none"
           aria-hidden="true"
+          data-bank-body
         >
-          <path d={risingBankPath(400, 20, 120)} fill={back} opacity=".9" />
-          <path d={risingBankPath(400, 46, 120)} fill={front} opacity=".95" />
+          <path d={risingBankPath(400, 20, 120)} fill={c.back} opacity={night ? 0.9 : 1} />
+          {night && <path d={risingBankPath(400, 46, 120)} fill={c.front} opacity={0.95} />}
         </svg>
-        <div
-          className="absolute inset-x-0 bottom-0 top-[119px]"
-          style={{ background: front, opacity: 0.95 }}
-        />
+        {night ? (
+          <div
+            className="absolute inset-x-0 bottom-0 top-[119px]"
+            style={{
+              background: `linear-gradient(180deg, ${c.front} 0%, ${c.base} 100%)`,
+              opacity: 0.95,
+            }}
+            data-bank-body
+          />
+        ) : (
+          // By day the front lobes and the body are one surface (no seam where the
+          // lobes end): a gradient anchored to the scene's bottom, the horizon,
+          // where the intensity mood haze is strongest, so the bank still steps
+          // darker there. Its top is cut to the front lobes' scalloped edge.
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `linear-gradient(to top, ${c.base} 0px, ${c.base} 110px, ${c.front} 270px)`,
+              ...FRONT_LOBES_MASK,
+            }}
+            data-bank-body
+            data-bank-front
+          />
+        )}
+        {c.rim && (
+          <svg
+            className="absolute inset-x-0 top-0 w-full h-[120px]"
+            viewBox="0 0 400 120"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+            data-bank-rim
+          >
+            <path
+              d={bankEdgePath(400, 20)}
+              fill="none"
+              stroke={c.rim}
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              vectorEffect="non-scaling-stroke"
+            />
+          </svg>
+        )}
       </div>
     );
   }

@@ -111,6 +111,7 @@ export function SceneAtmosphericDepth({ cleanliness, isNight }: DepthProps) {
     <motion.div
       className="absolute inset-x-0 z-[2] pointer-events-none"
       aria-hidden="true"
+      data-scene-depth=""
       style={{
         top: '42%',
         height: '22%',

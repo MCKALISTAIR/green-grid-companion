@@ -240,6 +240,7 @@ function HeavyRain({
   return (
     <motion.div
       className="absolute inset-0 overflow-hidden pointer-events-none"
+      data-art-precip="rain"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -312,6 +313,7 @@ export function WeatherEffects({
         {weather.isSnowing && (
           <motion.div
             className="absolute inset-0 overflow-hidden pointer-events-none"
+            data-art-precip="snow"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
