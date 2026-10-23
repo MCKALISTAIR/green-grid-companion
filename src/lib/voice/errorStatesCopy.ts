@@ -74,8 +74,13 @@ export const PLANNER_ERROR_COPY = {
 
 /** Only when our own API answers and NESO 5xx'd or timed out. */
 export const OUTAGE_COPY = {
-  /** Hero title when there's no reading, the device is online and NESO isn't responding (BH-80). */
+  /**
+   * Hero title when there's no reading, the device is online and the Carbon
+   * Intensity API request itself failed: timeout, network error or 5xx (BH-80).
+   */
   heroTitle: "NESO isn't answering",
+  /** Hero title for any other failure with no reading: parsing, postcode lookup, our bugs (BH-80). */
+  heroUnavailable: 'No reading right now',
   title: 'Grid data unavailable',
   body: {
     plain:
@@ -92,6 +97,16 @@ export const OUTAGE_COPY = {
  */
 export const NI_ALL_ISLAND_GRID =
   "Northern Ireland is on the all-island grid it shares with Ireland, which this data doesn't cover.";
+
+/**
+ * Hero title when there's no reading (Design call, BH-80): "Offline" when the
+ * device is; "NESO isn't answering" only when the Carbon Intensity API request
+ * itself failed (timeout, network error, 5xx); otherwise a neutral line.
+ */
+export function heroErrorTitle(isOffline: boolean, nesoRequestFailed: boolean): string {
+  if (isOffline) return OFFLINE_COPY.heroOffline;
+  return nesoRequestFailed ? OUTAGE_COPY.heroTitle : OUTAGE_COPY.heroUnavailable;
+}
 
 /** State 3: location outside GB (or a VPN). Follows the tone setting. */
 export const OUTSIDE_COPY = {

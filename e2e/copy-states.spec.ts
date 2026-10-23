@@ -29,6 +29,30 @@ test('hero: NESO not answering while online, "Offline" once offline (BH-80)', as
   await context.setOffline(false);
 });
 
+test('hero: neutral line when NESO answers but the data is unusable (BH-80)', async ({
+  page,
+  context,
+}) => {
+  test.setTimeout(90_000);
+  await page.setViewportSize(viewport);
+  await installMocks(context, { intensity: 150, index: 'moderate' });
+  // NESO answers 200, but with nothing we can read: a parse failure, not an outage.
+  await page.route(/api\.carbonintensity\.org\.uk/, (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ data: [] }),
+    }),
+  );
+  await context.addInitScript(seedStorage());
+  await page.goto('/');
+  const hero = page.getByTestId('hero-number');
+  await expect(hero).toContainText('No reading right now', { timeout: 60_000 });
+  await expect(hero).not.toContainText("NESO isn't answering");
+  await page.waitForTimeout(800);
+  await page.screenshot({ path: 'test-results/bh80-hero-unavailable-390x844.png' });
+});
+
 test('Home notice for a BT postcode uses the all-island wording (BH-87)', async ({
   page,
   context,

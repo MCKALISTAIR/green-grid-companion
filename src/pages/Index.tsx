@@ -46,6 +46,7 @@ import { createHorizontalStateVariants, stateTransition } from '@/lib/motion';
 
 import { formatLondonTime } from '@/lib/londonTime';
 import { signalFirstContent } from '@/lib/firstContent';
+import { isNesoRequestFailure } from '@/lib/carbonApi';
 
 const DASHBOARD_VIEWS: DashboardViewMode[] = ['intensity', 'demand', 'footprint'];
 
@@ -267,6 +268,7 @@ const Index = () => {
               isLoading={isLoading}
               isBackgroundFetching={isBackgroundFetching}
               isError={isError && !hasReading}
+              nesoRequestFailed={isNesoRequestFailure(error)}
               lastKnownAt={showLastKnown ? lastUpdated : undefined}
               lastUpdated={lastUpdated}
               nextUpdate={nextUpdate}

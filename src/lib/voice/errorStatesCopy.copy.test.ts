@@ -7,6 +7,7 @@ describe('Design copy calls (BH-80, BH-87)', () => {
   it('hero titles: "Offline" when the device is, NESO when it is not answering', () => {
     expect(OFFLINE_COPY.heroOffline).toBe('Offline');
     expect(OUTAGE_COPY.heroTitle).toBe("NESO isn't answering");
+    expect(OUTAGE_COPY.heroUnavailable).toBe('No reading right now');
   });
 
   it('uses the one all-island Northern Ireland line everywhere', () => {
