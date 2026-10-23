@@ -1,57 +1,39 @@
-import { Leaf, Sun, Trophy, Zap, ArrowRight } from 'lucide-react';
+import { Leaf, Moon, Trophy, Zap } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { SettingsSectionHeading } from '@/components/settings/SettingsSectionHeading';
+import { OctopusReferralLine } from '@/components/OctopusReferralLine';
+import { OCTOPUS_ENTRY_COPY as COPY } from '@/lib/voice/octopusLinkCopy';
 
 const OctopusLogo = ({ className }: { className?: string }) => (
   <img src="/octopus_logo.png" alt="" className={`${className} object-contain`} />
 );
 
+const ICONS = [Leaf, Trophy, Moon];
+
 interface OctopusBenefitsIntroProps {
   onContinue: () => void;
 }
 
-/**
- * Pre-credential benefits sheet so first-time linking explains meter truth
- * before asking for an API key.
- */
+/** Entry card (brief 3.1): what linking gets you, then one button that opens the linking sheet. */
 export function OctopusBenefitsIntro({ onContinue }: OctopusBenefitsIntroProps) {
   return (
-    <div className="space-y-4">
-      <SettingsSectionHeading>Energy Integrations</SettingsSectionHeading>
-      <Card className="p-5 border-primary/20 bg-primary/5 space-y-5">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-            <OctopusLogo className="w-6 h-6" />
-          </div>
-          <div className="space-y-1">
-            <h3 className="font-display text-lg font-semibold text-foreground tracking-tight">
-              Octopus Energy
-            </h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              See when you used power, from your meter.
-            </p>
-          </div>
+    <Card className="p-5 border-primary/20 bg-primary/5 space-y-5" data-testid="octopus-entry-card">
+      <div className="flex items-start gap-4">
+        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+          <OctopusLogo className="w-6 h-6" />
         </div>
+        <div className="space-y-1">
+          <h3 className="font-display text-lg font-semibold text-foreground tracking-tight">
+            {COPY.title}
+          </h3>
+          <p className="text-sm text-muted-foreground leading-relaxed">{COPY.line}</p>
+        </div>
+      </div>
 
-        <ul className="space-y-2.5">
-          {[
-            {
-              icon: Leaf,
-              label: 'True daily emissions from your meter',
-              detail: 'Not a household estimate',
-            },
-            {
-              icon: Trophy,
-              label: 'Green Score for timing demand',
-              detail: '% of your kWh used in low-carbon windows — timing beats thrift alone',
-            },
-            {
-              icon: Sun,
-              label: 'Solar & renewables impact',
-              detail: 'See when your usage matched clean generation',
-            },
-          ].map(({ icon: Icon, label, detail }) => (
+      <ul className="space-y-2.5">
+        {COPY.benefits.map(({ label, detail }, i) => {
+          const Icon = ICONS[i];
+          return (
             <li
               key={label}
               className="flex items-start gap-3 rounded-xl border border-border/50 bg-background/40 px-3 py-2.5"
@@ -64,32 +46,18 @@ export function OctopusBenefitsIntro({ onContinue }: OctopusBenefitsIntroProps) 
                 <p className="text-xs text-muted-foreground">{detail}</p>
               </div>
             </li>
-          ))}
-        </ul>
+          );
+        })}
+      </ul>
 
-        <div className="space-y-2">
-          <Button className="w-full font-semibold" size="lg" onClick={onContinue}>
-            <Zap className="w-4 h-4 mr-2" />
-            Continue to connect
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
-          <p className="text-[11px] text-center text-muted-foreground leading-relaxed">
-            You’ll enter your Octopus account number and API key next. Your key is sent once over
-            HTTPS and stored encrypted on our servers — never kept on this device.
-          </p>
-          <p className="text-[11px] text-center text-muted-foreground">
-            Not with Octopus yet?{' '}
-            <a
-              href="https://share.octopus.energy/light-sheep-695"
-              target="_blank"
-              rel="noreferrer"
-              className="tap-target underline font-medium text-primary hover:text-primary/80"
-            >
-              Join with £50 free credit
-            </a>
-          </p>
-        </div>
-      </Card>
-    </div>
+      <div className="space-y-2">
+        <Button className="w-full h-12 font-semibold text-base" onClick={onContinue}>
+          <Zap className="w-4 h-4 mr-2" />
+          {COPY.primary}
+        </Button>
+        <p className="text-xs text-center text-muted-foreground leading-relaxed">{COPY.under}</p>
+        <OctopusReferralLine className="text-xs text-center text-muted-foreground" />
+      </div>
+    </Card>
   );
 }

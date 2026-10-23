@@ -450,8 +450,7 @@ export function FootprintView() {
 
           {hasCredentials && (
             <div className="rounded-lg border border-border bg-muted/40 p-3 text-sm text-foreground">
-              Your Octopus key is saved securely, but meters aren&apos;t fully linked yet. Open
-              Settings to finish linking, then wait up to 24–48 hours for smart-meter history.
+              Your Octopus details are saved, but no meter is linked yet. Open Settings to finish.
             </div>
           )}
         </Card>
@@ -462,8 +461,8 @@ export function FootprintView() {
               Unlock your real footprint
             </h3>
             <p className="text-muted-foreground text-sm max-w-md mx-auto">
-              Connect Octopus Energy to multiply your actual half-hourly usage by grid intensity —
-              and get a Green Score for how well you time demand.
+              Link Octopus and we&apos;ll multiply your real half-hourly usage by the grid&apos;s
+              carbon intensity, then give you a Green Score for how well you time it.
             </p>
           </div>
 
