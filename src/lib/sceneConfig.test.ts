@@ -48,8 +48,9 @@ describe('buildSceneConfig ground plane (all scene dialects)', () => {
     expect(ground('coastal', 'night', 80, true)).toBe('#1c1917');
   });
 
-  it('dirty city still uses asphalt, not brown dirt grass', () => {
-    expect(ground('city', 'midday', 320)).toBe('#44403c');
+  it('dirty city uses the same asphalt as clean city (Design decision 12: land never reacts to carbon)', () => {
+    expect(ground('city', 'midday', 320)).toBe('#4b5563');
+    expect(ground('city', 'midday', 320)).toBe(ground('city', 'midday', 20));
   });
 });
 
