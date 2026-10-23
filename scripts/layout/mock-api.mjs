@@ -200,6 +200,8 @@ export async function installMocks(context, scenarioIn = {}) {
         cloud_cover: 40,
         wind_speed_10m: 18,
         is_day: 1,
+        // Optional per-scenario weather (art pass screenshots: wind, rain, overcast).
+        ...(s.weather || {}),
       },
       daily: {
         sunrise: [new Date().toISOString().slice(0, 10) + 'T07:20'],

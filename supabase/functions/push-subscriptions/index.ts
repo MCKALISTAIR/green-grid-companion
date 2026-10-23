@@ -2,6 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 import { corsHeaders } from '../_shared/cors.ts';
 import { normalizeSubscriptionPostcode } from '../_shared/subscription-postcode.ts';
+import { pushDeliveryFor } from '../_shared/push-config.ts';
 
 interface PushSubscriptionData {
   device_token: string;
@@ -336,7 +337,10 @@ Deno.serve(async (req) => {
           body.device_token.substring(0, 10) + '...',
         );
 
-        return new Response(JSON.stringify({ data }), {
+        // The app only treats the server daily outlook as confirmed (and drops its
+        // phone-scheduled fallback) when the server can really deliver a push.
+        const push_delivery = pushDeliveryFor(data?.platform ?? body.platform);
+        return new Response(JSON.stringify({ data, push_delivery }), {
           status: 200,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });

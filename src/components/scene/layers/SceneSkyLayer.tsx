@@ -1,10 +1,9 @@
-import { Sun } from 'lucide-react';
 import { motion, AnimatePresence, type MotionValue } from 'framer-motion';
 import type { TimeOfDay } from '@/hooks/useTimeOfDay';
 import type { WeatherData } from '@/hooks/useWeatherData';
 import type { SceneVisualConfig } from '@/lib/sceneConfig';
 import { WeatherEffects } from '../WeatherEffects';
-import { AuroraBorealis } from '../AuroraBorealis';
+import { AuroraRibbon, SceneSun } from '../art/WeatherArt';
 import { Stars } from '../Stars';
 import { Moon } from '../Moon';
 import { SunRay } from '../SunRay';
@@ -47,12 +46,20 @@ export function SceneSkyLayer({
       style={{ y: shouldReduceMotion ? 0 : skyY }}
       className="absolute inset-0 pointer-events-none z-[1]"
     >
-      <WeatherEffects weather={weather} isNight={isNight} cleanliness={sceneConfig.cleanliness} />
+      <WeatherEffects
+        weather={weather}
+        isNight={isNight}
+        cleanliness={sceneConfig.cleanliness}
+        timeOfDay={timeOfDay}
+        showWind={sceneConfig.showWind}
+      />
 
       {/* Aurora for magically clean nights (Phase 1: cleanliness > 0.85) */}
       <AnimatePresence>
         {isNight && sceneConfig.cleanliness > 0.85 && weather.cloudCover < 60 && (
-          <AuroraBorealis intensity={Math.min(1, (sceneConfig.cleanliness - 0.85) / 0.15)} />
+          <AuroraRibbon
+            opacity={0.2 + 0.18 * Math.min(1, (sceneConfig.cleanliness - 0.85) / 0.15)}
+          />
         )}
       </AnimatePresence>
 
@@ -137,25 +144,13 @@ export function SceneSkyLayer({
                 scale: { type: 'spring' as const, stiffness: 400, damping: 15 },
               }}
             >
-              <motion.div
-                className="absolute inset-0 w-20 h-20 -translate-x-2 -translate-y-2 rounded-full blur-xl pointer-events-none"
-                style={{
-                  backgroundColor:
-                    timeOfDay === 'sunset' ? 'hsl(30 90% 55% / 0.4)' : 'hsl(var(--accent) / 0.3)',
-                }}
-                animate={{ scale: [1, 1.25, 1], opacity: [0.6, 1, 0.6] }}
-                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' as const }}
-              />
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 35, repeat: Infinity, ease: 'linear' as const }}
-                className="relative z-10 pointer-events-none"
-              >
-                <Sun
-                  className={`w-16 h-16 ${timeOfDay === 'sunset' ? 'text-orange-400' : 'text-accent'}`}
-                  aria-hidden="true"
+              {/* Art pass v1 sun: flat disc, rim light, soft halo; no rays, no spin. */}
+              <div className="relative z-10 pointer-events-none -m-11">
+                <SceneSun
+                  r={timeOfDay === 'midday' ? 20 : 23}
+                  tone={timeOfDay === 'sunset' ? 'sunset' : timeOfDay === 'dawn' ? 'dawn' : 'day'}
                 />
-              </motion.div>
+              </div>
 
               {/* Sunglasses Overlay */}
               <AnimatePresence>
