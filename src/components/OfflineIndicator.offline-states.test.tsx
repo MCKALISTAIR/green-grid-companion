@@ -51,7 +51,8 @@ describe('Offline: pill vs full state (Design call)', () => {
       window.dispatchEvent(new Event('offline'));
     });
     expect(screen.queryByTestId('connection-pill')).toBeNull();
-    expect(screen.queryByTestId('offline-banner')).toBeNull();
+    // Exactly one offline message: the full state's title, no pill.
+    expect(screen.getAllByText(/offline/i)).toHaveLength(1);
     const card = screen.getByTestId('offline-empty-state');
     expect(card).toHaveTextContent("You're offline.");
     expect(card).toHaveTextContent('Nothing saved yet.');
@@ -75,5 +76,46 @@ describe('Offline: pill vs full state (Design call)', () => {
       'Nothing saved yet. The grid carries on without us.',
     );
     localStorage.clear();
+  });
+});
+
+describe('Offline pill Retry (Design call, BH-78)', () => {
+  it('carries Retry while offline and refetches active queries', async () => {
+    const client = new QueryClient();
+    const refetch = vi.spyOn(client, 'refetchQueries').mockResolvedValue();
+    render(
+      <QueryClientProvider client={client}>
+        <OfflineIndicator />
+      </QueryClientProvider>,
+    );
+    await act(async () => {
+      window.dispatchEvent(new Event('offline'));
+    });
+    const pill = screen.getByTestId('connection-pill');
+    expect(pill).toHaveTextContent('Offline · nothing saved yet');
+    expect(screen.getAllByText(/offline/i)).toHaveLength(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(refetch).toHaveBeenCalledWith({ type: 'active' }, { cancelRefetch: false });
+    await act(async () => {
+      window.dispatchEvent(new Event('online'));
+    });
+  });
+
+  it('drops Retry once back online', async () => {
+    const client = new QueryClient();
+    vi.spyOn(client, 'refetchQueries').mockResolvedValue();
+    render(
+      <QueryClientProvider client={client}>
+        <OfflineIndicator />
+      </QueryClientProvider>,
+    );
+    await act(async () => {
+      window.dispatchEvent(new Event('offline'));
+    });
+    await act(async () => {
+      window.dispatchEvent(new Event('online'));
+    });
+    expect(screen.getByTestId('connection-pill')).toHaveTextContent('Back online');
+    expect(screen.queryByRole('button', { name: 'Retry' })).toBeNull();
   });
 });
