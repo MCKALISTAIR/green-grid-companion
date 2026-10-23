@@ -35,6 +35,7 @@ import { OutageCard } from '@/components/home/OutageCard';
 import { OfflineEmptyState } from '@/components/errors/OfflineEmptyState';
 import { useGridFailureKind } from '@/hooks/useGridFailureKind';
 import { useOffline } from '@/hooks/useOffline';
+import { setHeroReadingAt } from '@/lib/offlineReadingTime';
 import { isReadingStale } from '@/lib/voice/statesCopy';
 import { PostcodeNotFoundNotice } from '@/components/home/PostcodeNotFoundNotice';
 import { DashboardViewTabs, type DashboardViewMode } from '@/components/home/DashboardViewTabs';
@@ -124,6 +125,11 @@ const Index = () => {
   const showLastKnown =
     hasReading && !isOffline && (isError || isReadingStale(lastUpdated ?? undefined));
   const showOfflineEmpty = isOffline && !hasReading;
+  // BH-88: the offline pill shows this reading's own time, not when it was saved.
+  useEffect(() => {
+    const at = lastUpdated ? Date.parse(lastUpdated) : NaN;
+    setHeroReadingAt(Number.isFinite(at) ? at : null);
+  }, [lastUpdated]);
 
   // Splash fades as soon as the home screen has something real to show
   // (a reading from cache or network, an off-grid notice, or an error state).

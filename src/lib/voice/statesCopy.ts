@@ -3,12 +3,15 @@
  * Plain in both tones (clarity wins). Times are Europe/London. Error-state
  * cards (slow, outage, stale, offline, rank, planner) live in errorStatesCopy.
  */
-import { formatLondonTime } from '@/lib/londonTime';
+import { formatLondonSlotTime } from '@/lib/londonTime';
 
-/** Compact hero pill (motion spec §2.7). `savedAt` is when the newest cached carbon figures were fetched (ms), or null. */
-export function offlinePillText(savedAt: number | null): string {
-  if (!savedAt) return 'Offline · nothing saved yet';
-  return `Offline · figures from ${formatLondonTime(new Date(savedAt))}`;
+/**
+ * Compact hero pill (motion spec §2.7). `readingAt` is the reading's own time (BH-88), shown in UK time. On
+ * clock-change day the repeated hour carries BST or GMT ("01:30 GMT").
+ */
+export function offlinePillText(readingAt: number | null): string {
+  if (!readingAt) return 'Offline · nothing saved yet';
+  return `Offline · figures from ${formatLondonSlotTime(new Date(readingAt))}`;
 }
 
 export const BACK_ONLINE_PILL = 'Back online';

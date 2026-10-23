@@ -51,10 +51,12 @@ describe('Offline: pill vs full state (Design call)', () => {
       window.dispatchEvent(new Event('offline'));
     });
     expect(screen.queryByTestId('connection-pill')).toBeNull();
-    // Exactly one offline message: the full state's title, no pill.
-    expect(screen.getAllByText(/offline/i)).toHaveLength(1);
+    // No pill, and the card has no "You're offline." title (BH-89): the
+    // hero's "Offline" is the one offline message on Home.
+    expect(screen.queryAllByText(/offline/i)).toHaveLength(0);
     const card = screen.getByTestId('offline-empty-state');
-    expect(card).toHaveTextContent("You're offline.");
+    expect(card).not.toHaveTextContent(/you're offline/i);
+    expect(card.querySelector('h3')).toBeNull();
     expect(card).toHaveTextContent('Nothing saved yet.');
     expect(card).toHaveTextContent('We will refresh automatically when you are back online.');
     fireEvent.click(screen.getByRole('button', { name: 'Try now' }));

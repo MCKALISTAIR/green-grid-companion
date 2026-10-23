@@ -31,7 +31,6 @@ export const SLOW_COPY = {
  * from HH:MM" instead, so this card never shows alongside it.
  */
 export const OFFLINE_COPY = {
-  title: "You're offline.",
   body: {
     plain: 'Nothing saved yet.',
     cheeky: 'Nothing saved yet. The grid carries on without us.',

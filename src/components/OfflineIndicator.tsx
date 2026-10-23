@@ -7,7 +7,8 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { NotificationType } from '@capacitor/haptics';
 import { useOfflineEmptyStateShown } from '@/lib/offlineEmptyState';
 import { useQueryClient } from '@tanstack/react-query';
-import { BACK_ONLINE_PILL, CARBON_QUERY_ROOTS, offlinePillText } from '@/lib/voice/statesCopy';
+import { BACK_ONLINE_PILL, offlinePillText } from '@/lib/voice/statesCopy';
+import { cachedReadingAt, useHeroReadingAt } from '@/lib/offlineReadingTime';
 import { useHeroStatusSlot } from '@/lib/heroStatusSlot';
 import { dur, spring } from '@/lib/motion';
 import { STALE_COPY } from '@/lib/voice/errorStatesCopy';
@@ -41,17 +42,10 @@ export function OfflineIndicator() {
   // Home's full offline state (nothing cached) already says it; no pill too.
   const emptyStateShown = useOfflineEmptyStateShown();
 
-  const savedAt = isOffline
-    ? Math.max(
-        0,
-        ...queryClient
-          .getQueryCache()
-          .getAll()
-          .filter(
-            (q) => CARBON_QUERY_ROOTS.has(String(q.queryKey[0])) && q.state.data !== undefined,
-          )
-          .map((q) => q.state.dataUpdatedAt),
-      ) || null
+  // BH-88: the reading's own time (NESO's `from`), never when it was saved.
+  const heroReadingAt = useHeroReadingAt();
+  const readingAt = isOffline
+    ? (heroReadingAt ?? cachedReadingAt(queryClient.getQueryCache().getAll()))
     : null;
 
   useEffect(() => {
@@ -101,7 +95,7 @@ export function OfflineIndicator() {
             aria-hidden="true"
           />
           <motion.span layout={!reduced ? 'position' : false} role="status" aria-live="polite">
-            {state === 'offline' ? offlinePillText(savedAt) : BACK_ONLINE_PILL}
+            {state === 'offline' ? offlinePillText(readingAt) : BACK_ONLINE_PILL}
           </motion.span>
           {state === 'offline' && (
             <button
