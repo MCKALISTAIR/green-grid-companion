@@ -59,6 +59,8 @@ interface IntensitySceneProps {
    * text bottom + 34 (village REDRAW-PLAN), so no cloud edge crosses the text.
    */
   cloudTopPx?: number;
+  /** Design review of #184: tells the hero when synthwave is on, so its text goes white. */
+  onSynthwaveChange?: (on: boolean) => void;
 }
 
 export function IntensityScene({
@@ -74,6 +76,7 @@ export function IntensityScene({
   hasLiveReading = true,
   compact = false,
   cloudTopPx,
+  onSynthwaveChange,
 }: IntensitySceneProps) {
   const {
     timeOfDay: realTimeOfDay,
@@ -136,6 +139,9 @@ export function IntensityScene({
   // BH-96: synthwave is in memory only (never persisted), so it resets on reload
   // and next launch.
   const [synthwaveMode, setSynthwaveMode] = useState(false);
+  useEffect(() => {
+    onSynthwaveChange?.(synthwaveMode);
+  }, [synthwaveMode, onSynthwaveChange]);
   // Bumped on every sun tap; SceneSkyLayer replays the small sun reaction.
   const [sunReactionKey, setSunReactionKey] = useState(0);
   const registerSunTap = useTapCount();
@@ -272,13 +278,15 @@ export function IntensityScene({
   // BH-96 (Design brief Q1): every tap on the sun gives a small reaction (disc
   // pulse + light haptic, haptic at most once per 1.2 s). Three taps within 1.5 s
   // toggle synthwave (medium haptic); a single or double tap never does.
+  // Design review of #184: the third tap toggles synthwave only, without
+  // replaying the small sun reaction.
   const handleSunTap = () => {
-    setSunReactionKey((k) => k + 1);
     if (registerSunTap()) {
       impactMedium();
       setSynthwaveMode((on) => !on);
       return;
     }
+    setSunReactionKey((k) => k + 1);
     const now = Date.now();
     if (now - lastSunHapticRef.current >= 1200) {
       lastSunHapticRef.current = now;

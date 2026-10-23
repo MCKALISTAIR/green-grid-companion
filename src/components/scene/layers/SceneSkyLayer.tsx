@@ -139,6 +139,7 @@ export function SceneSkyLayer({
                 key={sunReactionKey}
                 className="relative z-10 pointer-events-none -m-11"
                 data-sun-reaction={sunReactionKey > 0 && !shouldReduceMotion ? 'on' : 'off'}
+                data-sun-reactions={sunReactionKey}
                 initial={false}
                 animate={
                   sunReactionKey > 0 && !shouldReduceMotion ? { scale: [1, 1.08, 1] } : { scale: 1 }

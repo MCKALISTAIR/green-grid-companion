@@ -199,6 +199,38 @@ describe('IntensityScene sun taps (BH-96)', () => {
     expect(document.querySelector('[data-sun-sunglasses]')).toBeNull();
   });
 
+  it('the third tap toggles synthwave without replaying the sun reaction', () => {
+    const reactions = () =>
+      Number(document.querySelector('[data-sun-reactions]')?.getAttribute('data-sun-reactions'));
+    renderSunnyScene();
+    tap(2);
+    expect(reactions()).toBe(2);
+    tap(1);
+    expect(synthwave()).toBe('on');
+    expect(reactions()).toBe(2); // no replay on the toggling tap
+  });
+
+  it('reports synthwave on and off to the hero (onSynthwaveChange)', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-06-21T12:00:00+01:00'));
+    const onSynthwaveChange = vi.fn();
+    render(
+      <IntensityScene
+        intensity={100}
+        index="low"
+        timeOfDayOverride="midday"
+        weatherOverride={{ condition: 'clear', cloudCover: 0 }}
+        onSynthwaveChange={onSynthwaveChange}
+      />,
+    );
+    expect(onSynthwaveChange).toHaveBeenLastCalledWith(false);
+    tap(3);
+    expect(onSynthwaveChange).toHaveBeenLastCalledWith(true);
+    vi.advanceTimersByTime(2000);
+    tap(3);
+    expect(onSynthwaveChange).toHaveBeenLastCalledWith(false);
+  });
+
   it('three taps spread over 1.6 s do not toggle synthwave', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-06-21T12:00:00+01:00'));

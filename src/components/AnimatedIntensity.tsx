@@ -124,6 +124,7 @@ export function AnimatedIntensity({
           Background refresh is already signaled by “Updating…” in the meta row. */}
       <motion.span
         aria-hidden
+        data-hero-digits={size === 'hero' ? '' : undefined}
         className={cn(
           'font-bold tabular-nums tracking-tighter',
           size === 'hero'
