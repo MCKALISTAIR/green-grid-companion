@@ -182,8 +182,8 @@ export function CloudBank({ night = false, topPx }: { night?: boolean; topPx?: n
     const top = Math.round(topPx);
     const day = CLOUD_BANK_DAY_BELOW_TEXT;
     const c = night
-      ? { back, front, base: front, rim: undefined }
-      : { back: day.back, front: day.front, base: day.base, rim: day.rim };
+      ? { back, front, base: front, mid: front, rim: undefined }
+      : { back: day.back, front: day.front, base: day.base, mid: day.mid, rim: day.rim };
     return (
       <div
         aria-hidden
@@ -215,13 +215,15 @@ export function CloudBank({ night = false, topPx }: { night?: boolean; topPx?: n
           />
         ) : (
           // By day the front lobes and the body are one surface (no seam where the
-          // lobes end): a gradient anchored to the scene's bottom, the horizon,
-          // where the intensity mood haze is strongest, so the bank still steps
-          // darker there. Its top is cut to the front lobes' scalloped edge.
+          // lobes end): a gradient anchored to the scene's bottom, the horizon, so
+          // the bank steps darker there; a slightly lighter mid-body (PR-2b, which
+          // removed the fake outage haze that used to lift it) and the top lobes
+          // back at the front tone, so no part is lighter than the sky. Its top is
+          // cut to the front lobes' scalloped edge.
           <div
             className="absolute inset-0"
             style={{
-              background: `linear-gradient(to top, ${c.base} 0px, ${c.base} 110px, ${c.front} 270px)`,
+              background: `linear-gradient(to top, ${c.base} 0px, ${c.base} 60px, ${c.mid} 120px, ${c.mid} 170px, ${c.front} 220px)`,
               ...FRONT_LOBES_MASK,
             }}
             data-bank-body

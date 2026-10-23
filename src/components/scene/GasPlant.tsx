@@ -2,16 +2,24 @@
  * PR-2b (Design brief Q5): the gas plant (a CCGT) that replaces the white-box
  * SimpleFactory icons. One plant, on the back hill, inside the 320 crop.
  *
- * - Always present as a building. Smokeless at very low and low, and when there
- *   is no reading. (REDRAW-PLAN open question 2 stays with Alistair; if he says
- *   no, gate the mount on the haze band.)
+ * - Always present as a building (Design decision 23 Oct 2026, BRIEF Q5; closes
+ *   REDRAW-PLAN open question 2). Smokeless at very low and low, under "already
+ *   zero carbon", and when there is no reading. Static aviation dots at night.
  * - Smoke comes only from its two stacks at moderate and above, density by the
  *   NESO band, not gas share. One animated group, CSS transform and opacity
  *   only. Reduce Motion: 3 static puffs per stack.
  * - Drawn in the countryside SVG space (viewBox 0 30 400 120).
  */
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { getHillRidgeY } from '@/lib/sceneUtils';
+import {
+  GAS_PLANT_HALL,
+  GAS_PLANT_BOILER,
+  GAS_PLANT_STACK,
+  GAS_PLANT_TOKENS,
+  GAS_PLANT_AVIATION_RED,
+  GAS_PLANT_X,
+  gasPlantGeometry,
+} from '@/lib/gasPlant';
 import {
   SMOKE_BY_BAND,
   SMOKE_NIGHT_FILL,
@@ -23,29 +31,6 @@ import {
   type HazeBand,
 } from '@/lib/sceneHaze';
 import { WIND_STATE_KMH } from '@/lib/sceneConfig';
-
-/** Q7 prop tokens (day), plus Design-default dark tokens for dusk and night. */
-export const GAS_PLANT_TOKENS = {
-  day: { light: '#d9dde2', shade: '#aab1ba', band: '#9aa1ab' },
-  night: { light: '#5d6577', shade: '#454c5d', band: '#737b8c' },
-} as const;
-export const GAS_PLANT_AVIATION_RED = '#e5484d';
-
-/** Left edge of the turbine hall, SVG units. Plant spans x 98-138. */
-export const GAS_PLANT_X = 98;
-const HALL = { w: 40, h: 12 };
-const BOILER = { w: 14, h: 18 };
-const STACK = { w: 3, h: 34 };
-
-export function gasPlantGeometry(x = GAS_PLANT_X) {
-  // Grounded on the back ridge: base at the lowest ridge point under the footprint
-  // + 1 unit, so no edge floats (BRIEF §2).
-  const xs = [x, x + HALL.w / 2, x + HALL.w];
-  const baseY = Math.max(...xs.map((sx) => getHillRidgeY('back', sx))) + 1;
-  const boilerX = x + HALL.w - BOILER.w;
-  const stacks = [x + 19, x + 24.5].map((sx) => ({ x: sx, top: baseY - STACK.h }));
-  return { x, baseY, boilerX, stacks, width: HALL.w };
-}
 
 export interface GasPlantProps {
   band: HazeBand;
@@ -70,19 +55,25 @@ export function GasPlant({ band, isNight, windSpeed = 0, x = GAS_PLANT_X }: GasP
       {/* Stacks, behind the hall: slim, two thin bands each. */}
       {stacks.map((s, i) => (
         <g key={`stack-${i}`}>
-          <rect x={s.x} y={s.top} width={STACK.w} height={STACK.h} fill={t.light} />
           <rect
-            x={s.x + STACK.w * 0.6}
+            x={s.x}
             y={s.top}
-            width={STACK.w * 0.4}
-            height={STACK.h}
+            width={GAS_PLANT_STACK.w}
+            height={GAS_PLANT_STACK.h}
+            fill={t.light}
+          />
+          <rect
+            x={s.x + GAS_PLANT_STACK.w * 0.6}
+            y={s.top}
+            width={GAS_PLANT_STACK.w * 0.4}
+            height={GAS_PLANT_STACK.h}
             fill={t.shade}
           />
-          <rect x={s.x} y={s.top + 3} width={STACK.w} height={1} fill={t.band} />
-          <rect x={s.x} y={s.top + 7} width={STACK.w} height={1} fill={t.band} />
+          <rect x={s.x} y={s.top + 3} width={GAS_PLANT_STACK.w} height={1} fill={t.band} />
+          <rect x={s.x} y={s.top + 7} width={GAS_PLANT_STACK.w} height={1} fill={t.band} />
           {isNight && (
             <circle
-              cx={s.x + STACK.w / 2}
+              cx={s.x + GAS_PLANT_STACK.w / 2}
               cy={s.top - 0.6}
               r={0.9}
               fill={GAS_PLANT_AVIATION_RED}
@@ -92,24 +83,30 @@ export function GasPlant({ band, isNight, windSpeed = 0, x = GAS_PLANT_X }: GasP
         </g>
       ))}
       {/* Boiler block at the east end. */}
-      <rect x={boilerX} y={baseY - BOILER.h} width={BOILER.w} height={BOILER.h} fill={t.light} />
       <rect
-        x={boilerX + BOILER.w * 0.62}
-        y={baseY - BOILER.h}
-        width={BOILER.w * 0.38}
-        height={BOILER.h}
+        x={boilerX}
+        y={baseY - GAS_PLANT_BOILER.h}
+        width={GAS_PLANT_BOILER.w}
+        height={GAS_PLANT_BOILER.h}
+        fill={t.light}
+      />
+      <rect
+        x={boilerX + GAS_PLANT_BOILER.w * 0.62}
+        y={baseY - GAS_PLANT_BOILER.h}
+        width={GAS_PLANT_BOILER.w * 0.38}
+        height={GAS_PLANT_BOILER.h}
         fill={t.shade}
       />
       {/* Long low turbine hall with a shallow roof line. */}
       <path
-        d={`M${x} ${baseY} V${baseY - HALL.h + 1.5} L${x + (HALL.w - BOILER.w) / 2} ${baseY - HALL.h} L${boilerX} ${baseY - HALL.h + 1.5} V${baseY} Z`}
+        d={`M${x} ${baseY} V${baseY - GAS_PLANT_HALL.h + 1.5} L${x + (GAS_PLANT_HALL.w - GAS_PLANT_BOILER.w) / 2} ${baseY - GAS_PLANT_HALL.h} L${boilerX} ${baseY - GAS_PLANT_HALL.h + 1.5} V${baseY} Z`}
         fill={t.light}
       />
       <rect x={x} y={baseY - 4} width={boilerX - x} height={4} fill={t.shade} />
 
       {smoke &&
         stacks.map((s, si) => {
-          const cx = s.x + STACK.w / 2;
+          const cx = s.x + GAS_PLANT_STACK.w / 2;
           const cy = s.top - r - 0.5;
           return (
             <g

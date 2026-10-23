@@ -86,4 +86,10 @@ describe('sun, stars and smoke by band', () => {
     expect(SMOKE_BY_BAND.high.puffs).toBe(4);
     expect(SMOKE_BY_BAND['very high'].puffs).toBe(5);
   });
+
+  it('already zero carbon (e.g. Scotland at 0 g): no haze and a smokeless plant (BRIEF Q5, REDRAW-PLAN Q2)', () => {
+    expect(getHazeBand('very low', 0)).toBe('none');
+    expect(getHazeBand(undefined, 0)).toBe('none');
+    expect(showsSmoke(getHazeBand('very low', 0))).toBe(false);
+  });
 });

@@ -47,8 +47,13 @@ export const CLOUD_BANK_COLOURS = {
  */
 export const CLOUD_BANK_DAY_BELOW_TEXT = {
   back: 'hsl(220 8% 57.5%)',
-  front: 'hsl(220 8% 58.5%)',
+  front: 'hsl(220 8% 57.5%)', // PR-2b: 58.5% -> 57.5% (top lobes stay under the sky)
   base: 'hsl(220 9% 54.5%)',
+  // PR-2b: the mid-body lift. The old IntensityMood showed a fake moderate haze
+  // during an outage that lightened this tall bank; with no data there is now no
+  // haze (truth rule), so the body itself carries that lightness. Re-measured in
+  // cloud-bank-day: body 1.08-1.13:1 and never lighter than the sky.
+  mid: 'hsl(220 8% 61%)',
   rim: 'rgba(255,255,255,0.38)',
 } as const;
 

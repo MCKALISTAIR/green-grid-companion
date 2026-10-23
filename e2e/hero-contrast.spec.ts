@@ -140,15 +140,15 @@ function log(row: Record<string, unknown>) {
 for (const [vw, vh] of VIEWPORTS) {
   for (const [t, iso] of TIMES) {
     for (const [wn, weather] of WEATHERS) {
-      for (const band of BANDS) {
-        const suffix = band === 'very high' ? ' (very high haze)' : '';
+      for (const level of BANDS) {
+        const suffix = level === 'very high' ? ' (very high haze)' : '';
         test(`${vw}x${vh} ${t} ${wn}: reading text >= 4.5:1${suffix}`, async ({
           page,
           context,
         }) => {
           test.setTimeout(90_000);
-          await open(page, context, vw, vh, t, iso, weather, 'ok', READINGS[band]);
-          if (band === 'very high')
+          await open(page, context, vw, vh, t, iso, weather, 'ok', READINGS[level]);
+          if (level === 'very high')
             await expect(page.locator('[data-art="haze"]')).toHaveAttribute(
               'data-haze-band',
               'very high',
@@ -165,9 +165,9 @@ for (const [vw, vh] of VIEWPORTS) {
           const label = await measure(page, band, await colourOf(band));
           if (
             OUT &&
-            (wn === 'storm' || wn === 'snow' || wn === 'overcast' || band !== 'very low')
+            (wn === 'storm' || wn === 'snow' || wn === 'overcast' || level !== 'very low')
           ) {
-            const b = band === 'very low' ? '' : '-very-high';
+            const b = level === 'very low' ? '' : '-very-high';
             await page.screenshot({ path: `${OUT}/reading-${vw}x${vh}-${t}-${wn}${b}.png` });
           }
           // The #179 rule for every cloud bank: cloud tops at the hero text bottom + 34.
@@ -179,7 +179,7 @@ for (const [vw, vh] of VIEWPORTS) {
             cloudGap = Math.round(bankBox.y - (text.y + text.height));
             expect(cloudGap, `${vw} ${t} ${wn} cloud gap`).toBeGreaterThanOrEqual(33);
           }
-          log({ vw, t, wn, band, state: 'reading', tone, number, label, cloudGap });
+          log({ vw, t, wn, level, state: 'reading', tone, number, label, cloudGap });
           expect(number, `${vw} ${t} ${wn} number`).toBeGreaterThanOrEqual(TEXT_MIN);
           expect(label, `${vw} ${t} ${wn} band label`).toBeGreaterThanOrEqual(TEXT_MIN);
           if (t === 'dusk' || t === 'night') expect(tone).toBe('light');

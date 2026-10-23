@@ -15,7 +15,7 @@ import type { TimeOfDay } from '@/hooks/useTimeOfDay';
 import { getHazeTokens, type HazeBand } from '@/lib/sceneHaze';
 
 /** Per-scene depth stops in that scene's SVG user units (y grows downward). */
-export const HAZE_GEOMETRY: Record<
+const HAZE_GEOMETRY: Record<
   SceneType,
   {
     viewBox: [number, number, number, number];

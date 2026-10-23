@@ -1,7 +1,8 @@
 import { render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getHillRidgeY } from '@/lib/sceneUtils';
-import { GasPlant, gasPlantGeometry } from './GasPlant';
+import { gasPlantGeometry } from '@/lib/gasPlant';
+import { GasPlant } from './GasPlant';
 
 const reduced = vi.hoisted(() => ({ value: false }));
 vi.mock('@/hooks/useReducedMotion', () => ({ useReducedMotion: () => reduced.value }));
@@ -58,6 +59,12 @@ describe('GasPlant (PR-2b)', () => {
     expect(c.innerHTML).toContain('#8f8794');
     expect(c.innerHTML).toContain('#f2b36b');
     expect(draw('high', false).querySelectorAll('[data-gas-plant-light]')).toHaveLength(0);
+  });
+
+  it('night with no smoke (very low, zero carbon): static aviation dots stay on', () => {
+    const c = draw('none', true);
+    expect(c.querySelectorAll('[data-gas-plant-light]')).toHaveLength(2);
+    expect(c.querySelectorAll('[data-smoke-puff]')).toHaveLength(0);
   });
 
   it('leans 10° in strong wind only', () => {
