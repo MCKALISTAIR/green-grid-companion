@@ -1,4 +1,5 @@
 import { AlertTriangle, ChevronDown, Info, Leaf, MapPin, RefreshCw, Trophy } from 'lucide-react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -105,7 +106,12 @@ export function IntensityHeroOverlay({
   const { weather, weatherKnown } = useWeatherData();
   // AA: ink on light skies, white on dark skies (art pass v1 §3). BH-90: with the
   // weather unknown the overcast sky follows the time of day, and so does the tone.
-  const heroTone = getHeroTextTone(timeOfDay, weatherKnown ? weather : undefined);
+  // Design review of #184: the synthwave sky is dark at every time of day (ink
+  // measured 2.35-2.74:1), so synthwave forces white text and icon.
+  const [synthwave, setSynthwave] = useState(false);
+  const heroTone = synthwave
+    ? 'light'
+    : getHeroTextTone(timeOfDay, weatherKnown ? weather : undefined);
   const isInk = heroTone === 'ink';
   // Only say "Offline" when the device really is, and only blame NESO when its request failed.
   const { isOffline } = useOffline();
@@ -547,6 +553,7 @@ export function IntensityHeroOverlay({
           hasLiveReading={hasFreshReading}
           compact={hideGauge}
           cloudTopPx={hideGauge ? undefined : cloudTopPx}
+          onSynthwaveChange={setSynthwave}
           className="absolute inset-0 h-full"
           style={{ height: '100%', position: 'absolute' }}
         />

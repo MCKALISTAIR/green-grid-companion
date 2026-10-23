@@ -1,12 +1,17 @@
 import { useEffect, useState } from 'react';
 import { IntensityScene } from '@/components/IntensityScene';
 import type { TimeOfDay } from '@/hooks/useTimeOfDay';
-import type { WeatherData } from '@/hooks/useWeatherData';
 import { getSceneIntrinsicHeight, IPHONE_DUO_VIEWPORTS, SCENE_HEIGHT_CSS } from '@/lib/sceneHeight';
+import {
+  sceneTestWeather,
+  SCENE_TEST_WEATHER_KEYS,
+  SCENE_TEST_WEATHER_LABELS,
+  type SceneTestWeatherKey,
+} from '@/lib/sceneTestWeather';
 
 /**
  * Dev-only visual regression test page for IntensityScene.
- * Renders the scene at multiple viewport sizes side-by-side so visual issues
+ * Renders the scene at multiple viewport sizes side by side so visual issues
  * (tall phones, iPhone Duo cover/inner, tablets) are easy to spot.
  *
  * Visit at /__scene-test
@@ -20,6 +25,7 @@ interface ViewportPreset {
 }
 
 const VIEWPORTS: ViewportPreset[] = [
+  { label: 'Small phone', width: 320, height: 568, aspect: '16:9' },
   { label: 'iPhone SE', width: 375, height: 667, aspect: '16:9' },
   { label: 'iPhone 14', width: 390, height: 844, aspect: '19.5:9' },
   { label: 'iPhone 17 Pro Max', width: 440, height: 956, aspect: '19.5:9' },
@@ -51,24 +57,16 @@ type SceneTypeOpt = 'auto' | 'countryside' | 'city' | 'coastal';
 const SCENE_TYPES: SceneTypeOpt[] = ['auto', 'countryside', 'city', 'coastal'];
 const PREFERENCE_KEY = 'gridgreen-scene-preference';
 
+// Day order (Design copy review, 23 Oct 2026).
 const TIMES_OF_DAY: TimeOfDay[] = [
-  'midday',
-  'sunset',
-  'night',
   'dawn',
-  'dusk',
   'morning',
+  'midday',
   'afternoon',
+  'sunset',
+  'dusk',
+  'night',
 ];
-const WEATHER_CONDITIONS: WeatherData['condition'][] = [
-  'clear',
-  'cloudy',
-  'rain',
-  'snow',
-  'fog',
-  'thunderstorm',
-];
-
 export default function SceneTest() {
   const [scaleToFit, setScaleToFit] = useState(true);
   const [selectedCase, setSelectedCase] = useState<SceneCase>(SCENE_CASES[0]);
@@ -81,12 +79,12 @@ export default function SceneTest() {
   });
 
   const [selectedTimeOfDay, setSelectedTimeOfDay] = useState<TimeOfDay>('midday');
-  const [selectedWeather, setSelectedWeather] = useState<WeatherData['condition']>('clear');
+  const [selectedWeather, setSelectedWeather] = useState<SceneTestWeatherKey>('clear');
   const [windSpeed, setWindSpeed] = useState<number>(5);
 
   useEffect(() => {
     const prev = document.title;
-    document.title = 'Scene Visual Test — GridSense Dev';
+    document.title = 'Scene test: GridSense dev';
     return () => {
       document.title = prev;
     };
@@ -112,11 +110,11 @@ export default function SceneTest() {
   return (
     <div className="min-h-screen bg-background p-6">
       <header className="mb-6 max-w-4xl">
-        <h1 className="text-2xl font-bold mb-2">Scene Visual Test</h1>
+        <h1 className="text-2xl font-bold mb-2">Scene test</h1>
         <p className="text-muted-foreground text-sm">
           Renders <code>IntensityScene</code> at common device viewports so vertical stretching,
-          ridge alignment, and sky-to-ground ratio can be eyeballed side-by-side. Resize the browser
-          to test responsive behavior of the scene container itself; the cards below show fixed
+          ridge alignment, and sky-to-ground ratio can be compared side by side. Resize the browser
+          to test responsive behaviour of the scene container itself; the cards below show fixed
           device sizes.
         </p>
 
@@ -140,6 +138,7 @@ export default function SceneTest() {
                 <button
                   key={c.label}
                   onClick={() => setSelectedCase(c)}
+                  aria-pressed={selectedCase.label === c.label}
                   className={`px-3 py-1 text-xs rounded-md border font-medium transition-colors ${
                     selectedCase.label === c.label
                       ? 'bg-primary text-primary-foreground border-primary'
@@ -154,11 +153,12 @@ export default function SceneTest() {
             <div className="h-4 w-[1px] bg-border hidden md:block" />
 
             <div className="flex items-center gap-1.5" role="group" aria-label="Scene type">
-              <span className="text-xs text-muted-foreground font-medium mr-1">Theme:</span>
+              <span className="text-xs text-muted-foreground font-medium mr-1">Theme</span>
               {SCENE_TYPES.map((t) => (
                 <button
                   key={t}
                   onClick={() => handleSceneTypeChange(t)}
+                  aria-pressed={sceneTypePref === t}
                   className={`px-3 py-1 text-xs rounded-md border capitalize font-medium transition-colors ${
                     sceneTypePref === t
                       ? 'bg-secondary text-secondary-foreground border-secondary'
@@ -178,6 +178,7 @@ export default function SceneTest() {
                 <button
                   key={t}
                   onClick={() => setSelectedTimeOfDay(t)}
+                  aria-pressed={selectedTimeOfDay === t}
                   className={`px-2.5 py-1 text-xs rounded-md border capitalize font-medium transition-colors ${
                     selectedTimeOfDay === t
                       ? 'bg-orange-500 text-white border-orange-500'
@@ -193,17 +194,18 @@ export default function SceneTest() {
 
             <div className="flex items-center gap-1.5" role="group" aria-label="Weather condition">
               <span className="text-xs text-muted-foreground font-medium mr-1">Weather:</span>
-              {WEATHER_CONDITIONS.map((w) => (
+              {SCENE_TEST_WEATHER_KEYS.map((w) => (
                 <button
                   key={w}
                   onClick={() => setSelectedWeather(w)}
-                  className={`px-2.5 py-1 text-xs rounded-md border capitalize font-medium transition-colors ${
+                  aria-pressed={selectedWeather === w}
+                  className={`px-2.5 py-1 text-xs rounded-md border font-medium transition-colors ${
                     selectedWeather === w
                       ? 'bg-blue-600 text-white border-blue-600'
                       : 'bg-card hover:bg-accent'
                   }`}
                 >
-                  {w}
+                  {SCENE_TEST_WEATHER_LABELS[w]}
                 </button>
               ))}
             </div>
@@ -215,7 +217,7 @@ export default function SceneTest() {
                 htmlFor="wind-slider"
                 className="text-xs text-muted-foreground font-medium whitespace-nowrap"
               >
-                Wind: <span className="font-mono text-foreground font-bold">{windSpeed}m/s</span>
+                Wind <span className="font-mono text-foreground font-bold">{windSpeed} m/s</span>
               </label>
               <input
                 id="wind-slider"
@@ -273,11 +275,7 @@ export default function SceneTest() {
                     index={selectedCase.index}
                     sceneTypeOverride={sceneTypePref === 'auto' ? undefined : sceneTypePref}
                     timeOfDayOverride={selectedTimeOfDay}
-                    weatherOverride={{
-                      condition: selectedWeather,
-                      temperature: 15,
-                      windSpeed: windSpeed,
-                    }}
+                    weatherOverride={sceneTestWeather(selectedWeather, windSpeed)}
                     style={{ height: '100%' }}
                   />
                 </div>

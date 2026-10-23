@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { afterEach, describe, it, expect, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { IntensityScene } from './IntensityScene';
 import React from 'react';
 
@@ -12,8 +12,9 @@ vi.mock('@/hooks/useHaptics', () => ({
   }),
 }));
 
+const motionPrefs = vi.hoisted(() => ({ reduce: false }));
 vi.mock('@/hooks/useReducedMotion', () => ({
-  useReducedMotion: () => false,
+  useReducedMotion: () => motionPrefs.reduce,
 }));
 
 vi.mock('@/hooks/useTimeOfDay', () => ({
@@ -135,5 +136,143 @@ describe('IntensityScene', () => {
   it('renders vintage snapshot without crashing', () => {
     render(<IntensityScene intensity={120} index="moderate" isVintage />);
     expect(screen.getByRole('region')).toBeInTheDocument();
+  });
+});
+
+// BH-96 (Design brief Q1): a single or double tap on the sun only gives the small
+// sun reaction; three taps within 1.5 s toggle synthwave, three more turn it off.
+describe('IntensityScene sun taps (BH-96)', () => {
+  const renderSunnyScene = () =>
+    render(
+      <IntensityScene
+        intensity={100}
+        index="low"
+        timeOfDayOverride="midday"
+        weatherOverride={{ condition: 'clear', cloudCover: 0 }}
+      />,
+    );
+  const synthwave = () => screen.getByRole('region').getAttribute('data-synthwave');
+  const sun = () => document.querySelector('[data-scene-sun-tap]') as HTMLElement;
+  const tap = (n = 1) => {
+    for (let i = 0; i < n; i += 1) fireEvent.pointerUp(sun());
+  };
+  const reaction = () =>
+    document.querySelector('[data-sun-reaction]')?.getAttribute('data-sun-reaction');
+
+  afterEach(() => {
+    vi.useRealTimers();
+    motionPrefs.reduce = false;
+  });
+
+  it('a single tap gives the sun reaction only, never synthwave', () => {
+    renderSunnyScene();
+    expect(synthwave()).toBe('off');
+    expect(reaction()).toBe('off');
+    tap(1);
+    expect(reaction()).toBe('on');
+    expect(synthwave()).toBe('off');
+    expect(document.querySelector('[data-sun-sunglasses]')).toBeNull();
+  });
+
+  it('a double tap (and a dblclick) never toggles synthwave', () => {
+    renderSunnyScene();
+    tap(2);
+    fireEvent.click(sun());
+    fireEvent.click(sun());
+    fireEvent.doubleClick(sun());
+    expect(synthwave()).toBe('off');
+  });
+
+  it('a triple tap toggles synthwave on (sunglasses on), another triple tap turns it off', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-06-21T12:00:00+01:00'));
+    renderSunnyScene();
+    tap(3);
+    expect(synthwave()).toBe('on');
+    expect(document.querySelector('[data-sun-sunglasses]')).not.toBeNull();
+    vi.advanceTimersByTime(2000);
+    tap(1);
+    expect(synthwave()).toBe('on'); // single tap while on: reaction only
+    vi.advanceTimersByTime(2000);
+    tap(3);
+    expect(synthwave()).toBe('off');
+    expect(document.querySelector('[data-sun-sunglasses]')).toBeNull();
+  });
+
+  it('the third tap toggles synthwave without replaying the sun reaction', () => {
+    const reactions = () =>
+      Number(document.querySelector('[data-sun-reactions]')?.getAttribute('data-sun-reactions'));
+    renderSunnyScene();
+    tap(2);
+    expect(reactions()).toBe(2);
+    tap(1);
+    expect(synthwave()).toBe('on');
+    expect(reactions()).toBe(2); // no replay on the toggling tap
+  });
+
+  it('reports synthwave on and off to the hero (onSynthwaveChange)', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-06-21T12:00:00+01:00'));
+    const onSynthwaveChange = vi.fn();
+    render(
+      <IntensityScene
+        intensity={100}
+        index="low"
+        timeOfDayOverride="midday"
+        weatherOverride={{ condition: 'clear', cloudCover: 0 }}
+        onSynthwaveChange={onSynthwaveChange}
+      />,
+    );
+    expect(onSynthwaveChange).toHaveBeenLastCalledWith(false);
+    tap(3);
+    expect(onSynthwaveChange).toHaveBeenLastCalledWith(true);
+    vi.advanceTimersByTime(2000);
+    tap(3);
+    expect(onSynthwaveChange).toHaveBeenLastCalledWith(false);
+  });
+
+  it('three taps spread over 1.6 s do not toggle synthwave', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-06-21T12:00:00+01:00'));
+    renderSunnyScene();
+    tap(1);
+    vi.advanceTimersByTime(800);
+    tap(1);
+    vi.advanceTimersByTime(800);
+    tap(1);
+    expect(synthwave()).toBe('off');
+  });
+
+  it('under Reduce Motion a tap gives no scale reaction, and a triple tap still works', () => {
+    motionPrefs.reduce = true;
+    renderSunnyScene();
+    tap(1);
+    expect(reaction()).toBe('off');
+    tap(2);
+    expect(synthwave()).toBe('on');
+  });
+
+  it('the sun is not exposed to VoiceOver or the keyboard, and has no CSS filter', () => {
+    renderSunnyScene();
+    const el = sun();
+    expect(el.getAttribute('aria-hidden')).toBe('true');
+    expect(el.hasAttribute('tabindex')).toBe(false);
+    expect(el.hasAttribute('role')).toBe(false);
+    fireEvent.keyDown(el, { key: 'Enter' });
+    fireEvent.keyDown(el, { key: ' ' });
+    expect(synthwave()).toBe('off');
+    expect(screen.queryByRole('button', { name: /synthwave|sun/i })).toBeNull();
+    const wrapper = el.closest('[data-scene-sun]') as HTMLElement;
+    expect(wrapper.style.filter).toBe('');
+  });
+
+  it('synthwave starts off on every mount (not persisted)', () => {
+    const first = renderSunnyScene();
+    tap(3);
+    expect(synthwave()).toBe('on');
+    expect(JSON.stringify({ ...localStorage })).not.toMatch(/synthwave/i);
+    first.unmount();
+    renderSunnyScene();
+    expect(synthwave()).toBe('off');
   });
 });

@@ -18,6 +18,7 @@ import ScrollToTop from '@/components/ScrollToTop';
 import { logger } from '@/lib/logger';
 import { AchievementManager } from '@/components/AchievementManager';
 import { DirectorPanel } from '@/components/DirectorPanel';
+import { SceneDirectorProvider } from '@/components/SceneDirectorProvider';
 import { StatusBarManager } from '@/components/StatusBarManager';
 import { ComponentErrorBoundary } from '@/components/ComponentErrorBoundary';
 import { SplashScreen } from '@/components/SplashScreen';
@@ -190,9 +191,11 @@ const App = () => (
       <TooltipProvider>
         <ErrorBoundary>
           <LocationProvider>
-            <AchievementManager />
-            <DirectorPanel />
-            <AppContent />
+            <SceneDirectorProvider>
+              <AchievementManager />
+              <DirectorPanel />
+              <AppContent />
+            </SceneDirectorProvider>
           </LocationProvider>
         </ErrorBoundary>
       </TooltipProvider>

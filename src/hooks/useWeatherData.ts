@@ -65,7 +65,7 @@ interface WeatherApiResponse {
   };
 }
 
-function parseWeatherResponse(data: WeatherApiResponse): WeatherData {
+export function parseWeatherResponse(data: WeatherApiResponse): WeatherData {
   const current = data.current;
   const code = current.weather_code;
   const condition = mapWMOCodeToCondition(code);
