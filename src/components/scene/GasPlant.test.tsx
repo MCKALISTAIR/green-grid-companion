@@ -7,10 +7,10 @@ import { GasPlant } from './GasPlant';
 const reduced = vi.hoisted(() => ({ value: false }));
 vi.mock('@/hooks/useReducedMotion', () => ({ useReducedMotion: () => reduced.value }));
 
-function draw(band: Parameters<typeof GasPlant>[0]['band'], isNight = false, windSpeed = 0) {
+function draw(band: Parameters<typeof GasPlant>[0]['band'], isNight = false) {
   return render(
     <svg viewBox="0 30 400 120">
-      <GasPlant band={band} isNight={isNight} windSpeed={windSpeed} />
+      <GasPlant band={band} isNight={isNight} />
     </svg>,
   ).container;
 }
@@ -67,13 +67,17 @@ describe('GasPlant (PR-2b)', () => {
     expect(c.querySelectorAll('[data-smoke-puff]')).toHaveLength(0);
   });
 
-  it('leans 10° in strong wind only', () => {
-    expect(
-      draw('moderate', false, 30).querySelector('[data-art="smoke"]')!.getAttribute('transform'),
-    ).toMatch(/^rotate\(10 /);
-    expect(
-      draw('moderate', false, 10).querySelector('[data-art="smoke"]')!.getAttribute('transform'),
-    ).toBeNull();
+  it('smoke rises straight up: no lean or sideways drift (no wind input until direction is fetched)', () => {
+    for (const night of [false, true]) {
+      const c = draw('very high', night);
+      expect(c.querySelectorAll('[data-smoke-puff]').length).toBeGreaterThan(0);
+      for (const plume of c.querySelectorAll('[data-art="smoke"]')) {
+        expect(plume.getAttribute('transform')).toBeNull();
+      }
+      for (const puff of c.querySelectorAll<SVGGElement>('[data-smoke-puff]')) {
+        expect(puff.style.transform).toMatch(/^translate\(0px, -/);
+      }
+    }
   });
 
   it('is grounded on the back ridge (no floating edge)', () => {

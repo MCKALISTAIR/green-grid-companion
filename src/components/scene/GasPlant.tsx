@@ -7,7 +7,8 @@
  *   zero carbon", and when there is no reading. Static aviation dots at night.
  * - Smoke comes only from its two stacks at moderate and above, density by the
  *   NESO band, not gas share. One animated group, CSS transform and opacity
- *   only. Reduce Motion: 3 static puffs per stack.
+ *   only. Reduce Motion: 3 static puffs per stack. Rises straight up (no drift
+ *   or lean) until wind direction is fetched.
  * - Drawn in the countryside SVG space (viewBox 0 30 400 120).
  */
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -30,23 +31,20 @@ import {
   showsSmoke,
   type HazeBand,
 } from '@/lib/sceneHaze';
-import { WIND_STATE_KMH } from '@/lib/sceneConfig';
 
 export interface GasPlantProps {
   band: HazeBand;
   isNight: boolean;
-  windSpeed?: number;
   x?: number;
 }
 
-export function GasPlant({ band, isNight, windSpeed = 0, x = GAS_PLANT_X }: GasPlantProps) {
+export function GasPlant({ band, isNight, x = GAS_PLANT_X }: GasPlantProps) {
   const reduced = useReducedMotion();
   const t = isNight ? GAS_PLANT_TOKENS.night : GAS_PLANT_TOKENS.day;
   const { baseY, boilerX, stacks } = gasPlantGeometry(x);
   const smoke = showsSmoke(band) ? SMOKE_BY_BAND[band] : null;
-  // Wind direction isn't fetched yet, so plumes drift right (Decisions for Design);
-  // a static 10° lean at wind >= 25 km/h.
-  const lean = windSpeed >= WIND_STATE_KMH ? 10 : 0;
+  // Design, 23 Oct 2026 (#196 decision 3): smoke rises straight up, with no
+  // drift or lean, until wind_direction_10m is fetched (follow-up bug in BUGS.md).
   const puffCount = smoke ? (reduced ? SMOKE_STATIC_PUFFS : smoke.puffs) : 0;
   const r = SMOKE_PUFF.startPx / 2;
 
@@ -109,16 +107,11 @@ export function GasPlant({ band, isNight, windSpeed = 0, x = GAS_PLANT_X }: GasP
           const cx = s.x + GAS_PLANT_STACK.w / 2;
           const cy = s.top - r - 0.5;
           return (
-            <g
-              key={`plume-${si}`}
-              data-art="smoke"
-              opacity={smoke.opacity}
-              transform={lean ? `rotate(${lean} ${cx} ${s.top})` : undefined}
-            >
+            <g key={`plume-${si}`} data-art="smoke" opacity={smoke.opacity}>
               {Array.from({ length: puffCount }).map((_, i) => {
                 const f = (i + 0.5) / puffCount;
                 // Static pose (Reduce Motion, or animations paused): spread up the plume.
-                const pose = `translate(${(6 * f).toFixed(2)}px, ${(-SMOKE_PUFF.risePx * f).toFixed(2)}px) scale(${(1 + (SMOKE_PUFF.endScale - 1) * f).toFixed(3)})`;
+                const pose = `translate(0px, ${(-SMOKE_PUFF.risePx * f).toFixed(2)}px) scale(${(1 + (SMOKE_PUFF.endScale - 1) * f).toFixed(3)})`;
                 const delay = -((i / puffCount) * SMOKE_PUFF.seconds + si * 0.9);
                 return (
                   <g

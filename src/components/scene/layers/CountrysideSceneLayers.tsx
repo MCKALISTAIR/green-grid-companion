@@ -65,7 +65,7 @@ export function CountrysideSceneLayers({
           />
           {/* PR-2b: the gas plant on the back hill, always present; smoke only at
               moderate and above (Design brief Q5). */}
-          <GasPlant band={hazeBand} isNight={isNight} windSpeed={windSpeed} />
+          <GasPlant band={hazeBand} isNight={isNight} />
         </svg>
       </motion.div>
 

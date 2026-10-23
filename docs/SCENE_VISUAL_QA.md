@@ -146,6 +146,7 @@ no index, with the HUD cut-offs.
 
 - [ ] Very low, low and no data (loading, outage): no haze and no smoke at all
 - [ ] The gas plant is always there; smoke only ever comes out of its two stacks
+- [ ] Smoke rises straight up, with no lean or sideways drift (until wind direction is fetched)
 - [ ] Sky wash peaks at the horizon and is gone by 55% of the sky height (day)
 - [ ] Dawn, dusk, night: low warm glow (`#8a6e5a`) in the lowest 25% of the sky only
 - [ ] Fog plus haze: the fog grade wins (sky wash at 50%)
