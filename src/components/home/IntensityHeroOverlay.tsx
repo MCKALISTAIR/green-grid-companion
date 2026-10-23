@@ -20,6 +20,7 @@ import { formatLondonTime } from '@/lib/londonTime';
 import { useEnergyFacts } from '@/hooks/useEnergyFacts';
 import { useUnseenBadgeCount } from '@/lib/trophyChip';
 import { useHeroTopRowFit } from '@/hooks/useHeroTopRowFit';
+import { useHeroCloudTop } from '@/hooks/useHeroCloudTop';
 import { useTimeOfDay } from '@/hooks/useTimeOfDay';
 import { getCleanlinessBand } from '@/hooks/useCleanlinessBand';
 import type { GenerationMix } from '@/lib/carbonApi';
@@ -99,10 +100,12 @@ export function IntensityHeroOverlay({
     measureRef,
     compact: compactBadge,
   } = useHeroTopRowFit(showTrophyChip, [region, isLoading, usingNationalFallback]);
+  const { sceneRef, textRef, cloudTopPx } = useHeroCloudTop();
   const { timeOfDay } = useTimeOfDay();
-  const { weather } = useWeatherData();
-  // AA: ink on light skies, white on dark skies (art pass v1 §3).
-  const heroTone = getHeroTextTone(timeOfDay, weather);
+  const { weather, weatherKnown } = useWeatherData();
+  // AA: ink on light skies, white on dark skies (art pass v1 §3). BH-90: with the
+  // weather unknown the overcast sky follows the time of day, and so does the tone.
+  const heroTone = getHeroTextTone(timeOfDay, weatherKnown ? weather : undefined);
   const isInk = heroTone === 'ink';
   // Only say "Offline" when the device really is, and only blame NESO when its request failed.
   const { isOffline } = useOffline();
@@ -112,6 +115,14 @@ export function IntensityHeroOverlay({
   const needsHardScrim = !isInk && isDirty;
   // Zero-carbon badge + scene celebration only for a live reading that isn't stale.
   const hasFreshReading = !isLoading && !isError && isReadingFresh(lastUpdated);
+  // BH-90: offline, no fetch can be in flight, so never claim to be loading.
+  // Offline with nothing to show is the hero's offline error state instead.
+  const showLoading = isLoading && !isOffline;
+  const offlineWithoutReading = isLoading && isOffline;
+  // Design (BH-90): offline or with the weather unknown, the warning icon holds
+  // steady at full opacity. Only the online outage with known weather pulses.
+  const steadyWarningIcon = isOffline || !weatherKnown;
+  const showFetchSpinner = isBackgroundFetching && !isOffline;
   const showZeroCarbonBadge = shouldCelebrateZeroCarbon(intensity, hasFreshReading);
   const conditionLabel = getConditionLabel(index, tone, region ?? postcode);
 
@@ -147,6 +158,7 @@ export function IntensityHeroOverlay({
 
   return (
     <div
+      ref={sceneRef}
       className={cn('home-scene relative w-full', hideGauge && 'home-scene--compact')}
       data-compact-scene={hideGauge ? 'true' : undefined}
     >
@@ -165,9 +177,9 @@ export function IntensityHeroOverlay({
               >
                 <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
                 <span className={usingNationalFallback ? 'whitespace-nowrap' : 'truncate'}>
-                  {isLoading ? 'Loading...' : region || 'Select location'}
+                  {showLoading ? 'Loading...' : region || 'Select location'}
                 </span>
-                {isBackgroundFetching ? (
+                {showFetchSpinner ? (
                   <RefreshCw className="w-3 h-3 animate-spin opacity-70" />
                 ) : (
                   <ChevronDown className="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity" />
@@ -245,11 +257,14 @@ export function IntensityHeroOverlay({
               /* h-80 covers the full stack down to the "updated" line (was h-56,
                  which faded out above the renewable/status rows). */
               'absolute inset-x-0 top-0 h-80 pointer-events-none transition-opacity duration-700',
-              isInk
-                ? 'bg-gradient-to-b from-white/30 via-white/15 to-transparent'
-                : needsHardScrim
-                  ? 'bg-gradient-to-b from-black/55 via-black/28 to-transparent'
-                  : 'scene-hud-scrim',
+              // BH-90: no white veil over the unknown-weather overcast sky.
+              isInk && !weatherKnown
+                ? 'bg-transparent'
+                : isInk
+                  ? 'bg-gradient-to-b from-white/30 via-white/15 to-transparent'
+                  : needsHardScrim
+                    ? 'bg-gradient-to-b from-black/55 via-black/28 to-transparent'
+                    : 'scene-hud-scrim',
             )}
           />
           {/* Always mounted; opacity only — conditional mount was a CLS source when
@@ -262,7 +277,11 @@ export function IntensityHeroOverlay({
             )}
           />
 
-          <div className="relative flex flex-col items-center text-center w-full max-w-[22rem] min-[540px]:max-w-[40rem] px-4 pointer-events-none">
+          <div
+            ref={textRef}
+            data-testid="hero-text-block"
+            className="relative flex flex-col items-center text-center w-full max-w-[22rem] min-[540px]:max-w-[40rem] px-4 pointer-events-none"
+          >
             <div
               ref={rowRef}
               className={cn(
@@ -293,9 +312,9 @@ export function IntensityHeroOverlay({
                         usingNationalFallback && !showTrophyChip ? 'whitespace-nowrap' : 'truncate'
                       }
                     >
-                      {isLoading ? 'Loading…' : region || 'Select location'}
+                      {showLoading ? 'Loading…' : region || 'Select location'}
                     </span>
-                    {isBackgroundFetching ? (
+                    {showFetchSpinner ? (
                       <RefreshCw className="w-3 h-3 animate-spin opacity-70" />
                     ) : (
                       <ChevronDown className="w-3 h-3 opacity-70" />
@@ -320,14 +339,20 @@ export function IntensityHeroOverlay({
               data-tour="intensity-gauge"
               data-testid="hero-number"
             >
-              {isLoading ? (
+              {showLoading ? (
                 <RefreshCw
                   className="w-12 h-12 text-white animate-spin drop-shadow-lg"
                   aria-label="Loading data"
                 />
-              ) : isError ? (
+              ) : isError || offlineWithoutReading ? (
                 <div className="flex flex-col items-center py-1">
-                  <AlertTriangle className="w-10 h-10 text-white animate-pulse mb-1 drop-shadow-md" />
+                  <AlertTriangle
+                    data-testid="hero-warning-icon"
+                    className={cn(
+                      'w-10 h-10 text-white mb-1 drop-shadow-md',
+                      !steadyWarningIcon && 'animate-pulse',
+                    )}
+                  />
                   <span className="text-sm font-bold text-white/95 uppercase tracking-[0.18em]">
                     {heroErrorTitle(isOffline, nesoRequestFailed)}
                   </span>
@@ -515,6 +540,7 @@ export function IntensityHeroOverlay({
           generationMix={generationMix}
           hasLiveReading={hasFreshReading}
           compact={hideGauge}
+          cloudTopPx={hideGauge ? undefined : cloudTopPx}
           className="absolute inset-0 h-full"
           style={{ height: '100%', position: 'absolute' }}
         />

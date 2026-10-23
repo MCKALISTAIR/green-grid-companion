@@ -43,3 +43,54 @@ export const CLOUD_BANK_COLOURS = {
   day: ['#dfe5ec', '#aab6c3'],
   night: ['#3a4270', '#262c52'],
 } as const;
+
+/**
+ * BH-90: weather unknown (offline or Open-Meteo failed). A soft overcast sky,
+ * light grey-blue at the top fading into the cloud tone, never white; darker at
+ * dusk and night. `bank` is [back (paler), front, base shade]; `rim` is the lit
+ * top edge (ART-DIRECTION.md §5).
+ */
+export type UnknownWeatherTone = 'day' | 'dawn' | 'sunset' | 'dusk' | 'night';
+
+export const UNKNOWN_WEATHER_PALETTE: Record<
+  UnknownWeatherTone,
+  { sky: readonly [string, string]; bank: readonly [string, string, string]; rim: string }
+> = {
+  day: {
+    sky: ['#a9b7c6', '#b9c2cd'],
+    bank: ['#c6cdd6', '#bac3ce', '#a1abb8'],
+    rim: 'rgba(255,255,255,0.42)',
+  },
+  dawn: {
+    sky: ['#a4a9ba', '#bbb9c2'],
+    bank: ['#c4c2ca', '#b1afba', '#9a98a6'],
+    rim: 'rgba(255,240,236,0.45)',
+  },
+  sunset: {
+    sky: ['#9ea2b4', '#b7b1b5'],
+    bank: ['#c0b9bc', '#aca5ab', '#958e97'],
+    rim: 'rgba(255,236,220,0.45)',
+  },
+  dusk: {
+    sky: ['#464f6b', '#5e6680'],
+    bank: ['#69718c', '#59617c', '#454c66'],
+    rim: 'rgba(255,255,255,0.3)',
+  },
+  night: {
+    sky: ['#232944', '#333a58'],
+    bank: ['#3c4363', '#323957', '#262c47'],
+    rim: 'rgba(255,255,255,0.2)',
+  },
+};
+
+export function unknownWeatherTone(timeOfDay: string): UnknownWeatherTone {
+  if (timeOfDay === 'dawn' || timeOfDay === 'sunset' || timeOfDay === 'dusk') return timeOfDay;
+  if (timeOfDay === 'night') return 'night';
+  return 'day';
+}
+
+/** CSS sky for the unknown-weather scene: grey-blue top into the cloud tone. */
+export function unknownWeatherSkyGradient(timeOfDay: string): string {
+  const [top, bottom] = UNKNOWN_WEATHER_PALETTE[unknownWeatherTone(timeOfDay)].sky;
+  return `linear-gradient(180deg, ${top} 0%, ${bottom} 75%, ${bottom} 100%)`;
+}

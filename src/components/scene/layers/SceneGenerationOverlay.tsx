@@ -1,6 +1,7 @@
 import { Leaf, Flame, Droplets } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { SceneVisualConfig } from '@/lib/sceneConfig';
+import { turbineRotationSeconds } from '@/lib/turbineSpeed';
 import type { TurbineSlot } from '@/lib/turbineLayout';
 import { SimpleFactory } from '../SimpleFactory';
 import { WindTurbine } from '../WindTurbine';
@@ -56,15 +57,15 @@ export function SceneGenerationOverlay({
           !isCoastal &&
           sceneConfig.showRenewables &&
           turbineLayout.map((slot, i) => {
-            // Wind speed drives rotation: near-zero wind → very slow / stopped
-            const effectiveWindSpeed = sceneConfig.windSpeed ?? 0;
-            const baseSpeed =
-              effectiveWindSpeed < 2
-                ? 30 // Almost still
-                : Math.max(1.5, 6 - effectiveWindSpeed / 8);
+            // Wind speed drives rotation; unknown weather → one idle speed for all
+            const seconds = turbineRotationSeconds({
+              kind: 'countryside',
+              windSpeed: sceneConfig.windSpeed ?? 0,
+              weatherKnown: sceneConfig.weatherKnown,
+              index: i,
+              layer: slot.layer,
+            });
             const isOverdrive = turbineOverdrive === i;
-            // Background turbines slightly slower for parallax feel
-            const layerSpeedMod = slot.layer === 'back' ? 1.3 : slot.layer === 'mid' ? 1.1 : 1;
             // Opacity based on depth layer
             const layerOpacity = slot.layer === 'back' ? 0.5 : slot.layer === 'mid' ? 0.75 : 1;
 
@@ -85,7 +86,7 @@ export function SceneGenerationOverlay({
               >
                 <WindTurbine
                   scale={slot.scale}
-                  speed={isOverdrive ? 0.2 : baseSpeed * layerSpeedMod + i * 0.2}
+                  speed={isOverdrive ? 0.2 : seconds}
                   onClick={() => handleTurbineClick(i)}
                 />
               </motion.div>
@@ -286,6 +287,7 @@ export function SceneGenerationOverlay({
               <OffshoreWind
                 count={Math.min(3, Math.floor(windPercentage / 10))}
                 windSpeed={windSpeed}
+                weatherKnown={sceneConfig.weatherKnown}
               />
             </svg>
           </div>

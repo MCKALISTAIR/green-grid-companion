@@ -1,16 +1,22 @@
 import { motion } from 'framer-motion';
+import { turbineRotationSeconds } from '@/lib/turbineSpeed';
 
 interface OffshoreWindProps {
   count?: number; // How many turbines to show
   windSpeed?: number; // Affects rotation speed
+  weatherKnown?: boolean; // Unknown weather → shared idle speed
 }
 
-export function OffshoreWind({ count = 3, windSpeed = 10 }: OffshoreWindProps) {
+export function OffshoreWind({
+  count = 3,
+  windSpeed = 10,
+  weatherKnown = true,
+}: OffshoreWindProps) {
   // Grounded at Y=60 (background/horizon layer)
   const baseY = 60;
 
   // Calculate turbine speed based on wind
-  const rotationSpeed = Math.max(6, 12 - windSpeed / 5);
+  const rotationSpeed = turbineRotationSeconds({ kind: 'offshore', windSpeed, weatherKnown });
 
   return (
     <motion.g
@@ -41,6 +47,7 @@ export function OffshoreWind({ count = 3, windSpeed = 10 }: OffshoreWindProps) {
                 from="0 0 -25"
                 to="360 0 -25"
                 dur={`${rotationSpeed}s`}
+                data-turbine-seconds={rotationSpeed}
                 repeatCount="indefinite"
               />
 

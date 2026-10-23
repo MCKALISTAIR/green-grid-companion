@@ -4,14 +4,17 @@
  * Every piece renders a finished still frame; motion is CSS and is switched off by
  * `prefers-reduced-motion` (see .art-* rules in index.css).
  */
-import { useId } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import {
   CLOUD_BANK_COLOURS,
   MOOD,
   SUN_COLOURS,
   type MoodBand,
   type SunTone,
+  UNKNOWN_WEATHER_PALETTE,
+  unknownWeatherTone,
 } from '@/lib/artPalette';
+import { bankRim, irregularBankEdge } from './bankEdge';
 
 export function SceneSun({ r = 22, tone = 'day' }: { r?: number; tone?: SunTone }) {
   const id = useId().replace(/:/g, '');
@@ -265,4 +268,83 @@ export function IntensityMood({ band }: { band: MoodBand }) {
 function hexA(hex: string, a: number) {
   const n = parseInt(hex.slice(1), 16);
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${Math.min(1, a).toFixed(3)})`;
+}
+
+function useWidth<T extends HTMLElement>(fallback: number) {
+  const ref = useRef<T>(null);
+  const [width, setWidth] = useState(fallback);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const update = () => setWidth(Math.max(1, Math.round(el.clientWidth)));
+    update();
+    if (typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return [ref, width] as const;
+}
+
+/**
+ * BH-90: the cloud bank for unknown weather (ART-DIRECTION.md §4 overcast, village
+ * REDRAW-PLAN cloud banks): a paler back bank at lower opacity and a front bank
+ * offset below it so the scallops overlap, a lit top edge, a darker base. The top
+ * sits at `topPx` (hero text bottom + 34) so no cloud edge crosses the text.
+ */
+export function UnknownWeatherCloudBank({
+  topPx,
+  timeOfDay = 'midday',
+}: {
+  topPx?: number;
+  timeOfDay?: string;
+}) {
+  const id = useId().replace(/:/g, '');
+  const [ref, width] = useWidth<HTMLDivElement>(400);
+  const { bank, rim } = UNKNOWN_WEATHER_PALETTE[unknownWeatherTone(timeOfDay)];
+  const [back, front, base] = bank;
+  const backEdge = irregularBankEdge(width, 17, 11);
+  const frontEdge = irregularBankEdge(width, 41, 37);
+  const FRONT_DROP = 14;
+  const fill = (edge: string) => `${edge} V4000 H-40 Z`;
+  return (
+    <div
+      ref={ref}
+      aria-hidden
+      className="absolute inset-x-0 bottom-0 overflow-hidden pointer-events-none"
+      style={{ top: topPx != null ? `${Math.round(topPx)}px` : '40%' }}
+      data-art="cloud-bank"
+      data-variant="unknown-weather"
+      data-cloud-top={topPx != null ? Math.round(topPx) : undefined}
+    >
+      <svg className="absolute inset-0 w-full h-full overflow-visible" aria-hidden>
+        <defs>
+          <linearGradient id={`ub${id}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor={front} />
+            <stop offset=".5" stopColor={front} />
+            <stop offset="1" stopColor={base} />
+          </linearGradient>
+        </defs>
+        <path d={fill(backEdge)} fill={back} opacity=".7" />
+        <path
+          d={bankRim(width, 17, 11)}
+          fill="none"
+          stroke={rim}
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          opacity=".7"
+        />
+        <g transform={`translate(0 ${FRONT_DROP})`}>
+          <path d={fill(frontEdge)} fill={`url(#ub${id})`} opacity=".92" />
+          <path
+            d={bankRim(width, 41, 37)}
+            fill="none"
+            stroke={rim}
+            strokeWidth="1.6"
+            strokeLinecap="round"
+          />
+        </g>
+      </svg>
+    </div>
+  );
 }

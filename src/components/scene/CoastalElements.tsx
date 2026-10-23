@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { turbineRotationSeconds } from '@/lib/turbineSpeed';
 
 // 🐦 Seagull — soaring flight pattern
 export function Seagull({
@@ -162,11 +163,15 @@ export function FishingBoat({
 export function CoastalOffshoreWind({
   count = 3,
   windSpeed = 10,
+  weatherKnown = true,
 }: {
   count?: number;
   windSpeed?: number;
+  /** Unknown weather → every turbine at the shared idle speed */
+  weatherKnown?: boolean;
 }) {
-  const rotationSpeed = Math.max(4, 10 - windSpeed / 4);
+  const seconds = (i: number) =>
+    turbineRotationSeconds({ kind: 'coastal', windSpeed, weatherKnown, index: i });
 
   return (
     <g>
@@ -190,7 +195,8 @@ export function CoastalOffshoreWind({
                 type="rotate"
                 from={`${i * 40} 0 -40`}
                 to={`${360 + i * 40} 0 -40`}
-                dur={`${rotationSpeed + i}s`}
+                dur={`${seconds(i)}s`}
+                data-turbine-seconds={seconds(i)}
                 repeatCount="indefinite"
               />
               {[0, 120, 240].map((angle) => (

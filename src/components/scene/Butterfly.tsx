@@ -9,6 +9,7 @@ export function Butterfly({ startX, delay = 0 }: ButterflyProps) {
   return (
     <motion.svg
       className="absolute w-6 h-6"
+      data-ambient="butterfly"
       viewBox="0 0 24 24"
       aria-hidden="true"
       initial={{ x: `${startX}%`, y: '60%', opacity: 0 }}

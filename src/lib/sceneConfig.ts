@@ -2,6 +2,7 @@ import type { TimeOfDay } from '@/hooks/useTimeOfDay';
 import type { WeatherData } from '@/hooks/useWeatherData';
 import type { SceneType } from '@/hooks/useSceneType';
 import { getSkyGradient } from '@/lib/sceneUtils';
+import { unknownWeatherSkyGradient } from '@/lib/artPalette';
 
 /** Wind state threshold, km/h (Open-Meteo default unit). Alistair, 15 Oct 2026. */
 export const WIND_STATE_KMH = 25;
@@ -31,6 +32,8 @@ export interface SceneVisualConfig {
   birdCount: number;
   starVisibility: number;
   windSpeed: number;
+  /** False while the weather is unknown (offline, fetch failed, cold start). */
+  weatherKnown: boolean;
   sceneFilter: string;
 }
 
@@ -43,6 +46,8 @@ interface BuildSceneConfigInput {
   isNight: boolean;
   /** Drives ground plane dialect (city pavement vs countryside grass). */
   sceneType?: SceneType;
+  /** False while the weather is unknown; turbines idle and the hero halo is hidden. */
+  weatherKnown?: boolean;
 }
 
 export function buildSceneConfig({
@@ -53,6 +58,7 @@ export function buildSceneConfig({
   synthwaveMode,
   isNight,
   sceneType = 'countryside',
+  weatherKnown = true,
 }: BuildSceneConfigInput): SceneVisualConfig {
   const cleanliness = Math.max(0, Math.min(1, 1 - (intensity - 50) / 300));
   const weatherReducesBirds = weather.isRaining || weather.isSnowing || weather.isThunderstorm;
@@ -122,11 +128,15 @@ export function buildSceneConfig({
     cleanliness,
     skyGradient: synthwaveMode
       ? 'linear-gradient(180deg, #2b1055 0%, #7597de 100%)'
-      : getSkyGradient(index, timeOfDay, cleanliness, weather),
+      : weatherKnown
+        ? getSkyGradient(index, timeOfDay, cleanliness, weather)
+        : // BH-90: no weather, so a soft overcast sky that keeps the time of day.
+          unknownWeatherSkyGradient(timeOfDay),
     groundColor: getGroundColor(),
     showRenewables: cleanliness > 0.25,
     showFactories: cleanliness < 0.85,
-    showBirds: cleanliness > 0.6 && isDaytime && !weatherReducesBirds,
+    // BH-90: no birds when the weather is unknown (they read as stray marks).
+    showBirds: weatherKnown && cleanliness > 0.6 && isDaytime && !weatherReducesBirds,
     showSmoke: cleanliness < 0.5,
     // Intensity never invents weather (art pass v1 §9); rain comes only from weather.isRaining.
     showWind: !synthwaveMode && weather.windSpeed >= WIND_STATE_KMH,
@@ -139,9 +149,13 @@ export function buildSceneConfig({
       (isDarkPeriod || timeOfDay === 'dawn') && cleanliness > 0.3 && weather.cloudCover < 70,
     showMoon: isDarkPeriod && weather.cloudCover < 80,
     showSun,
-    showButterflies: cleanliness > 0.9 && isDaytime && !weatherReducesButterflies,
+    // BH-90: likewise butterflies (they also imply fine weather).
+    showButterflies: weatherKnown && cleanliness > 0.9 && isDaytime && !weatherReducesButterflies,
     showFireflies:
-      (isDarkPeriod || timeOfDay === 'sunset') && cleanliness > 0.8 && !weather.isRaining,
+      weatherKnown &&
+      (isDarkPeriod || timeOfDay === 'sunset') &&
+      cleanliness > 0.8 &&
+      !weather.isRaining,
     isGoldenHour,
     isDaytime,
     isDarkPeriod,
@@ -157,6 +171,7 @@ export function buildSceneConfig({
       (1 - weather.cloudCover / 100) *
       (timeOfDay === 'night' ? 1 : timeOfDay === 'dusk' ? 0.6 : 0.3),
     windSpeed: weather.windSpeed,
+    weatherKnown,
     sceneFilter: getTimeFilter(),
   };
 }

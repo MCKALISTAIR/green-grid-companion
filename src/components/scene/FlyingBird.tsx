@@ -16,6 +16,7 @@ export function FlyingBird({
   return (
     <motion.svg
       className="absolute w-4 h-4"
+      data-ambient="bird"
       initial={{ left: `${startX}%`, opacity: 0 }}
       animate={{
         left: [`${startX}%`, '120%'],
