@@ -32,7 +32,9 @@ import { SlowLoadingNotice } from '@/components/SlowLoadingNotice';
 import { OffGridNotice } from '@/components/home/OffGridNotice';
 import { StaleReadingNotice } from '@/components/home/StaleReadingNotice';
 import { OutageCard } from '@/components/home/OutageCard';
+import { OfflineEmptyState } from '@/components/errors/OfflineEmptyState';
 import { useGridFailureKind } from '@/hooks/useGridFailureKind';
+import { useOffline } from '@/hooks/useOffline';
 import { isReadingStale } from '@/lib/voice/statesCopy';
 import { PostcodeNotFoundNotice } from '@/components/home/PostcodeNotFoundNotice';
 import { DashboardViewTabs, type DashboardViewMode } from '@/components/home/DashboardViewTabs';
@@ -115,7 +117,11 @@ const Index = () => {
   // Design error states: keep the last known number (with its chip) when a
   // refresh fails or the reading is old, and only blame NESO when it's NESO.
   const failureKind = useGridFailureKind(isError, error);
+  const { isOffline } = useOffline();
+  // Offline with cached figures: the in-hero offline pill (#137) says so, so
+  // no Last-known chip as well. Nothing cached at all: full offline state.
   const showLastKnown = hasReading && (isError || isReadingStale(lastUpdated ?? undefined));
+  const showOfflineEmpty = isOffline && !hasReading;
 
   // Splash fades as soon as the home screen has something real to show
   // (a reading from cache or network, an off-grid notice, or an error state).
@@ -338,7 +344,9 @@ const Index = () => {
               <div className="home-feed-body min-h-[54.8rem]">
                 {/* Prefer skeleton over error while loading/restoring so a brief
                     no-reading frame never mounts ErrorState and shifts the feed. */}
-                {isLoading && forecast.length === 0 ? (
+                {showOfflineEmpty ? (
+                  <OfflineEmptyState />
+                ) : isLoading && forecast.length === 0 ? (
                   <div className="space-y-3">
                     <SlowLoadingNotice active onRetry={() => void refetch()} />
                     <DashboardSkeleton />
