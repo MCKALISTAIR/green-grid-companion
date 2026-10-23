@@ -180,7 +180,11 @@ describe('first launch', () => {
     const card = await screen.findByTestId('outside-gb');
     expect(card).toHaveTextContent('Outside Great Britain');
     expect(card).toHaveTextContent('GridSense only covers the GB grid.');
-    expect(screen.getByText(/Northern Ireland runs on a separate grid/)).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Northern Ireland is on the all-island grid it shares with Ireland, which this data doesn't cover.",
+      ),
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Use GB average' }));
     await screen.findByText('HOME');
     expect(localStorage.getItem('gridgreen-postcode')).toBe('GB');
