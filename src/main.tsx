@@ -18,6 +18,13 @@ initMonitoring({
 import { logger } from './lib/logger';
 import { hydrateAppStorage } from './lib/appStorage';
 import { installExternalLinkHandler } from './lib/openExternal';
+import { captureOAuthRedirect, completeOAuthRedirect } from './lib/oauthRedirect';
+import { supabase } from './integrations/supabase/client';
+
+// BH-119: read Google/Apple sign-in tokens from the URL before anything can
+// navigate (the "no postcode -> /onboarding" redirect used to drop them).
+const oauthReturn =
+  typeof window !== 'undefined' ? captureOAuthRedirect(window.location.href) : null;
 
 // Native: external links open in SFSafariViewController, not Safari (BH-51).
 installExternalLinkHandler();
@@ -31,7 +38,17 @@ if (import.meta.env.DEV) {
 
 // Native: load saved settings from Preferences before the first render so the
 // app never flashes default state. Web resolves immediately.
-void hydrateAppStorage().finally(() => {
+// Web OAuth return (BH-119): store the session and clean the URL first. Only
+// waits when the URL actually carries sign-in tokens or an error.
+void Promise.allSettled([
+  hydrateAppStorage(),
+  completeOAuthRedirect(oauthReturn, {
+    auth: supabase.auth,
+    location: window.location,
+    history: window.history,
+    warn: (message, context) => logger.warn(message, context),
+  }),
+]).finally(() => {
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <App />
