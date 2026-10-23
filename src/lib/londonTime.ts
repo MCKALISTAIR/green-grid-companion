@@ -195,3 +195,25 @@ const mediumDateFormatter = new Intl.DateTimeFormat('en-GB', {
 export function formatLondonDateTime(date: Date): string {
   return `${mediumDateFormatter.format(date)}, ${formatLondonSlotTime(date)}`;
 }
+
+const dayShortMonthFormatter = new Intl.DateTimeFormat('en-GB', {
+  timeZone: LONDON_TZ,
+  day: 'numeric',
+  month: 'short',
+});
+
+const dayLongMonthFormatter = new Intl.DateTimeFormat('en-GB', {
+  timeZone: LONDON_TZ,
+  day: 'numeric',
+  month: 'long',
+});
+
+/** "12 Oct" (no leading zero) in UK time. */
+export function formatLondonDayShortMonth(date: Date): string {
+  return dayShortMonthFormatter.format(date);
+}
+
+/** "12 October" in UK time. */
+export function formatLondonDayLongMonth(date: Date): string {
+  return dayLongMonthFormatter.format(date);
+}
