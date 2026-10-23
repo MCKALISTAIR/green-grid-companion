@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ErrorActionButton, ErrorStateCard } from '@/components/errors/ErrorStateCard';
 import { readTone } from '@/lib/tone';
 import { OFFLINE_COPY, toneBody } from '@/lib/voice/errorStatesCopy';
-import { setOfflineEmptyStateShown } from '@/lib/heroStatusSlot';
+import { setOfflineEmptyStateShown } from '@/lib/offlineEmptyState';
 
 /**
  * Design state 12, full version: offline and nothing cached at all. With

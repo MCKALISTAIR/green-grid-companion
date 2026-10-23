@@ -5,9 +5,10 @@ import { useOffline } from '@/hooks/useOffline';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { NotificationType } from '@capacitor/haptics';
+import { useOfflineEmptyStateShown } from '@/lib/offlineEmptyState';
 import { useQueryClient } from '@tanstack/react-query';
 import { BACK_ONLINE_PILL, CARBON_QUERY_ROOTS, offlinePillText } from '@/lib/voice/statesCopy';
-import { useHeroStatusSlot, useOfflineEmptyStateShown } from '@/lib/heroStatusSlot';
+import { useHeroStatusSlot } from '@/lib/heroStatusSlot';
 import { dur, spring } from '@/lib/motion';
 
 /** How long "Back online" stays before fading (motion spec §2.7). */
