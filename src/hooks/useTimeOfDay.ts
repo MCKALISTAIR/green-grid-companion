@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
+import { getSunTimes, sunPositionFromSun, timeOfDayFromSun } from '@/lib/sunTimes';
+import { getSceneLocation, subscribeSceneLocation } from '@/lib/sceneLocation';
 
 export type TimeOfDay = 'night' | 'dawn' | 'morning' | 'midday' | 'afternoon' | 'sunset' | 'dusk';
 
@@ -12,47 +14,38 @@ interface TimeOfDayState {
 }
 
 export function useTimeOfDay(): TimeOfDayState {
-  const [hour, setHour] = useState(() => new Date().getHours());
+  const [now, setNow] = useState(() => new Date());
+  const [loc, setLoc] = useState(getSceneLocation);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setHour(new Date().getHours());
-    }, 60000); // Update every minute
-
-    return () => clearInterval(interval);
+    const interval = setInterval(() => setNow(new Date()), 60000); // every minute
+    const unsub = subscribeSceneLocation(() => setLoc(getSceneLocation()));
+    return () => {
+      clearInterval(interval);
+      unsub();
+    };
   }, []);
 
   return useMemo(() => {
-    let timeOfDay: TimeOfDay;
-
-    if (hour >= 0 && hour < 5) {
-      timeOfDay = 'night';
-    } else if (hour >= 5 && hour < 7) {
-      timeOfDay = 'dawn';
-    } else if (hour >= 7 && hour < 11) {
-      timeOfDay = 'morning';
-    } else if (hour >= 11 && hour < 14) {
-      timeOfDay = 'midday';
-    } else if (hour >= 14 && hour < 17) {
-      timeOfDay = 'afternoon';
-    } else if (hour >= 17 && hour < 20) {
-      timeOfDay = 'sunset';
-    } else if (hour >= 20 && hour < 22) {
-      timeOfDay = 'dusk';
-    } else {
-      timeOfDay = 'night';
-    }
-
-    // Sun position: 0 at 6am, 0.5 at noon, 1 at 6pm
-    const sunPosition = Math.max(0, Math.min(1, (hour - 6) / 12));
-
+    // Real sunrise/sunset for the user's location (art pass v1 §9), not fixed clock bands.
+    const sun = getSunTimes(now, loc.lat, loc.lon);
+    const timeOfDay = timeOfDayFromSun(now, sun);
     return {
       timeOfDay,
-      hour,
-      sunPosition,
+      hour: londonHour(now),
+      sunPosition: sunPositionFromSun(now, sun),
       isNight: timeOfDay === 'night' || timeOfDay === 'dusk',
       isDawn: timeOfDay === 'dawn',
       isDusk: timeOfDay === 'dusk' || timeOfDay === 'sunset',
     };
-  }, [hour]);
+  }, [now, loc]);
+}
+
+function londonHour(d: Date): number {
+  const h = new Intl.DateTimeFormat('en-GB', {
+    hour: 'numeric',
+    hourCycle: 'h23',
+    timeZone: 'Europe/London',
+  }).format(d);
+  return Number(h);
 }

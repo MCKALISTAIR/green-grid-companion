@@ -49,3 +49,12 @@ export function isReadingStale(fromIso: string | undefined, nowMs: number = Date
   const from = Date.parse(fromIso);
   return Number.isFinite(from) && nowMs - from > STALE_READING_MS;
 }
+/**
+ * Home notice when the saved postcode doesn't exist (#108; Design call 22 Oct).
+ * Same wording in Cheeky and Plain. The action opens the location picker.
+ */
+export const POSTCODE_NOT_FOUND_COPY = {
+  title: (postcode: string) => `We couldn't find ${postcode}`,
+  body: 'Showing the GB average for now.',
+  action: 'Fix postcode',
+} as const;

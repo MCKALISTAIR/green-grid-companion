@@ -59,7 +59,7 @@ export async function heroBoxes(page, { region = 'South Scotland', band = 'Very 
       '[data-testid="hero-band"]',
       `.home-scene-gauge p:has-text("${band}")`,
     ]),
-    trophy: await firstVisibleBox(page, ['[aria-label="Trophy Room"]']),
+    trophy: await firstVisibleBox(page, ['[data-testid="new-badge-pill"]']),
     meta: await firstVisibleBox(page, ['[data-testid="hero-meta"]']),
     sheetTop: await page.evaluate(() => {
       const el = document.querySelector('.home-feed');
@@ -107,10 +107,15 @@ export async function checkHero(
   }
   if (b.header) {
     if (b.trophy && intersects(b.header, b.trophy))
-      fails.push(`${tag} location header overlaps the trophy button`);
+      fails.push(`${tag} location header overlaps the New badge pill`);
     if (b.header.x < 0 || b.header.x + b.header.width > viewport.width + 1)
       fails.push(`${tag} location header runs off-screen (${fmt(b.header)})`);
   }
+  // Design: the New badge pill keeps a 44pt+ tap target.
+  if (b.trophy && (b.trophy.width < 44 || b.trophy.height < 44))
+    fails.push(`${tag} New badge pill tap target under 44px (${fmt(b.trophy)})`);
+  if (b.trophy && b.trophy.x + b.trophy.width > viewport.width + 1)
+    fails.push(`${tag} New badge pill runs off-screen (${fmt(b.trophy)})`);
   fails.push(...(await checkHeroText(page, { tag, viewport, expectMeta })));
   // Hero sun never sits behind the trophy chip (bug: 15 Oct, S3).
   const sun = await firstVisibleBox(page, ['[data-scene-sun]']);
@@ -157,6 +162,27 @@ async function checkHeroText(page, { tag, viewport, expectMeta }) {
         right: i.left >= l.right - 1,
       };
     }
+    const rect = (el) => {
+      const r = el.getBoundingClientRect();
+      return r.width && r.height ? { x: r.x, y: r.y, w: r.width, h: r.height } : null;
+    };
+    const text = ['hero-number', 'hero-band', 'hero-meta']
+      .map((id) => document.querySelector(`[data-testid='${id}']`))
+      .filter(Boolean)
+      .map(rect)
+      .filter(Boolean);
+    out.hotspotHits = [...document.querySelectorAll('[data-scene-hotspot]')]
+      .map(rect)
+      .filter(Boolean)
+      .filter((h) =>
+        text.some((t) => h.x < t.x + t.w && h.x + h.w > t.x && h.y < t.y + t.h && h.y + h.h > t.y),
+      ).length;
+    const metaEl = document.querySelector("[data-testid='hero-meta']");
+    const sheet = document.querySelector('.home-feed');
+    out.metaGap =
+      metaEl && sheet
+        ? sheet.getBoundingClientRect().top - metaEl.getBoundingClientRect().bottom
+        : null;
     const meta = document.querySelector("[data-testid='hero-meta']");
     if (meta && meta.children.length >= 2) {
       const [a, b] = [...meta.children].map((c) => c.getBoundingClientRect());
@@ -305,6 +331,12 @@ export async function checkScrollSpace(
   if (r.scrollH > limit + 1)
     fails.push(
       `${tag} ${Math.round(r.scrollH - limit)}px of empty scroll below the last content (scrollHeight ${r.scrollH}, last content ${Math.round(r.last)})`,
+    );
+  if (r.hotspotHits) fails.push(`${tag} ${r.hotspotHits} tappable scene dot(s) overlap hero text`);
+  // 320 follow-up (a): meta line clears the skyline strip above the scallop.
+  if (viewport.width < 360 && viewport.height <= 640 && r.metaGap !== null && r.metaGap < 72)
+    fails.push(
+      `${tag} meta line sits on the skyline (${Math.round(r.metaGap)}px above the sheet, need 72)`,
     );
   return fails;
 }
