@@ -22,6 +22,12 @@ for (const [w, h] of [
         }),
       );
       await page.goto('/__scene-test');
+      // BH-94: the dev page's "clear" now matches live clear (cloud cover 5%,
+      // so no clouds); pick partly-cloudy so there are clouds to measure.
+      await page
+        .getByRole('group', { name: 'Weather condition' })
+        .getByRole('button', { name: 'partly-cloudy', exact: true })
+        .click();
       const c = page.locator('[data-art-cloud]').first();
       await c.waitFor({ timeout: 20000 });
       const info = async () =>

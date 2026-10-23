@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react';
 import { IntensityScene } from '@/components/IntensityScene';
 import type { TimeOfDay } from '@/hooks/useTimeOfDay';
-import type { WeatherData } from '@/hooks/useWeatherData';
 import { getSceneIntrinsicHeight, IPHONE_DUO_VIEWPORTS, SCENE_HEIGHT_CSS } from '@/lib/sceneHeight';
+import {
+  sceneTestWeather,
+  SCENE_TEST_WEATHER_KEYS,
+  type SceneTestWeatherKey,
+} from '@/lib/sceneTestWeather';
 
 /**
  * Dev-only visual regression test page for IntensityScene.
@@ -20,6 +24,7 @@ interface ViewportPreset {
 }
 
 const VIEWPORTS: ViewportPreset[] = [
+  { label: 'Small phone', width: 320, height: 568, aspect: '16:9' },
   { label: 'iPhone SE', width: 375, height: 667, aspect: '16:9' },
   { label: 'iPhone 14', width: 390, height: 844, aspect: '19.5:9' },
   { label: 'iPhone 17 Pro Max', width: 440, height: 956, aspect: '19.5:9' },
@@ -60,15 +65,6 @@ const TIMES_OF_DAY: TimeOfDay[] = [
   'morning',
   'afternoon',
 ];
-const WEATHER_CONDITIONS: WeatherData['condition'][] = [
-  'clear',
-  'cloudy',
-  'rain',
-  'snow',
-  'fog',
-  'thunderstorm',
-];
-
 export default function SceneTest() {
   const [scaleToFit, setScaleToFit] = useState(true);
   const [selectedCase, setSelectedCase] = useState<SceneCase>(SCENE_CASES[0]);
@@ -81,7 +77,7 @@ export default function SceneTest() {
   });
 
   const [selectedTimeOfDay, setSelectedTimeOfDay] = useState<TimeOfDay>('midday');
-  const [selectedWeather, setSelectedWeather] = useState<WeatherData['condition']>('clear');
+  const [selectedWeather, setSelectedWeather] = useState<SceneTestWeatherKey>('clear');
   const [windSpeed, setWindSpeed] = useState<number>(5);
 
   useEffect(() => {
@@ -140,6 +136,7 @@ export default function SceneTest() {
                 <button
                   key={c.label}
                   onClick={() => setSelectedCase(c)}
+                  aria-pressed={selectedCase.label === c.label}
                   className={`px-3 py-1 text-xs rounded-md border font-medium transition-colors ${
                     selectedCase.label === c.label
                       ? 'bg-primary text-primary-foreground border-primary'
@@ -159,6 +156,7 @@ export default function SceneTest() {
                 <button
                   key={t}
                   onClick={() => handleSceneTypeChange(t)}
+                  aria-pressed={sceneTypePref === t}
                   className={`px-3 py-1 text-xs rounded-md border capitalize font-medium transition-colors ${
                     sceneTypePref === t
                       ? 'bg-secondary text-secondary-foreground border-secondary'
@@ -178,6 +176,7 @@ export default function SceneTest() {
                 <button
                   key={t}
                   onClick={() => setSelectedTimeOfDay(t)}
+                  aria-pressed={selectedTimeOfDay === t}
                   className={`px-2.5 py-1 text-xs rounded-md border capitalize font-medium transition-colors ${
                     selectedTimeOfDay === t
                       ? 'bg-orange-500 text-white border-orange-500'
@@ -193,10 +192,11 @@ export default function SceneTest() {
 
             <div className="flex items-center gap-1.5" role="group" aria-label="Weather condition">
               <span className="text-xs text-muted-foreground font-medium mr-1">Weather:</span>
-              {WEATHER_CONDITIONS.map((w) => (
+              {SCENE_TEST_WEATHER_KEYS.map((w) => (
                 <button
                   key={w}
                   onClick={() => setSelectedWeather(w)}
+                  aria-pressed={selectedWeather === w}
                   className={`px-2.5 py-1 text-xs rounded-md border capitalize font-medium transition-colors ${
                     selectedWeather === w
                       ? 'bg-blue-600 text-white border-blue-600'
@@ -273,11 +273,7 @@ export default function SceneTest() {
                     index={selectedCase.index}
                     sceneTypeOverride={sceneTypePref === 'auto' ? undefined : sceneTypePref}
                     timeOfDayOverride={selectedTimeOfDay}
-                    weatherOverride={{
-                      condition: selectedWeather,
-                      temperature: 15,
-                      windSpeed: windSpeed,
-                    }}
+                    weatherOverride={sceneTestWeather(selectedWeather, windSpeed)}
                     style={{ height: '100%' }}
                   />
                 </div>

@@ -4,6 +4,7 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useMemo, useState, useEffect } from 'react';
 import { motion, useMotionValue, useScroll, useTransform } from 'framer-motion';
 import { useTimeOfDay, TimeOfDay } from '@/hooks/useTimeOfDay';
+import { isNightTimeOfDay } from '@/lib/timeOfDayNight';
 import { useWeatherData, WeatherData } from '@/hooks/useWeatherData';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useSceneDirector } from '@/hooks/useSceneDirector';
@@ -111,13 +112,11 @@ export function IntensityScene({
     timeOfDayOverride ??
     (isDirectorMode && overrides.timeOfDay ? overrides.timeOfDay : realTimeOfDay);
 
-  const isNight = timeOfDayOverride
-    ? timeOfDayOverride === 'night' || timeOfDayOverride === 'dusk' || timeOfDayOverride === 'dawn'
-    : isDirectorMode && overrides.timeOfDay
-      ? overrides.timeOfDay === 'night' ||
-        overrides.timeOfDay === 'dusk' ||
-        overrides.timeOfDay === 'dawn'
-      : realIsNight;
+  // Dawn parity (BH-94 QA tooling): an override counts as night exactly when the
+  // real clock would (night and dusk), so dawn previews match production.
+  const timeOverride =
+    timeOfDayOverride ?? (isDirectorMode && overrides.timeOfDay ? overrides.timeOfDay : undefined);
+  const isNight = timeOverride ? isNightTimeOfDay(timeOverride) : realIsNight;
 
   // Override Weather - wrapped in useMemo to prevent dependency issues
   const weather = useMemo(() => {
@@ -308,6 +307,8 @@ export function IntensityScene({
       role="region"
       aria-label={`Animated landscape representing ${index} carbon intensity`}
       data-scene-type={sceneType}
+      data-time-of-day={timeOfDay}
+      data-scene-night={isNight ? 'on' : 'off'}
     >
       {isVintage && (
         <div

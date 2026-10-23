@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { TimeOfDay } from './useTimeOfDay';
 
 export interface SceneOverrides {
@@ -23,7 +23,11 @@ export interface SceneOverrides {
 
 const STORAGE_KEY = 'gridgreen-director-mode';
 
-export function useSceneDirector() {
+/**
+ * The Director Mode state. Call this once, in SceneDirectorProvider; everything
+ * else reads the shared value with useSceneDirector().
+ */
+export function useSceneDirectorState() {
   const [unlocked, setUnlocked] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -96,4 +100,32 @@ export function useSceneDirector() {
     setExactOverride,
     clearOverrides,
   };
+}
+
+export type SceneDirectorValue = ReturnType<typeof useSceneDirectorState>;
+
+const noop = () => {};
+
+/** Outside a provider (unit tests, isolated renders): Director Mode is off. */
+const INACTIVE_DIRECTOR: SceneDirectorValue = {
+  unlocked: false,
+  active: false,
+  overrides: {},
+  tapCount: 0,
+  setActive: noop,
+  handleVersionTap: noop,
+  updateOverride: noop,
+  setExactOverride: noop,
+  clearOverrides: noop,
+};
+
+export const SceneDirectorContext = createContext<SceneDirectorValue | null>(null);
+
+/**
+ * Shared Director Mode state (BH-94 QA tooling). It used to be per-instance
+ * useState, so DirectorPanel's overrides never reached IntensityScene, the
+ * status bar or Settings. Now every caller reads the one provider.
+ */
+export function useSceneDirector(): SceneDirectorValue {
+  return useContext(SceneDirectorContext) ?? INACTIVE_DIRECTOR;
 }

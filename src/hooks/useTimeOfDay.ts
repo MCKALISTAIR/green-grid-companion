@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { getSunTimes, sunPositionFromSun, timeOfDayFromSun } from '@/lib/sunTimes';
 import { getSceneLocation, subscribeSceneLocation } from '@/lib/sceneLocation';
+import { isNightTimeOfDay } from '@/lib/timeOfDayNight';
 
 export type TimeOfDay = 'night' | 'dawn' | 'morning' | 'midday' | 'afternoon' | 'sunset' | 'dusk';
 
@@ -34,7 +35,7 @@ export function useTimeOfDay(): TimeOfDayState {
       timeOfDay,
       hour: londonHour(now),
       sunPosition: sunPositionFromSun(now, sun),
-      isNight: timeOfDay === 'night' || timeOfDay === 'dusk',
+      isNight: isNightTimeOfDay(timeOfDay),
       isDawn: timeOfDay === 'dawn',
       isDusk: timeOfDay === 'dusk' || timeOfDay === 'sunset',
     };
