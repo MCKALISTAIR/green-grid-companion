@@ -71,6 +71,7 @@ import { IntensityScene } from '@/components/IntensityScene';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useAppLocation } from '@/contexts/LocationContext';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { halfHourKey } from '@/lib/halfHour';
 
 function RegionChip({ region, className }: { region?: string | null; className?: string }) {
   return (
@@ -167,20 +168,17 @@ export default function HistoryPage() {
 
   // Merge consumption data
   const chartData = useMemo(() => {
+    // Match by half-hour instant, not by string (BH-91): NESO says "…T22:30Z",
+    // the DB says "…T22:30:00+00:00". Same rule as the edge function.
+    const byHalfHour = new Map<number, NonNullable<typeof footprint>['records'][number]>();
+    for (const r of footprint?.records ?? []) {
+      const key = halfHourKey(r.interval_start);
+      if (key !== null) byHalfHour.set(key, r);
+    }
     return data.map((item) => {
       const itemDate = parseISO(item.from);
-
-      // Find matching consumption record (approximate match to hour/30min slot)
-      // Octopus data is typically 30m slots.
-      // We'll try to find a record that starts within the same 30m window.
-      const consumptionRecord = footprint?.records.find((r) => {
-        const rDate = parseISO(r.interval_start);
-        // Use date-fns for robust comparison (handles ISO format differences)
-        return rDate.getTime() === itemDate.getTime();
-      });
-
-      // Fallback: Group by hour if slots don't align perfectly?
-      // For now, strict match or null.
+      const slot = halfHourKey(item.from);
+      const consumptionRecord = slot === null ? undefined : byHalfHour.get(slot);
 
       const { forecast, actual } = toHistoryPoint(item);
       return {
