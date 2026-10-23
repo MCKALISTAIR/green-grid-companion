@@ -6,8 +6,10 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { ErrorState } from '@/components/ErrorState';
-import { EmptyState } from '@/components/EmptyState';
 import { getErrorInfo } from '@/lib/errorUtils';
+import { ErrorStateCard } from '@/components/errors/ErrorStateCard';
+import { RANK_EMPTY_COPY, toneBody } from '@/lib/voice/errorStatesCopy';
+import { readTone } from '@/lib/tone';
 
 import { PullToRefresh } from '@/components/PullToRefresh';
 import { Map as MapIcon, X } from 'lucide-react';
@@ -112,9 +114,28 @@ export default function MapPage() {
                 transition={stateTransition}
                 className="space-y-6"
               >
+                {/* Design state 5: no regional figures. Overlay the map, keep the page. */}
+                {sortedRegions.length === 0 && (
+                  <div className="relative" data-testid="rank-empty">
+                    <div aria-hidden="true" className="pointer-events-none opacity-40">
+                      <UKMap regions={[]} />
+                    </div>
+                    <div className="absolute inset-x-0 top-6 flex justify-center px-2">
+                      <ErrorStateCard
+                        className="w-full max-w-md"
+                        tint="blue"
+                        icon={MapIcon}
+                        title={RANK_EMPTY_COPY.title}
+                        body={toneBody(RANK_EMPTY_COPY.body, readTone())}
+                        actions={[{ label: RANK_EMPTY_COPY.action, onClick: () => void refetch() }]}
+                      />
+                    </div>
+                  </div>
+                )}
+
                 {/* Toggleable Map View */}
                 <AnimatePresence initial={false}>
-                  {showMap && (
+                  {showMap && sortedRegions.length > 0 && (
                     <motion.div
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}

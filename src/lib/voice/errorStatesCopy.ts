@@ -42,6 +42,16 @@ export const OFFLINE_COPY = {
 
 export const lastKnownChip = (at: Date) => `Last known · ${formatLondonTime(at)}`;
 
+/** State 5: Rank map with no regional figures. Follows the tone setting. */
+export const RANK_EMPTY_COPY = {
+  title: 'No regional figures right now',
+  body: {
+    plain: 'NESO has not sent regional data yet. National figures are still available on Home.',
+    cheeky: 'The regions are being shy. National figures are still on Home.',
+  },
+  action: 'Retry',
+} as const;
+
 /** Always Plain. */
 export const STALE_COPY = {
   title: 'This might be out of date',
