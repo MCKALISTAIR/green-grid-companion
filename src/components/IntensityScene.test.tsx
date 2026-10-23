@@ -54,6 +54,7 @@ vi.mock('@/hooks/useSceneType', () => ({
     preference: 'auto',
     setPreference: vi.fn(),
     autoDetected: 'countryside',
+    cityVariant: 'generic',
   }),
 }));
 
