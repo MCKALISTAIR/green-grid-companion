@@ -1,10 +1,12 @@
-import { describe, it, expect } from 'vitest';
+import { afterEach, describe, it, expect, vi } from 'vitest';
 import {
   isCredentialMeterError,
+  isDeviceOffline,
   readFunctionErrorBody,
   syncErrorOutcome,
   syncFailureMessage,
   syncOutcome,
+  withOfflineCheck,
 } from './octopusSyncOutcome';
 import { OCTOPUS_SYNC_COPY } from './voice/errorStatesCopy';
 import {
@@ -15,7 +17,8 @@ import {
 import { makeFetch, makeStore } from '../../supabase/functions/_shared/octopus_test_harness.ts';
 
 const FAILED = "Couldn't get your Octopus usage just now. Try again in a bit.";
-const EXPIRED = 'Your Octopus link has expired. Sign in again to see your use.';
+const EXPIRED = 'Your Octopus link has expired. Disconnect it in Settings, then link it again.';
+const OFFLINE = "You're offline, so we couldn't get your Octopus usage.";
 const meter = { userId: 'u1', mpan: '1300000000000', serial: 'S', authHeader: 'Basic dGVzdDo=' };
 
 /** A real per-meter result from the shared pipeline, with Octopus answering `status`. */
@@ -30,13 +33,15 @@ describe('Octopus sync copy (Design call on #180)', () => {
     for (const tone of ['plain', 'cheeky'] as const) {
       expect(syncFailureMessage('failed', tone)).toBe(FAILED);
       expect(syncFailureMessage('credentials', tone)).toBe(EXPIRED);
+      expect(syncFailureMessage('offline', tone)).toBe(OFFLINE);
     }
+    expect(OCTOPUS_SYNC_COPY.offline.plain).toBe(OCTOPUS_SYNC_COPY.offline.cheeky);
     expect(OCTOPUS_SYNC_COPY.failed.plain).toBe(OCTOPUS_SYNC_COPY.failed.cheeky);
     expect(OCTOPUS_SYNC_COPY.credentials.plain).toBe(OCTOPUS_SYNC_COPY.credentials.cheeky);
   });
 
   it('never promises an automatic retry (nothing retries a failed sync)', () => {
-    for (const line of [FAILED, EXPIRED])
+    for (const line of [FAILED, EXPIRED, OFFLINE])
       expect(line).not.toMatch(/automatic|we'll retry|retrying/i);
   });
 });
@@ -166,5 +171,34 @@ describe('syncErrorOutcome: non-2xx responses', () => {
     expect(
       await readFunctionErrorBody({ context: new Response('not json', { status: 500 }) }),
     ).toBeNull();
+  });
+});
+
+describe('offline (Design call, final #180)', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('a general failure while the device is offline gets the offline line', () => {
+    expect(withOfflineCheck('failed', true)).toBe('offline');
+    expect(syncFailureMessage(withOfflineCheck('failed', true), 'plain')).toBe(OFFLINE);
+  });
+
+  it('reads navigator.onLine at failure time', () => {
+    vi.stubGlobal('navigator', { onLine: false });
+    expect(isDeviceOffline()).toBe(true);
+    expect(withOfflineCheck(syncErrorOutcome({ error: 'Failed to fetch' }))).toBe('offline');
+    vi.stubGlobal('navigator', { onLine: true });
+    expect(isDeviceOffline()).toBe(false);
+  });
+
+  it('a timeout while online keeps the general line', () => {
+    vi.stubGlobal('navigator', { onLine: true });
+    const outcome = withOfflineCheck(syncErrorOutcome({ error: 'Request timed out' }));
+    expect(outcome).toBe('failed');
+    expect(syncFailureMessage(outcome, 'cheeky')).toBe(FAILED);
+  });
+
+  it('a credentials verdict from the server is never turned into offline', () => {
+    expect(withOfflineCheck('credentials', true)).toBe('credentials');
+    expect(withOfflineCheck('ok', true)).toBe('ok');
   });
 });

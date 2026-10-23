@@ -129,7 +129,7 @@ export const POSTCODE_COPY = {
 } as const;
 
 /**
- * Octopus sync toasts (Design call on #180, BH-91). The same line in Plain and
+ * Octopus sync toasts (Design calls on #180, BH-91, final 23 Oct 2026). The same line in Plain and
  * Cheeky. Neither line promises an automatic retry: nothing retries a failed
  * in-app sync. Which line shows is decided in src/lib/octopusSyncOutcome.ts.
  */
@@ -139,10 +139,18 @@ export const OCTOPUS_SYNC_COPY = {
     plain: "Couldn't get your Octopus usage just now. Try again in a bit.",
     cheeky: "Couldn't get your Octopus usage just now. Try again in a bit.",
   },
-  /** Octopus said 401/403 to the user's key, or the stored key is missing or unreadable. */
+  /** The device is offline (navigator.onLine false) when the sync fails. Timeouts are not offline. */
+  offline: {
+    plain: "You're offline, so we couldn't get your Octopus usage.",
+    cheeky: "You're offline, so we couldn't get your Octopus usage.",
+  },
+  /**
+   * Octopus said 401/403 to the user's key, or the stored key is missing or
+   * unreadable. No toast action: reconnect is a separate follow-up (BH-92).
+   */
   credentials: {
-    plain: 'Your Octopus link has expired. Sign in again to see your use.',
-    cheeky: 'Your Octopus link has expired. Sign in again to see your use.',
+    plain: 'Your Octopus link has expired. Disconnect it in Settings, then link it again.',
+    cheeky: 'Your Octopus link has expired. Disconnect it in Settings, then link it again.',
   },
   /**
    * The separate calculate-footprint action (no UI caller today). Wording

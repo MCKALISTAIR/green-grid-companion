@@ -13,6 +13,7 @@ import {
   syncErrorOutcome,
   syncFailureMessage,
   syncOutcome,
+  withOfflineCheck,
 } from '@/lib/octopusSyncOutcome';
 
 /** Thrown after the sync toast has already been shown, so the catch doesn't show a second one. */
@@ -20,8 +21,8 @@ class SyncToastShown extends Error {}
 
 /** Toast for a non-2xx sync response; returns an error to throw. No automatic retry. */
 async function toastSyncHttpError(error: { message?: string }): Promise<SyncToastShown> {
-  const outcome = syncErrorOutcome(await readFunctionErrorBody(error));
-  toast.error(syncFailureMessage(outcome === 'ok' ? 'failed' : outcome, readTone()));
+  const outcome = withOfflineCheck(syncErrorOutcome(await readFunctionErrorBody(error)));
+  toast.error(syncFailureMessage(outcome, readTone()));
   return new SyncToastShown(error.message || 'Octopus sync failed');
 }
 
@@ -496,7 +497,7 @@ export function useOctopusEnergy(days: number = 30) {
         if (error) throw await toastSyncHttpError(error);
 
         // BH-91: the function reports per-meter failures instead of a blanket success.
-        const outcome = syncOutcome(data);
+        const outcome = withOfflineCheck(syncOutcome(data));
         if (outcome === 'ok') toast.success(`Synced ${data.readings_synced} consumption readings`);
         else toast.error(syncFailureMessage(outcome, readTone()));
         await refetchStatus();
@@ -504,7 +505,7 @@ export function useOctopusEnergy(days: number = 30) {
       } catch (error: unknown) {
         if (!(error instanceof SyncToastShown)) {
           logger.warn('Octopus sync failed', { error });
-          toast.error(syncFailureMessage('failed', readTone()));
+          toast.error(syncFailureMessage(withOfflineCheck('failed'), readTone()));
         }
         throw error;
       } finally {
@@ -565,7 +566,7 @@ export function useOctopusEnergy(days: number = 30) {
 
         if (error) throw await toastSyncHttpError(error);
 
-        const outcome = syncOutcome(data);
+        const outcome = withOfflineCheck(syncOutcome(data));
         if (outcome === 'ok') {
           const readings = data.sync?.readings_synced || 0;
           const calculations = data.calculation?.records_calculated || 0;
@@ -583,7 +584,7 @@ export function useOctopusEnergy(days: number = 30) {
       } catch (error: unknown) {
         if (!(error instanceof SyncToastShown)) {
           logger.warn('Octopus full sync failed', { error });
-          toast.error(syncFailureMessage('failed', readTone()));
+          toast.error(syncFailureMessage(withOfflineCheck('failed'), readTone()));
         }
         throw error;
       } finally {

@@ -17,11 +17,17 @@
  *
  * Calculation results (MeterCalcResult) carry NESO's status, not Octopus's,
  * so they never map to credentials.
+ *
+ * Offline: a general failure becomes 'offline' only when the device reports
+ * itself offline (navigator.onLine === false, the same signal useOffline and
+ * errorUtils use) at the moment the failure is handled. Timeouts and other
+ * network errors while online keep the general line. A credentials verdict
+ * came from the server, so it is never turned into 'offline'.
  */
 import type { CommentaryTone } from '@/lib/tone';
 import { OCTOPUS_SYNC_COPY, toneBody } from '@/lib/voice/errorStatesCopy';
 
-export type SyncOutcome = 'ok' | 'credentials' | 'failed';
+export type SyncOutcome = 'ok' | 'credentials' | 'failed' | 'offline';
 
 interface MeterLike {
   ok?: boolean;
@@ -69,7 +75,7 @@ export function syncOutcome(data: SyncResponseLike | null | undefined): SyncOutc
 }
 
 /** Outcome of a non-2xx response (the parsed JSON body, if any). */
-export function syncErrorOutcome(body: unknown): SyncOutcome {
+export function syncErrorOutcome(body: unknown): 'credentials' | 'failed' {
   if (body && typeof body === 'object') {
     const b = body as { code?: unknown; error?: unknown };
     if (b.code === 'credentials_unavailable') return 'credentials';
@@ -78,15 +84,31 @@ export function syncErrorOutcome(body: unknown): SyncOutcome {
   return 'failed';
 }
 
+/** True only when the device says it is offline right now. */
+export function isDeviceOffline(): boolean {
+  return typeof navigator !== 'undefined' && navigator.onLine === false;
+}
+
+/** Swap a general failure for 'offline' when the device is offline at failure time. */
+export function withOfflineCheck<T extends SyncOutcome>(
+  outcome: T,
+  offline = isDeviceOffline(),
+): T | 'offline' {
+  return outcome === 'failed' && offline ? 'offline' : outcome;
+}
+
 /** Toast text for a failed outcome, in the user's tone. */
 export function syncFailureMessage(
   outcome: Exclude<SyncOutcome, 'ok'>,
   tone: CommentaryTone,
 ): string {
-  return toneBody(
-    outcome === 'credentials' ? OCTOPUS_SYNC_COPY.credentials : OCTOPUS_SYNC_COPY.failed,
-    tone,
-  );
+  const copy =
+    outcome === 'credentials'
+      ? OCTOPUS_SYNC_COPY.credentials
+      : outcome === 'offline'
+        ? OCTOPUS_SYNC_COPY.offline
+        : OCTOPUS_SYNC_COPY.failed;
+  return toneBody(copy, tone);
 }
 
 /**
