@@ -2,7 +2,6 @@ import { AnimatePresence } from 'framer-motion';
 import type { WeatherData } from '@/hooks/useWeatherData';
 import type { SceneVisualConfig } from '@/lib/sceneConfig';
 import { Rainbow } from '../Rainbow';
-import { PollutionWarning } from '../PollutionWarning';
 import { NetZeroCelebration } from '../NetZeroCelebration';
 import { shouldCelebrateZeroCarbon } from '@/lib/sceneUtils';
 
@@ -29,8 +28,8 @@ export function SceneMilestoneFX({
         {intensity < 50 && weather.isRaining && sceneConfig.isDaytime && <Rainbow />}
       </AnimatePresence>
 
-      {/* Pollution Warning - High carbon (>300g) */}
-      <AnimatePresence>{intensity > 300 && <PollutionWarning />}</AnimatePresence>
+      {/* BH-102 (Design): no in-scene pollution warning (⚠, red border, vignette, blur
+          particles) at high carbon. The hero carries the reading; the world shows it. */}
 
       {/* Zero-carbon celebration: only on a real 0 gCO2/kWh reading */}
       <AnimatePresence>

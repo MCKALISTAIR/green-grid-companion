@@ -16,12 +16,10 @@ function read(name: string) {
  * hydro dams, biomass, and dual offshore wind stacks leaked in.
  */
 describe('Scene theme integrity (stress-test guards)', () => {
-  it('keeps Lucide leaf/flame overlays countryside-only in SceneGenerationOverlay', () => {
+  it('keeps countryside props gated in SceneGenerationOverlay (no Lucide icons, BH-102)', () => {
     const src = read('SceneGenerationOverlay.tsx');
-    // Leaves block must be gated
-    expect(src).toMatch(/!isCity && !isCoastal && sceneConfig\.cleanliness > 0\.75/);
-    // Flames block must be gated
-    expect(src).toMatch(/!isCity && !isCoastal && sceneConfig\.cleanliness < 0\.2/);
+    // BH-102: the Lucide leaf/flame/droplet overlays are gone from the scene entirely
+    expect(src).not.toMatch(/from 'lucide-react'/);
     // Solar panels countryside-only
     expect(src).toMatch(
       /!isCity && !isCoastal && sceneConfig\.showRenewables && sceneConfig\.showSun/,
