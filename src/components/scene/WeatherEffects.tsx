@@ -22,7 +22,10 @@ interface WeatherEffectsProps {
   showWind?: boolean;
   /** BH-90: false when the weather is unknown (offline / Open-Meteo failed). */
   weatherKnown?: boolean;
-  /** BH-90: px from the scene top where unknown-weather clouds may start. */
+  /**
+   * BH-90: px from the scene top where clouds may start (hero text bottom + 34).
+   * Used by the unknown-weather bank and, since the #185 review, the overcast bank.
+   */
   cloudTopPx?: number;
 }
 
@@ -285,7 +288,7 @@ export function WeatherEffects({
       {!weatherKnown ? (
         <UnknownWeatherCloudBank topPx={cloudTopPx} timeOfDay={timeOfDay} />
       ) : weather.cloudCover > 70 || weather.isRaining ? (
-        <CloudBank night={isNight} />
+        <CloudBank night={isNight} topPx={cloudTopPx} />
       ) : (
         weather.cloudCover > 40 && (
           <WeatherClouds cloudCover={weather.cloudCover} isNight={isNight} timeOfDay={timeOfDay} />

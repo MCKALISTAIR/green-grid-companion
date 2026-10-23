@@ -1,14 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import {
-  getHeroTextTone,
-  getSkyGradient,
-  HERO_CHIP,
-  HERO_INK,
-  TIME_SKY_COLORS,
-} from './sceneUtils';
+import { getHeroTextTone, HERO_CHIP, HERO_INK, TIME_SKY_COLORS } from './sceneUtils';
 import type { WeatherData } from '@/hooks/useWeatherData';
 import type { TimeOfDay } from '@/hooks/useTimeOfDay';
-import { MOOD, UNKNOWN_WEATHER_PALETTE, unknownWeatherTone } from './artPalette';
+import { MOOD } from './artPalette';
 
 type RGB = [number, number, number];
 const parseHsl = (s: string): RGB => {
@@ -124,58 +118,24 @@ describe('hero text AA with the intensity mood haze', () => {
   });
 });
 
-// BH-92 (Design ruling, 23 Oct 2026): the hero warning icon is steady (full
-// opacity, no pulse) in every error state and follows the hero text rule: ink on
-// light skies, white on dark ones. As a non-text graphic it needs >= 3:1 against
-// the sky behind it at every time of day, with known and unknown weather.
-describe('BH-92 hero warning icon contrast (steady, >= 3:1)', () => {
-  const TIMES = Object.keys(TIME_SKY_COLORS) as TimeOfDay[];
-  // The icon colour, mirroring IntensityHeroOverlay: ink class on ink tone, else white.
-  const iconColour = (tone: ReturnType<typeof getHeroTextTone>): RGB =>
-    tone === 'ink' ? hex(HERO_INK) : WHITE;
-  // White icons sit over the dark HUD scrim (weakest stop); ink icons get no help
-  // (the light veil is ignored, and is off entirely with the weather unknown).
-  const behind = (tone: ReturnType<typeof getHeroTextTone>, sky: RGB): RGB =>
-    tone === 'ink' ? sky : mix(sky, BLACK, DARK_SCRIM);
-
-  it.each(skies)('known weather, %s: icon >= 3:1 at full opacity', (_n, t, w, stops) => {
-    const tone = getHeroTextTone(t, w);
-    for (const s of stops) {
-      expect(ratio(iconColour(tone), behind(tone, parseHsl(s)))).toBeGreaterThanOrEqual(3);
-    }
-  });
-
-  it.each(TIMES)('unknown weather (neutral overcast), %s: icon >= 3:1', (t) => {
-    // BH-90: with the weather unknown the tone follows the time of day only.
-    const tone = getHeroTextTone(t, undefined);
-    for (const s of UNKNOWN_WEATHER_PALETTE[unknownWeatherTone(t)].sky) {
-      expect(ratio(iconColour(tone), behind(tone, hex(s)))).toBeGreaterThanOrEqual(3);
-    }
-  });
-
-  // Full matrix: every time of day x weather x haze, using the sky the scene
-  // actually resolves (getSkyGradient) at the stops behind the icon (0% and 40%).
+// Design review of #185 (23 Oct 2026, incl. BH-107): the hero tone rule. The
+// contrast itself is pixel-measured on the rendered scene in
+// e2e/hero-contrast.spec.ts (every weather by time of day at 390 and 320); this
+// only pins the rule. White at dusk and night in EVERY weather.
+describe('hero tone rule (text and warning icon)', () => {
   const WEATHERS: Array<[string, Partial<WeatherData>]> = [
     ['clear', { cloudCover: 0 }],
     ['partly cloudy', { cloudCover: 40 }],
     ['overcast', { cloudCover: 100 }],
-    ['rain', { cloudCover: 80, isRaining: true }],
-    ['fog', { cloudCover: 50, isFoggy: true }],
-    ['storm', { cloudCover: 60, isThunderstorm: true }],
+    ['rain', { cloudCover: 95, isRaining: true }],
+    ['fog', { cloudCover: 100, isFoggy: true }],
+    ['storm', { cloudCover: 90, isRaining: true, isThunderstorm: true }],
+    ['snow', { cloudCover: 90, isSnowing: true }],
   ];
-  const HAZES: Array<[string, (typeof MOOD)[keyof typeof MOOD] | null]> = [
-    ['no haze', null],
-    ...Object.entries(MOOD),
-  ];
-  const matrix = TIMES.flatMap((t) =>
-    WEATHERS.flatMap(([wn, w]) =>
-      HAZES.map(([hn, m]) => [`${t} / ${wn} / ${hn}`, t, w, m] as const),
-    ),
-  );
-  it.each(matrix)('%s: icon >= 3:1', (_n, t, w, m) => {
-    const weather = {
+  const full = (w: Partial<WeatherData>) =>
+    ({
       condition: 'clear',
-      temperature: 12,
+      temperature: 2,
       windSpeed: 5,
       cloudCover: 0,
       isRaining: false,
@@ -183,23 +143,21 @@ describe('BH-92 hero warning icon contrast (steady, >= 3:1)', () => {
       isFoggy: false,
       isThunderstorm: false,
       ...w,
-    } as WeatherData;
-    const tone = getHeroTextTone(t, weather);
-    const stops = getSkyGradient('low', t, 0.8, weather)
-      .match(/hsl\([^)]+\)/g)!
-      .slice(0, 2);
-    for (const stop of stops) {
-      let sky = parseHsl(stop);
-      if (m) {
-        const l = 0.2126 * sky[0] + 0.7152 * sky[1] + 0.0722 * sky[2];
-        sky = mix(sky.map((v) => l + (v - l) * m.sat) as RGB, hex(m.haze), m.a);
-      }
-      expect(ratio(iconColour(tone), behind(tone, sky))).toBeGreaterThanOrEqual(3);
-    }
+    }) as WeatherData;
+
+  it.each(WEATHERS)('%s: white at dusk and night', (_n, w) => {
+    expect(getHeroTextTone('dusk', full(w))).toBe('light');
+    expect(getHeroTextTone('night', full(w))).toBe('light');
   });
 
-  it('is ink on light skies and white on dark ones', () => {
-    expect(iconColour(getHeroTextTone('midday'))).toEqual(hex('#0f1a24'));
-    expect(iconColour(getHeroTextTone('night'))).toEqual(WHITE);
+  it('white at dusk and night with the weather unknown too', () => {
+    expect(getHeroTextTone('dusk', undefined)).toBe('light');
+    expect(getHeroTextTone('night', undefined)).toBe('light');
+  });
+
+  it('by day the weather still decides: ink under cloud, rain, fog and snow', () => {
+    for (const t of ['morning', 'midday', 'afternoon', 'sunset'] as TimeOfDay[]) {
+      for (const [, w] of WEATHERS) expect(getHeroTextTone(t, full(w))).toBe('ink');
+    }
   });
 });

@@ -122,9 +122,49 @@ function bankPath(w: number, y: number) {
   return `${d} V0 H0Z`;
 }
 
-/** Full-width overcast bank (overcast >70% or raining). */
-export function CloudBank({ night = false }: { night?: boolean }) {
+/** The same scalloped edge, filled downwards: a bank whose tops are its edge. */
+function risingBankPath(w: number, y: number, bottom: number) {
+  return bankPath(w, y).replace(/ V0 H0Z$/, ` V${bottom} H0Z`);
+}
+
+/**
+ * Full-width overcast bank (overcast >70% or raining).
+ *
+ * Design review of #185 (23 Oct 2026): on the home hero (`topPx` given) the bank
+ * follows the #179 rule, like the unknown-weather bank: its cloud tops start at
+ * the hero text bottom + 34, so no cloud edge crosses the number, label or
+ * warning icon (at 320x568 the hanging deck's edge sat right on the icon).
+ * Without `topPx` (scene test page, compact scenes) it hangs from the top as before.
+ */
+export function CloudBank({ night = false, topPx }: { night?: boolean; topPx?: number }) {
   const [front, back] = night ? CLOUD_BANK_COLOURS.night : CLOUD_BANK_COLOURS.day;
+  if (topPx != null) {
+    const top = Math.round(topPx);
+    return (
+      <div
+        aria-hidden
+        className="absolute inset-x-0 bottom-0 overflow-hidden pointer-events-none"
+        style={{ top: `${top}px` }}
+        data-art="cloud-bank"
+        data-variant="below-text"
+        data-cloud-top={top}
+      >
+        <svg
+          className="absolute inset-x-0 top-0 w-full h-[120px]"
+          viewBox="0 0 400 120"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          <path d={risingBankPath(400, 20, 120)} fill={back} opacity=".9" />
+          <path d={risingBankPath(400, 46, 120)} fill={front} opacity=".95" />
+        </svg>
+        <div
+          className="absolute inset-x-0 bottom-0 top-[119px]"
+          style={{ background: front, opacity: 0.95 }}
+        />
+      </div>
+    );
+  }
   return (
     <svg
       className="absolute inset-x-0 top-0 w-full h-[40%]"
