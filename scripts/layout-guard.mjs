@@ -97,6 +97,16 @@ async function openPage(browser, base, { viewport, scenario, route = '/', clock 
   });
   await installMocks(context, SCENARIOS[scenario]);
   await context.addInitScript(seedStorage());
+  // A just-unlocked, unseen badge so Home shows the trophy chip and its overlap
+  // checks still run (the chip hides otherwise; see src/lib/trophyChip.ts).
+  await context.addInitScript(() => {
+    localStorage.setItem(
+      'gridgreen-achievements-v1',
+      JSON.stringify([
+        { id: 'data_tracker', unlocked: true, unlockedAt: new Date().toISOString(), progress: 1 },
+      ]),
+    );
+  });
   const page = await context.newPage();
   if (clock) {
     await page.clock.install({ time: new Date(clock) });

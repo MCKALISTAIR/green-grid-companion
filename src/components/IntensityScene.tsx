@@ -9,7 +9,8 @@ import { useAchievements } from '@/hooks/useAchievements';
 import { useSceneDirector } from '@/hooks/useSceneDirector';
 import { useCleanlinessBand } from '@/hooks/useCleanlinessBand';
 import { useSceneGrowth } from '@/hooks/useSceneGrowth';
-import { SceneColorGrade } from './scene/SceneColorGrade';
+import { IntensityMood } from './scene/art/WeatherArt';
+import { getMoodBand } from '@/lib/artPalette';
 import { StateTransitionFX } from './scene/StateTransitionFX';
 import { SceneHeroSpotlight, SceneAtmosphericDepth } from './scene/SceneComposition';
 import { SceneTemporalLife } from './scene/SceneTemporalLife';
@@ -181,14 +182,6 @@ export function IntensityScene({
     }));
   }, []);
 
-  const rainConfig = useMemo(() => {
-    return Array.from({ length: 20 }).map((_, i) => ({
-      id: i,
-      delay: Math.random() * 2,
-      x: 5 + i * 4.5,
-    }));
-  }, []);
-
   const { isRaining } = weather;
 
   const [activeEvent, setActiveEvent] = useState<SceneRandomEvent>('none');
@@ -348,13 +341,14 @@ export function IntensityScene({
           isCoastal={isCoastal}
           isNight={isNight}
         />
-        <SceneColorGrade cleanliness={sceneConfig.cleanliness} isNight={isNight} />
+        <IntensityMood
+          band={getMoodBand(hasLiveReading ? intensity : Math.max(1, intensity), index)}
+        />
         <StateTransitionFX transition={bandTransition} />
 
         <SceneAmbientLife
           sceneConfig={sceneConfig}
           shouldReduceMotion={shouldReduceMotion}
-          rainConfig={rainConfig}
           birdConfig={birdConfig}
           fireflyConfig={fireflyConfig}
         />

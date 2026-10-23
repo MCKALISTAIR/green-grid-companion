@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildSceneConfig } from './sceneConfig';
+import { buildSceneConfig, WIND_STATE_KMH } from './sceneConfig';
 import type { WeatherData } from '@/hooks/useWeatherData';
 import type { TimeOfDay } from '@/hooks/useTimeOfDay';
 import type { SceneType } from '@/hooks/useSceneType';
@@ -50,5 +50,27 @@ describe('buildSceneConfig ground plane (all scene dialects)', () => {
 
   it('dirty city still uses asphalt, not brown dirt grass', () => {
     expect(ground('city', 'midday', 320)).toBe('#44403c');
+  });
+});
+
+describe('art pass v1 scene logic', () => {
+  const cfg = (intensity: number, windSpeed: number, isRaining = false) =>
+    buildSceneConfig({
+      intensity,
+      index: 'very high',
+      timeOfDay: 'midday',
+      weather: { ...clearWeather, windSpeed, isRaining },
+      synthwaveMode: false,
+      isNight: false,
+    });
+
+  it('never draws rain from intensity alone (dry day at 400g)', () => {
+    expect('showRain' in cfg(400, 5)).toBe(false);
+  });
+
+  it('wind state starts at 25 km/h', () => {
+    expect(WIND_STATE_KMH).toBe(25);
+    expect(cfg(100, 24.9).showWind).toBe(false);
+    expect(cfg(100, 25).showWind).toBe(true);
   });
 });
