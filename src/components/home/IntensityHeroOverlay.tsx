@@ -502,7 +502,7 @@ export function IntensityHeroOverlay({
         </div>
       )}
 
-      {/* Rendered last so keyboard/SR order is trophy → location → reading → scene hotspots.
+      {/* Rendered last so keyboard/SR order is trophy → location → reading → scene.
           Absolute + no z-index, so paint order vs. the z-10/z-30 overlays is unchanged. */}
       <ComponentErrorBoundary name="SceneCanvas">
         <IntensityScene

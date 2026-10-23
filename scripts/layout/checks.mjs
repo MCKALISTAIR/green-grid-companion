@@ -162,21 +162,6 @@ async function checkHeroText(page, { tag, viewport, expectMeta }) {
         right: i.left >= l.right - 1,
       };
     }
-    const rect = (el) => {
-      const r = el.getBoundingClientRect();
-      return r.width && r.height ? { x: r.x, y: r.y, w: r.width, h: r.height } : null;
-    };
-    const text = ['hero-number', 'hero-band', 'hero-meta']
-      .map((id) => document.querySelector(`[data-testid='${id}']`))
-      .filter(Boolean)
-      .map(rect)
-      .filter(Boolean);
-    out.hotspotHits = [...document.querySelectorAll('[data-scene-hotspot]')]
-      .map(rect)
-      .filter(Boolean)
-      .filter((h) =>
-        text.some((t) => h.x < t.x + t.w && h.x + h.w > t.x && h.y < t.y + t.h && h.y + h.h > t.y),
-      ).length;
     const metaEl = document.querySelector("[data-testid='hero-meta']");
     const sheet = document.querySelector('.home-feed');
     out.metaGap =
@@ -332,7 +317,6 @@ export async function checkScrollSpace(
     fails.push(
       `${tag} ${Math.round(r.scrollH - limit)}px of empty scroll below the last content (scrollHeight ${r.scrollH}, last content ${Math.round(r.last)})`,
     );
-  if (r.hotspotHits) fails.push(`${tag} ${r.hotspotHits} tappable scene dot(s) overlap hero text`);
   // 320 follow-up (a): meta line clears the skyline strip above the scallop.
   if (viewport.width < 360 && viewport.height <= 640 && r.metaGap !== null && r.metaGap < 72)
     fails.push(
