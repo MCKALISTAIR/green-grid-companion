@@ -17,6 +17,8 @@ import {
   TubeFlash,
 } from '../CityElements';
 import { ValleyMist } from '../ValleyMist';
+import { EdinburghCastle } from '../EdinburghCastle';
+import { isLandmarkHeroLit, type CityWeatherState } from '@/lib/cityLandmarkPalette';
 
 export interface CitySceneLayersProps {
   shouldReduceMotion: boolean;
@@ -32,11 +34,20 @@ export interface CitySceneLayersProps {
   cleanlinessBand: CleanlinessBand;
   intensity: number;
   /**
-   * Which city (PR-B2): London landmarks, the Eye and the Tube flash render
-   * only for 'london'. 'edinburgh' and 'generic' get the skyline without them
-   * until the art PR fills CityVariantLandmarkSlot. Defaults to 'generic'.
+   * Which city (PR-B2): London landmarks, the dome, the Eye and the Tube flash
+   * render only for 'london'. 'edinburgh' gets the neutral GB skyline with
+   * Edinburgh Castle in the far layer; 'generic' gets the neutral skyline with
+   * the church spire (PR-B1, Design brief §11). Defaults to 'generic'.
    */
   cityVariant?: CityVariant;
+  /**
+   * NESO index string ('very low' … 'very high') when there is a live reading.
+   * Drives the decorative very-clean landmark light (castle / spire) and the
+   * castle's haze. Art only; no data logic here.
+   */
+  nesoIndex?: string;
+  /** Collapsed weather state for landmark colour treatments (§11.2). */
+  weatherState?: CityWeatherState;
 }
 
 export function CitySceneLayers({
@@ -52,14 +63,43 @@ export function CitySceneLayers({
   timeOfDay,
   cleanlinessBand,
   cityVariant = 'generic',
+  nesoIndex,
+  weatherState = 'clear',
 }: CitySceneLayersProps) {
   const isLondon = cityVariant === 'london';
   const hero = getCityHeroEmphasis(cleanlinessBand);
+  const landmarkHero = isLandmarkHeroLit(nesoIndex, cleanlinessBand);
   const showStack =
     sceneConfig.cleanliness < 0.2 || hero.hero === 'distant-stack' || hero.hero === 'smog';
 
   return (
     <>
+      {/* Landmark far layer (Design brief §11, layer 3): Edinburgh Castle on its
+          rock, behind the back row. Its own layer so the skyline demotion never
+          fades it; static art, no filters. */}
+      {cityVariant === 'edinburgh' && (
+        <motion.div
+          data-city-landmark-layer="edinburgh-far"
+          style={{ y: shouldReduceMotion ? 0 : backY }}
+          className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-0 overflow-hidden"
+        >
+          <svg
+            viewBox="0 0 400 150"
+            className="w-full h-full"
+            preserveAspectRatio={SCENE_SILHOUETTE_ASPECT}
+            aria-hidden="true"
+          >
+            <EdinburghCastle
+              timeOfDay={timeOfDay}
+              weather={weatherState}
+              nesoIndex={nesoIndex}
+              heroLit={landmarkHero}
+              synthwaveMode={synthwaveMode}
+            />
+          </svg>
+        </motion.div>
+      )}
+
       {/* City: Background skyline (backY) */}
       <motion.div
         data-city-variant={cityVariant}
@@ -76,10 +116,6 @@ export function CitySceneLayers({
         >
           <SmogBand cleanliness={sceneConfig.cleanliness} isNight={isNight} />
           {showStack && <DistantStack isNight={isNight} />}
-          {/* Landmark far layer (Design brief §11, layer 3): Edinburgh only.
-              Edinburgh Castle on Castle Rock lands here in the art PR (PR-B1),
-              behind CityLandscapeBack. Empty slot until then. */}
-          {cityVariant === 'edinburgh' && <g data-city-landmark-slot="edinburgh-far" />}
           <CityLandscapeBack
             cleanliness={sceneConfig.cleanliness}
             isNight={isNight}
@@ -90,6 +126,8 @@ export function CitySceneLayers({
             windSpeed={windSpeed}
             timeOfDay={timeOfDay}
             cityVariant={cityVariant}
+            landmarkHero={landmarkHero}
+            weatherState={weatherState}
           />
         </svg>
       </motion.div>
@@ -117,6 +155,8 @@ export function CitySceneLayers({
             windSpeed={windSpeed}
             timeOfDay={timeOfDay}
             cityVariant={cityVariant}
+            landmarkHero={landmarkHero}
+            weatherState={weatherState}
           />
         </svg>
       </motion.div>
@@ -142,15 +182,17 @@ export function CitySceneLayers({
               windSpeed={windSpeed}
               timeOfDay={timeOfDay}
               cityVariant={cityVariant}
+              landmarkHero={landmarkHero}
+              weatherState={weatherState}
             />
           </g>
           {isLondon && (
             <g
-              opacity={hero.eyeOpacity}
+              opacity={hero.landmarkOpacity}
               style={{
                 transition: 'opacity 1.2s ease',
                 transformOrigin: '75px 138px',
-                transform: `scale(${hero.eyeScale})`,
+                transform: `scale(${hero.landmarkScale})`,
               }}
             >
               <LondonEye isNight={isNight} skipIntro={skipIntro} />
