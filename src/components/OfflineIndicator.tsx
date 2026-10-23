@@ -5,6 +5,7 @@ import { useOffline } from '@/hooks/useOffline';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { NotificationType } from '@capacitor/haptics';
+import { useOfflineEmptyStateShown } from '@/lib/offlineEmptyState';
 import { useQueryClient } from '@tanstack/react-query';
 import { BACK_ONLINE_PILL, CARBON_QUERY_ROOTS, offlinePillText } from '@/lib/voice/statesCopy';
 import { useHeroStatusSlot } from '@/lib/heroStatusSlot';
@@ -34,6 +35,8 @@ export function OfflineIndicator() {
   const reduced = useReducedMotion();
   const queryClient = useQueryClient();
   const slot = useHeroStatusSlot();
+  // Home's full offline state (nothing cached) already says it; no pill too.
+  const emptyStateShown = useOfflineEmptyStateShown();
 
   const savedAt = isOffline
     ? Math.max(
@@ -69,7 +72,9 @@ export function OfflineIndicator() {
   }, [wasOffline, clearWasOffline, queryClient]);
 
   const state: 'offline' | 'online' | null = isOffline
-    ? 'offline'
+    ? emptyStateShown
+      ? null
+      : 'offline'
     : showReconnected
       ? 'online'
       : null;
