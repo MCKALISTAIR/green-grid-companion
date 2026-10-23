@@ -1155,7 +1155,7 @@ const NEUTRAL_TREES = [
 /** Edinburgh: a garden gap under the castle (x 110-190), then the town resumes at the tail. */
 const EDINBURGH_FRONT: Run[] = [
   { x: 14, houses: 6, u: 14 },
-  { x: 190, houses: 4, u: 15 },
+  { x: 190, houses: 4, u: 17 },
   { x: 264, houses: 5, u: 13 },
   { x: 352, houses: 3, u: 16 },
 ];
