@@ -10,7 +10,13 @@ import { installMocks, seedStorage } from '../scripts/layout/mock-api.mjs';
 test.use({ serviceWorkers: 'block' });
 
 const MIDDAY = new Date('2026-06-21T12:00:00+01:00');
-const LONDON_LANDMARKS = ['glass-tower-far', 'clock-tower', 'glass-tower-near', 'london-eye'];
+const LONDON_LANDMARKS = [
+  'glass-tower-far',
+  'clock-tower',
+  'dome',
+  'glass-tower-near',
+  'london-eye',
+];
 // Set B2_SHOTS=1 to write the PR screenshots into docs/pr-shots/b2/.
 const SHOTS = Boolean(process.env.B2_SHOTS);
 
@@ -69,8 +75,8 @@ for (const viewport of VIEWPORTS) {
       const scene = await openHomeAt(page, postcode, viewport);
       await expect(scene).toHaveAttribute('data-scene-type', 'city');
       await expect(scene.locator(`[data-city-variant="${variant}"]`)).toHaveCount(1);
-      // The skyline itself is still there.
-      await expect(scene.locator(`[data-city-landmark-slot="${variant}-front"]`)).toHaveCount(1);
+      // The skyline itself is still there (PR-B1 neutral set).
+      await expect(scene.locator(`[data-city-art="${variant}-front"]`)).toHaveCount(1);
       expect(await landmarksIn(scene)).toEqual([]);
       await shot(page, name);
     });

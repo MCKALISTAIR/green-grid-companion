@@ -17,6 +17,7 @@ import { SceneTemporalLife } from './scene/SceneTemporalLife';
 import { GenerationMix } from '@/lib/carbonApi';
 import { buildSceneConfig } from '@/lib/sceneConfig';
 import { useTapCount } from '@/lib/useTapCount';
+import { cityWeatherState } from '@/lib/cityLandmarkPalette';
 import { buildTurbineLayout } from '@/lib/turbineLayout';
 import { useSceneType, SceneType } from '@/hooks/useSceneType';
 import {
@@ -333,6 +334,7 @@ export function IntensityScene({
       data-synthwave={synthwaveMode ? 'on' : 'off'}
       aria-label={`Animated landscape representing ${index} carbon intensity`}
       data-scene-type={sceneType}
+      data-time-of-day={timeOfDay}
     >
       {isVintage && (
         <div
@@ -425,6 +427,12 @@ export function IntensityScene({
             cleanlinessBand={cleanlinessBand}
             intensity={intensity}
             cityVariant={cityVariant}
+            nesoIndex={
+              hasLiveReading || (isDirectorMode && overrides.intensity !== undefined)
+                ? rawIndex || undefined
+                : undefined
+            }
+            weatherState={cityWeatherState(weatherKnown, weather)}
           />
         ) : (
           <CountrysideSceneLayers

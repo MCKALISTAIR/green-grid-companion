@@ -7,12 +7,17 @@ import type { CleanlinessBand } from '@/hooks/useCleanlinessBand';
  * still read, and leave one micro-life cue on the road.
  */
 export interface CityHeroEmphasis {
-  /** Focal prop for this band (matches SceneHeroSpotlight). */
-  hero: 'london-eye' | 'skyline' | 'bess' | 'distant-stack' | 'smog';
-  eyeOpacity: number;
+  /**
+   * Focal prop for this band (matches SceneHeroSpotlight). 'landmark' is the
+   * city's very-clean hero: the London Eye, Edinburgh Castle (rim-lit, never
+   * demoted or scaled) or the generic church spire (Design brief Q9, PR-B1).
+   */
+  hero: 'landmark' | 'skyline' | 'bess' | 'distant-stack' | 'smog';
+  /** London Eye opacity (the only landmark that is demoted/scaled). */
+  landmarkOpacity: number;
   bessOpacity: number;
   /** Scale bump when this prop is the hero (>1) or slight shrink when demoted. */
-  eyeScale: number;
+  landmarkScale: number;
   bessScale: number;
   /** Mid/back skyline relative opacity (clean band lifts the skyline). */
   skylineOpacity: number;
@@ -29,10 +34,10 @@ export interface CityHeroEmphasis {
 
 const CITY_HERO_EMPHASIS: Record<CleanlinessBand, CityHeroEmphasis> = {
   'very-clean': {
-    hero: 'london-eye',
-    eyeOpacity: 1,
+    hero: 'landmark',
+    landmarkOpacity: 1,
     bessOpacity: 0.38,
-    eyeScale: 1.08,
+    landmarkScale: 1.08,
     bessScale: 0.92,
     skylineOpacity: 0.78,
     frontOpacity: 0.88,
@@ -44,9 +49,9 @@ const CITY_HERO_EMPHASIS: Record<CleanlinessBand, CityHeroEmphasis> = {
   },
   clean: {
     hero: 'skyline',
-    eyeOpacity: 0.42,
+    landmarkOpacity: 0.42,
     bessOpacity: 0.38,
-    eyeScale: 0.94,
+    landmarkScale: 0.94,
     bessScale: 0.94,
     skylineOpacity: 1,
     frontOpacity: 1,
@@ -58,9 +63,9 @@ const CITY_HERO_EMPHASIS: Record<CleanlinessBand, CityHeroEmphasis> = {
   },
   moderate: {
     hero: 'bess',
-    eyeOpacity: 0.4,
+    landmarkOpacity: 0.4,
     bessOpacity: 1,
-    eyeScale: 0.94,
+    landmarkScale: 0.94,
     bessScale: 1.12,
     skylineOpacity: 0.8,
     frontOpacity: 0.86,
@@ -72,9 +77,9 @@ const CITY_HERO_EMPHASIS: Record<CleanlinessBand, CityHeroEmphasis> = {
   },
   dirty: {
     hero: 'distant-stack',
-    eyeOpacity: 0.36,
+    landmarkOpacity: 0.36,
     bessOpacity: 0.36,
-    eyeScale: 0.92,
+    landmarkScale: 0.92,
     bessScale: 0.92,
     skylineOpacity: 0.88,
     frontOpacity: 0.92,
@@ -86,9 +91,9 @@ const CITY_HERO_EMPHASIS: Record<CleanlinessBand, CityHeroEmphasis> = {
   },
   'very-dirty': {
     hero: 'smog',
-    eyeOpacity: 0.35,
+    landmarkOpacity: 0.35,
     bessOpacity: 0.32,
-    eyeScale: 0.9,
+    landmarkScale: 0.9,
     bessScale: 0.9,
     skylineOpacity: 0.72,
     frontOpacity: 0.8,
