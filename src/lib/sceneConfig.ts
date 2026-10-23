@@ -3,6 +3,9 @@ import type { WeatherData } from '@/hooks/useWeatherData';
 import type { SceneType } from '@/hooks/useSceneType';
 import { getSkyGradient } from '@/lib/sceneUtils';
 
+/** Wind state threshold, km/h (Open-Meteo default unit). Alistair, 15 Oct 2026. */
+export const WIND_STATE_KMH = 25;
+
 export interface SceneVisualConfig {
   cleanliness: number;
   skyGradient: string;
@@ -11,7 +14,8 @@ export interface SceneVisualConfig {
   showFactories: boolean;
   showBirds: boolean;
   showSmoke: boolean;
-  showRain: boolean;
+  /** Wind state (art pass v1 §9): Open-Meteo wind_speed_10m >= WIND_STATE_KMH. */
+  showWind: boolean;
   showSunRays: boolean;
   showStars: boolean;
   showMoon: boolean;
@@ -58,7 +62,9 @@ export function buildSceneConfig({
   const isDaytime = timeOfDay === 'morning' || timeOfDay === 'midday' || timeOfDay === 'afternoon';
   const isGoldenHour = timeOfDay === 'sunset' || timeOfDay === 'dawn';
   const isDarkPeriod = timeOfDay === 'night' || timeOfDay === 'dusk';
-  const showSun = isDaytime || timeOfDay === 'sunset';
+  // No sun behind an overcast bank, rain or fog (art pass v1 §7).
+  const skyHidden = weather.cloudCover > 70 || weather.isRaining || weather.isFoggy;
+  const showSun = (isDaytime || timeOfDay === 'sunset') && !skyHidden;
 
   const getTimeFilter = () => {
     if (synthwaveMode) return 'contrast(1.2) saturate(1.5) hue-rotate(-10deg)';
@@ -122,7 +128,8 @@ export function buildSceneConfig({
     showFactories: cleanliness < 0.85,
     showBirds: cleanliness > 0.6 && isDaytime && !weatherReducesBirds,
     showSmoke: cleanliness < 0.5,
-    showRain: cleanliness < 0.35 && !weather.isRaining,
+    // Intensity never invents weather (art pass v1 §9); rain comes only from weather.isRaining.
+    showWind: !synthwaveMode && weather.windSpeed >= WIND_STATE_KMH,
     showSunRays:
       cleanliness > 0.7 &&
       (timeOfDay === 'morning' || timeOfDay === 'midday' || timeOfDay === 'afternoon') &&

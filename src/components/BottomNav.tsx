@@ -7,6 +7,7 @@ import { useHaptics } from '@/hooks/useHaptics';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { cn } from '@/lib/utils';
 import { prefetchMainTab } from '@/lib/navTabs';
+import { useUnseenBadge } from '@/lib/trophyChip';
 
 const pillTransition = { type: 'spring' as const, stiffness: 450, damping: 25 };
 
@@ -36,6 +37,7 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
   const location = useLocation();
   const { selection } = useHaptics();
   const shouldReduceMotion = useReducedMotion();
+  const unseenBadge = useUnseenBadge();
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -93,7 +95,17 @@ export function BottomNav({ onHomeClick }: BottomNavProps) {
                     fillOpacity={active ? 0.18 : 0}
                   />
                 </motion.span>
-                <span className="text-[10px] font-semibold tracking-wide">{label}</span>
+                {id === 'rank' && unseenBadge && (
+                  <span
+                    data-testid="rank-badge-dot"
+                    className="absolute top-1.5 left-1/2 ml-2 h-2.5 w-2.5 rounded-full bg-[#e0662f] ring-2 ring-background"
+                    aria-hidden="true"
+                  />
+                )}
+                <span className="text-[10px] font-semibold tracking-wide">
+                  {label}
+                  {id === 'rank' && unseenBadge && <span className="sr-only"> (new badge)</span>}
+                </span>
               </Button>
             );
           })}
