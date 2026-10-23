@@ -6,6 +6,7 @@ import { logger } from '@/lib/logger';
 import { resolvePostcode } from '@/lib/location';
 import { coordParams, roundCoords } from '@/lib/coords';
 import { setSceneLocation } from '@/lib/sceneLocation';
+import { selectSceneWeather } from '@/lib/sceneWeather';
 
 // Weather condition types based on WMO codes
 export type WeatherCondition =
@@ -116,21 +117,6 @@ async function fetchWeather(lat: number, lon: number): Promise<WeatherData> {
 // Default UK coordinates (London) as fallback
 const DEFAULT_COORDS = { lat: 51.5074, lon: -0.1278 };
 
-// Default weather until the first response. Module-level so its identity is
-// stable: a fresh object per render re-fired every effect that depends on it.
-const defaultWeather: WeatherData = {
-  condition: 'clear',
-  temperature: 15,
-  humidity: 50,
-  windSpeed: 10,
-  cloudCover: 30,
-  isRaining: false,
-  isSnowing: false,
-  isFoggy: false,
-  isThunderstorm: false,
-  precipitationIntensity: 0,
-};
-
 export function useWeatherData(postcode?: string) {
   const [coords, setCoords] = useState<{ lat: number; lon: number } | null>(null);
   const [coordsError, setCoordsError] = useState<string | null>(null);
@@ -223,8 +209,14 @@ export function useWeatherData(postcode?: string) {
     retry: 2,
   });
 
+  // No reading yet (loading, offline with nothing cached, or the fetch failed):
+  // the neutral overcast scene, never an invented sunny sky (BH-90).
+  const { weather, weatherKnown } = selectSceneWeather(query.data);
+
   return {
-    weather: query.data ?? defaultWeather,
+    weather,
+    /** False while `weather` is the neutral stand-in rather than a real reading. */
+    weatherKnown,
     isLoading: query.isLoading || !coords,
     error: query.error || coordsError,
   };
