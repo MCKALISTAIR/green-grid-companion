@@ -1,18 +1,11 @@
 /**
- * Loading, offline and empty-state copy. Plain in both tones (clarity wins).
- * Times are Europe/London.
+ * Offline pill, off-grid and postcode notices, and the stale-reading rule.
+ * Plain in both tones (clarity wins). Times are Europe/London. Error-state
+ * cards (slow, outage, stale, offline, rank, planner) live in errorStatesCopy.
  */
 import { formatLondonTime } from '@/lib/londonTime';
 
-/** Offline banner text. `savedAt` is when the newest cached carbon figures were fetched (ms), or null. */
-export function offlineBannerText(savedAt: number | null): string {
-  if (!savedAt) return "You're offline. Nothing saved yet.";
-  return `You're offline. Figures from ${formatLondonTime(new Date(savedAt))}.`;
-}
-
-export const BACK_ONLINE_TEXT = "You're back online.";
-
-/** Compact hero pill (motion spec §2.7). */
+/** Compact hero pill (motion spec §2.7). `savedAt` is when the newest cached carbon figures were fetched (ms), or null. */
 export function offlinePillText(savedAt: number | null): string {
   if (!savedAt) return 'Offline · nothing saved yet';
   return `Offline · figures from ${formatLondonTime(new Date(savedAt))}`;
@@ -22,13 +15,6 @@ export const BACK_ONLINE_PILL = 'Back online';
 
 /** Query keys (first element) that hold carbon intensity figures. */
 export const CARBON_QUERY_ROOTS = new Set(['national', 'regional', 'forecast']);
-
-/** Shown when a load has taken longer than ~8s (the request gives up at 10s). */
-export const SLOW_LOADING_COPY = {
-  title: 'Still waiting for NESO…',
-  body: 'The grid data service is slow right now.',
-  retry: 'Try again',
-} as const;
 
 /** Home notice when the saved postcode is not on the GB grid (figures are the GB average). */
 export const OFF_GRID_HOME_COPY = {
