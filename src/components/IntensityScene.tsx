@@ -1,7 +1,7 @@
 import { useHaptics } from '@/hooks/useHaptics';
 import { NotificationType } from '@capacitor/haptics';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { motion, useMotionValue, useScroll, useTransform } from 'framer-motion';
 import { useTimeOfDay, TimeOfDay } from '@/hooks/useTimeOfDay';
 import { useWeatherData, WeatherData } from '@/hooks/useWeatherData';
@@ -16,6 +16,7 @@ import { SceneHeroSpotlight, SceneAtmosphericDepth } from './scene/SceneComposit
 import { SceneTemporalLife } from './scene/SceneTemporalLife';
 import { GenerationMix } from '@/lib/carbonApi';
 import { buildSceneConfig } from '@/lib/sceneConfig';
+import { useTapCount } from '@/lib/useTapCount';
 import { buildTurbineLayout } from '@/lib/turbineLayout';
 import { useSceneType, SceneType } from '@/hooks/useSceneType';
 import {
@@ -82,7 +83,7 @@ export function IntensityScene({
   const { weather: realWeather, weatherKnown: realWeatherKnown } = useWeatherData();
   const { unlock } = useAchievements();
   const { active: isDirectorMode, overrides } = useSceneDirector();
-  const { impactLight: impactMedium, notification } = useHaptics({ decorative: true }); // scene taps: light, decorative
+  const { impactLight, impactMedium, notification } = useHaptics({ decorative: true }); // scene taps: decorative
   const shouldReduceMotion = useReducedMotion();
   const { sceneType: autoSceneType } = useSceneType();
 
@@ -132,8 +133,13 @@ export function IntensityScene({
   const weatherKnown =
     realWeatherKnown || Boolean(weatherOverride) || (isDirectorMode && Boolean(overrides.weather));
 
+  // BH-96: synthwave is in memory only (never persisted), so it resets on reload
+  // and next launch.
   const [synthwaveMode, setSynthwaveMode] = useState(false);
-  const [sunGlassesActive, setSunGlassesActive] = useState(false);
+  // Bumped on every sun tap; SceneSkyLayer replays the small sun reaction.
+  const [sunReactionKey, setSunReactionKey] = useState(0);
+  const registerSunTap = useTapCount();
+  const lastSunHapticRef = useRef(0);
 
   // Apply Intensity Override (guarantee a valid number, default to 150 moderate if propIntensity is undefined/null/NaN)
   const rawIntensity =
@@ -263,11 +269,21 @@ export function IntensityScene({
     setTimeout(() => setShowMeteorShower(false), 8000);
   };
 
-  const handleSunDoubleClick = () => {
-    if (shouldReduceMotion) return;
-    notification(NotificationType.Success);
-    setSunGlassesActive(true);
-    setTimeout(() => setSunGlassesActive(false), 4000);
+  // BH-96 (Design brief Q1): every tap on the sun gives a small reaction (disc
+  // pulse + light haptic, haptic at most once per 1.2 s). Three taps within 1.5 s
+  // toggle synthwave (medium haptic); a single or double tap never does.
+  const handleSunTap = () => {
+    setSunReactionKey((k) => k + 1);
+    if (registerSunTap()) {
+      impactMedium();
+      setSynthwaveMode((on) => !on);
+      return;
+    }
+    const now = Date.now();
+    if (now - lastSunHapticRef.current >= 1200) {
+      lastSunHapticRef.current = now;
+      impactLight();
+    }
   };
 
   const biomassPercentage = getGenerationPercentage('biomass');
@@ -306,6 +322,7 @@ export function IntensityScene({
       // region (not img): scene contains focusable tap targets (moon, cooling tower,
       // fact bubble...); role="img" forbids that
       role="region"
+      data-synthwave={synthwaveMode ? 'on' : 'off'}
       aria-label={`Animated landscape representing ${index} carbon intensity`}
     >
       {isVintage && (
@@ -338,11 +355,9 @@ export function IntensityScene({
           sunPosition={sunPosition}
           timeOfDay={timeOfDay}
           synthwaveMode={synthwaveMode}
-          setSynthwaveMode={setSynthwaveMode}
-          sunGlassesActive={sunGlassesActive}
+          sunReactionKey={sunReactionKey}
           handleMoonDoubleClick={handleMoonDoubleClick}
-          handleSunDoubleClick={handleSunDoubleClick}
-          impactMedium={impactMedium}
+          onSunTap={handleSunTap}
           cloudTopPx={cloudTopPx}
         />
 
