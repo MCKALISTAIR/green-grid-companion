@@ -6,6 +6,14 @@
  * intensity are skipped — never written as 0 g or a 'moderate' band.
  */
 import { parseIntensityPoint, type IntensityPoint } from './intensity-point.ts';
+import { halfHourKey, halfHourKeyToIso } from './half-hour.ts';
+
+/**
+ * Intensity by epoch half-hour (see half-hour.ts). Keyed by instant, not by
+ * string: NESO says "…T22:30Z", the DB says "…T22:30:00+00:00" and Octopus says
+ * "…T23:30:00+01:00" for the same half-hour (BH-91).
+ */
+export type IntensityByHalfHour = Map<number, IntensityPoint>;
 
 /** National (/intensity/...) and regional (/regional/intensity/.../regionid/N) bodies differ in shape. */
 export function extractIntensityList(json: unknown, isRegional: boolean): unknown[] {
@@ -26,13 +34,14 @@ export function extractIntensityList(json: unknown, isRegional: boolean): unknow
 export function buildIntensityMap(
   json: unknown,
   isRegional: boolean,
-): { map: Map<string, IntensityPoint>; skipped: number } {
-  const map = new Map<string, IntensityPoint>();
+): { map: IntensityByHalfHour; skipped: number } {
+  const map: IntensityByHalfHour = new Map();
   let skipped = 0;
   for (const item of extractIntensityList(json, isRegional)) {
     const from = (item as { from?: unknown } | null)?.from;
-    const point = typeof from === 'string' ? parseIntensityPoint(item) : null;
-    if (point) map.set(from as string, point);
+    const key = typeof from === 'string' ? halfHourKey(from) : null;
+    const point = key === null ? null : parseIntensityPoint(item);
+    if (key !== null && point) map.set(key, point);
     else skipped++;
   }
   return { map, skipped };
@@ -48,18 +57,26 @@ export interface FootprintRow {
   mpan: string;
 }
 
+/**
+ * One row per reading whose half-hour has usable intensity. interval_start /
+ * interval_end are written as canonical UTC ISO so the upsert key
+ * (mpan, interval_start) is the same instant whichever source spelled it.
+ */
 export function buildFootprintRows(
   consumption: Array<{ interval_start: string; interval_end: string; kwh: number }>,
-  intensity: Map<string, IntensityPoint>,
+  intensity: IntensityByHalfHour,
   mpan: string,
 ): FootprintRow[] {
   const rows: FootprintRow[] = [];
   for (const r of consumption) {
-    const point = intensity.get(r.interval_start);
+    const key = halfHourKey(r.interval_start);
+    if (key === null) continue;
+    const point = intensity.get(key);
     if (!point) continue;
+    const endKey = halfHourKey(r.interval_end);
     rows.push({
-      interval_start: r.interval_start,
-      interval_end: r.interval_end,
+      interval_start: halfHourKeyToIso(key),
+      interval_end: halfHourKeyToIso(endKey ?? key + 1),
       consumption_kwh: r.kwh,
       intensity_gco2_kwh: point.intensity,
       carbon_g: r.kwh * point.intensity,
