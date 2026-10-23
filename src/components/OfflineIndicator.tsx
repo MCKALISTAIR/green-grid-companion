@@ -10,6 +10,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { BACK_ONLINE_PILL, CARBON_QUERY_ROOTS, offlinePillText } from '@/lib/voice/statesCopy';
 import { useHeroStatusSlot } from '@/lib/heroStatusSlot';
 import { dur, spring } from '@/lib/motion';
+import { STALE_COPY } from '@/lib/voice/errorStatesCopy';
 
 /** How long "Back online" stays before fading (motion spec §2.7). */
 export const BACK_ONLINE_MS = 1600;
@@ -26,7 +27,9 @@ export function resetOfflineWarningForTests() {
  * hero's status slot) so it never covers the reading; on other screens it
  * floats as the same pill just below the status bar. Reconnect morphs the
  * pill to "Back online" and fades it after 1.6s. React Query refetches on
- * reconnect by itself, so there's no Refresh button any more.
+ * reconnect by itself. While offline the pill also carries the stale card's
+ * Retry (Design call, BH-78): Home hides that card offline so the cached time
+ * is said once, here.
  */
 export function OfflineIndicator() {
   const { isOffline, wasOffline, clearWasOffline } = useOffline();
@@ -89,9 +92,7 @@ export function OfflineIndicator() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, transition: { duration: dur.fast } }}
           transition={reduced ? { duration: dur.reduced } : spring.snappy}
-          className="inline-flex items-center gap-2 rounded-full bg-background/95 text-foreground border border-border/60 shadow-sm px-3 py-1.5 text-xs font-semibold backdrop-blur"
-          role="status"
-          aria-live="polite"
+          className="pointer-events-auto inline-flex items-center gap-2 rounded-full bg-background/95 text-foreground border border-border/60 shadow-sm px-3 py-1.5 text-xs font-semibold backdrop-blur"
           data-testid="connection-pill"
           data-state={state}
         >
@@ -99,9 +100,21 @@ export function OfflineIndicator() {
             className={`h-2 w-2 rounded-full shrink-0 ${state === 'offline' ? 'bg-amber-500' : 'bg-emerald-500'}`}
             aria-hidden="true"
           />
-          <motion.span layout={!reduced ? 'position' : false}>
+          <motion.span layout={!reduced ? 'position' : false} role="status" aria-live="polite">
             {state === 'offline' ? offlinePillText(savedAt) : BACK_ONLINE_PILL}
           </motion.span>
+          {state === 'offline' && (
+            <button
+              type="button"
+              data-testid="connection-pill-retry"
+              className="-my-1 -mr-1.5 rounded-full px-2 py-1 font-semibold text-primary underline underline-offset-2 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              onClick={() =>
+                void queryClient.refetchQueries({ type: 'active' }, { cancelRefetch: false })
+              }
+            >
+              {STALE_COPY.action}
+            </button>
+          )}
         </motion.div>
       )}
     </AnimatePresence>

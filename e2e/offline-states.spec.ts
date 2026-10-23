@@ -65,7 +65,10 @@ for (const viewport of [
     await expect(pill).toContainText('Offline · figures from');
     await expect(page.getByTestId('connection-pill')).toHaveCount(1);
     await expect(page.getByTestId('offline-empty-state')).toHaveCount(0);
-    await expect(page.getByTestId('offline-banner')).toHaveCount(0);
+    // Exactly one offline message: the pill (no card, chip or stale card too).
+    await expect(page.getByText(/offline/i)).toHaveCount(1);
+    await expect(page.getByTestId('last-known-chip')).toHaveCount(0);
+    await expect(page.getByTestId('stale-reading-notice')).toHaveCount(0);
     await page.screenshot({ path: `test-results/offline-cached-${viewport.width}.png` });
     await context.setOffline(false);
   });
@@ -87,6 +90,8 @@ for (const viewport of [
     const nav = await page.locator('[data-testid="bottom-nav"], .nav-dock').first().boundingBox();
     expect(btn!.y + btn!.height).toBeLessThanOrEqual(nav!.y);
     await expect(page.getByTestId('connection-pill')).toHaveCount(0);
+    // Exactly one offline message: the full state's title.
+    await expect(page.getByText(/offline/i)).toHaveCount(1);
     await page.screenshot({ path: `test-results/offline-empty-${viewport.width}.png` });
     await context.setOffline(false);
   });

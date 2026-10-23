@@ -119,8 +119,11 @@ const Index = () => {
   const failureKind = useGridFailureKind(isError, error);
   const { isOffline } = useOffline();
   // Offline with cached figures: the in-hero offline pill (#137) says so, so
-  // no Last-known chip as well. Nothing cached at all: full offline state.
-  const showLastKnown = hasReading && (isError || isReadingStale(lastUpdated ?? undefined));
+  // no Last-known chip and no stale card as well (the pill carries Retry).
+  // Back online but still stale: chip and card return. Nothing cached at
+  // all: full offline state.
+  const showLastKnown =
+    hasReading && !isOffline && (isError || isReadingStale(lastUpdated ?? undefined));
   const showOfflineEmpty = isOffline && !hasReading;
 
   // Splash fades as soon as the home screen has something real to show
@@ -295,7 +298,7 @@ const Index = () => {
                 <OffGridNotice area={offGrid} postcode={postcode} onChangePostcode={setPostcode} />
               )}
 
-              {isError && hasReading ? (
+              {isOffline ? null : isError && hasReading ? (
                 failureKind === 'outage' ? (
                   <OutageCard onRetry={() => void refetch()} />
                 ) : (
