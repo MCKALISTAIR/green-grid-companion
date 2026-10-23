@@ -84,7 +84,7 @@ export function IntensityScene({
   const { active: isDirectorMode, overrides } = useSceneDirector();
   const { impactLight: impactMedium, notification } = useHaptics({ decorative: true }); // scene taps: light, decorative
   const shouldReduceMotion = useReducedMotion();
-  const { sceneType: autoSceneType } = useSceneType();
+  const { sceneType: autoSceneType, cityVariant } = useSceneType();
 
   // Page-scroll parallax is for the home hero only. Vintage/Time Machine embeds
   // the scene in a short card — tracking document scrollY makes clouds/sky slide
@@ -307,6 +307,7 @@ export function IntensityScene({
       // fact bubble...); role="img" forbids that
       role="region"
       aria-label={`Animated landscape representing ${index} carbon intensity`}
+      data-scene-type={sceneType}
     >
       {isVintage && (
         <div
@@ -400,6 +401,7 @@ export function IntensityScene({
             timeOfDay={timeOfDay}
             cleanlinessBand={cleanlinessBand}
             intensity={intensity}
+            cityVariant={cityVariant}
           />
         ) : (
           <CountrysideSceneLayers

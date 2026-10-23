@@ -1,6 +1,7 @@
 import { useMemo, useId } from 'react';
 import { motion } from 'framer-motion';
 import { getWindowLitColor } from '@/lib/windowLitColor';
+import type { CityVariant } from '@/hooks/useSceneType';
 
 export type TimeOfDayCityLandscape =
   'night' | 'dawn' | 'morning' | 'midday' | 'afternoon' | 'sunset' | 'dusk';
@@ -14,6 +15,28 @@ export interface CityLandscapeProps {
   skipIntro?: boolean;
   windSpeed?: number;
   timeOfDay?: TimeOfDayCityLandscape;
+  /**
+   * Which city this is (PR-B2). The London landmarks draw only for 'london'.
+   * Defaults to 'generic' so a missing prop never shows London anywhere else.
+   */
+  cityVariant?: CityVariant;
+}
+
+/**
+ * Landmark slot for the non-London variants. Empty until the art PR (PR-B1,
+ * to Design's spec) adds the neutral skyline hero and, for 'edinburgh',
+ * Edinburgh Castle in the background. Keeping the slot in one place means the
+ * art PR changes only this component, not the layer or mapping code.
+ */
+function CityVariantLandmarkSlot({
+  cityVariant,
+  layer,
+}: {
+  cityVariant: CityVariant;
+  layer: 'back' | 'mid' | 'front';
+}) {
+  if (cityVariant === 'london') return null;
+  return <g data-city-landmark-slot={`${cityVariant}-${layer}`} />;
 }
 
 function useCityPalette(
@@ -745,6 +768,7 @@ function CityRoad({ fill, skipIntro }: { fill: string; skipIntro?: boolean }) {
 
 // Far skyline (background buildings)
 export function CityLandscapeBack(props: CityLandscapeProps) {
+  const cityVariant = props.cityVariant ?? 'generic';
   const palette = useCityPalette(
     props.cleanliness,
     props.isNight,
@@ -807,18 +831,24 @@ export function CityLandscapeBack(props: CityLandscapeProps) {
         delay={0.1}
         skipIntro={props.skipIntro}
       />
-      {/* Landmark: Glass tower silhouette */}
-      <GlassTower
-        x={85}
-        width={14}
-        height={100}
-        fill={`url(#${id}-gradCityFar)`}
-        windowLit={palette.windowLit}
-        isNight={props.isNight}
-        cleanliness={props.cleanliness}
-        delay={0.12}
-        skipIntro={props.skipIntro}
-      />
+      {/* London landmark: Glass tower silhouette (London only, PR-B2) */}
+      {cityVariant === 'london' ? (
+        <g data-city-landmark="glass-tower-far">
+          <GlassTower
+            x={85}
+            width={14}
+            height={100}
+            fill={`url(#${id}-gradCityFar)`}
+            windowLit={palette.windowLit}
+            isNight={props.isNight}
+            cleanliness={props.cleanliness}
+            delay={0.12}
+            skipIntro={props.skipIntro}
+          />
+        </g>
+      ) : (
+        <CityVariantLandmarkSlot cityVariant={cityVariant} layer="back" />
+      )}
       {/* Snow layer */}
       {props.isSnowing && (
         <rect x={0} y={133} width={400} height={17} fill="white" fillOpacity={0.15} />
@@ -829,6 +859,7 @@ export function CityLandscapeBack(props: CityLandscapeProps) {
 
 // Mid skyline
 export function CityLandscapeMid(props: CityLandscapeProps) {
+  const cityVariant = props.cityVariant ?? 'generic';
   const palette = useCityPalette(
     props.cleanliness,
     props.isNight,
@@ -888,21 +919,28 @@ export function CityLandscapeMid(props: CityLandscapeProps) {
         delay={0.25}
         skipIntro={props.skipIntro}
       />
-      {/* Landmark: Clock tower */}
-      <ClockTower
-        x={300}
-        height={82}
-        fill={`url(#${id}-gradCityMid)`}
-        isNight={props.isNight}
-        delay={0.28}
-        skipIntro={props.skipIntro}
-      />
+      {/* London landmark: Clock tower (London only, PR-B2) */}
+      {cityVariant === 'london' ? (
+        <g data-city-landmark="clock-tower">
+          <ClockTower
+            x={300}
+            height={82}
+            fill={`url(#${id}-gradCityMid)`}
+            isNight={props.isNight}
+            delay={0.28}
+            skipIntro={props.skipIntro}
+          />
+        </g>
+      ) : (
+        <CityVariantLandmarkSlot cityVariant={cityVariant} layer="mid" />
+      )}
     </g>
   );
 }
 
 // Near skyline (foreground buildings)
 export function CityLandscapeFront(props: CityLandscapeProps) {
+  const cityVariant = props.cityVariant ?? 'generic';
   const palette = useCityPalette(
     props.cleanliness,
     props.isNight,
@@ -970,18 +1008,24 @@ export function CityLandscapeFront(props: CityLandscapeProps) {
           delay={0.45}
           skipIntro={props.skipIntro}
         />
-        {/* Landmark: Glass tower (Shard-like) prominent in foreground */}
-        <GlassTower
-          x={195}
-          width={22}
-          height={65}
-          fill={`url(#${id}-gradCityNear)`}
-          windowLit={palette.windowLit}
-          isNight={props.isNight}
-          cleanliness={props.cleanliness}
-          delay={0.48}
-          skipIntro={props.skipIntro}
-        />
+        {/* London landmark: Glass tower (Shard-like) in the foreground (London only, PR-B2) */}
+        {cityVariant === 'london' ? (
+          <g data-city-landmark="glass-tower-near">
+            <GlassTower
+              x={195}
+              width={22}
+              height={65}
+              fill={`url(#${id}-gradCityNear)`}
+              windowLit={palette.windowLit}
+              isNight={props.isNight}
+              cleanliness={props.cleanliness}
+              delay={0.48}
+              skipIntro={props.skipIntro}
+            />
+          </g>
+        ) : (
+          <CityVariantLandmarkSlot cityVariant={cityVariant} layer="front" />
+        )}
       </g>
 
       {/* Road rendered on top */}
