@@ -26,10 +26,21 @@ async function openHome(page: Page) {
   });
 }
 
+// Must match IDLE_TURBINE_SECONDS in src/lib/turbineSpeed.ts.
+const IDLE_TURBINE_SECONDS = '20';
+
 async function expectNeutralSky(page: Page) {
   const scene = page.getByRole('region', { name: /Animated landscape/ });
   await expect(scene.locator('[data-art="cloud-bank"]')).toHaveCount(1);
   await expect(scene.locator(WEATHER_EFFECTS)).toHaveCount(0);
+  // Design review: no pale glow (the band halo reads as a sun behind cloud).
+  await expect(scene.locator('[data-scene-halo]')).toHaveCount(0);
+  // Every turbine on screen, of whatever kind, turns at the one idle speed.
+  const speeds = await scene
+    .locator('[data-turbine-seconds]')
+    .evaluateAll((els) => els.map((el) => el.getAttribute('data-turbine-seconds')));
+  expect(new Set(speeds).size).toBeLessThanOrEqual(1);
+  if (speeds.length > 0) expect(speeds[0]).toBe(IDLE_TURBINE_SECONDS);
 }
 
 for (const viewport of [
@@ -51,6 +62,12 @@ for (const viewport of [
     await context.setOffline(true);
     await page.waitForTimeout(2000);
     await expectNeutralSky(page);
+    // Design review: offline, nothing can be loading. The hero says Offline and
+    // the location chip shows its normal empty label; nothing spins.
+    await expect(page.getByTestId('hero-number')).toContainText('Offline');
+    await expect(page.getByText(/Loading/)).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /Select location/ }).first()).toBeVisible();
+    await expect(page.locator('.animate-spin:visible')).toHaveCount(0);
     await page.screenshot({
       path: `test-results/bh90-offline-empty-${viewport.width}x${viewport.height}.png`,
     });
@@ -111,4 +128,31 @@ test('the normal scene resumes once real weather arrives', async ({ page, contex
   const scene = page.getByRole('region', { name: /Animated landscape/ });
   await expect(scene.locator('[data-scene-sun]')).toHaveCount(1, { timeout: 15_000 });
   await expect(scene.locator('[data-art="cloud-bank"]')).toHaveCount(0);
+  await expect(scene.locator('[data-scene-halo]')).toHaveCount(1);
 });
+
+for (const sceneType of ['countryside', 'coastal'] as const) {
+  test(`weather unknown: every ${sceneType} turbine turns at the one idle speed`, async ({
+    page,
+    context,
+  }) => {
+    test.setTimeout(90_000);
+    await page.clock.install({ time: MIDDAY });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await installMocks(context, { intensity: 60, index: 'low' });
+    await page.route(OPEN_METEO, () => {}); // never answers
+    await context.addInitScript(seedStorage());
+    await context.addInitScript(
+      `localStorage.setItem('gridgreen-scene-preference', ${JSON.stringify(sceneType)})`,
+    );
+    await openHome(page);
+    const scene = page.getByRole('region', { name: /Animated landscape/ });
+    const turbines = scene.locator('[data-turbine-seconds]');
+    await expect.poll(() => turbines.count(), { timeout: 15_000 }).toBeGreaterThan(1);
+    const speeds = await turbines.evaluateAll((els) =>
+      els.map((el) => el.getAttribute('data-turbine-seconds')),
+    );
+    expect(new Set(speeds)).toEqual(new Set([IDLE_TURBINE_SECONDS]));
+    await expectNeutralSky(page);
+  });
+}

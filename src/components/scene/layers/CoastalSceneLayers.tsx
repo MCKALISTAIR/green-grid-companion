@@ -93,6 +93,7 @@ export function CoastalSceneLayers({
               <CoastalOffshoreWind
                 count={Math.min(4, Math.floor(windPercentage / 8))}
                 windSpeed={windSpeed}
+                weatherKnown={sceneConfig.weatherKnown}
               />
             </svg>
           </motion.div>

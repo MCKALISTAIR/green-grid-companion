@@ -108,6 +108,11 @@ export function IntensityHeroOverlay({
   const needsHardScrim = !isInk && isDirty;
   // Zero-carbon badge + scene celebration only for a live reading that isn't stale.
   const hasFreshReading = !isLoading && !isError && isReadingFresh(lastUpdated);
+  // BH-90: offline, no fetch can be in flight, so never claim to be loading.
+  // Offline with nothing to show is the hero's offline error state instead.
+  const showLoading = isLoading && !isOffline;
+  const offlineWithoutReading = isLoading && isOffline;
+  const showFetchSpinner = isBackgroundFetching && !isOffline;
   const showZeroCarbonBadge = shouldCelebrateZeroCarbon(intensity, hasFreshReading);
   const conditionLabel = getConditionLabel(index, tone, region ?? postcode);
 
@@ -161,9 +166,9 @@ export function IntensityHeroOverlay({
               >
                 <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
                 <span className={usingNationalFallback ? 'whitespace-nowrap' : 'truncate'}>
-                  {isLoading ? 'Loading...' : region || 'Select location'}
+                  {showLoading ? 'Loading...' : region || 'Select location'}
                 </span>
-                {isBackgroundFetching ? (
+                {showFetchSpinner ? (
                   <RefreshCw className="w-3 h-3 animate-spin opacity-70" />
                 ) : (
                   <ChevronDown className="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity" />
@@ -289,9 +294,9 @@ export function IntensityHeroOverlay({
                         usingNationalFallback && !showTrophyChip ? 'whitespace-nowrap' : 'truncate'
                       }
                     >
-                      {isLoading ? 'Loading…' : region || 'Select location'}
+                      {showLoading ? 'Loading…' : region || 'Select location'}
                     </span>
-                    {isBackgroundFetching ? (
+                    {showFetchSpinner ? (
                       <RefreshCw className="w-3 h-3 animate-spin opacity-70" />
                     ) : (
                       <ChevronDown className="w-3 h-3 opacity-70" />
@@ -316,12 +321,12 @@ export function IntensityHeroOverlay({
               data-tour="intensity-gauge"
               data-testid="hero-number"
             >
-              {isLoading ? (
+              {showLoading ? (
                 <RefreshCw
                   className="w-12 h-12 text-white animate-spin drop-shadow-lg"
                   aria-label="Loading data"
                 />
-              ) : isError ? (
+              ) : isError || offlineWithoutReading ? (
                 <div className="flex flex-col items-center py-1">
                   <AlertTriangle className="w-10 h-10 text-white animate-pulse mb-1 drop-shadow-md" />
                   <span className="text-sm font-bold text-white/95 uppercase tracking-[0.18em]">

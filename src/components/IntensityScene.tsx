@@ -73,7 +73,7 @@ export function IntensityScene({
     isNight: realIsNight,
     sunPosition: realSunPosition,
   } = useTimeOfDay();
-  const { weather: realWeather } = useWeatherData();
+  const { weather: realWeather, weatherKnown: realWeatherKnown } = useWeatherData();
   const { unlock } = useAchievements();
   const { active: isDirectorMode, overrides } = useSceneDirector();
   const { impactLight: impactMedium, notification } = useHaptics({ decorative: true }); // scene taps: light, decorative
@@ -122,6 +122,9 @@ export function IntensityScene({
       ? { ...realWeather, ...overrides.weather }
       : realWeather;
   }, [weatherOverride, isDirectorMode, overrides.weather, realWeather]);
+  // A SceneTest / Director weather override counts as known weather (dev tools).
+  const weatherKnown =
+    realWeatherKnown || Boolean(weatherOverride) || (isDirectorMode && Boolean(overrides.weather));
 
   const [synthwaveMode, setSynthwaveMode] = useState(false);
   const [sunGlassesActive, setSunGlassesActive] = useState(false);
@@ -273,8 +276,9 @@ export function IntensityScene({
         synthwaveMode,
         isNight,
         sceneType,
+        weatherKnown,
       }),
-    [intensity, index, timeOfDay, weather, synthwaveMode, isNight, sceneType],
+    [intensity, index, timeOfDay, weather, synthwaveMode, isNight, sceneType, weatherKnown],
   );
 
   return (
@@ -336,12 +340,16 @@ export function IntensityScene({
         />
 
         <SceneAtmosphericDepth cleanliness={sceneConfig.cleanliness} isNight={isNight} />
-        <SceneHeroSpotlight
-          band={cleanlinessBand}
-          isCity={isCity}
-          isCoastal={isCoastal}
-          isNight={isNight}
-        />
+        {/* The halo's screen blend reads as a sun behind the cloud, so it stays
+            off while the weather is unknown (BH-90). */}
+        {sceneConfig.weatherKnown && (
+          <SceneHeroSpotlight
+            band={cleanlinessBand}
+            isCity={isCity}
+            isCoastal={isCoastal}
+            isNight={isNight}
+          />
+        )}
         <IntensityMood
           band={getMoodBand(hasLiveReading ? intensity : Math.max(1, intensity), index)}
         />

@@ -73,6 +73,7 @@ export function SceneHeroSpotlight({ band, isCity, isCoastal, isNight }: Spotlig
     <motion.div
       className="absolute inset-0 z-[3] pointer-events-none"
       aria-hidden="true"
+      data-scene-halo=""
       animate={{
         background: `radial-gradient(ellipse ${h.size}% ${h.size * 0.9}% at ${h.x}% ${h.y}%, ${h.tint}, rgba(0,0,0,0) 70%)`,
         opacity: dimmer,

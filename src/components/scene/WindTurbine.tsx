@@ -170,6 +170,7 @@ export function WindTurbine({ scale = 1, speed = 4, onClick }: WindTurbineProps)
             from="0 24 20"
             to="360 24 20"
             dur={`${speed}s`}
+            data-turbine-seconds={speed}
             repeatCount="indefinite"
           />
 

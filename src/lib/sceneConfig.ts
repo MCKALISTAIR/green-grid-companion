@@ -31,6 +31,8 @@ export interface SceneVisualConfig {
   birdCount: number;
   starVisibility: number;
   windSpeed: number;
+  /** False while the weather is unknown (offline, fetch failed, cold start). */
+  weatherKnown: boolean;
   sceneFilter: string;
 }
 
@@ -43,6 +45,8 @@ interface BuildSceneConfigInput {
   isNight: boolean;
   /** Drives ground plane dialect (city pavement vs countryside grass). */
   sceneType?: SceneType;
+  /** False while the weather is unknown; turbines idle and the hero halo is hidden. */
+  weatherKnown?: boolean;
 }
 
 export function buildSceneConfig({
@@ -53,6 +57,7 @@ export function buildSceneConfig({
   synthwaveMode,
   isNight,
   sceneType = 'countryside',
+  weatherKnown = true,
 }: BuildSceneConfigInput): SceneVisualConfig {
   const cleanliness = Math.max(0, Math.min(1, 1 - (intensity - 50) / 300));
   const weatherReducesBirds = weather.isRaining || weather.isSnowing || weather.isThunderstorm;
@@ -157,6 +162,7 @@ export function buildSceneConfig({
       (1 - weather.cloudCover / 100) *
       (timeOfDay === 'night' ? 1 : timeOfDay === 'dusk' ? 0.6 : 0.3),
     windSpeed: weather.windSpeed,
+    weatherKnown,
     sceneFilter: getTimeFilter(),
   };
 }
