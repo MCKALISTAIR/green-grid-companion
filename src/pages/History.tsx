@@ -9,6 +9,7 @@ import {
 } from '@/lib/carbonApi';
 import { useCarbonData } from '@/hooks/useCarbonData';
 import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
+import { OctopusStaleNotice } from '@/components/OctopusStaleNotice';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 import {
@@ -96,7 +97,7 @@ export default function HistoryPage() {
     isError: isRegionError,
     error: regionError,
   } = useCarbonData(postcode);
-  const { footprint, isLinked } = useOctopusEnergy();
+  const { footprint, isLinked, status: octopusStatus } = useOctopusEnergy();
 
   const [timeRange, setTimeRange] = useState<'24h' | '7d'>('7d');
   const [date, setDate] = useState<Date | undefined>(undefined); // If defined, we are in Time Machine mode
@@ -465,6 +466,12 @@ export default function HistoryPage() {
               )}
 
               {/* Stats Cards */}
+              {isLinked && (
+                <OctopusStaleNotice
+                  variant="history"
+                  latestConsumption={octopusStatus?.latest_consumption}
+                />
+              )}
               <motion.div variants={itemVariants} className="grid grid-cols-2 gap-4">
                 <motion.div
                   className="h-full"
