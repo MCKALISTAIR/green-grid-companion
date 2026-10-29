@@ -67,7 +67,7 @@ function footprintBody() {
     summary: {
       total_carbon_kg: 11.4,
       total_kwh: 108.6,
-      avg_intensity: 105,
+      avg_intensity: 150,
       by_intensity_index: {
         'very low': { count: 84, carbon_g: 1680, kwh: 42 },
         low: { count: 140, carbon_g: 2970, kwh: 32 },
@@ -144,22 +144,11 @@ for (const vp of PHONES) {
     });
   }
 
-  test(`account backup line ${vp.width}x${vp.height}`, async ({ page, context }) => {
-    await page.setViewportSize(vp);
-    await setup(page, context, scenario());
-    await page.goto('/settings');
-    const line = page.getByText('Your Octopus key is stored encrypted.', { exact: false });
-    await line.waitFor({ timeout: 60_000 });
-    await line.evaluate((el) => el.scrollIntoView({ block: 'center' }));
-    await settle(page);
-    await shot(page, 'settings-account-backup');
-  });
-
   test(`notifications (digest rows hidden) ${vp.width}x${vp.height}`, async ({ page, context }) => {
     await page.setViewportSize(vp);
     await setup(page, context, scenario());
     await page.goto('/settings');
-    const h = page.getByText('Daily Forecast', { exact: false }).first();
+    const h = page.getByText('Daily Energy Outlook').first();
     await h.waitFor({ timeout: 60_000 });
     await h.evaluate((el) => el.scrollIntoView({ block: 'start' }));
     await settle(page);
@@ -168,9 +157,11 @@ for (const vp of PHONES) {
 
   test(`year wrapped ${vp.width}x${vp.height}`, async ({ page, context }) => {
     await page.setViewportSize(vp);
+    // The Grid Wrapped row only shows in December (SettingsResourcesSection).
+    await page.clock.setFixedTime(new Date('2026-12-15T12:00:00Z'));
     await setup(page, context, scenario());
     await page.goto('/settings');
-    const row = page.getByText('Your year on the GB grid');
+    const row = page.getByText('Your year on the GB grid', { exact: true });
     await row.waitFor({ timeout: 60_000 });
     await row.evaluate((el) => el.scrollIntoView({ block: 'center' }));
     await settle(page);
@@ -188,7 +179,7 @@ for (const vp of PHONES) {
       await page.waitForTimeout(900);
     }
     await page.getByText("That's a Wrap!").waitFor({ timeout: 10_000 });
-    await settle(page, 1500);
+    await settle(page, 3000);
     await shot(page, 'year-wrapped-summary');
   });
 
@@ -202,10 +193,12 @@ for (const vp of PHONES) {
     await settle(page, 1500);
     await shot(page, 'footprint', true);
     const miles = page.getByText('Miles Driven');
-    await miles.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+    await miles.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await page.evaluate(() => window.scrollBy(0, -120));
+    await settle(page, 1500);
     await miles.click();
     await page.getByText('Source: DESNZ 2025').waitFor();
-    await settle(page, 600);
+    await settle(page, 1500);
     await shot(page, 'footprint-miles-popover');
     await page.keyboard.press('Escape');
     const exp = page.getByText(/kWh exported/);
