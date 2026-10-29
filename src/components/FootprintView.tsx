@@ -1070,8 +1070,6 @@ export function FootprintView() {
                       You use most energy in the <strong>{insights.peakPeriod}</strong>.
                       {insights.peakPeriod === 'night' &&
                         ' Night-time is often cleaner. Good choice!'}
-                      {insights.peakPeriod === 'afternoon' &&
-                        ' Afternoon can be high-intensity. Consider shifting some usage to morning or night.'}
                     </p>
                   </div>
                 </div>
