@@ -340,63 +340,59 @@ export function NotificationSettings({ onClose: _onClose }: NotificationSettings
         )}
       </Card>
 
-      {/* Weekly Digest — server push not wired from Settings yet */}
-      <Card className="p-4 space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-              <CalendarDays className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="font-medium text-foreground">Weekly Digest</h3>
-                <Badge variant="secondary" className="text-[10px]">
-                  Coming soon
-                </Badge>
+      {/* Weekly Digest and Monthly Report stay hidden until server delivery ships (C2-09). */}
+      {DIGEST_DELIVERY_AVAILABLE && (
+        <>
+          {/* Weekly Digest — server push not wired from Settings yet */}
+          <Card className="p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                  <CalendarDays className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-medium text-foreground">Weekly Digest</h3>
+                    <Badge variant="secondary" className="text-[10px]">
+                      Coming soon
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Summary of your carbon footprint &amp; best times
+                  </p>
+                </div>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Summary of your carbon footprint &amp; best times
-              </p>
+              <Switch checked={false} disabled aria-label="Weekly digest coming soon" />
             </div>
-          </div>
-          <Switch checked={false} disabled aria-label="Weekly digest coming soon" />
-        </div>
-        {!DIGEST_DELIVERY_AVAILABLE && (
-          <p className="text-xs text-muted-foreground border-t border-border pt-3">
-            Digests need reliable server push registration. We&apos;ve disabled this toggle so it
-            can&apos;t look enabled without delivering.
-          </p>
-        )}
-      </Card>
+          </Card>
 
-      {/* Monthly Report — server push not wired from Settings yet */}
-      <Card className="p-4 space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-accent/50 flex items-center justify-center">
-              <FileText className="w-5 h-5 text-accent-foreground" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="font-medium text-foreground">Monthly Report</h3>
-                <Badge variant="secondary" className="text-[10px]">
-                  Coming soon
-                </Badge>
+          {/* Monthly Report — server push not wired from Settings yet */}
+          <Card className="p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-accent/50 flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-accent-foreground" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-medium text-foreground">Monthly Report</h3>
+                    <Badge variant="secondary" className="text-[10px]">
+                      Coming soon
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Detailed carbon analysis with trends
+                  </p>
+                </div>
               </div>
-              <p className="text-sm text-muted-foreground">Detailed carbon analysis with trends</p>
+              <Switch checked={false} disabled aria-label="Monthly report coming soon" />
             </div>
-          </div>
-          <Switch checked={false} disabled aria-label="Monthly report coming soon" />
-        </div>
-        {!DIGEST_DELIVERY_AVAILABLE && (
-          <p className="text-xs text-muted-foreground border-t border-border pt-3">
-            Same as weekly digests: the preview below is only an example until push delivery ships.
-          </p>
-        )}
-        <div className="pt-1">
-          <MonthlyReportPreview />
-        </div>
-      </Card>
+            <div className="pt-1">
+              <MonthlyReportPreview />
+            </div>
+          </Card>
+        </>
+      )}
 
       {!isSupported && (
         <p className="text-xs text-center text-muted-foreground">

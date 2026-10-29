@@ -51,7 +51,7 @@ export function GreenScoreExplainerContent() {
       <div>
         <h4 className="font-semibold text-sm mb-2">Improve your score</h4>
         <ul className="text-xs text-muted-foreground space-y-1 list-disc pl-4">
-          <li>Charge devices overnight when wind is typically high</li>
+          <li>Check the forecast for clean overnight windows</li>
           <li>Run appliances during sunny, windy days</li>
           <li>Check Power Planner for best windows</li>
           <li>On History, watch yellow usage bars vs dirty intensity spikes</li>

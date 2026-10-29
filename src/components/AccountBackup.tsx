@@ -574,7 +574,7 @@ export function AccountBackup({
 
       <p className="flex items-center gap-2 text-sm text-muted-foreground">
         <Lock className="w-4 h-4 shrink-0" aria-hidden="true" />
-        Octopus data is encrypted. Sign in to keep it.
+        Your Octopus key is stored encrypted. Sign in to keep your Octopus data across devices.
       </p>
 
       <div className="space-y-2">

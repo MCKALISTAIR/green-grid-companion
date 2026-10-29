@@ -35,7 +35,7 @@ export function SettingsResourcesSection({
                 </div>
                 <div className="text-left">
                   <h3 className="font-medium">{new Date().getFullYear()} Grid Wrapped</h3>
-                  <p className="text-sm text-muted-foreground">Your year in UK electricity</p>
+                  <p className="text-sm text-muted-foreground">Your year on the GB grid</p>
                 </div>
               </div>
               <Badge variant="secondary" className="text-[10px]">

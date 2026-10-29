@@ -22,7 +22,6 @@ import {
   Info,
   Car,
   Smartphone,
-  Trees,
   Coffee,
   SunMedium,
   AlertCircle,
@@ -764,9 +763,8 @@ export function FootprintView() {
                     </PopoverTrigger>
                     <PopoverContent className="w-[280px] p-3 text-xs" align="end">
                       <p>
-                        Your solar export meter shows clean energy you sent back to the grid (
-                        {insights.exportKwh.toFixed(1)} kWh), which actively displaces fossil fuels
-                        and reduces your net footprint.
+                        Your export meter shows {insights.exportKwh.toFixed(1)} kWh of solar you
+                        sent back to the grid. We take that off your net footprint.
                       </p>
                     </PopoverContent>
                   </Popover>
@@ -969,34 +967,7 @@ export function FootprintView() {
                         <strong>{insights.impact.milesDriven} miles</strong>.
                       </p>
                       <p className="text-[10px] text-muted-foreground mt-1 text-right">
-                        Source: EPA (~0.4kg CO₂/mile)
-                      </p>
-                    </PopoverContent>
-                  </Popover>
-
-                  {/* Trees */}
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <div className="p-3 bg-muted/30 rounded-lg flex flex-col items-center text-center gap-2 border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors">
-                        <Trees className="w-5 h-5 text-primary" />
-                        <div>
-                          <p className="text-lg font-bold font-mono tabular-nums text-foreground">
-                            {insights.impact.treesPlanted}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                            Tree Days
-                          </p>
-                        </div>
-                      </div>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-60 p-3 text-xs">
-                      <p>
-                        Equivalent to the carbon absorbed by{' '}
-                        <strong>{insights.impact.treesPlanted} mature trees</strong> in a single
-                        day.
-                      </p>
-                      <p className="text-[10px] text-muted-foreground mt-1 text-right">
-                        Source: Carbon Trust (~25kg/year/tree)
+                        Source: DESNZ 2025 (0.26 kg CO₂e/mile)
                       </p>
                     </PopoverContent>
                   </Popover>
@@ -1024,10 +995,10 @@ export function FootprintView() {
                     </PopoverContent>
                   </Popover>
 
-                  {/* Kettles */}
+                  {/* Kettles (spans the row now the trees tile is gone: C2-02) */}
                   <Popover>
                     <PopoverTrigger asChild>
-                      <div className="p-3 bg-muted/30 rounded-lg flex flex-col items-center text-center gap-2 border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors">
+                      <div className="col-span-2 p-3 bg-muted/30 rounded-lg flex flex-col items-center text-center gap-2 border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors">
                         <Coffee className="w-5 h-5 text-primary" />
                         <div>
                           <p className="text-lg font-bold font-mono tabular-nums text-foreground">
@@ -1068,13 +1039,12 @@ export function FootprintView() {
                   <Leaf className="w-5 h-5 text-primary mt-0.5" />
                   <div>
                     <p className="text-sm text-foreground">
-                      <strong>{insights.greenPercentage.toFixed(0)}%</strong> of your energy came
-                      from low-carbon sources!
-                      {insights.greenPercentage >= 70 &&
-                        " You're in the top tier of eco-conscious users."}
+                      <strong>{insights.greenPercentage.toFixed(0)}%</strong> of your usage landed
+                      in low-carbon periods.
+                      {insights.greenPercentage >= 70 && " That's an excellent score."}
                       {insights.greenPercentage >= 50 &&
                         insights.greenPercentage < 70 &&
-                        " Keep it up! You're doing better than average."}
+                        " Keep it up. That's a good score."}
                       {insights.greenPercentage < 50 &&
                         ' Try running appliances during windy or sunny periods.'}
                     </p>
@@ -1109,8 +1079,6 @@ export function FootprintView() {
                       You use most energy in the <strong>{insights.peakPeriod}</strong>.
                       {insights.peakPeriod === 'night' &&
                         ' Night-time often has lower intensity – great choice!'}
-                      {insights.peakPeriod === 'afternoon' &&
-                        ' Afternoon can be high-intensity. Consider shifting some usage to morning or night.'}
                     </p>
                   </div>
                 </div>

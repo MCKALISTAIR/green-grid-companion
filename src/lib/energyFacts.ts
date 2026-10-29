@@ -173,15 +173,6 @@ export const ENERGY_FACTS: EnergyFact[] = [
     condition: () => true,
   },
   {
-    id: 'general_friendly_5',
-    text: 'In 2020, Britain went a record 67 days, 22 hours and 55 minutes without coal power.',
-    source:
-      'https://www.nationalgrideso.com/news/record-breaking-2020-becomes-greenest-year-britains-electricity ; https://www.independent.co.uk/climate-change/news/coal-free-power-uk-record-time-2020-how-long-renewable-energy-a9570891.html',
-    category: 'general',
-    tone: 'friendly',
-    condition: () => true,
-  },
-  {
     id: 'general_friendly_6',
     text: 'The Hornsea 2 offshore wind farm covers 462 km², more than the land area of the Maldives.',
     source:
@@ -416,7 +407,7 @@ export function getRandomFact(
           if (diffHours >= 24) {
             eligible.push({
               id: 'coal_free_current',
-              text: 'The UK is running coal-free!',
+              text: 'No coal on the GB grid since 30 September 2024.',
               category: 'general',
               tone: 'friendly',
             });

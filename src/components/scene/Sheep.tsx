@@ -15,7 +15,7 @@ const SheepPhrases = [
   'Ewe should wait until 9pm to wash clothes!',
   'Feeling wool-y green today!',
   'This pasture is powered by wind!',
-  'No coal in our grass, please!',
+  'Wind in our wool, please!',
   'Baa-rry clean energy!',
   'I only eat zero-carbon clover!',
 ];

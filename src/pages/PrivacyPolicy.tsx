@@ -61,7 +61,7 @@ export default function PrivacyPolicy() {
               </li>
               <li>
                 <strong>Octopus Energy data:</strong> Your account number, API key, meter details,
-                consumption history, and calculated carbon footprint — only if you voluntarily link
+                consumption history, and calculated carbon footprint. Only if you voluntarily link
                 your account.
               </li>
               <li>
@@ -103,7 +103,7 @@ export default function PrivacyPolicy() {
               </li>
               <li>Row-level security ensures you can only access your own data.</li>
               <li>
-                Authentication is handled via Google and Apple OAuth — we never see or store your
+                Authentication is handled via Google and Apple OAuth: we never see or store your
                 passwords.
               </li>
             </ul>
@@ -117,14 +117,16 @@ export default function PrivacyPolicy() {
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground space-y-2">
             <p>
-              GridSense uses your location solely to identify your local energy region (e.g., "South
-              Wales").
+              GridSense uses your location to identify your local energy region (e.g., "South
+              Wales") and to fetch your local weather.
             </p>
             <p>
-              <span className="font-semibold text-foreground">Local Processing:</span> Your exact
-              coordinates are processed locally on your device or sent anonymously to{' '}
-              <code>postcodes.io</code> to convert coordinates into a postcode outcode (e.g.,
-              "CF10").
+              <span className="font-semibold text-foreground">Rounded on your device:</span> Your
+              coordinates are rounded to about 1 km on your device before they are sent anywhere.
+              The rounded coordinates go to <code>postcodes.io</code> (or OpenStreetMap&apos;s
+              Nominatim, if postcodes.io can&apos;t place you) to find your postcode outcode (e.g.,
+              "CF10"), and through our server to Open-Meteo for your local weather. Only the outcode
+              is sent to NESO&apos;s Carbon Intensity API.
             </p>
             <p>
               <span className="font-semibold text-foreground">Postcodes you enter:</span> When you
@@ -144,7 +146,9 @@ export default function PrivacyPolicy() {
             <p>
               <span className="font-semibold text-foreground">No Tracking:</span> We do not save a
               history of where you have been. Your selected region is stored locally on your device
-              so you don't have to select it every time you open the app.
+              so you don't have to select it every time you open the app. If you sign in, your saved
+              and recent places also sync to your account. If you turn on alerts, we store your
+              postcode outcode to send them.
             </p>
           </CardContent>
         </Card>
@@ -158,11 +162,11 @@ export default function PrivacyPolicy() {
             <p>The app interacts with the following services to function:</p>
             <ul className="list-disc pl-4 space-y-1">
               <li>
-                <strong>NESO (National Energy System Operator)</strong> — To fetch carbon intensity
+                <strong>NESO (National Energy System Operator):</strong> To fetch carbon intensity
                 data for your region.
               </li>
               <li>
-                <strong>Octopus Energy API</strong> — To securely fetch your smart meter consumption
+                <strong>Octopus Energy API:</strong> To securely fetch your smart meter consumption
                 data (only if you voluntarily link your account).
               </li>
               <li>
@@ -170,7 +174,7 @@ export default function PrivacyPolicy() {
                 &quot;Current Location&quot;) or from a postcode you enter.
               </li>
               <li>
-                <strong>Google & Apple OAuth</strong> — For secure authentication. We receive only
+                <strong>Google & Apple OAuth:</strong> For secure authentication. We receive only
                 your email and name.
               </li>
             </ul>

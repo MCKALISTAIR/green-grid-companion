@@ -36,16 +36,19 @@ export const FEATURE_GUIDES = [
         </p>
         <ul className="list-disc pl-5 space-y-2">
           <li>
-            <strong>0-50 (Very Low):</strong> Excellent time to use energy.
+            <strong>Very low:</strong> A great time for big loads.
           </li>
           <li>
-            <strong>50-100 (Low):</strong> Good time for most tasks.
+            <strong>Low:</strong> A good time for big loads.
           </li>
           <li>
-            <strong>100-200 (Moderate):</strong> Average mix of renewables and gas.
+            <strong>Moderate:</strong> A mix of renewables and gas.
           </li>
           <li>
-            <strong>200+ (High):</strong> Try to save energy if possible.
+            <strong>High:</strong> Worth waiting if you can.
+          </li>
+          <li>
+            <strong>Very high:</strong> Hold off if you can.
           </li>
         </ul>
       </div>
@@ -74,15 +77,15 @@ export const FEATURE_GUIDES = [
             <strong>Nuclear:</strong> Low carbon, provides steady baseload power.
           </li>
           <li>
-            <strong>Gas & Coal:</strong> Burn fossil fuels and release CO₂. These are used when
-            demand is high or renewables are low.
+            <strong>Gas:</strong> Burns fossil fuel and releases CO₂. Used most when demand is high
+            or wind and sun are low.
           </li>
         </ul>
 
         <p>
           By checking GridSense, you can choose to use electricity when the grid is powered by wind
-          and sun, rather than gas. This is called <strong>load shifting</strong>, and it massively
-          reduces your personal carbon footprint.
+          and sun, rather than gas. This is called <strong>load shifting</strong>, and it can cut
+          the carbon from your electricity use.
         </p>
       </div>
     ),
@@ -158,11 +161,11 @@ export const FEATURE_GUIDES = [
     id: 'leaderboard',
     title: 'Leaderboard',
     icon: Map,
-    description: 'Compare regions across the UK and understand rankings',
+    description: 'See how GB regions compare',
     content: (
       <div className="space-y-4">
         <p>
-          See how your region compares to the rest of the UK with the <strong>Leaderboard</strong>.
+          <strong>Rank</strong> shows how your region compares with the rest of Great Britain.
         </p>
 
         <h3 className="text-lg font-semibold pt-2">Regional Ranking</h3>
