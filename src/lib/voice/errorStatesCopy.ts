@@ -19,7 +19,8 @@ export function toneBody(copy: ToneCopy, tone: CommentaryTone): string {
 export const SLOW_COPY = {
   title: 'Still waiting for NESO',
   body: {
-    plain: 'We have been waiting over 8 seconds. Your connection may be slow, or NESO may be busy.',
+    plain:
+      "We've been waiting over 8 seconds. Your connection might be slow, or NESO might be busy.",
     cheeky: 'NESO is having a long think. Over 8 seconds so far.',
   },
   action: 'Try again',
@@ -47,7 +48,7 @@ export const lastKnownChip = (at: Date) => `Last known · ${formatLondonTime(at)
 export const RANK_EMPTY_COPY = {
   title: 'No regional figures right now',
   body: {
-    plain: 'NESO has not sent regional data yet. National figures are still available on Home.',
+    plain: "NESO hasn't sent regional data yet. National figures are still on Home.",
     cheeky: 'The regions are being shy. National figures are still on Home.',
   },
   action: 'Retry',
@@ -57,7 +58,7 @@ export const RANK_EMPTY_COPY = {
 export const STALE_COPY = {
   title: 'This might be out of date',
   body: (at: Date) =>
-    `We could not refresh, so you are seeing the figure from ${formatLondonTime(at)}. Plan with care.`,
+    `We couldn't refresh, so this is the figure from ${formatLondonTime(at)}. Bear that in mind when planning.`,
   action: 'Retry',
 } as const;
 
@@ -67,7 +68,7 @@ export const PLANNER_ERROR_COPY = {
   body: (appliance: string, tone: CommentaryTone) =>
     tone === 'cheeky'
       ? `Your ${appliance} choice is saved. The forecast is dragging its feet.`
-      : 'Your choice is saved. We will find the best time as soon as the forecast loads.',
+      : "Your choice is saved. We'll find the best time as soon as the forecast loads.",
   action: 'Retry',
 } as const;
 
@@ -83,7 +84,7 @@ export const OUTAGE_COPY = {
   title: 'Grid data unavailable',
   body: {
     plain:
-      'The National Energy System Operator data feed is not responding. This is on their side, not your phone.',
+      "The National Energy System Operator (NESO) data feed isn't responding. It's on their side, not your phone.",
     cheeky: 'NESO has gone quiet. Not your phone, promise.',
   },
   action: 'Try again',
@@ -111,10 +112,8 @@ export function heroErrorTitle(isOffline: boolean, nesoRequestFailed: boolean): 
 export const OUTSIDE_COPY = {
   title: 'Outside Great Britain',
   body: {
-    plain:
-      'Your location looks like it is outside GB, or you are on a VPN. GridSense only covers the GB grid.',
-    cheeky:
-      'Bonjour? Your location looks like it is outside GB, or you are on a VPN. We only cover the GB grid.',
+    plain: "It looks like you're outside GB, or on a VPN. GridSense only covers the GB grid.",
+    cheeky: "Bonjour? Looks like you're outside GB, or on a VPN. We only cover the GB grid.",
   },
   enterPostcode: 'Enter a GB postcode',
   useAverage: 'Use GB average',
@@ -157,6 +156,6 @@ export const OCTOPUS_SYNC_COPY = {
    * unchanged from errorUtils; not part of Design's #180 ruling.
    */
   calculateFailed: {
-    plain: 'Failed to calculate carbon footprint. Please try again.',
+    plain: "Couldn't work out your footprint. Please try again.",
   },
 } as const;

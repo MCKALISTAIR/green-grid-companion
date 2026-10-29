@@ -54,6 +54,7 @@ import { ComponentErrorBoundary } from '@/components/ComponentErrorBoundary';
 import { EstimateDisclaimer } from '@/components/attribution/EstimateDisclaimer';
 import { GreenScoreExplainerContent } from '@/components/GreenScoreExplainer';
 import { getGreenScoreRating } from '@/lib/greenScore';
+import { OctopusReferralLine } from '@/components/OctopusReferralLine';
 
 const INTENSITY_COLORS: Record<string, string> = {
   'very low': 'hsl(var(--intensity-very-low))',
@@ -329,7 +330,7 @@ export function FootprintView() {
       {
         id: 'green_majority',
         title: 'Green Majority',
-        description: 'Used 50%+ green energy in a single period',
+        description: 'Used 50%+ of your power in low-carbon times, in one period',
         icon: <Leaf className="w-5 h-5" />,
         unlocked: isUnlocked('green_majority'),
         color: 'green',
@@ -337,7 +338,7 @@ export function FootprintView() {
       {
         id: 'eco_champion',
         title: 'Eco Champion',
-        description: 'Used 70%+ green energy in a single period',
+        description: 'Used 70%+ of your power in low-carbon times, in one period',
         icon: <Trophy className="w-5 h-5" />,
         unlocked: isUnlocked('eco_champion'),
         color: 'emerald',
@@ -353,7 +354,7 @@ export function FootprintView() {
       {
         id: 'low_carbon_day',
         title: 'Low Carbon Zone',
-        description: 'Achieve a period with under 1kg CO₂ emissions',
+        description: 'Have a period under 1kg CO₂',
         icon: <Star className="w-5 h-5" />,
         unlocked: isUnlocked('low_carbon_day'),
         color: 'yellow',
@@ -413,16 +414,15 @@ export function FootprintView() {
                 Your household benchmark
               </h2>
               <p className="text-muted-foreground text-sm mt-1">
-                Based on {getHouseTypeLabel(houseType)} typical usage and today&apos;s grid
-                intensity
-                {intensity ? ` (${intensity}g CO₂/kWh · ${intensityIndex})` : ''}. A rough Ofgem
-                benchmark, not your actual usage — link Octopus to get a Green Score.{' '}
+                Based on {getHouseTypeLabel(houseType)} typical usage and the current grid intensity
+                {intensity ? ` (${intensity}g CO₂/kWh · ${intensityIndex})` : ''}. It&apos;s a rough
+                Ofgem benchmark, not your actual usage. Link Octopus to get a Green Score.{' '}
                 <button
                   type="button"
                   className="underline text-primary hover:text-primary/80 font-medium"
                   onClick={() => navigate('/settings')}
                 >
-                  Change home size in Settings
+                  Change home size
                 </button>
               </p>
             </div>
@@ -441,7 +441,7 @@ export function FootprintView() {
             <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
               <p className="text-xs text-muted-foreground">Est. daily CO₂</p>
               <p className="text-2xl font-semibold font-mono tabular-nums">
-                {intensity ? `${formatEstimatedKg(estimatedDailyGrams)} kg` : '—'}
+                {intensity ? `${formatEstimatedKg(estimatedDailyGrams)} kg` : 'n/a'}
               </p>
             </div>
           </div>
@@ -494,17 +494,10 @@ export function FootprintView() {
               onClick={() => navigate('/settings')}
             >
               <Zap className="w-5 h-5 mr-2" />
-              {hasCredentials ? 'Finish linking in Settings' : 'Link Octopus Account'}
+              {hasCredentials ? 'Finish linking' : 'Link Octopus Account'}
             </Button>
 
-            <a
-              href="https://share.octopus.energy/light-sheep-695"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-primary hover:text-primary/80 font-medium underline-offset-4 hover:underline transition-all"
-            >
-              Not with Octopus? Get £50 credit when you switch
-            </a>
+            <OctopusReferralLine className="text-sm" />
 
             <p className="text-xs text-muted-foreground pt-2 max-w-sm">
               Your Octopus API key is stored encrypted on our servers, never on your device. We use
@@ -538,10 +531,9 @@ export function FootprintView() {
           <AlertCircle className="w-8 h-8 text-destructive" />
         </div>
         <div className="space-y-2 max-w-sm">
-          <h3 className="text-lg font-semibold">Unable to load footprint data</h3>
+          <h3 className="text-lg font-semibold">Couldn&apos;t load your footprint</h3>
           <p className="text-sm text-muted-foreground">
-            We encountered an error while fetching your carbon data. Please check your connection
-            and try again.
+            Something went wrong getting your carbon data. Check your connection and try again.
           </p>
         </div>
         <Button variant="outline" onClick={() => refetchFootprint()} className="mt-4">
@@ -588,7 +580,7 @@ export function FootprintView() {
       {(timeRange === 'day' || timeRange === 'week') && availableDates?.maxDate && (
         <div className="text-sm text-muted-foreground">
           {timeRange === 'day'
-            ? `Showing: ${format(effectiveDate, 'EEEE, MMMM d, yyyy')}`
+            ? `Showing: ${format(effectiveDate, 'EEEE d MMMM yyyy')}`
             : `Showing: ${format(effectiveDate, 'MMM d')} to ${format(new Date(effectiveDate.getTime() + 6 * 24 * 60 * 60 * 1000), 'MMM d, yyyy')}`}
         </div>
       )}
@@ -613,7 +605,7 @@ export function FootprintView() {
                 It&apos;s currently{' '}
                 <strong className="text-foreground">{insights.greenPercentage.toFixed(0)}%</strong>{' '}
                 ({getGreenScoreRating(insights.greenPercentage)}). This measures <em>when</em> you
-                used power — not just how much. Open History to see yellow usage bars against dirty
+                used power, not just how much. Open History to see yellow usage bars against dirty
                 intensity spikes.
               </p>
               <GreenScoreExplainerContent />
@@ -632,14 +624,14 @@ export function FootprintView() {
             </h3>
             <p className="text-sm text-muted-foreground mb-4 max-w-xs mx-auto">
               {timeRange === 'day' && selectedDate
-                ? `No data available for ${format(selectedDate, 'PPP')}. Smart meter data typically has a 24-48 hour delay.`
+                ? `Nothing for ${format(selectedDate, 'PPP')} yet. Smart meter data usually takes 24-48 hours to come through.`
                 : timeRange === 'day' && availableDates?.maxDate
-                  ? `Showing most recent data from ${format(parseISO(availableDates.maxDate), 'PPP')}. Today's data will be available in 24-48 hours.`
+                  ? `Showing your latest data, from ${format(parseISO(availableDates.maxDate), 'PPP')}. Today's should arrive in 24-48 hours.`
                   : !status?.latest_consumption
-                    ? 'Waiting for readings from Octopus Energy. Smart meter data can take 24-48 hours to become available after linking.'
+                    ? 'Waiting for your readings from Octopus. They can take 24-48 hours to show up after linking.'
                     : footprint?.records?.length
-                      ? 'No data in selected date range. Try selecting an earlier date.'
-                      : 'Sync your consumption data to see your carbon footprint.'}
+                      ? 'Nothing in these dates. Try an earlier one.'
+                      : 'Sync your usage to see your carbon footprint.'}
             </p>
           </div>
 
@@ -686,7 +678,7 @@ export function FootprintView() {
                 {isSyncing ? (
                   <>
                     <TurbineSpinner size="sm" className="mr-2" />
-                    Syncing &amp; Calculating...
+                    Syncing…
                   </>
                 ) : (
                   <>
@@ -804,9 +796,8 @@ export function FootprintView() {
                     </PopoverTrigger>
                     <PopoverContent className="w-[280px] p-3 text-xs" align="end">
                       <p>
-                        Your <strong>net footprint</strong> is your total grid emissions minus the
-                        carbon you offset by exporting solar energy. We subtract your export offset
-                        from your import emissions.
+                        Your <strong>net footprint</strong> is your grid emissions minus the carbon
+                        credited for the solar you exported.
                       </p>
                     </PopoverContent>
                   </Popover>
@@ -834,7 +825,7 @@ export function FootprintView() {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="font-medium text-foreground">Green Energy Score</h3>
+                      <h3 className="font-medium text-foreground">Green Score</h3>
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button
@@ -855,8 +846,8 @@ export function FootprintView() {
                     </div>
                     <p className="text-sm text-muted-foreground">
                       {insights.greenPercentage >= 50
-                        ? 'Great job! Most of your usage was during clean periods.'
-                        : 'Try to shift more usage to low-intensity periods.'}
+                        ? 'Nice one. Most of your usage landed in clean periods.'
+                        : 'Try moving a bit more of your usage into cleaner hours.'}
                     </p>
                   </div>
                 </div>
@@ -1049,7 +1040,7 @@ export function FootprintView() {
                 </div>
 
                 <p className="text-xs text-center text-muted-foreground mt-1">
-                  You avoided this much carbon by using energy when the grid was greener.
+                  That&apos;s the carbon you avoided by using power when the grid was cleaner.
                 </p>
               </div>
             </Card>
@@ -1108,7 +1099,7 @@ export function FootprintView() {
                     <p className="text-sm text-foreground">
                       You use most energy in the <strong>{insights.peakPeriod}</strong>.
                       {insights.peakPeriod === 'night' &&
-                        ' Night-time often has lower intensity – great choice!'}
+                        ' Night-time is often cleaner. Good choice!'}
                       {insights.peakPeriod === 'afternoon' &&
                         ' Afternoon can be high-intensity. Consider shifting some usage to morning or night.'}
                     </p>
@@ -1301,11 +1292,11 @@ export function FootprintView() {
                   <h3 className="font-medium text-foreground">Potential Savings</h3>
                   <div className="text-sm text-muted-foreground mt-1 space-y-2">
                     <p>
-                      If all your usage was during low-intensity periods, you could save{' '}
+                      If all your usage had been in low-intensity periods, you&apos;d have saved{' '}
                       <strong className="text-foreground">
                         {insights.potentialSavings.toFixed(1)} kg CO₂
                       </strong>{' '}
-                      during this period!
+                      this period.
                     </p>
                     <div className="flex items-center gap-2 p-2 bg-muted/40 rounded-md border border-primary/10">
                       <Car className="w-4 h-4 text-primary" />

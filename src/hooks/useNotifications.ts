@@ -207,7 +207,7 @@ export function useNotifications() {
 
   const requestPermission = async () => {
     if (!isNative && !('Notification' in window)) {
-      toast.error('Notifications are not supported in this browser.');
+      toast.error("This browser can't show notifications.");
       return false;
     }
 

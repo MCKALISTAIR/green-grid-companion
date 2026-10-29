@@ -83,11 +83,11 @@ export function MonthlyReportPreview() {
         setStats(data.monthly_stats);
         setMonthName(data.monthName || 'Last Month');
       } else {
-        setError('No data available');
+        setError('No data yet');
       }
     } catch (err) {
       logger.error('Failed to fetch monthly report preview', { error: err });
-      setError('Failed to load preview');
+      setError("Couldn't load the preview");
     } finally {
       setLoading(false);
     }
@@ -286,7 +286,7 @@ export function MonthlyReportPreview() {
         <div className="text-center py-2">
           <p className="text-sm text-muted-foreground">📊 Your monthly report is ready!</p>
           <p className="text-xs text-muted-foreground mt-1">
-            Link your smart meter for personalised insights.
+            Link your smart meter to see your own numbers.
           </p>
         </div>
       )}

@@ -45,7 +45,7 @@ export default function MapPage() {
     return (
       <div className="page-shell page-shell--fit">
         <div className="page-shell-inner">
-          <PageHeader title="Leaderboard" className="mb-4" />
+          <PageHeader title="Rank" className="mb-4" />
           <ErrorState
             title={errorInfo.title}
             description={errorInfo.description}
@@ -66,7 +66,7 @@ export default function MapPage() {
       >
         <div className="page-shell-inner space-y-4">
           <PageHeader
-            title="Leaderboard"
+            title="Rank"
             actions={
               <Button
                 variant={showMap ? 'default' : 'outline'}

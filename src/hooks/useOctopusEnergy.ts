@@ -174,7 +174,7 @@ function migrateLegacyCredentialsOnce(): Promise<boolean> {
       logger.warn('Could not upload legacy Octopus credentials; user must re-enter them', {
         error,
       });
-      toast.info("Please relink Octopus in Settings. We couldn't move your old details across.");
+      toast.info("Couldn't move your Octopus link. Relink in Settings.");
       return false;
     }
   })();
@@ -386,7 +386,7 @@ export function useOctopusEnergy(days: number = 30) {
         }
         return data;
       } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'Failed to migrate data';
+        const message = error instanceof Error ? error.message : "Couldn't move your data";
         logger.error('Data migration failed', { error: message });
         // Don't show error toast - this is a background operation
         return null;
@@ -498,7 +498,7 @@ export function useOctopusEnergy(days: number = 30) {
       if (error) throw new Error(error.message || 'Failed to link meter');
 
       if (data.meters?.length > 0) {
-        toast.success(`Linked ${data.meters.length} meter(s) successfully!`);
+        toast.success(`Linked ${data.meters.length} meter(s).`);
         await refetchStatus();
       } else {
         toast.error('No electricity meters found on your account');
@@ -523,7 +523,7 @@ export function useOctopusEnergy(days: number = 30) {
         const session = await ensureAuthSession();
 
         if (!session) {
-          toast.error('Please sign in to sync consumption data');
+          toast.error('Sign in to sync your usage');
           return null;
         }
 
@@ -535,7 +535,7 @@ export function useOctopusEnergy(days: number = 30) {
 
         // BH-91: the function reports per-meter failures instead of a blanket success.
         const outcome = withOfflineCheck(syncOutcome(data));
-        if (outcome === 'ok') toast.success(`Synced ${data.readings_synced} consumption readings`);
+        if (outcome === 'ok') toast.success(`Synced ${data.readings_synced} readings`);
         else toast.error(syncFailureMessage(outcome, readTone()));
         await refetchStatus();
         return data;
@@ -560,7 +560,7 @@ export function useOctopusEnergy(days: number = 30) {
       const session = await ensureAuthSession();
 
       if (!session) {
-        toast.error('Please sign in to calculate footprint');
+        toast.error('Sign in to see your footprint');
         return null;
       }
 
@@ -572,7 +572,7 @@ export function useOctopusEnergy(days: number = 30) {
 
       if (data?.success === false)
         toast.error(toneBody(OCTOPUS_SYNC_COPY.calculateFailed, readTone()));
-      else toast.success(`Calculated carbon footprint for ${data.records_calculated} periods`);
+      else toast.success(`Footprint worked out for ${data.records_calculated} periods`);
       await refetchFootprint();
       return data;
     } catch (error: unknown) {
@@ -627,9 +627,7 @@ export function useOctopusEnergy(days: number = 30) {
 
         if (run.outcome === 'ok') {
           const calculations = run.data.calculation?.records_calculated || 0;
-          toast.success(
-            `Synced ${run.readings} readings and calculated ${calculations} footprint records`,
-          );
+          toast.success(`Synced ${run.readings} readings, ${calculations} records`);
         } else {
           // Some or all meters failed (BH-91).
           toast.error(syncFailureMessage(run.outcome, readTone()));
@@ -677,7 +675,7 @@ export function useOctopusEnergy(days: number = 30) {
         if (error) throw new Error(error.message || 'Failed to disconnect account');
       }
 
-      toast.success('Disconnected Octopus Energy account');
+      toast.success('Octopus disconnected');
 
       // Clear all local storage
       queryClient.setQueryData(['octopus-status'], null);

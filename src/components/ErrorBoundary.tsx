@@ -34,7 +34,7 @@ export class ErrorBoundary extends Component<Props, State> {
         <div className="min-h-screen bg-background flex items-center justify-center">
           <ErrorState
             title="Grid Malfunction"
-            description="Something went wrong in the application. We've logged the error."
+            description="Something went wrong in the app. We've logged it."
             retry={() => window.location.reload()}
             fullScreen
           />

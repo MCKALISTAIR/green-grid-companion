@@ -26,7 +26,7 @@ export function SettingsDataSyncSection({
       await refetchGrid();
       toast.success('Grid data refreshed', { id: toastId });
     } catch {
-      toast.error('Could not refresh grid data', { id: toastId });
+      toast.error("Couldn't refresh grid data", { id: toastId });
     }
   };
 
@@ -39,7 +39,7 @@ export function SettingsDataSyncSection({
             <Cloud className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h3 className="font-medium">Grid Network Data</h3>
+            <h3 className="font-medium">Grid data</h3>
             <p className="text-sm text-muted-foreground flex items-center gap-2">
               Last checked:{' '}
               {gridLastCheckedAt ? formatLondonTime(new Date(gridLastCheckedAt)) : 'Unknown'}
@@ -63,7 +63,7 @@ export function SettingsDataSyncSection({
           disabled={isGridFetching || isOffline}
         >
           <RefreshCw className={`w-4 h-4 mr-2 ${isGridFetching ? 'animate-spin' : ''}`} />
-          Force Refresh
+          Refresh now
         </Button>
       </div>
     </motion.div>

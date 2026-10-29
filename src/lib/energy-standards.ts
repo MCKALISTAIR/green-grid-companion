@@ -13,24 +13,24 @@ export const OFGEM_TDCV_2025 = {
   // Profile Class 1
   LOW: {
     annualKwh: 1800,
-    label: 'Flat / Small House (1-2 people)',
-    description: 'Typical consumption for a flat or small property with 1-2 occupants.',
+    label: 'Small (1-2 people)',
+    description: 'Typical usage for a flat or small home with 1-2 people.',
   },
 
   // Medium (2-3 Bed House)
   // Profile Class 1
   MEDIUM: {
     annualKwh: 2700,
-    label: 'Medium House (2-3 people)',
-    description: 'Typical consumption for a semi-detached or terraced house with 2-3 occupants.',
+    label: 'Medium (2-3 people)',
+    description: 'Typical usage for a semi-detached or terraced house with 2-3 people.',
   },
 
   // High (4+ Bed House)
   // Profile Class 1
   HIGH: {
     annualKwh: 4100,
-    label: 'Large House (4+ people)',
-    description: 'Typical consumption for a detached house with 4+ occupants.',
+    label: 'Large (4+ people)',
+    description: 'Typical usage for a detached house with 4+ people.',
   },
 } as const;
 

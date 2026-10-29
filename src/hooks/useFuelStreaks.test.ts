@@ -28,18 +28,18 @@ describe('useFuelStreaks', () => {
 
   describe('getRecordMessage', () => {
     it('returns first milestone message when previous record is 0', () => {
-      expect(getRecordMessage('coal', 5, 0)).toBe('🎉 First Coal-free milestone recorded!');
+      expect(getRecordMessage('coal', 5, 0)).toBe('🎉 First Coal-free milestone!');
     });
 
     it('returns correct message for 1 day improvement', () => {
       expect(getRecordMessage('coal', 11, 10)).toBe(
-        '🏆 New record! 11 days without Coal - beating the previous record by 1 day!',
+        '🏆 New record! 11 days without Coal, one day longer than the last!',
       );
     });
 
     it('returns correct message for > 1 day improvement', () => {
       expect(getRecordMessage('gas', 15, 10)).toBe(
-        '🏆 New record! 15 days without Gas - 5 days longer than before!',
+        '🏆 New record! 15 days without Gas, 5 days longer than before!',
       );
     });
 

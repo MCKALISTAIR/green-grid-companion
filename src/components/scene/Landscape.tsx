@@ -351,7 +351,7 @@ function Cottage({
       onClick={handleClick}
       role="button"
       tabIndex={0}
-      aria-label="Countryside cottage - click to toggle lights"
+      aria-label="Cottage. Tap to switch the lights"
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           handleClick();

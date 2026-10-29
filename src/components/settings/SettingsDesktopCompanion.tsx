@@ -19,8 +19,8 @@ export function SettingsDesktopCompanion() {
           <div className="space-y-1">
             <h3 className="font-medium text-base">GridSense Menu Bar</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Keep an eye on the grid from your desktop. Our native menu bar app shows live
-              intensity and upcoming forecasts at a glance.
+              Keep an eye on the grid from your Mac. The menu bar app shows the live number and
+              what&apos;s coming up.
             </p>
           </div>
         </div>

@@ -39,7 +39,9 @@ test('deep links, paste + normalising, format errors, wrong key on the key field
   await setup(page, context, sc);
 
   const card = await openSettings(page);
-  const cardReferral = card.getByRole('link', { name: 'Join through our referral link.' });
+  const cardReferral = card.getByRole('link', {
+    name: 'Join with our referral link and get £50 credit.',
+  });
   await expect(cardReferral).toHaveAttribute('href', OCTOPUS_REFERRAL_URL);
   await expect(cardReferral).toHaveAttribute('target', '_blank');
 
@@ -55,7 +57,7 @@ test('deep links, paste + normalising, format errors, wrong key on the key field
     OCTOPUS_DASHBOARD_URL,
   );
   await expect(
-    sheet.getByRole('link', { name: 'Join through our referral link.' }),
+    sheet.getByRole('link', { name: 'Join with our referral link and get £50 credit.' }),
   ).toHaveAttribute('href', OCTOPUS_REFERRAL_URL);
 
   const submit = page.getByTestId('octopus-link-submit');

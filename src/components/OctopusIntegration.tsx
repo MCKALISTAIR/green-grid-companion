@@ -81,7 +81,7 @@ export function OctopusIntegration() {
     setChecking(true);
     try {
       const result = await recheckMeters();
-      if (result.ok) toast.success(`Linked ${result.meters.length} meter(s) successfully!`);
+      if (result.ok) toast.success(`Linked ${result.meters.length} meter(s).`);
       else toast.error(linkFailureMessage(result));
     } finally {
       setChecking(false);
@@ -97,11 +97,7 @@ export function OctopusIntegration() {
   };
 
   const handleDisconnect = async () => {
-    if (
-      confirm(
-        'Are you sure you want to disconnect? This will remove your credentials and unlink your meters.',
-      )
-    ) {
+    if (confirm("Disconnect Octopus? We'll remove your Octopus details and unlink your meters.")) {
       await disconnect();
     }
   };

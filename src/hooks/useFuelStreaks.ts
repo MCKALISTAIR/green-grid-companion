@@ -300,13 +300,13 @@ export function getRecordMessage(fuel: string, days: number, previousRecord: num
   const fuelName = fuel.charAt(0).toUpperCase() + fuel.slice(1);
 
   if (previousRecord === 0) {
-    return `🎉 First ${fuelName}-free milestone recorded!`;
+    return `🎉 First ${fuelName}-free milestone!`;
   }
 
   const improvement = days - previousRecord;
   if (improvement === 1) {
-    return `🏆 New record! ${days} days without ${fuelName} - beating the previous record by 1 day!`;
+    return `🏆 New record! ${days} days without ${fuelName}, one day longer than the last!`;
   }
 
-  return `🏆 New record! ${days} days without ${fuelName} - ${improvement} days longer than before!`;
+  return `🏆 New record! ${days} days without ${fuelName}, ${improvement} days longer than before!`;
 }

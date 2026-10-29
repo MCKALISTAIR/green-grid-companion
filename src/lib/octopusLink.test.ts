@@ -255,10 +255,17 @@ describe('success copy (brief 3.5)', () => {
 });
 
 describe('voice rules', () => {
-  it('no em dashes, US spellings or stated referral amounts in the linking copy', () => {
+  it('no em dashes or US spellings in the linking copy', () => {
     const src = readFileSync(resolve(__dirname, 'voice/octopusLinkCopy.ts'), 'utf8');
     expect(src).not.toContain('\u2014');
-    expect(src).not.toMatch(/personaliz|color|center\b|£/i);
+    expect(src).not.toMatch(/personaliz|color|center\b/i);
+  });
+  it('states the £50 referral credit only in the referral link (copy pass X21)', () => {
+    const src = readFileSync(resolve(__dirname, 'voice/octopusLinkCopy.ts'), 'utf8');
+    expect(COPY.OCTOPUS_ENTRY_COPY.referralLink).toBe(
+      'Join with our referral link and get £50 credit.',
+    );
+    expect(src.match(/£/g)).toHaveLength(1);
   });
 });
 
