@@ -53,9 +53,9 @@ if (typeof window !== 'undefined') {
 // including a web OAuth return that lands outside Settings.
 installAnonMigration({
   onAuthStateChange: (cb) => supabase.auth.onAuthStateChange(cb),
-  invoke: (previousUserId) =>
+  invoke: (previousUserId, previousUserToken) =>
     supabase.functions.invoke('octopus-energy', {
-      body: { action: 'migrate-data', previousUserId },
+      body: { action: 'migrate-data', previousUserId, previousUserToken },
     }),
   storage: localStorage,
   onMigrated: ({ credentials, meters = 0, footprint_records = 0 }) => {
