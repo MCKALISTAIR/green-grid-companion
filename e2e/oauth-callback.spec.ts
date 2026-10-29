@@ -48,6 +48,19 @@ const USER = {
   created_at: '2026-10-23T12:00:00Z',
 };
 
+// BH-145: what AccountBackup stores right before leaving for the broker.
+async function seedIntent(context: BrowserContext) {
+  await context.addInitScript(() => {
+    if (!sessionStorage.getItem('bh145-seeded')) {
+      sessionStorage.setItem('bh145-seeded', '1');
+      localStorage.setItem(
+        'gs.oauthIntent',
+        JSON.stringify({ nonce: '0123456789abcdef0123', startedAt: Date.now() }),
+      );
+    }
+  });
+}
+
 async function mockAuth(context: BrowserContext, access: string, now: number) {
   await installMocks(context, { intensity: 150, index: 'moderate' });
   await context.route(/supabase\.co\/auth\/v1\/user/, (route) =>
@@ -85,6 +98,7 @@ for (const v of variants) {
     await page.setViewportSize({ width: 390, height: 844 });
     const { access, now } = fakeTokens();
     await mockAuth(context, access, now);
+    await seedIntent(context);
 
     // Fresh browser: no postcode, no onboarding flag, no session.
     await page.goto(`/${v.hash(access, now)}`);
@@ -103,6 +117,27 @@ for (const v of variants) {
     await expect(page.getByRole('button', { name: 'Continue with Google' })).toHaveCount(0);
     await page.screenshot({ path: `test-results/bh119-settings-${v.name.split(' ')[0]}-390.png` });
   });
+}
+
+// BH-145: a crafted link with someone else's tokens must not sign the visitor in.
+for (const path of ['/', '/auth/callback']) {
+  for (const where of ['hash', 'query'] as const) {
+    test(`crafted ${where} tokens on ${path} are ignored without a started sign-in`, async ({
+      page,
+      context,
+    }) => {
+      await page.setViewportSize({ width: 390, height: 844 });
+      const { access, now } = fakeTokens();
+      await mockAuth(context, access, now);
+      const params = `access_token=${access}&refresh_token=rt-1`;
+      await page.goto(where === 'hash' ? `${path}#${params}` : `${path}?${params}`);
+      // Lands on / or /onboarding, signed out, with the tokens gone from the URL.
+      await expect(page).toHaveURL(/localhost:\d+\/(onboarding)?$/, { timeout: 20000 });
+      await page.waitForTimeout(1500);
+      expect(page.url()).not.toContain('access_token');
+      expect(await page.evaluate((k) => localStorage.getItem(k), STORAGE_KEY)).toBeNull();
+    });
+  }
 }
 
 test('an OAuth error return is cleaned from the URL and the app still loads', async ({

@@ -46,6 +46,11 @@ test('anonymous Octopus data is migrated after a web OAuth return to /', async (
     if (!sessionStorage.getItem('bh129-seeded')) {
       sessionStorage.setItem('bh129-seeded', '1');
       localStorage.setItem('octopus-anon-user-id', id);
+      // BH-145: the sign-in intent marker set by AccountBackup.
+      localStorage.setItem(
+        'gs.oauthIntent',
+        JSON.stringify({ nonce: '0123456789abcdef0123', startedAt: Date.now() }),
+      );
     }
   }, ANON_ID);
   const cors = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' };

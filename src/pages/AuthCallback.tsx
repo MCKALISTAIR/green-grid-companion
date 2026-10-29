@@ -1,75 +1,40 @@
 import { useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logger';
 import { ROUTES } from '@/lib/routes';
+import { captureOAuthRedirect, completeOAuthRedirect } from '@/lib/oauthRedirect';
+import { consumeOAuthStart } from '@/lib/oauthIntent';
 
 /**
- * Handles OAuth callback by extracting tokens from the URL.
+ * Native sign-in return (DeepLinkHandler routes GridSense://auth/callback and
+ * https://getgridsense.com/auth/callback here, tokens in the hash).
  *
- * The broker redirects back with tokens in either:
- * - Hash fragment: #access_token=...&refresh_token=...
- * - Query params: ?access_token=...&refresh_token=...
- * - Or via DeepLinkHandler which passes them as query params
+ * BH-145: tokens are only used if this device started a sign-in in the last
+ * few minutes (oauthIntent.ts). Tokens in the query string are never used.
+ * Either way the tokens are removed from the URL before we move on.
  */
 export default function AuthCallback() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    const handleAuthCallback = async () => {
-      try {
-        // Try to extract tokens from hash fragment first (standard OAuth redirect)
-        const hash = window.location.hash.substring(1);
-        const hashParams = new URLSearchParams(hash);
-
-        // Check hash fragment, then query params
-        const accessToken = hashParams.get('access_token') || searchParams.get('access_token');
-        const refreshToken = hashParams.get('refresh_token') || searchParams.get('refresh_token');
-
-        if (accessToken && refreshToken) {
-          logger.info('Found tokens in callback URL, setting session');
-          const { error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
-
-          if (error) {
-            logger.error('Failed to set session from callback tokens', { message: error.message });
-            navigate(ROUTES.HOME);
-            return;
-          }
-
-          logger.info('Session set successfully from callback tokens');
-          navigate(ROUTES.HOME);
-          return;
-        }
-
-        // Fallback: check if session already exists (e.g. web flow where broker set it)
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession();
-
-        if (error) {
-          logger.error('Error checking session in auth callback', { message: error.message });
-        }
-
-        if (session) {
-          logger.info('Existing session found, redirecting');
-        } else {
-          logger.warn('No session or tokens found in auth callback');
-        }
-
-        navigate(ROUTES.HOME);
-      } catch (e) {
-        logger.error('Unexpected error in auth callback', e);
-        navigate(ROUTES.HOME);
-      }
+    let cancelled = false;
+    const run = async () => {
+      const outcome = await completeOAuthRedirect(captureOAuthRedirect(window.location.href), {
+        auth: supabase.auth,
+        location: window.location,
+        history: window.history,
+        warn: (message, context) => logger.warn(message, context),
+        consumeIntent: () => consumeOAuthStart(),
+      });
+      logger.info('Auth callback finished', { outcome });
+      if (!cancelled) navigate(ROUTES.HOME, { replace: true });
     };
-
-    handleAuthCallback();
-  }, [navigate, searchParams]);
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate]);
 
   return (
     <div className="flex items-center justify-center min-h-screen">

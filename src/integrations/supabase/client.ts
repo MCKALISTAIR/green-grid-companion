@@ -16,5 +16,12 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: typeof localStorage !== 'undefined' ? localStorage : undefined,
     persistSession: true,
     autoRefreshToken: true,
+    // BH-145: never adopt a session just because tokens appear in the URL.
+    // Sign-in returns are handled by src/lib/oauthRedirect.ts, which checks
+    // that this device started the sign-in. PKCE means a stray ?code= can't
+    // be exchanged without the verifier stored here. Keep these two lines if
+    // Lovable regenerates this file.
+    detectSessionInUrl: false,
+    flowType: 'pkce',
   },
 });
