@@ -201,8 +201,58 @@ function assertOk(response: Response, what: string): void {
   throw error;
 }
 
+/**
+ * NESO's "current" endpoints (/intensity, /regional/regionid/{id}, /regional,
+ * /generation) serve the last half hour that has finished, not the open one:
+ * at 20:52 they return 20:00-20:30. Shown as "now", the reading was 30-60 min
+ * old even straight after a refresh (BH-136). Ask for the open half hour by
+ * time instead, and fall back to the old endpoint only when that comes back empty.
+ */
+export function nesoTime(ms: number): string {
+  return new Date(ms).toISOString().slice(0, 16) + 'Z';
+}
+
+/** Parse JSON, or null when the body isn't JSON (the caller then falls back). */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- NESO bodies are checked field by field.
+async function readJson(response: Response): Promise<any> {
+  try {
+    return await response.json();
+  } catch {
+    return null;
+  }
+}
+
+/** `{now}/{now + 30 min}`: NESO returns the half hour(s) overlapping that span. */
+function openSlotRange(nowMs: number): string {
+  return `${nesoTime(nowMs)}/${nesoTime(nowMs + 30 * 60 * 1000)}`;
+}
+
+/** The slot whose [from, to) contains `nowMs`, else the first one. */
+export function pickOpenSlot<T extends { from: string; to: string }>(
+  slots: T[] | undefined | null,
+  nowMs: number = Date.now(),
+): T | undefined {
+  if (!Array.isArray(slots) || slots.length === 0) return undefined;
+  const open = slots.find((s) => {
+    const f = Date.parse(s.from);
+    const t = Date.parse(s.to);
+    return Number.isFinite(f) && Number.isFinite(t) && f <= nowMs && nowMs < t;
+  });
+  return open ?? slots[0];
+}
+
 // Get current national intensity
 export async function getCurrentIntensity(signal?: AbortSignal): Promise<IntensityData> {
+  const now = Date.now();
+  const timed = await fetchWithNoCache(`${BASE_URL}/intensity/${openSlotRange(now)}`, signal);
+  const open = timed.ok
+    ? pickOpenSlot<IntensityData>((await readJson(timed))?.data, now)
+    : undefined;
+  if (open?.intensity) return open;
+  return getLastFinishedIntensity(signal);
+}
+
+async function getLastFinishedIntensity(signal?: AbortSignal): Promise<IntensityData> {
   const response = await fetchWithNoCache(`${BASE_URL}/intensity`, signal);
   assertOk(response, 'national intensity');
   const data = await response.json();
@@ -319,6 +369,17 @@ export async function getRegionalIntensityById(
   regionId: number,
   signal?: AbortSignal,
 ): Promise<RegionalData> {
+  const now = Date.now();
+  const timed = await fetchWithNoCache(
+    `${BASE_URL}/regional/intensity/${openSlotRange(now)}/regionid/${regionId}`,
+    signal,
+  );
+  // Shape: { data: { regionid, dnoregion, shortname, data: [slot, ...] } }
+  const timedJson = timed.ok ? await readJson(timed) : null;
+  const region = timedJson?.data;
+  const open = pickOpenSlot<RegionalData['data'][number]>(region?.data, now);
+  if (region && open?.intensity) return { ...region, data: [open] };
+
   const response = await fetchWithNoCache(`${BASE_URL}/regional/regionid/${regionId}`, signal);
   assertOk(response, 'regional data');
   const data = await response.json();
@@ -327,6 +388,15 @@ export async function getRegionalIntensityById(
 
 // Get national generation mix
 export async function getGenerationMix(signal?: AbortSignal): Promise<GenerationMix[]> {
+  const now = Date.now();
+  const timed = await fetchWithNoCache(`${BASE_URL}/generation/${openSlotRange(now)}`, signal);
+  const timedJson = timed.ok ? await readJson(timed) : null;
+  const open = pickOpenSlot<{ from: string; to: string; generationmix?: GenerationMix[] }>(
+    timedJson?.data,
+    now,
+  );
+  if (Array.isArray(open?.generationmix)) return open.generationmix;
+
   const response = await fetchWithNoCache(`${BASE_URL}/generation`, signal);
   assertOk(response, 'generation mix');
   const data = await response.json();
@@ -349,6 +419,19 @@ export interface RegionListItem {
 
 // Get all regions
 export async function getAllRegions(signal?: AbortSignal): Promise<RegionListItem[]> {
+  const now = Date.now();
+  const timed = await fetchWithNoCache(
+    `${BASE_URL}/regional/intensity/${openSlotRange(now)}`,
+    signal,
+  );
+  // Shape: { data: [{ from, to, regions: [...] }] }
+  const timedJson = timed.ok ? await readJson(timed) : null;
+  const open = pickOpenSlot<{ from: string; to: string; regions?: RegionListItem[] }>(
+    timedJson?.data,
+    now,
+  );
+  if (Array.isArray(open?.regions) && open.regions.length > 0) return open.regions;
+
   const response = await fetchWithNoCache(`${BASE_URL}/regional`, signal);
   assertOk(response, 'regions');
   const data = await response.json();

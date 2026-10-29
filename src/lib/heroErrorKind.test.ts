@@ -59,7 +59,10 @@ describe('hero title by failure kind', () => {
   });
 
   it('parse error (200 with a bad body): neutral', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('<html>', { status: 200 })));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('<html>', { status: 200 })),
+    );
     const err = await getCurrentIntensity().catch((e) => e);
     expect(err).toBeInstanceOf(Error);
     expect(heroFor(err)).toBe(NEUTRAL);
@@ -68,7 +71,7 @@ describe('hero title by failure kind', () => {
   it('parse error (200 with the wrong shape): neutral', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: [] }), { status: 200 })),
+      vi.fn(async () => new Response(JSON.stringify({ data: [] }), { status: 200 })),
     );
     const err = await getCurrentIntensity().catch((e) => e);
     expect(err.message).toBe('Bad data from national intensity');
