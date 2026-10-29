@@ -114,9 +114,9 @@ describe('sun, stars and smoke by band', () => {
 });
 
 describe('sky blend by day (round 3)', () => {
-  it('blends the whole sky 20% at high and 40% at very high, by day only', () => {
-    expect(getSkyBlend('very high', 'midday')).toBe(0.4);
-    expect(getSkyBlend('high', 'morning')).toBe(0.2);
+  it('blends the whole sky 15% at high and 70% at very high, by day only', () => {
+    expect(getSkyBlend('very high', 'midday')).toBe(0.7);
+    expect(getSkyBlend('high', 'morning')).toBe(0.15);
     for (const b of ['none', 'moderate'] as const) expect(getSkyBlend(b, 'midday')).toBe(0);
     for (const t of ['dawn', 'sunset', 'dusk', 'night'])
       expect(getSkyBlend('very high', t)).toBe(0);

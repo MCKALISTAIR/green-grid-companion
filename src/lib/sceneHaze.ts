@@ -58,17 +58,19 @@ export const HAZE_DAY: Record<
 };
 
 /**
- * Day only (Design, 29 Oct 2026, round 3): the whole sky gradient is blended top to
- * bottom toward a neutral grey, ~20% at high and ~40% at very high, so the sky
- * reads grey-blue rather than clean cyan. Drawn under all scene art, so the land
- * never changes. Very low, low and moderate: no blend.
+ * Day only (Design, 29 Oct 2026, round 4): the whole sky gradient is blended top to
+ * bottom toward #6f777e so the sky reads grey-blue rather than clean cyan. The
+ * blend and the sky sit outside the scene filter, so the set colour lands. Drawn
+ * under all scene art, so the land never changes. Very low, low and moderate: none.
+ * Tuned on the measured top sky pixel, which also sits under the hero's white/30
+ * scrim: very high lands at about (138,172,189) against Design's (130,165,180).
  */
-export const HAZE_SKY_BLEND_COLOR = '#a9adb0';
+export const HAZE_SKY_BLEND_COLOR = '#6f777e';
 export const HAZE_SKY_BLEND: Record<HazeBand, number> = {
   none: 0,
   moderate: 0,
-  high: 0.2,
-  'very high': 0.4,
+  high: 0.15,
+  'very high': 0.7,
 };
 /**
  * Sky blend for a band and time of day. Blue-sky daytime only (morning, midday,
