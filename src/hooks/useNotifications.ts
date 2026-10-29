@@ -14,7 +14,7 @@ import {
   type ServerOutlookConfirmation,
 } from '@/lib/dailyOutlookServer';
 import { getNativePushToken } from '@/lib/nativePushToken';
-import { supabase } from '@/integrations/supabase/client';
+import { ensureAuthSession } from '@/lib/auth-utils';
 import { readTone } from '@/lib/tone';
 import {
   cleanWindowNotification,
@@ -295,9 +295,6 @@ export function useNotifications() {
     if (prefs.dailyForecastEnabled && permissionStatus !== 'granted') return;
     let cancelled = false;
     const timer = setTimeout(async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
       const result = await syncDailyOutlookSubscription({
         enabled: prefs.dailyForecastEnabled,
         time: prefs.dailyForecastTime,
@@ -307,7 +304,9 @@ export function useNotifications() {
         isSandbox: import.meta.env.DEV,
         baseUrl: import.meta.env.VITE_SUPABASE_URL,
         apiKey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-        accessToken: session?.access_token ?? null,
+        // BH-149: make sure there is a session (anonymous if needed) so the
+        // call is never sent without a token.
+        getAccessToken: async () => (await ensureAuthSession())?.access_token ?? null,
       });
       if (cancelled) return;
       logger.info('Daily outlook server subscription', { status: result.status });
