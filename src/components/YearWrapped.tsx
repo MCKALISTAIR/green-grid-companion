@@ -455,7 +455,7 @@ function SummarySlide({ data, onClose: _onClose }: { data: YearWrappedData; onCl
         transition={{ delay: 0.6 }}
         className="text-sm text-muted-foreground"
       >
-        Thanks for watching the GB grid with&nbsp;us! 💚
+        Thanks for tracking the GB grid with&nbsp;us! 💚
       </motion.p>
     </div>
   );
