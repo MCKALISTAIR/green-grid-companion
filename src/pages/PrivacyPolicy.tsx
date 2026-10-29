@@ -36,7 +36,7 @@ export default function PrivacyPolicy() {
 
       <div className="p-4 max-w-2xl mx-auto space-y-6 lg:pb-6 animate-page-enter">
         <div className="space-y-2">
-          <p className="text-muted-foreground">Last updated: 3 October 2026</p>
+          <p className="text-muted-foreground">Last updated: 29 October 2026</p>
           <p>
             Hello! I'm Alistair McKay. Apps should be honest and respectful of your data. As a
             hobbyist developer, I built GridSense to help you track energy intensity, not to track
@@ -61,7 +61,7 @@ export default function PrivacyPolicy() {
               </li>
               <li>
                 <strong>Octopus Energy data:</strong> Your account number, API key, meter details,
-                consumption history, and calculated carbon footprint. Only if you voluntarily link
+                consumption history, and calculated carbon footprint: only if you voluntarily link
                 your account.
               </li>
               <li>
