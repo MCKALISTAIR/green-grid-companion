@@ -334,9 +334,9 @@ supabase db reset
 supabase functions serve
 ```
 
-The project includes 12 edge functions under `supabase/functions/`:
+The project includes 11 edge functions under `supabase/functions/`:
 `check-carbon-intensity`, `daily-forecast`, `weekly-digest`, `monthly-report`,
-`tesla-energy`, `push-subscriptions`, `delete-account`, `export-data`,
+`push-subscriptions`, `delete-account`, `export-data`, `geocoding`,
 `grid-demand`, `octopus-energy`, `weather`.
 
 ### Push Notifications (APNs / FCM)

@@ -8,8 +8,12 @@ import {
   EDINBURGH_CASTLE_TOKENS,
   getEdinburghCastleColours,
   getLandmarkLight,
+  DAY_STORM_EXTRA_DARKEN_L,
   LANDMARK_RIM_SUN,
   mixHex,
+  NIGHT_BANK_LIFT,
+  NIGHT_BANK_SNOW_LIFT,
+  NIGHT_BANK_STONE,
 } from './cityLandmarkPalette';
 
 const TIMES: TimeOfDay[] = ['dawn', 'morning', 'midday', 'afternoon', 'sunset', 'dusk', 'night'];
@@ -159,17 +163,12 @@ describe('Design review of #190', () => {
     expect(colours('sunset', 'clear').walls).toBe(EDINBURGH_CASTLE_TOKENS.sunset.walls);
   });
 
-  it('clear dusk takes the night lit-stone set; cloudy dusk keeps the dark set', () => {
+  it('clear dusk takes the night lit-stone set', () => {
     expect(colours('dusk', 'clear').walls).toBe(EDINBURGH_CASTLE_AFTER_DARK.night.walls);
     expect(colours('dusk', 'clear').rock).toBe(EDINBURGH_CASTLE_AFTER_DARK.night.rock);
-    for (const w of ['overcast', 'rain', 'snow', 'storm'] as const) {
-      expect(lightness(colours('dusk', w).walls)).toBeLessThan(
-        lightness(EDINBURGH_CASTLE_AFTER_DARK.night.walls),
-      );
-    }
   });
 
-  it('darkens the castle under cloud by day and at night, deepest in daytime snow; fog is exempt', () => {
+  it('darkens the castle under cloud by day, deepest in daytime snow; fog is exempt', () => {
     for (const t of ['morning', 'midday', 'afternoon'] as const) {
       const clear = lightness(colours(t, 'clear').walls);
       const overcast = lightness(colours(t, 'overcast').walls);
@@ -178,8 +177,45 @@ describe('Design review of #190', () => {
       expect(snow).toBeLessThan(overcast);
       expect(lightness(colours(t, 'fog').walls)).toBeGreaterThan(clear);
     }
-    expect(lightness(colours('night', 'snow').walls)).toBeLessThan(
-      lightness(colours('night', 'clear').walls) - 0.15,
+  });
+});
+
+describe('BH-117: castle in front of the cloud bank', () => {
+  const colours = (
+    timeOfDay: TimeOfDay,
+    weather: Parameters<typeof getEdinburghCastleColours>[0]['weather'],
+  ) => getEdinburghCastleColours({ timeOfDay, weather, nesoIndex: 'low', heroLit: false });
+  const lift = (hex: string, t: number) => mixHex(hex, NIGHT_BANK_STONE, t);
+
+  it('after dark under the bank the castle is the lit-stone set lifted toward pale stone', () => {
+    const night = EDINBURGH_CASTLE_AFTER_DARK.night;
+    for (const t of ['dusk', 'night'] as const) {
+      for (const w of ['overcast', 'rain', 'storm'] as const) {
+        expect(colours(t, w).walls).toBe(lift(night.walls, NIGHT_BANK_LIFT));
+        expect(colours(t, w).rock).toBe(lift(night.rock, NIGHT_BANK_LIFT));
+      }
+      expect(colours(t, 'snow').walls).toBe(lift(night.walls, NIGHT_BANK_SNOW_LIFT));
+      // Never darker than the clear-night lit stone.
+      for (const w of ['overcast', 'rain', 'storm', 'snow'] as const) {
+        expect(contrastRatio(colours(t, w).rock, '#000000')).toBeGreaterThan(
+          contrastRatio(night.rock, '#000000'),
+        );
+      }
+    }
+  });
+
+  it('daytime storm is a little darker than the storm treatment alone', () => {
+    for (const t of ['morning', 'midday', 'afternoon'] as const) {
+      const base = EDINBURGH_CASTLE_TOKENS[t].walls;
+      const stormOnly = mixHex(darkenHex(base, 16), '#4f4370', 0.2);
+      expect(colours(t, 'storm').walls).toBe(darkenHex(stormOnly, DAY_STORM_EXTRA_DARKEN_L));
+    }
+  });
+
+  it('leaves clear, fog and daytime cloud unchanged', () => {
+    expect(colours('night', 'clear').walls).toBe(EDINBURGH_CASTLE_AFTER_DARK.night.walls);
+    expect(colours('dusk', 'fog').walls).toBe(
+      mixHex(EDINBURGH_CASTLE_AFTER_DARK.dusk.walls, '#d9d9d9', 0.7),
     );
   });
 });

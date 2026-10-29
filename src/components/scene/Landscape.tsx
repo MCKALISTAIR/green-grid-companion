@@ -2,6 +2,7 @@ import { useMemo, useState, useId } from 'react';
 import { motion } from 'framer-motion';
 import { useHaptics } from '@/hooks/useHaptics';
 import { getWindowLitColor } from '@/lib/windowLitColor';
+import { getLandPalette } from '@/lib/landPalette';
 
 export type TimeOfDayLandscape =
   'night' | 'dawn' | 'morning' | 'midday' | 'afternoon' | 'sunset' | 'dusk';
@@ -162,6 +163,7 @@ function HillLayer({
 }) {
   return (
     <motion.g
+      data-land="hill"
       initial={skipIntro ? { y: 0, opacity: 1 } : { y: 50, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={skipIntro ? { duration: 0 } : { duration: 1.5, delay, ease: 'easeOut' as const }}
@@ -204,111 +206,23 @@ function HillLayer({
   );
 }
 
-// 🎨 Palette Hook
+// 🎨 Palette Hook: land tokens never react to carbon (src/lib/landPalette.ts).
 function useLandscapePalette(
-  cleanliness: number,
   isNight: boolean,
   synthwaveMode: boolean,
   isSnowing?: boolean,
   timeOfDay?: TimeOfDayLandscape,
 ) {
-  return useMemo(() => {
-    if (synthwaveMode) {
-      return {
-        backHillHighlight: '#3c096c',
-        backHillShadow: '#1a0033',
-        midHillHighlight: '#5a189a',
-        midHillShadow: '#240046',
-        frontHillHighlight: '#7b2cbf',
-        frontHillShadow: '#3c096c',
-        treePrimary: '#e0aaff',
-        treeShadow: '#9d4edd',
-      };
-    }
-    if (isSnowing) {
-      return {
-        backHillHighlight: isNight ? '#2d3748' : '#e2e8f0',
-        backHillShadow: isNight ? '#0f172a' : '#cbd5e1',
-        midHillHighlight: isNight ? '#334155' : '#f1f5f9',
-        midHillShadow: isNight ? '#1e293b' : '#e2e8f0',
-        frontHillHighlight: isNight ? '#475569' : '#ffffff',
-        frontHillShadow: isNight ? '#334155' : '#f1f5f9',
-        treePrimary: isNight ? '#0f172a' : '#14532d',
-        treeShadow: isNight ? '#020617' : '#052e16',
-      };
-    }
-    if (isNight) {
-      return {
-        backHillHighlight: '#1e293b',
-        backHillShadow: '#020617',
-        midHillHighlight: '#334155',
-        midHillShadow: '#0f172a',
-        frontHillHighlight: '#475569',
-        frontHillShadow: '#1e293b',
-        treePrimary: '#475569',
-        treeShadow: '#0f172a',
-      };
-    }
-
-    const isClean = cleanliness > 0.5;
-
-    // Time-of-day tinting for landscape
-    if (timeOfDay === 'dawn') {
-      return {
-        backHillHighlight: isClean ? '#2b5a3e' : '#5c3e1a',
-        backHillShadow: isClean ? '#13281a' : '#2b1a08',
-        midHillHighlight: isClean ? '#34704b' : '#734e26',
-        midHillShadow: isClean ? '#1a3d25' : '#3d250f',
-        frontHillHighlight: isClean ? '#3e8c5b' : '#8c5e32',
-        frontHillShadow: isClean ? '#204d30' : '#4d3215',
-        treePrimary: isClean ? '#6ec89b' : '#b8860b',
-        treeShadow: isClean ? '#3a8a65' : '#8b6914',
-      };
-    }
-    if (timeOfDay === 'sunset') {
-      return {
-        backHillHighlight: isClean ? '#4a702e' : '#733e0d',
-        backHillShadow: isClean ? '#203610' : '#381c03',
-        midHillHighlight: isClean ? '#5c8a39' : '#8c4e12',
-        midHillShadow: isClean ? '#2a4714' : '#4c2505',
-        frontHillHighlight: isClean ? '#70a644' : '#a65f1a',
-        frontHillShadow: isClean ? '#365a18' : '#5c3209',
-        treePrimary: isClean ? '#8bc34a' : '#cd853f',
-        treeShadow: isClean ? '#558b2f' : '#a0522d',
-      };
-    }
-    if (timeOfDay === 'dusk') {
-      return {
-        backHillHighlight: isClean ? '#25354c' : '#3d281a',
-        backHillShadow: isClean ? '#0f1824' : '#1f130a',
-        midHillHighlight: isClean ? '#324a6b' : '#543b27',
-        midHillShadow: isClean ? '#172538' : '#2a1a0f',
-        frontHillHighlight: isClean ? '#44608c' : '#6b4e36',
-        frontHillShadow: isClean ? '#21334c' : '#3a2818',
-        treePrimary: isClean ? '#5a7a90' : '#7a6040',
-        treeShadow: isClean ? '#2a4a60' : '#5a4030',
-      };
-    }
-
-    // Midday / Normal daylight
-    return {
-      backHillHighlight: isClean ? '#1f6e3c' : '#61330b',
-      backHillShadow: isClean ? '#0e3a1d' : '#2d1402',
-      midHillHighlight: isClean ? '#22c55e' : '#854d0e',
-      midHillShadow: isClean ? '#14532d' : '#451a03',
-      frontHillHighlight: isClean ? '#4ade80' : '#a16207',
-      frontHillShadow: isClean ? '#16a34a' : '#713f12',
-      treePrimary: isClean ? '#4ade80' : '#a16207',
-      treeShadow: isClean ? '#16a34a' : '#854d0e',
-    };
-  }, [cleanliness, isNight, synthwaveMode, isSnowing, timeOfDay]);
+  return useMemo(
+    () => getLandPalette({ isNight, synthwaveMode, isSnowing, timeOfDay }),
+    [isNight, synthwaveMode, isSnowing, timeOfDay],
+  );
 }
 
 // --- Independent Layer Components ---
 
 export function LandscapeBack(props: LandscapeProps) {
   const palette = useLandscapePalette(
-    props.cleanliness,
     props.isNight,
     props.synthwaveMode,
     props.isSnowing,
@@ -356,7 +270,6 @@ export function LandscapeBack(props: LandscapeProps) {
 
 export function LandscapeMid(props: LandscapeProps) {
   const palette = useLandscapePalette(
-    props.cleanliness,
     props.isNight,
     props.synthwaveMode,
     props.isSnowing,
@@ -554,7 +467,6 @@ function Cottage({
 
 export function LandscapeFront(props: LandscapeProps) {
   const palette = useLandscapePalette(
-    props.cleanliness,
     props.isNight,
     props.synthwaveMode,
     props.isSnowing,

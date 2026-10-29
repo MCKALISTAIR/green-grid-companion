@@ -1,266 +1,222 @@
-import { useState, forwardRef } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Eye, EyeOff, Loader2, Save, AlertCircle } from 'lucide-react';
-import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
-import { z } from 'zod';
+import { Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { OCTOPUS_SHEET_COPY as COPY } from '@/lib/voice/octopusLinkCopy';
+import type { LinkField } from '@/lib/octopusLink';
 
-// Validation schema for Octopus Energy credentials
-const credentialsSchema = z.object({
-  accountNumber: z
-    .string()
-    .trim()
-    .min(1, 'Account number is required')
-    .max(20, 'Account number is too long')
-    .regex(/^A-[A-Z0-9]{8}$/i, 'Account number must be in format A-XXXXXXXX (e.g., A-12AB34CD)'),
-  apiKey: z
-    .string()
-    .trim()
-    .min(1, 'API key is required')
-    .max(100, 'API key is too long')
-    .regex(
-      /^sk_live_[a-zA-Z0-9]{20,}$/,
-      'API key must start with sk_live_ followed by alphanumeric characters',
-    ),
-});
-
-type CredentialsFormData = z.infer<typeof credentialsSchema>;
-type ValidationErrors = Partial<Record<keyof CredentialsFormData, string>>;
-
-interface OctopusSettingsProps {
-  onSaved: () => void;
-  onCancel?: () => void;
+/** True when the async clipboard read API exists (permission is only known on first use). */
+function clipboardReadable(): boolean {
+  return typeof navigator !== 'undefined' && typeof navigator.clipboard?.readText === 'function';
 }
 
-export const OctopusSettings = forwardRef<HTMLDivElement, OctopusSettingsProps>(
-  ({ onSaved, onCancel }, ref) => {
-    const [apiKey, setApiKey] = useState('');
-    const [accountNumber, setAccountNumber] = useState('');
-    const [showKey, setShowKey] = useState(false);
-    const [errors, setErrors] = useState<ValidationErrors>({});
-    const [touched, setTouched] = useState<Record<string, boolean>>({});
-    const { saveCredentials, isSyncing } = useOctopusEnergy();
+export interface OctopusSettingsProps {
+  formId: string;
+  accountNumber: string;
+  apiKey: string;
+  errors: Partial<Record<LinkField, string>>;
+  /** Server error for the whole form (role="alert"), shown above the fields. */
+  banner?: string;
+  bannerAction?: { label: string; onClick: () => void; disabled?: boolean };
+  busy: boolean;
+  onChange: (field: LinkField, value: string) => void;
+  onBlur: (field: LinkField) => void;
+  onPaste: (field: LinkField, value: string) => void;
+  onSubmit: () => void;
+}
 
-    const validateField = (field: keyof CredentialsFormData, value: string): string | undefined => {
-      const partialSchema = credentialsSchema.shape[field];
-      const result = partialSchema.safeParse(value);
-      return result.success ? undefined : result.error.errors[0]?.message;
-    };
+/**
+ * The two fields, privacy line and server banner of the Octopus linking sheet
+ * (brief 3.2 and 3.3). State lives in OctopusLinkSheet. The key is held in
+ * React state only and never written to storage.
+ */
+export function OctopusSettings({
+  formId,
+  accountNumber,
+  apiKey,
+  errors,
+  banner,
+  bannerAction,
+  busy,
+  onChange,
+  onBlur,
+  onPaste,
+  onSubmit,
+}: OctopusSettingsProps) {
+  const [showKey, setShowKey] = useState(false);
+  const [canPaste, setCanPaste] = useState(clipboardReadable);
 
-    const handleAccountNumberChange = (value: string) => {
-      // Sanitize input - only allow alphanumeric and dash
-      const sanitized = value.replace(/[^a-zA-Z0-9-]/g, '').toUpperCase();
-      setAccountNumber(sanitized);
+  useEffect(() => setCanPaste(clipboardReadable()), []);
 
-      // Clear error while typing (don't re-validate until blur)
-      if (errors.accountNumber) {
-        setErrors((prev) => ({ ...prev, accountNumber: undefined }));
-      }
-    };
+  const paste = async (field: LinkField) => {
+    try {
+      const text = await navigator.clipboard.readText();
+      onPaste(field, text);
+    } catch {
+      // Not allowed (or not supported): hide the button, long-press paste still works.
+      setCanPaste(false);
+    }
+  };
 
-    const handleApiKeyChange = (value: string) => {
-      // Sanitize input - only allow alphanumeric and underscore
-      const sanitized = value.replace(/[^a-zA-Z0-9_]/g, '');
-      setApiKey(sanitized);
+  const accountError = errors.accountNumber;
+  const keyError = errors.apiKey;
 
-      // Clear error while typing (don't re-validate until blur)
-      if (errors.apiKey) {
-        setErrors((prev) => ({ ...prev, apiKey: undefined }));
-      }
-    };
-
-    const handleBlur = (field: keyof CredentialsFormData) => {
-      const value = field === 'accountNumber' ? accountNumber : apiKey;
-      // Only validate on blur if the user has actually interacted (field has content or was previously touched)
-      if (value || touched[field]) {
-        setTouched((prev) => ({ ...prev, [field]: true }));
-        setErrors((prev) => ({
-          ...prev,
-          [field]: validateField(field, value),
-        }));
-      }
-    };
-
-    const handleSave = async (e: React.FormEvent) => {
-      e.preventDefault();
-
-      // Validate all fields
-      const result = credentialsSchema.safeParse({ accountNumber, apiKey });
-
-      if (!result.success) {
-        const fieldErrors: ValidationErrors = {};
-        result.error.errors.forEach((err) => {
-          const field = err.path[0] as keyof CredentialsFormData;
-          if (!fieldErrors[field]) {
-            fieldErrors[field] = err.message;
-          }
-        });
-        setErrors(fieldErrors);
-        setTouched({ accountNumber: true, apiKey: true });
-        return;
-      }
-
-      try {
-        await saveCredentials(result.data.apiKey, result.data.accountNumber);
-        onSaved();
-      } catch {
-        // Error handled in hook toast
-      }
-    };
-
-    const isValid = !errors.accountNumber && !errors.apiKey && accountNumber && apiKey;
-
-    return (
-      <Card ref={ref} className="p-4 border-primary/15 bg-primary/5">
-        <div className="space-y-4">
-          <div>
-            <h3 className="font-medium text-foreground">Connect Octopus Energy</h3>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Enter your credentials to calculate your true carbon footprint and see if you're using
-              energy at the greenest times.
-            </p>
+  return (
+    <form
+      id={formId}
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSubmit();
+      }}
+      className="space-y-4"
+      noValidate
+    >
+      {banner && (
+        <div
+          role="alert"
+          data-testid="octopus-link-banner"
+          className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-foreground"
+        >
+          <div className="flex items-start gap-2">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" aria-hidden="true" />
+            <p className="leading-snug">{banner}</p>
           </div>
+          {bannerAction && (
+            <button
+              type="button"
+              onClick={bannerAction.onClick}
+              disabled={bannerAction.disabled}
+              className="mt-2 min-h-11 rounded-lg px-3 text-sm font-semibold text-primary underline-offset-2 hover:underline disabled:opacity-50"
+            >
+              {bannerAction.label}
+            </button>
+          )}
+        </div>
+      )}
 
-          <form onSubmit={handleSave} className="space-y-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="account-number" className="text-xs">
-                Account Number
-              </Label>
-              <Input
-                id="account-number"
-                placeholder="A-12345678"
-                value={accountNumber}
-                onChange={(e) => handleAccountNumberChange(e.target.value)}
-                onBlur={() => handleBlur('accountNumber')}
-                maxLength={11}
-                className={`h-8 bg-background/50 ${
-                  errors.accountNumber && touched.accountNumber
-                    ? 'border-destructive focus-visible:ring-destructive'
-                    : ''
-                }`}
-                aria-invalid={!!(errors.accountNumber && touched.accountNumber)}
-                aria-describedby={
-                  errors.accountNumber && touched.accountNumber ? 'account-error' : undefined
-                }
-              />
-              {errors.accountNumber && touched.accountNumber && (
-                <p
-                  id="account-error"
-                  className="text-[10px] text-destructive flex items-center gap-1"
-                >
-                  <AlertCircle className="w-3 h-3" />
-                  {errors.accountNumber}
-                </p>
-              )}
-            </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="account-number" className="text-sm font-semibold">
+          {COPY.accountLabel}
+        </Label>
+        <div className="relative">
+          <Input
+            id="account-number"
+            name="octopus-account-number"
+            placeholder={COPY.accountPlaceholder}
+            value={accountNumber}
+            onChange={(e) => onChange('accountNumber', e.target.value)}
+            onBlur={() => onBlur('accountNumber')}
+            readOnly={busy}
+            inputMode="text"
+            autoCapitalize="characters"
+            autoCorrect="off"
+            spellCheck={false}
+            autoComplete="off"
+            enterKeyHint="next"
+            className={cn(
+              'h-12 rounded-xl bg-background text-base',
+              canPaste && 'pr-20',
+              accountError && 'border-destructive focus-visible:ring-destructive',
+            )}
+            aria-invalid={!!accountError}
+            aria-describedby={accountError ? 'account-error' : 'account-help'}
+          />
+          {canPaste && (
+            <button
+              type="button"
+              onClick={() => paste('accountNumber')}
+              disabled={busy}
+              aria-label={COPY.pasteAccountLabel}
+              className="absolute right-1.5 top-1/2 h-9 -translate-y-1/2 rounded-lg bg-primary/10 px-3 text-sm font-semibold text-primary hover:bg-primary/15 disabled:opacity-50"
+            >
+              {COPY.paste}
+            </button>
+          )}
+        </div>
+        {accountError ? (
+          <p
+            id="account-error"
+            className="flex items-start gap-1 text-[13px] leading-snug text-destructive"
+          >
+            <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            {accountError}
+          </p>
+        ) : (
+          <p id="account-help" className="text-xs text-muted-foreground">
+            {COPY.accountHelper}
+          </p>
+        )}
+      </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="api-key" className="text-xs">
-                API Key
-              </Label>
-              <div className="relative">
-                <Input
-                  id="api-key"
-                  type={showKey ? 'text' : 'password'}
-                  placeholder="sk_live_..."
-                  value={apiKey}
-                  onChange={(e) => handleApiKeyChange(e.target.value)}
-                  onBlur={() => handleBlur('apiKey')}
-                  maxLength={100}
-                  className={`h-8 pr-8 bg-background/50 ${
-                    errors.apiKey && touched.apiKey
-                      ? 'border-destructive focus-visible:ring-destructive'
-                      : ''
-                  }`}
-                  aria-invalid={!!(errors.apiKey && touched.apiKey)}
-                  aria-describedby={errors.apiKey && touched.apiKey ? 'apikey-error' : undefined}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowKey(!showKey)}
-                  className="absolute right-2 top-2 text-muted-foreground hover:text-foreground"
-                  aria-label={showKey ? 'Hide API key' : 'Show API key'}
-                >
-                  {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-              {errors.apiKey && touched.apiKey && (
-                <p
-                  id="apikey-error"
-                  className="text-[10px] text-destructive flex items-center gap-1"
-                >
-                  <AlertCircle className="w-3 h-3" />
-                  {errors.apiKey}
-                </p>
-              )}
-            </div>
-
-            <div className="flex gap-2">
-              {onCancel && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={onCancel}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-              )}
-              <Button
-                type="submit"
-                size="sm"
-                className={`bg-primary hover:bg-primary/90 ${onCancel ? 'flex-1' : 'w-full'}`}
-                disabled={isSyncing || !isValid}
+      <div className="space-y-1.5">
+        <Label htmlFor="api-key" className="text-sm font-semibold">
+          {COPY.keyLabel}
+        </Label>
+        <div className="relative">
+          <Input
+            id="api-key"
+            name="octopus-api-key"
+            type={showKey ? 'text' : 'password'}
+            placeholder={COPY.keyPlaceholder}
+            value={apiKey}
+            onChange={(e) => onChange('apiKey', e.target.value)}
+            onBlur={() => onBlur('apiKey')}
+            readOnly={busy}
+            maxLength={100}
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            autoComplete="off"
+            enterKeyHint="go"
+            className={cn(
+              'h-12 rounded-xl bg-background text-base',
+              canPaste ? 'pr-[7.5rem]' : 'pr-12',
+              keyError && 'border-destructive focus-visible:ring-destructive',
+            )}
+            aria-invalid={!!keyError}
+            aria-describedby={keyError ? 'apikey-error' : 'apikey-help'}
+          />
+          <div className="absolute right-1.5 top-1/2 flex -translate-y-1/2 items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setShowKey((v) => !v)}
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground"
+              aria-label={showKey ? COPY.hideKey : COPY.showKey}
+            >
+              {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+            {canPaste && (
+              <button
+                type="button"
+                onClick={() => paste('apiKey')}
+                disabled={busy}
+                aria-label={COPY.pasteKeyLabel}
+                className="h-9 rounded-lg bg-primary/10 px-3 text-sm font-semibold text-primary hover:bg-primary/15 disabled:opacity-50"
               >
-                {isSyncing ? (
-                  <>
-                    <Loader2 className="w-3 h-3 mr-2 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-3 h-3 mr-2" />
-                    Save
-                  </>
-                )}
-              </Button>
-            </div>
-          </form>
-
-          <div className="text-[10px] text-muted-foreground mt-2 space-y-2">
-            <p>
-              Your API key is sent once over HTTPS and stored encrypted on our servers (never on
-              this device). It is only used to fetch your meter data. You can find your API Key in
-              the{' '}
-              <a
-                href="https://octopus.energy/dashboard/developer/"
-                target="_blank"
-                rel="noreferrer"
-                className="underline hover:text-primary"
-              >
-                Octopus Developer Dashboard
-              </a>
-              .
-            </p>
-            <p className="pt-2 border-t border-primary/20">
-              Not with Octopus yet?{' '}
-              <a
-                href="https://share.octopus.energy/light-sheep-695"
-                target="_blank"
-                rel="noreferrer"
-                className="tap-target underline font-medium text-primary hover:text-primary/80"
-              >
-                Join with £50 free credit
-              </a>
-            </p>
+                {COPY.paste}
+              </button>
+            )}
           </div>
         </div>
-      </Card>
-    );
-  },
-);
+        {keyError ? (
+          <p
+            id="apikey-error"
+            className="flex items-start gap-1 text-[13px] leading-snug text-destructive"
+          >
+            <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            {keyError}
+          </p>
+        ) : (
+          <p id="apikey-help" className="text-xs text-muted-foreground">
+            {COPY.keyHelper}
+          </p>
+        )}
+      </div>
 
-OctopusSettings.displayName = 'OctopusSettings';
+      <p className="text-xs leading-relaxed text-muted-foreground" data-testid="octopus-privacy">
+        {COPY.privacy}
+      </p>
+    </form>
+  );
+}

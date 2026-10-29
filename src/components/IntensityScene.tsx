@@ -16,12 +16,14 @@ import { StateTransitionFX } from './scene/StateTransitionFX';
 import { SceneTemporalLife } from './scene/SceneTemporalLife';
 import { GenerationMix } from '@/lib/carbonApi';
 import { buildSceneConfig } from '@/lib/sceneConfig';
+import type { BirdFlightBand } from '@/lib/birdFlightBand';
 import { useTapCount } from '@/lib/useTapCount';
 import { cityWeatherState } from '@/lib/cityLandmarkPalette';
 import { buildTurbineLayout } from '@/lib/turbineLayout';
 import { useSceneType, SceneType } from '@/hooks/useSceneType';
 import {
   SceneSkyLayer,
+  SceneCloudBankLayer,
   SceneAmbientLife,
   CoastalSceneLayers,
   CitySceneLayers,
@@ -60,6 +62,12 @@ interface IntensitySceneProps {
    * text bottom + 34 (village REDRAW-PLAN), so no cloud edge crosses the text.
    */
   cloudTopPx?: number;
+  /**
+   * BH-116: the lane (px from the scene top) ambient birds fly in, below the
+   * hero text + 12 px. null: no birds (no room, or not measured yet). Omitted
+   * (no hero text over the scene): birds fly at their usual 10-40% heights.
+   */
+  birdBand?: BirdFlightBand | null;
   /** Design review of #184: tells the hero when synthwave is on, so its text goes white. */
   onSynthwaveChange?: (on: boolean) => void;
 }
@@ -77,6 +85,7 @@ export function IntensityScene({
   hasLiveReading = true,
   compact = false,
   cloudTopPx,
+  birdBand,
   onSynthwaveChange,
 }: IntensitySceneProps) {
   const {
@@ -384,6 +393,7 @@ export function IntensityScene({
           handleMoonDoubleClick={handleMoonDoubleClick}
           onSunTap={handleSunTap}
           cloudTopPx={cloudTopPx}
+          bankBehindSkyline={isCity}
         />
 
         {/* PR-2b: one horizon-weighted haze by NESO band replaces IntensityMood, the
@@ -402,8 +412,24 @@ export function IntensityScene({
           sceneConfig={sceneConfig}
           shouldReduceMotion={shouldReduceMotion}
           birdConfig={birdConfig}
+          birdBand={birdBand}
           fireflyConfig={fireflyConfig}
         />
+
+        {/* BH-117: city skylines (castle, London landmarks, neutral skyline) stand in
+            front of the cloud bank, so in city scenes it is drawn here, just
+            before CitySceneLayers, instead of inside the sky layer. */}
+        {isCity && (
+          <SceneCloudBankLayer
+            skyY={skyY}
+            shouldReduceMotion={shouldReduceMotion}
+            weather={weather}
+            isNight={isNight}
+            timeOfDay={timeOfDay}
+            weatherKnown={sceneConfig.weatherKnown}
+            cloudTopPx={cloudTopPx}
+          />
+        )}
 
         {/* ===== LANDSCAPE LAYERS ===== */}
         {isCoastal ? (
@@ -530,6 +556,7 @@ export function IntensityScene({
       <div
         className="absolute bottom-0 left-0 right-0 h-10 pointer-events-none z-[45]"
         style={{ backgroundColor: sceneConfig.groundColor }}
+        data-land="ground"
         aria-hidden="true"
       />
     </motion.div>

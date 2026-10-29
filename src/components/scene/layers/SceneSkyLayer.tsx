@@ -27,6 +27,8 @@ export interface SceneSkyLayerProps {
   onSunTap: () => void;
   /** BH-90: where unknown-weather clouds may start (hero text bottom + 34). */
   cloudTopPx?: number;
+  /** BH-117: city scenes draw the cloud bank behind the skyline instead (SceneCloudBankLayer). */
+  bankBehindSkyline?: boolean;
 }
 
 export function SceneSkyLayer({
@@ -43,6 +45,7 @@ export function SceneSkyLayer({
   handleMoonDoubleClick,
   onSunTap,
   cloudTopPx,
+  bankBehindSkyline = false,
 }: SceneSkyLayerProps) {
   return (
     <motion.div
@@ -57,6 +60,7 @@ export function SceneSkyLayer({
         showWind={sceneConfig.showWind}
         weatherKnown={sceneConfig.weatherKnown}
         cloudTopPx={cloudTopPx}
+        omitBank={bankBehindSkyline}
       />
 
       {/* Aurora for magically clean nights (Phase 1: cleanliness > 0.85) */}
