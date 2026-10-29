@@ -24,7 +24,7 @@ import type { User } from '@supabase/supabase-js';
 import { Capacitor } from '@capacitor/core';
 import { nativeAuthRedirectUri } from '@/config';
 import { getAppleAuthorizationForDeletion } from '@/lib/appleRevocation';
-import { ANON_USER_ID_KEY, rememberAnonUserId } from '@/lib/anonMigration';
+import { ANON_PROOF_KEY, ANON_USER_ID_KEY, rememberAnonUserId } from '@/lib/anonMigration';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -105,7 +105,7 @@ export function AccountBackup({
       data: { session: currentSession },
     } = await supabase.auth.getSession();
     if (currentSession?.user?.id) {
-      rememberAnonUserId(currentSession.user, localStorage);
+      rememberAnonUserId(currentSession.user, localStorage, currentSession.access_token);
     }
 
     try {
@@ -236,6 +236,7 @@ export function AccountBackup({
       // BH-130: Octopus data can't move between two Google/Apple accounts (the
       // server only migrates from anonymous users), so don't queue a migration.
       localStorage.removeItem(ANON_USER_ID_KEY);
+      localStorage.removeItem(ANON_PROOF_KEY);
 
       // Sign out first
       await supabase.auth.signOut();

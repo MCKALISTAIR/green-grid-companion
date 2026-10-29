@@ -1,3 +1,4 @@
+import { verifyAnonOwnership } from '../_shared/migration-proof.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // Hack to make VS Code happy with Deno globals in a Node workspace
@@ -608,16 +609,20 @@ Deno.serve(async (req: Request) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      const { data: prevUserData, error: prevUserErr } =
-        await supabase.auth.admin.getUserById(previousUserId);
-      if (prevUserErr || !prevUserData?.user || prevUserData.user.is_anonymous !== true) {
+      // BH-147: the caller must prove they held that anonymous session (its
+      // access token), not just know its id. verifyAnonOwnership also checks
+      // the account is anonymous, so Google/Apple accounts can't be claimed.
+      const proof = await verifyAnonOwnership(previousUserId, payload.previousUserToken, (token) =>
+        supabase.auth.getUser(token),
+      );
+      if (!proof.ok) {
         logSecurityEvent({
           type: 'SUSPICIOUS_ACTIVITY',
           severity: 'MEDIUM',
           details: {
             user_id: userId.substring(0, 8) + '...',
             ip: clientIP,
-            message: 'migrate-data refused: previous user is not an anonymous account',
+            message: `migrate-data refused: ${proof.reason}`,
           },
           timestamp: new Date().toISOString(),
         });
