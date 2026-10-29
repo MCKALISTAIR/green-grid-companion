@@ -1,5 +1,5 @@
 import { appStorage } from '@/lib/appStorage';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +23,7 @@ import type { User } from '@supabase/supabase-js';
 import { Capacitor } from '@capacitor/core';
 import { APP_SCHEME } from '@/config';
 import { getAppleAuthorizationForDeletion } from '@/lib/appleRevocation';
+import { ANON_USER_ID_KEY } from '@/lib/anonMigration';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,7 +36,6 @@ import {
 } from '@/components/ui/alert-dialog';
 
 // Storage key for previous anonymous user ID
-const ANON_USER_ID_KEY = 'octopus-anon-user-id';
 
 interface AccountBackupProps {
   isSyncing?: boolean;
@@ -59,7 +59,6 @@ export function AccountBackup({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [switchTarget, setSwitchTarget] = useState<'google' | 'apple' | null>(null);
-  const migrationAttemptedRef = useRef(false);
 
   const defaultFormatLastSync = (date: Date | null) => {
     if (!date) return 'Not yet synced';
@@ -86,34 +85,7 @@ export function AccountBackup({
       const previousUser = user;
       setUser(session?.user ?? null);
 
-      // Handle sign-in event - attempt data migration
-      if (event === 'SIGNED_IN' && session?.user && !migrationAttemptedRef.current) {
-        migrationAttemptedRef.current = true;
-
-        // Check if there's a stored anonymous user ID to migrate from
-        const storedAnonId = localStorage.getItem(ANON_USER_ID_KEY);
-
-        if (storedAnonId && storedAnonId !== session.user.id) {
-          // Attempt to migrate data from the anonymous session
-          try {
-            const { data, error } = await supabase.functions.invoke('octopus-energy', {
-              body: { action: 'migrate-data', previousUserId: storedAnonId },
-            });
-
-            if (!error && data?.migrated) {
-              const { credentials, meters, footprint_records } = data.migrated;
-              if (credentials || meters > 0) {
-                toast.success(`Restored ${meters} meter(s) and ${footprint_records} records`);
-              }
-            }
-          } catch (err) {
-            console.error('Data migration failed:', err);
-          }
-
-          // Clear the stored anon ID after migration attempt
-          localStorage.removeItem(ANON_USER_ID_KEY);
-        }
-      }
+      // Sign-in data migration runs from main.tsx (BH-127, lib/anonMigration).
 
       // Store anonymous user ID when signing out
       if (event === 'SIGNED_OUT' && previousUser?.id) {
@@ -165,7 +137,6 @@ export function AccountBackup({
 
   const handleSignOut = async () => {
     setLoading(true);
-    migrationAttemptedRef.current = false; // Reset for next sign-in
     try {
       await supabase.auth.signOut();
       toast.success("You're signed out");
@@ -261,7 +232,6 @@ export function AccountBackup({
     try {
       // Store current user ID for data migration
       localStorage.setItem(ANON_USER_ID_KEY, user.id);
-      migrationAttemptedRef.current = false;
 
       // Sign out first
       await supabase.auth.signOut();
