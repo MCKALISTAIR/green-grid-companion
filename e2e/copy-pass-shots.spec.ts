@@ -47,6 +47,8 @@ const CELLS: Cell[] = [
     slug: 'home-forecast-weather',
     path: '/',
     prep: async (page) => {
+      // ForecastSummary sits inside the collapsed 'More insights' section.
+      await page.getByRole('button', { name: 'More insights' }).click();
       await page
         .getByTestId('forecast-day-card')
         .first()
