@@ -153,7 +153,7 @@ The migration system was already built and now works seamlessly with anonymous a
 
 ### Edge Functions
 
-Both `octopus-energy` and `tesla-energy` edge functions:
+The `octopus-energy` edge function (the Tesla integration and its `tesla-energy` function have been retired):
 
 - ✅ Already accept anonymous JWT tokens
 - ✅ Validate token using `supabase.auth.getUser(token)`
@@ -321,7 +321,6 @@ A: Anonymous data can be cleaned up after session expiry. Consider 90-day expiry
 - **`src/hooks/useTeslaEnergy.ts`** - Tesla integration with anon support
 - **`src/components/AccountBackup.tsx`** - Handles migration on sign-in
 - **`supabase/functions/octopus-energy/index.ts`** - Edge function with migrate-data action
-- **`supabase/functions/tesla-energy/index.ts`** - Tesla edge function
 
 ## Summary
 
