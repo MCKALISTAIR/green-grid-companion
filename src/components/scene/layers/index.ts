@@ -7,6 +7,8 @@ export type {
 } from './sceneLayerTypes';
 export { SceneSkyLayer } from './SceneSkyLayer';
 export type { SceneSkyLayerProps } from './SceneSkyLayer';
+export { SceneCloudBankLayer } from './SceneCloudBankLayer';
+export type { SceneCloudBankLayerProps } from './SceneCloudBankLayer';
 export { SceneAmbientLife } from './SceneAmbientLife';
 export type { SceneAmbientLifeProps } from './SceneAmbientLife';
 export { CoastalSceneLayers } from './CoastalSceneLayers';
