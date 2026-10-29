@@ -158,6 +158,9 @@ export default function MapPage() {
                   )}
                 </AnimatePresence>
 
+                <p data-testid="rank-estimate-note" className="text-xs text-muted-foreground">
+                  NESO forecasts for this half hour. Regional figures are modelled estimates.
+                </p>
                 <div className="grid gap-3">
                   {sortedRegions.map((region, idx) => (
                     <div
