@@ -210,3 +210,54 @@ describe('syncDailyOutlookSubscription: server push not configured', () => {
     expect(readServerOutlook()).toBeNull();
   });
 });
+
+describe('syncDailyOutlookSubscription session (BH-149)', () => {
+  beforeEach(() => localStorage.clear());
+
+  it('sends the token from getAccessToken', async () => {
+    const fetchImpl = vi.fn(async () =>
+      okResponse({
+        device_token: 'tok-123',
+        postcode: 'SW1A',
+        daily_forecast_enabled: true,
+        daily_forecast_time: '07:30:00',
+      }),
+    );
+    const getAccessToken = vi.fn(async () => 'anon-jwt');
+    await syncDailyOutlookSubscription(
+      opts({ accessToken: null, getAccessToken, fetchImpl: fetchImpl as unknown as typeof fetch }),
+    );
+    expect(getAccessToken).toHaveBeenCalled();
+    const init = (fetchImpl.mock.calls[0] as unknown[])[1] as RequestInit;
+    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer anon-jwt');
+  });
+
+  it('makes no request without a token, and does not confirm', async () => {
+    const fetchImpl = vi.fn();
+    const res = await syncDailyOutlookSubscription(
+      opts({
+        accessToken: null,
+        getAccessToken: async () => null,
+        fetchImpl: fetchImpl as unknown as typeof fetch,
+      }),
+    );
+    expect(fetchImpl).not.toHaveBeenCalled();
+    expect(res.status).toBe('failed');
+    expect(readServerOutlook()).toBeNull();
+  });
+
+  it('makes no request when getAccessToken throws', async () => {
+    const fetchImpl = vi.fn();
+    const res = await syncDailyOutlookSubscription(
+      opts({
+        accessToken: null,
+        getAccessToken: async () => {
+          throw new Error('offline');
+        },
+        fetchImpl: fetchImpl as unknown as typeof fetch,
+      }),
+    );
+    expect(fetchImpl).not.toHaveBeenCalled();
+    expect(res.status).toBe('failed');
+  });
+});

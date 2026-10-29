@@ -44,6 +44,8 @@ export interface SyncOptions {
   baseUrl: string;
   apiKey: string;
   accessToken?: string | null;
+  /** Preferred: resolves a token, creating a session if needed (BH-149). */
+  getAccessToken?: () => Promise<string | null>;
   fetchImpl?: (url: string, init?: RequestInit) => Promise<Response>;
   now?: () => Date;
 }
@@ -93,7 +95,16 @@ async function upsert(
     'Content-Type': 'application/json',
     apikey: opts.apiKey,
   };
-  if (opts.accessToken) headers.Authorization = `Bearer ${opts.accessToken}`;
+  // BH-149: push-subscriptions refuses calls without a session, so never
+  // send one without a token. getAccessToken makes sure a session exists.
+  let accessToken: string | null = null;
+  try {
+    accessToken = opts.getAccessToken ? await opts.getAccessToken() : (opts.accessToken ?? null);
+  } catch {
+    accessToken = null;
+  }
+  if (!accessToken) return null;
+  headers.Authorization = `Bearer ${accessToken}`;
   const res = await (opts.fetchImpl ?? fetch)(
     `${opts.baseUrl}/functions/v1/push-subscriptions?action=upsert`,
     {
