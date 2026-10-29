@@ -29,6 +29,7 @@ import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
 import { formatDistanceToNow } from 'date-fns';
 import { OctopusBenefitsIntro } from './OctopusBenefitsIntro';
 import { OctopusLinkSheet } from './OctopusLinkSheet';
+import { OctopusStaleNotice } from './OctopusStaleNotice';
 import { linkFailureMessage } from '@/lib/octopusLink';
 import {
   OCTOPUS_LINKED_CARD_COPY as LINKED,
@@ -291,19 +292,22 @@ export function OctopusIntegration() {
                 )}
               </div>
             ))}
+            <OctopusStaleNotice latestConsumption={status.latest_consumption} />
             {status.footprint_records > 0 && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Leaf className="w-4 h-4 text-green-500" />
                 <span>{status.footprint_records} footprint records calculated</span>
               </div>
             )}
-            <div className="flex gap-2 w-full mt-2">
+            {/* BH-144: below 360px the two labels overflow side by side, so stack them
+                full width with an 8px gap; side by side from 360px up. */}
+            <div className="flex flex-col min-[360px]:flex-row gap-2 w-full mt-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleSync}
                 disabled={isSyncing}
-                className="flex-1"
+                className="w-full min-[360px]:w-auto min-[360px]:flex-1"
               >
                 {isSyncing ? (
                   <>
@@ -321,7 +325,7 @@ export function OctopusIntegration() {
                 variant="outline"
                 size="sm"
                 onClick={() => navigate('/charging-history')}
-                className="flex-1 gap-1.5"
+                className="w-full min-[360px]:w-auto min-[360px]:flex-1 gap-1.5"
               >
                 <History className="w-4 h-4 text-primary" />
                 Charging History

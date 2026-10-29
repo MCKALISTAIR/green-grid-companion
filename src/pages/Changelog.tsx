@@ -34,7 +34,7 @@ interface ChangelogEntry {
 const changelog: ChangelogEntry[] = [
   {
     version: 'v1.6.0',
-    date: new Date().toISOString().split('T')[0],
+    date: '2026-07-18',
     title: 'Performance & Playful Motion',
     changes: [
       {
@@ -92,7 +92,7 @@ const changelog: ChangelogEntry[] = [
   },
   {
     version: 'v1.4.0',
-    date: new Date().toISOString().split('T')[0],
+    date: '2026-01-30',
     title: 'Gamification & Time Travel',
     changes: [
       { type: 'feature', description: 'Grid Time Machine: Explore historical carbon data' },
