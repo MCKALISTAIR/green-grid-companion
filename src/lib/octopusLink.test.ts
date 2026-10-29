@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
+  GET_METERS_CODE,
   GET_METERS_PREFIX,
   accountNumberError,
   apiKeyError,
@@ -97,6 +98,96 @@ describe('parseGetMetersAnswer (get-meters 200 answers)', () => {
     expect(r.ok).toBe(false);
     expect(r.reason).toBe(reason);
     expect(r.field).toBe(field);
+  });
+
+  it('pins the machine codes against the edge function source (C2-13)', () => {
+    const src = readFileSync(
+      resolve(__dirname, '../../supabase/functions/octopus-energy/index.ts'),
+      'utf8',
+    );
+    for (const code of Object.values(GET_METERS_CODE)) expect(src).toContain(`'${code}'`);
+    expect(src).toContain('octopus_status: response.status');
+  });
+
+  // Code path: newer deploys send `code` (and `octopus_status`). The message is
+  // deliberately reworded so only the code can drive the result.
+  const codeCases: [string, unknown, string, string | undefined][] = [
+    [
+      'code invalid_api_key',
+      { error: 'Reworded.', code: 'invalid_api_key', meters: [] },
+      'wrong_key',
+      'apiKey',
+    ],
+    [
+      'code account_not_found',
+      { error: 'Reworded.', code: 'account_not_found', meters: [] },
+      'wrong_account',
+      'accountNumber',
+    ],
+    [
+      'code octopus_error 403',
+      { error: 'Reworded.', code: 'octopus_error', octopus_status: 403, meters: [] },
+      'octopus_refused',
+      undefined,
+    ],
+    [
+      'code octopus_error 500',
+      { error: 'Reworded.', code: 'octopus_error', octopus_status: 500, meters: [] },
+      'octopus_down',
+      undefined,
+    ],
+    [
+      'code octopus_error 429',
+      { error: 'Reworded.', code: 'octopus_error', octopus_status: 429, meters: [] },
+      'octopus_down',
+      undefined,
+    ],
+    [
+      'code octopus_error, no status',
+      { error: 'Reworded.', code: 'octopus_error', meters: [] },
+      'unknown',
+      undefined,
+    ],
+    // Code wins over a conflicting message prefix.
+    [
+      'code beats prefix',
+      { error: ERR_401, code: 'account_not_found', meters: [] },
+      'wrong_account',
+      'accountNumber',
+    ],
+    // Unknown code falls back to the message prefix (older or newer server).
+    [
+      'unknown code -> prefix fallback',
+      { error: ERR_401, code: 'something_new', meters: [] },
+      'wrong_key',
+      'apiKey',
+    ],
+  ];
+  it.each(codeCases)('%s', (_name, body, reason, field) => {
+    const r = parseGetMetersAnswer(body);
+    expect(r.ok).toBe(false);
+    expect(r.reason).toBe(reason);
+    expect(r.field).toBe(field);
+  });
+
+  it('server answer shape: code and prefix agree for every status', () => {
+    // What index.ts now sends: both the old message and the new code.
+    const answers: [unknown, string][] = [
+      [{ error: ERR_401, code: 'invalid_api_key', octopus_status: 401, meters: [] }, 'wrong_key'],
+      [
+        { error: ERR_404, code: 'account_not_found', octopus_status: 404, meters: [] },
+        'wrong_account',
+      ],
+      [
+        { error: errN(502), code: 'octopus_error', octopus_status: 502, meters: [] },
+        'octopus_down',
+      ],
+    ];
+    for (const [body, reason] of answers) {
+      expect(parseGetMetersAnswer(body).reason).toBe(reason);
+      const { code: _c, octopus_status: _s, ...old } = body as Record<string, unknown>;
+      expect(parseGetMetersAnswer(old).reason).toBe(reason);
+    }
   });
 
   it('meters found', () => {

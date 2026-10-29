@@ -264,13 +264,13 @@ Deno.serve(async (req) => {
           `💡 Best time today: ${bestTimeToday}`;
       } else {
         body =
-          `💡 Best time to use energy today: ${bestTimeToday}. ` +
-          `Link your Octopus meter for personalized insights!`;
+          `💡 Cleanest time today: ${bestTimeToday}. ` +
+          `Link your Octopus meter to see your own numbers.`;
       }
 
       notifications.push({
         token: sub.device_token,
-        title: `${emoji} Your Weekly Carbon Digest`,
+        title: `${emoji} Your week on the grid`,
         body,
         platform: sub.platform,
         isSandbox: sub.is_sandbox,

@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import { test, expect, type Page } from '@playwright/test';
 import { installMocks, seedStorage } from '../scripts/layout/mock-api.mjs';
+import { pinClocks, restoreNodeClock } from './support/pinClocks';
 
 // Design review of #190: the castle must hold at least 1.5:1 against the sky
 // behind it at every time of day and in every weather, at 390 and 320. Fog is
@@ -39,10 +40,7 @@ const OUT = process.env.CASTLE_CONTRAST_OUT;
 // Set CASTLE_CONTRAST_DUMP=<dir> to keep the on/off crops for inspection.
 const DUMP = process.env.CASTLE_CONTRAST_DUMP;
 
-const realNow = Date.now.bind(Date);
-test.afterEach(() => {
-  Date.now = realNow;
-});
+test.afterEach(restoreNodeClock);
 
 async function openEdinburgh(
   page: Page,
@@ -50,10 +48,8 @@ async function openEdinburgh(
   weather: keyof typeof WEATHER,
   viewport: { width: number; height: number },
 ) {
-  // Page clock first, then Node's (see city-skylines-b1.spec.ts).
-  await page.clock.install({ time: new Date(TIMES[time]) });
-  const offset = new Date(TIMES[time]).getTime() - realNow();
-  Date.now = () => realNow() + offset;
+  // Page clock first, then Node's (BH-113, see support/pinClocks.ts).
+  await pinClocks(page, TIMES[time]);
   await page.setViewportSize(viewport);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await installMocks(page.context(), {

@@ -13,11 +13,18 @@ import { SCENE_TEST_WEATHER_LABELS } from '../src/lib/sceneTestWeather';
  * - The clock is pinned and paused, then stepped forward so the intro fades
  *   finish and nothing moves between the two screenshots Playwright compares.
  * - Math.random is seeded, so birds, stars and particles land in the same place.
+ * - SVG SMIL animations (the turbine rotors' <animateTransform>) run on the
+ *   document timeline, which neither page.clock nor `animations: 'disabled'`
+ *   touches. They are paused at t=0 before each screenshot, so the blades are
+ *   always at their rest angle (BH-115).
  * - Each case is set through the /__scene-test buttons (time, weather, intensity
  *   and theme), which now carry full weather flags.
  *
  * Update after a reviewed visual change:
  *   npx playwright test e2e/scene-vrt.spec.ts --project=chromium --update-snapshots
+ *
+ * SCENE_VRT_STRICT=1 compares with zero tolerance (maxDiffPixels 0). Use it with
+ * --repeat-each to prove a frame is fully deterministic.
  */
 test.use({ serviceWorkers: 'block' });
 
@@ -80,6 +87,15 @@ const CASES = [
   },
 ] as const;
 
+// Cases whose scene shows wind turbines (24 rotors across the preview cards).
+const TURBINE_CASES = new Set<string>([
+  'very-clean-midday-clear',
+  'moderate-sunset-partly-cloudy',
+  'clean-dawn-fog',
+]);
+
+const STRICT = Boolean(process.env.SCENE_VRT_STRICT);
+
 // A fixed winter midday; the time buttons override the time of day.
 const PINNED = new Date('2026-01-15T12:00:00Z');
 
@@ -92,6 +108,23 @@ async function seedRandom(page: Page) {
       t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
       return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
     };
+  });
+}
+
+/**
+ * BH-115: pause every SVG's SMIL timeline at t=0. The turbine rotors spin with
+ * <animateTransform>, whose timeline is wall-clock based, so without this the
+ * blades land at a different angle on every run. Returns how many rotors were
+ * pinned, so the spec can assert the pin reached them.
+ */
+async function pinSmilAnimations(page: Page) {
+  return page.evaluate(() => {
+    for (const svg of Array.from(document.querySelectorAll('svg'))) {
+      if (svg.ownerSVGElement) continue; // nested svgs share the outer timeline
+      svg.pauseAnimations();
+      svg.setCurrentTime(0);
+    }
+    return document.querySelectorAll('animateTransform[data-turbine-seconds]').length;
   });
 }
 
@@ -126,13 +159,16 @@ test.describe('Scene VRT', () => {
       await press(page, 'Weather condition', SCENE_TEST_WEATHER_LABELS[tc.weather]);
       // Let the intro and sky transitions finish on the paused clock.
       await page.clock.runFor(6000);
+      const rotors = await pinSmilAnimations(page);
+      // The cases with turbines in view must have had their rotors pinned.
+      if (TURBINE_CASES.has(tc.label)) expect(rotors).toBeGreaterThan(0);
 
       for (const preset of PRESETS) {
         const preview = page.getByLabel(`${preset.aria} viewport preview`, { exact: true });
         await preview.scrollIntoViewIfNeeded();
         await expect(preview).toHaveScreenshot(`scene-${tc.label}-${preset.name}.png`, {
           animations: 'disabled',
-          maxDiffPixelRatio: 0.01,
+          ...(STRICT ? { maxDiffPixels: 0 } : { maxDiffPixelRatio: 0.01 }),
         });
       }
     });
@@ -159,6 +195,18 @@ test.describe('Scene test copy', () => {
       await expect(header).toContainText('compared side by side');
       await expect(header).toContainText('responsive behaviour');
       await expect(header).toContainText(/Theme(?!:)/);
+      // Design (23 Oct 2026): no trailing colons on the control labels.
+      for (const [group, label] of [
+        ['Intensity state', 'Intensity'],
+        ['Scene type', 'Theme'],
+        ['Time of day', 'Time'],
+        ['Weather condition', 'Weather'],
+      ] as const) {
+        await expect(page.getByRole('group', { name: group }).locator('span').first()).toHaveText(
+          label,
+          { useInnerText: true },
+        );
+      }
       await expect(page.locator('label[for="wind-slider"]')).toHaveText('Wind 5 m/s');
       await expect(
         page.getByRole('group', { name: 'Weather condition' }).getByRole('button', {

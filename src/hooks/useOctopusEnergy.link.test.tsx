@@ -139,7 +139,7 @@ describe('useOctopusEnergy saveCredentials (PR-O1)', () => {
     answers({
       'save-credentials': () => ({
         error: httpError(429, {
-          error: 'Too many attempts. Please try again later.',
+          error: "That's a lot of tries. Try again later.",
           retry_after: 900,
         }),
       }),
