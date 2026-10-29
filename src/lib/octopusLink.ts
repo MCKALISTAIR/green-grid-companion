@@ -56,6 +56,7 @@ export type LinkFailureReason =
   | 'octopus_refused'
   | 'octopus_down'
   | 'no_meter'
+  | 'meter_taken'
   | 'rate_limited'
   | 'save_failed'
   | 'no_session'
@@ -90,6 +91,7 @@ export const GET_METERS_CODE = {
   wrongKey: 'invalid_api_key',
   wrongAccount: 'account_not_found',
   octopusError: 'octopus_error',
+  meterTaken: 'meter_already_linked',
 } as const;
 
 function fromOctopusStatus(status: number): LinkResult | undefined {
@@ -112,6 +114,7 @@ export function parseGetMetersAnswer(data: unknown): LinkResult {
       return { ok: false, reason: 'wrong_key', field: 'apiKey' };
     if (d.code === GET_METERS_CODE.wrongAccount)
       return { ok: false, reason: 'wrong_account', field: 'accountNumber' };
+    if (d.code === GET_METERS_CODE.meterTaken) return { ok: false, reason: 'meter_taken' };
     if (d.code === GET_METERS_CODE.octopusError && typeof d.octopus_status === 'number') {
       return fromOctopusStatus(d.octopus_status) ?? { ok: false, reason: 'unknown' };
     }
@@ -176,6 +179,8 @@ export function bannerMessage(result: LinkResult): string | undefined {
       return OCTOPUS_BANNER_COPY.octopusDown;
     case 'no_meter':
       return OCTOPUS_BANNER_COPY.noMeter;
+    case 'meter_taken':
+      return OCTOPUS_BANNER_COPY.meterTaken;
     case 'rate_limited': {
       if (!result.retryAfter) return OCTOPUS_BANNER_COPY.rateLimitedUnknown;
       const minutes = Math.ceil(result.retryAfter / 60);

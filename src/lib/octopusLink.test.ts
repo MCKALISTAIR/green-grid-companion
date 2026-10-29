@@ -92,6 +92,13 @@ describe('parseGetMetersAnswer (get-meters 200 answers)', () => {
     ['meters: []', { meters: [] }, 'no_meter', undefined, undefined],
     ['other error', { error: 'Something odd', meters: [] }, 'unknown', undefined, undefined],
     ['null body', null, 'no_meter', undefined, undefined],
+    [
+      'meter linked to another account (BH-152)',
+      { error: 'x', code: 'meter_already_linked', meters: [] },
+      'meter_taken',
+      undefined,
+      undefined,
+    ],
   ];
   it.each(cases)('%s', (_name, body, reason, field) => {
     const r = parseGetMetersAnswer(body);
@@ -284,6 +291,16 @@ describe('Design review fixes on #194 (23 Oct 2026)', () => {
     expect(COPY.OCTOPUS_SHEET_COPY.privacy).not.toMatch(/phone/);
     expect(COPY.OCTOPUS_BANNER_COPY.noSession).toBe(
       "We couldn't start a secure connection. Check your connection and try again.",
+    );
+  });
+});
+
+describe('meter_taken banner (BH-152)', () => {
+  it('shows the meter-taken copy', async () => {
+    const { bannerMessage } = await import('./octopusLink');
+    const { OCTOPUS_BANNER_COPY } = await import('@/lib/voice/octopusLinkCopy');
+    expect(bannerMessage({ ok: false, reason: 'meter_taken' })).toBe(
+      OCTOPUS_BANNER_COPY.meterTaken,
     );
   });
 });

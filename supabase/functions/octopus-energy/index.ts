@@ -7,6 +7,11 @@ declare const Deno: any;
 import { safeErrorResponse } from '../_shared/safe-error.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import {
+  METER_CLAIMED_MESSAGE,
+  mpansOwnedByOthers,
+  rateLimitUnavailable,
+} from '../_shared/meter-ownership.ts';
+import {
   calculateMeterFootprint,
   credentialsUnavailableResult,
   summarise,
@@ -85,9 +90,10 @@ async function checkRateLimit(
   });
 
   if (error) {
-    console.error('Rate limit check failed:', error);
-    // Fail open if DB is down to not block users, but log error
-    return { allowed: true };
+    // BH-152: fail closed. A limiter we cannot check must not wave
+    // credential and sync calls through.
+    console.error('Rate limit check failed:', error?.message);
+    return rateLimitUnavailable();
   }
 
   // Supabase RPC returns the JSON object directly
@@ -904,6 +910,43 @@ Deno.serve(async (req: Request) => {
 
       // Store meters in database linked to user
       if (meters.length > 0) {
+        // BH-152: never take a meter (and its history) from another user.
+        const { data: existing, error: ownerErr } = await supabase
+          .from('octopus_meters')
+          .select('mpan, user_id')
+          .in(
+            'mpan',
+            meters.map((m) => m.mpan),
+          );
+        if (ownerErr) {
+          console.error(`[${requestId}] meter ownership check failed:`, ownerErr.message);
+          return new Response(
+            JSON.stringify({
+              error: 'Could not save your meters. Please try again.',
+              code: 'meter_check_failed',
+            }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+          );
+        }
+        const taken = mpansOwnedByOthers(existing ?? [], userId);
+        if (taken.length > 0) {
+          logSecurityEvent({
+            type: 'SUSPICIOUS_ACTIVITY',
+            severity: 'MEDIUM',
+            details: { reason: 'meter_already_linked', count: taken.length },
+            timestamp: new Date().toISOString(),
+          });
+          return new Response(
+            // 200 like the other get-meters refusals, so the app reads the code.
+            JSON.stringify({
+              error: METER_CLAIMED_MESSAGE,
+              code: 'meter_already_linked',
+              meters: [],
+            }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+          );
+        }
+
         const { error } = await supabase.from('octopus_meters').upsert(
           meters.map((meter) => ({
             user_id: userId,
