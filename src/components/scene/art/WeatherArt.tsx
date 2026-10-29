@@ -14,7 +14,7 @@ import {
   unknownWeatherTone,
 } from '@/lib/artPalette';
 import { bankRim, irregularBankEdge } from './bankEdge';
-import { SUN_DISC_HAZE, SUN_HALO_FACTOR, type HazeBand } from '@/lib/sceneHaze';
+import { SUN_DISC_HAZE, SUN_DISC_OPACITY, SUN_HALO_FACTOR, type HazeBand } from '@/lib/sceneHaze';
 
 export function SceneSun({
   r = 22,
@@ -33,6 +33,7 @@ export function SceneSun({
   // disc is never brown and never darker than the day disc.
   const discTop = tone === 'day' ? (SUN_DISC_HAZE[haze] ?? c0) : c0;
   const halo = SUN_HALO_FACTOR[haze];
+  const discOpacity = SUN_DISC_OPACITY[haze];
   const s = r * 3;
   return (
     <svg
@@ -53,19 +54,23 @@ export function SceneSun({
           <stop offset="1" stopColor={c1} />
         </linearGradient>
       </defs>
-      <g className="art-breathe" opacity={halo === 1 ? undefined : halo} data-sun-halo={halo}>
-        <circle r={r * 3} fill={`url(#${id}h)`} />
-        <circle r={r * 1.55} fill={c0} opacity=".18" />
+      {halo > 0 && (
+        <g className="art-breathe" opacity={halo === 1 ? undefined : halo} data-sun-halo={halo}>
+          <circle r={r * 3} fill={`url(#${id}h)`} />
+          <circle r={r * 1.55} fill={c0} opacity=".18" />
+        </g>
+      )}
+      <g opacity={discOpacity === 1 ? undefined : discOpacity} data-sun-opacity={discOpacity}>
+        <circle r={r} fill={`url(#${id}d)`} data-sun-disc={discTop} />
+        <path
+          d={`M${-r * 0.72} ${-r * 0.5} A${r} ${r} 0 0 1 ${r * 0.3} ${-r * 0.95}`}
+          stroke="#fff"
+          strokeOpacity=".7"
+          strokeWidth="2"
+          fill="none"
+          strokeLinecap="round"
+        />
       </g>
-      <circle r={r} fill={`url(#${id}d)`} data-sun-disc={discTop} />
-      <path
-        d={`M${-r * 0.72} ${-r * 0.5} A${r} ${r} 0 0 1 ${r * 0.3} ${-r * 0.95}`}
-        stroke="#fff"
-        strokeOpacity=".7"
-        strokeWidth="2"
-        fill="none"
-        strokeLinecap="round"
-      />
     </svg>
   );
 }

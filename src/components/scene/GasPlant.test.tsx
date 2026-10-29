@@ -56,7 +56,7 @@ describe('GasPlant (PR-2b)', () => {
       );
     }
     const vh = draw('very high').querySelector('[data-art="smoke"]')!;
-    expect(Number(vh.getAttribute('opacity'))).toBe(0.5);
+    expect(Number(vh.getAttribute('opacity'))).toBe(0.6);
   });
 
   it('Reduce Motion: 3 static puffs per stack, no animation class', () => {

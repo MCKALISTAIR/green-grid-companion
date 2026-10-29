@@ -84,7 +84,7 @@ export const ENERGY_FACTS: EnergyFact[] = [
   },
   {
     id: 'dirty_friendly_1',
-    text: 'Carbon intensity is high right now. Try to save energy if you can.',
+    text: 'The grid is running dirtier than usual right now. Try to save energy if you can.',
     category: 'dirty_energy',
     tone: 'friendly',
     condition: (c) => c.intensity > 200,

@@ -58,10 +58,22 @@ export const HAZE_DAY: Record<
 };
 
 /**
- * Very high, day only: the top of the sky is desaturated a little with a neutral
- * grey veil (30% at the top) that fades out by 55% of the sky height (Design, 29 Oct 2026).
+ * Day only (Design, 29 Oct 2026, round 3): the whole sky gradient is blended top to
+ * bottom toward a neutral grey, ~20% at high and ~40% at very high, so the sky
+ * reads grey-blue rather than clean cyan. Drawn under all scene art, so the land
+ * never changes. Very low, low and moderate: no blend.
  */
-export const HAZE_TOP_DESAT = { color: '#a9adb0', opacity: 0.3, reach: 0.55 } as const;
+export const HAZE_SKY_BLEND_COLOR = '#a9adb0';
+export const HAZE_SKY_BLEND: Record<HazeBand, number> = {
+  none: 0,
+  moderate: 0,
+  high: 0.2,
+  'very high': 0.4,
+};
+/** Sky blend for a band and time of day; 0 after dark (the night murk is approved as is). */
+export function getSkyBlend(band: HazeBand, timeOfDay: TimeOfDay | string): number {
+  return isHazeDim(timeOfDay) ? 0 : HAZE_SKY_BLEND[band];
+}
 
 /**
  * Dawn, dusk, night: a lighter murk on the horizon (lighter than the night sky,
@@ -119,12 +131,19 @@ export function getHazeTokens(
   };
 }
 
-/** Sun halo opacity multiplier (day): × 0.80 / 0.65 / 0.50. */
+/** Sun halo opacity multiplier (day): × 0.80 at moderate; no glow at high and very high. */
 export const SUN_HALO_FACTOR: Record<HazeBand, number> = {
   none: 1,
   moderate: 0.8,
-  high: 0.65,
-  'very high': 0.5,
+  high: 0,
+  'very high': 0,
+};
+/** Design, 29 Oct 2026 (round 3): at high and very high the sun has no glow and the disc dims. */
+export const SUN_DISC_OPACITY: Record<HazeBand, number> = {
+  none: 1,
+  moderate: 1,
+  high: 0.7,
+  'very high': 0.7,
 };
 
 /** The sun disc warms under heavy haze; never brown, never darker than the day disc. */
@@ -147,8 +166,9 @@ export const SMOKE_BY_BAND: Record<
   { puffs: number; day: string; opacity: number }
 > = {
   moderate: { puffs: 3, day: '#e8e4dc', opacity: 0.35 },
-  high: { puffs: 5, day: '#cfc8bc', opacity: 0.42 },
-  'very high': { puffs: 6, day: '#b8b0a3', opacity: 0.5 },
+  // Round 3: darker smoke so it reads against the hazy sky.
+  high: { puffs: 5, day: '#9a968e', opacity: 0.5 },
+  'very high': { puffs: 6, day: '#7d7a74', opacity: 0.6 },
 };
 /**
  * Plume height in SVG units (Design, 29 Oct 2026): a clearly visible column at

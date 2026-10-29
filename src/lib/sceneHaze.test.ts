@@ -9,6 +9,8 @@ import {
   showsSmokeColumn,
   STAR_HAZE_FACTOR,
   SUN_HALO_FACTOR,
+  SUN_DISC_OPACITY,
+  getSkyBlend,
 } from './sceneHaze';
 
 describe('getHazeBand (PR-2b truth rule)', () => {
@@ -80,7 +82,11 @@ describe('getHazeTokens', () => {
 describe('sun, stars and smoke by band', () => {
   it('halo dims and stars thin as the band rises', () => {
     expect(SUN_HALO_FACTOR.moderate).toBe(0.8);
-    expect(SUN_HALO_FACTOR['very high']).toBe(0.5);
+    expect(SUN_HALO_FACTOR.high).toBe(0);
+    expect(SUN_HALO_FACTOR['very high']).toBe(0);
+    expect(SUN_DISC_OPACITY.high).toBe(0.7);
+    expect(SUN_DISC_OPACITY['very high']).toBe(0.7);
+    expect(SUN_DISC_OPACITY.moderate).toBe(1);
     expect(STAR_HAZE_FACTOR.none).toBe(1);
     expect(STAR_HAZE_FACTOR['very high']).toBe(0);
   });
@@ -91,7 +97,8 @@ describe('sun, stars and smoke by band', () => {
     expect(SMOKE_BY_BAND.moderate.puffs).toBe(3);
     expect(SMOKE_BY_BAND.high.puffs).toBe(5);
     expect(SMOKE_BY_BAND['very high'].puffs).toBe(6);
-    expect(SMOKE_BY_BAND['very high'].opacity).toBe(0.5);
+    expect(SMOKE_BY_BAND['very high']).toMatchObject({ day: '#7d7a74', opacity: 0.6 });
+    expect(SMOKE_BY_BAND.high.opacity).toBe(0.5);
     expect(SMOKE_PLUME_UNITS.high).toBeGreaterThanOrEqual(62);
     expect(SMOKE_PLUME_UNITS['very high']).toBeGreaterThanOrEqual(62);
     expect(showsSmokeColumn('moderate')).toBe(false);
@@ -103,5 +110,14 @@ describe('sun, stars and smoke by band', () => {
     expect(getHazeBand('very low', 0)).toBe('none');
     expect(getHazeBand(undefined, 0)).toBe('none');
     expect(showsSmoke(getHazeBand('very low', 0))).toBe(false);
+  });
+});
+
+describe('sky blend by day (round 3)', () => {
+  it('blends the whole sky 20% at high and 40% at very high, by day only', () => {
+    expect(getSkyBlend('very high', 'midday')).toBe(0.4);
+    expect(getSkyBlend('high', 'morning')).toBe(0.2);
+    for (const b of ['none', 'moderate'] as const) expect(getSkyBlend(b, 'midday')).toBe(0);
+    for (const t of ['dawn', 'dusk', 'night']) expect(getSkyBlend('very high', t)).toBe(0);
   });
 });

@@ -11,7 +11,7 @@ import { useSceneDirector } from '@/hooks/useSceneDirector';
 import { useCleanlinessBand } from '@/hooks/useCleanlinessBand';
 import { useSceneGrowth } from '@/hooks/useSceneGrowth';
 import { SceneHaze } from './scene/art/SceneHaze';
-import { getHazeBand } from '@/lib/sceneHaze';
+import { getHazeBand, getSkyBlend, HAZE_SKY_BLEND_COLOR } from '@/lib/sceneHaze';
 import { StateTransitionFX } from './scene/StateTransitionFX';
 import { SceneTemporalLife } from './scene/SceneTemporalLife';
 import { GenerationMix } from '@/lib/carbonApi';
@@ -333,6 +333,7 @@ export function IntensityScene({
       hazeBand,
     ],
   );
+  const skyBlend = synthwaveMode || isNight ? 0 : getSkyBlend(hazeBand, timeOfDay);
 
   return (
     <motion.div
@@ -366,6 +367,18 @@ export function IntensityScene({
             backgroundImage:
               "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E\")",
           }}
+        />
+      )}
+
+      {/* PR-2b round 3: by day at high and very high the whole sky blends toward
+          grey (20% / 40%), under all scene art, so the land never changes. */}
+      {skyBlend > 0 && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          aria-hidden="true"
+          data-art="sky-blend"
+          data-sky-blend={skyBlend}
+          style={{ backgroundColor: HAZE_SKY_BLEND_COLOR, opacity: skyBlend }}
         />
       )}
 
