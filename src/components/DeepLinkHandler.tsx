@@ -4,6 +4,9 @@ import { Capacitor } from '@capacitor/core';
 import { logger } from '@/lib/logger';
 import { APP_SCHEME } from '@/config';
 import { ROUTES } from '@/lib/routes';
+import { supabase } from '@/integrations/supabase/client';
+import { completeNativeCallback } from '@/lib/nativeAuth';
+import { toast } from 'sonner';
 
 export function DeepLinkHandler() {
   const navigate = useNavigate();
@@ -18,43 +21,28 @@ export function DeepLinkHandler() {
       const { App } = await import('@capacitor/app');
 
       const handleDeepLink = (event: { url: string }) => {
-        logger.info('Deep link received:', { url: event.url });
+        // Never log the full URL: a sign-in return carries session tokens.
+        logger.info('Deep link received:', { url: event.url.split(/[?#]/)[0] });
 
-        try {
-          const url = new URL(event.url);
-
-          // Verify scheme to prevent handling unexpected links
-          if (url.protocol !== `${APP_SCHEME.toLowerCase()}:`) {
-            logger.warn('Ignoring deep link with unknown scheme:', { scheme: url.protocol });
-            return;
-          }
-
-          if (url.pathname.startsWith(ROUTES.AUTH_CALLBACK)) {
-            // Forward hash fragment as query params so React Router can access them
-            // The broker returns tokens in the hash: #access_token=...&refresh_token=...
-            const hashFragment = url.hash ? url.hash.substring(1) : '';
-            const existingSearch = url.search ? url.search.substring(1) : '';
-
-            // Merge hash params into query params (hash takes priority)
-            const mergedParams = new URLSearchParams(existingSearch);
-            if (hashFragment) {
-              const hashParams = new URLSearchParams(hashFragment);
-              hashParams.forEach((value, key) => {
-                mergedParams.set(key, value);
-              });
+        // BH-119: sign-in return, as a universal link
+        // (https://getgridsense.com/auth/callback) or the GridSense:// handoff.
+        void completeNativeCallback(event.url, { auth: supabase.auth }, (message) =>
+          toast.error(`Sign in failed: ${message}`),
+        )
+          .then((outcome) => {
+            if (outcome === 'signed-in') navigate(ROUTES.HOME);
+            else if (outcome === 'not-auth') {
+              try {
+                const url = new URL(event.url);
+                if (url.protocol !== `${APP_SCHEME.toLowerCase()}:`) {
+                  logger.warn('Ignoring deep link with unknown scheme:', { scheme: url.protocol });
+                }
+              } catch (error) {
+                logger.error('Failed to parse deep link URL', error);
+              }
             }
-
-            const queryString = mergedParams.toString();
-            const path = url.pathname + (queryString ? `?${queryString}` : '');
-            logger.info('Navigating to auth callback with tokens:', {
-              path,
-              hasHash: !!hashFragment,
-            });
-            navigate(path);
-          }
-        } catch (error) {
-          logger.error('Failed to parse deep link URL', error);
-        }
+          })
+          .catch((error) => logger.error('Failed to complete sign-in from deep link', error));
       };
 
       const subscription = await App.addListener('appUrlOpen', handleDeepLink);

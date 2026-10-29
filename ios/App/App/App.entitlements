@@ -10,6 +10,13 @@
 	<array>
 		<string>Default</string>
 	</array>
+	<!-- Universal link for the native Google sign-in return (BH-119). Needs the
+	     Associated Domains capability on the App ID and the AASA file live at
+	     https://getgridsense.com/.well-known/apple-app-site-association. -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:getgridsense.com</string>
+	</array>
 	<!-- App Group shared with GridSenseWidget (value set by GS_APP_GROUP_ID build setting) -->
 	<key>com.apple.security.application-groups</key>
 	<array>

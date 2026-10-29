@@ -20,11 +20,22 @@ import { hydrateAppStorage } from './lib/appStorage';
 import { installExternalLinkHandler } from './lib/openExternal';
 import { captureOAuthRedirect, completeOAuthRedirect } from './lib/oauthRedirect';
 import { supabase } from './integrations/supabase/client';
+import { nativeHandoffUrl } from './lib/nativeAuth';
 
 // BH-119: read Google/Apple sign-in tokens from the URL before anything can
 // navigate (the "no postcode -> /onboarding" redirect used to drop them).
+// BH-119 (iOS): a broker return meant for the app (?app=ios) that opened in the
+// browser instead of as a universal link. Hand it to GridSense:// and don't keep
+// the session on the web.
+const nativeHandoff = typeof window !== 'undefined' ? nativeHandoffUrl(window.location.href) : null;
+if (nativeHandoff) {
+  window.history.replaceState(null, '', '/auth/callback');
+  window.location.replace(nativeHandoff);
+}
 const oauthReturn =
-  typeof window !== 'undefined' ? captureOAuthRedirect(window.location.href) : null;
+  typeof window !== 'undefined' && !nativeHandoff
+    ? captureOAuthRedirect(window.location.href)
+    : null;
 
 // Native: external links open in SFSafariViewController, not Safari (BH-51).
 installExternalLinkHandler();

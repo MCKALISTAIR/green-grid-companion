@@ -1,0 +1,20 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": [
+          "UW7848QP79.com.greengrid.companion"
+        ],
+        "components": [
+          {
+            "/": "/auth/callback",
+            "?": {
+              "app": "ios"
+            },
+            "comment": "Native sign-in return (BH-119)"
+          }
+        ]
+      }
+    ]
+  }
+}
