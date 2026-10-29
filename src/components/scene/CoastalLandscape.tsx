@@ -186,7 +186,7 @@ function Lighthouse({
       onClick={handleClick}
       role="button"
       tabIndex={0}
-      aria-label="Lighthouse - click to strobe light"
+      aria-label="Lighthouse. Tap to flash the light"
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           handleClick();

@@ -23,7 +23,7 @@ describe('stale reading labelling', () => {
     expect(screen.getByText('This might be out of date')).toBeInTheDocument();
     expect(
       screen.getByText(
-        'We could not refresh, so you are seeing the figure from 14:30. Plan with care.',
+        "We couldn't refresh, so this is the figure from 14:30. Bear that in mind when planning.",
       ),
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));

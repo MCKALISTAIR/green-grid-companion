@@ -33,6 +33,6 @@ describe('PostcodeNotFoundNotice (Design call 22 Oct)', () => {
     const btn = screen.getByRole('button', { name: 'Fix postcode' });
     expect(btn.className).toContain('h-11');
     fireEvent.click(btn);
-    expect(screen.getByPlaceholderText('Search postcode, town, or region...')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Postcode, town or region…')).toBeInTheDocument();
   });
 });

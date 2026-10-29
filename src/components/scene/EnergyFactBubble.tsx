@@ -100,7 +100,7 @@ export function EnergyFactBubble({
             whileTap={!shouldReduceMotion ? { scale: 0.96 } : {}}
             role="button"
             tabIndex={0}
-            aria-label={`${currentFact.text}. Press to cycle facts.`}
+            aria-label={`${currentFact.text}. Tap for another fact.`}
             className={`
               relative cursor-pointer select-none transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary/50
               ${
@@ -179,7 +179,7 @@ export function EnergyFactBubble({
                 </AnimatePresence>
                 {variant === 'bubble' && (
                   <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal self-end mt-1 block">
-                    ↻ tap to cycle
+                    ↻ tap for another
                   </span>
                 )}
               </div>

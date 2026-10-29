@@ -41,7 +41,7 @@ describe('first launch', () => {
   it('is one screen with location, postcode and a GB-average skip', () => {
     renderOnboarding();
     expect(
-      screen.getByRole('heading', { name: 'How clean is your power right now?' }),
+      screen.getByRole('heading', { name: 'How clean is your power now?' }),
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Use my location/ })).toBeInTheDocument();
     expect(screen.getByText('Just show me the GB average')).toBeInTheDocument();

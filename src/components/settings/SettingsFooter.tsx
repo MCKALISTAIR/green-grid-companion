@@ -43,7 +43,7 @@ export function SettingsFooter({ isLinked, unlocked, onVersionClick }: SettingsF
             type="button"
             className="inline-flex min-h-11 items-center underline hover:text-foreground transition-colors bg-transparent border-0 p-0 cursor-pointer"
           >
-            Data sources &amp; licences
+            Data sources
           </button>
         </ResponsiveDialogTrigger>
         <ResponsiveDialogContent className="max-w-md max-h-[85dvh] overflow-y-auto">
@@ -98,7 +98,7 @@ export function SettingsFooter({ isLinked, unlocked, onVersionClick }: SettingsF
             className="text-[10px] border-amber-500 text-amber-500 gap-1 mt-1 animate-in fade-in zoom-in"
           >
             <Construction className="w-3 h-3" />
-            Director Mode Unlocked
+            Director mode
           </Badge>
         )}
       </div>

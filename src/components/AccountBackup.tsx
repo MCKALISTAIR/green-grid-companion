@@ -103,9 +103,7 @@ export function AccountBackup({
             if (!error && data?.migrated) {
               const { credentials, meters, footprint_records } = data.migrated;
               if (credentials || meters > 0) {
-                toast.success(
-                  `Restored your Octopus data: ${meters} meter(s), ${footprint_records} footprint records`,
-                );
+                toast.success(`Restored ${meters} meter(s) and ${footprint_records} records`);
               }
             }
           } catch (err) {
@@ -159,7 +157,7 @@ export function AccountBackup({
         toast.error(`Sign in failed: ${error.message}`);
       }
     } catch {
-      toast.error('Sign in failed. Please try again.');
+      toast.error("Couldn't sign you in. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -170,9 +168,9 @@ export function AccountBackup({
     migrationAttemptedRef.current = false; // Reset for next sign-in
     try {
       await supabase.auth.signOut();
-      toast.success('Signed out successfully');
+      toast.success("You're signed out");
     } catch {
-      toast.error('Sign out failed');
+      toast.error("Couldn't sign you out");
     } finally {
       setLoading(false);
     }
@@ -191,7 +189,7 @@ export function AccountBackup({
       });
 
       if (error) {
-        toast.error('Account deletion failed. Please try again.');
+        toast.error("Couldn't delete your account. Try again.");
         console.error('Delete account error:', error);
         return;
       }
@@ -203,7 +201,7 @@ export function AccountBackup({
       // Sign out locally (server account is already deleted)
       await supabase.auth.signOut({ scope: 'local' });
 
-      toast.success('Your account and all data have been permanently deleted.');
+      toast.success('Account and all data deleted for good.');
       if (usesApple && data?.apple_revocation !== 'revoked') {
         toast.info(
           'To finish, remove GridSense in your iPhone Settings: [your name] > Sign-In & Security > Sign in with Apple.',
@@ -212,7 +210,7 @@ export function AccountBackup({
       setShowDeleteDialog(false);
     } catch (err) {
       console.error('Delete account error:', err);
-      toast.error('Account deletion failed. Please try again.');
+      toast.error("Couldn't delete your account. Try again.");
     } finally {
       setIsDeleting(false);
       setDeleteConfirmText('');
@@ -225,7 +223,7 @@ export function AccountBackup({
       const { data, error } = await supabase.functions.invoke('export-data');
 
       if (error) {
-        toast.error('Data export failed. Please try again.');
+        toast.error("Couldn't export your data. Try again.");
         console.error('Export error:', error);
         return;
       }
@@ -241,10 +239,10 @@ export function AccountBackup({
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      toast.success('Your data export has been downloaded.');
+      toast.success("Your data's downloaded.");
     } catch (err) {
       console.error('Export error:', err);
-      toast.error('Data export failed. Please try again.');
+      toast.error("Couldn't export your data. Try again.");
     } finally {
       setIsExporting(false);
     }
@@ -291,7 +289,7 @@ export function AccountBackup({
       }
       // On redirect, the onAuthStateChange SIGNED_IN handler will trigger migration
     } catch {
-      toast.error('Provider switch failed. Please try again.');
+      toast.error("Couldn't switch accounts. Please try again.");
       localStorage.removeItem(ANON_USER_ID_KEY);
     } finally {
       setLoading(false);
@@ -491,9 +489,9 @@ export function AccountBackup({
             <AlertDialogHeader>
               <AlertDialogTitle>Switch to {alternateProviderName}?</AlertDialogTitle>
               <AlertDialogDescription>
-                Your energy data (Octopus meters, consumption history, and carbon footprint) will be
-                transferred to your new {alternateProviderName} account. You'll be signed out and
-                redirected to sign in with {alternateProviderName}.
+                We&apos;ll move your energy data (Octopus meters, usage history and carbon
+                footprint) to your new {alternateProviderName} account, then sign you out so you can
+                sign in with {alternateProviderName}.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -525,9 +523,9 @@ export function AccountBackup({
                     <li>Octopus Energy credentials and meter data</li>
                     <li>Energy consumption and carbon footprint history</li>
                     <li>Saved locations and preferences</li>
-                    <li>Your authentication account</li>
+                    <li>Your sign-in account</li>
                   </ul>
-                  <p className="font-medium">This action cannot be undone.</p>
+                  <p className="font-medium">You can&apos;t undo this.</p>
                   <div className="pt-2">
                     <label className="text-sm text-muted-foreground">
                       Type <span className="font-mono font-bold">DELETE</span> to confirm:
@@ -551,7 +549,7 @@ export function AccountBackup({
                 disabled={deleteConfirmText !== 'DELETE' || isDeleting}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
-                {isDeleting ? 'Deleting...' : 'Permanently Delete Account'}
+                {isDeleting ? 'Deleting...' : 'Delete permanently'}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

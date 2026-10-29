@@ -242,8 +242,8 @@ export default function HistoryPage() {
           </div>
           <EmptyState
             icon={BarChart3}
-            title="No Historical Data"
-            description="We couldn't find any historical carbon intensity data for this region."
+            title="Nothing here yet"
+            description="No history came back for this region on this day. Try another day."
           />
         </div>
       </div>
@@ -263,7 +263,7 @@ export default function HistoryPage() {
         <motion.div variants={itemVariants}>
           <PageHeader
             title={date ? 'Time Machine' : 'Grid History'}
-            description={date ? `Archives for ${format(date, 'MMMM do, yyyy')}` : undefined}
+            description={date ? `The grid on ${format(date, 'd MMMM yyyy')}` : undefined}
             actions={
               <div className="flex items-center gap-2">
                 <Popover>
@@ -304,8 +304,8 @@ export default function HistoryPage() {
                     variant="ghost"
                     size="icon"
                     onClick={() => setDate(undefined)}
-                    title="Return to Present"
-                    aria-label="Return to present"
+                    title="Back to today"
+                    aria-label="Back to today"
                   >
                     <RotateCcw className="h-4 w-4" aria-hidden="true" />
                   </Button>
@@ -320,7 +320,7 @@ export default function HistoryPage() {
           {!postcode ? (
             <motion.div key="no-postcode" variants={itemVariants}>
               <Card className="sheet-surface p-6 text-center">
-                <p>Please enter a postcode in Settings to see regional history.</p>
+                <p>Add a postcode in Settings to see your region&apos;s history.</p>
               </Card>
             </motion.div>
           ) : showHistorySkeleton ? (
@@ -382,10 +382,9 @@ export default function HistoryPage() {
                       <div className="text-sm space-y-1">
                         {isLinked && (
                           <p className="text-muted-foreground leading-relaxed pt-1">
-                            Yellow <span className="font-medium text-foreground">usage bars</span>{' '}
-                            are your metered kWh. When bars stack under a dirty intensity spike,
-                            that usage hurts your Green Score — shift those loads into cleaner hours
-                            to improve it.
+                            Yellow <span className="font-medium text-foreground">bars</span> are
+                            your metered kWh. Usage under a dirty spike pulls your Green Score down,
+                            so moving those loads to cleaner hours lifts it.
                           </p>
                         )}
                       </div>
@@ -557,7 +556,7 @@ export default function HistoryPage() {
                   <CardHeader className="p-0 pb-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
-                        <CardTitle>{timeRange === '24h' ? '24 Hour' : '7 Day'} View</CardTitle>
+                        <CardTitle>{timeRange === '24h' ? '24-hour view' : '7-day view'}</CardTitle>
                         <CardDescription>
                           <div className="flex items-center gap-3 text-xs mt-1 flex-wrap">
                             <span className="flex items-center gap-1">

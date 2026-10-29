@@ -24,7 +24,7 @@ export function StaleDataBadge({ lastUpdated, thresholdMinutes = 35 }: StaleData
   const isStale = isOffline || ageMinutes >= thresholdMinutes;
 
   const label = isOffline
-    ? 'Cached data'
+    ? 'Saved data'
     : ageMinutes < 60
       ? `${ageMinutes}m ago`
       : ageMinutes < 1440

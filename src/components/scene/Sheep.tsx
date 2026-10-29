@@ -12,7 +12,7 @@ interface SheepProps {
 }
 
 const SheepPhrases = [
-  'Ewe should wait until 9pm to wash clothes!',
+  'Ewe could wait for a cleaner hour!',
   'Feeling wool-y green today!',
   'This pasture is powered by wind!',
   'No coal in our grass, please!',

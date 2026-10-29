@@ -72,7 +72,7 @@ function buildAction(
   nowAction?: NowOrWaitAction,
 ): string {
   if (isPast) {
-    return 'Past hour. Useful for comparing forecast with actual.';
+    return 'Past hour. Handy for checking forecast vs actual.';
   }
   // The current hour must agree with the now-or-wait card above the chart.
   if (isCurrent && nowAction === 'wait') {
@@ -87,25 +87,25 @@ function buildAction(
   if (inBestWindow) {
     return isCurrent
       ? 'Best window is open. Good time to run a load.'
-      : 'Inside a best window. Plan a load for this slot.';
+      : 'In a best window. A good slot to plan a load.';
   }
   if (band === 'very low' || band === 'low') {
     return isCurrent
-      ? 'Grid is clean. Use energy freely.'
+      ? "Grid's clean. Go for big loads."
       : vsNowCleaner
-        ? 'Cleaner than now. A solid shift target.'
+        ? 'Cleaner than now. Worth moving a load here.'
         : 'Still a clean hour on the grid.';
   }
   if (band === 'high' || band === 'very high') {
     if (isCurrent) return 'Dirty hour. Wait if you can.';
     if (minutesUntil > 0 && minutesUntil < 18 * 60) {
-      return 'Avoid starting big loads in this slot.';
+      return 'Best not to start big loads in this hour.';
     }
-    return 'Heavy carbon hour. Shift if you can.';
+    return 'High-carbon hour. Move it if you can.';
   }
   return isCurrent
-    ? 'Mid-pack hour. Check the chart for a greener window.'
-    : 'Moderate hour. Look for a greener neighbour.';
+    ? 'Middling hour. Check the chart for a cleaner one.'
+    : 'Moderate hour. Check the hours either side.';
 }
 
 /**

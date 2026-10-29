@@ -149,7 +149,7 @@ export default function Planner() {
   const handleCustomSubmit = () => {
     const duration = Math.max(0.5, parseFloat(customEvent.duration) || 1);
     const power = parseFloat(customEvent.power) || 1.0;
-    const name = customEvent.name || 'Custom Task';
+    const name = customEvent.name || 'My appliance';
 
     const customAppliance = {
       id: 'custom',
@@ -200,7 +200,7 @@ export default function Planner() {
     try {
       const permission = await LocalNotifications.requestPermissions();
       if (permission.display !== 'granted') {
-        toast.error('Notifications permission denied');
+        toast.error('Notifications are off for GridSense');
         return;
       }
 
@@ -209,15 +209,15 @@ export default function Planner() {
       const notificationTime = subMinutes(startDate, 15);
 
       if (!isFuture(notificationTime)) {
-        toast.error('This time is too soon to schedule a reminder!');
+        toast.error("That's too soon for a reminder.");
         return;
       }
 
       await LocalNotifications.schedule({
         notifications: [
           {
-            title: `Power Planner: Run ${selectedAppliance.name}`,
-            body: `Ideally start your ${selectedAppliance.name} in 15 minutes for lowest carbon intensity!`,
+            title: `${selectedAppliance.name} in 15 minutes`,
+            body: `Start your ${selectedAppliance.name} in 15 minutes to catch the cleanest window.`,
             id: plannerReminderId(notificationTime.getTime()),
             schedule: { at: notificationTime },
             sound: undefined,
@@ -231,7 +231,7 @@ export default function Planner() {
       toast.success(`Reminder set for ${formatLondonTime(notificationTime)}`);
     } catch (error) {
       logger.error('Failed to schedule power planner notification', { error });
-      toast.error('Failed to schedule reminder');
+      toast.error("Couldn't set the reminder");
     }
   };
 
@@ -308,21 +308,21 @@ export default function Planner() {
               </ResponsiveDialogTrigger>
               <ResponsiveDialogContent className="sm:max-w-md top-[20%] translate-y-0">
                 <ResponsiveDialogHeader>
-                  <ResponsiveDialogTitle>Add Custom Event</ResponsiveDialogTitle>
+                  <ResponsiveDialogTitle>Add your own appliance</ResponsiveDialogTitle>
                 </ResponsiveDialogHeader>
                 <div className="grid gap-4 py-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="name">Event Name</Label>
+                    <Label htmlFor="name">Name</Label>
                     <Input
                       id="name"
-                      placeholder="e.g. Bake Cake"
+                      placeholder="e.g. Slow cooker"
                       value={customEvent.name}
                       onChange={(e) => setCustomEvent({ ...customEvent, name: e.target.value })}
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-2">
-                      <Label htmlFor="duration">Duration (Hours)</Label>
+                      <Label htmlFor="duration">How long (hours)</Label>
                       <Input
                         id="duration"
                         type="number"
@@ -347,7 +347,7 @@ export default function Planner() {
                 </div>
                 <ResponsiveDialogFooter className="sm:justify-start">
                   <Button type="button" onClick={handleCustomSubmit} className="w-full">
-                    Calculate Best Time
+                    Find the best time
                   </Button>
                 </ResponsiveDialogFooter>
               </ResponsiveDialogContent>
@@ -514,14 +514,14 @@ export default function Planner() {
                       ? 'Waiting for fresh data'
                       : plan.reason === 'missing_data'
                         ? MISSING_DATA_TITLE
-                        : 'No forecast data available'}
+                        : 'No forecast yet'}
                   </p>
                   <p className="text-sm text-muted-foreground">
                     {plan.reason === 'stale_data'
                       ? "This reading is out of date, so we can't pick a time yet. Pull to refresh."
                       : plan.reason === 'missing_data'
                         ? `${MISSING_DATA_DETAIL} Pull to refresh, or try again later.`
-                        : 'We need a carbon intensity forecast to find your best window. Pull to refresh, or check your connection.'}
+                        : 'We need the forecast to find your best time. Pull to refresh, or check your connection.'}
                   </p>
                 </Card>
               </motion.div>

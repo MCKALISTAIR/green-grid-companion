@@ -24,7 +24,7 @@ export function SettingsBadgesSection() {
             </div>
             <div>
               <h3 className="font-medium">Trophy Room</h3>
-              <p className="text-sm text-muted-foreground">View your unlocked achievements</p>
+              <p className="text-sm text-muted-foreground">See the badges you&apos;ve earned</p>
             </div>
           </div>
           <ChevronRight className="w-5 h-5 text-muted-foreground" />

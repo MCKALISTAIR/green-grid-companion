@@ -11,6 +11,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
+    "check:em-dash": "node scripts/check-no-em-dash.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
