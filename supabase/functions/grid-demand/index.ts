@@ -5,6 +5,7 @@ const _ignore = null;
 declare const Deno: any;
 
 import { corsHeaders } from '../_shared/cors.ts';
+import { safeErrorResponse } from '../_shared/safe-error.ts';
 import { checkRateLimit } from '../_shared/rate-limit.ts';
 import {
   buildGridDemand,
@@ -91,11 +92,9 @@ Deno.serve(async (req: Request) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
     });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Error:', message);
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return safeErrorResponse(
+      { code: 'grid_demand_failed', error: 'Grid demand is unavailable', context: 'grid-demand' },
+      error,
+    );
   }
 });
