@@ -73,10 +73,10 @@ export function SideNav() {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1">
-        <NavItem path="/" icon={Home} label="Dashboard" />
+        <NavItem path="/" icon={Home} label="Home" />
         <NavItem path="/planner" icon={Calendar} label="Power Planner" dataTour="nav-plan" />
         <NavItem path="/history" icon={Clock} label="History" dataTour="nav-history" />
-        <NavItem path="/map" icon={ListOrdered} label="Region Rank" dataTour="nav-rank" />
+        <NavItem path="/map" icon={ListOrdered} label="Rank" dataTour="nav-rank" />
       </nav>
 
       {/* Footer / Settings */}

@@ -58,6 +58,10 @@ jobs:
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: npx tsc --noEmit -p tsconfig.app.json
 
+      - name: No em dashes in copy
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: node scripts/check-no-em-dash.mjs
+
       - name: Lint (errors fail, warnings allowed)
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: npx eslint .

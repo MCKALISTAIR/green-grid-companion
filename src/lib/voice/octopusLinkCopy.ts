@@ -23,7 +23,7 @@ export const OCTOPUS_ENTRY_COPY = {
   primary: 'Link my Octopus account',
   under: "You'll need two things from your Octopus account. We'll show you where.",
   referralLead: 'Not with Octopus yet?',
-  referralLink: 'Join through our referral link.',
+  referralLink: 'Join with our referral link and get £50 credit.',
 } as const;
 
 /** 3.2 Linking sheet. */

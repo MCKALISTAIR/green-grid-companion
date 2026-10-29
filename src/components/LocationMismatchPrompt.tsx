@@ -18,7 +18,7 @@ export const NATIONAL_OPT_IN_DISMISSED_KEY = 'gridsense-national-optin-dismissed
 export const PROMPT_DELAY_MS = 3000;
 
 export const LOCATION_PROMPT_COPY = {
-  mismatchTitle: 'Update Location?',
+  mismatchTitle: 'New location?',
   // Design-final (same for Cheeky and Plain tones).
   optInTitle: 'Showing the GB average',
   optInAction: 'Use my area',
@@ -197,8 +197,8 @@ export function LocationMismatchPrompt({ currentPostcode, onUpdate }: LocationMi
               <div className="flex-1 space-y-1">
                 <h4 className="font-medium text-sm">{LOCATION_PROMPT_COPY.mismatchTitle}</h4>
                 <p className="text-xs text-muted-foreground">
-                  It looks like you're in <strong>{detectedRegion.name}</strong>. Would you like to
-                  see grid data for this area instead?
+                  Looks like you&apos;re in <strong>{detectedRegion.name}</strong>. Want to see the
+                  grid there instead?
                 </p>
                 <div className="flex gap-2 mt-3 block">
                   <Button
@@ -209,7 +209,7 @@ export function LocationMismatchPrompt({ currentPostcode, onUpdate }: LocationMi
                     }}
                     className="h-8 text-xs"
                   >
-                    Update Region
+                    Use this region
                   </Button>
                   <Button
                     variant="ghost"

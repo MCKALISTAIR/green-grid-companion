@@ -208,7 +208,7 @@ const Index = () => {
         });
       } else {
         toast.info('Checked for updates', {
-          description: 'Nothing new from NESO yet. Try again in a few minutes.',
+          description: 'Nothing new from NESO yet. Try again soon.',
         });
       }
     }
@@ -261,7 +261,7 @@ const Index = () => {
         <PullToRefresh onRefresh={handleRefresh} disabled={isLoading}>
           {/* Shared app-content inset lives inside home-feed to clear the dock without a sky-coloured gap. */}
           <main className="home-shell flex flex-col animate-in fade-in duration-700 lg:min-h-[100dvh] lg:pb-0">
-            <h1 className="sr-only">Carbon Intensity Dashboard</h1>
+            <h1 className="sr-only">Home</h1>
 
             <IntensityHeroOverlay
               postcode={postcode}
@@ -331,10 +331,10 @@ const Index = () => {
                 <div className="mx-2 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-lg flex items-start gap-3 text-sm text-amber-800 dark:text-amber-200 animate-in fade-in">
                   <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-500" />
                   <div>
-                    <p className="font-semibold">Regional data degraded</p>
+                    <p className="font-semibold">Can&apos;t get your local figures</p>
                     <p>
-                      We're currently unable to fetch data for {postcode} and are showing National
-                      Grid averages instead.
+                      We can&apos;t get figures for {postcode} right now, so we&apos;re showing the
+                      GB average instead.
                     </p>
                   </div>
                 </div>

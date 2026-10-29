@@ -35,14 +35,12 @@ const NotFound = () => {
         <div className="space-y-2">
           <h1 className="text-6xl font-bold text-primary">404</h1>
           <h2 className="text-2xl font-semibold text-foreground">Page Not Found</h2>
-          <p className="text-muted-foreground">
-            The page you're looking for doesn't exist or has been moved.
-          </p>
+          <p className="text-muted-foreground">This page doesn&apos;t exist, or it&apos;s moved.</p>
         </div>
         <Button asChild size="lg">
           <Link to="/" className="gap-2">
             <Home className="w-4 h-4" />
-            Return to Home
+            Back to Home
           </Link>
         </Button>
       </div>

@@ -62,7 +62,7 @@ export function SettingsHouseholdSection({
                 Custom Estimate
               </Label>
               <div className="text-xs text-muted-foreground mb-1">
-                Enter your own annual consumption if known.
+                Know your yearly usage? Enter it here.
               </div>
 
               {houseType === 'CUSTOM' && (

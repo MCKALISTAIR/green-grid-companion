@@ -114,7 +114,7 @@ export function LocationManager({
         });
       } else {
         toast.error('Location not found', {
-          description: `Could not find a region matching "${searchQuery}"`,
+          description: `No region matches "${searchQuery}"`,
         });
       }
     } catch (error) {
@@ -157,13 +157,13 @@ export function LocationManager({
         });
       } else {
         toast.error('Region not found', {
-          description: 'Could not match your location to a supported region.',
+          description: "Couldn't match you to a GB region.",
         });
       }
     } catch (error) {
       logger.error('Geolocation error', { error });
-      toast.error('Location Error', {
-        description: 'Failed to detect your region. Please select manually.',
+      toast.error("Couldn't find you", {
+        description: "Couldn't find your region. Pick one instead.",
       });
     } finally {
       setLoadingLocation(false);
@@ -173,7 +173,7 @@ export function LocationManager({
   const handleSaveLocation = () => {
     if (!locationName.trim()) {
       toast.error('Name required', {
-        description: 'Please enter a name for this location.',
+        description: 'Give this location a name.',
       });
       return;
     }
@@ -182,7 +182,7 @@ export function LocationManager({
     setSaveDialogOpen(false);
     setLocationName('');
     toast.success('Location Saved', {
-      description: `"${locationName}" has been saved.`,
+      description: `Saved "${locationName}".`,
     });
   };
 
@@ -190,7 +190,7 @@ export function LocationManager({
     e.stopPropagation();
     removeLocation(id);
     toast.info('Location Removed', {
-      description: `"${name}" has been removed.`,
+      description: `Removed "${name}".`,
     });
   };
 
@@ -257,7 +257,7 @@ export function LocationManager({
           )}
           <Command shouldFilter={false}>
             <CommandInput
-              placeholder="Search postcode, town, or region..."
+              placeholder="Postcode, town or region…"
               aria-label="Search locations"
               value={searchQuery}
               onValueChange={setSearchQuery}
@@ -288,7 +288,7 @@ export function LocationManager({
                     </Button>
                   </div>
                 ) : (
-                  'No location found.'
+                  "Can't find that place"
                 )}
               </CommandEmpty>
 
@@ -300,7 +300,7 @@ export function LocationManager({
                     className="cursor-pointer text-primary font-medium"
                   >
                     <Navigation className={cn('mr-2 h-4 w-4', loadingLocation && 'animate-spin')} />
-                    {loadingLocation ? 'Detecting location...' : 'Use my current location'}
+                    {loadingLocation ? 'Finding you…' : 'Use my current location'}
                   </CommandItem>
                 </CommandGroup>
               )}
@@ -435,7 +435,8 @@ export function LocationManager({
           <ResponsiveDialogHeader>
             <ResponsiveDialogTitle>Save Location</ResponsiveDialogTitle>
             <ResponsiveDialogDescription>
-              Give this location a name (e.g., "Home", "Work", "Mum's house")
+              Give it a name, like &quot;Home&quot;, &quot;Work&quot; or &quot;Mum&apos;s
+              house&quot;.
             </ResponsiveDialogDescription>
           </ResponsiveDialogHeader>
           <div className="grid gap-4 py-4">
@@ -443,7 +444,7 @@ export function LocationManager({
               <Label htmlFor="location-name">Name</Label>
               <Input
                 id="location-name"
-                placeholder="e.g., Home"
+                placeholder="e.g. Home"
                 value={locationName}
                 onChange={(e) => setLocationName(e.target.value)}
                 onKeyDown={(e) => {

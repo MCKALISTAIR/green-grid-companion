@@ -35,7 +35,7 @@ export function SettingsResourcesSection({
                 </div>
                 <div className="text-left">
                   <h3 className="font-medium">{new Date().getFullYear()} Grid Wrapped</h3>
-                  <p className="text-sm text-muted-foreground">Your year in UK electricity</p>
+                  <p className="text-sm text-muted-foreground">Your year on the GB grid</p>
                 </div>
               </div>
               <Badge variant="secondary" className="text-[10px]">
@@ -124,7 +124,9 @@ export function SettingsResourcesSection({
               <div className="flex items-center gap-2">
                 <div>
                   <h3 className="font-medium">What's New</h3>
-                  <p className="text-sm text-muted-foreground">View changelog & version history</p>
+                  <p className="text-sm text-muted-foreground">
+                    What&apos;s changed in each version
+                  </p>
                 </div>
                 {hasNewVersion && (
                   <Badge variant="destructive" className="text-[10px] px-1.5 py-0 h-5">
