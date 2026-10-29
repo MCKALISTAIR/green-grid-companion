@@ -9,8 +9,8 @@ export function GreenScoreExplainerContent() {
       <div>
         <h4 className="font-semibold text-sm mb-2">How it&apos;s calculated</h4>
         <p className="text-xs text-muted-foreground leading-relaxed">
-          Your Green Score is the share of your metered kWh used during low-carbon intensity periods
-          (very low + low). Timing demand into clean windows raises it — not just using less.
+          Your Green Score is the share of your metered kWh used in low-carbon periods (very low or
+          low). Timing big loads into clean windows raises it, not just using less.
         </p>
       </div>
       <div>
@@ -53,8 +53,8 @@ export function GreenScoreExplainerContent() {
         <ul className="text-xs text-muted-foreground space-y-1 list-disc pl-4">
           <li>Check the forecast for clean overnight windows</li>
           <li>Run appliances during sunny, windy days</li>
-          <li>Check Power Planner for best windows</li>
-          <li>On History, watch yellow usage bars vs dirty intensity spikes</li>
+          <li>Find the best times in Power Planner</li>
+          <li>On History, look for usage bars under dirty spikes</li>
         </ul>
       </div>
     </div>

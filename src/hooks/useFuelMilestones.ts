@@ -121,8 +121,8 @@ export function getMilestoneMessage(milestone: FuelMilestone): string {
     periodWeeks > 4 ? `${Math.floor(periodWeeks / 4)} months` : `${periodWeeks} weeks`;
 
   if (milestone.type === 'low') {
-    return `${fuelName} at ${milestone.currentPerc.toFixed(1)}% — lowest share in ${periodText}`;
+    return `${fuelName} at ${milestone.currentPerc.toFixed(1)}%, its lowest share in ${periodText}`;
   }
 
-  return `${fuelName} at ${milestone.currentPerc.toFixed(1)}% — highest share in ${periodText}! 🎉`;
+  return `${fuelName} at ${milestone.currentPerc.toFixed(1)}%, its highest share in ${periodText}! 🎉`;
 }

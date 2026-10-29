@@ -124,7 +124,7 @@ function ChargingHistory() {
         </Button>
         <div>
           <h1 className="text-xl font-bold">Charging History</h1>
-          <p className="text-sm text-muted-foreground">Past Intelligent dispatch sessions</p>
+          <p className="text-sm text-muted-foreground">Your past Octopus smart charges</p>
         </div>
       </motion.div>
 
@@ -171,7 +171,7 @@ function ChargingHistory() {
             <EmptyState
               icon={BatteryCharging}
               title="No charging sessions yet"
-              description="Once Octopus schedules and completes smart charging sessions, they'll appear here."
+              description="When Octopus runs a smart charge for you, it'll show up here."
             />
           </motion.div>
         ) : (
@@ -302,7 +302,12 @@ function ChargingHistory() {
                                   {session.charge_kwh.toFixed(1)} kWh
                                 </span>
                               ) : (
-                                <span className="text-xs text-muted-foreground">—</span>
+                                <span
+                                  className="text-xs text-muted-foreground"
+                                  aria-label="No reading"
+                                >
+                                  n/a
+                                </span>
                               )}
                               <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
                             </div>

@@ -63,7 +63,7 @@ export function FuelInsightBadge({ streak, milestone, compact = false }: FuelIns
           <Tooltip>
             <TooltipTrigger asChild>{badgeContent}</TooltipTrigger>
             <TooltipContent>
-              <p className="text-xs">This streak extends beyond the 30-day API limit</p>
+              <p className="text-xs">It&apos;s gone on longer than the 30 days of data we get.</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

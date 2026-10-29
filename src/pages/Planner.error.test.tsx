@@ -46,7 +46,7 @@ describe('Planner forecast error (Design state 6)', () => {
     const card = screen.getByTestId('planner-error');
     expect(card).toHaveTextContent("Couldn't load the forecast");
     expect(card).toHaveTextContent(
-      'Your choice is saved. We will find the best time as soon as the forecast loads.',
+      "Your choice is saved. We'll find the best time as soon as the forecast loads.",
     );
     fireEvent.click(screen.getAllByRole('button', { name: 'Retry' })[0]);
     expect(screen.getByTestId('planner-error-sticky')).toHaveTextContent(

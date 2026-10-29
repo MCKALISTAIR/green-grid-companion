@@ -29,7 +29,7 @@ for (const viewport of [
     await notice.scrollIntoViewIfNeeded();
     await page.screenshot({ path: `test-results/postcode-not-found-${viewport.width}.png` });
     await notice.getByRole('button', { name: 'Fix postcode' }).click();
-    await expect(page.getByPlaceholder('Search postcode, town, or region...')).toBeVisible();
+    await expect(page.getByPlaceholder('Postcode, town or region…')).toBeVisible();
     await expect(page).toHaveURL(/\/$/);
   });
 }

@@ -3,26 +3,25 @@ import { Home, Zap, Calendar, Bell, Map, LineChart, Plug, MapPin } from 'lucide-
 export const FEATURE_GUIDES = [
   {
     id: 'home-dashboard',
-    title: 'Home Dashboard',
+    title: 'Home',
     icon: Home,
-    description: 'Understanding the intensity scene, reading data, and interpreting colors',
+    description: 'What the scene, numbers and colours mean',
     content: (
       <div className="space-y-4">
         <p>
-          The <strong>Home Dashboard</strong> is your main command center for understanding the
-          current energy status of the grid.
+          <strong>Home</strong> shows you how clean the grid is right now, at a glance.
         </p>
 
         <h3 className="text-lg font-semibold pt-2">The Dynamic Scene</h3>
-        <p>The background scene isn't just pretty—it's data-driven!</p>
+        <p>The background scene isn&apos;t just pretty. It moves with the data.</p>
         <ul className="list-disc pl-5 space-y-2">
           <li>
-            <strong>Clean Energy (Green/Blue Sky):</strong> When the carbon intensity is low (lots
-            of wind/solar), the scene is bright, clean, and vibrant.
+            <strong>Clean grid (green/blue sky):</strong> When carbon intensity is low (lots of wind
+            or solar), the scene is bright and clear.
           </li>
           <li>
-            <strong>Dirty Energy (Orange/Grey):</strong> When fossil fuels are dominating, the scene
-            becomes hazier or darker to reflect the higher pollution levels.
+            <strong>Dirty grid (orange/grey):</strong> When fossil fuels are doing most of the work,
+            the scene gets hazier and darker.
           </li>
           <li>
             <strong>Wind Turbines:</strong> Their speed reflects how much of the current mix comes
@@ -32,7 +31,7 @@ export const FEATURE_GUIDES = [
 
         <h3 className="text-lg font-semibold pt-2">Reading the Numbers</h3>
         <p>
-          The large number in the center is the <strong>Carbon Intensity</strong> in gCO₂/kWh.
+          The big number in the middle is the <strong>carbon intensity</strong>, in gCO₂/kWh.
         </p>
         <ul className="list-disc pl-5 space-y-2">
           <li>
@@ -98,8 +97,7 @@ export const FEATURE_GUIDES = [
     content: (
       <div className="space-y-4">
         <p>
-          The <strong>Power Planner</strong> helps you schedule high-energy tasks for the greenest
-          times of day.
+          The <strong>Power Planner</strong> finds the cleanest time to run your big appliances.
         </p>
 
         <h3 className="text-lg font-semibold pt-2">How to use it</h3>
@@ -107,10 +105,10 @@ export const FEATURE_GUIDES = [
           <li>
             Tap the <strong>Plan</strong> tab at the bottom.
           </li>
-          <li>Select an appliance (e.g., EV Charge, Washing Machine).</li>
+          <li>Pick an appliance (like EV Charge or Washing).</li>
           <li>
-            The app will instantly calculate the <strong>Best Time to Run</strong> based on the next
-            24-48 hours of forecast data.
+            GridSense finds the <strong>best time to run</strong> from the next 24-48 hours of
+            forecast.
           </li>
           <li>
             Tap <strong>"Remind me"</strong> to get a notification 15 minutes before the window
@@ -119,8 +117,7 @@ export const FEATURE_GUIDES = [
         </ol>
 
         <p className="text-sm text-muted-foreground pt-2">
-          <strong>Pro Tip:</strong> You can also create "Custom" tasks with specific durations and
-          power usage.
+          <strong>Tip:</strong> You can add your own appliance with its own run time and power.
         </p>
       </div>
     ),
@@ -129,24 +126,24 @@ export const FEATURE_GUIDES = [
     id: 'notifications',
     title: 'Notifications',
     icon: Bell,
-    description: 'Set up alerts and customize notification preferences',
+    description: 'Set up alerts and choose what you hear about',
     content: (
       <div className="space-y-4">
-        <p>Stay informed without constantly checking the app by setting up smart notifications.</p>
+        <p>Let GridSense tell you when it matters, so you don&apos;t have to keep checking.</p>
 
         <h3 className="text-lg font-semibold pt-2">Types of Alerts</h3>
         <ul className="list-disc pl-5 space-y-2">
           <li>
-            <strong>Daily Energy Outlook:</strong> A morning summary showing best times to use
-            energy and the longest green window (e.g., "Best window: 10:00-14:00 (4h)").
+            <strong>Daily Energy Outlook:</strong> A morning rundown of today&apos;s cleanest times,
+            like &quot;Best window: 10:00 to 14:00 (4h)&quot;.
           </li>
           <li>
-            <strong>Avoid High Carbon Times:</strong> Warns you when the grid gets dirty so you can
-            delay heavy appliance use.
+            <strong>Avoid High Carbon Times:</strong> A heads-up when the grid gets dirty, so you
+            can hold off big loads.
           </li>
           <li>
-            <strong>Best Time to Use Energy:</strong> Notifies you when clean energy is
-            abundant—perfect for charging devices, running the dishwasher, or doing laundry!
+            <strong>Best Time to Use Energy:</strong> Tells you when the grid&apos;s clean. A good
+            time to charge things, run the dishwasher or do the washing.
           </li>
         </ul>
 
@@ -159,13 +156,13 @@ export const FEATURE_GUIDES = [
   },
   {
     id: 'leaderboard',
-    title: 'Leaderboard',
+    title: 'Rank',
     icon: Map,
     description: 'See how GB regions compare',
     content: (
       <div className="space-y-4">
         <p>
-          <strong>Rank</strong> shows how your region compares with the rest of Great Britain.
+          See how your region compares to the rest of Great Britain with <strong>Rank</strong>.
         </p>
 
         <h3 className="text-lg font-semibold pt-2">Regional Ranking</h3>
@@ -181,8 +178,8 @@ export const FEATURE_GUIDES = [
         </ul>
 
         <p>
-          Tap the <strong>Map Icon</strong> (top right) to verify the live generation map provided
-          by NESO.
+          Tap the <strong>map icon</strong> (top right) to see each region&apos;s carbon intensity
+          on a map.
         </p>
       </div>
     ),
@@ -191,26 +188,24 @@ export const FEATURE_GUIDES = [
     id: 'history',
     title: 'History & Trends',
     icon: LineChart,
-    description: 'Analyze patterns over time and compare periods',
+    description: 'Look back at patterns and compare periods',
     content: (
       <div className="space-y-4">
         <p>
-          The <strong>History</strong> tab visualizes how the grid has performed over the last 24
-          hours to 30 days.
+          The <strong>History</strong> tab shows how the grid did, over 24 hours or 7 days.
         </p>
 
         <h3 className="text-lg font-semibold pt-2">Charts</h3>
         <ul className="list-disc pl-5 space-y-2">
           <li>
-            <strong>24h View:</strong> Detailed breakdown of intensity changes hour-by-hour.
+            <strong>24 hours:</strong> How intensity changed, hour by hour.
           </li>
           <li>
-            <strong>30 Day Trend:</strong> See the bigger picture—was this week greener than last
-            week?
+            <strong>7 days:</strong> How the last week went, day by day.
           </li>
         </ul>
 
-        <p>Use this data to understand seasonal or daily patterns in your local grid.</p>
+        <p>Handy for spotting daily and seasonal patterns where you live.</p>
       </div>
     ),
   },
@@ -233,24 +228,21 @@ export const FEATURE_GUIDES = [
     id: 'saved-locations',
     title: 'Saved Locations',
     icon: MapPin,
-    description: 'Manage multiple regions and quick switching',
+    description: 'Keep a few places handy and switch between them',
     content: (
       <div className="space-y-4">
-        <p>Track the grid status for multiple places—like home, work, or family members' homes.</p>
+        <p>Keep an eye on the grid in more than one place, like home, work or family.</p>
 
         <h3 className="text-lg font-semibold pt-2">Adding a Location</h3>
         <ol className="list-decimal pl-5 space-y-2">
-          <li>Tap your current location name on the Home screen.</li>
+          <li>Tap your current location name on Home.</li>
           <li>Search for a new postcode or town.</li>
           <li>
             After selecting, you'll see an option to <strong>"Save this location"</strong>.
           </li>
         </ol>
 
-        <p>
-          You can switch between saved locations seamlessly to check if it's a good time for your
-          family to use energy elsewhere!
-        </p>
+        <p>Switch between them any time, handy for checking the grid where your family live.</p>
       </div>
     ),
   },

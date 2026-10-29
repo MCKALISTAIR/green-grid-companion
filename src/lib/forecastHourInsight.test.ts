@@ -59,7 +59,7 @@ describe('getForecastHourInsight', () => {
     const forecast = [slot(2, 280, 'very high')];
     const insight = getForecastHourInsight(forecast, 0, 90, 'plain');
     expect(insight!.vsNow).toMatch(/dirtier than now/i);
-    expect(insight!.action.toLowerCase()).toMatch(/avoid|heavy|shift/);
+    expect(insight!.action.toLowerCase()).toMatch(/best not to start|high-carbon|move it/);
   });
 
   it('uses live-grid wording for the current slot instead of vs-now', () => {

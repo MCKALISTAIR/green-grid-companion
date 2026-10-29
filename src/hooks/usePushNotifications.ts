@@ -160,7 +160,7 @@ export function usePushNotifications(postcode: string) {
   // Request permission and get token
   const requestPermission = useCallback(async (): Promise<string | null> => {
     if (!isNative) {
-      toast.error('Push notifications require the native app');
+      toast.error('Notifications need the GridSense app');
       return null;
     }
 
@@ -189,12 +189,12 @@ export function usePushNotifications(postcode: string) {
         return token;
       } else {
         setPermissionStatus('denied');
-        toast.error('Notification permission denied');
+        toast.error('Notifications are off for GridSense');
         return null;
       }
     } catch (error) {
       logger.error('Push notification permission request failed', { error });
-      toast.error('Failed to request permission');
+      toast.error("Couldn't ask for permission");
       return null;
     }
   }, [isNative]);
@@ -259,7 +259,7 @@ export function usePushNotifications(postcode: string) {
         if (token !== deviceToken) setDeviceToken(token); // Ensure state is consistent
       } catch (error) {
         logger.error('Failed to save push notification preferences', { error });
-        toast.error('Failed to save notification settings');
+        toast.error("Couldn't save your notification settings");
       }
     },
     [deviceToken, postcode],
@@ -308,7 +308,7 @@ export function usePushNotifications(postcode: string) {
 
       setIsRegistered(false);
       setPrefs(DEFAULT_PREFS);
-      toast.success('Notifications disabled');
+      toast.success('Notifications off');
     } catch (error) {
       logger.error('Failed to unregister push notifications', { error });
     }

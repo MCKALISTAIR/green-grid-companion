@@ -29,7 +29,7 @@ describe('historyTrendCopy', () => {
     expect(historyTrendCopy('flat', '24h')).toBe('About the same as the start of the day');
   });
   it('keeps existing directional copy', () => {
-    expect(historyTrendCopy('improving', '7d')).toBe('Currently lower than start');
-    expect(historyTrendCopy('worsening', '24h')).toBe('Currently higher than start');
+    expect(historyTrendCopy('improving', '7d')).toBe('Lower than at the start');
+    expect(historyTrendCopy('worsening', '24h')).toBe('Higher than at the start');
   });
 });

@@ -188,9 +188,7 @@ export function WeatherWidget() {
           }`}
         >
           {isHighWind ? <Wind className="w-3 h-3" /> : <Sun className="w-3 h-3" />}
-          {isHighWind
-            ? 'Windy conditions — good for wind generation'
-            : 'Clear skies — good for solar generation'}
+          {isHighWind ? 'Windy. Good news for wind power.' : 'Clear skies. Good news for solar.'}
         </div>
       )}
     </div>
