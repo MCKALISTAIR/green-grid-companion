@@ -13,7 +13,7 @@ export interface ErrorInfo {
  * Context information for better error messages
  */
 export interface ErrorContext {
-  feature?: 'octopus' | 'tesla' | 'notifications' | 'location' | 'data' | 'auth';
+  feature?: 'octopus' | 'notifications' | 'location' | 'data' | 'auth';
   action?: 'save' | 'fetch' | 'sync' | 'link' | 'disconnect' | 'calculate';
 }
 
@@ -63,9 +63,6 @@ export function parseEdgeFunctionError(error: unknown, context?: ErrorContext): 
     if (context?.feature === 'octopus') {
       return 'Invalid Octopus Energy credentials. Please check your API key and account number.';
     }
-    if (context?.feature === 'tesla') {
-      return 'Tesla authentication expired. Please reconnect your account.';
-    }
     return 'Authentication failed. Please sign in again.';
   }
 
@@ -94,9 +91,6 @@ export function parseEdgeFunctionError(error: unknown, context?: ErrorContext): 
   ) {
     if (context?.feature === 'octopus') {
       return 'Octopus Energy service is temporarily unavailable. Please try again in a few minutes.';
-    }
-    if (context?.feature === 'tesla') {
-      return 'Tesla service is temporarily unavailable. Please try again in a few minutes.';
     }
     return 'The service is temporarily unavailable. Please try again later.';
   }
@@ -149,18 +143,6 @@ function getContextualErrorMessage(context?: ErrorContext, _error?: unknown): st
           return 'Failed to calculate carbon footprint. Please try again.';
         default:
           return 'Failed to connect to Octopus Energy. Please check your credentials.';
-      }
-
-    case 'tesla':
-      switch (action) {
-        case 'link':
-          return 'Failed to connect Tesla account. Please try again.';
-        case 'sync':
-          return 'Failed to sync Tesla data. Please try again.';
-        case 'disconnect':
-          return 'Failed to disconnect Tesla account. Please try again.';
-        default:
-          return 'Tesla connection failed. Please try again.';
       }
 
     case 'notifications':
