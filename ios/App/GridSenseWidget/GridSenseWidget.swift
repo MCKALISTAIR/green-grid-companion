@@ -223,7 +223,7 @@ struct GridSenseWidget: Widget {
             GridSenseWidgetEntryView(entry: entry)
         }
         .configurationDisplayName("Carbon Intensity")
-        .description("Current National Grid carbon intensity.")
+        .description("Current GB grid carbon intensity.")
         .supportedFamilies([.systemSmall, .systemMedium])
     }
 }

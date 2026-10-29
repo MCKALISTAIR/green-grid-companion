@@ -142,7 +142,7 @@ const changelog: ChangelogEntry[] = [
       { type: 'feature', description: 'Octopus Energy integration for smart meter data' },
       { type: 'feature', description: 'Personal carbon footprint tracking with charts' },
       { type: 'feature', description: 'Green Score with achievements' },
-      { type: 'feature', description: 'Weekly digest notifications' },
+      { type: 'feature', description: 'Weekly digest (coming soon)' },
       { type: 'improvement', description: 'Improved data caching for faster loading' },
     ],
   },

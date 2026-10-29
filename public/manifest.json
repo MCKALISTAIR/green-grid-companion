@@ -1,8 +1,8 @@
 {
     "id": "/",
     "short_name": "GridSense",
-    "name": "GridSense - UK Carbon Intensity",
-    "description": "Track UK carbon intensity and find the best times to use clean energy.",
+    "name": "GridSense: GB Carbon Intensity",
+    "description": "Track GB carbon intensity and find the cleanest times to use electricity.",
     "icons": [
         {
             "src": "icon-192.png",

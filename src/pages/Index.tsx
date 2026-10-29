@@ -333,8 +333,8 @@ const Index = () => {
                   <div>
                     <p className="font-semibold">Can&apos;t get your local figures</p>
                     <p>
-                      We're currently unable to fetch data for {postcode} and are showing National
-                      Grid averages instead.
+                      We can&apos;t get figures for {postcode} right now, so we&apos;re showing the
+                      GB average instead.
                     </p>
                   </div>
                 </div>

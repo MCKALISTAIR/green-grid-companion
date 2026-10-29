@@ -26,8 +26,8 @@ const EXCLUDE = [
   /^src\/integrations\/supabase\/types\.ts$/,
 ];
 
-/** Legal page, Alistair's call (C2-15). Remove once C2 lands. */
-export const ALLOWLIST = ['src/pages/PrivacyPolicy.tsx'];
+/** Files exempt from the check. PrivacyPolicy entry removed once C2 landed. */
+export const ALLOWLIST = [];
 
 const TEXT_KINDS = new Set([
   ts.SyntaxKind.StringLiteral,

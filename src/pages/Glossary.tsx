@@ -89,7 +89,7 @@ export default function Glossary() {
       id: 'coal',
       name: 'Coal',
       description:
-        'Burning coal. The most carbon-intensive form of electricity generation. Being phased out.',
+        "No longer used on the GB grid. Britain's last coal plant, Ratcliffe-on-Soar, closed on 30 September 2024.",
       icon: Factory,
       category: 'Fossil Fuel',
     },
@@ -192,10 +192,10 @@ export default function Glossary() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    **National**: The average for the entire UK grid.
+                    **National**: The average for the whole GB grid.
                     <br />
-                    **Regional**: Your specific local grid (DNO). Does your area produce more wind?
-                    Are you near a nuclear plant?
+                    **Regional**: Your own local grid area (DNO). Does your area make more wind? Are
+                    you near a nuclear plant?
                   </p>
                 </CardContent>
               </Card>
@@ -230,11 +230,8 @@ export default function Glossary() {
                   meters.
                 </p>
                 <p className="mt-2">
-                  To solve this, NESO uses sophisticated **AI and weather models** to estimate how
-                  much "Embedded Generation" is happening.
-                  <br />
-                  So when you see "Solar" data here, it's actually a smart blend of real meter
-                  readings and high-tech weather forecasting!
+                  So NESO estimates how much they&apos;re making with its own forecasting model. The
+                  solar figure here is NESO&apos;s best estimate, not a meter reading.
                 </p>
               </div>
             </CardContent>

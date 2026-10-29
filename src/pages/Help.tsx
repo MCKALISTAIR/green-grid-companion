@@ -64,8 +64,8 @@ export default function Help() {
                     <strong>What is GridSense?</strong>
                   </p>
                   <p>
-                    GridSense shows you real-time carbon intensity data for the UK electricity grid,
-                    helping you use energy when it's greenest.
+                    GridSense shows carbon intensity data for the GB electricity grid, updated every
+                    half hour, so you can use power when it&apos;s cleanest.
                   </p>
 
                   <p className="pt-2">
@@ -135,8 +135,8 @@ export default function Help() {
                     <strong>Why do regions differ?</strong>
                   </p>
                   <p>
-                    The UK grid is divided into regions with different generation mixes. Windy
-                    Scotland often has lower intensity than areas relying on gas power.
+                    GB&apos;s grid is split into regions with different generation mixes. Windy
+                    Scotland often has lower intensity than areas leaning on gas.
                   </p>
                 </div>
               </AccordionContent>
@@ -371,8 +371,12 @@ export default function Help() {
                     <strong>What data do you collect?</strong>
                   </p>
                   <p>
-                    Your preferences are stored locally on your device. Location data is used solely
-                    to fetch regional carbon intensity and is never shared.
+                    We use your location to find your grid region and local weather. We round it to
+                    about 1 km before it leaves your device, and only keep the first half of your
+                    postcode. Lookups go to postcodes.io and OpenStreetMap (region and place names),
+                    Open-Meteo through our server (weather) and NESO&apos;s Carbon Intensity API
+                    (postcode area only). If you sign in, your saved places sync to your account; if
+                    you turn on alerts, we store your postcode area to send them.
                   </p>
 
                   <p className="pt-2">
