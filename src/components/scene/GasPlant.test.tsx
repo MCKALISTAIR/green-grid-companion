@@ -29,8 +29,8 @@ describe('GasPlant (PR-2b)', () => {
 
   it.each([
     ['moderate', 3],
-    ['high', 4],
-    ['very high', 5],
+    ['high', 5],
+    ['very high', 6],
   ] as const)('%s: two plumes of %i puffs each, only from the stacks', (band, puffs) => {
     const c = draw(band);
     const plumes = c.querySelectorAll('[data-art="smoke"]');
@@ -44,6 +44,19 @@ describe('GasPlant (PR-2b)', () => {
       expect(stacks.some((s) => Math.abs(cx - (s.x + 1.5)) < 0.01)).toBe(true);
       expect(cy).toBeLessThan(Math.max(...stacks.map((s) => s.top)));
     });
+  });
+
+  it('high and very high: a static column per stack, at least 62 units tall; moderate has none', () => {
+    expect(draw('moderate').querySelectorAll('[data-smoke-column]')).toHaveLength(0);
+    for (const band of ['high', 'very high'] as const) {
+      const c = draw(band);
+      expect(c.querySelectorAll('[data-smoke-column]')).toHaveLength(2);
+      c.querySelectorAll('[data-art="smoke"]').forEach((p) =>
+        expect(Number(p.getAttribute('data-plume-units'))).toBeGreaterThanOrEqual(62),
+      );
+    }
+    const vh = draw('very high').querySelector('[data-art="smoke"]')!;
+    expect(Number(vh.getAttribute('opacity'))).toBe(0.5);
   });
 
   it('Reduce Motion: 3 static puffs per stack, no animation class', () => {

@@ -12,7 +12,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { SceneType } from '@/hooks/useSceneType';
 import type { TimeOfDay } from '@/hooks/useTimeOfDay';
-import { getHazeTokens, type HazeBand } from '@/lib/sceneHaze';
+import { getHazeTokens, HAZE_TOP_DESAT, type HazeBand } from '@/lib/sceneHaze';
 
 /** Per-scene depth stops in that scene's SVG user units (y grows downward). */
 const HAZE_GEOMETRY: Record<
@@ -97,6 +97,11 @@ export function SceneHaze({ band, sceneType, timeOfDay, isFoggy, synthwaveMode }
   const top = stops.length ? stops[0][0] : 0;
   const span = Math.max(1, bottom - top);
   const gid = `scene-haze-${sceneType}-${band.replace(' ', '-')}`;
+  // Very high by day: a neutral veil desaturates the top of the sky a little.
+  const desat = tokens && tokens.band === 'very high' && !tokens.dim;
+  const skyTop = g.horizon - skyUnits;
+  const desatEnd = skyTop + HAZE_TOP_DESAT.reach * skyUnits;
+  const did = `${gid}-desat`;
 
   return (
     <div
@@ -133,7 +138,34 @@ export function SceneHaze({ band, sceneType, timeOfDay, isFoggy, synthwaveMode }
                 />
               ))}
             </linearGradient>
+            {desat && (
+              <linearGradient
+                id={did}
+                gradientUnits="userSpaceOnUse"
+                x1="0"
+                x2="0"
+                y1={skyTop}
+                y2={desatEnd}
+              >
+                <stop
+                  offset="0"
+                  stopColor={HAZE_TOP_DESAT.color}
+                  stopOpacity={HAZE_TOP_DESAT.opacity}
+                />
+                <stop offset="1" stopColor={HAZE_TOP_DESAT.color} stopOpacity={0} />
+              </linearGradient>
+            )}
           </defs>
+          {desat && (
+            <rect
+              data-haze-desat=""
+              x={vx - 2000}
+              y={skyTop - 200}
+              width={vw + 4000}
+              height={desatEnd - skyTop + 200}
+              fill={`url(#${did})`}
+            />
+          )}
           {/* Overflows the viewBox on purpose: covers the letterboxed sky and sides. */}
           <rect
             x={vx - 2000}

@@ -20,8 +20,8 @@ const BANDS = [
   ['very low', 20, 'none', 0],
   ['low', 110, 'none', 0],
   ['moderate', 180, 'moderate', 3],
-  ['high', 260, 'high', 4],
-  ['very high', 340, 'very high', 5],
+  ['high', 260, 'high', 5],
+  ['very high', 340, 'very high', 6],
 ] as const;
 
 const VIEWPORTS = [
@@ -85,6 +85,12 @@ for (const [vw, vh] of VIEWPORTS) {
           expect(b.x + b.width).toBeLessThan(plantBox.x + plantBox.width + 40);
           expect(b.y + b.height).toBeLessThanOrEqual(pb.y + 2);
         }
+        if (band !== 'moderate') {
+          // Design, 29 Oct 2026: a clearly visible column, at least 60 px tall at 390.
+          const col = (await plant.locator('[data-smoke-column]').first().boundingBox())!;
+          console.log(`smoke column ${vw}x${vh} ${band}: ${col.height.toFixed(1)}px`);
+          if (vw >= 390) expect(col.height).toBeGreaterThanOrEqual(60);
+        }
       }
       // Motion budget: transform/opacity only, no filters or blur on the new art.
       const filters = await scene
@@ -112,19 +118,40 @@ for (const [vw, vh] of VIEWPORTS) {
   }
 }
 
-test('night very high: warm glow, aviation lights, underlit smoke, no stars', async ({ page }) => {
-  test.setTimeout(90_000);
-  const scene = await openAt(page, { intensity: 340, index: 'very high', time: NIGHT, isDay: 0 });
-  await expect(scene).toHaveAttribute('data-time-of-day', 'night');
-  await expect(scene.locator('[data-art="haze"]')).toHaveAttribute('data-haze-mode', 'glow');
-  await expect(scene.locator('[data-gas-plant-light]')).toHaveCount(2);
-  await expect(scene.locator('[data-art="smoke"]')).toHaveCount(2);
-  if (SHOTS)
-    await page.screenshot({
-      path: `${SHOTS}/after-very-high-night-390x844.png`,
-      animations: 'disabled',
+for (const [vw, vh] of [
+  [390, 844],
+  [320, 568],
+] as const) {
+  test(`${vw}x${vh} night very high: lighter horizon murk, aviation lights, underlit smoke`, async ({
+    page,
+  }) => {
+    test.setTimeout(90_000);
+    const scene = await openAt(page, {
+      intensity: 340,
+      index: 'very high',
+      time: NIGHT,
+      isDay: 0,
+      vw,
+      vh,
     });
-});
+    await expect(scene).toHaveAttribute('data-time-of-day', 'night');
+    const haze = scene.locator('[data-art="haze"]');
+    await expect(haze).toHaveAttribute('data-haze-mode', 'glow');
+    // The murk still draws after dark (Design, 29 Oct 2026).
+    await expect(haze.locator('rect')).not.toHaveCount(0);
+    await expect(scene.locator('[data-gas-plant-light]')).toHaveCount(2);
+    await expect(scene.locator('[data-art="smoke"]')).toHaveCount(2);
+    if (SHOTS) {
+      // Let the data settle before the shot: no skeletons, stable layout.
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(4000);
+      await page.screenshot({
+        path: `${SHOTS}/after-very-high-night-${vw}x${vh}.png`,
+        animations: 'disabled',
+      });
+    }
+  });
+}
 
 test('Reduce Motion: 3 static puffs per stack at very high', async ({ page }) => {
   test.setTimeout(90_000);

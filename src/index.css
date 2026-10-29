@@ -1455,6 +1455,7 @@ body {
 .art-smoke-puff {
   /* PR-2b gas-plant smoke (LIFE-LIST A1): 6 px puff grows to 1.8x, rises 18 px
      straight up (no drift until wind direction is fetched) and fades over 6 s.
+     High and very high rise further (--smoke-rise, 64 and 72 units).
      One animated group; transform and opacity only. */
   animation: art-smoke 6s linear infinite;
 }
@@ -1467,7 +1468,7 @@ body {
     opacity: 1;
   }
   100% {
-    transform: translate(0, -18px) scale(1.8);
+    transform: translate(0, var(--smoke-rise, -18px)) scale(1.8);
     opacity: 0;
   }
 }

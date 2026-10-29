@@ -5,6 +5,8 @@ import {
   HAZE_MAX_OPACITY,
   showsSmoke,
   SMOKE_BY_BAND,
+  SMOKE_PLUME_UNITS,
+  showsSmokeColumn,
   STAR_HAZE_FACTOR,
   SUN_HALO_FACTOR,
 } from './sceneHaze';
@@ -41,9 +43,12 @@ describe('getHazeTokens', () => {
 
   it('matches the Q5 day table and never exceeds 0.45', () => {
     const vh = getHazeTokens('very high', 'midday')!;
-    expect(vh).toMatchObject({ tint: '#b39a7c', far: 0.42, back: 0.28, village: 0.14 });
+    // Design, 29 Oct 2026: warm grey-brown, ~15/30/45% over the lower 45% of the sky.
+    expect(vh).toMatchObject({ tint: '#b9b2a0', sky: 0.45, far: 0.45, back: 0.3, village: 0.15 });
     expect(vh.front).toBe(0.05);
-    expect(vh.skyReach).toBe(0.55);
+    expect(vh.skyReach).toBe(0.45);
+    expect(getHazeTokens('high', 'midday')!.sky).toBe(0.3);
+    expect(getHazeTokens('moderate', 'midday')!.sky).toBe(0.15);
     for (const band of ['moderate', 'high', 'very high'] as const) {
       for (const tod of ['dawn', 'morning', 'midday', 'sunset', 'dusk', 'night']) {
         for (const fog of [false, true]) {
@@ -58,16 +63,17 @@ describe('getHazeTokens', () => {
     expect(getHazeTokens('moderate', 'midday')!.front).toBe(0);
   });
 
-  it('after dark: low warm glow in the lowest 25% of the sky, hills at 60%', () => {
+  it('after dark: a lighter murk in the lowest 30% of the sky, hills at 60%', () => {
     const n = getHazeTokens('high', 'night')!;
-    expect(n.tint).toBe('#8a6e5a');
-    expect(n.sky).toBe(0.28);
-    expect(n.skyReach).toBe(0.25);
+    expect(n.tint).toBe('#9c9486');
+    expect(n.sky).toBe(0.25);
+    expect(n.skyReach).toBe(0.3);
+    expect(getHazeTokens('very high', 'night')!.sky).toBeGreaterThan(0);
     expect(n.back).toBeCloseTo(0.12, 3);
   });
 
   it('fog wins: sky wash is capped at 50%', () => {
-    expect(getHazeTokens('very high', 'midday', true)!.sky).toBe(0.21);
+    expect(getHazeTokens('very high', 'midday', true)!.sky).toBe(0.225);
   });
 });
 
@@ -79,12 +85,18 @@ describe('sun, stars and smoke by band', () => {
     expect(STAR_HAZE_FACTOR['very high']).toBe(0);
   });
 
-  it('smoke only at moderate and above, 3/4/5 puffs, never black', () => {
+  it('smoke only at moderate and above, 3/5/6 puffs, never black; a tall column at high and very high', () => {
     expect(showsSmoke('none')).toBe(false);
     expect(showsSmoke('moderate')).toBe(true);
     expect(SMOKE_BY_BAND.moderate.puffs).toBe(3);
-    expect(SMOKE_BY_BAND.high.puffs).toBe(4);
-    expect(SMOKE_BY_BAND['very high'].puffs).toBe(5);
+    expect(SMOKE_BY_BAND.high.puffs).toBe(5);
+    expect(SMOKE_BY_BAND['very high'].puffs).toBe(6);
+    expect(SMOKE_BY_BAND['very high'].opacity).toBe(0.5);
+    expect(SMOKE_PLUME_UNITS.high).toBeGreaterThanOrEqual(62);
+    expect(SMOKE_PLUME_UNITS['very high']).toBeGreaterThanOrEqual(62);
+    expect(showsSmokeColumn('moderate')).toBe(false);
+    expect(showsSmokeColumn('high')).toBe(true);
+    expect(showsSmokeColumn('none')).toBe(false);
   });
 
   it('already zero carbon (e.g. Scotland at 0 g): no haze and a smokeless plant (BRIEF Q5, REDRAW-PLAN Q2)', () => {

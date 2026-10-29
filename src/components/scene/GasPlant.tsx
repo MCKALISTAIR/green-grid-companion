@@ -28,7 +28,9 @@ import {
   SMOKE_NIGHT_UNDERLIGHT_OPACITY,
   SMOKE_PUFF,
   SMOKE_STATIC_PUFFS,
+  SMOKE_PLUME_UNITS,
   showsSmoke,
+  showsSmokeColumn,
   type HazeBand,
 } from '@/lib/sceneHaze';
 
@@ -47,6 +49,8 @@ export function GasPlant({ band, isNight, x = GAS_PLANT_X }: GasPlantProps) {
   // drift or lean, until wind_direction_10m is fetched (follow-up bug in BUGS.md).
   const puffCount = smoke ? (reduced ? SMOKE_STATIC_PUFFS : smoke.puffs) : 0;
   const r = SMOKE_PUFF.startPx / 2;
+  const rise = smoke && showsSmoke(band) ? SMOKE_PLUME_UNITS[band] : SMOKE_PUFF.risePx;
+  const column = smoke && showsSmokeColumn(band);
 
   return (
     <g data-art="gas-plant" data-smoke={smoke ? band : 'none'} aria-hidden="true">
@@ -107,11 +111,25 @@ export function GasPlant({ band, isNight, x = GAS_PLANT_X }: GasPlantProps) {
           const cx = s.x + GAS_PLANT_STACK.w / 2;
           const cy = s.top - r - 0.5;
           return (
-            <g key={`plume-${si}`} data-art="smoke" opacity={smoke.opacity}>
+            <g
+              key={`plume-${si}`}
+              data-art="smoke"
+              data-plume-units={rise}
+              opacity={smoke.opacity}
+              style={{ ['--smoke-rise' as string]: `-${rise}px` }}
+            >
+              {column && (
+                // Static tapered column, straight up: readable even when paused.
+                <path
+                  data-smoke-column=""
+                  d={`M${cx - r * 0.8} ${s.top} C${cx - r} ${s.top - rise * 0.4} ${cx - r * 1.9} ${s.top - rise * 0.75} ${cx - r * 1.7} ${s.top - rise} L${cx + r * 1.7} ${s.top - rise} C${cx + r * 1.9} ${s.top - rise * 0.75} ${cx + r} ${s.top - rise * 0.4} ${cx + r * 0.8} ${s.top} Z`}
+                  fill={isNight ? SMOKE_NIGHT_FILL : smoke.day}
+                />
+              )}
               {Array.from({ length: puffCount }).map((_, i) => {
                 const f = (i + 0.5) / puffCount;
                 // Static pose (Reduce Motion, or animations paused): spread up the plume.
-                const pose = `translate(0px, ${(-SMOKE_PUFF.risePx * f).toFixed(2)}px) scale(${(1 + (SMOKE_PUFF.endScale - 1) * f).toFixed(3)})`;
+                const pose = `translate(0px, ${(-rise * f).toFixed(2)}px) scale(${(1 + (SMOKE_PUFF.endScale - 1) * f).toFixed(3)})`;
                 const delay = -((i / puffCount) * SMOKE_PUFF.seconds + si * 0.9);
                 return (
                   <g

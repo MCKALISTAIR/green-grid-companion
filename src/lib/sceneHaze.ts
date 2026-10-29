@@ -43,30 +43,41 @@ export type ActiveHazeBand = Exclude<HazeBand, 'none'>;
 export const HAZE_MAX_OPACITY = 0.45;
 
 /**
- * Day (morning to sunset), Q5 table. Opacity per depth layer plus the sky wash,
- * which peaks at the horizon and is 0 at 55% of the sky height.
+ * Day (morning to sunset). Design, 29 Oct 2026 (#196 review): one warm grey-brown
+ * (#b9b2a0) wash over the lower 45% of the sky, peaking at the horizon and fading
+ * upward, at about 15% / 30% / 45% by band. The hill layers follow the same ramp.
  */
+export const HAZE_TINT = '#b9b2a0';
 export const HAZE_DAY: Record<
   ActiveHazeBand,
   { tint: string; far: number; back: number; village: number; front: number; sky: number }
 > = {
-  moderate: { tint: '#d8c9a6', far: 0.22, back: 0.14, village: 0.06, front: 0, sky: 0.22 },
-  high: { tint: '#c9b08a', far: 0.32, back: 0.2, village: 0.1, front: 0.03, sky: 0.32 },
-  'very high': { tint: '#b39a7c', far: 0.42, back: 0.28, village: 0.14, front: 0.05, sky: 0.42 },
+  moderate: { tint: HAZE_TINT, far: 0.15, back: 0.1, village: 0.05, front: 0, sky: 0.15 },
+  high: { tint: HAZE_TINT, far: 0.3, back: 0.2, village: 0.1, front: 0.03, sky: 0.3 },
+  'very high': { tint: HAZE_TINT, far: 0.45, back: 0.3, village: 0.15, front: 0.05, sky: 0.45 },
 };
 
-/** Dawn, dusk, night: low light-pollution glow in the lowest 25% of the sky. */
-export const HAZE_DIM_TINT = '#8a6e5a';
+/**
+ * Very high, day only: the top of the sky is desaturated a little with a neutral
+ * grey veil (30% at the top) that fades out by 55% of the sky height (Design, 29 Oct 2026).
+ */
+export const HAZE_TOP_DESAT = { color: '#a9adb0', opacity: 0.3, reach: 0.55 } as const;
+
+/**
+ * Dawn, dusk, night: a lighter murk on the horizon (lighter than the night sky,
+ * so the haze still reads after dark), in the lowest 30% of the sky.
+ */
+export const HAZE_DIM_TINT = '#9c9486';
 export const HAZE_DIM_SKY_PEAK: Record<ActiveHazeBand, number> = {
-  moderate: 0.2,
-  high: 0.28,
-  'very high': 0.36,
+  moderate: 0.15,
+  high: 0.25,
+  'very high': 0.35,
 };
 /** Hills get 60% of the day values after dark. */
 export const HAZE_DIM_HILL_FACTOR = 0.6;
 
 /** Fraction of the sky height (up from the horizon) where the sky wash reaches 0. */
-export const HAZE_SKY_REACH = { day: 0.55, dim: 0.25 } as const;
+export const HAZE_SKY_REACH = { day: 0.45, dim: 0.3 } as const;
 
 /** When fog and haze are both true the fog grade wins: the sky wash is capped at 50%. */
 export const HAZE_FOG_SKY_FACTOR = 0.5;
@@ -135,10 +146,24 @@ export const SMOKE_BY_BAND: Record<
   ActiveHazeBand,
   { puffs: number; day: string; opacity: number }
 > = {
-  moderate: { puffs: 3, day: '#e8e4dc', opacity: 0.55 },
-  high: { puffs: 4, day: '#cfc8bc', opacity: 0.65 },
-  'very high': { puffs: 5, day: '#b8b0a3', opacity: 0.75 },
+  moderate: { puffs: 3, day: '#e8e4dc', opacity: 0.35 },
+  high: { puffs: 5, day: '#cfc8bc', opacity: 0.42 },
+  'very high': { puffs: 6, day: '#b8b0a3', opacity: 0.5 },
 };
+/**
+ * Plume height in SVG units (Design, 29 Oct 2026): a clearly visible column at
+ * high and very high, at least 60 px tall at 390 wide (1 unit is about 1 px
+ * there). Moderate keeps the short wisp.
+ */
+export const SMOKE_PLUME_UNITS: Record<ActiveHazeBand, number> = {
+  moderate: 18,
+  high: 64,
+  'very high': 72,
+};
+/** High and very high draw a static tapered column under the puffs. */
+export function showsSmokeColumn(band: HazeBand): boolean {
+  return band === 'high' || band === 'very high';
+}
 export const SMOKE_NIGHT_FILL = '#8f8794';
 export const SMOKE_NIGHT_UNDERLIGHT = '#f2b36b';
 export const SMOKE_NIGHT_UNDERLIGHT_OPACITY = 0.35;
