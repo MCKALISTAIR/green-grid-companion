@@ -1,4 +1,6 @@
 import { useState, useMemo } from 'react';
+import { OctopusStaleNotice } from './OctopusStaleNotice';
+import { OCTOPUS_LINKED_CARD_COPY as LINKED } from '@/lib/voice/octopusLinkCopy';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -661,11 +663,15 @@ export function FootprintView() {
                   </div>
                   <span className="text-xs text-muted-foreground">
                     {meter.last_sync_at
-                      ? `Synced ${formatDistanceToNow(new Date(meter.last_sync_at), { addSuffix: true })}`
+                      ? LINKED.lastSynced(
+                          formatDistanceToNow(new Date(meter.last_sync_at), { addSuffix: true }),
+                        )
                       : 'Never synced'}
                   </span>
                 </div>
               ))}
+
+              <OctopusStaleNotice latestConsumption={status.latest_consumption} />
 
               <Button
                 variant="outline"
@@ -1260,7 +1266,8 @@ export function FootprintView() {
                   <h3 className="font-medium text-foreground">Potential Savings</h3>
                   <div className="text-sm text-muted-foreground mt-1 space-y-2">
                     <p>
-                      If all your usage had been in low-intensity periods, you&apos;d have saved{' '}
+                      If all your usage had been at 50 gCO₂/kWh (a low-carbon half hour), you&apos;d
+                      have saved{' '}
                       <strong className="text-foreground">
                         {insights.potentialSavings.toFixed(1)} kg CO₂
                       </strong>{' '}
@@ -1273,7 +1280,7 @@ export function FootprintView() {
                         <strong className="text-foreground">
                           {getImpactEquivalents(insights.potentialSavings).milesDriven} miles
                         </strong>{' '}
-                        in an average car.
+                        in an average petrol car.
                       </p>
                     </div>
                   </div>

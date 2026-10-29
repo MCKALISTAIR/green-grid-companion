@@ -29,6 +29,12 @@ export const SYNC_LOOKBACK_CAP_DAYS = 30;
 export const SYNC_OVERLAP_MS = 2 * DAY_MS;
 /** NESO /intensity/{from}/{to} allows at most 14 days; stay well under it. */
 export const NESO_WINDOW_DAYS = 7;
+/**
+ * BH-127: if the newest stored reading is older than this and Octopus sends
+ * nothing newer, the meter has stalled (meter exchange, no data from the DCC,
+ * wrong serial). That is a failed sync, not a success: last_sync_at must not move.
+ */
+export const STALL_AFTER_MS = 2 * DAY_MS;
 /** Octopus pages are 25,000 rows; 30 days is ~1,440. This only stops a runaway `next` loop. */
 export const OCTOPUS_MAX_PAGES = 10;
 export const DB_CHUNK_SIZE = 1000;
@@ -416,6 +422,20 @@ export async function syncMeter(
   if (fp.error) base.footprint_error = fp.error;
 
   if (storeError) return { ...base, error: storeError };
+
+  // BH-127: Octopus answered 200 but sent nothing newer than what we already
+  // hold, and that is over 48h old. Report it so the stall shows up in the
+  // cron result and logs, and leave last_sync_at alone so it stays truthful.
+  const latestKey = halfHourKey(latest.value);
+  if (latestKey !== null && now.getTime() - latestKey * HALF_HOUR_MS > STALL_AFTER_MS) {
+    const newestFetched = rows.reduce(
+      (m, r) => Math.max(m, halfHourKey(r.interval_start) ?? -Infinity),
+      -Infinity,
+    );
+    if (newestFetched <= latestKey) {
+      return { ...base, error: 'no_new_readings' };
+    }
+  }
 
   const marked = await deps.store.markSynced(opts.userId, opts.mpan, now.toISOString());
   if (marked.error) return { ...base, error: `last_sync_update: ${errText(marked.error)}` };

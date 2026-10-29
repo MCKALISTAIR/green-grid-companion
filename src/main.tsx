@@ -20,6 +20,7 @@ import { hydrateAppStorage } from './lib/appStorage';
 import { installExternalLinkHandler } from './lib/openExternal';
 import { captureOAuthRedirect, completeOAuthRedirect } from './lib/oauthRedirect';
 import { supabase } from './integrations/supabase/client';
+import { installStaleChunkReload } from './lib/staleChunkReload';
 import { installAnonMigration } from './lib/anonMigration';
 import { toast } from 'sonner';
 
@@ -27,6 +28,15 @@ import { toast } from 'sonner';
 // navigate (the "no postcode -> /onboarding" redirect used to drop them).
 const oauthReturn =
   typeof window !== 'undefined' ? captureOAuthRedirect(window.location.href) : null;
+
+// BH-131: an open tab whose old chunks were removed by a deploy reloads once.
+if (typeof window !== 'undefined') {
+  installStaleChunkReload({
+    target: window,
+    storage: sessionStorage,
+    reload: () => window.location.reload(),
+  });
+}
 
 // BH-129: move anonymous Octopus data to the account after any sign-in,
 // including a web OAuth return that lands outside Settings.

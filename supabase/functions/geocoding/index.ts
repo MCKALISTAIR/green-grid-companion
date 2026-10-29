@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
+import { safeErrorResponse } from '../_shared/safe-error.ts';
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
@@ -80,13 +81,13 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e) {
-    console.error('[GEOCODING] Unexpected error:', e);
-    return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : 'Unknown error' }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      },
+    return safeErrorResponse(
+      { code: 'geocoding_failed', error: 'Geocoding failed', status: 500, context: 'GEOCODING' },
+      e,
     );
+    return new Response(JSON.stringify({ error: 'Geocoding failed', code: 'geocoding_failed' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });

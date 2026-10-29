@@ -40,3 +40,22 @@ describe('rotating energy facts', () => {
     );
   });
 });
+
+describe('no live coal-free streak fact (BH-137)', () => {
+  it('never adds coal_free_current, even with an old stored streak', async () => {
+    const { getRandomFact } = await import('@/lib/energyFacts');
+    localStorage.setItem(
+      'coal-free-streak',
+      JSON.stringify({ streakStarted: '2024-10-01T00:00:00Z', lastCoalSeen: null }),
+    );
+    for (let i = 0; i < 200; i++) {
+      const f = getRandomFact(
+        { intensity: 120, windSpeed: 5, isNight: false, renewablesPct: 40 } as never,
+        'friendly',
+      );
+      expect(f.id).not.toBe('coal_free_current');
+      expect(f.text.trim()).not.toBe('');
+    }
+    localStorage.removeItem('coal-free-streak');
+  });
+});

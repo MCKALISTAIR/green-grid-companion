@@ -408,13 +408,15 @@ function HighlightsSlide({ data }: { data: YearWrappedData }) {
 
 function SummarySlide({ data, onClose: _onClose }: { data: YearWrappedData; onClose: () => void }) {
   return (
-    <div className="p-8 flex flex-col items-center justify-center flex-1 text-center gap-6">
+    // Short phones (<=640px tall): smaller trophy and padding so the trophy and
+    // heading fit on open without scrolling (BH-126).
+    <div className="p-8 [@media(max-height:640px)]:px-6 [@media(max-height:640px)]:py-4 flex flex-col items-center justify-center flex-1 text-center gap-6 [@media(max-height:640px)]:gap-4">
       <motion.div
         initial={{ scale: 0, rotate: -180 }}
         animate={{ scale: 1, rotate: 0 }}
         transition={{ type: 'spring' as const }}
       >
-        <Trophy className="w-16 h-16 text-chart-4" />
+        <Trophy className="w-16 h-16 [@media(max-height:640px)]:w-12 [@media(max-height:640px)]:h-12 text-chart-4" />
       </motion.div>
 
       <motion.div
@@ -453,7 +455,7 @@ function SummarySlide({ data, onClose: _onClose }: { data: YearWrappedData; onCl
         transition={{ delay: 0.6 }}
         className="text-sm text-muted-foreground"
       >
-        Thanks for watching the GB grid with us! 💚
+        Thanks for tracking the GB grid with&nbsp;us! 💚
       </motion.p>
     </div>
   );

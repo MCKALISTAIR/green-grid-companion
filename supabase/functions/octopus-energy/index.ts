@@ -4,6 +4,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const Deno: any;
 
+import { safeErrorResponse } from '../_shared/safe-error.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import {
   calculateMeterFootprint,
@@ -358,7 +359,8 @@ Deno.serve(async (req: Request) => {
                 readings: 0,
                 footprints_written: 0,
                 intensity_status: 0,
-                error: `exception: ${err instanceof Error ? err.message : String(err)}`,
+                // Logged above; the response carries a code, not the raw error text.
+                error: 'exception',
               });
             }
             for (const r of userResults) {
@@ -1012,11 +1014,16 @@ Deno.serve(async (req: Request) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'Unknown error';
-        return new Response(JSON.stringify({ error: message }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return safeErrorResponse(
+          {
+            code: 'sync_failed',
+            error: 'sync-consumption failed',
+            status: 400,
+            context: 'sync-consumption',
+            details: { user: userId.substring(0, 8) },
+          },
+          error,
+        );
       }
     }
 
@@ -1027,11 +1034,16 @@ Deno.serve(async (req: Request) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'Unknown error';
-        return new Response(JSON.stringify({ error: message }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return safeErrorResponse(
+          {
+            code: 'footprint_calculation_failed',
+            error: 'calculate-footprint failed',
+            status: 400,
+            context: 'calculate-footprint',
+            details: { user: userId.substring(0, 8) },
+          },
+          error,
+        );
       }
     }
 
@@ -1059,11 +1071,16 @@ Deno.serve(async (req: Request) => {
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
         );
       } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'Unknown error';
-        return new Response(JSON.stringify({ error: message }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return safeErrorResponse(
+          {
+            code: 'full_sync_failed',
+            error: 'full-sync failed',
+            status: 400,
+            context: 'full-sync',
+            details: { user: userId.substring(0, 8) },
+          },
+          error,
+        );
       }
     }
 
@@ -1473,9 +1490,12 @@ Deno.serve(async (req: Request) => {
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         console.error('Intelligent dispatch error:', message);
-        return new Response(JSON.stringify({ planned: [], completed: [], error: message }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return new Response(
+          JSON.stringify({ planned: [], completed: [], error: 'dispatch_fetch_failed' }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          },
+        );
       }
     }
 
@@ -1582,11 +1602,14 @@ Deno.serve(async (req: Request) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error: unknown) {
-    console.error('Octopus Energy function error:', error);
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return safeErrorResponse(
+      {
+        code: 'internal_error',
+        error: 'Something went wrong',
+        status: 500,
+        context: 'octopus-energy',
+      },
+      error,
+    );
   }
 });

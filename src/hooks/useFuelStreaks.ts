@@ -7,9 +7,11 @@ const STORAGE_KEY = 'fuel-streaks-v3';
 const RECORDS_KEY = 'fuel-streak-records-v2';
 const LAST_SEEN_KEY = 'fuel-last-seen-v1';
 
-// Fossil fuels we want to track "free" streaks for
+// Fossil fuels we want to track "free" streaks for. Not coal: GB has had no
+// coal power since 30 Sep 2024, so every day is coal-free and a "30d+ coal-free"
+// or "New record!" badge would just be the 30-day lookback cap (BH-137).
 // Note: Oil removed as UK grid hasn't used it for generation in years
-const FOSSIL_FUELS = ['coal', 'gas'];
+const FOSSIL_FUELS = ['gas'];
 
 // API endpoint for historical generation data
 const CARBON_API_BASE = 'https://api.carbonintensity.org.uk';
