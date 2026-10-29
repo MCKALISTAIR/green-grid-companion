@@ -23,7 +23,7 @@ import type { User } from '@supabase/supabase-js';
 import { Capacitor } from '@capacitor/core';
 import { APP_SCHEME } from '@/config';
 import { getAppleAuthorizationForDeletion } from '@/lib/appleRevocation';
-import { ANON_USER_ID_KEY } from '@/lib/anonMigration';
+import { ANON_USER_ID_KEY, rememberAnonUserId } from '@/lib/anonMigration';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -87,9 +87,9 @@ export function AccountBackup({
 
       // Sign-in data migration runs from main.tsx (BH-129, lib/anonMigration).
 
-      // Store anonymous user ID when signing out
+      // Store the user id on sign-out only if it was an anonymous user (BH-130).
       if (event === 'SIGNED_OUT' && previousUser?.id) {
-        localStorage.setItem(ANON_USER_ID_KEY, previousUser.id);
+        rememberAnonUserId(previousUser, localStorage);
       }
     });
 
@@ -104,7 +104,7 @@ export function AccountBackup({
       data: { session: currentSession },
     } = await supabase.auth.getSession();
     if (currentSession?.user?.id) {
-      localStorage.setItem(ANON_USER_ID_KEY, currentSession.user.id);
+      rememberAnonUserId(currentSession.user, localStorage);
     }
 
     try {
@@ -230,8 +230,9 @@ export function AccountBackup({
     setLoading(true);
 
     try {
-      // Store current user ID for data migration
-      localStorage.setItem(ANON_USER_ID_KEY, user.id);
+      // BH-130: Octopus data can't move between two Google/Apple accounts (the
+      // server only migrates from anonymous users), so don't queue a migration.
+      localStorage.removeItem(ANON_USER_ID_KEY);
 
       // Sign out first
       await supabase.auth.signOut();
@@ -255,12 +256,9 @@ export function AccountBackup({
 
       if (error) {
         toast.error(`Switch failed: ${error.message}`);
-        localStorage.removeItem(ANON_USER_ID_KEY);
       }
-      // On redirect, the onAuthStateChange SIGNED_IN handler will trigger migration
     } catch {
       toast.error("Couldn't switch accounts. Please try again.");
-      localStorage.removeItem(ANON_USER_ID_KEY);
     } finally {
       setLoading(false);
       setSwitchTarget(null);
@@ -459,9 +457,9 @@ export function AccountBackup({
             <AlertDialogHeader>
               <AlertDialogTitle>Switch to {alternateProviderName}?</AlertDialogTitle>
               <AlertDialogDescription>
-                We&apos;ll move your energy data (Octopus meters, usage history and carbon
-                footprint) to your new {alternateProviderName} account, then sign you out so you can
-                sign in with {alternateProviderName}.
+                We&apos;ll sign you out so you can sign in with {alternateProviderName}. Your
+                Octopus link, usage history and carbon footprint stay with this account and
+                won&apos;t move across. You&apos;ll need to link Octopus again after you switch.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

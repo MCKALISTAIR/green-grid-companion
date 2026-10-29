@@ -28,6 +28,24 @@ export interface AnonMigrationDeps {
   onError?: (error: unknown) => void;
 }
 
+/**
+ * BH-130: store a user id for migration only when that user is anonymous.
+ * The server (octopus-energy migrate-data) only moves data off anonymous
+ * accounts, so storing a Google/Apple user's id just queued a call that was
+ * always refused. Clears any stale id otherwise.
+ */
+export function rememberAnonUserId(
+  user: { id?: string; is_anonymous?: boolean } | null | undefined,
+  storage: Pick<Storage, 'setItem' | 'removeItem'>,
+): boolean {
+  if (user?.id && user.is_anonymous === true) {
+    storage.setItem(ANON_USER_ID_KEY, user.id);
+    return true;
+  }
+  storage.removeItem(ANON_USER_ID_KEY);
+  return false;
+}
+
 /** Run migrate-data once for a signed-in (non-anonymous) session, if an anon id is stored. */
 export async function migrateAnonData(
   session: Session | null,
