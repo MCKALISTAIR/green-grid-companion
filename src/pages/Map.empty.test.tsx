@@ -34,11 +34,9 @@ describe('Rank map empty state (Design state 5)', () => {
     renderMap();
     expect(await screen.findByText('No regional figures right now')).toBeInTheDocument();
     expect(
-      screen.getByText(
-        'NESO has not sent regional data yet. National figures are still available on Home.',
-      ),
+      screen.getByText("NESO hasn't sent regional data yet. National figures are still on Home."),
     ).toBeInTheDocument();
-    expect(screen.getByText('Leaderboard')).toBeInTheDocument();
+    expect(screen.getByText('Rank')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
     expect(getAllRegions).toHaveBeenCalledTimes(2);
   });

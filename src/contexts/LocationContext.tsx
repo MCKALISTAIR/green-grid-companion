@@ -84,7 +84,7 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
             setCoordinates(resolved);
           } else {
             logger.warn('Could not resolve postcode', { postcode });
-            setError('Could not resolve location from postcode');
+            setError("Couldn't find that postcode");
             // Fallback to default if we can't resolve?
             // Or keep previous? Let's set to null or default to indicate failure.
             // If we set to default (London), it might be misleading if the user typed "Edinburgh".
@@ -132,7 +132,7 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
       } catch (err) {
         if (!isMounted) return;
         logger.error('Error updating location', { error: err });
-        setError('Failed to update location');
+        setError("Couldn't update your location");
       } finally {
         if (isMounted) {
           setIsLoading(false);

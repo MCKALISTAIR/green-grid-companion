@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useEnergyFacts } from '@/hooks/useEnergyFacts';
 import { useTimeOfDay } from '@/hooks/useTimeOfDay';
 import { useWeatherData } from '@/hooks/useWeatherData';
-import { useCoalFreeStreak, formatStreak } from '@/hooks/useCoalFreeStreak';
+import { useCoalFreeStreak } from '@/hooks/useCoalFreeStreak';
 import { GenerationMix } from '@/lib/carbonApi';
 import { MessageCircle } from 'lucide-react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -100,7 +100,7 @@ export function EnergyFactBubble({
             whileTap={!shouldReduceMotion ? { scale: 0.96 } : {}}
             role="button"
             tabIndex={0}
-            aria-label={`${currentFact.text}. Press to cycle facts.`}
+            aria-label={`${currentFact.text}. Tap for another fact.`}
             className={`
               relative cursor-pointer select-none transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary/50
               ${
@@ -164,12 +164,9 @@ export function EnergyFactBubble({
                       </span>
                     )}
                     {currentFact.id === 'coal_free_current' &&
-                    coalStreak.isActive &&
-                    coalStreak.days * 24 + coalStreak.hours >= 24
-                      ? `The UK has been coal-free for ${formatStreak(coalStreak)}!`
-                      : currentFact.id === 'coal_free_current'
-                        ? null // Don't show this fact if streak < 24h
-                        : currentFact.text}
+                    !(coalStreak.isActive && coalStreak.days * 24 + coalStreak.hours >= 24)
+                      ? null // Don't show this fact if streak < 24h
+                      : currentFact.text}
                     {variant === 'plain' && (
                       <span className="text-primary/60 text-lg leading-none select-none align-top ml-1 rotate-180 inline-block transform translate-y-0.5">
                         "
@@ -179,7 +176,7 @@ export function EnergyFactBubble({
                 </AnimatePresence>
                 {variant === 'bubble' && (
                   <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal self-end mt-1 block">
-                    ↻ tap to cycle
+                    ↻ tap for another
                   </span>
                 )}
               </div>

@@ -78,7 +78,7 @@ export function DashboardViewTabs({
   return (
     <div
       role="tablist"
-      aria-label="Dashboard Views"
+      aria-label="Home views"
       onKeyDown={onKeyDown}
       className="relative flex p-1.5 bg-muted/80 rounded-2xl overflow-hidden select-none border border-border/40"
     >

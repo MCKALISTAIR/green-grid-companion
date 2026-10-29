@@ -51,8 +51,7 @@ export default function Glossary() {
     {
       id: 'solar',
       name: 'Solar',
-      description:
-        'Clean energy generated from sunlight via photovoltaic panels. Highly time-dependent.',
+      description: 'Clean energy from sunlight, via solar panels. Only works in daylight.',
       icon: Sun,
       category: 'Renewable',
     },
@@ -74,7 +73,7 @@ export default function Glossary() {
       id: 'biomass',
       name: 'Biomass',
       description:
-        'Energy produced by burning organic materials. While often technically classified as renewable, it emits CO₂ during combustion.',
+        "Energy from burning organic material. It's classed as renewable, but burning it still releases CO₂.",
       icon: Leaf,
       category: 'Combustion',
     },
@@ -90,7 +89,7 @@ export default function Glossary() {
       id: 'coal',
       name: 'Coal',
       description:
-        'Burning coal. The most carbon-intensive form of electricity generation. Being phased out.',
+        "No longer used on the GB grid. Britain's last coal plant, Ratcliffe-on-Soar, closed on 30 September 2024.",
       icon: Factory,
       category: 'Fossil Fuel',
     },
@@ -193,10 +192,10 @@ export default function Glossary() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    **National**: The average for the entire UK grid.
+                    **National**: The average for the whole GB grid.
                     <br />
-                    **Regional**: Your specific local grid (DNO). Does your area produce more wind?
-                    Are you near a nuclear plant?
+                    **Regional**: Your own local grid area (DNO). Does your area make more wind? Are
+                    you near a nuclear plant?
                   </p>
                 </CardContent>
               </Card>
@@ -212,19 +211,17 @@ export default function Glossary() {
           </div>
           <Card className="bg-gradient-to-br from-background to-muted/50">
             <CardHeader>
-              <CardTitle className="text-base font-medium">
-                Where does this data come from?
-              </CardTitle>
+              <CardTitle className="text-base font-medium">Where&apos;s this data from?</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 text-sm text-muted-foreground leading-relaxed">
               <p>
-                We source our data directly from **NESO** (the National Energy System Operator).
-                They manage the flow of electricity across Great Britain in real-time.
+                Our data comes straight from <strong>NESO</strong> (the National Energy System
+                Operator), who run Great Britain&apos;s electricity system in real time.
               </p>
               <div className="bg-background/50 p-3 rounded-lg border border-border/50">
                 <h4 className="font-semibold text-foreground mb-1 flex items-center gap-2">
                   <Sun className="w-4 h-4 text-orange-500" />
-                  The "Embedded Generation" Challenge
+                  The hidden solar and wind
                 </h4>
                 <p>
                   Big power stations (like nuclear or wind farms) are easy to track because they
@@ -233,11 +230,8 @@ export default function Glossary() {
                   meters.
                 </p>
                 <p className="mt-2">
-                  To solve this, NESO uses sophisticated **AI and weather models** to estimate how
-                  much "Embedded Generation" is happening.
-                  <br />
-                  So when you see "Solar" data here, it's actually a smart blend of real meter
-                  readings and high-tech weather forecasting!
+                  So NESO estimates how much they&apos;re making with its own forecasting model. The
+                  solar figure here is NESO&apos;s best estimate, not a meter reading.
                 </p>
               </div>
             </CardContent>

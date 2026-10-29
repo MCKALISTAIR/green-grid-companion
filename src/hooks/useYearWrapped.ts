@@ -71,7 +71,7 @@ export function useYearWrapped() {
       }
 
       if (allData.length === 0) {
-        setError('No data available for this year');
+        setError('No data for this year yet');
         setIsLoading(false);
         return;
       }
@@ -81,7 +81,7 @@ export function useYearWrapped() {
       setData(result);
     } catch (err) {
       console.error('Error fetching year wrapped data:', err);
-      setError('Failed to load year data');
+      setError("Couldn't load your year");
     } finally {
       setIsLoading(false);
     }

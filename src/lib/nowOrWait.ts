@@ -344,8 +344,7 @@ export function describeAnyTime(
     : `It stays about the same for ${span}${around}, so there's no cleaner time to wait for.`;
 }
 
-export const MISSING_SLOTS_NOTE =
-  'Some half hours are missing from the forecast, so this is based on the hours we have.';
+export const MISSING_SLOTS_NOTE = 'Some half hours are missing, so this uses the ones we have.';
 export const MISSING_DATA_TITLE = 'Some of the forecast is missing';
 export const MISSING_DATA_DETAIL =
   "Half hours are missing from the forecast, so we can't compare starting now with later yet.";

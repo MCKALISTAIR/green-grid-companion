@@ -29,9 +29,10 @@ interface YearWrappedProps {
   year?: number;
 }
 
-type SlideType = 'intro' | 'coal' | 'renewables' | 'intensity' | 'highlights' | 'summary';
+type SlideType = 'intro' | 'renewables' | 'intensity' | 'highlights' | 'summary';
 
-const SLIDES: SlideType[] = ['intro', 'coal', 'renewables', 'intensity', 'highlights', 'summary'];
+// C2-16: the Coal-Free Days slide was removed (every day is coal-free since Oct 2024).
+const SLIDES: SlideType[] = ['intro', 'renewables', 'intensity', 'highlights', 'summary'];
 
 export function YearWrapped({
   open,
@@ -67,7 +68,7 @@ export function YearWrapped({
   };
 
   return (
-    <ResponsiveDialog detents="tall" open={open} onOpenChange={onOpenChange}>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
       <ResponsiveDialogContent className="max-w-lg p-0 overflow-hidden bg-gradient-to-br from-background via-background to-primary/5 border-primary/20">
         {isLoading ? (
           <LoadingSlide progress={progress} year={year} />
@@ -81,10 +82,9 @@ export function YearWrapped({
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
-              className="min-h-[500px] flex flex-col"
+              className="sm:min-h-[500px] flex flex-col"
             >
               {SLIDES[currentSlide] === 'intro' && <IntroSlide data={data} />}
-              {SLIDES[currentSlide] === 'coal' && <CoalSlide data={data} />}
               {SLIDES[currentSlide] === 'renewables' && <RenewablesSlide data={data} />}
               {SLIDES[currentSlide] === 'intensity' && <IntensitySlide data={data} />}
               {SLIDES[currentSlide] === 'highlights' && <HighlightsSlide data={data} />}
@@ -142,7 +142,7 @@ export function YearWrapped({
 
 function LoadingSlide({ progress, year }: { progress: number; year: number }) {
   return (
-    <div className="p-8 flex flex-col items-center justify-center min-h-[500px] text-center gap-6">
+    <div className="p-8 flex flex-col items-center justify-center sm:min-h-[500px] text-center gap-6">
       <Sparkles className="w-16 h-16 text-primary animate-pulse" />
       <div>
         <h2 className="text-2xl font-bold mb-2">Your {year} Grid Wrapped</h2>
@@ -158,7 +158,7 @@ function LoadingSlide({ progress, year }: { progress: number; year: number }) {
 
 function ErrorSlide({ error, onClose }: { error: string; onClose: () => void }) {
   return (
-    <div className="p-8 flex flex-col items-center justify-center min-h-[500px] text-center gap-6">
+    <div className="p-8 flex flex-col items-center justify-center sm:min-h-[500px] text-center gap-6">
       <X className="w-16 h-16 text-destructive" />
       <div>
         <h2 className="text-2xl font-bold mb-2">Oops!</h2>
@@ -193,64 +193,8 @@ function IntroSlide({ data }: { data: YearWrappedData }) {
         transition={{ delay: 0.6 }}
         className="text-muted-foreground max-w-xs"
       >
-        Your year in UK electricity, from {data.totalDataPoints.toLocaleString()} data points
+        Your year on the GB grid, from {data.totalDataPoints.toLocaleString()} data points
       </motion.p>
-    </div>
-  );
-}
-
-function CoalSlide({ data }: { data: YearWrappedData }) {
-  const formatDateRange = (start: string, end: string) => {
-    const startDate = parse(start, 'yyyy-MM-dd', new Date());
-    const endDate = parse(end, 'yyyy-MM-dd', new Date());
-    return `${format(startDate, 'MMM d')} - ${format(endDate, 'MMM d')}`;
-  };
-
-  return (
-    <div className="p-8 flex flex-col items-center justify-center flex-1 text-center gap-6">
-      <motion.div
-        initial={{ scale: 0, rotate: -180 }}
-        animate={{ scale: 1, rotate: 0 }}
-        transition={{ type: 'spring' as const }}
-        className="relative"
-      >
-        <Flame className="w-20 h-20 text-muted-foreground" />
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.3 }}
-          className="absolute -top-2 -right-2 bg-primary text-primary-foreground rounded-full p-1"
-        >
-          <X className="w-5 h-5" />
-        </motion.div>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-      >
-        <h2 className="text-xl font-semibold text-muted-foreground mb-1">Coal-Free Days</h2>
-        <p className="text-5xl font-bold text-primary">{data.coalFreeDays}</p>
-      </motion.div>
-
-      {data.longestCoalFree && data.longestCoalFree.days > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="bg-card/50 rounded-lg p-4 border border-border/50"
-        >
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-            <Trophy className="w-4 h-4 text-chart-4" />
-            Longest streak
-          </div>
-          <p className="text-2xl font-bold">{data.longestCoalFree.days} days</p>
-          <p className="text-xs text-muted-foreground">
-            {formatDateRange(data.longestCoalFree.startDate, data.longestCoalFree.endDate)}
-          </p>
-        </motion.div>
-      )}
     </div>
   );
 }
@@ -489,10 +433,6 @@ function SummarySlide({ data, onClose: _onClose }: { data: YearWrappedData; onCl
         className="grid grid-cols-2 gap-3 w-full max-w-xs text-left"
       >
         <div className="bg-card/50 rounded-lg p-3 border border-border/50">
-          <p className="text-2xl font-bold text-primary">{data.coalFreeDays}</p>
-          <p className="text-xs text-muted-foreground">Coal-free days</p>
-        </div>
-        <div className="bg-card/50 rounded-lg p-3 border border-border/50">
           <p className="text-2xl font-bold">{data.avgRenewableShare}%</p>
           <p className="text-xs text-muted-foreground">Avg renewable</p>
         </div>
@@ -500,7 +440,8 @@ function SummarySlide({ data, onClose: _onClose }: { data: YearWrappedData; onCl
           <p className="text-2xl font-bold">{data.avgIntensity}</p>
           <p className="text-xs text-muted-foreground">Avg gCO₂/kWh</p>
         </div>
-        <div className="bg-card/50 rounded-lg p-3 border border-border/50">
+        {/* Spans both columns now there are three stats (C2-16). */}
+        <div className="col-span-2 bg-card/50 rounded-lg p-3 border border-border/50">
           <p className="text-2xl font-bold">{data.totalDataPoints.toLocaleString()}</p>
           <p className="text-xs text-muted-foreground">Data points</p>
         </div>
@@ -512,7 +453,7 @@ function SummarySlide({ data, onClose: _onClose }: { data: YearWrappedData; onCl
         transition={{ delay: 0.6 }}
         className="text-sm text-muted-foreground"
       >
-        Thanks for tracking the UK grid with us! 💚
+        Thanks for watching the GB grid with us! 💚
       </motion.p>
     </div>
   );

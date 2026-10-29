@@ -87,7 +87,7 @@ export function NotificationSettings({ onClose: _onClose }: NotificationSettings
             <div>
               <p className="text-sm font-medium text-foreground">Not supported</p>
               <p className="text-xs text-muted-foreground">
-                Your browser does not support notifications.
+                This browser can&apos;t show notifications.
               </p>
             </div>
           </div>
@@ -104,8 +104,8 @@ export function NotificationSettings({ onClose: _onClose }: NotificationSettings
                 <p className="text-sm font-medium text-destructive">Notifications blocked</p>
                 <p className="text-xs text-muted-foreground">
                   {isNative
-                    ? 'Open your device Settings > GridSense > Notifications to enable.'
-                    : 'Please enable notifications in your browser settings, then refresh.'}
+                    ? 'To turn them on, go to Settings > GridSense > Notifications.'
+                    : 'Turn notifications on in your browser settings, then refresh.'}
                 </p>
               </div>
             </div>
@@ -152,7 +152,7 @@ export function NotificationSettings({ onClose: _onClose }: NotificationSettings
               <Bell className="w-5 h-5 text-muted-foreground" />
               <div>
                 <p className="text-sm font-medium text-foreground">Test Notification</p>
-                <p className="text-xs text-muted-foreground">Verify notifications are working</p>
+                <p className="text-xs text-muted-foreground">Check they&apos;re working</p>
               </div>
             </div>
             <Button
@@ -192,7 +192,7 @@ export function NotificationSettings({ onClose: _onClose }: NotificationSettings
             <div>
               <h3 className="font-medium text-foreground">Best Time to Use Energy</h3>
               <p className="text-sm text-muted-foreground">
-                Get notified when it's perfect for running appliances or charging devices
+                A nudge when the grid&apos;s clean enough for big loads or charging
               </p>
             </div>
           </div>
@@ -230,10 +230,10 @@ export function NotificationSettings({ onClose: _onClose }: NotificationSettings
                 <div className="space-y-0.5 pr-4">
                   <div className="text-sm font-medium">Live Accuracy Mode</div>
                   <p className="text-[10px] text-muted-foreground">
-                    Uses live checks instead of pre-scheduling green windows.
+                    Checks the grid live instead of scheduling alerts in advance.
                     {isNative
                       ? ' (Background Fetch, which may use slightly more battery.)'
-                      : ' (Tab must remain open.)'}{' '}
+                      : ' (Keep this tab open.)'}{' '}
                     Planner reminders still work.
                   </p>
                 </div>
@@ -266,7 +266,7 @@ export function NotificationSettings({ onClose: _onClose }: NotificationSettings
             <div>
               <h3 className="font-medium text-foreground">Avoid High Carbon Times</h3>
               <p className="text-sm text-muted-foreground">
-                Get warned when the grid gets dirty so you can delay heavy usage
+                A heads-up when the grid gets dirty, so you can hold off big loads
               </p>
             </div>
           </div>
@@ -313,7 +313,7 @@ export function NotificationSettings({ onClose: _onClose }: NotificationSettings
             <div>
               <h3 className="font-medium text-foreground">Daily Energy Outlook</h3>
               <p className="text-sm text-muted-foreground">
-                Morning summary with best times to use energy today
+                A morning rundown of today&apos;s cleanest times
               </p>
             </div>
           </div>
@@ -340,67 +340,58 @@ export function NotificationSettings({ onClose: _onClose }: NotificationSettings
         )}
       </Card>
 
-      {/* Weekly Digest — server push not wired from Settings yet */}
-      <Card className="p-4 space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-              <CalendarDays className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="font-medium text-foreground">Weekly Digest</h3>
-                <Badge variant="secondary" className="text-[10px]">
-                  Coming soon
-                </Badge>
+      {/*
+        Weekly Digest and Monthly Report stay hidden until server push delivery ships
+        (Design copy pass C2-09: no placeholder "Coming soon" rows in store builds).
+      */}
+      {DIGEST_DELIVERY_AVAILABLE && (
+        <>
+          <Card className="p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                  <CalendarDays className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-medium text-foreground">Weekly Digest</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Summary of your carbon footprint &amp; best times
+                  </p>
+                </div>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Summary of your carbon footprint &amp; best times
-              </p>
+              <Switch checked={false} disabled aria-label="Weekly digest" />
             </div>
-          </div>
-          <Switch checked={false} disabled aria-label="Weekly digest coming soon" />
-        </div>
-        {!DIGEST_DELIVERY_AVAILABLE && (
-          <p className="text-xs text-muted-foreground border-t border-border pt-3">
-            Digests need reliable server push registration. We&apos;ve disabled this toggle so it
-            can&apos;t look enabled without delivering.
-          </p>
-        )}
-      </Card>
+          </Card>
 
-      {/* Monthly Report — server push not wired from Settings yet */}
-      <Card className="p-4 space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-accent/50 flex items-center justify-center">
-              <FileText className="w-5 h-5 text-accent-foreground" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="font-medium text-foreground">Monthly Report</h3>
-                <Badge variant="secondary" className="text-[10px]">
-                  Coming soon
-                </Badge>
+          <Card className="p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-accent/50 flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-accent-foreground" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-medium text-foreground">Monthly Report</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Detailed carbon analysis with trends
+                  </p>
+                </div>
               </div>
-              <p className="text-sm text-muted-foreground">Detailed carbon analysis with trends</p>
+              <Switch checked={false} disabled aria-label="Monthly report" />
             </div>
-          </div>
-          <Switch checked={false} disabled aria-label="Monthly report coming soon" />
-        </div>
-        {!DIGEST_DELIVERY_AVAILABLE && (
-          <p className="text-xs text-muted-foreground border-t border-border pt-3">
-            Same as weekly digests: the preview below is only an example until push delivery ships.
-          </p>
-        )}
-        <div className="pt-1">
-          <MonthlyReportPreview />
-        </div>
-      </Card>
+            <div className="pt-1">
+              <MonthlyReportPreview />
+            </div>
+          </Card>
+        </>
+      )}
 
       {!isSupported && (
         <p className="text-xs text-center text-muted-foreground">
-          Notifications are not supported in this browser.
+          This browser can&apos;t show notifications.
         </p>
       )}
 

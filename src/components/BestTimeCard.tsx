@@ -34,7 +34,7 @@ export function BestTimeSlot({ forecast }: BestTimeCardProps) {
             <div className="flex items-center gap-2 flex-wrap">
               <BatteryCharging className="w-4 h-4 text-intensity-very-low-text" />
               <span className="text-sm font-medium text-foreground">
-                {isNow ? "Load-shift now. It's the best time." : 'Best time to load-shift'}
+                {isNow ? "Now's the best time for big loads." : 'Best time for big loads'}
               </span>
               {isNow && (
                 <span className="flex items-center gap-1.5 bg-intensity-very-low/20 text-intensity-very-low-text px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider">
@@ -81,7 +81,9 @@ export function WorstTimeSlot({ forecast, intensity, lastUpdated = null }: BestT
       ? getNowOrWaitDecision(intensity, forecast, now, lastUpdated).action
       : null;
   const title =
-    isNow && nowAction === 'use_now' ? 'Dirtiest stretch of the forecast' : 'Avoid high usage';
+    isNow && nowAction === 'use_now'
+      ? 'Dirtiest stretch of the forecast'
+      : 'Worst time for big loads';
 
   return (
     <motion.div whileHover={{ scale: 1.025, y: -2 }} transition={{ duration: 0.2 }}>

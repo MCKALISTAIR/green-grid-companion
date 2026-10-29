@@ -34,39 +34,36 @@ interface ChangelogEntry {
 const changelog: ChangelogEntry[] = [
   {
     version: 'v1.6.0',
-    date: new Date().toISOString().split('T')[0],
+    date: '2026-07-18',
     title: 'Performance & Playful Motion',
     changes: [
       {
         type: 'feature',
-        description: 'Playful motion: Spring animations and morphing layout for fact bubbles',
+        description: 'Bouncier animations, including the fact bubbles',
       },
       {
         type: 'feature',
-        description:
-          'Dynamic Onboarding: Ambient background scenes morphing in sync with setup steps',
+        description: 'Onboarding scenes now change as you go through setup',
       },
       {
         type: 'improvement',
-        description:
-          'Fluid page loading: Smooth spring exit-and-entry transitions between loading skeletons and page content',
+        description: 'Smoother transitions as pages load',
       },
       {
         type: 'improvement',
-        description: 'Smart caching: Native geocoding caching layer to prevent API limits',
+        description: "We now save location lookups so we don't hit service limits",
       },
       {
         type: 'improvement',
-        description: 'Smart sequencing: Energy facts are filtered to never repeat consecutively',
+        description: 'Energy facts no longer repeat back to back',
       },
       {
         type: 'technical',
-        description: 'Optimized build: Rollup code-splitting reduces vendor bundle size by 38%',
+        description: "Slimmed down the app's code: the main bundle is 38% smaller",
       },
       {
         type: 'technical',
-        description:
-          'Asset compression: Favicon and PWA icons compressed, saving 855KB of load footprint',
+        description: 'Smaller icons, saving 855KB',
       },
     ],
   },
@@ -79,7 +76,7 @@ const changelog: ChangelogEntry[] = [
       { type: 'feature', description: 'Cloud Sync: Back up your data with Apple/Google sign-in' },
       { type: 'feature', description: 'Enhanced Onboarding: House type selection & welcome tour' },
       { type: 'improvement', description: 'Interactive Product Tour for new users' },
-      { type: 'improvement', description: 'Refined Octopus "Welcome Back" experience' },
+      { type: 'improvement', description: 'A nicer welcome back for Octopus users' },
     ],
   },
   {
@@ -90,12 +87,12 @@ const changelog: ChangelogEntry[] = [
       { type: 'fix', description: 'Fixed scene layout stretching and height issues' },
       { type: 'improvement', description: 'Improved commentary text alignment' },
       { type: 'fix', description: 'Resolved "Grid Malfunction" crash' },
-      { type: 'fix', description: 'Fixed intensity card occlusion on small screens' },
+      { type: 'fix', description: 'Fixed the intensity card hiding on small screens' },
     ],
   },
   {
     version: 'v1.4.0',
-    date: new Date().toISOString().split('T')[0],
+    date: '2026-01-30',
     title: 'Gamification & Time Travel',
     changes: [
       { type: 'feature', description: 'Grid Time Machine: Explore historical carbon data' },
@@ -103,8 +100,8 @@ const changelog: ChangelogEntry[] = [
         type: 'feature',
         description: 'Grid Guardian Achievements: Unlock badges for green habits',
       },
-      { type: 'feature', description: 'Secret Builder Mode: Customize your dashboard scene' },
-      { type: 'feature', description: 'Vintage filter for historical data visualization' },
+      { type: 'feature', description: 'Secret Builder Mode: Customise your home scene' },
+      { type: 'feature', description: 'Vintage filter for historical charts' },
       { type: 'improvement', description: 'New "Badges" section in Settings' },
     ],
   },
@@ -114,8 +111,8 @@ const changelog: ChangelogEntry[] = [
     title: 'Reliability & Onboarding',
     changes: [
       { type: 'feature', description: 'New Onboarding flow with notification permissions' },
-      { type: 'feature', description: 'Production-grade error tracking with Sentry' },
-      { type: 'technical', description: 'Automated version synchronization' },
+      { type: 'feature', description: 'Better crash reporting (Sentry)' },
+      { type: 'technical', description: 'Version numbers now stay in sync' },
       { type: 'fix', description: 'Fixed iOS notification permission configuration' },
     ],
   },
@@ -124,26 +121,17 @@ const changelog: ChangelogEntry[] = [
     date: '2026-01-29',
     title: 'Seamless Data Updates',
     changes: [
-      { type: 'feature', description: 'Smart background refresh synced to NESO update schedule' },
+      {
+        type: 'feature',
+        description: 'Refreshes in the background when NESO publishes new figures',
+      },
       { type: 'feature', description: 'Animated intensity counter with directional indicators' },
       {
         type: 'improvement',
-        description: 'Removed "Waiting..." label - data now updates silently',
+        description: 'Removed the "Waiting..." label. Data updates quietly',
       },
       { type: 'improvement', description: 'Haptic feedback on intensity changes (iOS)' },
-      { type: 'fix', description: 'Fixed 401 errors when not logged in' },
-    ],
-  },
-  {
-    version: 'v1.1.0',
-    date: '2026-01-28',
-    title: 'Tesla Integration',
-    changes: [
-      { type: 'feature', description: 'Complete Tesla integration for Vehicles and Energy Sites' },
-      { type: 'feature', description: 'View real-time battery level, charging status, and range' },
-      { type: 'feature', description: 'Monitor Solar and Powerwall status' },
-      { type: 'track', description: 'Track carbon saved vs average grid intensity' },
-      { type: 'improvement', description: 'Secure OAuth linking with official Tesla login' },
+      { type: 'fix', description: 'Fixed sign-in errors when logged out' },
     ],
   },
   {
@@ -153,8 +141,8 @@ const changelog: ChangelogEntry[] = [
     changes: [
       { type: 'feature', description: 'Octopus Energy integration for smart meter data' },
       { type: 'feature', description: 'Personal carbon footprint tracking with charts' },
-      { type: 'feature', description: 'Green Energy Score with achievements' },
-      { type: 'feature', description: 'Weekly digest notifications' },
+      { type: 'feature', description: 'Green Score with achievements' },
+      { type: 'feature', description: 'Weekly digest (coming soon)' },
       { type: 'improvement', description: 'Improved data caching for faster loading' },
     ],
   },
@@ -167,7 +155,7 @@ const changelog: ChangelogEntry[] = [
       { type: 'feature', description: 'Real-time weather effects synced via Open-Meteo API' },
       { type: 'feature', description: 'Parallax depth layers with mountains and grass' },
       { type: 'improvement', description: 'High intensity shows factories, low shows renewables' },
-      { type: 'improvement', description: 'Desktop layout optimizations' },
+      { type: 'improvement', description: 'Better layout on desktop' },
     ],
   },
   {
@@ -175,9 +163,9 @@ const changelog: ChangelogEntry[] = [
     date: '2026-01-16',
     title: 'Enhanced Forecasting',
     changes: [
-      { type: 'feature', description: 'Comparative forecast view with actual vs predicted' },
-      { type: 'feature', description: 'Power Planner for optimal usage timing' },
-      { type: 'improvement', description: 'Skeleton loaders for better perceived performance' },
+      { type: 'feature', description: 'Forecast vs actual comparison' },
+      { type: 'feature', description: 'Power Planner: best times to run things' },
+      { type: 'improvement', description: 'Loading placeholders, so screens feel quicker' },
       { type: 'fix', description: 'Fixed forecast chart timezone issues' },
     ],
   },
@@ -304,7 +292,7 @@ export default function Changelog() {
 
         {/* Footer */}
         <div className="text-center text-xs text-muted-foreground pt-4">
-          <p>GridSense is continuously improved based on user feedback.</p>
+          <p>We keep improving GridSense based on your feedback.</p>
           <p className="mt-1">Built: {BUILD_DATE}</p>
         </div>
       </div>

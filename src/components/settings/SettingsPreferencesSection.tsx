@@ -57,8 +57,8 @@ export function SettingsPreferencesSection({
             <div>
               <h3 className="font-medium">Commentary Style</h3>
               <p className="text-sm text-muted-foreground">
-                Cheeky adds a short line about the grid on the home screen and in some alerts. Plain
-                sticks to the facts. The numbers and advice are the same in both.
+                Cheeky adds a short line about the grid on Home and in some alerts. Plain sticks to
+                the facts. The numbers and advice are the same in both.
               </p>
             </div>
           </div>
@@ -120,7 +120,7 @@ export function SettingsPreferencesSection({
                 <h3 id="pref-grid-frequency" className="font-medium">
                   Show Grid Frequency
                 </h3>
-                <p className="text-sm text-muted-foreground">Display live 50Hz frequency data</p>
+                <p className="text-sm text-muted-foreground">Show the live grid frequency</p>
               </div>
             </div>
             <button
@@ -216,7 +216,7 @@ export function SettingsPreferencesSection({
             </div>
             <div>
               <h3 className="font-medium">Take a Tour</h3>
-              <p className="text-sm text-muted-foreground">Discover all the app's features</p>
+              <p className="text-sm text-muted-foreground">A quick walk round the app</p>
             </div>
           </div>
           <Button

@@ -43,7 +43,7 @@ export function Moon({ position = 0.5, onDoubleClick }: MoonProps) {
       }}
       role="button"
       tabIndex={0}
-      aria-label="Moon - Double click or press Enter to trigger meteor shower"
+      aria-label="Moon. Double-tap or press Enter for a meteor shower"
     >
       <svg
         width="96"
