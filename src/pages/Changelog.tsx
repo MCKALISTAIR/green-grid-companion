@@ -135,18 +135,6 @@ const changelog: ChangelogEntry[] = [
     ],
   },
   {
-    version: 'v1.1.0',
-    date: '2026-01-28',
-    title: 'Tesla Integration',
-    changes: [
-      { type: 'feature', description: 'Complete Tesla integration for Vehicles and Energy Sites' },
-      { type: 'feature', description: 'View real-time battery level, charging status, and range' },
-      { type: 'feature', description: 'Monitor Solar and Powerwall status' },
-      { type: 'track', description: 'Track carbon saved vs average grid intensity' },
-      { type: 'improvement', description: 'Secure OAuth linking with official Tesla login' },
-    ],
-  },
-  {
     version: 'v1.0.0',
     date: '2026-01-23',
     title: 'Carbon Footprint Tracking',
