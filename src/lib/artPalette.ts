@@ -1,3 +1,5 @@
+import { bandFor } from '@/lib/nesoBand';
+
 /**
  * Art pass v1 palettes (from GridSense Design's src/art.js / art2.js).
  * Intensity drives only the mood (haze + saturation), never the weather.
@@ -16,13 +18,7 @@ export const MOOD: Record<MoodBand, { haze: string; a: number; sat: number }> = 
 /** NESO index → mood band; a live 0 g reading gets the mint 'zero' glow. */
 export function getMoodBand(intensity: number, index: string): MoodBand {
   if (intensity <= 0) return 'zero';
-  const k = (index || '').toLowerCase();
-  if (k in MOOD) return k as MoodBand;
-  if (intensity < 40) return 'very low';
-  if (intensity < 120) return 'low';
-  if (intensity < 200) return 'moderate';
-  if (intensity < 290) return 'high';
-  return 'very high';
+  return bandFor(intensity, index);
 }
 
 export type SunTone = 'day' | 'dawn' | 'sunset';

@@ -12,6 +12,7 @@ import { useCleanlinessBand } from '@/hooks/useCleanlinessBand';
 import { useSceneGrowth } from '@/hooks/useSceneGrowth';
 import { IntensityMood } from './scene/art/WeatherArt';
 import { getMoodBand } from '@/lib/artPalette';
+import { nesoBand } from '@/lib/nesoBand';
 import { StateTransitionFX } from './scene/StateTransitionFX';
 import { SceneHeroSpotlight, SceneAtmosphericDepth } from './scene/SceneComposition';
 import { SceneTemporalLife } from './scene/SceneTemporalLife';
@@ -162,21 +163,15 @@ export function IntensityScene({
   const intensity = typeof rawIntensity === 'number' && !isNaN(rawIntensity) ? rawIntensity : 150;
 
   const rawIndex =
-    isDirectorMode && overrides.intensity !== undefined
-      ? overrides.intensity < 50
-        ? 'very low'
-        : overrides.intensity < 150
-          ? 'low'
-          : overrides.intensity < 250
-            ? 'moderate'
-            : overrides.intensity < 350
-              ? 'high'
-              : 'very high'
-      : propIndex;
+    isDirectorMode && overrides.intensity !== undefined ? nesoBand(overrides.intensity) : propIndex;
   const index = rawIndex || 'moderate';
 
   // Cleanliness band + transition flourish trigger
-  const { band: cleanlinessBand, transition: bandTransition } = useCleanlinessBand(intensity);
+  const { band: cleanlinessBand, transition: bandTransition } = useCleanlinessBand(
+    intensity,
+    undefined,
+    rawIndex,
+  );
   const sceneGrowth = useSceneGrowth(intensity, generationMix);
 
   const sunPosition = realSunPosition;
@@ -394,7 +389,7 @@ export function IntensityScene({
           />
         )}
         <IntensityMood
-          band={getMoodBand(hasLiveReading ? intensity : Math.max(1, intensity), index)}
+          band={getMoodBand(hasLiveReading ? intensity : Math.max(1, intensity), rawIndex ?? '')}
         />
         <StateTransitionFX transition={bandTransition} />
 

@@ -115,7 +115,10 @@ export function IntensityHeroOverlay({
   const isInk = heroTone === 'ink';
   // Only say "Offline" when the device really is, and only blame NESO when its request failed.
   const { isOffline } = useOffline();
-  const band = getCleanlinessBand(intensity);
+  const band = getCleanlinessBand(intensity, index);
+  // Popover says "your region" only for a real regional reading, else Great Britain.
+  const isRegionalReading =
+    !!postcode && region !== 'National' && !region?.startsWith('GB') && !usingNationalFallback;
   const isDirty = band === 'dirty' || band === 'very-dirty';
   // Dark scrim only behind white text; ink sits on a light veil instead.
   const needsHardScrim = !isInk && isDirty;
@@ -446,8 +449,9 @@ export function IntensityHeroOverlay({
                           </p>
                         )}
                         <p className="text-muted-foreground">
-                          This is NESO&apos;s forecast for your region for this half hour. It
-                          updates every{' '}
+                          This is NESO&apos;s forecast for{' '}
+                          {isRegionalReading ? 'your region' : 'Great Britain'} for this half hour.
+                          It updates every{' '}
                           <span className="font-semibold text-foreground">30 minutes</span>.
                         </p>
                         <CompactDataAttribution />
