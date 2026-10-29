@@ -355,3 +355,87 @@ Deno.test('calculateMeterFootprint: footprint write error is reported, not swall
   assertEquals(r.footprints_written, 0);
   assertEquals(summarise([r]).errors, 1);
 });
+
+// BH-127: Octopus says 200 but sends nothing new while our newest reading is old.
+Deno.test(
+  'syncMeter: 200 with no readings and newest stored >48h old is no_new_readings',
+  async () => {
+    const now = Date.UTC(2026, 9, 29, 6);
+    const { fetchFn } = makeFetch({ pages: [[]] });
+    const { store, calls } = makeStore({ latest: '2026-07-30T22:30:00+00:00' });
+    const r = await syncMeter(
+      { fetch: fetchFn, store, now: () => new Date(now) },
+      { userId: 'u1', mpan: MPAN, serial: SERIAL, authHeader: AUTH },
+    );
+    assertEquals(r.ok, false);
+    assertEquals(r.http_status, 200);
+    assertEquals(r.error, 'no_new_readings');
+    assertEquals(calls.marked.length, 0);
+    assertEquals(summarise([r]).success, false);
+  },
+);
+
+Deno.test(
+  'syncMeter: only overlap re-reads (nothing newer) while stale is no_new_readings',
+  async () => {
+    const latest = Date.UTC(2026, 7, 1, 0, 0);
+    const now = latest + 5 * DAY;
+    const { fetchFn } = makeFetch({
+      pages: [octopusReadings(latest - 2 * DAY, latest + HH)],
+    });
+    const { store, calls } = makeStore({
+      latest: new Date(latest).toISOString(),
+    });
+    const r = await syncMeter(
+      { fetch: fetchFn, store, now: () => new Date(now) },
+      { userId: 'u1', mpan: MPAN, serial: SERIAL, authHeader: AUTH },
+    );
+    assertEquals(r.error, 'no_new_readings');
+    assert(r.readings_stored > 0);
+    assertEquals(calls.marked.length, 0);
+  },
+);
+
+Deno.test(
+  'syncMeter: no readings but newest stored is recent (Octopus lag) still succeeds',
+  async () => {
+    const now = Date.UTC(2026, 9, 29, 6);
+    const { fetchFn } = makeFetch({ pages: [[]] });
+    const { store, calls } = makeStore({
+      latest: new Date(now - 30 * HH).toISOString(),
+    });
+    const r = await syncMeter(
+      { fetch: fetchFn, store, now: () => new Date(now) },
+      { userId: 'u1', mpan: MPAN, serial: SERIAL, authHeader: AUTH },
+    );
+    assertEquals(r.ok, true);
+    assertEquals(calls.marked.length, 1);
+  },
+);
+
+Deno.test('syncMeter: a brand-new meter with no readings at all is not a stall', async () => {
+  const { fetchFn } = makeFetch({ pages: [[]] });
+  const { store } = makeStore();
+  const r = await syncMeter(
+    { fetch: fetchFn, store, now: () => new Date(Date.UTC(2026, 9, 29)) },
+    { userId: 'u1', mpan: MPAN, serial: SERIAL, authHeader: AUTH },
+  );
+  assertEquals(r.ok, true);
+});
+
+Deno.test('syncMeter: stale meter that gets newer readings recovers and marks synced', async () => {
+  const latest = Date.UTC(2026, 7, 1);
+  const now = latest + 5 * DAY;
+  const { fetchFn } = makeFetch({
+    pages: [octopusReadings(latest - 2 * DAY, now - DAY)],
+  });
+  const { store, calls } = makeStore({
+    latest: new Date(latest).toISOString(),
+  });
+  const r = await syncMeter(
+    { fetch: fetchFn, store, now: () => new Date(now) },
+    { userId: 'u1', mpan: MPAN, serial: SERIAL, authHeader: AUTH },
+  );
+  assertEquals(r.ok, true);
+  assertEquals(calls.marked.length, 1);
+});
