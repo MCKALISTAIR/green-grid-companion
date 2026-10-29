@@ -10,7 +10,7 @@ const BASE = 'https://getgridsense.com/';
 
 function fakeDeps(
   href: string,
-  opts: { stored?: string | null; setError?: string; hang?: boolean } = {},
+  opts: { stored?: string | null; setError?: string; hang?: boolean; intended?: boolean } = {},
 ) {
   let stored = opts.stored ?? null;
   const auth: OAuthSessionClient = {
@@ -33,7 +33,8 @@ function fakeDeps(
     }),
   };
   const warn = vi.fn();
-  return { auth, location, history, warn };
+  const consumeIntent = vi.fn(() => opts.intended ?? true);
+  return { auth, location, history, warn, consumeIntent };
 }
 
 describe('captureOAuthRedirect', () => {
@@ -57,10 +58,11 @@ describe('captureOAuthRedirect', () => {
     expect(got?.tokens).toEqual({ access_token: 'a', refresh_token: 'r' });
   });
 
-  it('reads tokens from the query string too', () => {
-    expect(
-      captureOAuthRedirect(`${BASE}auth/callback?access_token=a&refresh_token=r`)?.tokens,
-    ).toEqual({ access_token: 'a', refresh_token: 'r' });
+  it('never uses tokens from the query string (BH-145) but still flags them for stripping', () => {
+    expect(captureOAuthRedirect(`${BASE}auth/callback?access_token=a&refresh_token=r`)).toEqual({
+      tokens: null,
+      error: 'tokens_in_query',
+    });
   });
 
   it('reports an error return without tokens', () => {
@@ -99,6 +101,23 @@ describe('completeOAuthRedirect', () => {
     expect(d.auth.initialize).toHaveBeenCalledBefore(d.auth.setSession as never);
     expect(d.auth.setSession).toHaveBeenCalledWith({ access_token: 'a', refresh_token: 'r' });
     expect(d.location.href).toBe(BASE);
+  });
+
+  it('rejects tokens this device did not ask for (crafted link, BH-145)', async () => {
+    const href = `${BASE}auth/callback#access_token=attacker&refresh_token=r`;
+    const d = fakeDeps(href, { intended: false });
+    expect(await completeOAuthRedirect(captureOAuthRedirect(href), d)).toBe('rejected');
+    expect(d.auth.setSession).not.toHaveBeenCalled();
+    expect(d.auth.initialize).not.toHaveBeenCalled();
+    expect(d.location.href).toBe(`${BASE}auth/callback`);
+  });
+
+  it('rejects query-string tokens even when a sign-in was started', async () => {
+    const href = `${BASE}auth/callback?access_token=a&refresh_token=r`;
+    const d = fakeDeps(href, { intended: true });
+    expect(await completeOAuthRedirect(captureOAuthRedirect(href), d)).toBe('failed');
+    expect(d.auth.setSession).not.toHaveBeenCalled();
+    expect(d.location.href).toBe(`${BASE}auth/callback`);
   });
 
   it("doesn't set the session twice when supabase already stored it", async () => {

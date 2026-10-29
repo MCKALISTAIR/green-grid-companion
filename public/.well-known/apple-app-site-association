@@ -1,0 +1,13 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["UW7848QP79.com.greengrid.companion"],
+        "components": [{ "/": "/auth/callback", "comment": "Sign-in return (BH-145)" }]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": ["UW7848QP79.com.greengrid.companion"]
+  }
+}
