@@ -67,7 +67,7 @@ export function YearWrapped({
   };
 
   return (
-    <ResponsiveDialog detents="tall" open={open} onOpenChange={onOpenChange}>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
       <ResponsiveDialogContent className="max-w-lg p-0 overflow-hidden bg-gradient-to-br from-background via-background to-primary/5 border-primary/20">
         {isLoading ? (
           <LoadingSlide progress={progress} year={year} />
@@ -81,7 +81,7 @@ export function YearWrapped({
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
-              className="min-h-[500px] flex flex-col"
+              className="sm:min-h-[500px] flex flex-col"
             >
               {SLIDES[currentSlide] === 'intro' && <IntroSlide data={data} />}
               {SLIDES[currentSlide] === 'coal' && <CoalSlide data={data} />}
@@ -142,7 +142,7 @@ export function YearWrapped({
 
 function LoadingSlide({ progress, year }: { progress: number; year: number }) {
   return (
-    <div className="p-8 flex flex-col items-center justify-center min-h-[500px] text-center gap-6">
+    <div className="p-8 flex flex-col items-center justify-center sm:min-h-[500px] text-center gap-6">
       <Sparkles className="w-16 h-16 text-primary animate-pulse" />
       <div>
         <h2 className="text-2xl font-bold mb-2">Your {year} Grid Wrapped</h2>
@@ -158,7 +158,7 @@ function LoadingSlide({ progress, year }: { progress: number; year: number }) {
 
 function ErrorSlide({ error, onClose }: { error: string; onClose: () => void }) {
   return (
-    <div className="p-8 flex flex-col items-center justify-center min-h-[500px] text-center gap-6">
+    <div className="p-8 flex flex-col items-center justify-center sm:min-h-[500px] text-center gap-6">
       <X className="w-16 h-16 text-destructive" />
       <div>
         <h2 className="text-2xl font-bold mb-2">Oops!</h2>
