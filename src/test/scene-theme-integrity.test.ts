@@ -24,8 +24,10 @@ describe('Scene theme integrity (stress-test guards)', () => {
     expect(src).toMatch(
       /!isCity && !isCoastal && sceneConfig\.showRenewables && sceneConfig\.showSun/,
     );
-    // Factories already gated
-    expect(src).toMatch(/showFactories && !isCity && !isCoastal/);
+    // PR-2b: the white-box factories are gone; the gas plant is countryside-only
+    expect(src).not.toMatch(/SimpleFactory|SmokeParticle/);
+    const countryside = read('CountrysideSceneLayers.tsx');
+    expect(countryside).toContain('<GasPlant');
     // Nuclear countryside-only
     expect(src).toMatch(/nuclearPercentage > 5 && !isCity && !isCoastal/);
     // Offshore wind must not also paint on coastal (coastal has its own layer)
@@ -58,11 +60,11 @@ describe('Scene theme integrity (stress-test guards)', () => {
     expect(backBlock).not.toContain('<LondonEye');
   });
 
-  it('gives dirty coastal a pollution silhouette (smog + horizon stack)', () => {
+  it('gives dirty coastal a pollution silhouette (horizon stack by NESO band)', () => {
     const coastal = read('CoastalSceneLayers.tsx');
-    expect(coastal).toContain('CoastalHorizonPollution');
-    expect(coastal).toContain('SmogBand');
-    expect(coastal).toMatch(/cleanliness > 0\.25/);
+    expect(coastal).toContain('CoastalHorizonPollution band={sceneConfig.hazeBand}');
+    // PR-2b: haze comes from SceneHaze, not a per-scene smog band
+    expect(coastal).not.toContain('SmogBand');
     const elements = fs.readFileSync(
       path.resolve(__dirname, '../components/scene/CoastalElements.tsx'),
       'utf-8',

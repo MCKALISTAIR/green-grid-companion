@@ -24,6 +24,7 @@ import { supabase } from './integrations/supabase/client';
 import { installStaleChunkReload } from './lib/staleChunkReload';
 import { installAnonMigration } from './lib/anonMigration';
 import { toast } from 'sonner';
+import { shouldBlockFraming } from './lib/frameGuard';
 
 // BH-119: read Google/Apple sign-in tokens from the URL before anything can
 // navigate (the "no postcode -> /onboarding" redirect used to drop them).
@@ -52,9 +53,9 @@ if (typeof window !== 'undefined') {
 // including a web OAuth return that lands outside Settings.
 installAnonMigration({
   onAuthStateChange: (cb) => supabase.auth.onAuthStateChange(cb),
-  invoke: (previousUserId) =>
+  invoke: (previousUserId, previousUserToken) =>
     supabase.functions.invoke('octopus-energy', {
-      body: { action: 'migrate-data', previousUserId },
+      body: { action: 'migrate-data', previousUserId, previousUserToken },
     }),
   storage: localStorage,
   onMigrated: ({ credentials, meters = 0, footprint_records = 0 }) => {
@@ -89,6 +90,15 @@ void Promise.allSettled([
     consumeIntent: () => consumeOAuthStart(),
   }),
 ]).finally(() => {
+  // BH-151: never render the app inside someone else's frame on production.
+  if (shouldBlockFraming(window)) {
+    try {
+      window.top!.location.href = window.location.href;
+    } catch {
+      // Sandboxed frame: just stay blank.
+    }
+    return;
+  }
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <App />

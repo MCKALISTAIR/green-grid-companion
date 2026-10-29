@@ -5,10 +5,22 @@
  */
 import { corsHeaders } from './cors.ts';
 
+/**
+ * BH-150: mask identifiers that must not reach logs. Octopus account numbers
+ * (A-1234ABCD) become "A-***", 13-digit MPANs and long digit runs keep only
+ * their first 4 digits, and API keys (sk_live_/sk_test_) are dropped.
+ */
+export function redactIdentifiers(text: string): string {
+  return text
+    .replace(/\bA-[A-Z0-9]{6,12}\b/gi, 'A-***')
+    .replace(/\bsk_(live|test)_[A-Za-z0-9]+/g, 'sk_$1_***')
+    .replace(/\b(\d{4})\d{6,}\b/g, '$1***');
+}
+
 export function describeError(err: unknown): { name: string; message: string } {
   return err instanceof Error
-    ? { name: err.name, message: err.message }
-    : { name: typeof err, message: String(err) };
+    ? { name: err.name, message: redactIdentifiers(err.message) }
+    : { name: typeof err, message: redactIdentifiers(String(err)) };
 }
 
 /** Log `err` with context (no secrets) and return `{ error, code }` with the given status. */

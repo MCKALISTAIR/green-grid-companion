@@ -2,9 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { SceneVisualConfig } from '@/lib/sceneConfig';
 import { turbineRotationSeconds } from '@/lib/turbineSpeed';
 import type { TurbineSlot } from '@/lib/turbineLayout';
-import { SimpleFactory } from '../SimpleFactory';
 import { WindTurbine } from '../WindTurbine';
-import { SmokeParticle } from '../SmokeParticle';
 import { NuclearCoolingTower } from '../NuclearCoolingTower';
 import { OffshoreWind } from '../OffshoreWind';
 import { TidalWaves } from '../TidalWaves';
@@ -129,52 +127,9 @@ export function SceneGenerationOverlay({
         )}
       </AnimatePresence>
 
-      {/* Factories for dirty energy */}
-      <AnimatePresence>
-        {sceneConfig.showFactories && !isCity && !isCoastal && (
-          <motion.div
-            className="absolute bottom-14 left-6 flex gap-6"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.6 }}
-          >
-            <div className="relative">
-              <SimpleFactory
-                className="w-18 h-18 text-secondary"
-                style={{ width: '4.5rem', height: '4.5rem' }}
-                isNight={isNight}
-              />
-              {sceneConfig.showSmoke && (
-                <>
-                  <SmokeParticle delay={0} x={35} />
-                  <SmokeParticle delay={0.8} x={40} />
-                  <SmokeParticle delay={1.6} x={45} />
-                  <SmokeParticle delay={0.4} x={60} />
-                  <SmokeParticle delay={1.2} x={65} />
-                </>
-              )}
-            </div>
-            {sceneConfig.cleanliness < 0.3 && (
-              <motion.div
-                className="relative"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-              >
-                <SimpleFactory className="w-14 h-14 text-secondary/90" isNight={isNight} />
-                {sceneConfig.showSmoke && (
-                  <>
-                    <SmokeParticle delay={0.3} x={35} />
-                    <SmokeParticle delay={1.1} x={45} />
-                    <SmokeParticle delay={0.7} x={55} />
-                  </>
-                )}
-              </motion.div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* PR-2b: the white-box factories are gone. The one gas plant is drawn in the
+          countryside back-hill layer (GasPlant), with smoke only from its stacks at
+          NESO moderate and above. */}
 
       {/* BH-102 (Design): no Lucide leaf, flame or droplet icons in the scene. They read
           as UI chrome, not world. Cleanliness shows through the world itself (sky, smoke,

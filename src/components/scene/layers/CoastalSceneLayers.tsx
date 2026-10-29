@@ -15,7 +15,6 @@ import {
   HarbourSeal,
   CoastalHorizonPollution,
 } from '../CoastalElements';
-import { SmogBand } from '../CityElements';
 import { ValleyMist } from '../ValleyMist';
 import { JumpingFish } from '../JumpingFish';
 import { SCENE_SILHOUETTE_ASPECT } from '@/lib/sceneScaleBible';
@@ -62,7 +61,6 @@ export function CoastalSceneLayers({
           preserveAspectRatio={SCENE_SILHOUETTE_ASPECT}
           aria-hidden="true"
         >
-          <SmogBand cleanliness={sceneConfig.cleanliness} isNight={isNight} />
           <CoastalLandscapeBack
             cleanliness={sceneConfig.cleanliness}
             isNight={isNight}
@@ -73,7 +71,7 @@ export function CoastalSceneLayers({
             timeOfDay={timeOfDay}
           />
           {/* Pollution sits above the sea fill so stacks / sheen / tanker stay visible */}
-          <CoastalHorizonPollution cleanliness={sceneConfig.cleanliness} isNight={isNight} />
+          <CoastalHorizonPollution band={sceneConfig.hazeBand} isNight={isNight} />
         </svg>
       </motion.div>
 
@@ -141,7 +139,7 @@ export function CoastalSceneLayers({
       </motion.div>
 
       {/* Coastal: Valley Mist */}
-      <ValleyMist cleanliness={sceneConfig.cleanliness} timeOfDay={timeOfDay} isNight={isNight} />
+      <ValleyMist timeOfDay={timeOfDay} isNight={isNight} />
 
       {/* Coastal: Harbour seal */}
       <motion.div
