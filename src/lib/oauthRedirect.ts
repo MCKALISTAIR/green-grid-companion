@@ -52,7 +52,13 @@ function hashParams(url: URL): URLSearchParams {
   return new URLSearchParams(url.hash.startsWith('#') ? url.hash.slice(1) : url.hash);
 }
 
-/** Read OAuth return params from a URL (hash first, then query). Null if it isn't an OAuth return. */
+/**
+ * Read OAuth return params from a URL. Null if it isn't an OAuth return.
+ *
+ * BH-145: tokens are only read from the hash (where the broker puts them).
+ * Tokens in the query string are never used, but are still reported as a
+ * return (with `tokens: null`) so they get stripped from the address bar.
+ */
 export function captureOAuthRedirect(href: string): CapturedOAuthRedirect | null {
   let url: URL;
   try {
@@ -63,9 +69,12 @@ export function captureOAuthRedirect(href: string): CapturedOAuthRedirect | null
   const hash = hashParams(url);
   const get = (key: string) => hash.get(key) ?? url.searchParams.get(key);
 
-  const accessToken = get('access_token');
-  const refreshToken = get('refresh_token');
+  const accessToken = hash.get('access_token');
+  const refreshToken = hash.get('refresh_token');
   const error = get('error_description') ?? get('error');
+  const queryTokens = url.searchParams.has('access_token') || url.searchParams.has('refresh_token');
+
+  if (!accessToken && queryTokens) return { tokens: null, error: 'tokens_in_query' };
 
   if (!accessToken && !error) return null;
   return {
@@ -104,9 +113,15 @@ export interface CompleteOAuthDeps {
   warn?: (message: string, context?: Record<string, unknown>) => void;
   /** Give up and render anyway after this long (ms). */
   timeoutMs?: number;
+  /**
+   * BH-145: true once if this device started a sign-in moments ago
+   * (see oauthIntent.ts). Tokens are refused when it returns false.
+   */
+  consumeIntent: () => boolean;
 }
 
-export type OAuthOutcome = 'none' | 'signed-in' | 'already-signed-in' | 'failed' | 'timeout';
+export type OAuthOutcome =
+  'none' | 'signed-in' | 'already-signed-in' | 'failed' | 'rejected' | 'timeout';
 
 /**
  * Store the session from a captured OAuth return, then remove the tokens from
@@ -119,7 +134,15 @@ export async function completeOAuthRedirect(
   if (!captured) return 'none';
   const warn = deps.warn ?? (() => {});
 
+  // Checked (and cleared) up front, before any await, so a second crafted
+  // link can't reuse a sign-in the user started.
+  const intended = deps.consumeIntent();
+
   const work = async (): Promise<OAuthOutcome> => {
+    if (captured.tokens && !intended) {
+      warn('Ignored sign-in tokens this device did not ask for');
+      return 'rejected';
+    }
     if (captured.error && !captured.tokens) {
       warn('OAuth return carried an error', { error: captured.error });
       return 'failed';

@@ -16,12 +16,13 @@ import {
   Download,
   Lock,
 } from 'lucide-react';
+import { markOAuthStart, clearOAuthStart } from '@/lib/oauthIntent';
 import { lovable } from '@/integrations/lovable/index';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { User } from '@supabase/supabase-js';
 import { Capacitor } from '@capacitor/core';
-import { APP_SCHEME } from '@/config';
+import { nativeAuthRedirectUri } from '@/config';
 import { getAppleAuthorizationForDeletion } from '@/lib/appleRevocation';
 import { ANON_USER_ID_KEY, rememberAnonUserId } from '@/lib/anonMigration';
 import {
@@ -113,7 +114,7 @@ export function AccountBackup({
       let redirectUri: string;
 
       if (Capacitor.isNativePlatform()) {
-        redirectUri = `${APP_SCHEME}://auth/callback`;
+        redirectUri = nativeAuthRedirectUri();
       } else if (isLocalhost) {
         // Localhost can't be used as OAuth redirect — use the preview URL instead
         redirectUri = 'https://gridsense-app.lovable.app';
@@ -121,11 +122,13 @@ export function AccountBackup({
         redirectUri = window.location.origin;
       }
 
+      markOAuthStart();
       const { error } = await lovable.auth.signInWithOAuth(provider, {
         redirect_uri: redirectUri,
       });
 
       if (error) {
+        clearOAuthStart();
         toast.error(`Sign in failed: ${error.message}`);
       }
     } catch {
@@ -243,18 +246,20 @@ export function AccountBackup({
       let redirectUri: string;
 
       if (Capacitor.isNativePlatform()) {
-        redirectUri = `${APP_SCHEME}://auth/callback`;
+        redirectUri = nativeAuthRedirectUri();
       } else if (isLocalhost) {
         redirectUri = 'https://gridsense-app.lovable.app';
       } else {
         redirectUri = window.location.origin;
       }
 
+      markOAuthStart();
       const { error } = await lovable.auth.signInWithOAuth(switchTarget, {
         redirect_uri: redirectUri,
       });
 
       if (error) {
+        clearOAuthStart();
         toast.error(`Switch failed: ${error.message}`);
       }
     } catch {

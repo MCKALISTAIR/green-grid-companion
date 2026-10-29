@@ -18,7 +18,8 @@ initMonitoring({
 import { logger } from './lib/logger';
 import { hydrateAppStorage } from './lib/appStorage';
 import { installExternalLinkHandler } from './lib/openExternal';
-import { captureOAuthRedirect, completeOAuthRedirect } from './lib/oauthRedirect';
+import { captureOAuthRedirect, completeOAuthRedirect, stripOAuthParams } from './lib/oauthRedirect';
+import { consumeOAuthStart } from './lib/oauthIntent';
 import { supabase } from './integrations/supabase/client';
 import { installStaleChunkReload } from './lib/staleChunkReload';
 import { installAnonMigration } from './lib/anonMigration';
@@ -28,6 +29,15 @@ import { toast } from 'sonner';
 // navigate (the "no postcode -> /onboarding" redirect used to drop them).
 const oauthReturn =
   typeof window !== 'undefined' ? captureOAuthRedirect(window.location.href) : null;
+// BH-145/146: take tokens out of the address bar straight away, before
+// supabase-js, the router or Sentry can see them.
+if (oauthReturn) {
+  try {
+    window.history.replaceState(window.history.state, '', stripOAuthParams(window.location.href));
+  } catch {
+    // completeOAuthRedirect strips again later
+  }
+}
 
 // BH-131: an open tab whose old chunks were removed by a deploy reloads once.
 if (typeof window !== 'undefined') {
@@ -76,6 +86,7 @@ void Promise.allSettled([
     location: window.location,
     history: window.history,
     warn: (message, context) => logger.warn(message, context),
+    consumeIntent: () => consumeOAuthStart(),
   }),
 ]).finally(() => {
   createRoot(document.getElementById('root')!).render(
