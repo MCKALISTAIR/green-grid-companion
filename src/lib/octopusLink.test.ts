@@ -303,4 +303,10 @@ describe('meter_taken banner (BH-152)', () => {
       OCTOPUS_BANNER_COPY.meterTaken,
     );
   });
+
+  it('pins the signed-off second line', () => {
+    expect(COPY.OCTOPUS_BANNER_COPY.meterTaken).toBe(
+      'That meter is already linked to another GridSense account. Unlink it in that account first, then try again.',
+    );
+  });
 });

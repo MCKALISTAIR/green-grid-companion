@@ -83,7 +83,7 @@ export const OCTOPUS_BANNER_COPY = {
   noMeter:
     "Your details work, but Octopus didn't list an electricity meter on that account. GridSense needs one to show your usage.",
   meterTaken:
-    'That meter is already linked to another GridSense account. Unlink it there first, then try again.',
+    'That meter is already linked to another GridSense account. Unlink it in that account first, then try again.',
   checkAgain: 'Check again',
   rateLimited: (minutes: number) =>
     `That's a lot of tries. Give it ${minutes} minutes, then try again.`,
