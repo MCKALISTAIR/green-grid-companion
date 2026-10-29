@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cachedReadingAt, setHeroReadingAt, type CachedQueryLike } from './offlineReadingTime';
@@ -178,6 +178,16 @@ describe('cachedReadingAt (BH-88)', () => {
 });
 
 describe('OfflineIndicator pill time (BH-88)', () => {
+  // Pin "now" to the same day as the fixture, or the pill adds a weekday once
+  // the fixture is a day old (these tests started failing on 24 Oct 2026).
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(utc('2026-10-23T07:45:00Z'));
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   function renderWithCache(setup: (client: QueryClient) => void) {
     const client = new QueryClient();
     setup(client);
