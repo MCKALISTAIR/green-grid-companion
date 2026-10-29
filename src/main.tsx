@@ -20,11 +20,21 @@ import { hydrateAppStorage } from './lib/appStorage';
 import { installExternalLinkHandler } from './lib/openExternal';
 import { captureOAuthRedirect, completeOAuthRedirect } from './lib/oauthRedirect';
 import { supabase } from './integrations/supabase/client';
+import { installStaleChunkReload } from './lib/staleChunkReload';
 
 // BH-119: read Google/Apple sign-in tokens from the URL before anything can
 // navigate (the "no postcode -> /onboarding" redirect used to drop them).
 const oauthReturn =
   typeof window !== 'undefined' ? captureOAuthRedirect(window.location.href) : null;
+
+// BH-131: an open tab whose old chunks were removed by a deploy reloads once.
+if (typeof window !== 'undefined') {
+  installStaleChunkReload({
+    target: window,
+    storage: sessionStorage,
+    reload: () => window.location.reload(),
+  });
+}
 
 // Native: external links open in SFSafariViewController, not Safari (BH-51).
 installExternalLinkHandler();
