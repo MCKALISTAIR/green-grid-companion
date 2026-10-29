@@ -118,6 +118,6 @@ describe('sky blend by day (round 3)', () => {
     expect(getSkyBlend('very high', 'midday')).toBe(0.4);
     expect(getSkyBlend('high', 'morning')).toBe(0.2);
     for (const b of ['none', 'moderate'] as const) expect(getSkyBlend(b, 'midday')).toBe(0);
-    for (const t of ['dawn', 'dusk', 'night']) expect(getSkyBlend('very high', t)).toBe(0);
+    for (const t of ['dawn', 'sunset', 'dusk', 'night']) expect(getSkyBlend('very high', t)).toBe(0);
   });
 });

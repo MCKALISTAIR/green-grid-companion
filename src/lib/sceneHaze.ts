@@ -70,9 +70,14 @@ export const HAZE_SKY_BLEND: Record<HazeBand, number> = {
   high: 0.2,
   'very high': 0.4,
 };
-/** Sky blend for a band and time of day; 0 after dark (the night murk is approved as is). */
+/**
+ * Sky blend for a band and time of day. Blue-sky daytime only (morning, midday,
+ * afternoon): sunset's warm sky is not cyan and the blend there drops the dark hero
+ * text to 4.44:1. 0 after dark (the night murk is approved as is).
+ */
+const SKY_BLEND_TIMES: ReadonlySet<string> = new Set(['morning', 'midday', 'afternoon']);
 export function getSkyBlend(band: HazeBand, timeOfDay: TimeOfDay | string): number {
-  return isHazeDim(timeOfDay) ? 0 : HAZE_SKY_BLEND[band];
+  return SKY_BLEND_TIMES.has(timeOfDay) ? HAZE_SKY_BLEND[band] : 0;
 }
 
 /**
