@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { installMocks, seedStorage } from '../scripts/layout/mock-api.mjs';
 
-// BH-127: an anonymous user who linked Octopus, then signs in with Google/Apple
+// BH-129: an anonymous user who linked Octopus, then signs in with Google/Apple
 // on the web, must have their anonymous data moved to the new account. The
 // broker returns to "/", where the Settings-only AccountBackup listener isn't
 // mounted, so the SIGNED_IN event was missed and migrate-data never ran.
@@ -10,7 +10,7 @@ test.use({ serviceWorkers: 'block' });
 
 const ANON_ID = '00000000-0000-4000-8000-0000000000a1';
 const USER_ID = '00000000-0000-4000-8000-0000000000b2';
-const EMAIL = 'bh127@example.com';
+const EMAIL = 'bh129@example.com';
 const b64 = (o: object) => Buffer.from(JSON.stringify(o)).toString('base64url');
 
 test('anonymous Octopus data is migrated after a web OAuth return to /', async ({
@@ -43,8 +43,8 @@ test('anonymous Octopus data is migrated after a web OAuth return to /', async (
   await context.addInitScript(seedStorage());
   // What handleSignIn stores before leaving for the broker (once only).
   await context.addInitScript((id) => {
-    if (!sessionStorage.getItem('bh127-seeded')) {
-      sessionStorage.setItem('bh127-seeded', '1');
+    if (!sessionStorage.getItem('bh129-seeded')) {
+      sessionStorage.setItem('bh129-seeded', '1');
       localStorage.setItem('octopus-anon-user-id', id);
     }
   }, ANON_ID);

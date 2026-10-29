@@ -85,7 +85,7 @@ export function AccountBackup({
       const previousUser = user;
       setUser(session?.user ?? null);
 
-      // Sign-in data migration runs from main.tsx (BH-127, lib/anonMigration).
+      // Sign-in data migration runs from main.tsx (BH-129, lib/anonMigration).
 
       // Store anonymous user ID when signing out
       if (event === 'SIGNED_OUT' && previousUser?.id) {

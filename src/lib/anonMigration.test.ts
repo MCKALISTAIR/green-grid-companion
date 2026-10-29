@@ -14,7 +14,7 @@ function memStorage(init: Record<string, string> = {}) {
   };
 }
 
-describe('migrateAnonData (BH-127)', () => {
+describe('migrateAnonData (BH-129)', () => {
   it('migrates the stored anon id to the signed-in user and clears it', async () => {
     const storage = memStorage({ [ANON_USER_ID_KEY]: 'anon-1' });
     const invoke = vi.fn().mockResolvedValue({ data: { migrated: { meters: 2 } }, error: null });

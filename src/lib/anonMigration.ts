@@ -1,5 +1,5 @@
 /**
- * BH-127: move an anonymous user's Octopus data to their Google/Apple account
+ * BH-129: move an anonymous user's Octopus data to their Google/Apple account
  * after sign-in, wherever the sign-in lands.
  *
  * Before sign-in, AccountBackup stores the anonymous user's id under

@@ -28,7 +28,7 @@ import { toast } from 'sonner';
 const oauthReturn =
   typeof window !== 'undefined' ? captureOAuthRedirect(window.location.href) : null;
 
-// BH-127: move anonymous Octopus data to the account after any sign-in,
+// BH-129: move anonymous Octopus data to the account after any sign-in,
 // including a web OAuth return that lands outside Settings.
 installAnonMigration({
   onAuthStateChange: (cb) => supabase.auth.onAuthStateChange(cb),
