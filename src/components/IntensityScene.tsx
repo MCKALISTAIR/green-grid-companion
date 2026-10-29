@@ -9,7 +9,7 @@ import { useWeatherData, WeatherData } from '@/hooks/useWeatherData';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useSceneDirector } from '@/hooks/useSceneDirector';
 import { useCleanlinessBand } from '@/hooks/useCleanlinessBand';
-import { useSceneGrowth } from '@/hooks/useSceneGrowth';
+import type { SceneGrowthStage } from '@/hooks/useSceneGrowth';
 import { IntensityMood } from './scene/art/WeatherArt';
 import { getMoodBand } from '@/lib/artPalette';
 import { StateTransitionFX } from './scene/StateTransitionFX';
@@ -42,6 +42,8 @@ interface IntensitySceneProps {
   intensity: number;
   index: string;
   generationMix?: GenerationMix[];
+  /** BH-143: garden stage from useSceneGrowth on the page; sparse when omitted. */
+  growthStage?: SceneGrowthStage;
   isVintage?: boolean;
   className?: string;
   sceneTypeOverride?: SceneType;
@@ -77,6 +79,7 @@ export function IntensityScene({
   intensity: propIntensity,
   index: propIndex,
   generationMix = [],
+  growthStage = 0,
   isVintage = false,
   className,
   sceneTypeOverride,
@@ -177,7 +180,8 @@ export function IntensityScene({
 
   // Cleanliness band + transition flourish trigger
   const { band: cleanlinessBand, transition: bandTransition } = useCleanlinessBand(intensity);
-  const sceneGrowth = useSceneGrowth(intensity, generationMix);
+  // BH-143: the page owns garden growth (low-carbon days in the last 14).
+  const sceneGrowth = { stage: growthStage };
 
   const sunPosition = realSunPosition;
 

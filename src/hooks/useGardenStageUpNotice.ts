@@ -87,7 +87,7 @@ export function useGardenStageUpNotice(
   }
 
   const base = GARDEN_STAGE_UP_COPY[pendingStage];
-  const message = gardenDays > 0 ? `${base} · day ${gardenDays}` : base;
+  const message = gardenDays > 0 ? `${base} · ${gardenDays} of 14 days low carbon` : base;
 
   return { visible: true, message, dismiss };
 }
