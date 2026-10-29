@@ -265,7 +265,9 @@ test('the normal scene resumes once real weather arrives', async ({ page, contex
   const scene = page.getByRole('region', { name: /Animated landscape/ });
   await expect(scene.locator('[data-scene-sun]')).toHaveCount(1, { timeout: 15_000 });
   await expect(scene.locator('[data-art="cloud-bank"]')).toHaveCount(0);
-  await expect(scene.locator('[data-scene-halo]')).toHaveCount(1);
+  // PR-2b: the hero spotlight halo is retired; the moderate band shows as haze.
+  await expect(scene.locator('[data-scene-halo]')).toHaveCount(0);
+  await expect(scene.locator('[data-art="haze"]')).toHaveAttribute('data-haze-band', 'moderate');
 });
 
 for (const sceneType of ['countryside', 'coastal'] as const) {

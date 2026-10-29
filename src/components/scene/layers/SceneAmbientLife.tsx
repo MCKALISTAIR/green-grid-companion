@@ -25,20 +25,6 @@ export function SceneAmbientLife({
       {/* Always-on decorative clouds removed (art pass v1 §2.3): clouds now come only
           from real cloud cover, drawn in WeatherEffects. */}
 
-      {/* Extra pollution clouds for dirty energy */}
-      <AnimatePresence>
-        {sceneConfig.showSmoke && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 1 }}
-            ></motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
       {/* Flying birds for clean energy */}
       <AnimatePresence>
         {sceneConfig.showBirds && birdBand !== null && (
