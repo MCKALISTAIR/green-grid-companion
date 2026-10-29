@@ -17,6 +17,7 @@
 
 import * as Sentry from '@sentry/react';
 import { Capacitor } from '@capacitor/core';
+import { redactSecrets, redactSecretsDeep } from './sentryScrub';
 import { getLoggerConfig, shouldLog, getLogColor, type LogLevel } from './logger.config';
 
 interface LogContext {
@@ -104,7 +105,10 @@ class Logger {
   /**
    * Core logging method
    */
-  private log(level: LogLevel, message: string, context?: LogContext): void {
+  private log(level: LogLevel, rawMessage: string, rawContext?: LogContext): void {
+    // BH-146: tokens, keys and location never reach the console or breadcrumbs.
+    const message = redactSecrets(rawMessage);
+    const context = rawContext === undefined ? undefined : redactSecretsDeep(rawContext);
     // Check if this log level should be logged
     if (!shouldLog(level, this.config)) {
       return;
