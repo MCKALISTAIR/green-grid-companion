@@ -186,12 +186,9 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error('Data export error:', error);
-    return new Response(
-      JSON.stringify({ error: 'An unexpected error occurred during data export.' }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      },
-    );
+    return new Response(JSON.stringify({ error: 'Something went wrong exporting your data.' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });
