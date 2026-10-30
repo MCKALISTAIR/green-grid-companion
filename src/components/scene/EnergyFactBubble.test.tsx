@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import { EnergyFactBubble } from './EnergyFactBubble';
+import { factAriaLabel } from '@/lib/factAriaLabel';
 
 const weatherResult = { weather: { windSpeed: 5, isRaining: false, isSnowing: false } };
 vi.mock('@/hooks/useWeatherData', () => ({
@@ -33,5 +34,17 @@ describe('EnergyFactBubble plain variant', () => {
   it('no fact string carries its own quote marks', async () => {
     const { ENERGY_FACTS } = await import('@/lib/energyFacts');
     for (const f of ENERGY_FACTS) expect(f.text).not.toMatch(/["„“”«»]/);
+  });
+});
+
+describe('factAriaLabel', () => {
+  it.each([
+    ['Ends with a stop.', 'Ends with a stop. Tap for another fact.'],
+    ['Ends with a bang!', 'Ends with a bang! Tap for another fact.'],
+    ['Ends with a question?', 'Ends with a question? Tap for another fact.'],
+    ['No punctuation', 'No punctuation. Tap for another fact.'],
+    ['  Trailing space.  ', 'Trailing space. Tap for another fact.'],
+  ])('%j', (fact, expected) => {
+    expect(factAriaLabel(fact)).toBe(expected);
   });
 });
