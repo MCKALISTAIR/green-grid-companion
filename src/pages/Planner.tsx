@@ -272,7 +272,7 @@ export default function Planner() {
                 </motion.div>
                 <div className="text-center">
                   <div className="font-semibold">{app.name}</div>
-                  <div className="text-[10px] opacity-70 font-normal">{app.label}</div>
+                  <div className="text-[10px] opacity-90 font-normal">{app.label}</div>
                 </div>
               </Button>
             ))}
@@ -301,7 +301,7 @@ export default function Planner() {
                       {selectedAppliance.id === 'custom' ? selectedAppliance.name : 'Custom'}
                     </div>
                     {selectedAppliance.id === 'custom' && (
-                      <div className="text-[10px] opacity-70 font-normal">Tap to edit</div>
+                      <div className="text-[10px] opacity-90 font-normal">Tap to edit</div>
                     )}
                   </div>
                 </Button>

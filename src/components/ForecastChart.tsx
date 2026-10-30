@@ -28,6 +28,15 @@ import { cn } from '@/lib/utils';
 import { hapticSelectionChanged } from '@/lib/haptics';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useChartScrub } from '@/hooks/useChartScrub';
+import { getConditionParts } from '@/lib/conditionLabels';
+
+const LEGEND_BANDS = [
+  { index: 'very low', dot: 'bg-intensity-very-low' },
+  { index: 'low', dot: 'bg-intensity-low' },
+  { index: 'moderate', dot: 'bg-intensity-moderate' },
+  { index: 'high', dot: 'bg-intensity-high' },
+  { index: 'very high', dot: 'bg-intensity-very-high' },
+] as const;
 
 interface ForecastChartProps {
   forecast: ForecastData[];
@@ -527,27 +536,13 @@ export function ForecastChart({
       </div>
 
       <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground flex-wrap">
-        <div className="flex items-center gap-1">
-          <div className="w-2 h-2 rounded-full bg-intensity-very-low" />
-          <span>Very Low</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="w-2 h-2 rounded-full bg-intensity-low" />
-          <span>Low</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="w-2 h-2 rounded-full bg-intensity-moderate" />
-          <span>Moderate</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="w-2 h-2 rounded-full bg-intensity-high" />
-          <span>High</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="w-2 h-2 rounded-full bg-intensity-very-high" />
-          <span>Very High</span>
-        </div>
-        <span className="text-muted-foreground/80" data-testid="forecast-unit">
+        {LEGEND_BANDS.map(({ index, dot }) => (
+          <div key={index} className="flex items-center gap-1" data-testid="forecast-legend-item">
+            <div className={`w-2 h-2 rounded-full ${dot}`} />
+            <span>{getConditionParts(index, 'plain').band}</span>
+          </div>
+        ))}
+        <span className="text-muted-foreground" data-testid="forecast-unit">
           Values in gCO₂/kWh
         </span>
       </div>
