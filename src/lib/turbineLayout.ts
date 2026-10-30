@@ -1,33 +1,46 @@
-import { getTurbineBottomPct } from '@/lib/sceneUtils';
+import { getHillRidgeY } from '@/lib/sceneUtils';
 
 export type TurbineLayer = 'back' | 'mid' | 'front';
 
 export interface TurbineSlot {
-  left: number;
+  /** Scene x in the countryside viewBox (0 to 400). */
+  x: number;
   scale: number;
   z: number;
   layer: TurbineLayer;
-  bottom: number;
+  /** Scene y of the ridge under the mast, in the same viewBox. */
+  groundY: number;
 }
 
-const TURBINE_SLOT_DEFS: Array<Omit<TurbineSlot, 'bottom'>> = [
+/**
+ * The hero text and renewable pill sit over scene x 112 to 288 at every size
+ * (#239 measures this for the sheep). Turbines are tall enough to reach the
+ * hero from any ridge, so no mast or rotor may sit inside this band.
+ */
+export const TURBINE_HERO_SAFE_X = { min: 112, max: 288 } as const;
+
+/** Rotor radius in scene units at the narrowest phone (320px, 0.8 px per unit). */
+export function turbineHalfWidthUnits(scale: number): number {
+  return (48 * scale) / 2 / 0.8;
+}
+
+const TURBINE_SLOT_DEFS: Array<Omit<TurbineSlot, 'groundY'>> = [
   // Turbines must visually dominate trees (front trees ~0.5). Front slots ≥0.95.
-  { left: 18, scale: 0.42, z: 1, layer: 'back' },
-  { left: 25, scale: 0.38, z: 1, layer: 'back' },
-  { left: 92, scale: 0.4, z: 1, layer: 'back' },
-  { left: 50, scale: 0.68, z: 15, layer: 'mid' },
-  { left: 60, scale: 0.64, z: 15, layer: 'mid' },
-  { left: 72, scale: 0.7, z: 15, layer: 'mid' },
-  { left: 30, scale: 1.05, z: 25, layer: 'front' },
-  { left: 45, scale: 0.98, z: 25, layer: 'front' },
+  { x: 16, scale: 0.42, z: 1, layer: 'back' },
+  { x: 34, scale: 0.38, z: 1, layer: 'back' },
+  { x: 384, scale: 0.4, z: 1, layer: 'back' },
+  { x: 345, scale: 0.68, z: 15, layer: 'mid' },
+  { x: 372, scale: 0.64, z: 15, layer: 'mid' },
+  { x: 62, scale: 0.7, z: 15, layer: 'mid' },
+  { x: 44, scale: 1.05, z: 25, layer: 'front' },
+  { x: 76, scale: 0.98, z: 25, layer: 'front' },
 ];
 
-/** Build wind-driven turbine placements that sit on hill ridge lines. */
+/** Build wind-driven turbine placements whose masts stand on the hill they belong to. */
 export function buildTurbineLayout(windPercentage: number): TurbineSlot[] {
-  const CONTAINER_PCT = 100;
   const allSlots: TurbineSlot[] = TURBINE_SLOT_DEFS.map((slot) => ({
     ...slot,
-    bottom: getTurbineBottomPct(slot.layer, slot.left, CONTAINER_PCT, -1),
+    groundY: getHillRidgeY(slot.layer, slot.x),
   }));
 
   let count: number;
@@ -52,3 +65,26 @@ export function buildTurbineLayout(windPercentage: number): TurbineSlot[] {
   const remaining = allSlots.filter((s) => !seeded.includes(s));
   return [...seeded, ...remaining].slice(0, count);
 }
+
+/** Countryside viewBox `0 30 400 120`, drawn with xMidYMax meet. */
+const VB = { x: 0, y: 30, w: 400, h: 120 };
+
+/**
+ * Where scene point (x, y) lands in a container of width by height px, using
+ * the same xMidYMax meet fit as the landscape SVGs, as CSS left and bottom px.
+ */
+export function scenePointToPx(
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+): { left: number; bottom: number; unit: number } {
+  const unit = Math.min(width / VB.w, height / VB.h);
+  const offsetX = (width - VB.w * unit) / 2;
+  return { left: offsetX + (x - VB.x) * unit, bottom: (VB.y + VB.h - y) * unit, unit };
+}
+
+/** The mast foot is 4 of 96 px above the turbine box bottom (WindTurbine viewBox). */
+export const TURBINE_FOOT_PX = 4;
+/** Sink the foot into the ridge so it reads as planted. */
+export const TURBINE_SINK_PX = 1;
