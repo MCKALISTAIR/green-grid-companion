@@ -10,6 +10,7 @@ import {
   getCurrentIntensity,
   getAllRegions,
   pickLiveIntensity,
+  isActualIntensity,
   RegionalData,
   RegionListItem,
   ForecastData,
@@ -300,6 +301,10 @@ export function useCarbonData(postcode: string) {
   const usingNationalFallback = !!regionalData && regionalLive === null && nationalLive !== null;
   const liveIntensity = regionalLive ?? nationalLive;
   const hasReading = liveIntensity !== null;
+  // Whether the figure on screen is NESO's published actual (else the forecast).
+  const isActualReading = isActualIntensity(
+    regionalLive !== null ? regionalData?.intensity : nationalQuery.data?.intensity,
+  );
   const intensity = hasReading ? liveIntensity : 0;
   const index =
     (usingNationalFallback ? undefined : regionalData?.intensity?.index) ??
@@ -372,6 +377,8 @@ export function useCarbonData(postcode: string) {
     intensity,
     /** False when `intensity` is only the 0 placeholder (no real reading yet). */
     hasReading,
+    /** True when the figure shown is NESO's published actual, not the forecast. */
+    isActualReading,
     previousIntensity,
     index,
     region,
