@@ -63,12 +63,11 @@ export function SceneSkyLayer({
         omitBank={bankBehindSkyline}
       />
 
-      {/* Aurora for magically clean nights (Phase 1: cleanliness > 0.85) */}
+      {/* Scene audit item 3: a green aurora on very low nights only (keyed to the
+          label's band, never grams), so it never reads as smog. */}
       <AnimatePresence>
-        {isNight && sceneConfig.cleanliness > 0.85 && weather.cloudCover < 60 && (
-          <AuroraRibbon
-            opacity={0.2 + 0.18 * Math.min(1, (sceneConfig.cleanliness - 0.85) / 0.15)}
-          />
+        {isNight && sceneConfig.band === 'very low' && weather.cloudCover < 60 && (
+          <AuroraRibbon opacity={0.5} />
         )}
       </AnimatePresence>
 
