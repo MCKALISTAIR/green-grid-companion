@@ -235,19 +235,23 @@ export function CitySceneLayers({
       </div>
 
       <AnimatePresence>
-        {hero.pigeonCount > 0 && sceneConfig.isDaytime && sceneConfig.cleanliness > 0.4 && (
-          <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-[23] overflow-hidden">
-            <svg
-              viewBox="0 0 400 150"
-              className="w-full h-full"
-              preserveAspectRatio={SCENE_SILHOUETTE_ASPECT}
-              aria-hidden="true"
-            >
-              <Pigeon x={180} y={136} delay={0} />
-              {hero.pigeonCount > 1 && <Pigeon x={60} y={135} delay={1.5} />}
-            </svg>
-          </div>
-        )}
+        {/* Reduce Motion: no pigeons, like the Tube flash. They wander, peck and fly off forever. */}
+        {!shouldReduceMotion &&
+          hero.pigeonCount > 0 &&
+          sceneConfig.isDaytime &&
+          sceneConfig.cleanliness > 0.4 && (
+            <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-[23] overflow-hidden">
+              <svg
+                viewBox="0 0 400 150"
+                className="w-full h-full"
+                preserveAspectRatio={SCENE_SILHOUETTE_ASPECT}
+                aria-hidden="true"
+              >
+                <Pigeon x={180} y={136} delay={0} />
+                {hero.pigeonCount > 1 && <Pigeon x={60} y={135} delay={1.5} />}
+              </svg>
+            </div>
+          )}
       </AnimatePresence>
 
       <AnimatePresence>
