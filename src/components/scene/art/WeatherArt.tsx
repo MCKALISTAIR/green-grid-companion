@@ -361,12 +361,12 @@ export function AuroraRibbon({ opacity = 0.38 }: { opacity?: number }) {
     >
       <path
         d={`M-10 ${y} C${w * 0.25} ${y - 40} ${w * 0.45} ${y + 20} ${w * 0.7} ${y - 30} S${w + 10} ${y - 10} ${w + 10} ${y - 24} V${y + 30} C${w * 0.6} ${y + 6} ${w * 0.3} ${y + 40} -10 ${y + 26}Z`}
-        fill="#5eead4"
+        fill="#5fd93a"
       />
       <path
         d={`M-10 ${y + 12} C${w * 0.3} ${y - 20} ${w * 0.5} ${y + 30} ${w + 10} ${y - 4} V${y + 18} C${w * 0.5} ${y + 40} ${w * 0.2} ${y + 18} -10 ${y + 30}Z`}
-        fill="#a7f3d0"
-        opacity=".7"
+        fill="#b5f58f"
+        opacity=".75"
       />
     </svg>
   );

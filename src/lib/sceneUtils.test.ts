@@ -11,23 +11,23 @@ import { WeatherData } from '../hooks/useWeatherData';
 
 describe('sceneUtils', () => {
   describe('getCarbonIndex', () => {
-    it('returns "very low" for intensity < 50', () => {
-      expect(getCarbonIndex(40)).toBe('very low');
+    it('returns "very low" for intensity <= 24 (NESO 2026)', () => {
+      expect(getCarbonIndex(20)).toBe('very low');
     });
 
-    it('returns "low" for intensity < 150', () => {
-      expect(getCarbonIndex(100)).toBe('low');
+    it('returns "low" for intensity 25-89', () => {
+      expect(getCarbonIndex(60)).toBe('low');
     });
 
-    it('returns "moderate" for intensity < 250', () => {
-      expect(getCarbonIndex(200)).toBe('moderate');
+    it('returns "moderate" for intensity 90-169', () => {
+      expect(getCarbonIndex(150)).toBe('moderate');
     });
 
-    it('returns "high" for intensity < 350', () => {
-      expect(getCarbonIndex(300)).toBe('high');
+    it('returns "high" for intensity 170-230', () => {
+      expect(getCarbonIndex(215)).toBe('high');
     });
 
-    it('returns "very high" for intensity >= 350', () => {
+    it('returns "very high" for intensity >= 231', () => {
       expect(getCarbonIndex(400)).toBe('very high');
     });
   });
