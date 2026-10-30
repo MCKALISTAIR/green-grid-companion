@@ -124,14 +124,20 @@ async function castleContrast(
         .sort((x, y) => x - y);
       const ref = covered[Math.floor(covered.length * 0.95)] ?? 1;
       const ratios: number[] = [];
+      let darker = 0;
       for (let i = 0; i < pa.length; i += 4) {
         if (cov[i / 4] < 0.5 * ref) continue; // castle not (or barely) visible here
         if (delta(pa, pa2, i) > 4 || delta(pb, pb2, i) > 4) continue; // moving weather
+        if (lum(pa, i) < lum(pb, i)) darker++;
         const [hi, lo] = [lum(pa, i), lum(pb, i)].sort((x, y) => y - x);
         ratios.push((hi + 0.05) / (lo + 0.05));
       }
       ratios.sort((x, y) => x - y);
-      return { median: ratios[Math.floor(ratios.length / 2)] ?? 1, pixels: ratios.length };
+      return {
+        median: ratios[Math.floor(ratios.length / 2)] ?? 1,
+        pixels: ratios.length,
+        darkShare: ratios.length ? darker / ratios.length : 0,
+      };
     },
     [shots.on, shots.on2, shots.key, shots.off, shots.off2].map((x) => x.toString('base64')),
   );
@@ -143,6 +149,7 @@ async function measureCastle(
   weather: keyof typeof WEATHER,
   viewport: { width: number; height: number },
   grams: { intensity: number; index: string },
+  { silhouette = false }: { silhouette?: boolean } = {},
 ) {
   const scene = await openEdinburgh(page, time, weather, viewport, grams);
   const castle = scene.locator('[data-city-art="edinburgh-castle"]').first();
@@ -166,7 +173,7 @@ async function measureCastle(
   const off = await page.screenshot({ clip });
   await page.waitForTimeout(300);
   const off2 = await page.screenshot({ clip });
-  const { median, pixels } = await castleContrast(page, { on, on2, key, off, off2 });
+  const { median, pixels, darkShare } = await castleContrast(page, { on, on2, key, off, off2 });
   if (DUMP) {
     const tag = `${DUMP}/${time}-${weather}-${grams.intensity}g-${viewport.width}`;
     fs.writeFileSync(`${tag}-on.png`, on);
@@ -176,14 +183,29 @@ async function measureCastle(
   if (OUT) {
     fs.appendFileSync(
       OUT,
-      JSON.stringify({ vw: viewport.width, time, weather, g: grams.intensity, median, pixels }) +
-        '\n',
+      JSON.stringify({
+        vw: viewport.width,
+        time,
+        weather,
+        g: grams.intensity,
+        median,
+        pixels,
+        darkShare,
+      }) + '\n',
     );
   }
   // Fog is exempt: it may soften the castle, or hide it entirely.
   if (weather !== 'fog') {
     expect(pixels, 'castle should be visible').toBeGreaterThan(200);
     expect(median).toBeGreaterThanOrEqual(MIN_CONTRAST);
+    // By day the castle is a stone silhouette: darker than the sky behind it.
+    // The stone is darker than the sky; the only paler pixels are highlights
+    // drawn on purpose: the very-low hero rim light and lit windows (up to 11%)
+    // and, in snow, the white snow caps (up to 22%).
+    if (silhouette)
+      expect(darkShare, 'castle darker than the sky').toBeGreaterThanOrEqual(
+        weather === 'snow' ? 0.75 : 0.85,
+      );
   }
 }
 
@@ -205,18 +227,28 @@ for (const viewport of VIEWPORTS) {
   }
 }
 
-// (d) At very high the smog haze sits over the landmark layer. By day the castle
-// must still hold 1.5:1 in every weather but fog.
+// By day the castle is a stone silhouette at every band: darker than the sky
+// behind it (it never flips to pale stone) and at least 1.5:1, in every weather
+// but fog. One case per NESO band (10, 60, 130, 200, 300g).
 const DAY_TIMES = ['morning', 'midday', 'afternoon'] as const;
+const BANDS = [
+  { intensity: 10, index: 'very low' },
+  { intensity: 60, index: 'low' },
+  { intensity: 130, index: 'moderate' },
+  { intensity: 200, index: 'high' },
+  { intensity: 300, index: 'very high' },
+];
 for (const viewport of VIEWPORTS) {
-  for (const time of DAY_TIMES) {
-    for (const weather of Object.keys(WEATHER) as Array<keyof typeof WEATHER>) {
-      test(`castle vs sky at very high: ${time} ${weather} at ${viewport.width}x${viewport.height}`, async ({
-        page,
-      }) => {
-        test.setTimeout(120_000);
-        await measureCastle(page, time, weather, viewport, { intensity: 300, index: 'very high' });
-      });
+  for (const band of BANDS) {
+    for (const time of DAY_TIMES) {
+      for (const weather of Object.keys(WEATHER) as Array<keyof typeof WEATHER>) {
+        test(`castle silhouette by day: ${band.intensity}g ${time} ${weather} at ${viewport.width}x${viewport.height}`, async ({
+          page,
+        }) => {
+          test.setTimeout(120_000);
+          await measureCastle(page, time, weather, viewport, band, { silhouette: true });
+        });
+      }
     }
   }
 }
