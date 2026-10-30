@@ -105,9 +105,14 @@ export const NIGHT_BANK_SNOW_LIFT = 0.75;
 
 /** Far-layer haze by NESO band (brief §11.2 / Q5). None at very low or low. */
 const FAR_HAZE: Record<string, number> = { moderate: 0.22, high: 0.32, 'very high': 0.42 };
-/** (d) Very high by day: far-haze mix cap and extra darkening (L points) for 1.5:1. */
-export const VERY_HIGH_DAY_FAR_HAZE = 0.2;
-export const VERY_HIGH_DAY_DARKEN_L = { clear: 12, snow: 0, cloud: 0 } as const;
+/** Day silhouette: far-haze mix cap by day at every hazy band (was very high only). */
+export const DAY_SILHOUETTE_FAR_HAZE = 0.2;
+/** Day silhouette: extra darkening (L points) per band and weather group, for 1.5:1. */
+export const DAY_SILHOUETTE_DARKEN_L = {
+  moderate: { clear: 8, snow: 8, cloud: 12 },
+  high: { clear: 16, snow: 10, cloud: 14 },
+  'very high': { clear: 16, snow: 0, cloud: 0 },
+} as const;
 /**
  * (d) The scene haze over the castle is capped to this alpha. The haze itself stays at
  * its full band strength (0.45 far at very high) on the sky and skyline; only the
@@ -359,26 +364,30 @@ export function getEdinburghCastleColours({
     }
     const k = (nesoIndex || '').toLowerCase();
     const haze = FAR_HAZE[k];
-    // (d) By day at very high the sky is blended toward grey (HAZE_SKY_BLEND), so
-    // the full far-haze mix left the castle at 1.04-1.4:1. Cap the mix and darken
-    // so it holds 1.5:1 in every weather but fog. Fog is exempt and may soften.
-    const veryHighDay = k === 'very high' && !afterDark && !floodlit && weather !== 'fog';
+    // (d) Day silhouette: by day the castle is a stone silhouette, always darker
+    // than the sky behind it, at 1.5:1 or more in every weather but fog. The full
+    // far-haze mix pulled it toward the pale haze until it matched (1.17:1 at
+    // high) or read paler than the sky, so at every hazy band by day the mix is
+    // capped, the scene haze in front is capped (LANDMARK_HAZE_CAP), and the
+    // stone is darkened per band. Fog is exempt and may soften.
+    const daySilhouette = !!haze && !afterDark && !floodlit && weather !== 'fog';
     if (haze)
-      mixAll(MOOD[k as keyof typeof MOOD].haze, veryHighDay ? VERY_HIGH_DAY_FAR_HAZE : haze);
-    if (veryHighDay)
+      mixAll(MOOD[k as keyof typeof MOOD].haze, daySilhouette ? DAY_SILHOUETTE_FAR_HAZE : haze);
+    if (daySilhouette) {
+      const d = DAY_SILHOUETTE_DARKEN_L[k as keyof typeof DAY_SILHOUETTE_DARKEN_L];
       darkenAll(
         weather === 'clear' || weather === 'unknown'
-          ? VERY_HIGH_DAY_DARKEN_L.clear
+          ? d.clear
           : weather === 'snow'
-            ? VERY_HIGH_DAY_DARKEN_L.snow
-            : VERY_HIGH_DAY_DARKEN_L.cloud,
+            ? d.snow
+            : d.cloud,
       );
-    // (d) Cap the scene haze in front of the castle only (see LANDMARK_HAZE_CAP).
-    const front = getHazeTokens('very high', timeOfDay);
-    if (veryHighDay && front && !front.dim) {
-      rock = capHazeInFront(rock, front.far, LANDMARK_HAZE_CAP);
-      walls = capHazeInFront(walls, front.far, LANDMARK_HAZE_CAP);
-      roofs = capHazeInFront(roofs, front.far, LANDMARK_HAZE_CAP);
+      const front = getHazeTokens(k as 'moderate' | 'high' | 'very high', timeOfDay);
+      if (front && !front.dim) {
+        rock = capHazeInFront(rock, front.far, LANDMARK_HAZE_CAP);
+        walls = capHazeInFront(walls, front.far, LANDMARK_HAZE_CAP);
+        roofs = capHazeInFront(roofs, front.far, LANDMARK_HAZE_CAP);
+      }
     }
   }
 

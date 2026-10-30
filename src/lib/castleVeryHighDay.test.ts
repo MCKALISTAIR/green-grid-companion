@@ -7,13 +7,17 @@ const lum = (hex: string) => {
   return 0.2126 * l[0] + 0.7152 * l[1] + 0.0722 * l[2];
 };
 
-describe('castle at very high by day (d)', () => {
+describe('castle day silhouette at every hazy band', () => {
+  // The haze used to pull the walls paler as the band rose. Now the hazy bands
+  // by day are at least as dark as low, so the castle never flips to pale stone.
   for (const weather of ['clear', 'overcast', 'rain', 'snow', 'storm'] as const) {
-    it(`is darker than the same scene at high, ${weather}`, () => {
-      const at = (nesoIndex: string) =>
-        getEdinburghCastleColours({ timeOfDay: 'midday', weather, nesoIndex, heroLit: false });
-      expect(lum(at('very high').walls)).toBeLessThan(lum(at('high').walls));
-    });
+    for (const band of ['moderate', 'high', 'very high']) {
+      it(`${band}, ${weather}: walls no paler than at low`, () => {
+        const at = (nesoIndex: string) =>
+          getEdinburghCastleColours({ timeOfDay: 'midday', weather, nesoIndex, heroLit: false });
+        expect(lum(at(band).walls)).toBeLessThanOrEqual(lum(at('low').walls) * 1.05);
+      });
+    }
   }
 
   it('leaves fog and after dark alone', () => {
