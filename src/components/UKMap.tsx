@@ -2,7 +2,8 @@ import { RegionListItem } from '@/lib/carbonApi';
 import { getIntensityColor } from '@/lib/carbonApi';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
-import { MAP_MAX_WIDTH, markerLeft } from '@/lib/ukMapLayout';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { layoutMarkers, MAP_MAX_WIDTH, markerSizeFor } from '@/lib/ukMapLayout';
 import { Button } from '@/components/ui/button';
 const MotionButton = motion.create(Button);
 
@@ -58,9 +59,52 @@ const getPosition = (lat: number, lon: number) => {
   };
 };
 
+const coordsFor = (shortname: string) => {
+  const coords = REGION_COORDS[shortname];
+  if (coords) return coords;
+  if (shortname.includes('Merseyside')) return REGION_COORDS['Merseyside and Northern Wales'];
+  if (shortname.includes('South England')) return REGION_COORDS['Southern England'];
+  return undefined;
+};
+
 export function UKMap({ regions, onRegionSelect, selectedRegionId }: UKMapProps) {
+  const frameRef = useRef<HTMLDivElement>(null);
+  const [box, setBox] = useState({ w: 0, h: 0 });
+  useEffect(() => {
+    const el = frameRef.current;
+    if (!el) return;
+    const read = () => setBox({ w: el.clientWidth, h: el.clientHeight });
+    read();
+    if (typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(read);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const sz = useMemo(() => markerSizeFor(box.w || 346), [box.w]);
+  const byId = useMemo(() => new Map(regions.map((r) => [r.regionid, r])), [regions]);
+  const placed = useMemo(() => {
+    const w = box.w || 346;
+    const h = box.h || w / 0.61;
+    const anchors = regions.flatMap((region) => {
+      const coords = coordsFor(region.shortname);
+      if (!coords) return [];
+      const { x, y } = getPosition(coords.lat, coords.lon);
+      const offset = SOUTHERN_OFFSETS[region.shortname] ?? { x: 0, y: 0 };
+      // Offsets were tuned for 40px markers; scale them with the marker.
+      const k = sz.size / 40;
+      return [
+        { id: region.regionid, x: (x / 100) * w + offset.x * k, y: (y / 100) * h + offset.y * k },
+      ];
+    });
+    // mb-12 (48px) below the outline is marker room, so markers may sit in it.
+    return layoutMarkers(anchors, w, h, sz, 48);
+  }, [regions, box.w, box.h, sz]);
+  const leaders = placed.filter((m) => m.leader);
+
   return (
     <div
+      ref={frameRef}
       className="relative isolate w-full aspect-[0.61] mx-auto mt-4 mb-12 select-none"
       style={{ maxWidth: MAP_MAX_WIDTH }}
       role="group"
@@ -388,23 +432,34 @@ c21 14 23 19 14 45 -8 23 -7 35 5 53 9 13 25 50 36 83 15 44 17 61 8 72 -9 11
         </svg>
       </div>
 
-      {/* Region Markers */}
-      {regions.map((region) => {
-        let coords = REGION_COORDS[region.shortname];
-        if (!coords) {
-          if (region.shortname.includes('Merseyside'))
-            coords = REGION_COORDS['Merseyside and Northern Wales'];
-          if (region.shortname.includes('South England'))
-            coords = REGION_COORDS['Southern England'];
-        }
-
-        if (!coords) return null;
-
-        const { x, y } = getPosition(coords.lat, coords.lon);
+      {/* Region markers: laid out in px so colliding markers are nudged apart (leader line back to the region). */}
+      {leaders.length > 0 && (
+        <svg
+          className="absolute inset-0 w-full h-full pointer-events-none overflow-visible"
+          aria-hidden="true"
+          data-testid="map-leaders"
+        >
+          {leaders.map((m) => (
+            <g key={m.id}>
+              <line
+                x1={m.x}
+                y1={m.y}
+                x2={m.px}
+                y2={m.py}
+                className="stroke-foreground/45"
+                strokeWidth={1}
+              />
+              <circle cx={m.x} cy={m.y} r={2} className="fill-foreground/55" />
+            </g>
+          ))}
+        </svg>
+      )}
+      {placed.map((m) => {
+        const region = byId.get(m.id)!;
         const colorClass = getIntensityColor(region.intensity.index);
-        const offset = SOUTHERN_OFFSETS[region.shortname] ?? { x: 0, y: 0 };
         const lightBubble = ['low', 'moderate', 'high'].includes(region.intensity.index);
         const isSelected = selectedRegionId === region.regionid;
+        const xPct = box.w ? (m.px / box.w) * 100 : 50;
 
         return (
           <MotionButton
@@ -414,17 +469,24 @@ c21 14 23 19 14 45 -8 23 -7 35 5 53 9 13 25 50 36 83 15 44 17 61 8 72 -9 11
             animate={{ scale: isSelected ? 1.15 : 1, opacity: 1, zIndex: isSelected ? 50 : 10 }}
             transition={{ type: 'spring' as const, stiffness: 300, damping: 20 }}
             className={cn(
-              'absolute min-w-10 min-h-10 w-10 h-10 p-0 -ml-5 -mt-5 rounded-full flex items-center justify-center shadow-md transition-all duration-300',
+              'absolute p-0 rounded-full flex items-center justify-center shadow-md transition-all duration-300',
               colorClass,
               lightBubble ? 'map-light-ink' : 'map-dark-ink',
               isSelected
                 ? 'ring-4 ring-background shadow-xl'
-                : 'opacity-90 hover:opacity-100 hover:scale-110 hover:z-20 border-2 border-background/50',
+                : 'opacity-90 hover:opacity-100 border-2 border-background/50',
             )}
             style={{
-              left: markerLeft(x, offset.x),
-              top: `calc(${y}% + ${offset.y}px)`,
+              left: m.px,
+              top: m.py,
+              width: sz.size,
+              height: sz.size,
+              minWidth: sz.size,
+              minHeight: sz.size,
+              marginLeft: -sz.size / 2,
+              marginTop: -sz.size / 2,
             }}
+            data-map-marker=""
             aria-label={`${region.shortname}: ${region.intensity.forecast} gCO₂/kWh`}
             aria-pressed={isSelected}
             onClick={() => onRegionSelect?.(region.regionid)}
@@ -432,14 +494,19 @@ c21 14 23 19 14 45 -8 23 -7 35 5 53 9 13 25 50 36 83 15 44 17 61 8 72 -9 11
             {isSelected && (
               <span className="absolute inset-0 rounded-full animate-ping bg-current opacity-30 pointer-events-none" />
             )}
-            <span className="text-[10px] font-bold z-10">{region.intensity.forecast}</span>
+            <span
+              className="font-bold z-10 leading-none tracking-tight"
+              style={{ fontSize: sz.font }}
+            >
+              {region.intensity.forecast}
+            </span>
             {isSelected && (
               <motion.div
                 initial={{ y: 5, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 className={cn(
                   'absolute top-full mt-2 w-max max-w-[180px] bg-popover/95 backdrop-blur-md px-3 py-1.5 rounded-lg text-xs shadow-lg border border-border/50 font-semibold whitespace-normal text-center text-popover-foreground z-50 pointer-events-none',
-                  x > 65 ? 'right-0' : x < 35 ? 'left-0' : 'left-1/2 -translate-x-1/2',
+                  xPct > 65 ? 'right-0' : xPct < 35 ? 'left-0' : 'left-1/2 -translate-x-1/2',
                 )}
               >
                 {region.shortname}
