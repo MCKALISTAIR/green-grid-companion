@@ -11,6 +11,7 @@ import { useSceneDirector } from '@/hooks/useSceneDirector';
 import { useCleanlinessBand } from '@/hooks/useCleanlinessBand';
 import { useSceneGrowth } from '@/hooks/useSceneGrowth';
 import { SceneHaze } from './scene/art/SceneHaze';
+import { nesoBand } from '@/lib/nesoBand';
 import { getHazeBand, getSkyBlend, HAZE_SKY_BLEND_COLOR } from '@/lib/sceneHaze';
 import { StateTransitionFX } from './scene/StateTransitionFX';
 import { SceneTemporalLife } from './scene/SceneTemporalLife';
@@ -161,17 +162,7 @@ export function IntensityScene({
   const intensity = typeof rawIntensity === 'number' && !isNaN(rawIntensity) ? rawIntensity : 150;
 
   const rawIndex =
-    isDirectorMode && overrides.intensity !== undefined
-      ? overrides.intensity < 50
-        ? 'very low'
-        : overrides.intensity < 150
-          ? 'low'
-          : overrides.intensity < 250
-            ? 'moderate'
-            : overrides.intensity < 350
-              ? 'high'
-              : 'very high'
-      : propIndex;
+    isDirectorMode && overrides.intensity !== undefined ? nesoBand(overrides.intensity) : propIndex;
   const index = rawIndex || 'moderate';
   // PR-2b: haze and smoke follow the NESO band only, and need a real reading
   // (or a Director override). No data means no haze and no smoke.
@@ -179,7 +170,11 @@ export function IntensityScene({
   const hazeBand = hasBandReading ? getHazeBand(rawIndex, intensity) : 'none';
 
   // Cleanliness band + transition flourish trigger
-  const { band: cleanlinessBand, transition: bandTransition } = useCleanlinessBand(intensity);
+  const { band: cleanlinessBand, transition: bandTransition } = useCleanlinessBand(
+    intensity,
+    undefined,
+    rawIndex,
+  );
   const sceneGrowth = useSceneGrowth(intensity, generationMix);
 
   const sunPosition = realSunPosition;
