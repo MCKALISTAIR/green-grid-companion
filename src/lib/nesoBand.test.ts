@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { bandFor, nesoBand } from './nesoBand';
 import { getCleanlinessBand } from '@/hooks/useCleanlinessBand';
 import { getCarbonIndex } from './sceneUtils';
-import { getMoodBand } from './artPalette';
+import { getHazeBand } from './sceneHaze';
 
 describe('nesoBand (NESO 2026 Table 2)', () => {
   it.each([
@@ -29,7 +29,7 @@ describe('nesoBand (NESO 2026 Table 2)', () => {
 
   it('BH-139: 215 g gives the high scene, matching the label', () => {
     expect(getCleanlinessBand(215)).toBe('dirty');
-    expect(getMoodBand(215, '')).toBe('high');
+    expect(getHazeBand('', 215)).toBe('high');
   });
 
   it.each([

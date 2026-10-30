@@ -23,6 +23,8 @@ vi.mock('@transistorsoft/capacitor-background-fetch', () => ({
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: { auth: { getSession: async () => ({ data: { session: null } }) } },
 }));
+const ensure = vi.hoisted(() => vi.fn(async () => ({ access_token: 'anon-jwt' }) as unknown));
+vi.mock('@/lib/auth-utils', () => ({ ensureAuthSession: ensure }));
 vi.mock('@/lib/nativePushToken', () => ({ getNativePushToken: async () => 'tok-1' }));
 vi.mock('@/lib/dailyOutlookServer', async (orig) => {
   const real = await orig<typeof import('@/lib/dailyOutlookServer')>();
@@ -118,5 +120,19 @@ describe('useNotifications daily outlook: server or phone, never both (BH-73)', 
       postcode: 'EH1',
       platform: 'ios',
     });
+  });
+
+  it('native sync gets its token through ensureAuthSession (BH-149)', async () => {
+    enablePrefs('07:30');
+    localStorage.setItem('gridgreen-postcode', 'EH1');
+    ensure.mockClear();
+    renderHook(() => useNotifications());
+    await waitFor(() => expect(syncDailyOutlookSubscription).toHaveBeenCalled(), { timeout: 3000 });
+    const opts = vi.mocked(syncDailyOutlookSubscription).mock.calls.at(-1)![0];
+    expect(opts.accessToken).toBeUndefined();
+    await expect(opts.getAccessToken!()).resolves.toBe('anon-jwt');
+    expect(ensure).toHaveBeenCalled();
+    ensure.mockResolvedValueOnce(null);
+    await expect(opts.getAccessToken!()).resolves.toBeNull();
   });
 });

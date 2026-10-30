@@ -6,9 +6,9 @@ import {
   PushNotificationSchema,
   ActionPerformed,
 } from '@capacitor/push-notifications';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
+import { ensureAuthSession } from '@/lib/auth-utils';
 
 export interface PushNotificationPrefs {
   lowIntensityEnabled: boolean;
@@ -21,6 +21,26 @@ export interface PushNotificationPrefs {
   weeklyDigestDay: number;
   monthlyReportEnabled: boolean;
   monthlyReportDay: number;
+}
+
+/**
+ * BH-149: push-subscriptions needs a session. Make sure one exists (anonymous
+ * if needed) and return headers carrying its token, or null if none could be
+ * made, in which case the caller must not send the request.
+ */
+async function pushAuthHeaders(): Promise<Record<string, string> | null> {
+  let accessToken: string | undefined;
+  try {
+    accessToken = (await ensureAuthSession())?.access_token;
+  } catch {
+    accessToken = undefined;
+  }
+  if (!accessToken) return null;
+  return {
+    'Content-Type': 'application/json',
+    apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+    Authorization: `Bearer ${accessToken}`,
+  };
 }
 
 const DEFAULT_PREFS: PushNotificationPrefs = {
@@ -48,15 +68,10 @@ export function usePushNotifications(postcode: string) {
   // Load preferences via edge function (secure server-side access)
   const loadPreferences = useCallback(async (token: string) => {
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-      };
-      if (session?.access_token) {
-        headers['Authorization'] = `Bearer ${session.access_token}`;
+      const headers = await pushAuthHeaders();
+      if (!headers) {
+        logger.warn('Push settings call skipped: no session');
+        return;
       }
 
       // Use query params for GET request
@@ -214,15 +229,11 @@ export function usePushNotifications(postcode: string) {
         // Optimistic update
         setPrefs(newPrefs);
 
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        const headers: Record<string, string> = {
-          'Content-Type': 'application/json',
-          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-        };
-        if (session?.access_token) {
-          headers['Authorization'] = `Bearer ${session.access_token}`;
+        const headers = await pushAuthHeaders();
+        if (!headers) {
+          logger.warn('Push settings call skipped: no session');
+          toast.error("Couldn't save your notification settings");
+          return;
         }
 
         const response = await fetch(
@@ -283,15 +294,10 @@ export function usePushNotifications(postcode: string) {
     if (!deviceToken) return;
 
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-      };
-      if (session?.access_token) {
-        headers['Authorization'] = `Bearer ${session.access_token}`;
+      const headers = await pushAuthHeaders();
+      if (!headers) {
+        logger.warn('Push settings call skipped: no session');
+        return;
       }
 
       const response = await fetch(

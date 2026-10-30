@@ -26,6 +26,7 @@ function config(cleanliness: number): SceneVisualConfig {
     groundColor: '#4a7c3f',
     windSpeed: 10,
     weatherKnown: true,
+    hazeBand: cleanliness < 0.2 ? 'very high' : 'none',
   } as SceneVisualConfig;
 }
 
@@ -68,9 +69,11 @@ describe('BH-102 no chrome icons in the scene', () => {
     },
   );
 
-  it('very dirty countryside still draws the factories (world unchanged)', () => {
+  it('PR-2b: the overlay no longer paints white-box factories or loose smoke', () => {
+    // The one gas plant (and its smoke) lives in the countryside back-hill layer.
     const { container } = renderOverlay(0.1);
-    expect(container.querySelectorAll('svg').length).toBeGreaterThan(0);
+    expect(container.querySelector('[data-art="smoke"]')).toBeNull();
+    expect(container.querySelector('[data-art="gas-plant"]')).toBeNull();
   });
 
   it.each([301, 340, 450])('no pollution warning, red border or vignette at %s g', (intensity) => {

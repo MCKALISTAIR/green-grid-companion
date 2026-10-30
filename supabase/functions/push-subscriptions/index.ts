@@ -3,6 +3,16 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
 import { normalizeSubscriptionPostcode } from '../_shared/subscription-postcode.ts';
 import { pushDeliveryFor } from '../_shared/push-config.ts';
+import { requireUser } from '../_shared/require-user.ts';
+import { checkRateLimit } from '../_shared/rate-limit.ts';
+import {
+  PUSH_IP_LIMIT,
+  PUSH_USER_LIMIT,
+  PUSH_WINDOW_SECONDS,
+  canAccessSubscription,
+  isPlausibleDeviceToken,
+  ownerForUpsert,
+} from '../_shared/push-subscription-access.ts';
 
 interface PushSubscriptionData {
   device_token: string;
@@ -19,73 +29,18 @@ interface PushSubscriptionData {
   monthly_report_enabled?: boolean;
   monthly_report_day?: number;
   is_sandbox?: boolean;
+  /** Ignored. Kept so older app builds that still send it are accepted. */
   attestation_token?: string | null;
 }
 
-/**
- * Pluggable device attestation check to verify request legitimacy
- * Supports Apple DeviceCheck REST API and Google Play Integrity.
- */
-async function validateDeviceAttestation(
-  token: string | null,
-  platform: string,
-): Promise<{ valid: boolean; reason?: string }> {
-  // If no token is provided, check if attestation is strictly enforced
-  const enforceAttestation = Deno.env.get('ENFORCE_DEVICE_ATTESTATION') === 'true';
+const json = (body: unknown, status: number, extra: Record<string, string> = {}) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json', ...extra },
+  });
 
-  if (!token) {
-    if (enforceAttestation) {
-      return { valid: false, reason: 'Device attestation token is required' };
-    }
-    return { valid: true }; // Fail-open / lenient mode
-  }
-
-  const platformLower = platform.toLowerCase();
-
-  // 1. Apple DeviceCheck Verification (iOS)
-  if (platformLower === 'ios') {
-    const appleKey = Deno.env.get('APPLE_DEVICE_CHECK_KEY'); // base64 encoded private key or token
-    const appleKeyId = Deno.env.get('APPLE_DEVICE_CHECK_KEY_ID');
-    const appleTeamId = Deno.env.get('APPLE_DEVICE_CHECK_TEAM_ID');
-
-    if (!appleKey || !appleKeyId || !appleTeamId) {
-      console.warn('[ATTESTATION] Apple DeviceCheck keys are not configured. Bypassing check.');
-      return { valid: true };
-    }
-
-    try {
-      console.log('[ATTESTATION] Verifying iOS device token via Apple DeviceCheck API...');
-      // For verification, call POST https://api.devicecheck.apple.com/v1/validate_device_token
-      return { valid: true };
-    } catch (err) {
-      console.error('[ATTESTATION] iOS DeviceCheck failed:', err);
-      return { valid: false, reason: 'Device check service error' };
-    }
-  }
-
-  // 2. Google Play Integrity Verification (Android)
-  if (platformLower === 'android') {
-    const googleCreds = Deno.env.get('GOOGLE_PLAY_INTEGRITY_JSON');
-
-    if (!googleCreds) {
-      console.warn(
-        '[ATTESTATION] Google Play Integrity credentials not configured. Bypassing check.',
-      );
-      return { valid: true };
-    }
-
-    try {
-      console.log('[ATTESTATION] Verifying Android integrity token via Google API...');
-      // For verification, call POST https://playintegrity.googleapis.com/v1/sources/{packageName}/tokens/{token}:decode
-      return { valid: true };
-    } catch (err) {
-      console.error('[ATTESTATION] Android Play Integrity check failed:', err);
-      return { valid: false, reason: 'Android integrity check service error' };
-    }
-  }
-
-  return { valid: true };
-}
+const tooMany = (retryAfter: number) =>
+  json({ error: 'Too many requests' }, 429, { 'Retry-After': String(retryAfter) });
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
@@ -100,19 +55,22 @@ Deno.serve(async (req) => {
     // Create service role client for secure database access
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Authenticate the user if Authorization header is present
-    let userId: string | null = null;
-    const authHeader = req.headers.get('Authorization');
-    if (authHeader?.startsWith('Bearer ')) {
-      const token = authHeader.replace('Bearer ', '');
-      const { data: userData, error: userError } = await supabase.auth.getUser(token);
-      if (userError) {
-        console.warn('JWT validation failed:', userError.message);
-      } else if (userData?.user) {
-        userId = userData.user.id;
-        console.log(`Authenticated request as user: ${userId}`);
-      }
-    }
+    // BH-149: rate limit by IP first, then require a session (anonymous is
+    // fine), then rate limit by user.
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    const ipLimit = await checkRateLimit(`push-subs:ip:${ip}`, PUSH_IP_LIMIT, PUSH_WINDOW_SECONDS);
+    if (!ipLimit.allowed) return tooMany(ipLimit.retryAfter);
+
+    const auth = await requireUser(req, (t) => supabase.auth.getUser(t), 'push-subscriptions');
+    if ('response' in auth) return auth.response;
+    const userId = auth.user.id;
+
+    const userLimit = await checkRateLimit(
+      `push-subs:user:${userId}`,
+      PUSH_USER_LIMIT,
+      PUSH_WINDOW_SECONDS,
+    );
+    if (!userLimit.allowed) return tooMany(userLimit.retryAfter);
 
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
@@ -130,7 +88,7 @@ Deno.serve(async (req) => {
         // Get subscription by device token
         const deviceToken = url.searchParams.get('device_token');
 
-        if (!deviceToken) {
+        if (!isPlausibleDeviceToken(deviceToken)) {
           return new Response(JSON.stringify({ error: 'device_token is required' }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -152,10 +110,8 @@ Deno.serve(async (req) => {
         }
 
         // Ownership check: If subscription is tied to a user, it must match the authenticated requester
-        if (data && data.user_id && data.user_id !== userId) {
-          console.warn(
-            `[SECURITY] Access denied to token starting with ${deviceToken.substring(0, 10)}. Belongs to user ${data.user_id}, but request is from user ${userId}`,
-          );
+        if (data && !canAccessSubscription(data.user_id, userId)) {
+          console.warn('[SECURITY] push subscription access denied');
           return new Response(JSON.stringify({ error: 'Forbidden' }), {
             status: 403,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -177,7 +133,7 @@ Deno.serve(async (req) => {
           });
         }
 
-        if (!body.device_token || !body.postcode) {
+        if (!isPlausibleDeviceToken(body.device_token) || !body.postcode) {
           return new Response(JSON.stringify({ error: 'device_token and postcode are required' }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -260,22 +216,6 @@ Deno.serve(async (req) => {
           }
         }
 
-        // Validate device attestation token
-        const attestation = await validateDeviceAttestation(
-          body.attestation_token || null,
-          body.platform || 'ios',
-        );
-
-        if (!attestation.valid) {
-          console.warn(
-            `[SECURITY] Blocked subscription due to failed device attestation: ${attestation.reason}`,
-          );
-          return new Response(
-            JSON.stringify({ error: `Device integrity check failed: ${attestation.reason}` }),
-            { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-          );
-        }
-
         // Check ownership of existing subscription
         const { data: existingSub, error: checkError } = await supabase
           .from('push_subscriptions')
@@ -284,17 +224,16 @@ Deno.serve(async (req) => {
           .maybeSingle();
 
         if (checkError) {
-          console.error('Error checking existing subscription:', checkError);
+          console.error('Error checking existing subscription:', checkError.message);
+          return json({ error: 'Failed to check subscription' }, 500);
         }
 
-        if (existingSub && existingSub.user_id && existingSub.user_id !== userId) {
-          console.warn(
-            `[SECURITY] Attempt to hijack subscription from user ${existingSub.user_id} by user ${userId}`,
-          );
-          return new Response(
-            JSON.stringify({ error: 'Forbidden: Subscription belongs to another user' }),
-            { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-          );
+        if (existingSub && !canAccessSubscription(existingSub.user_id, userId)) {
+          console.warn('[SECURITY] push subscription access denied');
+          return new Response(JSON.stringify({ error: 'Forbidden' }), {
+            status: 403,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
         }
 
         const { data, error } = await supabase
@@ -302,7 +241,7 @@ Deno.serve(async (req) => {
           .upsert(
             {
               device_token: body.device_token,
-              user_id: userId || (existingSub ? existingSub.user_id : null),
+              user_id: ownerForUpsert(userId),
               postcode,
               platform: body.platform?.toLowerCase() || 'ios',
               low_intensity_enabled: body.low_intensity_enabled ?? false,
@@ -350,7 +289,7 @@ Deno.serve(async (req) => {
         // Delete subscription by device token
         const deviceToken = url.searchParams.get('device_token');
 
-        if (!deviceToken) {
+        if (!isPlausibleDeviceToken(deviceToken)) {
           return new Response(JSON.stringify({ error: 'device_token is required' }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -365,13 +304,12 @@ Deno.serve(async (req) => {
           .maybeSingle();
 
         if (checkError) {
-          console.error('Error checking existing subscription:', checkError);
+          console.error('Error checking existing subscription:', checkError.message);
+          return json({ error: 'Failed to check subscription' }, 500);
         }
 
-        if (existingSub && existingSub.user_id && existingSub.user_id !== userId) {
-          console.warn(
-            `[SECURITY] Attempt to delete subscription of user ${existingSub.user_id} by user ${userId}`,
-          );
+        if (existingSub && !canAccessSubscription(existingSub.user_id, userId)) {
+          console.warn('[SECURITY] push subscription access denied');
           return new Response(JSON.stringify({ error: 'Forbidden' }), {
             status: 403,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },

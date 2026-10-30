@@ -1,10 +1,11 @@
+import { verifyAnonOwnership } from '../_shared/migration-proof.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // Hack to make VS Code happy with Deno globals in a Node workspace
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const Deno: any;
 
-import { safeErrorResponse } from '../_shared/safe-error.ts';
+import { redactIdentifiers, safeErrorResponse } from '../_shared/safe-error.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import {
   calculateMeterFootprint,
@@ -608,16 +609,20 @@ Deno.serve(async (req: Request) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      const { data: prevUserData, error: prevUserErr } =
-        await supabase.auth.admin.getUserById(previousUserId);
-      if (prevUserErr || !prevUserData?.user || prevUserData.user.is_anonymous !== true) {
+      // BH-147: the caller must prove they held that anonymous session (its
+      // access token), not just know its id. verifyAnonOwnership also checks
+      // the account is anonymous, so Google/Apple accounts can't be claimed.
+      const proof = await verifyAnonOwnership(previousUserId, payload.previousUserToken, (token) =>
+        supabase.auth.getUser(token),
+      );
+      if (!proof.ok) {
         logSecurityEvent({
           type: 'SUSPICIOUS_ACTIVITY',
           severity: 'MEDIUM',
           details: {
             user_id: userId.substring(0, 8) + '...',
             ip: clientIP,
-            message: 'migrate-data refused: previous user is not an anonymous account',
+            message: `migrate-data refused: ${proof.reason}`,
           },
           timestamp: new Date().toISOString(),
         });
@@ -839,15 +844,16 @@ Deno.serve(async (req: Request) => {
 
       // Fetch account details to get meter information
       const accountUrl = `https://api.octopus.energy/v1/accounts/${OCTOPUS_ACCOUNT_NUMBER}/`;
-      console.log(`Fetching account from: ${accountUrl}`);
+      console.log(`[${requestId}] Fetching Octopus account details`);
 
       const response = await fetch(accountUrl, {
         headers: { Authorization: authHeaderOctopus },
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`Octopus API error: ${response.status} - ${errorText}`);
+        // BH-150: never log the raw body; it can echo the account number.
+        await response.body?.cancel();
+        console.error(`[${requestId}] Octopus account API error: ${response.status}`);
         const userMessage =
           response.status === 404
             ? 'Account not found. Please check your account number is correct (e.g. A-12345678).'
@@ -917,7 +923,7 @@ Deno.serve(async (req: Request) => {
         );
 
         if (error) {
-          console.error(`Error storing meters for user ${userId}:`, error);
+          console.error(`[${requestId}] Error storing meters:`, error?.message);
         }
       }
 
@@ -1238,7 +1244,7 @@ Deno.serve(async (req: Request) => {
         });
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
-        console.error('Greenness forecast error:', message);
+        console.error('Greenness forecast error:', redactIdentifiers(message));
         // Return empty array for graceful degradation
         return new Response(JSON.stringify({ forecast: [] }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -1489,7 +1495,7 @@ Deno.serve(async (req: Request) => {
         );
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
-        console.error('Intelligent dispatch error:', message);
+        console.error('Intelligent dispatch error:', redactIdentifiers(message));
         return new Response(
           JSON.stringify({ planned: [], completed: [], error: 'dispatch_fetch_failed' }),
           {

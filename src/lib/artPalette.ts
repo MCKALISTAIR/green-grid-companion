@@ -1,25 +1,22 @@
-import { bandFor } from '@/lib/nesoBand';
-
 /**
  * Art pass v1 palettes (from GridSense Design's src/art.js / art2.js).
  * Intensity drives only the mood (haze + saturation), never the weather.
+ *
+ * PR-2b: the scene haze itself now comes from src/lib/sceneHaze.ts (NESO band
+ * only). MOOD stays as the far-landmark haze tint (cityLandmarkPalette), with
+ * no haze at very low and low.
  */
 export type MoodBand = 'zero' | 'very low' | 'low' | 'moderate' | 'high' | 'very high';
 
 export const MOOD: Record<MoodBand, { haze: string; a: number; sat: number }> = {
   zero: { haze: '#c9f7e3', a: 0.14, sat: 1.08 },
   'very low': { haze: '#ffffff', a: 0, sat: 1 },
-  low: { haze: '#f1e7d0', a: 0.12, sat: 0.95 },
+  // PR-2b (truth rule): no haze at very low or low.
+  low: { haze: '#f1e7d0', a: 0, sat: 1 },
   moderate: { haze: '#e6d3a8', a: 0.24, sat: 0.85 },
   high: { haze: '#cfa877', a: 0.34, sat: 0.72 },
   'very high': { haze: '#a8846a', a: 0.44, sat: 0.6 },
 };
-
-/** NESO index → mood band; a live 0 g reading gets the mint 'zero' glow. */
-export function getMoodBand(intensity: number, index: string): MoodBand {
-  if (intensity <= 0) return 'zero';
-  return bandFor(intensity, index);
-}
 
 export type SunTone = 'day' | 'dawn' | 'sunset';
 export const SUN_COLOURS: Record<SunTone, [string, string]> = {
@@ -50,8 +47,13 @@ export const CLOUD_BANK_COLOURS = {
  */
 export const CLOUD_BANK_DAY_BELOW_TEXT = {
   back: 'hsl(220 8% 57.5%)',
-  front: 'hsl(220 8% 58.5%)',
+  front: 'hsl(220 8% 57.5%)', // PR-2b: 58.5% -> 57.5% (top lobes stay under the sky)
   base: 'hsl(220 9% 54.5%)',
+  // PR-2b: the mid-body lift. The old IntensityMood showed a fake moderate haze
+  // during an outage that lightened this tall bank; with no data there is now no
+  // haze (truth rule), so the body itself carries that lightness. Re-measured in
+  // cloud-bank-day: body 1.08-1.13:1 and never lighter than the sky.
+  mid: 'hsl(220 8% 61%)',
   rim: 'rgba(255,255,255,0.38)',
 } as const;
 

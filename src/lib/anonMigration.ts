@@ -13,6 +13,11 @@
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
 
 export const ANON_USER_ID_KEY = 'octopus-anon-user-id';
+/**
+ * BH-147: the anonymous session's access token, sent with the id so the server
+ * can check the caller really held that session. Cleared with the id.
+ */
+export const ANON_PROOF_KEY = 'octopus-anon-proof';
 
 export interface MigrationResult {
   credentials?: boolean;
@@ -22,7 +27,10 @@ export interface MigrationResult {
 
 export interface AnonMigrationDeps {
   onAuthStateChange(cb: (event: AuthChangeEvent, session: Session | null) => void): unknown;
-  invoke(previousUserId: string): Promise<{ data: unknown; error: unknown }>;
+  invoke(
+    previousUserId: string,
+    previousUserToken: string | null,
+  ): Promise<{ data: unknown; error: unknown }>;
   storage: Pick<Storage, 'getItem' | 'removeItem'>;
   onMigrated?: (result: MigrationResult) => void;
   onError?: (error: unknown) => void;
@@ -37,12 +45,16 @@ export interface AnonMigrationDeps {
 export function rememberAnonUserId(
   user: { id?: string; is_anonymous?: boolean } | null | undefined,
   storage: Pick<Storage, 'setItem' | 'removeItem'>,
+  accessToken?: string | null,
 ): boolean {
   if (user?.id && user.is_anonymous === true) {
     storage.setItem(ANON_USER_ID_KEY, user.id);
+    if (accessToken) storage.setItem(ANON_PROOF_KEY, accessToken);
+    else storage.removeItem(ANON_PROOF_KEY);
     return true;
   }
   storage.removeItem(ANON_USER_ID_KEY);
+  storage.removeItem(ANON_PROOF_KEY);
   return false;
 }
 
@@ -54,15 +66,17 @@ export async function migrateAnonData(
   const user = session?.user;
   if (!user || user.is_anonymous) return false;
   const storedAnonId = deps.storage.getItem(ANON_USER_ID_KEY);
-  if (!storedAnonId) return false;
-  if (storedAnonId === user.id) {
-    deps.storage.removeItem(ANON_USER_ID_KEY);
+  const proof = deps.storage.getItem(ANON_PROOF_KEY);
+  if (!storedAnonId) {
+    deps.storage.removeItem(ANON_PROOF_KEY);
     return false;
   }
   // Clear first so a second auth event can't start a duplicate migration.
   deps.storage.removeItem(ANON_USER_ID_KEY);
+  deps.storage.removeItem(ANON_PROOF_KEY);
+  if (storedAnonId === user.id) return false;
   try {
-    const { data, error } = await deps.invoke(storedAnonId);
+    const { data, error } = await deps.invoke(storedAnonId, proof);
     if (error) {
       deps.onError?.(error);
       return false;

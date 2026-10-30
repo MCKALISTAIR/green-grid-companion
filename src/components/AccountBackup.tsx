@@ -16,14 +16,15 @@ import {
   Download,
   Lock,
 } from 'lucide-react';
+import { markOAuthStart, clearOAuthStart } from '@/lib/oauthIntent';
 import { lovable } from '@/integrations/lovable/index';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { User } from '@supabase/supabase-js';
 import { Capacitor } from '@capacitor/core';
-import { APP_SCHEME } from '@/config';
+import { nativeAuthRedirectUri } from '@/config';
 import { getAppleAuthorizationForDeletion } from '@/lib/appleRevocation';
-import { ANON_USER_ID_KEY, rememberAnonUserId } from '@/lib/anonMigration';
+import { ANON_PROOF_KEY, ANON_USER_ID_KEY, rememberAnonUserId } from '@/lib/anonMigration';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -104,7 +105,7 @@ export function AccountBackup({
       data: { session: currentSession },
     } = await supabase.auth.getSession();
     if (currentSession?.user?.id) {
-      rememberAnonUserId(currentSession.user, localStorage);
+      rememberAnonUserId(currentSession.user, localStorage, currentSession.access_token);
     }
 
     try {
@@ -113,7 +114,7 @@ export function AccountBackup({
       let redirectUri: string;
 
       if (Capacitor.isNativePlatform()) {
-        redirectUri = `${APP_SCHEME}://auth/callback`;
+        redirectUri = nativeAuthRedirectUri();
       } else if (isLocalhost) {
         // Localhost can't be used as OAuth redirect — use the preview URL instead
         redirectUri = 'https://gridsense-app.lovable.app';
@@ -121,11 +122,13 @@ export function AccountBackup({
         redirectUri = window.location.origin;
       }
 
+      markOAuthStart();
       const { error } = await lovable.auth.signInWithOAuth(provider, {
         redirect_uri: redirectUri,
       });
 
       if (error) {
+        clearOAuthStart();
         toast.error(`Sign in failed: ${error.message}`);
       }
     } catch {
@@ -233,6 +236,7 @@ export function AccountBackup({
       // BH-130: Octopus data can't move between two Google/Apple accounts (the
       // server only migrates from anonymous users), so don't queue a migration.
       localStorage.removeItem(ANON_USER_ID_KEY);
+      localStorage.removeItem(ANON_PROOF_KEY);
 
       // Sign out first
       await supabase.auth.signOut();
@@ -243,18 +247,20 @@ export function AccountBackup({
       let redirectUri: string;
 
       if (Capacitor.isNativePlatform()) {
-        redirectUri = `${APP_SCHEME}://auth/callback`;
+        redirectUri = nativeAuthRedirectUri();
       } else if (isLocalhost) {
         redirectUri = 'https://gridsense-app.lovable.app';
       } else {
         redirectUri = window.location.origin;
       }
 
+      markOAuthStart();
       const { error } = await lovable.auth.signInWithOAuth(switchTarget, {
         redirect_uri: redirectUri,
       });
 
       if (error) {
+        clearOAuthStart();
         toast.error(`Switch failed: ${error.message}`);
       }
     } catch {
