@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { getConditionParts } from '@/lib/conditionLabels';
 import { useQuery } from '@tanstack/react-query';
 import { getAllRegions, getIntensityColor } from '@/lib/carbonApi';
 import { UKMap } from '@/components/UKMap';
@@ -217,8 +218,11 @@ export default function MapPage() {
                             <div
                               className={`text-[10px] inline-flex items-center px-1.5 py-0.5 rounded-full mt-0.5 ${getIntensityColor(region.intensity.index)} bg-opacity-20`}
                             >
-                              <span className="capitalize font-medium text-[#0f1a24]">
-                                {region.intensity.index}
+                              <span
+                                data-testid="rank-band-pill"
+                                className="font-medium text-[#0f1a24]"
+                              >
+                                {getConditionParts(region.intensity.index, 'plain').band}
                               </span>
                             </div>
                           </div>

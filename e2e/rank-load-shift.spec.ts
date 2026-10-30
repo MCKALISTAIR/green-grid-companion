@@ -32,6 +32,9 @@ for (const viewport of [
     await page.waitForTimeout(1500);
     const cls = await page.evaluate(() => (window as unknown as { __cls: number }).__cls);
     expect(cls).toBeLessThan(0.05);
+    // Band pills use Home's sentence-case labels ("Very low", not "very low" / "Very Low").
+    for (const t of await page.getByTestId('rank-band-pill').allInnerTexts())
+      expect(t).toMatch(/^(Very low|Low|Moderate|High|Very high)$/);
     await context.close();
   });
 }
