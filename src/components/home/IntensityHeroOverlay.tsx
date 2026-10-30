@@ -404,7 +404,11 @@ export function IntensityHeroOverlay({
                 there's room (tablet/desktop, where the hero is short), badge on its own
                 line below the band on phones. Never above, so it can't reach the header. */}
             <div
-              className="flex flex-wrap items-center justify-center gap-x-3"
+              className={cn(
+                'flex flex-wrap items-center justify-center gap-x-3',
+                /* Loading: hold the band label's line so the scene doesn't grow when it lands. */
+                showLoading && 'min-h-[3rem]',
+              )}
               data-testid="hero-band-row"
             >
               {!isLoading && !isError && conditionLabel && (
@@ -491,6 +495,11 @@ export function IntensityHeroOverlay({
               )}
             </div>
 
+            {showLoading && (
+              /* Same height as the renewable + updated pill below, so short screens
+                 (320x568, the iPhone Duo cover) don't shift the sheet when data lands. */
+              <div aria-hidden className="mt-2 h-[3.3rem]" data-testid="hero-meta-reserve" />
+            )}
             {!isLoading && !isError && (
               <div
                 className={cn(
