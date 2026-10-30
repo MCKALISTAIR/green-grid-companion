@@ -106,16 +106,20 @@ for (const route of ROUTES) {
         if (r.width < 2 || r.height < 2) continue;
         if (r.bottom <= 0 || r.top >= window.innerHeight) continue; // off screen
         // Clipped away by a scrolling or overflow-hidden ancestor: not visible.
+        // D-07: a line cut by a scrolling column only shows down to that
+        // column's bottom edge, so measure its visible bottom.
         let clipped = false;
+        let visibleBottom = r.bottom;
         for (let a = el.parentElement; a && a !== document.body; a = a.parentElement) {
           const o = getComputedStyle(a);
           if (o.overflowY === 'visible' && o.overflowX === 'visible') continue;
           const ar = a.getBoundingClientRect();
           if (r.top >= ar.bottom - 1 || r.bottom <= ar.top + 1) clipped = true;
           if (clipped) break;
+          visibleBottom = Math.min(visibleBottom, ar.bottom);
         }
         if (clipped) continue;
-        if (r.bottom > navTop + 1)
+        if (visibleBottom > navTop + 1)
           out.push(
             `${(n.textContent || '').trim().slice(0, 30)} (${Math.round(r.bottom)} > ${Math.round(navTop)})`,
           );
