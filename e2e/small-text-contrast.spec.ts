@@ -28,3 +28,20 @@ for (const theme of ['light', 'dark'] as const) {
     });
   }
 }
+
+// Design copy call: the forecast legend uses Home's sentence-case band names.
+test('forecast legend uses sentence case band names', async ({ browser }) => {
+  const context = await browser.newContext({
+    viewport: { width: 382, height: 618 },
+    serviceWorkers: 'block',
+    reducedMotion: 'reduce',
+  });
+  await installMocks(context, SCENARIOS['zero-carbon']);
+  await context.addInitScript(seedStorage({}));
+  const page = await context.newPage();
+  await page.goto('/');
+  const items = page.getByTestId('forecast-legend-item');
+  await expect(items).toHaveCount(5, { timeout: 15000 });
+  await expect(items).toHaveText(['Very low', 'Low', 'Moderate', 'High', 'Very high']);
+  await context.close();
+});
