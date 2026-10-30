@@ -105,8 +105,8 @@ describe('scene props follow the data or the band, not grams (scene audit item 2
     expect(cfg(215).cleanliness).toBe(cfg(200, 'high').cleanliness);
   });
 
-  it('uses the label index when given', () => {
-    expect(cfg(215, 'moderate').cleanliness).toBe(cfg(130).cleanliness);
+  it('uses the grams over a disagreeing NESO index, like the label', () => {
+    expect(cfg(215, 'moderate').cleanliness).toBe(cfg(215).cleanliness);
   });
 
   it('birds by day at very low and low, butterflies at very low only', () => {
