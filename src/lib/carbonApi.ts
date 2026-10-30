@@ -69,6 +69,14 @@ export function actualSeriesLabel(items: Pick<ForecastData, 'intensity'>[]): 'Ac
  * otherwise use `forecast`. Regional endpoints usually omit actuals, so this
  * mostly improves the national view without changing regional behaviour.
  */
+/** True when pickLiveIntensity would return NESO's published actual, not the forecast. */
+export function isActualIntensity(
+  intensity: { forecast?: number | null; actual?: number | null } | null | undefined,
+): boolean {
+  const a = intensity?.actual;
+  return typeof a === 'number' && Number.isFinite(a) && a >= 0;
+}
+
 export function pickLiveIntensity(
   intensity:
     | {

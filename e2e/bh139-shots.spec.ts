@@ -17,8 +17,24 @@ const PHONES = [
   { width: 320, height: 568 },
 ];
 const CELLS = [
-  { slug: 'region-215g-popover', postcode: 'EH1 1YZ', text: 'your region' },
-  { slug: 'gb-215g-popover', postcode: '', text: 'Great Britain' },
+  {
+    slug: 'region-215g-popover',
+    postcode: 'EH1 1YZ',
+    actual: null,
+    text: "This is NESO's forecast for your region for this half hour.",
+  },
+  {
+    slug: 'gb-forecast-215g-popover',
+    postcode: '',
+    actual: null,
+    text: "This is NESO's forecast for Great Britain for this half hour.",
+  },
+  {
+    slug: 'gb-actual-215g-popover',
+    postcode: '',
+    actual: 215,
+    text: "This is NESO's figure for Great Britain for this half hour.",
+  },
 ];
 
 async function settle(page: Page) {
@@ -32,7 +48,12 @@ for (const vp of PHONES) {
     test(`${cell.slug} ${vp.width}x${vp.height}`, async ({ page, context }) => {
       await page.setViewportSize(vp);
       await pinClocks(page, AT);
-      await installMocks(context, { intensity: 215, index: 'high', flatSeries: true });
+      await installMocks(context, {
+        intensity: 215,
+        index: 'high',
+        flatSeries: true,
+        actual: cell.actual,
+      });
       await context.addInitScript(seedStorage({ postcode: cell.postcode }));
       await context.addInitScript(() =>
         localStorage.setItem('gridgreen-scene-preference', 'countryside'),
@@ -47,7 +68,12 @@ for (const vp of PHONES) {
       });
       await page.getByRole('button', { name: 'What is carbon intensity?' }).click();
       await page.clock.runFor(800);
-      await expect(page.getByText(`NESO's forecast for ${cell.text}`)).toBeVisible();
+      await expect(page.getByText(cell.text)).toBeVisible();
+      await expect(page.getByText('Lower means cleaner')).toHaveCount(0);
+      // collisionPadding: the popover clears both screen edges by 12px.
+      const box = await page.locator('[data-radix-popper-content-wrapper]').last().boundingBox();
+      expect(box!.x).toBeGreaterThanOrEqual(12);
+      expect(box!.x + box!.width).toBeLessThanOrEqual(vp.width - 12);
       await page.screenshot({ path: `${OUT}/${cell.slug}-${vp.width}x${vp.height}.png` });
     });
   }

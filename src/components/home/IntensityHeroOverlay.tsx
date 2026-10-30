@@ -41,6 +41,8 @@ interface IntensityHeroOverlayProps {
   intensity: number;
   previousIntensity: number | null | undefined;
   index: string;
+  /** The figure is NESO's published actual for this half hour, not the forecast. */
+  isActualReading?: boolean;
   generationMix: GenerationMix[] | undefined;
   isLoading: boolean;
   isBackgroundFetching: boolean;
@@ -73,6 +75,7 @@ export function IntensityHeroOverlay({
   intensity,
   previousIntensity,
   index,
+  isActualReading = false,
   generationMix,
   isLoading,
   isBackgroundFetching,
@@ -436,10 +439,12 @@ export function IntensityHeroOverlay({
                           <Info className="w-3.5 h-3.5" aria-hidden="true" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-[260px] p-3 text-xs bg-card border-border backdrop-blur-xl space-y-2">
+                      <PopoverContent
+                        collisionPadding={12}
+                        className="w-[260px] p-3 text-xs bg-card border-border backdrop-blur-xl space-y-2"
+                      >
                         <p className="font-semibold">Carbon intensity</p>
                         <p>{DEFINITIONS['Carbon Intensity']}</p>
-                        <p className="text-muted-foreground">{DEFINITIONS['gCO2/kWh']}</p>
                         {index && tone !== 'plain' && (
                           <p className="text-muted-foreground">
                             Official band:{' '}
@@ -449,8 +454,11 @@ export function IntensityHeroOverlay({
                           </p>
                         )}
                         <p className="text-muted-foreground">
-                          This is NESO&apos;s forecast for{' '}
-                          {isRegionalReading ? 'your region' : 'Great Britain'} for this half hour.
+                          {isRegionalReading
+                            ? "This is NESO's forecast for your region for this half hour."
+                            : isActualReading
+                              ? "This is NESO's figure for Great Britain for this half hour."
+                              : "This is NESO's forecast for Great Britain for this half hour."}{' '}
                           It updates every{' '}
                           <span className="font-semibold text-foreground">30 minutes</span>.
                         </p>
