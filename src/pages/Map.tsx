@@ -20,6 +20,9 @@ import { pageTransition, stateTransition } from '@/lib/motion';
 
 export default function MapPage() {
   const [showMap, setShowMap] = useState(true);
+  // Only animate the map open when the user taps the toggle; on first load it must
+  // appear at full height or the list below slides down (CLS ~0.3 on phones).
+  const [mapToggled, setMapToggled] = useState(false);
   const [selectedRegionId, setSelectedRegionId] = useState<number | null>(null);
 
   const {
@@ -74,7 +77,10 @@ export default function MapPage() {
               <Button
                 variant={showMap ? 'default' : 'outline'}
                 size="icon"
-                onClick={() => setShowMap(!showMap)}
+                onClick={() => {
+                  setMapToggled(true);
+                  setShowMap(!showMap);
+                }}
                 className="rounded-full min-h-11 min-w-11 h-11 w-11 shadow-sm"
                 aria-label={showMap ? 'Hide map' : 'Show map'}
                 aria-pressed={showMap}
@@ -98,6 +104,17 @@ export default function MapPage() {
                 transition={stateTransition}
                 className="space-y-3"
               >
+                {/* Same box as the map frame + UKMap and the note line, so the list
+                    doesn't jump down when regions load (CLS 0.1-0.3 before). */}
+                {showMap && (
+                  <div className="-mx-1 px-2">
+                    <Skeleton
+                      data-testid="rank-map-skeleton"
+                      className="w-full aspect-[0.61] mx-auto mt-4 mb-12 rounded-3xl"
+                    />
+                  </div>
+                )}
+                <Skeleton className="h-4 w-3/4" />
                 {[1, 2, 3, 4, 5, 6].map((i) => (
                   <Card key={i} className="sheet-surface p-4 flex items-center justify-between">
                     <div className="space-y-1.5 flex-1">
@@ -140,7 +157,7 @@ export default function MapPage() {
                 <AnimatePresence initial={false}>
                   {showMap && sortedRegions.length > 0 && (
                     <motion.div
-                      initial={{ height: 0, opacity: 0 }}
+                      initial={mapToggled ? { height: 0, opacity: 0 } : false}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
                       transition={pageTransition}
@@ -200,7 +217,7 @@ export default function MapPage() {
                             <div
                               className={`text-[10px] inline-flex items-center px-1.5 py-0.5 rounded-full mt-0.5 ${getIntensityColor(region.intensity.index)} bg-opacity-20`}
                             >
-                              <span className="capitalize font-medium text-foreground">
+                              <span className="capitalize font-medium text-[#0f1a24]">
                                 {region.intensity.index}
                               </span>
                             </div>
