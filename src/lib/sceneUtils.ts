@@ -1,3 +1,4 @@
+import { nesoBand } from '@/lib/nesoBand';
 import { TimeOfDay } from '@/hooks/useTimeOfDay';
 import { WeatherData } from '@/hooks/useWeatherData';
 
@@ -107,12 +108,9 @@ function getSkyParams(
   };
 }
 
+/** BH-139: NESO 2026 bands, the same as the hero label. */
 export function getCarbonIndex(intensity: number): string {
-  if (intensity < 50) return 'very low';
-  if (intensity < 150) return 'low';
-  if (intensity < 250) return 'moderate';
-  if (intensity < 350) return 'high';
-  return 'very high';
+  return nesoBand(intensity);
 }
 
 // ── Hill path sampling ──────────────────────────────────────────────

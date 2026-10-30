@@ -211,17 +211,21 @@ export default function Help() {
                     <strong>Live readings</strong>
                   </p>
                   <p>
-                    Carbon intensity comes from NESO. We show NESO's measured figure when it has
-                    published one, otherwise its forecast. Forecasts can change.
+                    Carbon intensity comes from NESO. For a region, the live number is always
+                    NESO&apos;s forecast, a modelled estimate. For Great Britain as a whole, we show
+                    NESO&apos;s after-the-fact figure once it&apos;s published, otherwise its
+                    forecast. That figure is also an estimate, worked out from metered power
+                    stations plus NESO&apos;s estimate of small-scale solar and wind. Forecasts can
+                    change.
                   </p>
 
                   <p className="pt-2">
                     <strong>What does "Estimate" mean?</strong>
                   </p>
                   <p>
-                    NESO doesn't publish measured figures for regions, so past regional readings are
-                    worked out by GridSense from the fuel mix. They're marked "Estimate" and aren't
-                    NESO figures.
+                    NESO doesn&apos;t publish after-the-fact figures for regions, so past regional
+                    readings are worked out by GridSense from the fuel mix. They're marked
+                    "Estimate" and aren't NESO figures.
                   </p>
 
                   <p className="pt-2">

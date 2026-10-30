@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useEnergyFacts } from '@/hooks/useEnergyFacts';
 import { useTimeOfDay } from '@/hooks/useTimeOfDay';
 import { useWeatherData } from '@/hooks/useWeatherData';
-import { useCoalFreeStreak } from '@/hooks/useCoalFreeStreak';
 import { GenerationMix } from '@/lib/carbonApi';
 import { MessageCircle } from 'lucide-react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -27,7 +26,6 @@ export function EnergyFactBubble({
   const { currentFact, refreshFact, tone } = useEnergyFacts();
   const { isNight } = useTimeOfDay();
   const { weather } = useWeatherData();
-  const coalStreak = useCoalFreeStreak(generationMix);
   const [isVisible, setIsVisible] = useState(true);
   const shouldReduceMotion = useReducedMotion();
 
@@ -163,10 +161,7 @@ export function EnergyFactBubble({
                         "
                       </span>
                     )}
-                    {currentFact.id === 'coal_free_current' &&
-                    !(coalStreak.isActive && coalStreak.days * 24 + coalStreak.hours >= 24)
-                      ? null // Don't show this fact if streak < 24h
-                      : currentFact.text}
+                    {currentFact.text}
                     {variant === 'plain' && (
                       <span className="text-primary/60 text-lg leading-none select-none align-top ml-1 rotate-180 inline-block transform translate-y-0.5">
                         "

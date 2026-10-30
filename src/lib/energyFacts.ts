@@ -84,7 +84,7 @@ export const ENERGY_FACTS: EnergyFact[] = [
   },
   {
     id: 'dirty_friendly_1',
-    text: "Carbon intensity's high right now. Hold off on big loads if you can.",
+    text: 'The grid is running dirtier than usual right now. Hold off on big loads if you can.',
     category: 'dirty_energy',
     tone: 'friendly',
     condition: (c) => c.intensity > 200,
@@ -319,7 +319,7 @@ export const ENERGY_FACTS: EnergyFact[] = [
   },
   {
     id: 'solar_domestic_snark_2',
-    text: 'Solar panels work in the UK? Shocking. Almost like they need light, not heat.',
+    text: 'Solar panels work in GB? Shocking. Almost like they need light, not heat.',
     category: 'general',
     tone: 'snarky',
     condition: () => true,
@@ -330,7 +330,7 @@ export const ENERGY_FACTS: EnergyFact[] = [
   // --- GRID INTERCONNECTORS ---
   {
     id: 'interconnector_2',
-    text: 'The North Sea Link to Norway brings renewable hydro power to the UK via a 720km cable.',
+    text: 'The North Sea Link to Norway brings renewable hydro power to GB via a 720km cable.',
     source: 'https://www.northsealink.com/north-sea-link/overview',
     category: 'general',
     tone: 'friendly',
@@ -374,8 +374,6 @@ export const ENERGY_FACTS: EnergyFact[] = [
     tone: 'snarky',
     condition: () => true,
   },
-
-  // Note: coal_free_current fact will be added dynamically by useEnergyFacts hook
 ];
 
 export function getRandomFact(
@@ -391,33 +389,6 @@ export function getRandomFact(
 
   // 2. Filter by condition
   eligible = eligible.filter((f) => !f.condition || f.condition(context));
-
-  // Dynamic insertion of active coal-free streak if eligible under friendly tone
-  if (tonePref === 'friendly' || tonePref === 'mixed') {
-    try {
-      const stored =
-        typeof window !== 'undefined' ? localStorage.getItem('coal-free-streak') : null;
-      if (stored) {
-        const streakData = JSON.parse(stored);
-        if (streakData && streakData.streakStarted) {
-          const start = new Date(streakData.streakStarted);
-          const current = new Date();
-          const diffMs = current.getTime() - start.getTime();
-          const diffHours = diffMs / (1000 * 60 * 60);
-          if (diffHours >= 24) {
-            eligible.push({
-              id: 'coal_free_current',
-              text: 'No coal on the GB grid since 30 September 2024.',
-              category: 'general',
-              tone: 'friendly',
-            });
-          }
-        }
-      }
-    } catch {
-      // fail-silent
-    }
-  }
 
   // 3. Prevent duplicate consecutive selections
   if (lastFactId && eligible.length > 1) {

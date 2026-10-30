@@ -112,6 +112,7 @@ const Index = () => {
     offGridArea: offGrid,
     isError,
     hasReading,
+    isActualReading,
     error,
     refetch,
     getNextUpdate,
@@ -277,6 +278,7 @@ const Index = () => {
               intensity={intensity}
               previousIntensity={previousIntensity}
               index={index}
+              isActualReading={isActualReading}
               generationMix={generationMix}
               isLoading={isLoading}
               isBackgroundFetching={isBackgroundFetching}

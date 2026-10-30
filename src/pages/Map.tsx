@@ -33,6 +33,9 @@ export default function MapPage() {
     queryFn: ({ signal }) => getAllRegions(signal),
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 30, // 30 minutes
+    // BH-136: Rank isn't on the half-hour timer, so while it's open (and
+    // visible) check every 5 min; a new half hour shows within 5 min of NESO.
+    refetchInterval: 1000 * 60 * 5,
   });
 
   const sortedRegions = regions
@@ -158,6 +161,9 @@ export default function MapPage() {
                   )}
                 </AnimatePresence>
 
+                <p data-testid="rank-estimate-note" className="text-xs text-muted-foreground">
+                  NESO forecasts for this half hour. Regional figures are modelled estimates.
+                </p>
                 <div className="grid gap-3">
                   {sortedRegions.map((region, idx) => (
                     <div

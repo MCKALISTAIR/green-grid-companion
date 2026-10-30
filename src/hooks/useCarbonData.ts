@@ -10,6 +10,7 @@ import {
   getCurrentIntensity,
   getAllRegions,
   pickLiveIntensity,
+  isActualIntensity,
   RegionalData,
   RegionListItem,
   ForecastData,
@@ -40,6 +41,13 @@ const getMsUntilNextHalfHour = (): number => {
 let globalRefetchTimer: ReturnType<typeof setTimeout> | null = null;
 let globalRefetchFn: (() => Promise<void>) | null = null;
 let globalRefetchSubscribers = 0;
+let globalReturnListener: (() => void) | null = null;
+/** When the timer or a return last refetched (the queries also fetch on mount). */
+let globalLastRefetchAt = Date.now();
+
+const HALF_HOUR = 30 * 60 * 1000;
+/** Start (epoch ms) of the UTC half hour containing `ms`. */
+export const halfHourStart = (ms: number): number => Math.floor(ms / HALF_HOUR) * HALF_HOUR;
 
 function useSmartRefetch(refetchFn: () => Promise<void>, enabled: boolean) {
   const refetchRef = useRef(refetchFn);
@@ -64,6 +72,7 @@ function useSmartRefetch(refetchFn: () => Promise<void>, enabled: boolean) {
 
         globalRefetchTimer = setTimeout(async () => {
           logger.info('Smart refetch triggered at half-hour boundary');
+          globalLastRefetchAt = Date.now();
           try {
             if (globalRefetchFn) await globalRefetchFn();
           } catch (e) {
@@ -74,14 +83,45 @@ function useSmartRefetch(refetchFn: () => Promise<void>, enabled: boolean) {
       };
 
       scheduleNext();
+
+      // BH-136: timers are paused or throttled while the tab is hidden or the
+      // device sleeps, and React Query's focus refetch skips data younger than
+      // staleTime even when a new half hour has opened since. So on return,
+      // refetch if we crossed a :00/:30 boundary, and re-arm the timer.
+      const onReturn = () => {
+        if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+        if (halfHourStart(Date.now()) > halfHourStart(globalLastRefetchAt)) {
+          globalLastRefetchAt = Date.now();
+          globalRefetchFn?.().catch((e) => logger.warn('Return refetch failed', e));
+        }
+        scheduleNext();
+      };
+      globalReturnListener = onReturn;
+      if (typeof document !== 'undefined') {
+        document.addEventListener('visibilitychange', onReturn);
+      }
+      if (typeof window !== 'undefined') {
+        window.addEventListener('online', onReturn);
+        window.addEventListener('focus', onReturn);
+      }
     }
 
     return () => {
       globalRefetchSubscribers--;
-      if (globalRefetchSubscribers === 0 && globalRefetchTimer) {
-        clearTimeout(globalRefetchTimer);
+      if (globalRefetchSubscribers === 0) {
+        if (globalRefetchTimer) clearTimeout(globalRefetchTimer);
         globalRefetchTimer = null;
         globalRefetchFn = null;
+        if (globalReturnListener) {
+          if (typeof document !== 'undefined') {
+            document.removeEventListener('visibilitychange', globalReturnListener);
+          }
+          if (typeof window !== 'undefined') {
+            window.removeEventListener('online', globalReturnListener);
+            window.removeEventListener('focus', globalReturnListener);
+          }
+          globalReturnListener = null;
+        }
       }
     };
   }, [enabled]);
@@ -261,6 +301,10 @@ export function useCarbonData(postcode: string) {
   const usingNationalFallback = !!regionalData && regionalLive === null && nationalLive !== null;
   const liveIntensity = regionalLive ?? nationalLive;
   const hasReading = liveIntensity !== null;
+  // Whether the figure on screen is NESO's published actual (else the forecast).
+  const isActualReading = isActualIntensity(
+    regionalLive !== null ? regionalData?.intensity : nationalQuery.data?.intensity,
+  );
   const intensity = hasReading ? liveIntensity : 0;
   const index =
     (usingNationalFallback ? undefined : regionalData?.intensity?.index) ??
@@ -333,6 +377,8 @@ export function useCarbonData(postcode: string) {
     intensity,
     /** False when `intensity` is only the 0 placeholder (no real reading yet). */
     hasReading,
+    /** True when the figure shown is NESO's published actual, not the forecast. */
+    isActualReading,
     previousIntensity,
     index,
     region,

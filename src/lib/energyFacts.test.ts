@@ -29,4 +29,41 @@ describe('rotating energy facts', () => {
       "Britain's last coal power station, Ratcliffe-on-Soar, closed on 30 September 2024.",
     );
   });
+
+  it('never names an intensity band, so a fact cannot contradict the hero label (#196 round 3)', () => {
+    // Facts are chosen by grams (> 200 g), not by the NESO band the label shows, so a
+    // fact saying "high" could sit under a "Very high" label. Keep them band-free.
+    const bandClaim = /\b(intensity|carbon) is (very )?(low|moderate|high)\b/i;
+    expect(ENERGY_FACTS.filter((f) => bandClaim.test(f.text)).map((f) => f.id)).toEqual([]);
+    expect(ENERGY_FACTS.find((f) => f.id === 'dirty_friendly_1')?.text).toBe(
+      'The grid is running dirtier than usual right now. Hold off on big loads if you can.',
+    );
+  });
+});
+
+describe('no live coal-free streak fact (BH-137)', () => {
+  it('never adds coal_free_current, even with an old stored streak', async () => {
+    const { getRandomFact } = await import('@/lib/energyFacts');
+    localStorage.setItem(
+      'coal-free-streak',
+      JSON.stringify({ streakStarted: '2024-10-01T00:00:00Z', lastCoalSeen: null }),
+    );
+    for (let i = 0; i < 200; i++) {
+      const f = getRandomFact(
+        { intensity: 120, windSpeed: 5, isNight: false, renewablesPct: 40 } as never,
+        'friendly',
+      );
+      expect(f.id).not.toBe('coal_free_current');
+      expect(f.text.trim()).not.toBe('');
+    }
+    localStorage.removeItem('coal-free-streak');
+  });
+});
+
+describe('grid facts name GB, not the UK (scene audit item 11)', () => {
+  it.each(['solar_domestic_snark_2', 'interconnector_2'])('%s says GB', (id) => {
+    const f = ENERGY_FACTS.find((x) => x.id === id);
+    expect(f?.text).toMatch(/\bGB\b/);
+    expect(f?.text).not.toMatch(/\bUK\b/);
+  });
 });

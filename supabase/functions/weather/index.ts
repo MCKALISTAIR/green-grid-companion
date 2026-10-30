@@ -5,6 +5,7 @@ const _ignore = null;
 declare const Deno: any;
 
 import { corsHeaders } from '../_shared/cors.ts';
+import { describeError } from '../_shared/safe-error.ts';
 import { checkRateLimit } from '../_shared/rate-limit.ts';
 
 Deno.serve(async (req: Request) => {
@@ -74,10 +75,14 @@ Deno.serve(async (req: Request) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(JSON.stringify({ error: message }), {
-      status: 400,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    // BH-150: log the detail, return a stable code.
+    console.error('[weather] fetch failed', describeError(error));
+    return new Response(
+      JSON.stringify({ error: 'Weather is unavailable', code: 'weather_failed' }),
+      {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      },
+    );
   }
 });
