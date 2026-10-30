@@ -221,11 +221,11 @@ export default function Changelog() {
       <div className="page-shell-inner space-y-6">
         {/* Header */}
         <div className="flex items-center gap-3">
-          <Link to="/settings">
-            <Button variant="ghost" size="icon" className="shrink-0" aria-label="Back to settings">
+          <Button asChild variant="ghost" size="icon" className="h-11 w-11 shrink-0">
+            <Link to="/settings" aria-label="Back to settings">
               <ChevronLeft className="w-5 h-5" aria-hidden="true" />
-            </Button>
-          </Link>
+            </Link>
+          </Button>
           <div>
             <h1 className="text-2xl font-bold">Changelog</h1>
             <p className="text-sm text-muted-foreground">Current: {VERSION_STRING}</p>
