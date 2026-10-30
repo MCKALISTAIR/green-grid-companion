@@ -191,7 +191,7 @@ export async function installMocks(context, scenarioIn = {}) {
       status: 'ok',
       timestamp: fromIso,
       dataTime: fromIso,
-      fetchedAt: new Date().toISOString(),
+      fetchedAt: new Date(Date.now()).toISOString(),
       settlementDate: null,
       settlementPeriod: null,
       totalDemandMW: total,
@@ -221,8 +221,9 @@ export async function installMocks(context, scenarioIn = {}) {
         ...(s.weather || {}),
       },
       daily: {
-        sunrise: [new Date().toISOString().slice(0, 10) + 'T07:20'],
-        sunset: [new Date().toISOString().slice(0, 10) + 'T18:20'],
+        // Date.now, not new Date(): pinClocks pins Date.now only (BH-165).
+        sunrise: [new Date(Date.now()).toISOString().slice(0, 10) + 'T07:20'],
+        sunset: [new Date(Date.now()).toISOString().slice(0, 10) + 'T18:20'],
       },
     }),
   );
