@@ -485,7 +485,7 @@ export default function HistoryPage() {
                     <div className="text-2xl font-bold mt-1 leading-tight whitespace-nowrap">
                       {avgIntensity}
                     </div>
-                    <div className="text-xs text-muted-foreground whitespace-nowrap">gCO2/kWh</div>
+                    <div className="text-xs text-muted-foreground whitespace-nowrap">gCO₂/kWh</div>
                     <div className="text-xs text-muted-foreground mt-1">
                       {timeRange === '7d' ? '7 days' : '24h'}
                     </div>
@@ -550,7 +550,7 @@ export default function HistoryPage() {
                         </span>
                       </div>
                       <div className="text-xs text-muted-foreground whitespace-nowrap">
-                        gCO2/kWh
+                        gCO₂/kWh
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">
                         {historyTrendCopy(trend, timeRange)}
