@@ -31,6 +31,13 @@ export interface SceneSkyLayerProps {
   bankBehindSkyline?: boolean;
 }
 
+/**
+ * The sunset sun sits low, level with the hero's gCO2 unit and info icon. At
+ * 15% from the right its 46px disc covered both on phones, so it now hugs the
+ * right edge (#c: measured clear of both at 320, 390 and 720 wide).
+ */
+export const SUNSET_SUN_RIGHT = '2%';
+
 export function SceneSkyLayer({
   skyY,
   shouldReduceMotion,
@@ -124,7 +131,8 @@ export function SceneSkyLayer({
                       ? '12%'
                       : '8%'
               }, calc(max(env(safe-area-inset-top), 24px) + 4.25rem))`,
-              right: timeOfDay === 'sunset' ? '15%' : timeOfDay === 'morning' ? '20%' : '8%',
+              right:
+                timeOfDay === 'sunset' ? SUNSET_SUN_RIGHT : timeOfDay === 'morning' ? '20%' : '8%',
               left: 'auto',
               // BH-96 (brief Q1): no CSS filter on the sun; its colour comes from the art.
             }}
