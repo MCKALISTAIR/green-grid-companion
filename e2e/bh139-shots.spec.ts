@@ -32,7 +32,7 @@ for (const vp of PHONES) {
     test(`${cell.slug} ${vp.width}x${vp.height}`, async ({ page, context }) => {
       await page.setViewportSize(vp);
       await pinClocks(page, AT);
-      await installMocks(context, { intensity: 215, index: 'high' });
+      await installMocks(context, { intensity: 215, index: 'high', flatSeries: true });
       await context.addInitScript(seedStorage({ postcode: cell.postcode }));
       await context.addInitScript(() =>
         localStorage.setItem('gridgreen-scene-preference', 'countryside'),
