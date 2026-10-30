@@ -26,3 +26,32 @@ export function gasPlantGeometry(x = GAS_PLANT_X) {
   const stacks = [x + 19, x + 24.5].map((sx) => ({ x: sx, top: baseY - GAS_PLANT_STACK.h }));
   return { x, baseY, boilerX, stacks, width: GAS_PLANT_HALL.w };
 }
+
+/**
+ * Scene audit item 4: the city far-layer plant. The same art as the countryside
+ * plant, scaled down and seated on the city far ground line (y 95 in the city
+ * viewBox 0 0 400 150, where the old distant stack stood), toward the east edge.
+ */
+/**
+ * #241 Design review: in the city the plant stands in front of the far skyline,
+ * so its silhouette must be darker than those buildings to be found.
+ */
+export const CITY_GAS_PLANT_TOKENS = {
+  day: { light: '#6e7883', shade: '#56606b', band: '#454e59' },
+  night: { light: '#262c3a', shade: '#1c2130', band: '#363e4f' },
+} as const;
+
+export const CITY_GAS_PLANT = { x: 292, groundY: 95, scale: 0.8 } as const;
+/** Vertical offset and scale of the city plant, for measuring sky in SVG units. */
+export function cityGasPlantFrame() {
+  const { baseY } = gasPlantGeometry(GAS_PLANT_X);
+  const { groundY, scale } = CITY_GAS_PLANT;
+  return { dy: groundY - baseY * scale, scale };
+}
+export function cityGasPlantTransform() {
+  const { baseY } = gasPlantGeometry(GAS_PLANT_X);
+  const { x, groundY, scale } = CITY_GAS_PLANT;
+  const dx = x - GAS_PLANT_X * scale;
+  const dy = groundY - baseY * scale;
+  return `translate(${dx.toFixed(2)} ${dy.toFixed(2)}) scale(${scale})`;
+}

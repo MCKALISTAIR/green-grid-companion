@@ -11,13 +11,13 @@ import {
   Pigeon,
   ConstructionCrane,
   LondonEye,
-  DistantStack,
   BatteryStorageContainer,
   TubeFlash,
 } from '../CityElements';
 import { ValleyMist } from '../ValleyMist';
 import { EdinburghCastle } from '../EdinburghCastle';
 import { isLandmarkHeroLit, type CityWeatherState } from '@/lib/cityLandmarkPalette';
+import { CityGasPlant } from '../GasPlant';
 
 export interface CitySceneLayersProps {
   shouldReduceMotion: boolean;
@@ -68,9 +68,6 @@ export function CitySceneLayers({
   const isLondon = cityVariant === 'london';
   const hero = getCityHeroEmphasis(cleanlinessBand);
   const landmarkHero = isLandmarkHeroLit(nesoIndex, cleanlinessBand);
-  // PR-2b: the distant stack (and its plume) follows the NESO band, high and
-  // above, never the cleanliness formula. Haze comes from SceneHaze.
-  const showStack = sceneConfig.hazeBand === 'high' || sceneConfig.hazeBand === 'very high';
 
   return (
     <>
@@ -114,7 +111,6 @@ export function CitySceneLayers({
           preserveAspectRatio={SCENE_SILHOUETTE_ASPECT}
           aria-hidden="true"
         >
-          {showStack && <DistantStack isNight={isNight} />}
           <CityLandscapeBack
             cleanliness={sceneConfig.cleanliness}
             isNight={isNight}
@@ -157,6 +153,12 @@ export function CitySceneLayers({
             landmarkHero={landmarkHero}
             weatherState={weatherState}
           />
+          {/* Scene audit item 4: a small gas plant, always present, with the
+              same band-driven smoke as the countryside plant. It stands in front
+              of the mid skyline and behind the front buildings (behind the mid
+              skyline it was hidden or washed out by the haze), clear of the London crane. It replaces the faint
+              high-only distant stack. */}
+          <CityGasPlant band={sceneConfig.hazeBand} isNight={isNight} />
         </svg>
       </motion.div>
 

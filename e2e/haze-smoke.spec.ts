@@ -18,9 +18,9 @@ const CLEAR = { weather_code: 0, cloud_cover: 0, wind_speed_10m: 8 };
 
 const BANDS = [
   ['very low', 20, 'none', 0],
-  ['low', 110, 'none', 0],
-  ['moderate', 180, 'moderate', 3],
-  ['high', 260, 'high', 5],
+  ['low', 60, 'none', 0],
+  ['moderate', 130, 'moderate', 3],
+  ['high', 200, 'high', 5],
   ['very high', 340, 'very high', 6],
 ] as const;
 
@@ -39,6 +39,8 @@ async function openAt(
   await installMocks(page.context(), {
     intensity,
     index,
+    // Flat series at the NESO 2026 bands, so the mocked index matches bandFor() (#241).
+    flatSeries: true,
     weather: { ...CLEAR, is_day: isDay },
   });
   await page.context().addInitScript(seedStorage({ postcode }));
@@ -161,10 +163,14 @@ test('Reduce Motion: 3 static puffs per stack at very high', async ({ page }) =>
   await expect(scene.locator('.art-smoke-puff')).toHaveCount(0);
 });
 
-test('city very high: haze, no countryside gas plant', async ({ page }) => {
+test('city very high: haze, only the city gas plant (#241)', async ({ page }) => {
   test.setTimeout(90_000);
   const scene = await openAt(page, { intensity: 340, index: 'very high', postcode: 'EH1 1YZ' });
   await expect(scene).toHaveAttribute('data-scene-type', 'city');
   await expect(scene.locator('[data-art="haze"]')).toHaveAttribute('data-haze-band', 'very high');
-  await expect(scene.locator('[data-art="gas-plant"]')).toHaveCount(0);
+  // Scene audit item 4 (#241): the city far layer has its own plant; no countryside one.
+  await expect(scene.locator('[data-art="city-gas-plant"]')).toHaveCount(1);
+  await expect(
+    scene.locator('[data-art="gas-plant"]:not([data-art="city-gas-plant"] *)'),
+  ).toHaveCount(0);
 });

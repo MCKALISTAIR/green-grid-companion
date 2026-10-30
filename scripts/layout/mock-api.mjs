@@ -8,9 +8,10 @@
  *   ageMinutes              how old the reading's `from` time is (stale = 60+)
  *   regionName              shortname returned for the region (long-name state)
  *   mix                     generation mix for the region
- *   flatSeries              true: the 24 h series is flat at `intensity` (no wobble)
- *   place                   postcodes.io result override ({ postcode, outcode, latitude, ... })
  *   actual                  NESO's published actual for the reading (default null: forecast only)
+ *   flatSeries              true: the 24 h series is flat at `intensity` (no wobble), so a shot
+ *                           named for N g shows N g
+ *   place                   postcodes.io result override ({ postcode, outcode, latitude, ... })
  *   mode                    'ok' | 'error' (API 500s) | 'loading' (never answers)
  */
 
@@ -107,14 +108,15 @@ export async function installMocks(context, scenarioIn = {}) {
               : f.getTime() < Date.now()
                 ? v
                 : null,
+          // NESO 2026 bands (src/lib/nesoBand.ts), so the mocked index matches bandFor().
           index:
-            v < 40
+            v <= 24
               ? 'very low'
-              : v < 120
+              : v <= 89
                 ? 'low'
-                : v < 200
+                : v <= 169
                   ? 'moderate'
-                  : v < 290
+                  : v <= 230
                     ? 'high'
                     : 'very high',
         },

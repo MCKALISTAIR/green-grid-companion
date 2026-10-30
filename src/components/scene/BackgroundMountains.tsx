@@ -1,6 +1,21 @@
 import { motion } from 'framer-motion';
 import { useId } from 'react';
 
+/** Night far-hill fills: lavender a step above the night horizon (#392763). */
+const NIGHT_TOP = 0.95;
+
+export const NIGHT_FAR_HILLS = { base: '#968ace', mid: '#a498d8', highlight: '#b2a7e2' } as const;
+
+/**
+ * #239 Design review: ridge-top stop opacities. By day they stay as they were.
+ * At night the far ridge was only about 1.1:1 against the sky, so the tops are
+ * stronger there, for about 1.25:1 (measured at 390, 320 and 720x540).
+ */
+export const RIDGE_TOP_OPACITY = {
+  day: { back: 0.4, mid: 0.5, front: 0.4 },
+  night: { back: NIGHT_TOP, mid: NIGHT_TOP, front: NIGHT_TOP },
+} as const;
+
 interface BackgroundMountainsProps {
   isNight: boolean;
 }
@@ -9,9 +24,13 @@ export function BackgroundMountains({ isNight }: BackgroundMountainsProps) {
   const id = useId();
   // Grounded at Y=30-70 (far background, distant horizon)
 
-  const baseColor = isNight ? '#0f172a' : '#475569';
-  const midColor = isNight ? '#1e293b' : '#64748b';
-  const highlightColor = isNight ? '#334155' : '#94a3b8';
+  // Scene audit item 10: the night slates were darker than the night sky, so
+  // the far hills vanished and the sheep floated. At night they are one step
+  // lighter than the sky instead (NIGHT_FAR_HILLS, tested).
+  const baseColor = isNight ? NIGHT_FAR_HILLS.base : '#475569';
+  const midColor = isNight ? NIGHT_FAR_HILLS.mid : '#64748b';
+  const highlightColor = isNight ? NIGHT_FAR_HILLS.highlight : '#94a3b8';
+  const top = isNight ? RIDGE_TOP_OPACITY.night : RIDGE_TOP_OPACITY.day;
 
   return (
     <motion.g
@@ -22,17 +41,17 @@ export function BackgroundMountains({ isNight }: BackgroundMountainsProps) {
     >
       <defs>
         <linearGradient id={`${id}-mountain-back`} x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor={baseColor} stopOpacity="0.4" />
+          <stop offset="0%" stopColor={baseColor} stopOpacity={top.back} />
           <stop offset="100%" stopColor={baseColor} stopOpacity="0.1" />
         </linearGradient>
 
         <linearGradient id={`${id}-mountain-mid`} x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor={midColor} stopOpacity="0.5" />
+          <stop offset="0%" stopColor={midColor} stopOpacity={top.mid} />
           <stop offset="100%" stopColor={midColor} stopOpacity="0.1" />
         </linearGradient>
 
         <linearGradient id={`${id}-mountain-front`} x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor={highlightColor} stopOpacity="0.4" />
+          <stop offset="0%" stopColor={highlightColor} stopOpacity={top.front} />
           <stop offset="100%" stopColor={highlightColor} stopOpacity="0.1" />
         </linearGradient>
       </defs>

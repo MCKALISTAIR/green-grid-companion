@@ -1,8 +1,8 @@
 import { render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getHillRidgeY } from '@/lib/sceneUtils';
-import { gasPlantGeometry } from '@/lib/gasPlant';
-import { GasPlant } from './GasPlant';
+import { cityGasPlantTransform, gasPlantGeometry } from '@/lib/gasPlant';
+import { CityGasPlant, GasPlant } from './GasPlant';
 
 const reduced = vi.hoisted(() => ({ value: false }));
 vi.mock('@/hooks/useReducedMotion', () => ({ useReducedMotion: () => reduced.value }));
@@ -98,5 +98,24 @@ describe('GasPlant (PR-2b)', () => {
     for (const x of [g.x, g.x + g.width / 2, g.x + g.width]) {
       expect(g.baseY).toBeGreaterThanOrEqual(getHillRidgeY('back', x));
     }
+  });
+});
+
+describe('CityGasPlant (scene audit item 4)', () => {
+  it.each(['none', 'moderate', 'high', 'very high'] as const)(
+    '%s: always drawn in the city far layer, smoke follows the band',
+    (band) => {
+      const c = render(
+        <svg viewBox="0 0 400 150">
+          <CityGasPlant band={band} isNight={false} />
+        </svg>,
+      ).container;
+      expect(c.querySelector('[data-art="city-gas-plant"] [data-art="gas-plant"]')).not.toBeNull();
+      expect(c.querySelectorAll('[data-art="smoke"]')).toHaveLength(band === 'none' ? 0 : 2);
+    },
+  );
+
+  it('sits on the city far ground line', () => {
+    expect(cityGasPlantTransform()).toMatch(/^translate\([\d.-]+ [\d.-]+\) scale\(0\.8\)$/);
   });
 });
