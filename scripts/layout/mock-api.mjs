@@ -8,6 +8,8 @@
  *   ageMinutes              how old the reading's `from` time is (stale = 60+)
  *   regionName              shortname returned for the region (long-name state)
  *   mix                     generation mix for the region
+ *   flatSeries              true: the 24 h series is flat at `intensity` (no wobble)
+ *   place                   postcodes.io result override ({ postcode, outcode, latitude, ... })
  *   mode                    'ok' | 'error' (API 500s) | 'loading' (never answers)
  */
 
@@ -88,7 +90,9 @@ export async function installMocks(context, scenarioIn = {}) {
     const start = halfHourFloor(Date.now() - 24 * 3600000).getTime();
     return Array.from({ length: 144 }, (_, i) => {
       const f = new Date(start + i * 1800000);
-      const v = Math.max(0, Math.round((s.intensity || 0) + 40 * Math.sin(i / 6)));
+      // flatSeries: every slot reads the scenario's own value (hero shots per band).
+      const wobble = s.flatSeries ? 0 : 40 * Math.sin(i / 6);
+      const v = Math.max(0, Math.round((s.intensity || 0) + wobble));
       return {
         from: f.toISOString().replace(/\.\d+Z$/, 'Z'),
         to: new Date(f.getTime() + 1800000).toISOString().replace(/\.\d+Z$/, 'Z'),
@@ -212,7 +216,8 @@ export async function installMocks(context, scenarioIn = {}) {
   await context.route(/api\.postcodes\.io/, (route) =>
     json(route, {
       status: 200,
-      result: {
+      // Optional per-scenario place (hero shots in London, inland England...).
+      result: s.place || {
         postcode: 'EH1 1YZ',
         outcode: 'EH1',
         latitude: 55.95,
