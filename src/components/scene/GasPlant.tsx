@@ -11,6 +11,7 @@
  *   or lean) until wind direction is fetched.
  * - Drawn in the countryside SVG space (viewBox 0 30 400 120).
  */
+import { useLayoutEffect, useRef, useState } from 'react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   GAS_PLANT_HALL,
@@ -29,6 +30,8 @@ import {
   SMOKE_PUFF,
   SMOKE_STATIC_PUFFS,
   SMOKE_PLUME_UNITS,
+  fitPlumeUnits,
+  svgUnitsAbove,
   showsSmoke,
   showsSmokeColumn,
   type HazeBand,
@@ -49,11 +52,20 @@ export function GasPlant({ band, isNight, x = GAS_PLANT_X }: GasPlantProps) {
   // drift or lean, until wind_direction_10m is fetched (follow-up bug in BUGS.md).
   const puffCount = smoke ? (reduced ? SMOKE_STATIC_PUFFS : smoke.puffs) : 0;
   const r = SMOKE_PUFF.startPx / 2;
-  const rise = smoke && showsSmoke(band) ? SMOKE_PLUME_UNITS[band] : SMOKE_PUFF.risePx;
+  const skyUnits = useSkyUnitsAbove(stacks[0].top);
+  const rise =
+    smoke && showsSmoke(band)
+      ? fitPlumeUnits(SMOKE_PLUME_UNITS[band], skyUnits.units)
+      : SMOKE_PUFF.risePx;
   const column = smoke && showsSmokeColumn(band);
 
   return (
-    <g data-art="gas-plant" data-smoke={smoke ? band : 'none'} aria-hidden="true">
+    <g
+      ref={skyUnits.ref}
+      data-art="gas-plant"
+      data-smoke={smoke ? band : 'none'}
+      aria-hidden="true"
+    >
       {/* Stacks, behind the hall: slim, two thin bands each. */}
       {stacks.map((s, i) => (
         <g key={`stack-${i}`}>
@@ -162,4 +174,31 @@ export function GasPlant({ band, isNight, x = GAS_PLANT_X }: GasPlantProps) {
         })}
     </g>
   );
+}
+
+/** Measures the sky above `y` in the owning SVG (see svgUnitsAbove). */
+function useSkyUnitsAbove(y: number) {
+  const ref = useRef<SVGGElement>(null);
+  const [units, setUnits] = useState<number | null>(null);
+  useLayoutEffect(() => {
+    const svg = ref.current?.ownerSVGElement;
+    if (!svg) return;
+    const measure = () => {
+      const vb = svg.viewBox?.baseVal;
+      if (!vb || !vb.width) return;
+      const next = svgUnitsAbove(
+        y,
+        { x: vb.x, y: vb.y, w: vb.width, h: vb.height },
+        svg.clientWidth,
+        svg.clientHeight,
+      );
+      setUnits((prev) => (prev === next ? prev : next));
+    };
+    measure();
+    if (typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(measure);
+    ro.observe(svg);
+    return () => ro.disconnect();
+  }, [y]);
+  return { ref, units };
 }

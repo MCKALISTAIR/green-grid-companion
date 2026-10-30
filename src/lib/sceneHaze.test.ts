@@ -5,6 +5,8 @@ import {
   HAZE_MAX_OPACITY,
   showsSmoke,
   SMOKE_BY_BAND,
+  fitPlumeUnits,
+  svgUnitsAbove,
   SMOKE_PLUME_UNITS,
   showsSmokeColumn,
   STAR_HAZE_FACTOR,
@@ -129,5 +131,23 @@ describe('sky blend by day (round 3)', () => {
 describe('moderate smoke (scene audit item 6)', () => {
   it('is #c9c4ba at 0.45 so it reads on the pale sky', () => {
     expect(SMOKE_BY_BAND.moderate).toMatchObject({ day: '#c9c4ba', opacity: 0.45 });
+  });
+});
+
+describe('plume fits the sky (scene audit item 9)', () => {
+  const vb = { x: 0, y: 30, w: 400, h: 120 };
+  it('keeps the band height when there is room (390x844 scene)', () => {
+    const sky = svgUnitsAbove(36, vb, 390, 400);
+    expect(fitPlumeUnits(72, sky)).toBe(72);
+  });
+  it('caps the plume to 70% of the sky in a short landscape scene (720x540)', () => {
+    const sky = svgUnitsAbove(36, vb, 720, 290)!;
+    expect(sky).toBeGreaterThan(0);
+    expect(fitPlumeUnits(72, sky)).toBeCloseTo(sky * 0.7, 5);
+    expect(fitPlumeUnits(72, sky)).toBeLessThan(72);
+  });
+  it('falls back to the band height with no measurement', () => {
+    expect(fitPlumeUnits(64, null)).toBe(64);
+    expect(svgUnitsAbove(36, vb, 0, 0)).toBeNull();
   });
 });
