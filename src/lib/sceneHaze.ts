@@ -172,7 +172,8 @@ export const SMOKE_BY_BAND: Record<
   ActiveHazeBand,
   { puffs: number; day: string; opacity: number }
 > = {
-  moderate: { puffs: 3, day: '#e8e4dc', opacity: 0.35 },
+  // Scene audit item 6: the pale wisp vanished on the moderate sky.
+  moderate: { puffs: 3, day: '#c9c4ba', opacity: 0.45 },
   // Round 3: darker smoke so it reads against the hazy sky.
   high: { puffs: 5, day: '#9a968e', opacity: 0.5 },
   'very high': { puffs: 6, day: '#7d7a74', opacity: 0.6 },
