@@ -22,7 +22,7 @@ describe('useGardenStageUpNotice', () => {
 
     expect(result.current.visible).toBe(true);
     expect(result.current.message).toContain(GARDEN_STAGE_UP_COPY[1]);
-    expect(result.current.message).toContain('day 1');
+    expect(result.current.message).toContain('1 of 14 days low carbon');
 
     act(() => result.current.dismiss());
     expect(result.current.visible).toBe(false);

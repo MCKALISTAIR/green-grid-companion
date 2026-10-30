@@ -14,6 +14,7 @@ import { TypewriterText } from '@/components/TypewriterText';
 import { RenewableSparkle } from '@/components/RenewableSparkle';
 import { ComponentErrorBoundary } from '@/components/ComponentErrorBoundary';
 import { IntensityScene } from '@/components/IntensityScene';
+import type { SceneGrowthStage } from '@/hooks/useSceneGrowth';
 import { DEFINITIONS } from '@/lib/definitions';
 import { cn } from '@/lib/utils';
 import { getConditionLabel, getConditionParts } from '@/lib/conditionLabels';
@@ -60,6 +61,8 @@ interface IntensityHeroOverlayProps {
   sparkleTrigger: boolean;
   onSparkleComplete: () => void;
   hideGauge: boolean;
+  /** BH-143: garden stage from useSceneGrowth (low-carbon days in the last 14). */
+  growthStage?: SceneGrowthStage;
 }
 
 /**
@@ -75,6 +78,7 @@ export function IntensityHeroOverlay({
   intensity,
   previousIntensity,
   index,
+  growthStage = 0,
   isActualReading = false,
   generationMix,
   isLoading,
@@ -562,6 +566,7 @@ export function IntensityHeroOverlay({
           intensity={intensity}
           index={index}
           generationMix={generationMix}
+          growthStage={growthStage}
           hasLiveReading={hasFreshReading}
           compact={hideGauge}
           cloudTopPx={hideGauge ? undefined : cloudTopPx}

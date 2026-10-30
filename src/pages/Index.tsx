@@ -143,7 +143,11 @@ const Index = () => {
 
   const { frequency: gridFrequency } = useGridDemand();
   const renewablesPct = getRenewablesPercentage(generationMix);
-  const sceneGrowth = useSceneGrowth(intensity, generationMix);
+  const sceneGrowth = useSceneGrowth(
+    intensity,
+    // BH-143: GB without a postcode; wait for the region id when there is one.
+    postcode ? regionId : null,
+  );
 
   const cleanliness = useMemo(() => {
     const band = index || 'moderate';
@@ -265,6 +269,7 @@ const Index = () => {
             <h1 className="sr-only">Home</h1>
 
             <IntensityHeroOverlay
+              growthStage={sceneGrowth.stage}
               postcode={postcode}
               setPostcode={setPostcode}
               region={region}
