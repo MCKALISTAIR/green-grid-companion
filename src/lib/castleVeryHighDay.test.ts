@@ -32,3 +32,23 @@ describe('castle at very high by day (d)', () => {
     expect(lum(fogVh.walls)).toBeGreaterThan(lum(fogH.walls) * 0.8);
   });
 });
+
+describe('capHazeInFront', () => {
+  it('matches the composite under the capped haze', async () => {
+    const { capHazeInFront } = await import('@/lib/cityLandmarkPalette');
+    const { HAZE_TINT } = await import('@/lib/sceneHaze');
+    const c = '#6a6f78';
+    const out = capHazeInFront(c, 0.45, 0.25);
+    const comp = (hex: string, a: number) =>
+      [1, 3, 5].map(
+        (i) =>
+          parseInt(hex.slice(i, i + 2), 16) * (1 - a) + parseInt(HAZE_TINT.slice(i, i + 2), 16) * a,
+      );
+    comp(out, 0.45).forEach((v, i) => expect(Math.abs(v - comp(c, 0.25)[i])).toBeLessThan(1));
+  });
+
+  it('is a no-op when the haze is already at or under the cap', async () => {
+    const { capHazeInFront } = await import('@/lib/cityLandmarkPalette');
+    expect(capHazeInFront('#6a6f78', 0.2, 0.25)).toBe('#6a6f78');
+  });
+});

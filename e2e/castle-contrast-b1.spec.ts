@@ -47,7 +47,7 @@ async function openEdinburgh(
   time: keyof typeof TIMES,
   weather: keyof typeof WEATHER,
   viewport: { width: number; height: number },
-  grams: { intensity: number; index: string } = { intensity: 100, index: 'low' },
+  grams: { intensity: number; index: string } = { intensity: 60, index: 'low' },
 ) {
   // Page clock first, then Node's (BH-113, see support/pinClocks.ts).
   await pinClocks(page, TIMES[time]);
@@ -57,6 +57,8 @@ async function openEdinburgh(
     intensity: grams.intensity,
     index: grams.index,
     ageMinutes: 5,
+    // Flat series: the 40g wobble crossed band edges at some wall-clock hours.
+    flatSeries: true,
     weather: { ...WEATHER[weather], is_day: time === 'dusk' || time === 'night' ? 0 : 1 },
   });
   await page.context().addInitScript(seedStorage({ postcode: 'EH1' }));
@@ -197,7 +199,7 @@ for (const viewport of VIEWPORTS) {
         page,
       }) => {
         test.setTimeout(120_000);
-        await measureCastle(page, time, weather, viewport, { intensity: 100, index: 'low' });
+        await measureCastle(page, time, weather, viewport, { intensity: 60, index: 'low' });
       });
     }
   }
