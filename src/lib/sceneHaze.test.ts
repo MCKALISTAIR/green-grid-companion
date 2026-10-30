@@ -122,3 +122,9 @@ describe('sky blend by day (round 3)', () => {
       expect(getSkyBlend('very high', t)).toBe(0);
   });
 });
+
+describe('moderate smoke (scene audit item 6)', () => {
+  it('is #c9c4ba at 0.45 so it reads on the pale sky', () => {
+    expect(SMOKE_BY_BAND.moderate).toMatchObject({ day: '#c9c4ba', opacity: 0.45 });
+  });
+});
