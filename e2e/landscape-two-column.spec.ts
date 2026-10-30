@@ -38,7 +38,22 @@ const layout = (page: Page) =>
     const meta = r('[data-testid="hero-meta"]');
     const tabs = r('.home-feed [role="tablist"]');
     const nav = r('[data-testid="bottom-nav"]');
+    const sky = [
+      ...document.querySelectorAll(
+        '[data-city-art="terrace"], [data-city-art$="-front"], [data-city-art="edinburgh-castle"]',
+      ),
+    ]
+      .map((e) => e.getBoundingClientRect())
+      .filter((x) => x.width > 0);
+    const metaEl = document.querySelector('[data-testid="hero-meta"]')!;
     return {
+      vh: innerHeight,
+      sceneBottom: scene.bottom,
+      feedBottom: feed.bottom,
+      nav: { left: nav.left, right: nav.right },
+      metaBottom: meta.bottom,
+      skyTop: Math.min(...sky.map((x) => x.top)),
+      metaBg: getComputedStyle(metaEl).backgroundColor,
       vw: innerWidth,
       scene: { left: scene.left, right: scene.right, width: scene.width },
       feed: { left: feed.left, width: feed.width },
@@ -69,6 +84,16 @@ for (const scenario of ['zero-carbon', 'very-high']) {
     expect(m.tabs.top).toBeGreaterThanOrEqual(0);
     expect(m.tabs.bottom).toBeLessThanOrEqual(m.navTop);
 
+    // Solid pill backing, clear of the skyline (very low included).
+    expect(m.metaBg).toMatch(/^rgb\(/);
+    expect(m.metaBottom).toBeLessThanOrEqual(m.skyTop);
+    // Scene ground runs to the bottom of the column (no empty band).
+    expect(m.sceneBottom).toBeGreaterThanOrEqual(m.vh - 1);
+    // Nav docks in the right column only; the sheet ends above it.
+    expect(m.nav.left).toBeGreaterThanOrEqual(m.scene.right - 1);
+    expect(m.nav.right).toBeLessThanOrEqual(m.vw);
+    expect(m.feedBottom).toBeLessThanOrEqual(m.navTop + 1);
+
     // The sheet scrolls on its own; the page and the scene do not move.
     const before = await page.evaluate(() => ({
       y: scrollY,
@@ -87,6 +112,25 @@ for (const scenario of ['zero-carbon', 'very-high']) {
       top: document.querySelector('.home-scene')!.getBoundingClientRect().top,
     }));
     expect(after).toEqual(before);
+
+    // At the end of the sheet the last card is fully above the nav.
+    const end = await page.evaluate(() => {
+      const feed = document.querySelector<HTMLElement>('.home-feed')!;
+      feed.scrollTop = feed.scrollHeight;
+      const cards = [
+        ...feed.querySelectorAll<HTMLElement>(
+          '.home-feed-body > * , .home-feed-body [class*="rounded"]',
+        ),
+      ]
+        .map((e) => e.getBoundingClientRect())
+        .filter((x) => x.height > 20);
+      const lastBottom = Math.max(...cards.map((x) => x.bottom));
+      const navTop = document
+        .querySelector('[data-testid="bottom-nav"]')!
+        .getBoundingClientRect().top;
+      return { lastBottom, navTop };
+    });
+    expect(end.lastBottom).toBeLessThanOrEqual(end.navTop);
   });
 }
 

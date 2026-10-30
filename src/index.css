@@ -1363,6 +1363,50 @@ blockquote {
   .home-scene-gauge [data-testid='hero-meta'] p {
     font-size: 0.75rem;
   }
+
+  /* D-07 changes: the scene column runs the full height so its ground reaches
+     the bottom (no flat band under the skyline). The nav docks in the right
+     column only, and the sheet ends just above it, so the last card is never
+     covered and no card text sits under the nav at rest. */
+  .home-shell {
+    height: 100dvh;
+    max-height: 100dvh;
+    background: linear-gradient(to right, transparent 50%, hsl(var(--card)) 50%);
+  }
+
+  .home-feed {
+    height: calc(100% - var(--bottom-content-inset) + 1rem);
+    align-self: flex-start;
+  }
+
+  .app-content--home .home-feed {
+    padding-bottom: 1rem;
+  }
+
+  body:has(.home-shell) #bottom-nav {
+    left: 50%;
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Five tabs stay 44px+ wide in the narrower column. */
+  body:has(.home-shell) #bottom-nav .nav-dock {
+    width: calc(100% - 8px);
+  }
+
+  body:has(.home-shell) #bottom-nav .nav-dock > div {
+    padding-inline: 0;
+  }
+
+  /* Same solid backing as the short portrait hero (#262), so the pill reads
+     on any scene and never sits on the skyline. */
+  .home-scene-gauge [data-testid='hero-meta'] {
+    background-color: #0f172a;
+    box-shadow: var(--shadow-sm, 0 1px 2px rgb(0 0 0 / 0.1));
+  }
+
+  [data-hero-tone='ink'] [data-testid='hero-meta'] {
+    background-color: #ffffff;
+  }
 }
 /* ==========================================
    Privacy choice sheet (CookieConsent.tsx)
