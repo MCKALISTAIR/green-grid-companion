@@ -579,6 +579,14 @@ Deno.serve(async (req: Request) => {
         });
       }
 
+      // BH-127: a new key replaces the one Octopus rejected, so clear the
+      // "key rejected" state. The next sync sets it again if this key fails too.
+      const { error: clearErr } = await supabase
+        .from('octopus_meters')
+        .update({ last_sync_error: null, last_sync_error_at: null })
+        .eq('user_id', userId);
+      if (clearErr) console.warn('Could not clear last_sync_error after relink');
+
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });

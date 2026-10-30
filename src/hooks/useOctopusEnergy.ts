@@ -57,6 +57,9 @@ export interface OctopusMeter {
   serial_number: string;
   is_active: boolean;
   last_sync_at: string | null;
+  /** BH-127: 'octopus_http_401' / 'octopus_http_403' when Octopus rejected the key on the last sync. */
+  last_sync_error?: string | null;
+  last_sync_error_at?: string | null;
   meter_type?: string;
 }
 

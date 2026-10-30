@@ -73,6 +73,17 @@ export interface OctopusStore {
     error: DbError;
   }>;
   markSynced(userId: string, mpan: string, atIso: string): Promise<{ error: DbError }>;
+  /**
+   * BH-127: record that Octopus rejected the key (401/403) for this meter, so
+   * get-status can show "Octopus rejected your key". Cleared by markSynced and
+   * by save-credentials.
+   */
+  markSyncError(
+    userId: string,
+    mpan: string,
+    error: string,
+    atIso: string,
+  ): Promise<{ error: DbError }>;
 }
 
 // ---------------------------------------------------------------------------
@@ -350,6 +361,9 @@ export interface MeterSyncResult {
  * succeeded. A NESO/footprint failure is reported but doesn't block it,
  * because the readings themselves did sync; the next calculate run fills in.
  */
+/** BH-127: Octopus errors that mean the stored key was rejected. */
+export const KEY_REJECTED_ERRORS = new Set(['octopus_http_401', 'octopus_http_403']);
+
 export async function syncMeter(
   deps: { fetch: FetchLike; store: OctopusStore; now?: () => Date },
   opts: {
@@ -387,7 +401,13 @@ export async function syncMeter(
   });
   base.http_status = fetched.http_status;
   base.readings_fetched = fetched.readings.length;
-  if (!fetched.ok) return { ...base, error: fetched.error };
+  if (!fetched.ok) {
+    if (fetched.error && KEY_REJECTED_ERRORS.has(fetched.error)) {
+      // Best effort: a failed write here must not hide the 401 from the caller.
+      await deps.store.markSyncError(opts.userId, opts.mpan, fetched.error, now.toISOString());
+    }
+    return { ...base, error: fetched.error };
+  }
 
   const rows: ConsumptionRow[] = fetched.readings.map((r) => ({
     interval_start: halfHourKeyToIso(halfHourKey(r.interval_start)!),
@@ -574,7 +594,15 @@ export function supabaseOctopusStore(supabase: AnyClient): OctopusStore {
     async markSynced(userId, mpan, atIso) {
       const { error } = await supabase
         .from('octopus_meters')
-        .update({ last_sync_at: atIso })
+        .update({ last_sync_at: atIso, last_sync_error: null, last_sync_error_at: null })
+        .eq('mpan', mpan)
+        .eq('user_id', userId);
+      return { error };
+    },
+    async markSyncError(userId, mpan, syncError, atIso) {
+      const { error } = await supabase
+        .from('octopus_meters')
+        .update({ last_sync_error: syncError, last_sync_error_at: atIso })
         .eq('mpan', mpan)
         .eq('user_id', userId);
       return { error };

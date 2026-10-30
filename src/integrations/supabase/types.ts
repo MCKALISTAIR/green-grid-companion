@@ -209,6 +209,8 @@ export type Database = {
           id: string
           is_active: boolean
           last_sync_at: string | null
+          last_sync_error: string | null
+          last_sync_error_at: string | null
           meter_type: string
           mpan: string
           serial_number: string
@@ -220,6 +222,8 @@ export type Database = {
           id?: string
           is_active?: boolean
           last_sync_at?: string | null
+          last_sync_error?: string | null
+          last_sync_error_at?: string | null
           meter_type?: string
           mpan: string
           serial_number: string
@@ -231,6 +235,8 @@ export type Database = {
           id?: string
           is_active?: boolean
           last_sync_at?: string | null
+          last_sync_error?: string | null
+          last_sync_error_at?: string | null
           meter_type?: string
           mpan?: string
           serial_number?: string
