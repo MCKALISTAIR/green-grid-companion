@@ -7,11 +7,11 @@ import { gradeContrast, type WcagGrade } from '@/lib/designTokens';
 const TIMES: TimeOfDay[] = ['night', 'dawn', 'morning', 'midday', 'afternoon', 'sunset', 'dusk'];
 
 const INTENSITY_SAMPLES: Array<{ value: number; label: string }> = [
-  { value: 30, label: 'Very low' },
-  { value: 100, label: 'Low' },
-  { value: 200, label: 'Moderate' },
-  { value: 300, label: 'High' },
-  { value: 420, label: 'Very high' },
+  { value: 10, label: 'Very low' },
+  { value: 60, label: 'Low' },
+  { value: 130, label: 'Moderate' },
+  { value: 200, label: 'High' },
+  { value: 300, label: 'Very high' },
 ];
 
 const HSL_RE = /hsl\(\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)%\s+(-?\d+(?:\.\d+)?)%\s*\)/i;

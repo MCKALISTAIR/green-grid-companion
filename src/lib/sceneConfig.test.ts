@@ -75,3 +75,53 @@ describe('art pass v1 scene logic', () => {
     expect(cfg(100, 25).showWind).toBe(true);
   });
 });
+
+describe('scene props follow the data or the band, not grams (scene audit item 2)', () => {
+  const cfg = (
+    intensity: number,
+    index = '',
+    extra: Partial<Parameters<typeof buildSceneConfig>[0]> = {},
+  ) =>
+    buildSceneConfig({
+      intensity,
+      index,
+      timeOfDay: 'midday',
+      weather: { ...clearWeather, windSpeed: 36 },
+      synthwaveMode: false,
+      isNight: false,
+      ...extra,
+    });
+
+  it('keeps turbines and panels at very high (300 g), count comes from wind share', () => {
+    expect(cfg(300).showRenewables).toBe(true);
+    expect(cfg(10).showRenewables).toBe(true);
+  });
+
+  it('only changes gates at band edges', () => {
+    expect(cfg(25).cleanliness).toBe(cfg(89).cleanliness);
+    expect(cfg(90).cleanliness).toBe(cfg(169).cleanliness);
+    expect(cfg(170).cleanliness).toBe(cfg(230).cleanliness);
+    expect(cfg(89).cleanliness).toBeGreaterThan(cfg(90).cleanliness);
+    expect(cfg(215).cleanliness).toBe(cfg(200, 'high').cleanliness);
+  });
+
+  it('uses the label index when given', () => {
+    expect(cfg(215, 'moderate').cleanliness).toBe(cfg(130).cleanliness);
+  });
+
+  it('birds by day at very low and low, butterflies at very low only', () => {
+    expect(cfg(60).showBirds).toBe(true);
+    expect(cfg(130).showBirds).toBe(false);
+    expect(cfg(10).showButterflies).toBe(true);
+    expect(cfg(60).showButterflies).toBe(false);
+  });
+
+  it('solar brightness follows solar share', () => {
+    const low = cfg(130, '', { solarShare: 0 }).solarBrightness;
+    const high = cfg(130, '', { solarShare: 20 }).solarBrightness;
+    expect(high).toBeGreaterThan(low);
+    expect(cfg(10, '', { solarShare: 5 }).solarBrightness).toBe(
+      cfg(300, '', { solarShare: 5 }).solarBrightness,
+    );
+  });
+});

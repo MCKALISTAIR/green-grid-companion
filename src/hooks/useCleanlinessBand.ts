@@ -1,13 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
+import { bandFor, type NesoBand } from '@/lib/nesoBand';
 
 export type CleanlinessBand = 'very-clean' | 'clean' | 'moderate' | 'dirty' | 'very-dirty';
 
-export function getCleanlinessBand(intensity: number): CleanlinessBand {
-  if (intensity < 50) return 'very-clean';
-  if (intensity < 150) return 'clean';
-  if (intensity < 250) return 'moderate';
-  if (intensity < 350) return 'dirty';
-  return 'very-dirty';
+const FROM_NESO: Record<NesoBand, CleanlinessBand> = {
+  'very low': 'very-clean',
+  low: 'clean',
+  moderate: 'moderate',
+  high: 'dirty',
+  'very high': 'very-dirty',
+};
+
+/** BH-139: same bands as the hero label (NESO index, else NESO 2026 bands). */
+export function getCleanlinessBand(intensity: number, index?: string | null): CleanlinessBand {
+  return FROM_NESO[bandFor(intensity, index)];
 }
 
 const ORDER: CleanlinessBand[] = ['very-clean', 'clean', 'moderate', 'dirty', 'very-dirty'];
@@ -23,8 +29,8 @@ export interface BandTransition {
  * Derive a discrete cleanliness band and report transitions.
  * The transition fires once when the band changes, then clears after `clearAfterMs`.
  */
-export function useCleanlinessBand(intensity: number, clearAfterMs = 3500) {
-  const band = getCleanlinessBand(intensity);
+export function useCleanlinessBand(intensity: number, clearAfterMs = 3500, index?: string | null) {
+  const band = getCleanlinessBand(intensity, index);
   const prevRef = useRef<CleanlinessBand>(band);
   const [transition, setTransition] = useState<BandTransition | null>(null);
 
