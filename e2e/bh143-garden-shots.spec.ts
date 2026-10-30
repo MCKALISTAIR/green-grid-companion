@@ -15,6 +15,7 @@ const AT = '2026-10-29T12:10:00Z';
 const PHONES = [
   { width: 390, height: 844 },
   { width: 320, height: 568 },
+  { width: 720, height: 540 },
 ];
 const WEEKS = {
   lush: () => 60,
@@ -58,7 +59,7 @@ for (const vp of PHONES) {
     test(`garden ${week} ${vp.width}x${vp.height}`, async ({ page, context }) => {
       await page.setViewportSize(vp);
       await pinClocks(page, AT);
-      await installMocks(context, { intensity: 75, index: 'low' });
+      await installMocks(context, { intensity: 75, index: 'low', flatSeries: true });
       await mockGardenWindow(context, perDay);
       await context.addInitScript(seedStorage());
       // The garden grows in the countryside scene (the city has no garden layer).
