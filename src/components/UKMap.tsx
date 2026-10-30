@@ -60,7 +60,7 @@ const getPosition = (lat: number, lon: number) => {
 export function UKMap({ regions, onRegionSelect, selectedRegionId }: UKMapProps) {
   return (
     <div
-      className="relative w-full aspect-[0.61] max-w-sm mx-auto my-4 select-none"
+      className="relative isolate w-full aspect-[0.61] max-w-sm mx-auto my-4 select-none"
       role="group"
       aria-label="Map of regional carbon intensity"
     >
