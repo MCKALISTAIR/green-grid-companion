@@ -93,7 +93,10 @@ export async function installMocks(context, scenarioIn = {}) {
     return Array.from({ length: 144 }, (_, i) => {
       const f = new Date(start + i * 1800000);
       // flatSeries: every slot reads the scenario's own value (hero shots per band).
-      const wobble = s.flatSeries ? 0 : 40 * Math.sin(i / 6);
+      // The open half hour is the live reading (BH-136 asks for it by time), so it
+      // carries the scenario's own grams; only the other slots wobble for the chart.
+      const isOpen = f.getTime() <= Date.now() && Date.now() < f.getTime() + 1800000;
+      const wobble = s.flatSeries || isOpen ? 0 : 40 * Math.sin(i / 6);
       const v = Math.max(0, Math.round((s.intensity || 0) + wobble));
       return {
         from: f.toISOString().replace(/\.\d+Z$/, 'Z'),
