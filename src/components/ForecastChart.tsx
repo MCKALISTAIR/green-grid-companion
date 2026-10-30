@@ -29,6 +29,9 @@ import { hapticSelectionChanged } from '@/lib/haptics';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useChartScrub } from '@/hooks/useChartScrub';
 
+const STRIP_EDGE_FADE =
+  'linear-gradient(to right, transparent 0, #000 16px, #000 calc(100% - 16px), transparent 100%)';
+
 interface ForecastChartProps {
   forecast: ForecastData[];
   showNext?: number;
@@ -314,7 +317,8 @@ export function ForecastChart({
         ref={scrollContainerRef}
         onScroll={handleScroll}
         className={cn(
-          'overflow-x-auto pb-4 pt-4 -mt-2 scrollbar-thin scrollbar-thumb-muted-foreground/20 rounded-xl transition-colors duration-500',
+          'overflow-x-auto pb-4 -mt-2 scrollbar-thin scrollbar-thumb-muted-foreground/20 rounded-xl transition-colors duration-500',
+          bestBlocks.length > 0 ? 'pt-10' : 'pt-4',
           insight?.washClass,
         )}
         role="listbox"
@@ -322,7 +326,12 @@ export function ForecastChart({
         aria-activedescendant={selectedIndex >= 0 ? `forecast-hour-${selectedIndex}` : undefined}
         data-testid="forecast-strip"
         data-scrubbing={scrubbing || undefined}
-        style={{ WebkitTouchCallout: 'none' }}
+        style={{
+          WebkitTouchCallout: 'none',
+          // G-08: soft 16px fade at both edges instead of a hard clip.
+          maskImage: STRIP_EDGE_FADE,
+          WebkitMaskImage: STRIP_EDGE_FADE,
+        }}
       >
         <div className="flex gap-2 min-w-max px-4 relative">
           {bestBlocks.map((block, idx) => {
@@ -359,12 +368,17 @@ export function ForecastChart({
                   aria-hidden
                   className="absolute inset-x-0 top-1 bottom-6 rounded-2xl bg-intensity-very-low/[0.12] dark:bg-intensity-very-low/15 ring-1 ring-inset ring-intensity-very-low/35"
                 />
-                <div className="absolute -top-2 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-intensity-very-low/15 dark:bg-intensity-very-low/25 border border-intensity-very-low/30 px-2 py-0.5 rounded-full whitespace-nowrap shadow-sm z-10">
-                  <span className="text-[8px] font-bold tracking-wide text-intensity-very-low-text">
-                    ★
+                {/* Chip sits above the column, never wider than it, so it can't
+                    cover the band or the bars (G-08). Time wraps to its own line. */}
+                <div
+                  data-testid="best-window-chip"
+                  className="absolute bottom-full mb-2 left-0 right-0 mx-auto w-fit max-w-full flex flex-col items-center bg-intensity-very-low/15 dark:bg-intensity-very-low/25 border border-intensity-very-low/30 px-1 py-px rounded-md shadow-sm z-10 leading-tight"
+                >
+                  <span className="text-[8px] font-semibold text-intensity-very-low-text whitespace-nowrap">
+                    <span className="font-bold tracking-wide">★</span> Best
                   </span>
-                  <span className="text-[8px] font-semibold text-intensity-very-low-text">
-                    Best · {startTime}–{endTime}
+                  <span className="text-[8px] font-semibold text-intensity-very-low-text whitespace-nowrap tabular-nums tracking-tighter">
+                    {startTime}–{endTime}
                   </span>
                 </div>
               </div>
