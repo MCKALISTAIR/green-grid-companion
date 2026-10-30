@@ -1603,3 +1603,34 @@ body {
     padding-bottom: 6.75rem;
   }
 }
+
+/* G-11: cloud bank cross-fade when the weather lands (WeatherCloudBank). Opacity
+   only, so it runs on the compositor; Reduce Motion skips it in JS and here. */
+@keyframes cloud-bank-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes cloud-bank-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+.cloud-bank-in {
+  animation: cloud-bank-in 400ms ease-in-out both;
+}
+.cloud-bank-out {
+  animation: cloud-bank-out 400ms ease-in-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cloud-bank-in,
+  .cloud-bank-out {
+    animation: none;
+  }
+}

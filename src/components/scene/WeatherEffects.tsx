@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WeatherData } from '@/hooks/useWeatherData';
 import type { TimeOfDay } from '@/hooks/useTimeOfDay';
@@ -276,7 +277,20 @@ function HeavyRain({
   );
 }
 
-/** The full cloud bank for this weather, or nothing (see hasCloudBank). */
+/** G-11: cross-fade length when the weather lands (matches .cloud-bank-in/out in index.css). */
+export const CLOUD_BANK_FADE_MS = 400;
+
+type BankKey = 'unknown' | 'night' | 'day';
+
+/**
+ * The full cloud bank for this weather, or nothing (see hasCloudBank).
+ *
+ * G-11 (Design, 30 Oct 2026): when the weather lands (unknown bank to the real
+ * bank, or to no bank) the banks cross-fade in place over 400ms; nothing moves.
+ * The fade is a CSS animation so it runs on the compositor while the page is busy
+ * rendering the new data. Reduce Motion swaps them instantly. Callers keep this
+ * mounted when there is no bank, so the outgoing bank can fade out.
+ */
 export function WeatherCloudBank({
   weather,
   isNight,
@@ -284,12 +298,64 @@ export function WeatherCloudBank({
   weatherKnown = true,
   cloudTopPx,
 }: Pick<WeatherEffectsProps, 'weather' | 'isNight' | 'timeOfDay' | 'weatherKnown' | 'cloudTopPx'>) {
-  if (!hasCloudBank(weather, weatherKnown)) return null;
-  return !weatherKnown ? (
-    <UnknownWeatherCloudBank topPx={cloudTopPx} timeOfDay={timeOfDay} />
-  ) : (
-    <CloudBank night={isNight} topPx={cloudTopPx} />
-  );
+  const reduceMotion = useReducedMotion();
+  const show = hasCloudBank(weather, weatherKnown);
+  const key: BankKey | null = show ? (!weatherKnown ? 'unknown' : isNight ? 'night' : 'day') : null;
+  // Both banks use the current cloudTopPx, so neither crosses the hero text (#179)
+  // if the text block changes height as the data lands.
+  const bankFor = (k: BankKey) =>
+    k === 'unknown' ? (
+      <UnknownWeatherCloudBank topPx={cloudTopPx} timeOfDay={timeOfDay} />
+    ) : (
+      <CloudBank night={k === 'night'} topPx={cloudTopPx} />
+    );
+
+  const firstKey = useRef(key);
+  const prevKey = useRef(key);
+  const [outgoing, setOutgoing] = useState<BankKey | null>(null);
+
+  useLayoutEffect(() => {
+    const was = prevKey.current;
+    prevKey.current = key;
+    if (was === key) return;
+    if (reduceMotion || !was) {
+      setOutgoing(null);
+      return;
+    }
+    setOutgoing(was);
+    // Cleared on animationend; this is only a fallback (tab hidden, no animations).
+    const id = window.setTimeout(() => setOutgoing(null), CLOUD_BANK_FADE_MS * 4);
+    return () => window.clearTimeout(id);
+  }, [key, reduceMotion]);
+
+  const fadeIn = !reduceMotion && key !== firstKey.current;
+  // One keyed list, so the outgoing bank keeps its DOM (and measured width): only
+  // its class changes, and it fades out under the incoming one.
+  const layers: ReactNode[] = [];
+  if (outgoing && outgoing !== key) {
+    layers.push(
+      <div
+        key={outgoing}
+        className="absolute inset-0 pointer-events-none cloud-bank-out"
+        data-bank-fade="out"
+        onAnimationEnd={() => setOutgoing(null)}
+      >
+        {bankFor(outgoing)}
+      </div>,
+    );
+  }
+  if (key) {
+    layers.push(
+      <div
+        key={key}
+        className={cn('absolute inset-0 pointer-events-none', fadeIn && 'cloud-bank-in')}
+        data-bank-fade={fadeIn ? 'in' : 'none'}
+      >
+        {bankFor(key)}
+      </div>,
+    );
+  }
+  return <>{layers}</>;
 }
 
 export function WeatherEffects({
@@ -310,23 +376,18 @@ export function WeatherEffects({
     <>
       <AnimatePresence>{weather.isFoggy && <FogVeil />}</AnimatePresence>
 
-      {hasCloudBank(weather, weatherKnown)
-        ? !omitBank && (
-            <WeatherCloudBank
-              weather={weather}
-              isNight={isNight}
-              timeOfDay={timeOfDay}
-              weatherKnown={weatherKnown}
-              cloudTopPx={cloudTopPx}
-            />
-          )
-        : weather.cloudCover > 40 && (
-            <WeatherClouds
-              cloudCover={weather.cloudCover}
-              isNight={isNight}
-              timeOfDay={timeOfDay}
-            />
-          )}
+      {!omitBank && (
+        <WeatherCloudBank
+          weather={weather}
+          isNight={isNight}
+          timeOfDay={timeOfDay}
+          weatherKnown={weatherKnown}
+          cloudTopPx={cloudTopPx}
+        />
+      )}
+      {!hasCloudBank(weather, weatherKnown) && weather.cloudCover > 40 && (
+        <WeatherClouds cloudCover={weather.cloudCover} isNight={isNight} timeOfDay={timeOfDay} />
+      )}
 
       {showWind && (
         <div
