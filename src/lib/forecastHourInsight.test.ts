@@ -116,3 +116,28 @@ describe('current-hour line agrees with the now-or-wait card', () => {
     }
   });
 });
+
+describe('F-01: current-slot copy names this half hour', () => {
+  const cur = () => {
+    const from = new Date(Date.now() - 5 * 60 * 1000);
+    from.setSeconds(0, 0);
+    return from;
+  };
+  it('best window open says this half hour', () => {
+    const f = [slotAt(cur(), 0, 'very low')];
+    const i = getForecastHourInsight(f, 0, 0, 'plain', new Date(), new Set([0]));
+    expect(i!.action).toBe('Best window is open this half hour. Good time to run a load.');
+  });
+  it('clean current slot says this half hour', () => {
+    const f = [slotAt(cur(), 20, 'very low')];
+    expect(getForecastHourInsight(f, 0, 20, 'plain')!.action).toMatch(/this half hour/);
+  });
+  it('dirty and middling current slots say half hour', () => {
+    expect(getForecastHourInsight([slotAt(cur(), 300, 'very high')], 0, 300)!.action).toBe(
+      'Dirty half hour. Wait if you can.',
+    );
+    expect(getForecastHourInsight([slotAt(cur(), 150, 'moderate')], 0, 150)!.action).toMatch(
+      /^Middling half hour/,
+    );
+  });
+});

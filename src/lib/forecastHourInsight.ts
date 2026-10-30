@@ -86,25 +86,25 @@ function buildAction(
   }
   if (inBestWindow) {
     return isCurrent
-      ? 'Best window is open. Good time to run a load.'
+      ? 'Best window is open this half hour. Good time to run a load.'
       : 'In a best window. A good slot to plan a load.';
   }
   if (band === 'very low' || band === 'low') {
     return isCurrent
-      ? "Grid's clean. Go for big loads."
+      ? "Grid's clean this half hour. Go for big loads."
       : vsNowCleaner
         ? 'Cleaner than now. Worth moving a load here.'
         : 'Still a clean hour on the grid.';
   }
   if (band === 'high' || band === 'very high') {
-    if (isCurrent) return 'Dirty hour. Wait if you can.';
+    if (isCurrent) return 'Dirty half hour. Wait if you can.';
     if (minutesUntil > 0 && minutesUntil < 18 * 60) {
       return 'Best not to start big loads in this hour.';
     }
     return 'High-carbon hour. Move it if you can.';
   }
   return isCurrent
-    ? 'Middling hour. Check the chart for a cleaner one.'
+    ? 'Middling half hour. Check the chart for a cleaner one.'
     : 'Moderate hour. Check the hours either side.';
 }
 
