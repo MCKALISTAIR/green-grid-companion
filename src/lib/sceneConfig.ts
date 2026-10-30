@@ -40,6 +40,8 @@ export interface SceneVisualConfig {
   isGoldenHour: boolean;
   isDaytime: boolean;
   isDarkPeriod: boolean;
+  /** The label's NESO band (bandFor), for band-keyed props such as the aurora. */
+  band: NesoBand;
   turbineCount: number;
   solarBrightness: number;
   birdCount: number;
@@ -169,6 +171,7 @@ export function buildSceneConfig({
   };
 
   return {
+    band: bandFor(intensity, index),
     cleanliness,
     skyGradient: synthwaveMode
       ? 'linear-gradient(180deg, #2b1055 0%, #7597de 100%)'
