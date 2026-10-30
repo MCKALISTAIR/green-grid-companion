@@ -62,16 +62,17 @@ export function SceneTemporalLife({
               aria-hidden="true"
               data-garden-flowers
             >
+              {/* Thin weeks: soft earthy ovals, about 14x4 px at 390, on the front ridge. */}
               {gardenBarePatches(stage).map((p, i) => (
                 <ellipse
                   key={`bare-${i}`}
                   data-garden-bare
                   cx={p.x}
                   cy={p.y}
-                  rx={6}
-                  ry={1.6}
-                  fill="#7a5a36"
-                  opacity={0.75}
+                  rx={7.2}
+                  ry={2}
+                  fill="#8a7a52"
+                  opacity={0.55}
                 />
               ))}
               <Flowers positions={flowerPositions} scale={GARDEN_FLOWER_SCALE} />

@@ -63,5 +63,5 @@ export function gardenFlowerPositions(stage: number): GardenFlower[] {
 /** Thin weeks: bare-earth patches on the ridge (scene x centres). */
 export function gardenBarePatches(stage: number): { x: number; y: number }[] {
   if (stage > 1) return [];
-  return [40, 150, 200, 345].map((x) => ({ x, y: getHillRidgeY('front', x) - 0.9 }));
+  return [40, 150, 200, 345].map((x) => ({ x, y: getHillRidgeY('front', x) - 1 }));
 }
