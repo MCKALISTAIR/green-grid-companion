@@ -302,6 +302,7 @@ export function IntensityScene({
   };
 
   const biomassPercentage = getGenerationPercentage('biomass');
+  const solarShare = generationMix?.length ? getGenerationPercentage('solar') : undefined;
 
   const sceneConfig = useMemo(
     () =>
@@ -315,6 +316,7 @@ export function IntensityScene({
         sceneType,
         weatherKnown,
         hazeBand,
+        solarShare,
       }),
     [
       intensity,
@@ -326,6 +328,7 @@ export function IntensityScene({
       sceneType,
       weatherKnown,
       hazeBand,
+      solarShare,
     ],
   );
   const skyBlend = synthwaveMode || isNight ? 0 : getSkyBlend(hazeBand, timeOfDay);
