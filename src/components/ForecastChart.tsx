@@ -547,7 +547,7 @@ export function ForecastChart({
           <div className="w-2 h-2 rounded-full bg-intensity-very-high" />
           <span>Very High</span>
         </div>
-        <span className="text-muted-foreground/80" data-testid="forecast-unit">
+        <span className="text-muted-foreground" data-testid="forecast-unit">
           Values in gCO₂/kWh
         </span>
       </div>
