@@ -319,7 +319,7 @@ export const ENERGY_FACTS: EnergyFact[] = [
   },
   {
     id: 'solar_domestic_snark_2',
-    text: 'Solar panels work in the UK? Shocking. Almost like they need light, not heat.',
+    text: 'Solar panels work in GB? Shocking. Almost like they need light, not heat.',
     category: 'general',
     tone: 'snarky',
     condition: () => true,
@@ -330,7 +330,7 @@ export const ENERGY_FACTS: EnergyFact[] = [
   // --- GRID INTERCONNECTORS ---
   {
     id: 'interconnector_2',
-    text: 'The North Sea Link to Norway brings renewable hydro power to the UK via a 720km cable.',
+    text: 'The North Sea Link to Norway brings renewable hydro power to GB via a 720km cable.',
     source: 'https://www.northsealink.com/north-sea-link/overview',
     category: 'general',
     tone: 'friendly',
