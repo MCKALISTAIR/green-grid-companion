@@ -1,4 +1,6 @@
 import { useState, useMemo } from 'react';
+import { OctopusStaleNotice } from './OctopusStaleNotice';
+import { OCTOPUS_LINKED_CARD_COPY as LINKED } from '@/lib/voice/octopusLinkCopy';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -661,11 +663,15 @@ export function FootprintView() {
                   </div>
                   <span className="text-xs text-muted-foreground">
                     {meter.last_sync_at
-                      ? `Synced ${formatDistanceToNow(new Date(meter.last_sync_at), { addSuffix: true })}`
+                      ? LINKED.lastSynced(
+                          formatDistanceToNow(new Date(meter.last_sync_at), { addSuffix: true }),
+                        )
                       : 'Never synced'}
                   </span>
                 </div>
               ))}
+
+              <OctopusStaleNotice latestConsumption={status.latest_consumption} />
 
               <Button
                 variant="outline"

@@ -29,6 +29,7 @@ import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
 import { formatDistanceToNow } from 'date-fns';
 import { OctopusBenefitsIntro } from './OctopusBenefitsIntro';
 import { OctopusLinkSheet } from './OctopusLinkSheet';
+import { OctopusStaleNotice } from './OctopusStaleNotice';
 import { linkFailureMessage } from '@/lib/octopusLink';
 import {
   OCTOPUS_LINKED_CARD_COPY as LINKED,
@@ -291,6 +292,7 @@ export function OctopusIntegration() {
                 )}
               </div>
             ))}
+            <OctopusStaleNotice latestConsumption={status.latest_consumption} />
             {status.footprint_records > 0 && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Leaf className="w-4 h-4 text-green-500" />

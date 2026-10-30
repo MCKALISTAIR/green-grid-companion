@@ -129,6 +129,16 @@ export const OCTOPUS_LINKED_CARD_COPY = {
   lastSynced: (ago: string) => `Last synced ${ago}`,
 } as const;
 
+/** BH-127: how fresh the meter data is, and what to do when it has stalled. */
+export const OCTOPUS_FRESHNESS_COPY = {
+  newestReading: (ago: string) => `Newest reading ${ago}`,
+  staleTitle: 'Your meter data has stopped updating',
+  staleBody: (date: string) =>
+    `The newest reading we have from Octopus is from ${date}. Tap Sync Now to try again. If it's still stuck, unlink Octopus and link it again with a new API key.`,
+  historyNote: (date: string) =>
+    `Your smart meter data stops at ${date}, so your footprint doesn't include anything after that.`,
+} as const;
+
 /** 3.6 MPAN popover. */
 export const OCTOPUS_MPAN_COPY = {
   trigger: 'What is an MPAN?',
