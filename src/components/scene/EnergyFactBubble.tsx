@@ -156,17 +156,10 @@ export function EnergyFactBubble({
                     transition={{ duration: 0.2, ease: 'easeInOut' }}
                     className={`w-full ${variant === 'plain' ? 'text-center' : 'text-left'}`}
                   >
-                    {variant === 'plain' && (
-                      <span className="text-primary/60 text-lg leading-none select-none align-top mr-1">
-                        "
-                      </span>
-                    )}
+                    {/* Plain variant: italic line, no decorative marks. The old marks were
+                        straight ASCII quotes, the closing one rotated 180deg, which read
+                        as a stray " and a low-9 quote. */}
                     {currentFact.text}
-                    {variant === 'plain' && (
-                      <span className="text-primary/60 text-lg leading-none select-none align-top ml-1 rotate-180 inline-block transform translate-y-0.5">
-                        "
-                      </span>
-                    )}
                   </motion.p>
                 </AnimatePresence>
                 {variant === 'bubble' && (

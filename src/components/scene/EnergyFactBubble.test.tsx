@@ -20,3 +20,18 @@ describe('EnergyFactBubble', () => {
     expect(container.textContent?.length).toBeGreaterThan(10);
   });
 });
+
+describe('EnergyFactBubble plain variant', () => {
+  it('renders the fact text exactly, with no quote marks around it', async () => {
+    const { ENERGY_FACTS } = await import('@/lib/energyFacts');
+    const { container } = render(<EnergyFactBubble intensity={150} hasReading variant="plain" />);
+    const text = container.querySelector('p')?.textContent ?? '';
+    expect(ENERGY_FACTS.map((f) => f.text)).toContain(text);
+    expect(text).not.toMatch(/^["“„]|["”„]$/);
+  });
+
+  it('no fact string carries its own quote marks', async () => {
+    const { ENERGY_FACTS } = await import('@/lib/energyFacts');
+    for (const f of ENERGY_FACTS) expect(f.text).not.toMatch(/["„“”«»]/);
+  });
+});
