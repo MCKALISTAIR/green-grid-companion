@@ -268,3 +268,45 @@ describe('copy helpers', () => {
     expect(roundPercent(12)).toBe(10);
   });
 });
+
+describe('F-01: live reading at or below the best forecast says now', () => {
+  const now = new Date('2026-10-30T12:05:00Z');
+  const series = (vals: number[]) =>
+    vals.map((v, i) => {
+      const from = new Date(Date.UTC(2026, 9, 30, 12, 0) + i * 30 * 60_000);
+      const to = new Date(from.getTime() + 30 * 60_000);
+      return {
+        from: from.toISOString(),
+        to: to.toISOString(),
+        intensity: { forecast: v, actual: null, index: 'low' },
+      } as unknown as ForecastData;
+    });
+  // Current slot forecast high, then clean later window at ~0.
+  const vals = [150, 150, 150, 150, 150, 150, ...Array(30).fill(0)];
+
+  it('0 g live reading recommends now, not wait', () => {
+    const d = getNowOrWaitDecision(0, series(vals), now);
+    expect(d.action).toBe('use_now');
+    expect(d.headline).not.toMatch(/^Wait/);
+    expect(d.plan.nowAvg).toBe(0);
+  });
+
+  it('live reading equal to the best window avg recommends now', () => {
+    const v = [150, 150, 150, 150, 150, 150, ...Array(30).fill(40)];
+    expect(getNowOrWaitDecision(40, series(v), now).action).toBe('use_now');
+  });
+
+  it('live reading just above the best window still waits', () => {
+    const v = [150, 150, 150, 150, 150, 150, ...Array(30).fill(40)];
+    expect(getNowOrWaitDecision(41, series(v), now).action).toBe('wait');
+  });
+
+  it('without a live reading the forecast average still decides', () => {
+    expect(getNowOrWaitDecision(null, series(vals), now).action).toBe('wait');
+  });
+
+  it('stale 0 g reading never says now', () => {
+    const d = getNowOrWaitDecision(0, series(vals), now, '2026-10-30T09:00:00Z');
+    expect(d.action).not.toBe('use_now');
+  });
+});

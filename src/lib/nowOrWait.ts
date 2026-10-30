@@ -271,6 +271,14 @@ export function planLoad({
     end: new Date(upcoming[best.i + len - 1].to),
     avg: Math.round(best.avg),
   };
+  // F-01: a live reading at or below the best later window (0 g included)
+  // is already as clean as waiting gets, so say "now" whatever the 3-hour
+  // average from the forecast says. The forecast data itself is untouched.
+  if (current === 0 && live !== null && Math.round(live) <= bestWindow.avg) {
+    const liveNow = Math.round(live);
+    return { ...(anyTime ?? base), nowAvg: liveNow, best: bestWindow };
+  }
+
   const grams = roundedNow - bestWindow.avg;
 
   if (grams <= 0) return { ...(anyTime ?? base), best: bestWindow };
