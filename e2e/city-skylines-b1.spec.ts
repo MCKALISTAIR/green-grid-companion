@@ -40,8 +40,9 @@ async function openCity(
   await installMocks(
     page.context(),
     veryClean
-      ? { intensity: 32, index: 'very low', ageMinutes: 5 }
-      : { intensity: 100, index: 'low', ageMinutes: 5 },
+      ? // NESO 2026 bands: very low is 0-24 g, low is 25-89 g (src/lib/nesoBand.ts).
+        { intensity: 20, index: 'very low', ageMinutes: 5 }
+      : { intensity: 60, index: 'low', ageMinutes: 5 },
   );
   await page.context().addInitScript(seedStorage({ postcode }));
   await page.goto('/');
