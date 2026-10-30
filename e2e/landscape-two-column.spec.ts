@@ -4,8 +4,8 @@ import { installMocks, seedStorage, SCENARIOS } from '../scripts/layout/mock-api
 // D-07 (Design call): at 594x406 (iPhone Duo outer, landscape) Home is two
 // columns. Scene + hero on the left (about 50%) with the band label and the
 // renewable pill centred in that column; sheet + tabs on the right, scrolling
-// on their own, with the tabs visible on first view. 951x620 keeps its
-// two-column layout; portrait stays one column.
+// on their own, with the tabs visible on first view. 951x620 (48/52) gets the
+// same ground and nav treatment; portrait stays one column.
 test.use({ serviceWorkers: 'block', reducedMotion: 'reduce' });
 
 const LANDSCAPE = { top: 0, bottom: 21, left: 59, right: 59 };
@@ -134,12 +134,59 @@ for (const scenario of ['zero-carbon', 'very-high']) {
   });
 }
 
-test('951x620 keeps its two columns', async ({ page }) => {
-  await open(page, 951, 620);
+for (const scenario of ['zero-carbon', 'very-high']) {
+  test(`951x620 two columns, ground and nav like 594x406, ${scenario}`, async ({ page }) => {
+    await open(page, 951, 620, scenario);
+    const m = await layout(page);
+    expect(Math.abs(m.scene.width / m.vw - 0.48)).toBeLessThan(0.02);
+    expect(Math.abs(m.feed.left - m.scene.right)).toBeLessThanOrEqual(2);
+    expect(m.tabs.bottom).toBeLessThanOrEqual(m.navTop);
+    // Scene ground runs to the bottom of the column (no flat band).
+    expect(m.sceneBottom).toBeGreaterThanOrEqual(m.vh - 1);
+    // Nav docks in the right column only; the sheet ends above it.
+    expect(m.nav.left).toBeGreaterThanOrEqual(m.scene.right - 1);
+    expect(m.nav.right).toBeLessThanOrEqual(m.vw);
+    expect(m.feedBottom).toBeLessThanOrEqual(m.navTop + 1);
+    // Tabs stay 44px or wider in the narrower nav.
+    const tabW = await page.evaluate(() =>
+      Math.min(
+        ...[
+          ...document.querySelectorAll(
+            '[data-testid="bottom-nav"] a, [data-testid="bottom-nav"] button',
+          ),
+        ]
+          .map((e) => e.getBoundingClientRect().width)
+          .filter((w) => w > 0),
+      ),
+    );
+    expect(tabW).toBeGreaterThanOrEqual(44);
+    // At the end of the sheet the last card is fully above the nav.
+    const end = await page.evaluate(() => {
+      const feed = document.querySelector<HTMLElement>('.home-feed')!;
+      feed.scrollTop = feed.scrollHeight;
+      const cards = [
+        ...feed.querySelectorAll<HTMLElement>(
+          '.home-feed-body > * , .home-feed-body [class*="rounded"]',
+        ),
+      ]
+        .map((e) => e.getBoundingClientRect())
+        .filter((x) => x.height > 20);
+      const navTop = document
+        .querySelector('[data-testid="bottom-nav"]')!
+        .getBoundingClientRect().top;
+      return { lastBottom: Math.max(...cards.map((x) => x.bottom)), navTop };
+    });
+    expect(end.lastBottom).toBeLessThanOrEqual(end.navTop);
+  });
+}
+
+test('669x902 portrait is unchanged: one column, full-width nav', async ({ page }) => {
+  await open(page, 669, 902);
   const m = await layout(page);
-  expect(Math.abs(m.scene.width / m.vw - 0.48)).toBeLessThan(0.02);
-  expect(Math.abs(m.feed.left - m.scene.right)).toBeLessThanOrEqual(2);
-  expect(m.tabs.bottom).toBeLessThanOrEqual(m.navTop);
+  expect(m.scene.width).toBeCloseTo(m.vw, 0);
+  expect(m.feed.width).toBeCloseTo(m.vw, 0);
+  // Nav stays centred across the full width.
+  expect(Math.abs((m.nav.left + m.nav.right) / 2 - m.vw / 2)).toBeLessThanOrEqual(2);
 });
 
 test('382x618 portrait stays one column', async ({ page }) => {
