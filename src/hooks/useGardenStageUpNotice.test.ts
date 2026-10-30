@@ -35,15 +35,19 @@ describe('useGardenStageUpNotice', () => {
     expect(result.current.message).toContain(GARDEN_STAGE_UP_COPY[2]);
   });
 
-  it('auto-dismisses after a few seconds', () => {
+  it('no longer auto-dismisses from mount (the pill owns the in-view timer)', () => {
     vi.useFakeTimers();
     const { result } = renderHook(() => useGardenStageUpNotice(1, 1));
-    expect(result.current.visible).toBe(true);
-
     act(() => {
-      vi.advanceTimersByTime(6500);
+      vi.advanceTimersByTime(60_000);
     });
+    expect(result.current.visible).toBe(true);
+    expect(localStorage.getItem('scene-garden-last-seen-stage-v1')).toBeNull();
+  });
+
+  it('stays hidden and unacknowledged when disabled (city scene)', () => {
+    const { result } = renderHook(() => useGardenStageUpNotice(3, 12, false));
     expect(result.current.visible).toBe(false);
-    expect(localStorage.getItem('scene-garden-last-seen-stage-v1')).toBe('1');
+    expect(localStorage.getItem('scene-garden-last-seen-stage-v1')).toBeNull();
   });
 });
