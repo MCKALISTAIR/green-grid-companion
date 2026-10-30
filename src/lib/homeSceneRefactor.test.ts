@@ -59,6 +59,6 @@ describe('buildTurbineLayout', () => {
     expect(buildTurbineLayout(3).length).toBe(2);
     expect(buildTurbineLayout(12).length).toBeGreaterThan(2);
     expect(buildTurbineLayout(40).length).toBe(8);
-    expect(buildTurbineLayout(40).every((slot) => Number.isFinite(slot.bottom))).toBe(true);
+    expect(buildTurbineLayout(40).every((slot) => Number.isFinite(slot.groundY))).toBe(true);
   });
 });

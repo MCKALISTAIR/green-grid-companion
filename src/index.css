@@ -605,6 +605,9 @@
     inset 0 1px 0 0 hsl(var(--background) / 0.5);
   font-family: var(--font-sans);
   padding: 1.5rem;
+  /* Foldable cover screens (~280px): keep 12px clear of both edges. */
+  min-width: 0;
+  max-width: min(300px, calc(100vw - 24px));
   animation: tour-popover-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -707,6 +710,31 @@
 .gridsense-tour-popover .driver-popover-arrow-side-left .driver-popover-arrow,
 .gridsense-tour-popover .driver-popover-arrow-side-right .driver-popover-arrow {
   border-color: hsl(var(--card) / 0.95);
+}
+
+/* Short screens (320x568, 720x540): a tighter tip so it fits beside its card
+   instead of over it. Buttons keep their 44px touch target. */
+@media (max-height: 640px) {
+  .gridsense-tour-popover.driver-popover {
+    padding: 1rem 1.125rem;
+  }
+
+  .gridsense-tour-popover .driver-popover-title {
+    margin-bottom: 0.25rem;
+  }
+
+  .gridsense-tour-popover .driver-popover-description {
+    line-height: 1.45;
+    margin-top: 0.25rem;
+  }
+
+  .gridsense-tour-popover .driver-popover-footer {
+    margin-top: 0.5rem;
+  }
+
+  .gridsense-tour-popover .driver-popover-navigation-btns {
+    margin-top: 0;
+  }
 }
 
 /* Highlighted element styling */
