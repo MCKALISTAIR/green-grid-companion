@@ -21,6 +21,9 @@ import {
   GAS_PLANT_AVIATION_RED,
   GAS_PLANT_X,
   gasPlantGeometry,
+  cityGasPlantFrame,
+  cityGasPlantTransform,
+  CITY_GAS_PLANT_TOKENS,
 } from '@/lib/gasPlant';
 import {
   SMOKE_BY_BAND,
@@ -41,21 +44,38 @@ export interface GasPlantProps {
   band: HazeBand;
   isNight: boolean;
   x?: number;
+  /** Override the day and night tokens (the city far layer wants a darker silhouette). */
+  tokens?: { day: PlantTokens; night: PlantTokens };
+  /**
+   * The transform the plant is drawn under (the city far layer scales and moves it),
+   * so the sky above the stack is measured in the owning SVG's units and converted
+   * back to the plant's own units for the plume cap (#240).
+   */
+  frame?: { dy: number; scale: number };
 }
 
-export function GasPlant({ band, isNight, x = GAS_PLANT_X }: GasPlantProps) {
+type PlantTokens = { light: string; shade: string; band: string };
+
+export function GasPlant({
+  band,
+  isNight,
+  x = GAS_PLANT_X,
+  tokens = GAS_PLANT_TOKENS,
+  frame = { dy: 0, scale: 1 },
+}: GasPlantProps) {
   const reduced = useReducedMotion();
-  const t = isNight ? GAS_PLANT_TOKENS.night : GAS_PLANT_TOKENS.day;
+  const t = isNight ? tokens.night : tokens.day;
   const { baseY, boilerX, stacks } = gasPlantGeometry(x);
   const smoke = showsSmoke(band) ? SMOKE_BY_BAND[band] : null;
   // Design, 23 Oct 2026 (#196 decision 3): smoke rises straight up, with no
   // drift or lean, until wind_direction_10m is fetched (follow-up bug in BUGS.md).
   const puffCount = smoke ? (reduced ? SMOKE_STATIC_PUFFS : smoke.puffs) : 0;
   const r = SMOKE_PUFF.startPx / 2;
-  const skyUnits = useSkyUnitsAbove(stacks[0].top);
+  const skyUnits = useSkyUnitsAbove(frame.dy + stacks[0].top * frame.scale);
+  const localSky = skyUnits.units == null ? null : skyUnits.units / frame.scale;
   const rise =
     smoke && showsSmoke(band)
-      ? fitPlumeUnits(SMOKE_PLUME_UNITS[band], skyUnits.units)
+      ? fitPlumeUnits(SMOKE_PLUME_UNITS[band], localSky)
       : SMOKE_PUFF.risePx;
   const column = smoke && showsSmokeColumn(band);
 
@@ -172,6 +192,20 @@ export function GasPlant({ band, isNight, x = GAS_PLANT_X }: GasPlantProps) {
             </g>
           );
         })}
+    </g>
+  );
+}
+
+/** City far layer (scene audit item 4): the same plant, scaled and seated. */
+export function CityGasPlant({ band, isNight }: Omit<GasPlantProps, 'x' | 'tokens'>) {
+  return (
+    <g data-art="city-gas-plant" transform={cityGasPlantTransform()}>
+      <GasPlant
+        band={band}
+        isNight={isNight}
+        tokens={CITY_GAS_PLANT_TOKENS}
+        frame={cityGasPlantFrame()}
+      />
     </g>
   );
 }
