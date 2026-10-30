@@ -104,6 +104,9 @@ export const NIGHT_BANK_SNOW_LIFT = 0.75;
 
 /** Far-layer haze by NESO band (brief §11.2 / Q5). None at very low or low. */
 const FAR_HAZE: Record<string, number> = { moderate: 0.22, high: 0.32, 'very high': 0.42 };
+/** (d) Very high by day: far-haze mix cap and extra darkening (L points) for 1.5:1. */
+export const VERY_HIGH_DAY_FAR_HAZE = 0.2;
+export const VERY_HIGH_DAY_DARKEN_L = { clear: 20, snow: 8, cloud: 4 } as const;
 
 function hexToRgb(hex: string): [number, number, number] {
   const h = hex.replace('#', '');
@@ -334,7 +337,20 @@ export function getEdinburghCastleColours({
     }
     const k = (nesoIndex || '').toLowerCase();
     const haze = FAR_HAZE[k];
-    if (haze) mixAll(MOOD[k as keyof typeof MOOD].haze, haze);
+    // (d) By day at very high the sky is blended toward grey (HAZE_SKY_BLEND), so
+    // the full far-haze mix left the castle at 1.04-1.4:1. Cap the mix and darken
+    // so it holds 1.5:1 in every weather but fog. Fog is exempt and may soften.
+    const veryHighDay = k === 'very high' && !afterDark && !floodlit && weather !== 'fog';
+    if (haze)
+      mixAll(MOOD[k as keyof typeof MOOD].haze, veryHighDay ? VERY_HIGH_DAY_FAR_HAZE : haze);
+    if (veryHighDay)
+      darkenAll(
+        weather === 'clear' || weather === 'unknown'
+          ? VERY_HIGH_DAY_DARKEN_L.clear
+          : weather === 'snow'
+            ? VERY_HIGH_DAY_DARKEN_L.snow
+            : VERY_HIGH_DAY_DARKEN_L.cloud,
+      );
   }
 
   const light = getLandmarkLight({ timeOfDay, weather, heroLit, synthwaveMode });

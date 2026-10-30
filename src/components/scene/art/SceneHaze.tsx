@@ -41,6 +41,9 @@ const HAZE_GEOMETRY: Record<
   coastal: { viewBox: [0, 0, 400, 150], horizon: 68, far: 76, back: 92, village: 112, front: 132 },
 };
 
+/** (d) Max haze opacity over the city landmark layer by day. */
+export const LANDMARK_HAZE_CAP = 0.25;
+
 /** Sky height in SVG units when the box hasn't been measured yet (390x844 hero). */
 const FALLBACK_SKY_UNITS = 180;
 
@@ -83,12 +86,18 @@ export function SceneHaze({ band, sceneType, timeOfDay, isFoggy, synthwaveMode }
     skyUnits = Math.max(1, g.horizon - (bottom - box.h / scale));
   }
 
+  // (d) By day the city's far and back stops sit over the landmark layer (Edinburgh
+  // Castle, London's skyline). Cap them so the landmark keeps 1.5:1 at very high.
+  const capLandmark = sceneType === 'city' && tokens && !tokens.dim;
+  const far = tokens ? (capLandmark ? Math.min(tokens.far, LANDMARK_HAZE_CAP) : tokens.far) : 0;
+  const back = tokens ? (capLandmark ? Math.min(tokens.back, LANDMARK_HAZE_CAP) : tokens.back) : 0;
+
   const stops = tokens
     ? [
         [g.horizon - tokens.skyReach * skyUnits, 0],
         [g.horizon, tokens.sky],
-        [g.far, tokens.far],
-        [g.back, tokens.back],
+        [g.far, far],
+        [g.back, back],
         [g.village, tokens.village],
         [g.front, tokens.front],
         [bottom, tokens.front],
