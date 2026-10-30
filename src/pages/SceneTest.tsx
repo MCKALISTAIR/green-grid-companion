@@ -46,11 +46,11 @@ interface SceneCase {
 }
 
 const SCENE_CASES: SceneCase[] = [
-  { label: 'Very clean', intensity: 30, index: 'very low' },
-  { label: 'Clean', intensity: 100, index: 'low' },
-  { label: 'Moderate', intensity: 180, index: 'moderate' },
-  { label: 'Dirty', intensity: 300, index: 'high' },
-  { label: 'Very dirty', intensity: 380, index: 'very high' },
+  { label: 'Very clean', intensity: 10, index: 'very low' },
+  { label: 'Clean', intensity: 60, index: 'low' },
+  { label: 'Moderate', intensity: 130, index: 'moderate' },
+  { label: 'Dirty', intensity: 200, index: 'high' },
+  { label: 'Very dirty', intensity: 300, index: 'very high' },
 ];
 
 type SceneTypeOpt = 'auto' | 'countryside' | 'city' | 'coastal';

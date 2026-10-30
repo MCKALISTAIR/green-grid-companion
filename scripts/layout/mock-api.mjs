@@ -8,6 +8,7 @@
  *   ageMinutes              how old the reading's `from` time is (stale = 60+)
  *   regionName              shortname returned for the region (long-name state)
  *   mix                     generation mix for the region
+ *   actual                  NESO's published actual for the reading (default null: forecast only)
  *   mode                    'ok' | 'error' (API 500s) | 'loading' (never answers)
  */
 
@@ -80,7 +81,7 @@ export async function installMocks(context, scenarioIn = {}) {
   const reading = {
     from: fromIso,
     to: toIso,
-    intensity: { forecast: s.intensity, actual: null, index: s.index },
+    intensity: { forecast: s.intensity, actual: s.actual ?? null, index: s.index },
     generationmix: s.mix,
   };
   const regionShort = s.regionName ?? 'South Scotland';
@@ -94,7 +95,14 @@ export async function installMocks(context, scenarioIn = {}) {
         to: new Date(f.getTime() + 1800000).toISOString().replace(/\.\d+Z$/, 'Z'),
         intensity: {
           forecast: v,
-          actual: f.getTime() < Date.now() ? v : null,
+          // The open half hour carries the scenario's `actual` when one is set
+          // (null = NESO has only the forecast so far).
+          actual:
+            f.getTime() + 1800000 > Date.now() && 'actual' in s
+              ? s.actual
+              : f.getTime() < Date.now()
+                ? v
+                : null,
           index:
             v < 40
               ? 'very low'
