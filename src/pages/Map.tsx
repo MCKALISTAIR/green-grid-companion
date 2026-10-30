@@ -144,7 +144,8 @@ export default function MapPage() {
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
                       transition={pageTransition}
-                      className="overflow-hidden"
+                      className="overflow-hidden -mx-1 px-2"
+                      data-testid="rank-map-frame"
                     >
                       <UKMap
                         regions={regions || []}

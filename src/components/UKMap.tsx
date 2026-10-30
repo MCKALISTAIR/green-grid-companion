@@ -2,6 +2,7 @@ import { RegionListItem } from '@/lib/carbonApi';
 import { getIntensityColor } from '@/lib/carbonApi';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import { MAP_MAX_WIDTH, markerLeft } from '@/lib/ukMapLayout';
 import { Button } from '@/components/ui/button';
 const MotionButton = motion.create(Button);
 
@@ -60,7 +61,8 @@ const getPosition = (lat: number, lon: number) => {
 export function UKMap({ regions, onRegionSelect, selectedRegionId }: UKMapProps) {
   return (
     <div
-      className="relative isolate w-full aspect-[0.61] max-w-sm mx-auto my-4 select-none"
+      className="relative isolate w-full aspect-[0.61] mx-auto mt-4 mb-12 select-none"
+      style={{ maxWidth: MAP_MAX_WIDTH }}
       role="group"
       aria-label="Map of regional carbon intensity"
     >
@@ -419,7 +421,10 @@ c21 14 23 19 14 45 -8 23 -7 35 5 53 9 13 25 50 36 83 15 44 17 61 8 72 -9 11
                 ? 'ring-4 ring-background shadow-xl'
                 : 'opacity-90 hover:opacity-100 hover:scale-110 hover:z-20 border-2 border-background/50',
             )}
-            style={{ left: `calc(${x}% + ${offset.x}px)`, top: `calc(${y}% + ${offset.y}px)` }}
+            style={{
+              left: markerLeft(x, offset.x),
+              top: `calc(${y}% + ${offset.y}px)`,
+            }}
             aria-label={`${region.shortname}: ${region.intensity.forecast} gCO₂/kWh`}
             aria-pressed={isSelected}
             onClick={() => onRegionSelect?.(region.regionid)}
