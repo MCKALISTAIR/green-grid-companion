@@ -23,6 +23,7 @@ import { useEnergyFacts } from '@/hooks/useEnergyFacts';
 import { useUnseenBadgeCount } from '@/lib/trophyChip';
 import { useHeroTopRowFit } from '@/hooks/useHeroTopRowFit';
 import { useHeroCloudTop } from '@/hooks/useHeroCloudTop';
+import { useShortHero } from '@/hooks/useShortHero';
 import { useTimeOfDay } from '@/hooks/useTimeOfDay';
 import { getCleanlinessBand } from '@/hooks/useCleanlinessBand';
 import type { GenerationMix } from '@/lib/carbonApi';
@@ -134,6 +135,8 @@ export function IntensityHeroOverlay({
   // BH-90: offline, no fetch can be in flight, so never claim to be loading.
   // Offline with nothing to show is the hero's offline error state instead.
   const showLoading = isLoading && !isOffline;
+  // D-05: on short screens the renewable pill sits directly under the band line.
+  const shortHero = useShortHero();
   const offlineWithoutReading = isLoading && isOffline;
   const showFetchSpinner = isBackgroundFetching && !isOffline;
   const showZeroCarbonBadge = shouldCelebrateZeroCarbon(intensity, hasFreshReading);
@@ -168,6 +171,76 @@ export function IntensityHeroOverlay({
           : renewablesPct >= 30
             ? 'text-amber-100'
             : 'text-orange-100';
+
+  const heroMeta = !isLoading && !isError && (
+    <div
+      className={cn(
+        /* Soft backing so the renewable + updated lines stay legible over
+                     whatever scene art sits behind them (the house, dark hills) (BH-22). */
+        'mt-2 flex flex-col items-center gap-2 rounded-2xl px-3 py-1',
+        /* D-05: on short screens it sits in the hero stack under the band
+                     line with a solid backing (the hero chip's colours). */
+        shortHero
+          ? isInk
+            ? 'bg-white shadow-sm'
+            : 'bg-[#0f172a] shadow-sm'
+          : isInk
+            ? 'bg-white/55'
+            : 'bg-black/35',
+      )}
+      data-testid="hero-meta"
+      data-short-hero={shortHero ? 'true' : undefined}
+    >
+      <div className="relative">
+        <motion.p
+          className={cn(
+            'inline-flex items-center gap-1.5 text-sm font-semibold drop-shadow-[0_2px_10px_rgba(0,0,0,0.65)]',
+            renewablesTone,
+          )}
+          key={Math.round(renewablesPct / 10)}
+          animate={{ scale: [1, 1.04, 1] }}
+          transition={{ duration: 0.35, ease: 'easeOut' as const }}
+        >
+          <Leaf className="w-3.5 h-3.5" aria-hidden="true" />
+          {renewablesPct.toFixed(0)}% renewable
+        </motion.p>
+        <RenewableSparkle trigger={sparkleTrigger} onComplete={onSparkleComplete} />
+      </div>
+
+      {lastKnownAt ? (
+        <LastKnownChip at={new Date(lastKnownAt)} />
+      ) : (
+        lastUpdated && (
+          <div
+            className={cn(
+              'flex items-center gap-1.5 text-[11px] font-medium',
+              isInk ? 'text-hero-ink' : 'text-white drop-shadow-[0_1px_8px_rgba(0,0,0,0.65)]',
+            )}
+          >
+            <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
+              <span
+                className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-60 ${freshnessColor}`}
+              />
+              <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${freshnessColor}`} />
+            </span>
+            {isBackgroundFetching ? (
+              <span>Updating…</span>
+            ) : (
+              <>
+                <span>{relativeTime}</span>
+                {nextUpdateLabel && (
+                  <>
+                    <span className="opacity-60">·</span>
+                    <span>{nextUpdateLabel}</span>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+        )
+      )}
+    </div>
+  );
 
   return (
     <div
@@ -487,6 +560,9 @@ export function IntensityHeroOverlay({
                   )}
                 </motion.div>
               )}
+              {shortHero && heroMeta && (
+                <div className="basis-full flex justify-center">{heroMeta}</div>
+              )}
               {showZeroCarbonBadge && (
                 <ZeroCarbonBadge
                   tone={tone}
@@ -500,70 +576,7 @@ export function IntensityHeroOverlay({
                  (320x568, the iPhone Duo cover) don't shift the sheet when data lands. */
               <div aria-hidden className="mt-2 h-[3.3rem]" data-testid="hero-meta-reserve" />
             )}
-            {!isLoading && !isError && (
-              <div
-                className={cn(
-                  /* Soft backing so the renewable + updated lines stay legible over
-                     whatever scene art sits behind them (the house, dark hills) (BH-22). */
-                  'mt-2 flex flex-col items-center gap-2 rounded-2xl px-3 py-1',
-                  isInk ? 'bg-white/55' : 'bg-black/35',
-                )}
-                data-testid="hero-meta"
-              >
-                <div className="relative">
-                  <motion.p
-                    className={cn(
-                      'inline-flex items-center gap-1.5 text-sm font-semibold drop-shadow-[0_2px_10px_rgba(0,0,0,0.65)]',
-                      renewablesTone,
-                    )}
-                    key={Math.round(renewablesPct / 10)}
-                    animate={{ scale: [1, 1.04, 1] }}
-                    transition={{ duration: 0.35, ease: 'easeOut' as const }}
-                  >
-                    <Leaf className="w-3.5 h-3.5" aria-hidden="true" />
-                    {renewablesPct.toFixed(0)}% renewable
-                  </motion.p>
-                  <RenewableSparkle trigger={sparkleTrigger} onComplete={onSparkleComplete} />
-                </div>
-
-                {lastKnownAt ? (
-                  <LastKnownChip at={new Date(lastKnownAt)} />
-                ) : (
-                  lastUpdated && (
-                    <div
-                      className={cn(
-                        'flex items-center gap-1.5 text-[11px] font-medium',
-                        isInk
-                          ? 'text-hero-ink'
-                          : 'text-white drop-shadow-[0_1px_8px_rgba(0,0,0,0.65)]',
-                      )}
-                    >
-                      <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
-                        <span
-                          className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-60 ${freshnessColor}`}
-                        />
-                        <span
-                          className={`relative inline-flex h-1.5 w-1.5 rounded-full ${freshnessColor}`}
-                        />
-                      </span>
-                      {isBackgroundFetching ? (
-                        <span>Updating…</span>
-                      ) : (
-                        <>
-                          <span>{relativeTime}</span>
-                          {nextUpdateLabel && (
-                            <>
-                              <span className="opacity-60">·</span>
-                              <span>{nextUpdateLabel}</span>
-                            </>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  )
-                )}
-              </div>
-            )}
+            {!shortHero && heroMeta}
           </div>
         </div>
       )}
