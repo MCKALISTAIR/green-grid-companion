@@ -47,15 +47,18 @@ async function openEdinburgh(
   time: keyof typeof TIMES,
   weather: keyof typeof WEATHER,
   viewport: { width: number; height: number },
+  grams: { intensity: number; index: string } = { intensity: 60, index: 'low' },
 ) {
   // Page clock first, then Node's (BH-113, see support/pinClocks.ts).
   await pinClocks(page, TIMES[time]);
   await page.setViewportSize(viewport);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await installMocks(page.context(), {
-    intensity: 100,
-    index: 'low',
+    intensity: grams.intensity,
+    index: grams.index,
     ageMinutes: 5,
+    // Flat series: the 40g wobble crossed band edges at some wall-clock hours.
+    flatSeries: true,
     weather: { ...WEATHER[weather], is_day: time === 'dusk' || time === 'night' ? 0 : 1 },
   });
   await page.context().addInitScript(seedStorage({ postcode: 'EH1' }));
@@ -134,56 +137,85 @@ async function castleContrast(
   );
 }
 
-for (const viewport of [
+async function measureCastle(
+  page: Page,
+  time: keyof typeof TIMES,
+  weather: keyof typeof WEATHER,
+  viewport: { width: number; height: number },
+  grams: { intensity: number; index: string },
+) {
+  const scene = await openEdinburgh(page, time, weather, viewport, grams);
+  const castle = scene.locator('[data-city-art="edinburgh-castle"]').first();
+  const box = (await castle.boundingBox())!;
+  const clip = {
+    x: Math.floor(box.x),
+    y: Math.floor(box.y),
+    width: Math.ceil(box.width),
+    height: Math.ceil(box.height),
+  };
+  const on = await page.screenshot({ clip });
+  await page.waitForTimeout(300);
+  const on2 = await page.screenshot({ clip });
+  const keyStyle = await page.addStyleTag({
+    content:
+      '[data-city-art="edinburgh-castle"] * { fill: #ff00ff !important; stroke: #ff00ff !important; opacity: 1 !important; }',
+  });
+  const key = await page.screenshot({ clip });
+  await keyStyle.evaluate((el) => el.remove());
+  await castle.evaluate((el) => ((el as unknown as HTMLElement).style.visibility = 'hidden'));
+  const off = await page.screenshot({ clip });
+  await page.waitForTimeout(300);
+  const off2 = await page.screenshot({ clip });
+  const { median, pixels } = await castleContrast(page, { on, on2, key, off, off2 });
+  if (DUMP) {
+    const tag = `${DUMP}/${time}-${weather}-${grams.intensity}g-${viewport.width}`;
+    fs.writeFileSync(`${tag}-on.png`, on);
+    fs.writeFileSync(`${tag}-off.png`, off);
+    fs.writeFileSync(`${tag}-key.png`, key);
+  }
+  if (OUT) {
+    fs.appendFileSync(
+      OUT,
+      JSON.stringify({ vw: viewport.width, time, weather, g: grams.intensity, median, pixels }) +
+        '\n',
+    );
+  }
+  // Fog is exempt: it may soften the castle, or hide it entirely.
+  if (weather !== 'fog') {
+    expect(pixels, 'castle should be visible').toBeGreaterThan(200);
+    expect(median).toBeGreaterThanOrEqual(MIN_CONTRAST);
+  }
+}
+
+const VIEWPORTS = [
   { width: 390, height: 844 },
   { width: 320, height: 568 },
-]) {
+];
+
+for (const viewport of VIEWPORTS) {
   for (const time of Object.keys(TIMES) as Array<keyof typeof TIMES>) {
     for (const weather of Object.keys(WEATHER) as Array<keyof typeof WEATHER>) {
       test(`castle vs sky: ${time} ${weather} at ${viewport.width}x${viewport.height}`, async ({
         page,
       }) => {
         test.setTimeout(120_000);
-        const scene = await openEdinburgh(page, time, weather, viewport);
-        const castle = scene.locator('[data-city-art="edinburgh-castle"]').first();
-        const box = (await castle.boundingBox())!;
-        const clip = {
-          x: Math.floor(box.x),
-          y: Math.floor(box.y),
-          width: Math.ceil(box.width),
-          height: Math.ceil(box.height),
-        };
-        const on = await page.screenshot({ clip });
-        await page.waitForTimeout(300);
-        const on2 = await page.screenshot({ clip });
-        const keyStyle = await page.addStyleTag({
-          content:
-            '[data-city-art="edinburgh-castle"] * { fill: #ff00ff !important; stroke: #ff00ff !important; opacity: 1 !important; }',
-        });
-        const key = await page.screenshot({ clip });
-        await keyStyle.evaluate((el) => el.remove());
-        await castle.evaluate((el) => ((el as unknown as HTMLElement).style.visibility = 'hidden'));
-        const off = await page.screenshot({ clip });
-        await page.waitForTimeout(300);
-        const off2 = await page.screenshot({ clip });
-        const { median, pixels } = await castleContrast(page, { on, on2, key, off, off2 });
-        if (DUMP) {
-          const tag = `${DUMP}/${time}-${weather}-${viewport.width}`;
-          fs.writeFileSync(`${tag}-on.png`, on);
-          fs.writeFileSync(`${tag}-off.png`, off);
-          fs.writeFileSync(`${tag}-key.png`, key);
-        }
-        if (OUT) {
-          fs.appendFileSync(
-            OUT,
-            JSON.stringify({ vw: viewport.width, time, weather, median, pixels }) + '\n',
-          );
-        }
-        // Fog is exempt: it may soften the castle, or hide it entirely.
-        if (weather !== 'fog') {
-          expect(pixels, 'castle should be visible').toBeGreaterThan(200);
-          expect(median).toBeGreaterThanOrEqual(MIN_CONTRAST);
-        }
+        await measureCastle(page, time, weather, viewport, { intensity: 60, index: 'low' });
+      });
+    }
+  }
+}
+
+// (d) At very high the smog haze sits over the landmark layer. By day the castle
+// must still hold 1.5:1 in every weather but fog.
+const DAY_TIMES = ['morning', 'midday', 'afternoon'] as const;
+for (const viewport of VIEWPORTS) {
+  for (const time of DAY_TIMES) {
+    for (const weather of Object.keys(WEATHER) as Array<keyof typeof WEATHER>) {
+      test(`castle vs sky at very high: ${time} ${weather} at ${viewport.width}x${viewport.height}`, async ({
+        page,
+      }) => {
+        test.setTimeout(120_000);
+        await measureCastle(page, time, weather, viewport, { intensity: 300, index: 'very high' });
       });
     }
   }
