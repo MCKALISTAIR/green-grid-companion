@@ -21,6 +21,7 @@ import {
   GAS_PLANT_X,
   gasPlantGeometry,
   cityGasPlantTransform,
+  CITY_GAS_PLANT_TOKENS,
 } from '@/lib/gasPlant';
 import {
   SMOKE_BY_BAND,
@@ -39,11 +40,20 @@ export interface GasPlantProps {
   band: HazeBand;
   isNight: boolean;
   x?: number;
+  /** Override the day and night tokens (the city far layer wants a darker silhouette). */
+  tokens?: { day: PlantTokens; night: PlantTokens };
 }
 
-export function GasPlant({ band, isNight, x = GAS_PLANT_X }: GasPlantProps) {
+type PlantTokens = { light: string; shade: string; band: string };
+
+export function GasPlant({
+  band,
+  isNight,
+  x = GAS_PLANT_X,
+  tokens = GAS_PLANT_TOKENS,
+}: GasPlantProps) {
   const reduced = useReducedMotion();
-  const t = isNight ? GAS_PLANT_TOKENS.night : GAS_PLANT_TOKENS.day;
+  const t = isNight ? tokens.night : tokens.day;
   const { baseY, boilerX, stacks } = gasPlantGeometry(x);
   const smoke = showsSmoke(band) ? SMOKE_BY_BAND[band] : null;
   // Design, 23 Oct 2026 (#196 decision 3): smoke rises straight up, with no
@@ -166,10 +176,10 @@ export function GasPlant({ band, isNight, x = GAS_PLANT_X }: GasPlantProps) {
 }
 
 /** City far layer (scene audit item 4): the same plant, scaled and seated. */
-export function CityGasPlant({ band, isNight }: Omit<GasPlantProps, 'x'>) {
+export function CityGasPlant({ band, isNight }: Omit<GasPlantProps, 'x' | 'tokens'>) {
   return (
     <g data-art="city-gas-plant" transform={cityGasPlantTransform()}>
-      <GasPlant band={band} isNight={isNight} />
+      <GasPlant band={band} isNight={isNight} tokens={CITY_GAS_PLANT_TOKENS} />
     </g>
   );
 }

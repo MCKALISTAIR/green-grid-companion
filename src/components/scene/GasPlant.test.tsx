@@ -116,6 +116,6 @@ describe('CityGasPlant (scene audit item 4)', () => {
   );
 
   it('sits on the city far ground line', () => {
-    expect(cityGasPlantTransform()).toMatch(/^translate\([\d.-]+ [\d.-]+\) scale\(0\.7\)$/);
+    expect(cityGasPlantTransform()).toMatch(/^translate\([\d.-]+ [\d.-]+\) scale\(0\.8\)$/);
   });
 });

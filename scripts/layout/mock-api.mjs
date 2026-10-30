@@ -9,6 +9,9 @@
  *   regionName              shortname returned for the region (long-name state)
  *   mix                     generation mix for the region
  *   actual                  NESO's published actual for the reading (default null: forecast only)
+ *   flatSeries              true: the 24 h series is flat at `intensity` (no wobble), so a shot
+ *                           named for N g shows N g
+ *   place                   postcodes.io result override ({ postcode, outcode, latitude, ... })
  *   mode                    'ok' | 'error' (API 500s) | 'loading' (never answers)
  */
 
@@ -89,7 +92,8 @@ export async function installMocks(context, scenarioIn = {}) {
     const start = halfHourFloor(Date.now() - 24 * 3600000).getTime();
     return Array.from({ length: 144 }, (_, i) => {
       const f = new Date(start + i * 1800000);
-      const v = Math.max(0, Math.round((s.intensity || 0) + 40 * Math.sin(i / 6)));
+      const wobble = s.flatSeries ? 0 : 40 * Math.sin(i / 6);
+      const v = Math.max(0, Math.round((s.intensity || 0) + wobble));
       return {
         from: f.toISOString().replace(/\.\d+Z$/, 'Z'),
         to: new Date(f.getTime() + 1800000).toISOString().replace(/\.\d+Z$/, 'Z'),
@@ -103,14 +107,15 @@ export async function installMocks(context, scenarioIn = {}) {
               : f.getTime() < Date.now()
                 ? v
                 : null,
+          // NESO 2026 bands (src/lib/nesoBand.ts), so the mocked index matches bandFor().
           index:
-            v < 40
+            v <= 24
               ? 'very low'
-              : v < 120
+              : v <= 89
                 ? 'low'
-                : v < 200
+                : v <= 169
                   ? 'moderate'
-                  : v < 290
+                  : v <= 230
                     ? 'high'
                     : 'very high',
         },
@@ -220,7 +225,8 @@ export async function installMocks(context, scenarioIn = {}) {
   await context.route(/api\.postcodes\.io/, (route) =>
     json(route, {
       status: 200,
-      result: {
+      // Optional per-scenario place (hero shots in London, inland England...).
+      result: s.place || {
         postcode: 'EH1 1YZ',
         outcode: 'EH1',
         latitude: 55.95,

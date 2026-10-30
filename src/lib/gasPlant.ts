@@ -32,7 +32,16 @@ export function gasPlantGeometry(x = GAS_PLANT_X) {
  * plant, scaled down and seated on the city far ground line (y 95 in the city
  * viewBox 0 0 400 150, where the old distant stack stood), toward the east edge.
  */
-export const CITY_GAS_PLANT = { x: 332, groundY: 95, scale: 0.7 } as const;
+/**
+ * #241 Design review: in the city the plant stands in front of the far skyline,
+ * so its silhouette must be darker than those buildings to be found.
+ */
+export const CITY_GAS_PLANT_TOKENS = {
+  day: { light: '#6e7883', shade: '#56606b', band: '#454e59' },
+  night: { light: '#262c3a', shade: '#1c2130', band: '#363e4f' },
+} as const;
+
+export const CITY_GAS_PLANT = { x: 292, groundY: 95, scale: 0.8 } as const;
 export function cityGasPlantTransform() {
   const { baseY } = gasPlantGeometry(GAS_PLANT_X);
   const { x, groundY, scale } = CITY_GAS_PLANT;

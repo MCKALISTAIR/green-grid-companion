@@ -111,11 +111,6 @@ export function CitySceneLayers({
           preserveAspectRatio={SCENE_SILHOUETTE_ASPECT}
           aria-hidden="true"
         >
-          {/* Scene audit item 4: a small gas plant in the city far layer, always
-              present, with the same band-driven smoke as the countryside plant
-              (it replaces the faint distant stack that only showed at high and
-              above). */}
-          <CityGasPlant band={sceneConfig.hazeBand} isNight={isNight} />
           <CityLandscapeBack
             cleanliness={sceneConfig.cleanliness}
             isNight={isNight}
@@ -158,6 +153,12 @@ export function CitySceneLayers({
             landmarkHero={landmarkHero}
             weatherState={weatherState}
           />
+          {/* Scene audit item 4: a small gas plant, always present, with the
+              same band-driven smoke as the countryside plant. It stands in front
+              of the mid skyline and behind the front buildings (behind the mid
+              skyline it was hidden or washed out by the haze), clear of the London crane. It replaces the faint
+              high-only distant stack. */}
+          <CityGasPlant band={sceneConfig.hazeBand} isNight={isNight} />
         </svg>
       </motion.div>
 
