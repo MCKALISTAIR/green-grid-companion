@@ -9,7 +9,8 @@ import { BiomassSmoke } from '../BiomassSmoke';
 import { SCENE_SILHOUETTE_ASPECT } from '@/lib/sceneScaleBible';
 
 /** Biomass stacks sit either side of the hero text column (scene x 112 to 288). */
-export const BIOMASS_STACK_X = [106, 364] as const;
+/** Biomass stacks (scene x), both outside the hero text column at every size. */
+export const BIOMASS_STACK_X = [8, 376] as const;
 
 export interface SceneAdvancedLayerProps {
   sceneConfig: SceneVisualConfig;

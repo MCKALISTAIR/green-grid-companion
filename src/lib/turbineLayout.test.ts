@@ -52,4 +52,26 @@ describe('hero band is clear of scene props (#242 Design review)', () => {
     const { HERO_SAFE_X } = await import('@/components/scene/Sheep');
     expect(TURBINE_HERO_SAFE_X).toEqual(HERO_SAFE_X);
   });
+
+  it('keeps EVERY tall prop out of the hero text column', async () => {
+    const { gasPlantGeometry, GAS_PLANT_HALL } = await import('@/lib/gasPlant');
+    const { BIOMASS_STACK_X } = await import('@/components/scene/layers/SceneAdvancedLayer');
+    const { NUCLEAR_TOWER_X } = await import('@/components/scene/layers/SceneGenerationOverlay');
+    const { OFFSHORE_WIND_X } = await import('@/components/scene/OffshoreWind');
+    const { SHEEP_SPOTS } = await import('@/components/scene/Sheep');
+    const g = gasPlantGeometry();
+    // [name, left edge, right edge] in scene x.
+    const props: [string, number, number][] = [
+      ['gas plant', g.x, g.x + GAS_PLANT_HALL.w],
+      ...BIOMASS_STACK_X.map((x): [string, number, number] => ['biomass stack', x - 4, x + 4]),
+      ...NUCLEAR_TOWER_X.map((x): [string, number, number] => ['cooling tower', x - 10, x + 10]),
+      // Offshore rotors are 25 units at scale 0.25-0.35, so about 9 units across.
+      ...OFFSHORE_WIND_X.map((x): [string, number, number] => ['offshore turbine', x - 9, x + 9]),
+      // Sheep: feet x, as in Sheep.test (the flock faces east of the band).
+      ...SHEEP_SPOTS.map((s): [string, number, number] => ['sheep', s.x, s.x]),
+    ];
+    const { min, max } = TURBINE_HERO_SAFE_X;
+    for (const [name, a, b] of props)
+      expect(b <= min || a >= max, `${name} at ${a}-${b} overlaps ${min}-${max}`).toBe(true);
+  });
 });

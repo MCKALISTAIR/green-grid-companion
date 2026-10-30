@@ -120,12 +120,16 @@ export function SceneGenerationOverlay({
               aria-hidden="true"
             >
               <NuclearCoolingTower
-                x={280}
+                x={NUCLEAR_TOWER_X[0]}
                 steamIntensity={nuclearPercentage / 100}
                 isNight={isNight}
               />
               {nuclearPercentage > 15 && (
-                <NuclearCoolingTower x={240} steamIntensity={0.5} isNight={isNight} />
+                <NuclearCoolingTower
+                  x={NUCLEAR_TOWER_X[1]}
+                  steamIntensity={0.5}
+                  isNight={isNight}
+                />
               )}
             </svg>
           </div>
@@ -170,6 +174,9 @@ export function SceneGenerationOverlay({
     </>
   );
 }
+
+/** Nuclear cooling towers (scene x): east of the hero text column. */
+export const NUCLEAR_TOWER_X = [302, 346] as const;
 
 interface TurbineFieldProps {
   turbineLayout: TurbineSlot[];
