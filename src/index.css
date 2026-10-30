@@ -1204,15 +1204,18 @@ blockquote {
    * renewable + updated lines kept (on one row) instead of hidden. The scene
    * grows with the HUD, so the skyline sits below the text rather than behind it.
    */
+  /* D-05 (Design, 30 Oct 2026): less space above the reading, so the first
+     card's title shows above the nav on first view. The location chip lines up
+     with the trophy chip (same top), and the renewable pill moves up into the
+     stack under the band line (useShortHero), so less skyline strip is needed. */
   .home-scene-gauge {
-    padding-top: calc(max(env(safe-area-inset-top), 12px) + 1.25rem) !important;
-    /* -mt-8 sheet overlap (32px) + scallop crest (~22px) + a strip of skyline,
-       so the city sits below the meta row instead of behind the text. */
-    padding-bottom: 6rem;
+    padding-top: calc(max(env(safe-area-inset-top), 24px) + 0.5rem) !important;
+    /* -mt-8 sheet overlap (32px) + scallop crest (~22px) + a strip of skyline. */
+    padding-bottom: 3.75rem;
   }
 
   .home-scene-gauge [data-testid='hero-location'] {
-    margin-bottom: 0.125rem;
+    margin-bottom: 0;
   }
 
   .home-scene-gauge [data-testid='hero-number'] {
@@ -1426,7 +1429,7 @@ body {
    narrow, short phones. */
 @media (max-width: 359px) and (max-height: 640px) {
   .home-scene-gauge {
-    padding-bottom: 6.75rem;
+    padding-bottom: 4.5rem;
   }
 }
 
@@ -1584,6 +1587,20 @@ body {
   }
   [data-vaul-drawer][data-vaul-snap-points='true'][data-state='open'] {
     animation: fadeIn 160ms ease-out;
+  }
+}
+
+/* D-05: with no forecast badge under the pill, the pill is the last thing in
+   the hero stack; keep a strip of sky under it so it never sits on the
+   skyline rooftops. */
+@media (max-height: 640px) {
+  .home-scene-gauge:not(:has([data-testid='zero-carbon-badge'])) {
+    padding-bottom: 6rem;
+  }
+}
+@media (max-width: 359px) and (max-height: 640px) {
+  .home-scene-gauge:not(:has([data-testid='zero-carbon-badge'])) {
+    padding-bottom: 6.75rem;
   }
 }
 
