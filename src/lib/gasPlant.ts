@@ -12,7 +12,8 @@ export const GAS_PLANT_TOKENS = {
 export const GAS_PLANT_AVIATION_RED = '#e5484d';
 
 /** Left edge of the turbine hall, SVG units. Plant spans x 98-138. */
-export const GAS_PLANT_X = 98;
+/** West of the hero text column (scene x 112 to 288) so the hall and stacks never sit behind the hero at 720x540. */
+export const GAS_PLANT_X = 58;
 export const GAS_PLANT_HALL = { w: 40, h: 12 };
 export const GAS_PLANT_BOILER = { w: 14, h: 18 };
 export const GAS_PLANT_STACK = { w: 3, h: 34 };

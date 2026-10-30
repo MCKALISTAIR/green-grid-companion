@@ -34,3 +34,22 @@ describe('turbine layout', () => {
     expect(q.bottom).toBeCloseTo(120 * (390 / 400));
   });
 });
+
+describe('hero band is clear of scene props (#242 Design review)', () => {
+  it('keeps the gas plant hall and stacks west of the band', async () => {
+    const { gasPlantGeometry, GAS_PLANT_HALL } = await import('@/lib/gasPlant');
+    const g = gasPlantGeometry();
+    expect(g.x + GAS_PLANT_HALL.w).toBeLessThanOrEqual(TURBINE_HERO_SAFE_X.min);
+  });
+
+  it('keeps both biomass stacks out of the band', async () => {
+    const { BIOMASS_STACK_X } = await import('@/components/scene/layers/SceneAdvancedLayer');
+    for (const x of BIOMASS_STACK_X)
+      expect(x + 4 <= TURBINE_HERO_SAFE_X.min || x - 4 >= TURBINE_HERO_SAFE_X.max).toBe(true);
+  });
+
+  it('matches the sheep safe zone', async () => {
+    const { HERO_SAFE_X } = await import('@/components/scene/Sheep');
+    expect(TURBINE_HERO_SAFE_X).toEqual(HERO_SAFE_X);
+  });
+});

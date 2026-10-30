@@ -28,12 +28,12 @@ const TURBINE_SLOT_DEFS: Array<Omit<TurbineSlot, 'groundY'>> = [
   // Turbines must visually dominate trees (front trees ~0.5). Front slots ≥0.95.
   { x: 16, scale: 0.42, z: 1, layer: 'back' },
   { x: 34, scale: 0.38, z: 1, layer: 'back' },
-  { x: 384, scale: 0.4, z: 1, layer: 'back' },
-  { x: 345, scale: 0.68, z: 15, layer: 'mid' },
-  { x: 372, scale: 0.64, z: 15, layer: 'mid' },
-  { x: 62, scale: 0.7, z: 15, layer: 'mid' },
+  { x: 388, scale: 0.4, z: 1, layer: 'back' },
+  { x: 334, scale: 0.68, z: 15, layer: 'mid' },
+  { x: 358, scale: 0.64, z: 15, layer: 'mid' },
+  { x: 24, scale: 0.7, z: 15, layer: 'mid' },
   { x: 44, scale: 1.05, z: 25, layer: 'front' },
-  { x: 76, scale: 0.98, z: 25, layer: 'front' },
+  { x: 318, scale: 0.98, z: 25, layer: 'front' },
 ];
 
 /** Build wind-driven turbine placements whose masts stand on the hill they belong to. */
