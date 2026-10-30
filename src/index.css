@@ -1411,6 +1411,36 @@ blockquote {
     background-color: #ffffff;
   }
 }
+
+/* D-07 follow-up (Design, 30 Oct 2026): inner landscape (951x620) gets the same
+   treatment as 594x406. The scene column runs the full height so its ground
+   reaches the bottom (no flat band), and the nav docks in the right column only
+   with the sheet ending just above it. Columns stay 48/52 here. */
+@media (min-width: 800px) and (max-height: 720px) and (min-height: 481px) {
+  .home-shell {
+    height: 100dvh;
+    max-height: 100dvh;
+    background: linear-gradient(to right, transparent 48%, hsl(var(--card)) 48%);
+  }
+
+  .home-feed {
+    height: calc(100% - var(--bottom-content-inset) + 1rem);
+    align-self: flex-start;
+  }
+
+  .app-content--home .home-feed {
+    padding-bottom: 1rem;
+  }
+
+  body:has(.home-shell) #bottom-nav {
+    left: 48%;
+    padding-right: env(safe-area-inset-right);
+  }
+
+  body:has(.home-shell) #bottom-nav .nav-dock {
+    width: calc(100% - 16px);
+  }
+}
 /* ==========================================
    Privacy choice sheet (CookieConsent.tsx)
    Non-modal, docked above the tab bar (--consent-sheet-bottom is set from the
