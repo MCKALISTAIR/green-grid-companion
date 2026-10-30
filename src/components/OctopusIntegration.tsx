@@ -31,6 +31,7 @@ import { OctopusBenefitsIntro } from './OctopusBenefitsIntro';
 import { OctopusLinkSheet } from './OctopusLinkSheet';
 import { OctopusStaleNotice } from './OctopusStaleNotice';
 import { OctopusKeyRejectedNotice } from './OctopusKeyRejectedNotice';
+import { OCTOPUS_KEY_REJECTED_COPY as REJECTED } from '@/lib/voice/octopusLinkCopy';
 import { KEY_REJECTED_ERRORS, octopusKeyRejected } from '@/lib/octopusKeyRejected';
 import { syncOutcome } from '@/lib/octopusSyncOutcome';
 import { linkFailureMessage } from '@/lib/octopusLink';
@@ -149,7 +150,7 @@ export function OctopusIntegration() {
     const keyRejected = octopusKeyRejected(status?.meters);
     const showKeyRejected = isLinked && (keyRejected.rejected || rejectedThisSession);
     return (
-      <Card className="p-4 border-primary/15 bg-primary/5">
+      <Card className="p-4 border-primary/15 bg-primary/5" data-testid="octopus-card">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
@@ -158,7 +159,15 @@ export function OctopusIntegration() {
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-medium text-foreground">Octopus Energy</h3>
-                {isLinked ? (
+                {showKeyRejected ? (
+                  <Badge
+                    variant="outline"
+                    data-testid="octopus-needs-relink-badge"
+                    className="whitespace-nowrap bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20 px-1.5 py-0 h-5 text-[10px]"
+                  >
+                    {REJECTED.badge}
+                  </Badge>
+                ) : isLinked ? (
                   <Badge
                     variant="outline"
                     className="bg-green-500/10 text-green-600 border-green-500/20 px-1.5 py-0 h-5 text-[10px]"
@@ -280,10 +289,10 @@ export function OctopusIntegration() {
           <div className="mt-4 pt-4 border-t border-border/50 space-y-2">
             {status.meters?.map((meter) => (
               <div key={meter.mpan} className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-primary" />
-                  <span className="text-muted-foreground flex items-center gap-1.5">
-                    MPAN: {meter.mpan.slice(-6)}
+                <div className="flex items-center gap-2 shrink-0">
+                  <Zap className="w-4 h-4 text-primary shrink-0" />
+                  <span className="text-muted-foreground flex items-center gap-1.5 whitespace-nowrap">
+                    <span data-testid="octopus-mpan">MPAN: {meter.mpan.slice(-6)}</span>
                     <Popover>
                       <PopoverTrigger asChild>
                         <button
@@ -309,7 +318,7 @@ export function OctopusIntegration() {
                   </span>
                 </div>
                 {meter.last_sync_at && (
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-muted-foreground text-right ml-2 min-w-0">
                     {LINKED.lastSynced(
                       formatDistanceToNow(new Date(meter.last_sync_at), { addSuffix: true }),
                     )}

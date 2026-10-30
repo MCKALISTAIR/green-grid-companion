@@ -141,7 +141,8 @@ export const OCTOPUS_FRESHNESS_COPY = {
 
 /** BH-127: Octopus answered 401/403 to the stored key. */
 export const OCTOPUS_KEY_REJECTED_COPY = {
-  title: 'Octopus rejected your key, please relink',
+  title: 'Octopus stopped accepting your key',
+  badge: 'Needs relink',
   body: "Octopus didn't accept the API key we have for you, so your meter data has stopped updating. Relink with a new key from your Octopus account page.",
   since: (ago: string) => `Last tried ${ago}`,
   relink: 'Relink Octopus',

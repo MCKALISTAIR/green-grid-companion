@@ -23,6 +23,6 @@ describe('OctopusKeyRejectedNotice (BH-127)', () => {
     expect(screen.queryByText(/Last tried/)).toBeNull();
   });
   it('uses the agreed title', () => {
-    expect(COPY.title).toBe('Octopus rejected your key, please relink');
+    expect(COPY.title).toBe('Octopus stopped accepting your key');
   });
 });
