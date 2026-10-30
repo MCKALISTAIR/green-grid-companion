@@ -1,6 +1,9 @@
 import { motion } from 'framer-motion';
 import { useId } from 'react';
 
+/** Night far-hill fills: lavender a step above the night horizon (#392763). */
+export const NIGHT_FAR_HILLS = { base: '#6b5fa0', mid: '#7a6db0', highlight: '#8a7dbd' } as const;
+
 interface BackgroundMountainsProps {
   isNight: boolean;
 }
@@ -9,9 +12,12 @@ export function BackgroundMountains({ isNight }: BackgroundMountainsProps) {
   const id = useId();
   // Grounded at Y=30-70 (far background, distant horizon)
 
-  const baseColor = isNight ? '#0f172a' : '#475569';
-  const midColor = isNight ? '#1e293b' : '#64748b';
-  const highlightColor = isNight ? '#334155' : '#94a3b8';
+  // Scene audit item 10: the night slates were darker than the night sky, so
+  // the far hills vanished and the sheep floated. At night they are one step
+  // lighter than the sky instead (NIGHT_FAR_HILLS, tested).
+  const baseColor = isNight ? NIGHT_FAR_HILLS.base : '#475569';
+  const midColor = isNight ? NIGHT_FAR_HILLS.mid : '#64748b';
+  const highlightColor = isNight ? NIGHT_FAR_HILLS.highlight : '#94a3b8';
 
   return (
     <motion.g
