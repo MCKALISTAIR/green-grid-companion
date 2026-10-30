@@ -62,7 +62,9 @@ describe('BH-117: cloud bank behind the city skyline', () => {
         '[data-variant="unknown-weather"]',
       ),
     ).not.toBeNull();
-    expect(bankLayer(weather({ cloudCover: 50 })).innerHTML).toBe('');
+    expect(
+      bankLayer(weather({ cloudCover: 50 })).querySelector('[data-art="cloud-bank"]'),
+    ).toBeNull();
   });
 
   it('the sky layer leaves the bank out when asked, and keeps it otherwise', () => {

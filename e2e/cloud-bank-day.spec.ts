@@ -146,6 +146,8 @@ for (const [vw, vh] of VIEWPORTS) {
             page.getByTestId(mode === 'ok' ? 'hero-band-label' : 'hero-warning-icon'),
           ).toBeVisible({ timeout: 60_000 });
           const bank = page.locator('[data-art="cloud-bank"]');
+          // G-11: wait out the 400ms cross-fade from the unknown-weather bank.
+          await expect(bank).toHaveCount(1);
           await expect(bank).toHaveAttribute('data-tone', 'day');
           const target = page.getByTestId(mode === 'ok' ? 'hero-band-label' : 'hero-warning-icon');
           // Freeze every animation (framer-motion runs on the page clock), once the
