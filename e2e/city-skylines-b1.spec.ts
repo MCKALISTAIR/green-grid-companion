@@ -151,9 +151,15 @@ for (const viewport of VIEWPORTS) {
   });
 }
 
-test('the new city art uses no CSS filter or blur', async ({ page }) => {
+test('the new city art uses no CSS filter or blur', async ({ browser }) => {
   test.setTimeout(90_000);
   for (const city of CITIES.slice(1)) {
+    // One fresh context per city: a second pinClocks() on the same page runs with
+    // Node's clock already pinned, so Playwright drops the past instant and the
+    // page runs at wall time (BH-113, support/pinClocks.ts).
+    restoreNodeClock();
+    const context = await browser.newContext({ serviceWorkers: 'block' });
+    const page = await context.newPage();
     const scene = await openCity(page, city.postcode, 'dusk');
     const filtered = await scene.locator('[data-city-art]').evaluateAll((els) =>
       els.flatMap((el) =>
@@ -166,6 +172,7 @@ test('the new city art uses no CSS filter or blur', async ({ page }) => {
       ),
     );
     expect(filtered).toEqual([]);
+    await context.close();
   }
 });
 
