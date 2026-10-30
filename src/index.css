@@ -1441,6 +1441,32 @@ blockquote {
     width: calc(100% - 16px);
   }
 }
+
+/* Inner portrait (Duo unfolded, 669x902): the forecast badge stacks under the
+   band line instead of beside "Very low", and the renewable pill gets #262's
+   solid backing. Extra room under the stack drops the skyline below the
+   pill. Phones (<600px) and landscape are untouched. */
+@media (orientation: portrait) and (min-width: 600px) and (max-width: 767px) {
+  .home-scene-gauge [data-testid='hero-band-row'] > [data-testid='zero-carbon-badge'] {
+    flex-basis: 100%;
+  }
+
+  .home-scene-gauge [data-testid='hero-meta'] {
+    background-color: #0f172a;
+    box-shadow: var(--shadow-sm, 0 1px 2px rgb(0 0 0 / 0.1));
+  }
+
+  [data-hero-tone='ink'] [data-testid='hero-meta'] {
+    background-color: #ffffff;
+  }
+
+  /* Room under the stack so the skyline (pinned to the scene bottom) sits
+     below the pill instead of behind it. */
+  .home-scene-gauge {
+    padding-bottom: 8.5rem;
+  }
+}
+
 /* ==========================================
    Privacy choice sheet (CookieConsent.tsx)
    Non-modal, docked above the tab bar (--consent-sheet-bottom is set from the
