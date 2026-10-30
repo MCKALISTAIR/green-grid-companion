@@ -120,7 +120,14 @@ describe('sky blend by day (round 3)', () => {
     expect(getSkyBlend('very high', 'midday')).toBe(0.7);
     expect(getSkyBlend('high', 'morning')).toBe(0.15);
     for (const b of ['none', 'moderate'] as const) expect(getSkyBlend(b, 'midday')).toBe(0);
-    for (const t of ['dawn', 'sunset', 'dusk', 'night'])
-      expect(getSkyBlend('very high', t)).toBe(0);
+    expect(getSkyBlend('very high', 'sunset')).toBe(0.35);
+    expect(getSkyBlend('high', 'sunset')).toBe(0.075);
+    for (const t of ['dawn', 'dusk', 'night']) expect(getSkyBlend('very high', t)).toBe(0);
+  });
+});
+
+describe('moderate smoke (scene audit item 6)', () => {
+  it('is #c9c4ba at 0.45 so it reads on the pale sky', () => {
+    expect(SMOKE_BY_BAND.moderate).toMatchObject({ day: '#c9c4ba', opacity: 0.45 });
   });
 });

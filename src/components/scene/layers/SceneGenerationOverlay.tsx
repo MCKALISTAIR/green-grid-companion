@@ -105,7 +105,7 @@ export function SceneGenerationOverlay({
               <div
                 key={i}
                 className="relative w-7 h-5 bg-gen-solar/80 rounded-sm transform -skew-x-12 shadow-md overflow-hidden"
-                style={{ opacity: 0.7 + sceneConfig.cleanliness * 0.3 }}
+                style={{ opacity: Math.max(0.35, Math.min(1, sceneConfig.solarBrightness)) }}
               >
                 <motion.div
                   className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"

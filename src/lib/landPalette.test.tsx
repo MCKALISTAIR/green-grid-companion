@@ -56,10 +56,10 @@ const BANDS: [index: string, intensity: number][] = [
 
 const SCENES: SceneType[] = ['countryside', 'city', 'coastal'];
 
-const cleanlinessOf = (intensity: number) =>
+const cleanlinessOf = (intensity: number, index: string) =>
   buildSceneConfig({
     intensity,
-    index: 'moderate',
+    index,
     timeOfDay: 'midday',
     weather: BASE,
     synthwaveMode: false,
@@ -67,10 +67,10 @@ const cleanlinessOf = (intensity: number) =>
   }).cleanliness;
 
 describe('grass never reacts to carbon (Design decision 12)', () => {
-  it('the bands really do span the old cleanliness scale', () => {
-    const cs = BANDS.map(([, g]) => cleanlinessOf(g));
+  it('the bands really do span the whole band cleanliness scale', () => {
+    const cs = BANDS.map(([i, g]) => cleanlinessOf(g, i));
     expect(Math.max(...cs)).toBe(1);
-    expect(Math.min(...cs)).toBe(0);
+    expect(Math.min(...cs)).toBe(0.1);
   });
 
   for (const sceneType of SCENES) {
