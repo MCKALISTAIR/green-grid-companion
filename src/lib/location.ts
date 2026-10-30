@@ -408,10 +408,14 @@ async function lookupByCarbonApi(postcode: string): Promise<LocationSearchResult
  */
 async function lookupPlaceName(query: string): Promise<LocationSearchResult | null> {
   try {
-    // Try calling the Supabase Edge Function geocoding proxy first
-    const { data: edgeData, error: edgeError } = await supabase.functions.invoke('geocoding', {
-      body: { query: query },
-    });
+    // Try calling the Supabase Edge Function geocoding proxy first. It needs a
+    // session (anonymous is fine, BH-148); without one, go straight to OSM.
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const { data: edgeData, error: edgeError } = session
+      ? await supabase.functions.invoke('geocoding', { body: { query: query } })
+      : { data: null, error: 'no_session' };
 
     let data: NominatimResult[] = [];
     if (!edgeError && edgeData) {

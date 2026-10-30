@@ -51,13 +51,19 @@ describe('carbon fetchers reject bad responses with readable errors', () => {
   });
 
   it('empty data', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('{"data":[]}', { status: 200 })));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('{"data":[]}', { status: 200 })),
+    );
     const err = await getCurrentIntensity().catch((e) => e);
     expect(getErrorInfo(err).title).toBe('The data looks wrong');
   });
 
   it('malformed JSON', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('{"data":', { status: 200 })));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('{"data":', { status: 200 })),
+    );
     const err = await getCurrentIntensity().catch((e) => e);
     expect(getErrorInfo(err).title).toBe('The data looks wrong');
   });

@@ -5,6 +5,8 @@ import { LandscapeBack, LandscapeMid, LandscapeFront } from '../Landscape';
 import { ValleyMist } from '../ValleyMist';
 import { Sheep } from '../Sheep';
 import { SCENE_SILHOUETTE_ASPECT } from '@/lib/sceneScaleBible';
+import type { HazeBand } from '@/lib/sceneHaze';
+import { GasPlant } from '../GasPlant';
 
 export interface CountrysideSceneLayersProps {
   shouldReduceMotion: boolean;
@@ -21,6 +23,8 @@ export interface CountrysideSceneLayersProps {
   nuclearPercentage: number;
   hydroPercentage: number;
   isRaining: boolean;
+  /** PR-2b: NESO haze band; the gas plant smokes at moderate and above. */
+  hazeBand?: HazeBand;
 }
 
 export function CountrysideSceneLayers({
@@ -34,6 +38,7 @@ export function CountrysideSceneLayers({
   skipIntro,
   windSpeed,
   timeOfDay,
+  hazeBand = 'none',
 }: CountrysideSceneLayersProps) {
   return (
     <>
@@ -58,6 +63,9 @@ export function CountrysideSceneLayers({
             windSpeed={windSpeed}
             timeOfDay={timeOfDay}
           />
+          {/* PR-2b: the gas plant on the back hill, always present; smoke only at
+              moderate and above (Design brief Q5). */}
+          <GasPlant band={hazeBand} isNight={isNight} />
         </svg>
       </motion.div>
 
@@ -86,7 +94,7 @@ export function CountrysideSceneLayers({
       </motion.div>
 
       {/* Countryside: Valley Mist */}
-      <ValleyMist cleanliness={sceneConfig.cleanliness} timeOfDay={timeOfDay} isNight={isNight} />
+      <ValleyMist timeOfDay={timeOfDay} isNight={isNight} />
 
       {/* Countryside: Flock of Sheep */}
       <AnimatePresence>

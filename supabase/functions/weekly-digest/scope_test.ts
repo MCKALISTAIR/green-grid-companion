@@ -14,11 +14,7 @@ const forecast = [
 
 Deno.test('weekly-digest: each subscriber only sees their own meter (BH-26)', async () => {
   const tables = twoUserFixture(recent, now.getUTCDay());
-  const { status, pushes } = await runDigest(
-    new URL('./index.ts', import.meta.url).href,
-    tables,
-    forecast,
-  );
+  const { status, pushes } = await runDigest(() => import('./index.ts'), tables, forecast);
   assertEquals(status, 200);
   const alice = pushes.find((p) => p.includes('tok-alice'));
   const bob = pushes.find((p) => p.includes('tok-bob-'));

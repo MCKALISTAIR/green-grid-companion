@@ -24,6 +24,10 @@ const DEFAULT_SETTINGS: Settings = {
 };
 
 const LAST_SYNC_KEY = 'grid-companion-last-sync';
+// BH-133: which signed-in account the local settings last belonged to.
+export const SETTINGS_OWNER_KEY = 'grid-companion-settings-owner';
+const LOAD_RETRY_BASE_MS = 2000;
+const LOAD_RETRY_MAX_MS = 60_000;
 
 export function useSettings() {
   const [settings, setSettings] = useState<Settings>(() => {
@@ -43,7 +47,12 @@ export function useSettings() {
     return saved ? new Date(saved) : null;
   });
   const channelRef = useRef<RealtimeChannel | null>(null);
-  const isInitialLoadRef = useRef(true);
+  // BH-133: the user id whose server settings have been loaded. Nothing is
+  // written to the server until this matches the signed-in user, so a failed
+  // load retries instead of disabling sync for the session, and an early write
+  // can't overwrite the account with another user's local settings.
+  const loadedUserRef = useRef<string | null>(null);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const lastWriteRef = useRef(0);
 
   // Track auth state
@@ -64,7 +73,7 @@ export function useSettings() {
   // Sync to database
   const syncToDatabase = useCallback(
     async (newSettings: Settings) => {
-      if (!userId || isSyncingRef.current) return;
+      if (!userId || isSyncingRef.current || loadedUserRef.current !== userId) return;
 
       isSyncingRef.current = true;
       lastWriteRef.current = Date.now();
@@ -95,25 +104,38 @@ export function useSettings() {
     [userId],
   );
 
-  // Load settings from database when authenticated
+  // Load settings from database when authenticated (retries on failure, BH-133)
   useEffect(() => {
     if (!userId) {
-      isInitialLoadRef.current = true;
+      loadedUserRef.current = null;
       return;
     }
+    if (loadedUserRef.current === userId) return;
+
+    let cancelled = false;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+    const retry = () => {
+      if (!cancelled) setLoadAttempt((n) => n + 1);
+    };
 
     const loadFromDatabase = async () => {
+      let failed = false;
       try {
         const { data, error } = await supabase
           .from('user_preferences')
           .select('settings')
           .eq('user_id', userId)
           .single();
+        if (cancelled) return;
 
         if (error && error.code !== 'PGRST116') {
           logger.error('Failed to load settings', { error });
+          failed = true;
           return;
         }
+
+        const owner = appStorage.getItem(SETTINGS_OWNER_KEY);
+        appStorage.setItem(SETTINGS_OWNER_KEY, userId);
 
         if (
           data?.settings &&
@@ -121,23 +143,41 @@ export function useSettings() {
           Object.keys(data.settings).length > 0
         ) {
           const dbSettings = data.settings as unknown as Settings;
+          loadedUserRef.current = userId;
           setSettings({ ...DEFAULT_SETTINGS, ...dbSettings });
+        } else if (owner && owner !== userId) {
+          // Local settings belong to a different account: don't upload them.
+          loadedUserRef.current = userId;
+          setSettings(DEFAULT_SETTINGS);
         } else {
-          // No settings in DB, sync local settings up
+          // No settings in DB: this device's settings (anonymous or this user's) go up.
+          loadedUserRef.current = userId;
           const localSettings = JSON.parse(appStorage.getItem(LOCAL_SETTINGS_KEY) || '{}');
           if (Object.keys(localSettings).length > 0) {
             await syncToDatabase({ ...DEFAULT_SETTINGS, ...localSettings });
           }
         }
-
-        isInitialLoadRef.current = false;
       } catch (err) {
         logger.error('Error loading settings', { error: err });
+        failed = true;
+      } finally {
+        if (failed && !cancelled) {
+          const delay = Math.min(LOAD_RETRY_BASE_MS * 2 ** loadAttempt, LOAD_RETRY_MAX_MS);
+          retryTimer = setTimeout(retry, delay);
+        }
       }
     };
 
+    window.addEventListener('online', retry);
+    window.addEventListener('focus', retry);
     loadFromDatabase();
-  }, [userId, syncToDatabase]);
+    return () => {
+      cancelled = true;
+      clearTimeout(retryTimer);
+      window.removeEventListener('online', retry);
+      window.removeEventListener('focus', retry);
+    };
+  }, [userId, loadAttempt, syncToDatabase]);
 
   // Set up realtime subscription for cross-device sync
   useEffect(() => {
@@ -194,7 +234,7 @@ export function useSettings() {
   const prevSettingsRef = useRef<string>(JSON.stringify(settings));
 
   useEffect(() => {
-    if (!userId || isInitialLoadRef.current) return;
+    if (!userId || loadedUserRef.current !== userId) return;
 
     const currentSettingsStr = JSON.stringify(settings);
     // Only sync if settings actually changed (user made a change)

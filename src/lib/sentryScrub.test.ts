@@ -88,3 +88,50 @@ describe('scrubEvent / scrubBreadcrumb', () => {
     expect(crumb.data?.to).toBe(`/map?lat=${REDACTED}&lon=${REDACTED}`);
   });
 });
+
+describe('BH-146: sign-in tokens and secrets', () => {
+  const jwt = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhYmMifQ.c2lnbmF0dXJl';
+
+  it('redacts tokens from the deep link URL in a breadcrumb message', () => {
+    const crumb = scrubBreadcrumb({
+      message: `gridsense://auth/callback#access_token=${jwt}&refresh_token=r3fr3sh&expires_in=3600`,
+    });
+    expect(crumb.message).not.toContain('r3fr3sh');
+    expect(crumb.message).not.toContain('eyJ');
+    expect(crumb.message).toContain('expires_in=3600');
+  });
+
+  it('redacts query-string tokens on navigation breadcrumbs', () => {
+    const crumb = scrubBreadcrumb({
+      category: 'navigation',
+      data: {
+        from: '/',
+        to: '/auth/callback?access_token=aaa&refresh_token=bbb&provider_token=ccc&code=ddd',
+      },
+    });
+    expect(crumb.data?.to).toBe(
+      `/auth/callback?access_token=${REDACTED}&refresh_token=${REDACTED}&provider_token=${REDACTED}&code=${REDACTED}`,
+    );
+  });
+
+  it('redacts secret-named keys, JSON bodies, bearer headers, JWTs and Octopus keys', () => {
+    const out = scrubEvent({
+      type: undefined,
+      message: `Authorization: Bearer ${jwt} failed`,
+      extra: {
+        refresh_token: 'plain',
+        nested: { apiKey: 'sk_live_abcDEF123', body: '{"access_token":"zzz","ok":1}' },
+        note: 'key sk_live_XYZ987 rejected',
+      },
+    } as unknown as ErrorEvent);
+    const json = JSON.stringify(out);
+    expect(json).not.toMatch(/plain|sk_live_|zzz|eyJ/);
+    const extra = out.extra as { nested: { body: string } };
+    expect(extra.nested.body).toBe(`{"access_token":"${REDACTED}","ok":1}`);
+  });
+
+  it('leaves ordinary data alone', () => {
+    const crumb = scrubBreadcrumb({ data: { code: 'octopus_timeout', status_code: 500 } });
+    expect(crumb.data).toEqual({ code: 'octopus_timeout', status_code: 500 });
+  });
+});
