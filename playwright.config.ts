@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+import { DUO_VIEWPORTS } from './e2e/support/duoViewports';
 
 /**
  * Playwright configuration for GridSense e2e and Visual Regression Tests.
@@ -50,11 +51,26 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+      testIgnore: /duo-.*\.spec\.ts/,
     },
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
+      testIgnore: /duo-.*\.spec\.ts/,
     },
+    /* iPhone Duo (cover and inner screens). Only the duo-*.spec.ts files run here;
+       sizes live in e2e/support/duoViewports.ts. Run: npx playwright test --project='duo-*' */
+    ...DUO_VIEWPORTS.map((v) => ({
+      name: v.id,
+      testMatch: /duo-.*\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: v.width, height: v.height },
+        deviceScaleFactor: v.dpr,
+        hasTouch: true,
+        serviceWorkers: 'block' as const,
+      },
+    })),
   ],
 
   /* Start dev server automatically if not already running */
