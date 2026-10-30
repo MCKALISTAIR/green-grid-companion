@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useLayoutEffect, useState } from 'react';
 import { birdFlightBand, type BirdFlightBand } from '@/lib/birdFlightBand';
 
 /** Village REDRAW-PLAN / CONTRAST.md guard rail: clouds no higher than text bottom + 34. */
@@ -22,7 +22,9 @@ export function useHeroCloudTop() {
   const sceneRef = useCallback((el: HTMLElement | null) => setScene(el), []);
   const textRef = useCallback((el: HTMLElement | null) => setText(el), []);
 
-  useEffect(() => {
+  // G-11: measure before paint, so the bank's first frame is already at its
+  // reserved position (it used to paint once at the 40% fallback, then jump).
+  useLayoutEffect(() => {
     if (!scene || !text) {
       setCloudTopPx(undefined);
       setBirdBand(null);

@@ -1,7 +1,6 @@
 import { motion, type MotionValue } from 'framer-motion';
 import type { TimeOfDay } from '@/hooks/useTimeOfDay';
 import type { WeatherData } from '@/hooks/useWeatherData';
-import { hasCloudBank } from '@/lib/cloudBank';
 import { WeatherCloudBank } from '../WeatherEffects';
 
 export interface SceneCloudBankLayerProps {
@@ -23,6 +22,7 @@ export interface SceneCloudBankLayerProps {
  * the sky layer (z-[1]: rain, snow, sun, moon, fog) or above it (depth haze,
  * halo, mood) still is, and the bank's colours are unchanged. It moves with
  * the sky (skyY), as it did inside SceneSkyLayer.
+ * G-11: the layer stays mounted (empty) without a bank so banks can cross-fade.
  */
 export function SceneCloudBankLayer({
   skyY,
@@ -33,7 +33,7 @@ export function SceneCloudBankLayer({
   weatherKnown,
   cloudTopPx,
 }: SceneCloudBankLayerProps) {
-  if (!hasCloudBank(weather, weatherKnown)) return null;
+  // G-11: always mounted, so the bank can fade out when the weather lands clear.
   return (
     <motion.div
       style={{ y: shouldReduceMotion ? 0 : skyY }}
