@@ -114,8 +114,8 @@ describe('grass never reacts to carbon (Design decision 12)', () => {
     const layers = [LandscapeBack, LandscapeMid, LandscapeFront];
     for (const t of TIMES) {
       for (const isSnowing of [false, true]) {
-        const drawn = BANDS.map(([, intensity]) => {
-          const cleanliness = cleanlinessOf(intensity);
+        const drawn = BANDS.map(([index, intensity]) => {
+          const cleanliness = cleanlinessOf(intensity, index);
           return layers.map((Layer) => {
             const { container, unmount } = render(
               <svg viewBox="0 30 400 120">
