@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import type { SceneGrowthStage } from '@/hooks/useSceneGrowth';
 import { Flowers } from './Flowers';
-import { gardenFlowerPositions, GARDEN_FLOWER_SCALE } from '@/lib/gardenFlowers';
+import { gardenBarePatches, gardenFlowerPositions, GARDEN_FLOWER_SCALE } from '@/lib/gardenFlowers';
 import { SCENE_SILHOUETTE_ASPECT } from '@/lib/sceneScaleBible';
 import { Butterfly } from './Butterfly';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -62,6 +62,18 @@ export function SceneTemporalLife({
               aria-hidden="true"
               data-garden-flowers
             >
+              {gardenBarePatches(stage).map((p, i) => (
+                <ellipse
+                  key={`bare-${i}`}
+                  data-garden-bare
+                  cx={p.x}
+                  cy={p.y}
+                  rx={6}
+                  ry={1.6}
+                  fill="#7a5a36"
+                  opacity={0.75}
+                />
+              ))}
               <Flowers positions={flowerPositions} scale={GARDEN_FLOWER_SCALE} />
             </svg>
           </div>

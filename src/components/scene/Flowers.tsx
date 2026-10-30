@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 
 interface FlowersProps {
-  positions: { x: number; y: number }[]; // SVG coordinates for flower positions
+  positions: { x: number; y: number; color?: string }[]; // SVG coordinates for flower positions
   /** Uniform scale about the stem foot (1 = the original bee-flower size). */
   scale?: number;
 }
@@ -18,7 +18,7 @@ export function Flowers({ positions, scale = 1 }: FlowersProps) {
   return (
     <g>
       {positions.map((pos, i) => {
-        const color = flowerColors[i % flowerColors.length];
+        const color = pos.color ?? flowerColors[i % flowerColors.length];
 
         return (
           <g
