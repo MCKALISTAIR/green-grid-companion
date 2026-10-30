@@ -42,6 +42,12 @@ export const CITY_GAS_PLANT_TOKENS = {
 } as const;
 
 export const CITY_GAS_PLANT = { x: 292, groundY: 95, scale: 0.8 } as const;
+/** Vertical offset and scale of the city plant, for measuring sky in SVG units. */
+export function cityGasPlantFrame() {
+  const { baseY } = gasPlantGeometry(GAS_PLANT_X);
+  const { groundY, scale } = CITY_GAS_PLANT;
+  return { dy: groundY - baseY * scale, scale };
+}
 export function cityGasPlantTransform() {
   const { baseY } = gasPlantGeometry(GAS_PLANT_X);
   const { x, groundY, scale } = CITY_GAS_PLANT;

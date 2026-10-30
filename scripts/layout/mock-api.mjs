@@ -92,6 +92,7 @@ export async function installMocks(context, scenarioIn = {}) {
     const start = halfHourFloor(Date.now() - 24 * 3600000).getTime();
     return Array.from({ length: 144 }, (_, i) => {
       const f = new Date(start + i * 1800000);
+      // flatSeries: every slot reads the scenario's own value (hero shots per band).
       const wobble = s.flatSeries ? 0 : 40 * Math.sin(i / 6);
       const v = Math.max(0, Math.round((s.intensity || 0) + wobble));
       return {

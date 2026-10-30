@@ -11,6 +11,7 @@
  *   or lean) until wind direction is fetched.
  * - Drawn in the countryside SVG space (viewBox 0 30 400 120).
  */
+import { useLayoutEffect, useRef, useState } from 'react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   GAS_PLANT_HALL,
@@ -20,6 +21,7 @@ import {
   GAS_PLANT_AVIATION_RED,
   GAS_PLANT_X,
   gasPlantGeometry,
+  cityGasPlantFrame,
   cityGasPlantTransform,
   CITY_GAS_PLANT_TOKENS,
 } from '@/lib/gasPlant';
@@ -31,6 +33,8 @@ import {
   SMOKE_PUFF,
   SMOKE_STATIC_PUFFS,
   SMOKE_PLUME_UNITS,
+  fitPlumeUnits,
+  svgUnitsAbove,
   showsSmoke,
   showsSmokeColumn,
   type HazeBand,
@@ -42,6 +46,12 @@ export interface GasPlantProps {
   x?: number;
   /** Override the day and night tokens (the city far layer wants a darker silhouette). */
   tokens?: { day: PlantTokens; night: PlantTokens };
+  /**
+   * The transform the plant is drawn under (the city far layer scales and moves it),
+   * so the sky above the stack is measured in the owning SVG's units and converted
+   * back to the plant's own units for the plume cap (#240).
+   */
+  frame?: { dy: number; scale: number };
 }
 
 type PlantTokens = { light: string; shade: string; band: string };
@@ -51,6 +61,7 @@ export function GasPlant({
   isNight,
   x = GAS_PLANT_X,
   tokens = GAS_PLANT_TOKENS,
+  frame = { dy: 0, scale: 1 },
 }: GasPlantProps) {
   const reduced = useReducedMotion();
   const t = isNight ? tokens.night : tokens.day;
@@ -60,11 +71,21 @@ export function GasPlant({
   // drift or lean, until wind_direction_10m is fetched (follow-up bug in BUGS.md).
   const puffCount = smoke ? (reduced ? SMOKE_STATIC_PUFFS : smoke.puffs) : 0;
   const r = SMOKE_PUFF.startPx / 2;
-  const rise = smoke && showsSmoke(band) ? SMOKE_PLUME_UNITS[band] : SMOKE_PUFF.risePx;
+  const skyUnits = useSkyUnitsAbove(frame.dy + stacks[0].top * frame.scale);
+  const localSky = skyUnits.units == null ? null : skyUnits.units / frame.scale;
+  const rise =
+    smoke && showsSmoke(band)
+      ? fitPlumeUnits(SMOKE_PLUME_UNITS[band], localSky)
+      : SMOKE_PUFF.risePx;
   const column = smoke && showsSmokeColumn(band);
 
   return (
-    <g data-art="gas-plant" data-smoke={smoke ? band : 'none'} aria-hidden="true">
+    <g
+      ref={skyUnits.ref}
+      data-art="gas-plant"
+      data-smoke={smoke ? band : 'none'}
+      aria-hidden="true"
+    >
       {/* Stacks, behind the hall: slim, two thin bands each. */}
       {stacks.map((s, i) => (
         <g key={`stack-${i}`}>
@@ -179,7 +200,39 @@ export function GasPlant({
 export function CityGasPlant({ band, isNight }: Omit<GasPlantProps, 'x' | 'tokens'>) {
   return (
     <g data-art="city-gas-plant" transform={cityGasPlantTransform()}>
-      <GasPlant band={band} isNight={isNight} tokens={CITY_GAS_PLANT_TOKENS} />
+      <GasPlant
+        band={band}
+        isNight={isNight}
+        tokens={CITY_GAS_PLANT_TOKENS}
+        frame={cityGasPlantFrame()}
+      />
     </g>
   );
+}
+
+/** Measures the sky above `y` in the owning SVG (see svgUnitsAbove). */
+function useSkyUnitsAbove(y: number) {
+  const ref = useRef<SVGGElement>(null);
+  const [units, setUnits] = useState<number | null>(null);
+  useLayoutEffect(() => {
+    const svg = ref.current?.ownerSVGElement;
+    if (!svg) return;
+    const measure = () => {
+      const vb = svg.viewBox?.baseVal;
+      if (!vb || !vb.width) return;
+      const next = svgUnitsAbove(
+        y,
+        { x: vb.x, y: vb.y, w: vb.width, h: vb.height },
+        svg.clientWidth,
+        svg.clientHeight,
+      );
+      setUnits((prev) => (prev === next ? prev : next));
+    };
+    measure();
+    if (typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(measure);
+    ro.observe(svg);
+    return () => ro.disconnect();
+  }, [y]);
+  return { ref, units };
 }
