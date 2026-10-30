@@ -20,6 +20,7 @@ import {
   GAS_PLANT_AVIATION_RED,
   GAS_PLANT_X,
   gasPlantGeometry,
+  cityGasPlantTransform,
 } from '@/lib/gasPlant';
 import {
   SMOKE_BY_BAND,
@@ -160,6 +161,15 @@ export function GasPlant({ band, isNight, x = GAS_PLANT_X }: GasPlantProps) {
             </g>
           );
         })}
+    </g>
+  );
+}
+
+/** City far layer (scene audit item 4): the same plant, scaled and seated. */
+export function CityGasPlant({ band, isNight }: Omit<GasPlantProps, 'x'>) {
+  return (
+    <g data-art="city-gas-plant" transform={cityGasPlantTransform()}>
+      <GasPlant band={band} isNight={isNight} />
     </g>
   );
 }

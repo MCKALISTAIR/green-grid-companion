@@ -26,3 +26,17 @@ export function gasPlantGeometry(x = GAS_PLANT_X) {
   const stacks = [x + 19, x + 24.5].map((sx) => ({ x: sx, top: baseY - GAS_PLANT_STACK.h }));
   return { x, baseY, boilerX, stacks, width: GAS_PLANT_HALL.w };
 }
+
+/**
+ * Scene audit item 4: the city far-layer plant. The same art as the countryside
+ * plant, scaled down and seated on the city far ground line (y 95 in the city
+ * viewBox 0 0 400 150, where the old distant stack stood), toward the east edge.
+ */
+export const CITY_GAS_PLANT = { x: 332, groundY: 95, scale: 0.7 } as const;
+export function cityGasPlantTransform() {
+  const { baseY } = gasPlantGeometry(GAS_PLANT_X);
+  const { x, groundY, scale } = CITY_GAS_PLANT;
+  const dx = x - GAS_PLANT_X * scale;
+  const dy = groundY - baseY * scale;
+  return `translate(${dx.toFixed(2)} ${dy.toFixed(2)}) scale(${scale})`;
+}
