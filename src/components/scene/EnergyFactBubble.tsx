@@ -6,6 +6,7 @@ import { useWeatherData } from '@/hooks/useWeatherData';
 import { GenerationMix } from '@/lib/carbonApi';
 import { MessageCircle } from 'lucide-react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { factAriaLabel } from '@/lib/factAriaLabel';
 
 interface EnergyFactBubbleProps {
   intensity: number;
@@ -98,7 +99,7 @@ export function EnergyFactBubble({
             whileTap={!shouldReduceMotion ? { scale: 0.96 } : {}}
             role="button"
             tabIndex={0}
-            aria-label={`${currentFact.text}. Tap for another fact.`}
+            aria-label={factAriaLabel(currentFact.text)}
             className={`
               relative cursor-pointer select-none transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary/50
               ${
@@ -156,17 +157,10 @@ export function EnergyFactBubble({
                     transition={{ duration: 0.2, ease: 'easeInOut' }}
                     className={`w-full ${variant === 'plain' ? 'text-center' : 'text-left'}`}
                   >
-                    {variant === 'plain' && (
-                      <span className="text-primary/60 text-lg leading-none select-none align-top mr-1">
-                        "
-                      </span>
-                    )}
+                    {/* Plain variant: italic line, no decorative marks. The old marks were
+                        straight ASCII quotes, the closing one rotated 180deg, which read
+                        as a stray " and a low-9 quote. */}
                     {currentFact.text}
-                    {variant === 'plain' && (
-                      <span className="text-primary/60 text-lg leading-none select-none align-top ml-1 rotate-180 inline-block transform translate-y-0.5">
-                        "
-                      </span>
-                    )}
                   </motion.p>
                 </AnimatePresence>
                 {variant === 'bubble' && (

@@ -9,8 +9,9 @@ import { useWeatherData, WeatherData } from '@/hooks/useWeatherData';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useSceneDirector } from '@/hooks/useSceneDirector';
 import { useCleanlinessBand } from '@/hooks/useCleanlinessBand';
-import { useSceneGrowth } from '@/hooks/useSceneGrowth';
+import type { SceneGrowthStage } from '@/hooks/useSceneGrowth';
 import { SceneHaze } from './scene/art/SceneHaze';
+import { nesoBand } from '@/lib/nesoBand';
 import { getHazeBand, getSkyBlend, HAZE_SKY_BLEND_COLOR } from '@/lib/sceneHaze';
 import { StateTransitionFX } from './scene/StateTransitionFX';
 import { SceneTemporalLife } from './scene/SceneTemporalLife';
@@ -41,6 +42,8 @@ interface IntensitySceneProps {
   intensity: number;
   index: string;
   generationMix?: GenerationMix[];
+  /** BH-143: garden stage from useSceneGrowth on the page; sparse when omitted. */
+  growthStage?: SceneGrowthStage;
   isVintage?: boolean;
   className?: string;
   sceneTypeOverride?: SceneType;
@@ -76,6 +79,7 @@ export function IntensityScene({
   intensity: propIntensity,
   index: propIndex,
   generationMix = [],
+  growthStage = 0,
   isVintage = false,
   className,
   sceneTypeOverride,
@@ -161,17 +165,7 @@ export function IntensityScene({
   const intensity = typeof rawIntensity === 'number' && !isNaN(rawIntensity) ? rawIntensity : 150;
 
   const rawIndex =
-    isDirectorMode && overrides.intensity !== undefined
-      ? overrides.intensity < 50
-        ? 'very low'
-        : overrides.intensity < 150
-          ? 'low'
-          : overrides.intensity < 250
-            ? 'moderate'
-            : overrides.intensity < 350
-              ? 'high'
-              : 'very high'
-      : propIndex;
+    isDirectorMode && overrides.intensity !== undefined ? nesoBand(overrides.intensity) : propIndex;
   const index = rawIndex || 'moderate';
   // PR-2b: haze and smoke follow the NESO band only, and need a real reading
   // (or a Director override). No data means no haze and no smoke.
@@ -179,8 +173,13 @@ export function IntensityScene({
   const hazeBand = hasBandReading ? getHazeBand(rawIndex, intensity) : 'none';
 
   // Cleanliness band + transition flourish trigger
-  const { band: cleanlinessBand, transition: bandTransition } = useCleanlinessBand(intensity);
-  const sceneGrowth = useSceneGrowth(intensity, generationMix);
+  const { band: cleanlinessBand, transition: bandTransition } = useCleanlinessBand(
+    intensity,
+    undefined,
+    rawIndex,
+  );
+  // BH-143: the page owns garden growth (low-carbon days in the last 14).
+  const sceneGrowth = { stage: growthStage };
 
   const sunPosition = realSunPosition;
 
@@ -307,6 +306,7 @@ export function IntensityScene({
   };
 
   const biomassPercentage = getGenerationPercentage('biomass');
+  const solarShare = generationMix?.length ? getGenerationPercentage('solar') : undefined;
 
   const sceneConfig = useMemo(
     () =>
@@ -320,6 +320,7 @@ export function IntensityScene({
         sceneType,
         weatherKnown,
         hazeBand,
+        solarShare,
       }),
     [
       intensity,
@@ -331,6 +332,7 @@ export function IntensityScene({
       sceneType,
       weatherKnown,
       hazeBand,
+      solarShare,
     ],
   );
   const skyBlend = synthwaveMode || isNight ? 0 : getSkyBlend(hazeBand, timeOfDay);

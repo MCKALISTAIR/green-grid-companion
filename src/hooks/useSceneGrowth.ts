@@ -1,61 +1,22 @@
-import { useEffect, useMemo, useState } from 'react';
-import type { GenerationMix } from '@/lib/carbonApi';
-import { useCoalFreeStreak } from '@/hooks/useCoalFreeStreak';
-
-const STORAGE_KEY = 'scene-cleanliness-streak-v1';
-/** Intensity at or below this counts as a "clean" sample for garden growth. */
-const CLEAN_INTENSITY_MAX = 150;
-/** Cap accumulated clean hours so a long clean week doesn't explode stage math. */
-const MAX_CLEAN_HOURS = 24 * 45;
+import { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { getNationalHistoryAndForecast, getRegionalHistoryAndForecast } from '@/lib/carbonApi';
+import { countLowCarbonDays, gardenWindowRange } from '@/lib/gardenGrowth';
+import { londonDateKey } from '@/lib/londonTime';
+import { nesoBand } from '@/lib/nesoBand';
 
 export type SceneGrowthStage = 0 | 1 | 2 | 3 | 4;
 
-interface CleanStreakStore {
-  cleanHours: number;
-  lastSampleAt: string | null;
-  lastWasClean: boolean;
-}
-
 export interface SceneGrowth {
-  /** 0 sparse → 4 lush; driven by coal-free days + accumulated clean hours. */
+  /** 0 sparse → 4 lush; driven by low-carbon days in the last 14 (BH-143). */
   stage: SceneGrowthStage;
-  /** Effective garden age in whole days (for copy / HUD). */
+  /** Days in the last 14 whose daily average was low or very low (for copy). */
   gardenDays: number;
-  coalFreeDays: number;
-  cleanHours: number;
+  /** True while the current reading is itself low or very low. */
   isGrowing: boolean;
 }
 
-function readStore(): CleanStreakStore {
-  if (typeof window === 'undefined') {
-    return { cleanHours: 0, lastSampleAt: null, lastWasClean: false };
-  }
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { cleanHours: 0, lastSampleAt: null, lastWasClean: false };
-    const parsed = JSON.parse(raw) as CleanStreakStore;
-    return {
-      cleanHours: typeof parsed.cleanHours === 'number' ? parsed.cleanHours : 0,
-      lastSampleAt: parsed.lastSampleAt ?? null,
-      lastWasClean: Boolean(parsed.lastWasClean),
-    };
-  } catch {
-    return { cleanHours: 0, lastSampleAt: null, lastWasClean: false };
-  }
-}
-
-function writeStore(store: CleanStreakStore) {
-  if (typeof window === 'undefined') return;
-  try {
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
-    }
-  } catch {
-    // Ignore storage quota or disabled storage errors
-  }
-}
-
-/** Map combined garden days into a discrete Carrot-style growth stage. */
+/** Map low-carbon days (0-14) into a discrete Carrot-style growth stage. */
 export function gardenDaysToStage(gardenDays: number): SceneGrowthStage {
   if (gardenDays >= 14) return 4;
   if (gardenDays >= 7) return 3;
@@ -65,59 +26,45 @@ export function gardenDaysToStage(gardenDays: number): SceneGrowthStage {
 }
 
 /**
- * Temporal scene life: garden stage grows with coal-free streak + clean intensity hours.
- * Dirty periods pause growth and gently decay clean hours (no hard reset).
+ * BH-143: the garden grows from the number of days in the last 14 where the
+ * selected area's daily average intensity was in NESO's low or very low band.
+ * It thins in dirty weeks and never counts coal or gas streaks.
  *
- * Hours are the growth engine only — UI surfaces garden day / stage, never raw hours
- * (Carrot pattern: calendar story, half-hour grid truth under the hood).
+ * `regionId`: a NESO region id, `null` for Great Britain, `undefined` while the
+ * area is still unknown (nothing is fetched and the garden stays sparse).
  */
-export function useSceneGrowth(intensity: number, generationMix?: GenerationMix[]): SceneGrowth {
-  const coalFree = useCoalFreeStreak(generationMix);
-  const [cleanHours, setCleanHours] = useState(() => readStore().cleanHours);
-
-  useEffect(() => {
-    if (!Number.isFinite(intensity)) return;
-
-    const store = readStore();
-    const now = Date.now();
-    const lastAt = store.lastSampleAt ? new Date(store.lastSampleAt).getTime() : now;
-
-    // Avoid double-counting when home + scene both mount the hook
-    if (store.lastSampleAt && now - lastAt < 60_000) {
-      setCleanHours(store.cleanHours);
-      return;
-    }
-
-    const elapsedHours = Math.min(6, Math.max(0, (now - lastAt) / 3_600_000));
-    const isClean = intensity <= CLEAN_INTENSITY_MAX;
-
-    let nextHours = store.cleanHours;
-    if (isClean) {
-      nextHours = Math.min(MAX_CLEAN_HOURS, store.cleanHours + Math.max(elapsedHours, 0.25));
-    } else if (store.cleanHours > 0) {
-      // Soft decay while dirty — garden wilts slowly, like Carrot's monthly reset vibe
-      nextHours = Math.max(0, store.cleanHours - Math.max(elapsedHours * 0.35, 0.05));
-    }
-
-    const next: CleanStreakStore = {
-      cleanHours: nextHours,
-      lastSampleAt: new Date(now).toISOString(),
-      lastWasClean: isClean,
-    };
-    writeStore(next);
-    setCleanHours(nextHours);
-  }, [intensity]);
+export function useSceneGrowth(
+  intensity: number,
+  regionId: number | null | undefined,
+): SceneGrowth {
+  const dayKey = londonDateKey(new Date());
+  const { data: lowDays = 0 } = useQuery<number>({
+    queryKey: ['garden-low-days', regionId ?? 'gb', dayKey],
+    enabled: regionId !== undefined,
+    staleTime: 1000 * 60 * 60,
+    gcTime: 1000 * 60 * 60 * 24,
+    retry: 1,
+    queryFn: async ({ signal }) => {
+      const now = new Date();
+      const { from, to } = gardenWindowRange(now);
+      const rows = regionId
+        ? await getRegionalHistoryAndForecast(
+            regionId,
+            from.toISOString(),
+            to.toISOString(),
+            signal,
+          )
+        : await getNationalHistoryAndForecast(from.toISOString(), to.toISOString(), signal);
+      return countLowCarbonDays(rows, now);
+    },
+  });
 
   return useMemo(() => {
-    const cleanDays = cleanHours / 24;
-    const gardenDays = Math.floor(Math.max(coalFree.days + cleanDays * 0.5, cleanDays));
-    const stage = gardenDaysToStage(gardenDays);
+    const band = Number.isFinite(intensity) ? nesoBand(intensity) : 'moderate';
     return {
-      stage,
-      gardenDays,
-      coalFreeDays: coalFree.days,
-      cleanHours,
-      isGrowing: coalFree.isActive || intensity <= CLEAN_INTENSITY_MAX,
+      stage: gardenDaysToStage(lowDays),
+      gardenDays: lowDays,
+      isGrowing: band === 'very low' || band === 'low',
     };
-  }, [cleanHours, coalFree.days, coalFree.isActive, intensity]);
+  }, [lowDays, intensity]);
 }

@@ -5,6 +5,8 @@ import {
   HAZE_MAX_OPACITY,
   showsSmoke,
   SMOKE_BY_BAND,
+  fitPlumeUnits,
+  svgUnitsAbove,
   SMOKE_PLUME_UNITS,
   showsSmokeColumn,
   STAR_HAZE_FACTOR,
@@ -29,12 +31,14 @@ describe('getHazeBand (PR-2b truth rule)', () => {
     expect(getHazeBand('very high', 0)).toBe('very high');
   });
 
-  it('falls back to the HUD cut-offs only when the index is missing', () => {
-    expect(getHazeBand(undefined, 49)).toBe('none');
-    expect(getHazeBand(undefined, 149)).toBe('none');
-    expect(getHazeBand(undefined, 150)).toBe('moderate');
-    expect(getHazeBand('', 250)).toBe('high');
-    expect(getHazeBand('garbage', 350)).toBe('very high');
+  it('falls back to the NESO 2026 bands only when the index is missing (BH-139)', () => {
+    expect(getHazeBand(undefined, 89)).toBe('none');
+    expect(getHazeBand(undefined, 90)).toBe('moderate');
+    expect(getHazeBand(undefined, 169)).toBe('moderate');
+    expect(getHazeBand('', 170)).toBe('high');
+    expect(getHazeBand('', 215)).toBe('high');
+    expect(getHazeBand('', 230)).toBe('high');
+    expect(getHazeBand('garbage', 231)).toBe('very high');
   });
 });
 
@@ -118,7 +122,32 @@ describe('sky blend by day (round 3)', () => {
     expect(getSkyBlend('very high', 'midday')).toBe(0.7);
     expect(getSkyBlend('high', 'morning')).toBe(0.15);
     for (const b of ['none', 'moderate'] as const) expect(getSkyBlend(b, 'midday')).toBe(0);
-    for (const t of ['dawn', 'sunset', 'dusk', 'night'])
-      expect(getSkyBlend('very high', t)).toBe(0);
+    expect(getSkyBlend('very high', 'sunset')).toBe(0.35);
+    expect(getSkyBlend('high', 'sunset')).toBe(0.075);
+    for (const t of ['dawn', 'dusk', 'night']) expect(getSkyBlend('very high', t)).toBe(0);
+  });
+});
+
+describe('moderate smoke (scene audit item 6)', () => {
+  it('is #c9c4ba at 0.45 so it reads on the pale sky', () => {
+    expect(SMOKE_BY_BAND.moderate).toMatchObject({ day: '#c9c4ba', opacity: 0.45 });
+  });
+});
+
+describe('plume fits the sky (scene audit item 9)', () => {
+  const vb = { x: 0, y: 30, w: 400, h: 120 };
+  it('keeps the band height when there is room (390x844 scene)', () => {
+    const sky = svgUnitsAbove(36, vb, 390, 400);
+    expect(fitPlumeUnits(72, sky)).toBe(72);
+  });
+  it('caps the plume to 70% of the sky in a short landscape scene (720x540)', () => {
+    const sky = svgUnitsAbove(36, vb, 720, 290)!;
+    expect(sky).toBeGreaterThan(0);
+    expect(fitPlumeUnits(72, sky)).toBeCloseTo(sky * 0.7, 5);
+    expect(fitPlumeUnits(72, sky)).toBeLessThan(72);
+  });
+  it('falls back to the band height with no measurement', () => {
+    expect(fitPlumeUnits(64, null)).toBe(64);
+    expect(svgUnitsAbove(36, vb, 0, 0)).toBeNull();
   });
 });

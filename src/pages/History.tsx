@@ -478,14 +478,14 @@ export default function HistoryPage() {
                   whileHover={{ y: -3, scale: 1.01 }}
                   transition={{ type: 'spring' as const, stiffness: 450, damping: 22 }}
                 >
-                  <Card className="sheet-surface p-4 border-primary/20 bg-primary/5 h-full">
+                  <Card className="sheet-surface p-4 border-primary/20 bg-primary/5 h-full min-h-[8.5rem]">
                     <div className="text-muted-foreground text-xs uppercase font-bold tracking-wider">
                       Average
                     </div>
-                    <div className="text-2xl font-bold mt-1">
-                      {avgIntensity}{' '}
-                      <span className="text-sm font-normal text-muted-foreground">gCO2/kWh</span>
+                    <div className="text-2xl font-bold mt-1 leading-tight whitespace-nowrap">
+                      {avgIntensity}
                     </div>
+                    <div className="text-xs text-muted-foreground whitespace-nowrap">gCO₂/kWh</div>
                     <div className="text-xs text-muted-foreground mt-1">
                       {timeRange === '7d' ? '7 days' : '24h'}
                     </div>
@@ -497,7 +497,7 @@ export default function HistoryPage() {
                     whileHover={{ y: -3, scale: 1.01 }}
                     transition={{ type: 'spring' as const, stiffness: 450, damping: 22 }}
                   >
-                    <Card className="sheet-surface p-4 border-muted h-full">
+                    <Card className="sheet-surface p-4 border-muted h-full min-h-[8.5rem]">
                       <div className="text-muted-foreground text-xs uppercase font-bold tracking-wider">
                         Footprint
                       </div>
@@ -523,7 +523,7 @@ export default function HistoryPage() {
                     whileHover={{ y: -3, scale: 1.01 }}
                     transition={{ type: 'spring' as const, stiffness: 450, damping: 22 }}
                   >
-                    <Card className="sheet-surface p-4 border-muted h-full">
+                    <Card className="sheet-surface p-4 border-muted h-full min-h-[8.5rem]">
                       <div className="text-muted-foreground text-xs uppercase font-bold tracking-wider">
                         Trend
                       </div>
@@ -538,7 +538,7 @@ export default function HistoryPage() {
                         <span
                           data-testid="history-trend-value"
                           data-trend={trend}
-                          className={`text-sm font-bold ${
+                          className={`text-2xl font-bold leading-tight whitespace-nowrap ${
                             trend === 'improving'
                               ? 'text-green-600'
                               : trend === 'worsening'
@@ -546,8 +546,11 @@ export default function HistoryPage() {
                                 : 'text-foreground'
                           }`}
                         >
-                          {Math.abs(endVal - startVal)} gCO2/kWh
+                          {Math.abs(endVal - startVal)}
                         </span>
+                      </div>
+                      <div className="text-xs text-muted-foreground whitespace-nowrap">
+                        gCO₂/kWh
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">
                         {historyTrendCopy(trend, timeRange)}

@@ -59,3 +59,11 @@ describe('no live coal-free streak fact (BH-137)', () => {
     localStorage.removeItem('coal-free-streak');
   });
 });
+
+describe('grid facts name GB, not the UK (scene audit item 11)', () => {
+  it.each(['solar_domestic_snark_2', 'interconnector_2'])('%s says GB', (id) => {
+    const f = ENERGY_FACTS.find((x) => x.id === id);
+    expect(f?.text).toMatch(/\bGB\b/);
+    expect(f?.text).not.toMatch(/\bUK\b/);
+  });
+});

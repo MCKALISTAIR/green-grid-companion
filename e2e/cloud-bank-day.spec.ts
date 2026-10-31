@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import { test, expect, type Page } from '@playwright/test';
 import { installMocks, seedStorage } from '../scripts/layout/mock-api.mjs';
+import { pinClocks, restoreNodeClock } from './support/pinClocks';
 
 /**
  * Design review of #185 (23 Oct 2026): by day (dawn to sunset) the overcast bank
@@ -26,14 +27,21 @@ import { installMocks, seedStorage } from '../scripts/layout/mock-api.mjs';
  * its scallop and anything it covers aren't counted.
  * The composed scene is saved as a shot for the eye.
  *
- * The page clock is installed before anything else (BH-113), and each test
- * asserts the scene's data-time-of-day. Set CLOUD_BANK_OUT to log a JSONL table
- * and save shots.
+ * Both clocks are pinned with pinClocks (page first, BH-113) and Node stays
+ * pinned until afterEach, so the mocks (the reading's from/to, series(), the
+ * weather's sunrise and sunset) follow the pinned instant, not the wall clock
+ * (BH-165). Each test asserts the scene's data-time-of-day. Set CLOUD_BANK_OUT
+ * to log a JSONL table and save shots. CLOUD_BANK_DATE (YYYY-MM-DD) moves every
+ * cell to another day at the same times, to check results don't depend on it.
  */
 test.use({ serviceWorkers: 'block' });
 
 const OUT = process.env.CLOUD_BANK_OUT;
 const BODY_MAX = 1.15;
+const DAY = process.env.CLOUD_BANK_DATE;
+const onDay = (iso: string) => (DAY ? `${DAY}${iso.slice(10)}` : iso);
+
+test.afterEach(() => restoreNodeClock());
 
 const TIMES = [
   ['dawn', '2026-10-21T06:30:00Z'],
@@ -135,7 +143,7 @@ for (const [vw, vh] of VIEWPORTS) {
           context,
         }) => {
           test.setTimeout(90_000);
-          await page.clock.install({ time: new Date(iso) });
+          await pinClocks(page, onDay(iso));
           await page.setViewportSize({ width: vw, height: vh });
           await installMocks(context, { mode, weather: { ...weather, is_day: 1 } });
           await context.addInitScript(seedStorage());
@@ -146,6 +154,8 @@ for (const [vw, vh] of VIEWPORTS) {
             page.getByTestId(mode === 'ok' ? 'hero-band-label' : 'hero-warning-icon'),
           ).toBeVisible({ timeout: 60_000 });
           const bank = page.locator('[data-art="cloud-bank"]');
+          // G-11: wait out the 400ms cross-fade from the unknown-weather bank.
+          await expect(bank).toHaveCount(1);
           await expect(bank).toHaveAttribute('data-tone', 'day');
           const target = page.getByTestId(mode === 'ok' ? 'hero-band-label' : 'hero-warning-icon');
           // Freeze every animation (framer-motion runs on the page clock), once the
@@ -170,6 +180,11 @@ for (const [vw, vh] of VIEWPORTS) {
           await page.addStyleTag({
             content: [
               '[data-scene-type] * { visibility: hidden !important; }',
+              // BH-165: the sky is the scene-filtered layer's own background (PR-2b round 4,
+              // when there is no sky blend). Keep that layer visible (its children stay
+              // hidden by the rule above), or the 'sky' strip reads the unfiltered page
+              // background behind the scene and the filtered bank looks lighter than it.
+              '[data-scene-type] [data-art="scene-filtered"] { visibility: visible !important; }',
               '[data-art="cloud-bank"], [data-art="cloud-bank"] *, [data-art="haze"], [data-art="haze"] * { visibility: visible !important; }',
               '[data-bank-rim], [data-bank-rim] * { visibility: hidden !important; }',
               '[data-art="cloud-bank"].bank-off, [data-art="cloud-bank"].bank-off * { visibility: hidden !important; }',

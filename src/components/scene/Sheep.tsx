@@ -2,11 +2,47 @@ import { useState, useId, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { getHillRidgeY } from '@/lib/sceneUtils';
+
+/** Sheep art box, in its own units: 40 wide, feet at y 30, centred on x 20. */
+const ART = { w: 40, feetY: 30, feetX: 20 } as const;
+/** #239 Design review: feet sink this far into the ridge so they sit on land. */
+export const SHEEP_SINK = 0.5;
+/** Default width in mid-layer SVG units (Design: about 12 to 14). */
+export const SHEEP_WIDTH = 13;
+/** No sheep west of this x: the hero pill and text sit above that side at 720x540. */
+export const SHEEP_MIN_X = 150;
+
+/**
+ * Hero safe zone in scene units (viewBox 0 30 400 120). At 720x540 the scene is
+ * drawn about 1.8 px per unit and the hero text and pill cover roughly x 118 to
+ * 284 down to the mid crest, so nothing decorative goes there. Turbines use it too.
+ */
+export const HERO_SAFE_X = { min: 112, max: 288 } as const;
+
+/**
+ * Feet positions on the mid ridge (LandscapeMid, viewBox 0 30 400 120), east of
+ * the hero safe zone and on the falling east flank, never above a crest, and
+ * west of the night EV charger (x 326 to 352).
+ * Design suggested 192, 240 and 288; at 720x540 the first two sat on the hero
+ * headline and the info icon, so the flock moved east.
+ */
+export const SHEEP_SPOTS = [292, 305, 318].map((x) => ({
+  x,
+  y: getHillRidgeY('mid', x) + SHEEP_SINK,
+}));
+
+/** The <g> transform that seats a sheep's feet at (x, y), `width` units wide. */
+export function sheepTransform(x: number, y: number, width = SHEEP_WIDTH) {
+  const s = width / ART.w;
+  return `translate(${(x - ART.feetX * s).toFixed(2)} ${(y - ART.feetY * s).toFixed(2)}) scale(${s.toFixed(4)})`;
+}
 
 interface SheepProps {
+  /** Feet x and y in the mid-layer SVG units. */
   x: number;
   y: number;
-  scale?: number;
+  width?: number;
   isNight: boolean;
   delay?: number;
 }
@@ -20,7 +56,7 @@ const SheepPhrases = [
   'I only eat zero-carbon clover!',
 ];
 
-export function Sheep({ x, y, scale = 1, isNight, delay = 0 }: SheepProps) {
+export function Sheep({ x, y, width = SHEEP_WIDTH, isNight, delay = 0 }: SheepProps) {
   const [isJumping, setIsJumping] = useState(false);
   const [bubbleText, setBubbleText] = useState<string | null>(null);
   const [clickCount, setClickCount] = useState(0);
@@ -50,51 +86,35 @@ export function Sheep({ x, y, scale = 1, isNight, delay = 0 }: SheepProps) {
     return () => clearTimeout(timer);
   }, [bubbleText, clickCount]);
 
+  const s = width / ART.w;
+  const bubbleW = bubbleText ? bubbleText.length * 3.6 + 8 : 0;
+  // Keep the bubble inside the 400-unit scene.
+  const bubbleX = Math.max(2, Math.min(398 - bubbleW, x - bubbleW / 2));
+
   return (
-    <motion.div
-      className="absolute z-10 cursor-pointer pointer-events-auto select-none"
-      style={{ left: `${x}%`, bottom: `${y}%`, transform: `scale(${scale})` }}
+    <motion.g
+      data-art="sheep"
+      className="cursor-pointer select-none"
+      style={{ pointerEvents: 'auto' }}
       onClick={handleClick}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ delay, duration: 1 }}
     >
-      {/* Speech Bubble */}
-      <AnimatePresence>
-        {bubbleText && (
-          <motion.div
-            initial={!shouldReduceMotion ? { opacity: 0, scale: 0.8, y: 5 } : { opacity: 0 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={!shouldReduceMotion ? { opacity: 0, scale: 0.8 } : { opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 350, damping: 15 }}
-            className="absolute -top-12 left-1/2 -translate-x-1/2 bg-slate-900/90 dark:bg-slate-100/90 text-white dark:text-slate-900 border border-slate-700/30 text-[9px] font-bold py-1 px-2 rounded shadow-lg pointer-events-none whitespace-nowrap z-50"
-          >
-            {bubbleText}
-            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-slate-900/90 dark:bg-slate-100/90 border-r border-b border-slate-700/30 rotate-45" />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <motion.div
-        animate={
-          isJumping && !shouldReduceMotion
-            ? {
-                y: [-10, -35, -5, 0],
-                rotate: [0, 180, 360],
-              }
-            : isJumping
-              ? {
-                  y: [-10, -25, 0],
-                }
-              : {
-                  y: 0,
-                  rotate: 0,
-                }
-        }
-        whileHover={{ scale: 1.12 }}
-        transition={{ duration: 0.8, ease: 'easeInOut' }}
-      >
-        <svg width="40" height="30" viewBox="0 0 40 30" overflow="visible" aria-hidden="true">
+      <g transform={sheepTransform(x, y, width)}>
+        {/* Bigger invisible tap target than the 13-unit sheep. */}
+        <rect x={-10} y={-14} width={60} height={50} fill="transparent" />
+        <motion.g
+          style={{ transformBox: 'fill-box', transformOrigin: 'center' }}
+          animate={
+            isJumping && !shouldReduceMotion
+              ? { y: [-10, -35, -5, 0], rotate: [0, 180, 360] }
+              : isJumping
+                ? { y: [-10, -25, 0] }
+                : { y: 0, rotate: 0 }
+          }
+          transition={{ duration: 0.8, ease: 'easeInOut' }}
+        >
           {/* Internal Definitions */}
           <defs>
             <radialGradient id={`wool-${id}`} cx="50%" cy="50%" r="50%">
@@ -185,8 +205,41 @@ export function Sheep({ x, y, scale = 1, isNight, delay = 0 }: SheepProps) {
               </motion.text>
             )}
           </AnimatePresence>
-        </svg>
-      </motion.div>
-    </motion.div>
+        </motion.g>
+      </g>
+
+      {/* Speech bubble, in scene units above the sheep. */}
+      <AnimatePresence>
+        {bubbleText && (
+          <motion.g
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: shouldReduceMotion ? 0.15 : 0.25 }}
+            style={{ pointerEvents: 'none' }}
+          >
+            <rect
+              x={bubbleX}
+              y={y - 30 * s - 16}
+              width={bubbleW}
+              height={10}
+              rx={2}
+              fill="rgba(15,23,42,0.9)"
+            />
+            <text
+              x={bubbleX + bubbleW / 2}
+              y={y - 30 * s - 9.2}
+              fontSize={6}
+              fontWeight="bold"
+              fill="white"
+              textAnchor="middle"
+              fontFamily="sans-serif"
+            >
+              {bubbleText}
+            </text>
+          </motion.g>
+        )}
+      </AnimatePresence>
+    </motion.g>
   );
 }

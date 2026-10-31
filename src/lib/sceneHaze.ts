@@ -73,13 +73,20 @@ export const HAZE_SKY_BLEND: Record<HazeBand, number> = {
   'very high': 0.7,
 };
 /**
- * Sky blend for a band and time of day. Blue-sky daytime only (morning, midday,
- * afternoon): sunset's warm sky is not cyan and the blend there drops the dark hero
- * text to 4.44:1. 0 after dark (the night murk is approved as is).
+ * Sky blend for a band and time of day. Full strength in blue-sky daytime
+ * (morning, midday, afternoon). Sunset gets half strength (scene audit item 7):
+ * full strength drops the dark hero text to 4.44:1 on the warm sky, half keeps
+ * it above 4.5:1 and the haze still reads. 0 after dark (the night murk is
+ * approved as is).
  */
-const SKY_BLEND_TIMES: ReadonlySet<string> = new Set(['morning', 'midday', 'afternoon']);
+const SKY_BLEND_TIMES: Readonly<Record<string, number>> = {
+  morning: 1,
+  midday: 1,
+  afternoon: 1,
+  sunset: 0.5,
+};
 export function getSkyBlend(band: HazeBand, timeOfDay: TimeOfDay | string): number {
-  return SKY_BLEND_TIMES.has(timeOfDay) ? HAZE_SKY_BLEND[band] : 0;
+  return HAZE_SKY_BLEND[band] * (SKY_BLEND_TIMES[timeOfDay] ?? 0);
 }
 
 /**
@@ -172,7 +179,8 @@ export const SMOKE_BY_BAND: Record<
   ActiveHazeBand,
   { puffs: number; day: string; opacity: number }
 > = {
-  moderate: { puffs: 3, day: '#e8e4dc', opacity: 0.35 },
+  // Scene audit item 6: the pale wisp vanished on the moderate sky.
+  moderate: { puffs: 3, day: '#c9c4ba', opacity: 0.45 },
   // Round 3: darker smoke so it reads against the hazy sky.
   high: { puffs: 5, day: '#9a968e', opacity: 0.5 },
   'very high': { puffs: 6, day: '#7d7a74', opacity: 0.6 },
@@ -187,6 +195,35 @@ export const SMOKE_PLUME_UNITS: Record<ActiveHazeBand, number> = {
   high: 64,
   'very high': 72,
 };
+/**
+ * Scene audit item 9: in short landscape scenes (Surface Duo closed sideways,
+ * 720x540) the full plume ran off the top of the scene. The plume is capped to
+ * the sky actually visible above the stack: `skyUnits` is the SVG distance from
+ * the stack top to the top of the visible scene. The plume keeps 70% of it, so
+ * there is always sky above the smoke, and never grows past the band height.
+ * With no measurement (`skyUnits` null) the band height is used as is.
+ */
+export const SMOKE_SKY_FRACTION = 0.7;
+export function fitPlumeUnits(bandUnits: number, skyUnits: number | null): number {
+  if (skyUnits == null || !Number.isFinite(skyUnits)) return bandUnits;
+  return Math.max(0, Math.min(bandUnits, skyUnits * SMOKE_SKY_FRACTION));
+}
+/**
+ * Visible SVG units above `y` for an `xMidYMax meet` viewBox drawn into a
+ * `width` x `height` box: everything from the box top down to `y`.
+ */
+export function svgUnitsAbove(
+  y: number,
+  viewBox: { x: number; y: number; w: number; h: number },
+  width: number,
+  height: number,
+): number | null {
+  if (width <= 0 || height <= 0) return null;
+  const scale = Math.min(width / viewBox.w, height / viewBox.h);
+  const visibleTop = viewBox.y + viewBox.h - height / scale;
+  return y - visibleTop;
+}
+
 /** High and very high draw a static tapered column under the puffs. */
 export function showsSmokeColumn(band: HazeBand): boolean {
   return band === 'high' || band === 'very high';

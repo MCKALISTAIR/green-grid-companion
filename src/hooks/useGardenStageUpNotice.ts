@@ -32,6 +32,12 @@ function writeLastSeen(stage: SceneGrowthStage) {
   }
 }
 
+/**
+ * How long the notice stays once it is actually on screen (Design, 30 Oct 2026).
+ * The timer starts when the pill comes into view, not when it mounts.
+ */
+export const GARDEN_NOTICE_VISIBLE_MS = 8000;
+
 export interface GardenStageUpNotice {
   /** True only when stage just crossed above the last acknowledged stage. */
   visible: boolean;
@@ -43,16 +49,19 @@ export interface GardenStageUpNotice {
 
 /**
  * Quiet streak UX: garden copy appears only on stage-up, never as persistent chrome.
- * Hours stay under the hood in useSceneGrowth.
+ * Hours stay under the hood in useSceneGrowth. Dismissal (tap, or
+ * GARDEN_NOTICE_VISIBLE_MS after it comes into view) is driven by GardenStageUpPill.
  */
 export function useGardenStageUpNotice(
   stage: SceneGrowthStage,
   gardenDays: number,
+  /** False in the city scene: there is no garden, so nothing shows or is acknowledged. */
+  enabled = true,
 ): GardenStageUpNotice {
   const [pendingStage, setPendingStage] = useState<SceneGrowthStage | null>(null);
 
   useEffect(() => {
-    if (stage <= 0) {
+    if (!enabled || stage <= 0) {
       setPendingStage(null);
       return;
     }
@@ -62,7 +71,7 @@ export function useGardenStageUpNotice(
     } else {
       setPendingStage(null);
     }
-  }, [stage]);
+  }, [stage, enabled]);
 
   const dismiss = () => {
     setPendingStage((current) => {
@@ -71,23 +80,12 @@ export function useGardenStageUpNotice(
     });
   };
 
-  // Auto-dismiss after a beat so the sheet stays the brain
-  useEffect(() => {
-    if (pendingStage == null) return;
-    const stageToAck = pendingStage;
-    const t = window.setTimeout(() => {
-      writeLastSeen(stageToAck);
-      setPendingStage(null);
-    }, 6500);
-    return () => window.clearTimeout(t);
-  }, [pendingStage]);
-
   if (pendingStage == null || pendingStage === 0) {
     return { visible: false, message: null, dismiss };
   }
 
   const base = GARDEN_STAGE_UP_COPY[pendingStage];
-  const message = gardenDays > 0 ? `${base} · day ${gardenDays}` : base;
+  const message = gardenDays > 0 ? `${base} · ${gardenDays} of 14 days low carbon` : base;
 
   return { visible: true, message, dismiss };
 }

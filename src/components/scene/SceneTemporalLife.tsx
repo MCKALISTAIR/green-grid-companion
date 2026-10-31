@@ -1,6 +1,8 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import type { SceneGrowthStage } from '@/hooks/useSceneGrowth';
 import { Flowers } from './Flowers';
+import { gardenBarePatches, gardenFlowerPositions, GARDEN_FLOWER_SCALE } from '@/lib/gardenFlowers';
+import { SCENE_SILHOUETTE_ASPECT } from '@/lib/sceneScaleBible';
 import { Butterfly } from './Butterfly';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 
@@ -26,28 +28,7 @@ export function SceneTemporalLife({
   const shouldReduceMotion = useReducedMotion();
   if (stage < 1 || isCity) return null;
 
-  const flowerPositions =
-    stage >= 4
-      ? [
-          { x: 40, y: 122 },
-          { x: 90, y: 118 },
-          { x: 150, y: 120 },
-          { x: 210, y: 117 },
-          { x: 270, y: 121 },
-          { x: 330, y: 119 },
-          { x: 370, y: 123 },
-        ]
-      : stage >= 2
-        ? [
-            { x: 60, y: 121 },
-            { x: 140, y: 118 },
-            { x: 230, y: 120 },
-            { x: 320, y: 119 },
-          ]
-        : [
-            { x: 100, y: 120 },
-            { x: 260, y: 118 },
-          ];
+  const flowerPositions = gardenFlowerPositions(stage);
 
   return (
     <AnimatePresence>
@@ -71,14 +52,30 @@ export function SceneTemporalLife({
         )}
 
         {isDaytime && (
-          <div className="absolute bottom-0 left-0 right-0 h-[75%]">
+          <div className="absolute bottom-0 left-0 right-0 h-[100%]">
+            {/* #221: same box, viewBox and meet fit as the front hill, so the stems
+                stand on its ridge at every aspect (no stretching). */}
             <svg
               viewBox="0 30 400 120"
               className="w-full h-full"
-              preserveAspectRatio="none"
+              preserveAspectRatio={SCENE_SILHOUETTE_ASPECT}
               aria-hidden="true"
+              data-garden-flowers
             >
-              <Flowers positions={flowerPositions} />
+              {/* Thin weeks: soft earthy ovals, about 14x4 px at 390, on the front ridge. */}
+              {gardenBarePatches(stage).map((p, i) => (
+                <ellipse
+                  key={`bare-${i}`}
+                  data-garden-bare
+                  cx={p.x}
+                  cy={p.y}
+                  rx={7.2}
+                  ry={2}
+                  fill="#8a7a52"
+                  opacity={0.55}
+                />
+              ))}
+              <Flowers positions={flowerPositions} scale={GARDEN_FLOWER_SCALE} />
             </svg>
           </div>
         )}

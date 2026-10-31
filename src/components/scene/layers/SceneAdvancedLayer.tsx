@@ -8,6 +8,10 @@ import { MeteorShower } from '../MeteorShower';
 import { BiomassSmoke } from '../BiomassSmoke';
 import { SCENE_SILHOUETTE_ASPECT } from '@/lib/sceneScaleBible';
 
+/** Biomass stacks sit either side of the hero text column (scene x 112 to 288). */
+/** Biomass stacks (scene x), both outside the hero text column at every size. */
+export const BIOMASS_STACK_X = [8, 376] as const;
+
 export interface SceneAdvancedLayerProps {
   sceneConfig: SceneVisualConfig;
   isCity: boolean;
@@ -112,8 +116,8 @@ export function SceneAdvancedLayer({
               preserveAspectRatio={SCENE_SILHOUETTE_ASPECT}
               aria-hidden="true"
             >
-              <BiomassSmoke x={180} intensity={biomassPercentage / 100} />
-              {biomassPercentage > 15 && <BiomassSmoke x={220} intensity={0.6} />}
+              <BiomassSmoke x={BIOMASS_STACK_X[0]} intensity={biomassPercentage / 100} />
+              {biomassPercentage > 15 && <BiomassSmoke x={BIOMASS_STACK_X[1]} intensity={0.6} />}
             </svg>
           </div>
         )}

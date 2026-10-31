@@ -18,6 +18,8 @@ import { ErrorState } from '@/components/ErrorState';
 import { useGridDemand } from '@/hooks/useGridDemand';
 import { SceneWaveDivider } from '@/components/scene/SceneWaveDivider';
 import { EnergyFactBubble } from '@/components/scene/EnergyFactBubble';
+import { GardenStageUpPill } from '@/components/home/GardenStageUpPill';
+import { useSceneType } from '@/hooks/useSceneType';
 import { LocationMismatchPrompt } from '@/components/LocationMismatchPrompt';
 import { YearWrapped } from '@/components/YearWrapped';
 import { getRenewablesPercentage } from '@/lib/generationUtils';
@@ -112,6 +114,7 @@ const Index = () => {
     offGridArea: offGrid,
     isError,
     hasReading,
+    isActualReading,
     error,
     refetch,
     getNextUpdate,
@@ -142,7 +145,13 @@ const Index = () => {
 
   const { frequency: gridFrequency } = useGridDemand();
   const renewablesPct = getRenewablesPercentage(generationMix);
-  const sceneGrowth = useSceneGrowth(intensity, generationMix);
+  // No garden in the city scene, so no stage-up pill there (Design, 30 Oct 2026).
+  const { sceneType } = useSceneType();
+  const sceneGrowth = useSceneGrowth(
+    intensity,
+    // BH-143: GB without a postcode; wait for the region id when there is one.
+    postcode ? regionId : null,
+  );
 
   const cleanliness = useMemo(() => {
     const band = index || 'moderate';
@@ -264,6 +273,7 @@ const Index = () => {
             <h1 className="sr-only">Home</h1>
 
             <IntensityHeroOverlay
+              growthStage={sceneGrowth.stage}
               postcode={postcode}
               setPostcode={setPostcode}
               region={region}
@@ -272,6 +282,7 @@ const Index = () => {
               intensity={intensity}
               previousIntensity={previousIntensity}
               index={index}
+              isActualReading={isActualReading}
               generationMix={generationMix}
               isLoading={isLoading}
               isBackgroundFetching={isBackgroundFetching}
@@ -298,6 +309,13 @@ const Index = () => {
               >
                 <SceneWaveDivider cleanliness={cleanliness} />
               </div>
+
+              {/* Absolutely positioned over the handle row: no layout shift on show/hide. */}
+              <GardenStageUpPill
+                growthStage={sceneGrowth.stage}
+                gardenDays={sceneGrowth.gardenDays}
+                enabled={sceneType !== 'city'}
+              />
 
               <div className="flex justify-center pt-0.5 pb-1 lg:hidden" aria-hidden>
                 <div className="h-1 w-10 rounded-full bg-muted-foreground/25" />
@@ -416,8 +434,6 @@ const Index = () => {
                             lastUpdated={lastUpdated}
                             glowClass={glowClass}
                             showWeatherInInsights={prefs.showWeatherInInsights}
-                            gardenDays={sceneGrowth.gardenDays}
-                            growthStage={sceneGrowth.stage}
                             regionId={regionId ?? null}
                             regionName={region}
                           />

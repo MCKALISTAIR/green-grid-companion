@@ -1,6 +1,7 @@
 import type { CleanlinessBand } from '@/hooks/useCleanlinessBand';
 import type { TimeOfDay } from '@/hooks/useTimeOfDay';
 import type { WeatherData } from '@/hooks/useWeatherData';
+import { getHazeTokens, HAZE_TINT } from '@/lib/sceneHaze';
 import { MOOD, UNKNOWN_WEATHER_PALETTE, unknownWeatherTone } from '@/lib/artPalette';
 
 /**
@@ -104,6 +105,35 @@ export const NIGHT_BANK_SNOW_LIFT = 0.75;
 
 /** Far-layer haze by NESO band (brief §11.2 / Q5). None at very low or low. */
 const FAR_HAZE: Record<string, number> = { moderate: 0.22, high: 0.32, 'very high': 0.42 };
+/** Day silhouette: far-haze mix cap by day at every hazy band (was very high only). */
+export const DAY_SILHOUETTE_FAR_HAZE = 0.2;
+/** Day silhouette: extra darkening (L points) per band and weather group, for 1.5:1. */
+export const DAY_SILHOUETTE_DARKEN_L = {
+  moderate: { clear: 8, snow: 8, cloud: 12 },
+  high: { clear: 16, snow: 10, cloud: 14 },
+  'very high': { clear: 16, snow: 0, cloud: 0 },
+} as const;
+/**
+ * (d) The scene haze over the castle is capped to this alpha. The haze itself stays at
+ * its full band strength (0.45 far at very high) on the sky and skyline; only the
+ * castle is pre-compensated so it reads as if this much haze lay in front of it.
+ */
+export const LANDMARK_HAZE_CAP = 0.25;
+
+/**
+ * Pre-compensate a colour drawn under a haze of alpha `actual` so the composite
+ * matches the colour under a haze of alpha `cap`. Clamped to 0-255.
+ */
+export function capHazeInFront(hex: string, actual: number, cap: number, tint = HAZE_TINT): string {
+  if (actual <= cap) return hex;
+  const c = hexToRgb(hex);
+  const h = hexToRgb(tint);
+  const out = c.map((v, i) => {
+    const want = v * (1 - cap) + h[i] * cap;
+    return Math.max(0, Math.min(255, Math.round((want - h[i] * actual) / (1 - actual))));
+  });
+  return '#' + out.map((v) => v.toString(16).padStart(2, '0')).join('');
+}
 
 function hexToRgb(hex: string): [number, number, number] {
   const h = hex.replace('#', '');
@@ -334,7 +364,31 @@ export function getEdinburghCastleColours({
     }
     const k = (nesoIndex || '').toLowerCase();
     const haze = FAR_HAZE[k];
-    if (haze) mixAll(MOOD[k as keyof typeof MOOD].haze, haze);
+    // (d) Day silhouette: by day the castle is a stone silhouette, always darker
+    // than the sky behind it, at 1.5:1 or more in every weather but fog. The full
+    // far-haze mix pulled it toward the pale haze until it matched (1.17:1 at
+    // high) or read paler than the sky, so at every hazy band by day the mix is
+    // capped, the scene haze in front is capped (LANDMARK_HAZE_CAP), and the
+    // stone is darkened per band. Fog is exempt and may soften.
+    const daySilhouette = !!haze && !afterDark && !floodlit && weather !== 'fog';
+    if (haze)
+      mixAll(MOOD[k as keyof typeof MOOD].haze, daySilhouette ? DAY_SILHOUETTE_FAR_HAZE : haze);
+    if (daySilhouette) {
+      const d = DAY_SILHOUETTE_DARKEN_L[k as keyof typeof DAY_SILHOUETTE_DARKEN_L];
+      darkenAll(
+        weather === 'clear' || weather === 'unknown'
+          ? d.clear
+          : weather === 'snow'
+            ? d.snow
+            : d.cloud,
+      );
+      const front = getHazeTokens(k as 'moderate' | 'high' | 'very high', timeOfDay);
+      if (front && !front.dim) {
+        rock = capHazeInFront(rock, front.far, LANDMARK_HAZE_CAP);
+        walls = capHazeInFront(walls, front.far, LANDMARK_HAZE_CAP);
+        roofs = capHazeInFront(roofs, front.far, LANDMARK_HAZE_CAP);
+      }
+    }
   }
 
   const light = getLandmarkLight({ timeOfDay, weather, heroLit, synthwaveMode });
