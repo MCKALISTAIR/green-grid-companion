@@ -139,7 +139,7 @@ describe('F-01: current-slot copy names this half hour', () => {
       slotAt(new Date(c.getTime() + 30 * 60_000), 5, 'very low'),
     ];
     const i = getForecastHourInsight(f, 0, 20, 'plain', new Date(), new Set([0]));
-    expect(i!.action).toBe('Best window is open this half hour. Good time to run a load.');
+    expect(i!.action).toBe('Good half hour for a load. A later slot is a touch cleaner.');
   });
   it('past and future slots say half hour', () => {
     const past = new Date(Date.now() - 2 * 3600_000);

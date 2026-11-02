@@ -90,7 +90,7 @@ function buildAction(
       return 'This half hour is as clean as it gets. Good time to run a load.';
     }
     return isCurrent
-      ? 'Best window is open this half hour. Good time to run a load.'
+      ? 'Good half hour for a load. A later slot is a touch cleaner.'
       : 'In a best window. A good slot to plan a load.';
   }
   if (band === 'very low' || band === 'low') {

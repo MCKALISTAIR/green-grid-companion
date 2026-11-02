@@ -197,7 +197,7 @@ export function ForecastChart({
       <div className="flex items-center justify-between">
         <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
           <Clock3 className="w-3.5 h-3.5" aria-hidden />
-          Hourly forecast
+          Forecast
         </h3>
         <div className="flex items-center gap-2">
           <span className="text-xs font-medium text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-md">
@@ -297,7 +297,7 @@ export function ForecastChart({
       </AnimatePresence>
 
       <div className="sr-only">
-        <table aria-label="Hourly Carbon Intensity Forecast">
+        <table aria-label="Half-hourly carbon intensity forecast">
           <thead>
             <tr>
               <th>Time</th>
