@@ -82,6 +82,8 @@ export const OCTOPUS_BANNER_COPY = {
   octopusDown: "Octopus isn't answering just now. Try again in a bit.",
   noMeter:
     "Your details work, but Octopus didn't list an electricity meter on that account. GridSense needs one to show your usage.",
+  meterTaken:
+    'That meter is already linked to another GridSense account. Unlink it in that account first, then try again.',
   checkAgain: 'Check again',
   rateLimited: (minutes: number) =>
     `That's a lot of tries. Give it ${minutes} minutes, then try again.`,
@@ -137,6 +139,15 @@ export const OCTOPUS_FRESHNESS_COPY = {
     `The newest reading we have from Octopus is from ${date}. Tap Sync Now to try again. If it's still stuck, unlink Octopus and link it again with a new API key.`,
   historyNote: (date: string) =>
     `Your smart meter data stops at ${date}, so your footprint doesn't include anything after that.`,
+} as const;
+
+/** BH-127: Octopus answered 401/403 to the stored key. */
+export const OCTOPUS_KEY_REJECTED_COPY = {
+  title: 'Octopus stopped accepting your key',
+  badge: 'Needs relink',
+  body: "Octopus didn't accept the API key we have for you, so your meter data has stopped updating. Relink with a new key from your Octopus account page.",
+  since: (ago: string) => `Last tried ${ago}`,
+  relink: 'Relink Octopus',
 } as const;
 
 /** 3.6 MPAN popover. */
