@@ -21,25 +21,8 @@ export function getNavSlideDirection(fromPath: string, toPath: string): NavSlide
   return 'fade';
 }
 
-/** Warm a primary tab chunk on hover/focus so the first click rarely suspends. */
-export function prefetchMainTab(path: string) {
-  switch (path) {
-    case '/':
-      void import('@/pages/Index');
-      break;
-    case '/planner':
-      void import('@/pages/Planner');
-      break;
-    case '/history':
-      void import('@/pages/History');
-      break;
-    case '/map':
-      void import('@/pages/Map');
-      break;
-    case '/settings':
-      void import('@/pages/Settings');
-      break;
-    default:
-      break;
-  }
+/** Warm a primary tab chunk on hover/focus (primary tabs are eagerly bundled with App.tsx). */
+export function prefetchMainTab(_path: string) {
+  // Primary tabs are already eagerly bundled with App.tsx to ensure
+  // seamless 60fps dock slide transitions without mid-flight suspense.
 }

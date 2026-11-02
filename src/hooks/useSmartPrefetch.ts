@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSavedLocations } from '@/hooks/useSavedLocations';
-import {} from '@/lib/carbonApi';
+import { getRegionalIntensity } from '@/lib/carbonApi';
 import { logger } from '@/lib/logger';
 
 export function useSmartPrefetch() {
@@ -33,9 +33,6 @@ export function useSmartPrefetch() {
           .prefetchQuery({
             queryKey: ['regional', loc.postcode],
             queryFn: async ({ signal }) => {
-              // In actual use, getRegionalIntensity(postcode) is used.
-              // We can dynamically import it to avoid circular depends if necessary.
-              const { getRegionalIntensity } = await import('@/lib/carbonApi');
               return getRegionalIntensity(loc.postcode, signal);
             },
             staleTime: 1000 * 60 * 30,

@@ -2,6 +2,7 @@ import { Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 import { settingsItemVariants } from './settingsMotion';
 import { SettingsSectionHeading } from './SettingsSectionHeading';
 
@@ -23,15 +24,8 @@ export function SettingsDebugSection() {
                 throw new Error('This is a test error from GridSense Settings');
               } catch (error) {
                 console.error('Test error triggered', error);
-                import('@/lib/logger')
-                  .then(({ logger }) => {
-                    logger.error('Test error triggered by user', { error });
-                    toast.success('Error logged to Sentry successfully');
-                  })
-                  .catch((err) => {
-                    console.error('Failed to import logger:', err);
-                    toast.error('Failed to load logging module');
-                  });
+                logger.error('Test error triggered by user', { error });
+                toast.success('Error logged to Sentry successfully');
               }
               import('@sentry/react')
                 .then((Sentry) => {

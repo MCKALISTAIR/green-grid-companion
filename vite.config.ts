@@ -36,6 +36,7 @@ export default defineConfig(({ mode }) => {
   return {
     define: fallbackEnv,
     build: {
+      chunkSizeWarningLimit: 800,
       rollupOptions: {
         output: {
           manualChunks(id) {
