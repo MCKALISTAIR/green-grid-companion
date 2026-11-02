@@ -116,3 +116,78 @@ describe('current-hour line agrees with the now-or-wait card', () => {
     }
   });
 });
+
+describe('F-01: current-slot copy names this half hour', () => {
+  const cur = () => {
+    const from = new Date(Date.now() - 5 * 60 * 1000);
+    from.setSeconds(0, 0);
+    return from;
+  };
+  it('best window with no lower later slot says as clean as it gets', () => {
+    const c = cur();
+    const f = [
+      slotAt(c, 0, 'very low'),
+      slotAt(new Date(c.getTime() + 30 * 60_000), 0, 'very low'),
+    ];
+    const i = getForecastHourInsight(f, 0, 0, 'plain', new Date(), new Set([0]));
+    expect(i!.action).toBe('This half hour is as clean as it gets. Good time to run a load.');
+  });
+  it('best window with a lower later slot keeps the fallback', () => {
+    const c = cur();
+    const f = [
+      slotAt(c, 20, 'very low'),
+      slotAt(new Date(c.getTime() + 30 * 60_000), 5, 'very low'),
+    ];
+    const i = getForecastHourInsight(f, 0, 20, 'plain', new Date(), new Set([0]));
+    expect(i!.action).toBe('Part of a good window. A later slot is cleaner.');
+  });
+  it('past and future slots say half hour', () => {
+    const past = new Date(Date.now() - 2 * 3600_000);
+    expect(getForecastHourInsight([slotAt(past, 100)], 0, 100)!.action).toBe(
+      'Past half hour. Handy for checking forecast vs actual.',
+    );
+    const later = new Date(Date.now() + 30 * 3600_000);
+    expect(getForecastHourInsight([slotAt(later, 150, 'moderate')], 0, 150)!.action).toBe(
+      'Moderate half hour. Check the slots either side.',
+    );
+    expect(getForecastHourInsight([slotAt(later, 300, 'very high')], 0, 300)!.action).toBe(
+      'High-carbon half hour. Move it if you can.',
+    );
+  });
+  it('use-now current slots say half hour', () => {
+    expect(
+      getForecastHourInsight(
+        [slotAt(cur(), 300, 'very high')],
+        0,
+        300,
+        'plain',
+        new Date(),
+        new Set(),
+        'use_now',
+      )!.action,
+    ).toBe("Dirty half hour, but it won't get much cleaner soon.");
+    expect(
+      getForecastHourInsight(
+        [slotAt(cur(), 150, 'moderate')],
+        0,
+        150,
+        'plain',
+        new Date(),
+        new Set(),
+        'use_now',
+      )!.action,
+    ).toBe("Middling half hour, but it won't get much cleaner soon.");
+  });
+  it('clean current slot says this half hour', () => {
+    const f = [slotAt(cur(), 20, 'very low')];
+    expect(getForecastHourInsight(f, 0, 20, 'plain')!.action).toMatch(/this half hour/);
+  });
+  it('dirty and middling current slots say half hour', () => {
+    expect(getForecastHourInsight([slotAt(cur(), 300, 'very high')], 0, 300)!.action).toBe(
+      'Dirty half hour. Wait if you can.',
+    );
+    expect(getForecastHourInsight([slotAt(cur(), 150, 'moderate')], 0, 150)!.action).toMatch(
+      /^Middling half hour/,
+    );
+  });
+});
