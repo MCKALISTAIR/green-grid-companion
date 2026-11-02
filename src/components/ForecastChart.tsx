@@ -331,7 +331,7 @@ export function ForecastChart({
           insight?.washClass,
         )}
         role="listbox"
-        aria-label="Select a forecast hour"
+        aria-label="Select a forecast half hour"
         aria-activedescendant={selectedIndex >= 0 ? `forecast-hour-${selectedIndex}` : undefined}
         data-testid="forecast-strip"
         data-scrubbing={scrubbing || undefined}
