@@ -1,4 +1,4 @@
--- Run after the normal full-migration suite, then exit before legacy Tesla replays.
+-- Run from this test directory after the full-migration suite, then exit before legacy Tesla replays.
 -- Uses a separate throwaway database: no production object is touched.
 \set ON_ERROR_STOP 1
 \pset footer off

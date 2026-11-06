@@ -67,7 +67,7 @@ fi
 # replays. It must not alter or incompletely replay the combined branch's tests.
 if [[ "${TEST_TESLAS_ABSENT:-}" == "1" ]]; then
   TESLA_COMPAT="$HERE/anonymous_cleanup_without_tesla_tests.sql"
-  if ! out=$($PSQL -q -v ON_ERROR_STOP=1 -d "$DB" -At -F ' | ' -f - < "$TESLA_COMPAT" 2>&1); then
+  if ! out=$($PSQL -q -v ON_ERROR_STOP=1 -d "$DB" -At -F ' | ' -f "$TESLA_COMPAT" 2>&1); then
     echo "anonymous_cleanup_without_tesla_tests.sql errored:"; echo "$out"; exit 1
   fi
   echo "$out" | grep -E '^(PASS|FAIL) ' || true
