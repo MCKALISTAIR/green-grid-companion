@@ -66,8 +66,7 @@ END $$;
 
 INSERT INTO cleanup_results
 SELECT 'every stale anonymous account row is gone', value = 0, table_name || ' ' || value FROM unnest(ARRAY[
- 'consumption','footprint','dispatches','meters','credentials','preferences','push','sessions','identities','users',
- 'tesla_charging','tesla_credentials','tesla_energy','tesla_sites','tesla_vehicles'], ARRAY[
+ 'consumption','footprint','dispatches','meters','credentials','preferences','push','sessions','identities','users','teslas'], ARRAY[
  (SELECT count(*) FROM public.octopus_consumption WHERE mpan IN ('CLEANUP-OLD','CLEANUP-METER')),
  (SELECT count(*) FROM public.carbon_footprint WHERE mpan = 'CLEANUP-OLD'),
  (SELECT count(*) FROM public.octopus_intelligent_dispatches WHERE user_id IN ('66aaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','66121212-2121-4121-8121-121212121212')),
@@ -78,11 +77,13 @@ SELECT 'every stale anonymous account row is gone', value = 0, table_name || ' '
  (SELECT count(*) FROM auth.sessions WHERE user_id = '66aaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'),
  (SELECT count(*) FROM auth.identities WHERE user_id = '66aaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'),
  (SELECT count(*) FROM auth.users WHERE id = ANY(ARRAY['66aaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','66121212-2121-4121-8121-121212121212']::uuid[])),
- (SELECT count(*) FROM public.tesla_charging_sessions WHERE user_id = '66aaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'),
- (SELECT count(*) FROM public.tesla_credentials WHERE user_id = '66aaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'),
- (SELECT count(*) FROM public.tesla_energy_data WHERE user_id = '66aaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'),
- (SELECT count(*) FROM public.tesla_energy_sites WHERE user_id = '66aaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'),
- (SELECT count(*) FROM public.tesla_vehicles WHERE user_id = '66aaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa')
+ COALESCE((SELECT sum(count) FROM (
+   SELECT count(*) FROM public.tesla_charging_sessions WHERE user_id = '66aaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+   UNION ALL SELECT count(*) FROM public.tesla_credentials WHERE user_id = '66aaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+   UNION ALL SELECT count(*) FROM public.tesla_energy_data WHERE user_id = '66aaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+   UNION ALL SELECT count(*) FROM public.tesla_energy_sites WHERE user_id = '66aaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+   UNION ALL SELECT count(*) FROM public.tesla_vehicles WHERE user_id = '66aaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+ ) legacy_tesla(row_count)), 0)
 ]) rows(table_name, value);
 INSERT INTO cleanup_results
 SELECT 'all recent and nonanonymous accounts survive including an overbroad allowlist', count(*) = 6, string_agg(id::text, ',') FROM auth.users WHERE id IN ('7bbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb','77cccccc-cccc-4ccc-8ccc-cccccccccccc','77dddddd-dddd-4ddd-8ddd-dddddddddddd','77eeeeee-eeee-4eee-8eee-eeeeeeeeeeee','77ffffff-ffff-4fff-8fff-ffffffffffff','71313131-3131-4131-8131-131313131313');

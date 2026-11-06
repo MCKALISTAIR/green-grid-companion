@@ -44,3 +44,16 @@ Deno.test(
     assert(userFilters.every((v) => v === USER.id));
   },
 );
+
+Deno.test('export-data: excludes retired Tesla data and never queries its tables', async () => {
+  const admin = fakeAdmin({ octopus_meters: [{ mpan: '123' }] });
+  const res = await handleExportData(post('Bearer good-token'), {
+    getUser: fakeGetUser(),
+    admin: () => admin.client,
+  });
+  assertEquals(res.status, 200);
+  const body = await res.json();
+  assert(!('tesla' in body));
+  assertEquals(body.export_metadata.format_version, '1.1');
+  assert(admin.queries.every((query) => !query.table.startsWith('tesla_')));
+});
