@@ -48,6 +48,33 @@ summary=$(echo "$out" | tail -n 1)
 echo "passed | failed: $summary"
 [[ "$summary" =~ \|\ 0$ ]] || exit 1
 
+# Optional schema-order check: TEST_TESLAS_ABSENT=1 simulates the separate
+# Tesla-removal PR landing first, then stops before historical Tesla replays.
+# The default run exercises the full current migration chain below.
+if [[ "${TEST_TESLAS_ABSENT:-}" == "1" ]]; then
+  TESLA_COMPAT="$HERE/anonymous_cleanup_without_tesla_tests.sql"
+  if ! out=$($PSQL -q -v ON_ERROR_STOP=1 -d "$DB" -At -F ' | ' -f "$TESLA_COMPAT" 2>&1); then
+    echo "anonymous_cleanup_without_tesla_tests.sql errored:"; echo "$out"; exit 1
+  fi
+  echo "$out" | grep -E '^(PASS|FAIL) ' || true
+  summary=$(echo "$out" | tail -n 1)
+  echo "cleanup without Tesla passed | failed: $summary"
+  [[ "$summary" =~ \|\ 0$ ]] || exit 1
+  # This simulated schema ordering intentionally stops before legacy Tesla SQL.
+  exit 0
+fi
+
+ANONYMOUS_CLEANUP="$HERE/anonymous_cleanup_tests.sql"
+if [[ -f "$ANONYMOUS_CLEANUP" ]]; then
+  if ! out=$($PSQL -q -v ON_ERROR_STOP=1 -d "$DB" -At -F ' | ' -f "$ANONYMOUS_CLEANUP" 2>&1); then
+    echo "anonymous_cleanup_tests.sql errored:"; echo "$out"; exit 1
+  fi
+  echo "$out" | grep -E '^(PASS|FAIL) ' || true
+  summary=$(echo "$out" | tail -n 1)
+  echo "anonymous cleanup passed | failed: $summary"
+  [[ "$summary" =~ \|\ 0$ ]] || exit 1
+fi
+
 # Re-run checks for migrations that must be safe to apply twice.
 ANON_TIDY="$REPO/supabase/migrations/20261010170000_anon_access_tidy.sql"
 if [[ -f "$ANON_TIDY" ]]; then
