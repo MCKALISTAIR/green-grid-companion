@@ -1,7 +1,14 @@
 import { render, fireEvent } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { getHillRidgeY } from '@/lib/sceneUtils';
-import { HERO_SAFE_X, SHEEP_MIN_X, SHEEP_SINK, SHEEP_SPOTS, Sheep, sheepTransform } from './Sheep';
+import { Sheep } from './Sheep';
+import {
+  HERO_SAFE_X,
+  SHEEP_MIN_X,
+  SHEEP_SINK,
+  SHEEP_SPOTS,
+  sheepTransform,
+} from '@/lib/sheepLayout';
 
 vi.mock('@/hooks/useHaptics', () => ({ useHaptics: () => ({ impactLight: () => {} }) }));
 

@@ -2,41 +2,7 @@ import { useState, useId, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { getHillRidgeY } from '@/lib/sceneUtils';
-
-/** Sheep art box, in its own units: 40 wide, feet at y 30, centred on x 20. */
-const ART = { w: 40, feetY: 30, feetX: 20 } as const;
-/** #239 Design review: feet sink this far into the ridge so they sit on land. */
-export const SHEEP_SINK = 0.5;
-/** Default width in mid-layer SVG units (Design: about 12 to 14). */
-export const SHEEP_WIDTH = 13;
-/** No sheep west of this x: the hero pill and text sit above that side at 720x540. */
-export const SHEEP_MIN_X = 150;
-
-/**
- * Hero safe zone in scene units (viewBox 0 30 400 120). At 720x540 the scene is
- * drawn about 1.8 px per unit and the hero text and pill cover roughly x 118 to
- * 284 down to the mid crest, so nothing decorative goes there. Turbines use it too.
- */
-export const HERO_SAFE_X = { min: 112, max: 288 } as const;
-
-/**
- * Feet positions on the mid ridge (LandscapeMid, viewBox 0 30 400 120), east of
- * the hero safe zone and on the falling east flank, never above a crest, and
- * west of the night EV charger (x 326 to 352).
- * Design suggested 192, 240 and 288; at 720x540 the first two sat on the hero
- * headline and the info icon, so the flock moved east.
- */
-export const SHEEP_SPOTS = [292, 305, 318].map((x) => ({
-  x,
-  y: getHillRidgeY('mid', x) + SHEEP_SINK,
-}));
-
-/** The <g> transform that seats a sheep's feet at (x, y), `width` units wide. */
-export function sheepTransform(x: number, y: number, width = SHEEP_WIDTH) {
-  const s = width / ART.w;
-  return `translate(${(x - ART.feetX * s).toFixed(2)} ${(y - ART.feetY * s).toFixed(2)}) scale(${s.toFixed(4)})`;
-}
+import { ART, SHEEP_WIDTH, sheepTransform } from '@/lib/sheepLayout';
 
 interface SheepProps {
   /** Feet x and y in the mid-layer SVG units. */

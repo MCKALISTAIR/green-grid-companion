@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { render, screen, act, renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { OfflineIndicator, PILL_TICK_MS, resetOfflineWarningForTests } from './OfflineIndicator';
+import { OfflineIndicator } from './OfflineIndicator';
+import { PILL_TICK_MS, resetOfflineWarningForTests } from '@/lib/offlineIndicatorState';
 import { setHeroReadingAt } from '@/lib/offlineReadingTime';
 import { useStableAnnouncement } from '@/hooks/useStableAnnouncement';
 

@@ -8,7 +8,8 @@ import {
   offlinePillText,
   readingWhen,
 } from '@/lib/voice/statesCopy';
-import { OfflineIndicator, resetOfflineWarningForTests } from '@/components/OfflineIndicator';
+import { OfflineIndicator } from '@/components/OfflineIndicator';
+import { resetOfflineWarningForTests } from '@/lib/offlineIndicatorState';
 
 // BH-88: the offline pill shows the reading's own time in UK time, never when
 // the app saved it.

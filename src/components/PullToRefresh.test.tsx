@@ -1,11 +1,12 @@
 import { createPortal } from 'react-dom';
+import { ptrResistance, PTR_THRESHOLD, PTR_MAX } from '@/lib/pullToRefreshMotion';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, fireEvent, act } from '@testing-library/react';
 
 const impactMedium = vi.fn();
 vi.mock('@/hooks/useHaptics', () => ({ useHaptics: () => ({ impactMedium }) }));
 
-import { PullToRefresh, ptrResistance, PTR_THRESHOLD, PTR_MAX } from './PullToRefresh';
+import { PullToRefresh } from './PullToRefresh';
 
 const touch = (y: number) => ({ touches: [{ clientY: y }] });
 

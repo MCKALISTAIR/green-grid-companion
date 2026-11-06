@@ -197,12 +197,6 @@ function cleanupAuthFailureTracker() {
   }
 }
 
-interface OctopusMeterPoint {
-  mpan?: string;
-  mprn?: string;
-  meters: { serial_number: string }[];
-}
-
 interface FootprintRecord {
   interval_start: string;
   interval_end: string;

@@ -18,18 +18,7 @@ import { cachedReadingAt, useHeroReadingAt } from '@/lib/offlineReadingTime';
 import { useHeroStatusSlot } from '@/lib/heroStatusSlot';
 import { dur, spring } from '@/lib/motion';
 import { STALE_COPY } from '@/lib/voice/errorStatesCopy';
-
-/** How long "Back online" stays before fading (motion spec §2.7). */
-export const BACK_ONLINE_MS = 1600;
-
-/** How often the offline pill rechecks the day band (UK midnight rollover). */
-export const PILL_TICK_MS = 60_000;
-
-/** One Warning haptic per app session, not per drop. */
-let warnedThisSession = false;
-export function resetOfflineWarningForTests() {
-  warnedThisSession = false;
-}
+import { BACK_ONLINE_MS, PILL_TICK_MS, offlineWarningState } from '@/lib/offlineIndicatorState';
 
 /**
  * Offline / back-online status as a compact pill (motion spec §2.7).
@@ -68,8 +57,8 @@ export function OfflineIndicator() {
   }, [isOffline]);
 
   useEffect(() => {
-    if (isOffline && !warnedThisSession) {
-      warnedThisSession = true;
+    if (isOffline && !offlineWarningState.warnedThisSession) {
+      offlineWarningState.warnedThisSession = true;
       notification(NotificationType.Warning);
     }
   }, [isOffline, notification]);
