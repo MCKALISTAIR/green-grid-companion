@@ -1,5 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
+import { createClient } from '@supabase/supabase-js';
+import { SUPABASE_AUTH_STORAGE_KEY, SUPABASE_URL_ORIGIN } from '@/integrations/supabase/client';
 import {
   NATIVE_PKCE_VERIFIER_KEY,
   NATIVE_REDIRECT_URI,
@@ -17,6 +19,9 @@ const NOW = 1_700_000_000_000;
 const STATE = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
 const CALLBACK = `${NATIVE_REDIRECT_URI}&state=${STATE}&code=CODE`;
 const VALID_INTENT = JSON.stringify({ state: STATE, startedAt: NOW });
+const fetchMock = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit): Promise<Response> =>
+  Response.json({ error: 'Test exchange only' }, { status: 400 }),
+);
 
 function memStorage(init: Record<string, string> = {}) {
   const map = new Map(Object.entries(init));
@@ -192,6 +197,52 @@ describe('native callback validation', () => {
     expect(await completeNativeCallback(CALLBACK, d)).toBe('failed');
     expect(d.auth.exchangeCodeForSession).toHaveBeenCalledOnce();
   });
+});
+
+it('persists one S256 verifier for the mocked Supabase auth exchange', async () => {
+  const consoleCleanup = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  localStorage.clear();
+  fetchMock.mockClear();
+  try {
+    const client = createClient(SUPABASE_URL_ORIGIN, 'test-publishable-key', {
+      auth: {
+        flowType: 'pkce',
+        storage: localStorage,
+        storageKey: SUPABASE_AUTH_STORAGE_KEY,
+        persistSession: true,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+        lock: async (_name, _timeout, fn) => fn(),
+      },
+      global: { fetch: fetchMock as unknown as typeof fetch },
+    });
+    const d = makeDeps({ auth: client.auth, storage: localStorage });
+    await client.auth.initialize();
+    const started = await startNativeBrowserSignIn('google', d);
+    expect(started.error).toBeNull();
+    const verifier = localStorage.getItem(NATIVE_PKCE_VERIFIER_KEY);
+    expect(verifier).toEqual(expect.any(String));
+    expect(
+      new URL(vi.mocked(d.openBrowser).mock.calls[0][0]).searchParams.get('code_challenge'),
+    ).not.toBe(JSON.parse(verifier!));
+    const state = JSON.parse(localStorage.getItem(NATIVE_STATE_KEY)!).state;
+    await expect(
+      completeNativeCallback(`${NATIVE_REDIRECT_URI}&state=${state}&code=TEST_CODE`, d),
+    ).resolves.toBe('failed');
+    expect(fetchMock).toHaveBeenCalledOnce();
+    const [url, request] = fetchMock.mock.calls[0]!;
+    expect(String(url)).toContain('/auth/v1/token?grant_type=pkce');
+    expect(JSON.parse(String(request?.body))).toEqual({
+      auth_code: 'TEST_CODE',
+      code_verifier: JSON.parse(verifier!),
+    });
+    expect(localStorage.getItem(NATIVE_PKCE_VERIFIER_KEY)).toBeNull();
+    await client.auth.stopAutoRefresh();
+    await client.realtime.disconnect();
+  } finally {
+    localStorage.clear();
+    consoleCleanup.mockRestore();
+  }
 });
 
 describe('native Apple and iOS association', () => {
