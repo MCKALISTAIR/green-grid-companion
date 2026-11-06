@@ -80,12 +80,6 @@ export async function handleDeleteAccount(req: Request, depsIn?: Deps): Promise<
     // 3. Everything else keyed by user_id
     const deletions = [
       adminClient.from('octopus_credentials').delete().eq('user_id', userId),
-      // Tesla data
-      adminClient.from('tesla_charging_sessions').delete().eq('user_id', userId),
-      adminClient.from('tesla_energy_data').delete().eq('user_id', userId),
-      adminClient.from('tesla_energy_sites').delete().eq('user_id', userId),
-      adminClient.from('tesla_vehicles').delete().eq('user_id', userId),
-      adminClient.from('tesla_credentials').delete().eq('user_id', userId),
       // Push notification subscriptions (also cascade from auth.users, but be explicit)
       adminClient.from('push_subscriptions').delete().eq('user_id', userId),
       // User preferences

@@ -48,10 +48,24 @@ summary=$(echo "$out" | tail -n 1)
 echo "passed | failed: $summary"
 [[ "$summary" =~ \|\ 0$ ]] || exit 1
 
+# Tesla storage retirement: the drop migration is safe to reapply and preserves
+# unrelated account and Octopus fixtures in this throwaway database.
+# Local-only; never run this harness against a live Supabase project.
+TESLA_REMOVAL="$HERE/tesla_removal_tests.sql"
+if [[ -f "$TESLA_REMOVAL" ]]; then
+  if ! out=$($PSQL -q -v ON_ERROR_STOP=1 -d "$DB" -At -F ' | ' -f "$TESLA_REMOVAL" 2>&1); then
+    echo "tesla_removal_tests.sql errored:"; echo "$out"; exit 1
+  fi
+  echo "$out" | grep -E '^(PASS|FAIL) ' || true
+  summary=$(echo "$out" | tail -n 1)
+  echo "Tesla removal passed | failed: $summary"
+  [[ "$summary" =~ \|\ 0$ ]] || exit 1
+fi
+
 # Re-run checks for migrations that must be safe to apply twice.
 ANON_TIDY="$REPO/supabase/migrations/20261010170000_anon_access_tidy.sql"
 if [[ -f "$ANON_TIDY" ]]; then
-  if ! out=$($PSQL -q -v ON_ERROR_STOP=1 -d "$DB" -f - < "$ANON_TIDY" 2>&1); then
+  if ! out=$("$HERE/filter_legacy_anon_tidy.py" "$ANON_TIDY" | $PSQL -q -v ON_ERROR_STOP=1 -d "$DB" -f - 2>&1); then
     echo "FAIL re-applying $(basename "$ANON_TIDY")"; echo "$out"; exit 1
   fi
   echo "PASS | anon_access_tidy is safe to re-apply"
@@ -62,7 +76,7 @@ ALTER TABLE public.octopus_credentials DROP CONSTRAINT octopus_credentials_no_pl
 UPDATE public.octopus_credentials SET api_key = 'sk_legacy' WHERE user_id = '22222222-2222-2222-2222-222222222222';
 SQL
   ); then echo "FAIL preparing plaintext variant"; echo "$out"; exit 1; fi
-  if ! out=$($PSQL -v ON_ERROR_STOP=1 -d "$DB" -f - < "$ANON_TIDY" 2>&1); then
+  if ! out=$("$HERE/filter_legacy_anon_tidy.py" "$ANON_TIDY" | $PSQL -v ON_ERROR_STOP=1 -d "$DB" -f - 2>&1); then
     echo "FAIL anon_access_tidy with a plaintext key left"; echo "$out"; exit 1
   fi
   has=$($PSQL -At -d "$DB" -c "SELECT count(*) FROM pg_constraint WHERE conname = 'octopus_credentials_no_plaintext'")
