@@ -44,6 +44,8 @@ describe('ResponsiveDialog', () => {
     render(<Subject />);
     expect(screen.getByTestId('responsive-sheet')).toBeTruthy();
     expect(screen.getByTestId('sheet-grabber')).toBeTruthy();
+    expect(screen.getByTestId('responsive-sheet').className).toContain('top-[8dvh]');
+    expect(screen.getByTestId('responsive-sheet').className).toContain('bottom-[8dvh]');
     expect(screen.getByRole('button', { name: 'Close' }).className).toMatch(/h-11 w-11/);
   });
 
