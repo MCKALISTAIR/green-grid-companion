@@ -209,7 +209,7 @@ export function SettingsPreferencesSection({
 
         <PrivacyChoiceRow />
 
-        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg hover:from-primary/15 hover:to-primary/10 transition-colors">
+        <div className="flex items-center justify-between p-4 bg-primary/10 border border-primary/20 rounded-lg hover:bg-primary/15 transition-colors">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary/20 rounded-full">
               <Play className="w-5 h-5 text-primary" />

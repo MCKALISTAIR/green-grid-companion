@@ -28,7 +28,7 @@ export function SettingsResourcesSection({
       <div className="flex flex-col gap-3">
         {new Date().getMonth() === 11 && (
           <button onClick={onShowYearWrapped}>
-            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary/10 to-chart-4/10 border border-primary/20 rounded-lg hover:from-primary/20 hover:to-chart-4/20 transition-colors">
+            <div className="flex items-center justify-between p-4 bg-primary/10 border border-primary/20 rounded-lg hover:bg-primary/20 transition-colors">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-primary/20 rounded-full">
                   <Sparkles className="w-5 h-5 text-primary" />

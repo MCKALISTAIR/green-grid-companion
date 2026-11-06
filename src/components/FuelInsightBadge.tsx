@@ -33,7 +33,7 @@ export function FuelInsightBadge({ streak, milestone, compact = false }: FuelIns
         className={cn(
           'flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs',
           streak.isNewRecord
-            ? 'bg-gradient-to-r from-chart-4/20 to-chart-5/20 border border-chart-4/30'
+            ? 'bg-chart-4/15 border border-chart-4/30'
             : 'bg-primary/10 border border-primary/20',
         )}
       >
@@ -110,10 +110,10 @@ export function FuelInsightBadge({ streak, milestone, compact = false }: FuelIns
     }
 
     return (
-      <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs bg-gradient-to-r from-primary/10 to-chart-2/10 border border-primary/20">
+      <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs bg-primary/10 border border-primary/20">
         <Sparkles className="w-3.5 h-3.5 text-primary" />
         <span className="text-primary font-medium">
-          {fuelName} at highest share in {periodText}! 🎉
+          {fuelName} at highest share in {periodText}!
         </span>
       </div>
     );
