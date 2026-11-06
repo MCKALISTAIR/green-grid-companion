@@ -22,9 +22,17 @@ describe('nesoBand (NESO 2026 Table 2)', () => {
     expect(getCarbonIndex(g)).toBe(band);
   });
 
-  it('prefers NESO index when given, as the label does', () => {
-    expect(bandFor(215, 'moderate')).toBe('moderate');
+  it('uses the grams, not NESO index, when there is a number', () => {
+    expect(bandFor(215, 'moderate')).toBe('high');
+    expect(bandFor(100, 'low')).toBe('moderate');
     expect(bandFor(215, '')).toBe('high');
+    expect(bandFor(0, 'moderate')).toBe('very low');
+  });
+
+  it('falls back to NESO index only without a number', () => {
+    expect(bandFor(undefined, 'Low')).toBe('low');
+    expect(bandFor(Number.NaN, 'high')).toBe('high');
+    expect(bandFor(null, null)).toBe('moderate');
   });
 
   it('BH-139: 215 g gives the high scene, matching the label', () => {
