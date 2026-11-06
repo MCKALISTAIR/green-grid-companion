@@ -35,6 +35,7 @@ class ResizeObserverStub {
 describe('non-hero location picker surfaces', () => {
   beforeAll(() => {
     vi.stubGlobal('ResizeObserver', ResizeObserverStub);
+    Element.prototype.scrollIntoView = vi.fn();
   });
   afterAll(() => {
     vi.unstubAllGlobals();
@@ -52,11 +53,11 @@ describe('non-hero location picker surfaces', () => {
   });
 
   it('uses an opaque default trigger and no blur on responsive content', () => {
-    const { getByRole, getByTestId } = render(<LocationManager value="" onChange={vi.fn()} />);
+    const { getByRole, getAllByTestId } = render(<LocationManager value="" onChange={vi.fn()} />);
     const trigger = getByRole('combobox', { name: 'Select location' });
     expect(trigger).toHaveClass('bg-card', 'border-border', 'shadow-sm');
     expect(trigger.className).not.toContain('backdrop-blur');
-    const content = getByTestId('picker-content');
+    const content = getAllByTestId('picker-content')[0];
     expect(content).toHaveClass('bg-card', 'border-border');
     expect(content.className).not.toContain('backdrop-blur');
   });
