@@ -1,4 +1,5 @@
 import { REGIONAL_FALLBACK_LABEL } from '@/lib/regionalFallback';
+import { bandFor } from '@/lib/nesoBand';
 import { useQuery, useIsRestoring } from '@tanstack/react-query';
 import { useEffect, useRef, useCallback, useState } from 'react';
 import {
@@ -306,10 +307,13 @@ export function useCarbonData(postcode: string) {
     regionalLive !== null ? regionalData?.intensity : nationalQuery.data?.intensity,
   );
   const intensity = hasReading ? liveIntensity : 0;
-  const index =
+  // The label band comes from the grams on screen (NESO 2026 bands), so it
+  // always matches the number and the scene. NESO's own index is only used
+  // before there is a reading.
+  const apiIndex =
     (usingNationalFallback ? undefined : regionalData?.intensity?.index) ??
-    nationalQuery.data?.intensity?.index ??
-    'moderate';
+    nationalQuery.data?.intensity?.index;
+  const index: string = bandFor(hasReading ? intensity : undefined, apiIndex);
 
   // Track intensity changes for animation
   useEffect(() => {

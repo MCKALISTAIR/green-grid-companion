@@ -61,13 +61,13 @@ export function Sheep({ x, y, width = SHEEP_WIDTH, isNight, delay = 0 }: SheepPr
   const [bubbleText, setBubbleText] = useState<string | null>(null);
   const [clickCount, setClickCount] = useState(0);
   const id = useId();
-  const { impactLight: impactMedium } = useHaptics({ decorative: true });
+  const { impactLight } = useHaptics({ decorative: true });
   const shouldReduceMotion = useReducedMotion();
 
   const handleClick = () => {
     if (isJumping) return;
     setIsJumping(true);
-    impactMedium(); // Haptic feedback!
+    impactLight(); // Haptic feedback!
 
     // Pick random phrase
     const randomPhrase = SheepPhrases[Math.floor(Math.random() * SheepPhrases.length)];
