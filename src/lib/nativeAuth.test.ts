@@ -231,4 +231,15 @@ describe('native Apple and iOS association', () => {
     expect(entitlements).toContain('<string>webcredentials:getgridsense.com</string>');
     expect(entitlements).toContain('<key>com.apple.developer.applesignin</key>');
   });
+
+  it('does not register the obsolete GridSense OAuth token-return URL schemes', () => {
+    const infoPlist = readFileSync('ios/App/App/Info.plist', 'utf8');
+    const schemes = [
+      ...infoPlist.matchAll(/<key>CFBundleURLSchemes<\/key>\s*<array>([\s\S]*?)<\/array>/g),
+    ].flatMap((match) =>
+      [...match[1].matchAll(/<string>(.*?)<\/string>/g)].map((value) => value[1]),
+    );
+    expect(schemes).not.toContain('GridSense');
+    expect(schemes).not.toContain('gridsense');
+  });
 });
