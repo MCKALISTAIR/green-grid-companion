@@ -223,7 +223,7 @@ function TypographySamples() {
           Body · Plus Jakarta Sans 400 · 16/24
         </p>
         <p className="max-w-prose font-sans">
-          GridSense tracks UK carbon intensity in real time and tells you the cleanest moments to
+          GridSense tracks GB carbon intensity in real time and tells you the cleanest moments to
           use power.
         </p>
       </div>
