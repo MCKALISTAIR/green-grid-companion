@@ -25,6 +25,6 @@ describe('aurora (scene audit item 3)', () => {
     expect(night(24).band).toBe('very low');
     expect(night(25).band).toBe('low');
     expect(night(60).band).toBe('low');
-    expect(night(10, 'low').band).toBe('low');
+    expect(night(10, 'low').band).toBe('very low');
   });
 });

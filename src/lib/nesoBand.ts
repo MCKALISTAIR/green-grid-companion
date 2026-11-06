@@ -4,8 +4,10 @@
  *
  *   very low 0-24 · low 25-89 · moderate 90-169 · high 170-230 · very high 231+
  *
- * BH-139: the hero label shows NESO's own index; the scene must use the same
- * bands, so everything that turns a number into a band goes through here.
+ * BH-139: the hero label and the scene must agree, so everything that turns a
+ * number into a band goes through here. The grams decide the band; NESO's own
+ * `index` can disagree with these thresholds (it is set from the forecast and
+ * regional figures), so it is only a fallback when there is no number.
  */
 export type NesoBand = 'very low' | 'low' | 'moderate' | 'high' | 'very high';
 
@@ -22,8 +24,9 @@ export function nesoBand(intensity: number): NesoBand {
 
 const KNOWN = new Set<string>(['very low', 'low', 'moderate', 'high', 'very high']);
 
-/** The label's band: NESO's published index when we have one, else the same 2026 bands. */
-export function bandFor(intensity: number, index?: string | null): NesoBand {
+/** The band for a reading: the 2026 gram thresholds, or NESO's index only when there is no number. */
+export function bandFor(intensity: number | null | undefined, index?: string | null): NesoBand {
+  if (typeof intensity === 'number' && Number.isFinite(intensity)) return nesoBand(intensity);
   const k = (index || '').toLowerCase();
-  return KNOWN.has(k) ? (k as NesoBand) : nesoBand(intensity);
+  return KNOWN.has(k) ? (k as NesoBand) : 'moderate';
 }
