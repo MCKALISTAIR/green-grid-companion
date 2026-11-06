@@ -164,12 +164,12 @@ function Lighthouse({
   skipIntro?: boolean;
 }) {
   const [isFlashing, setIsFlashing] = useState(false);
-  const { impactLight: impactMedium } = useHaptics({ decorative: true });
+  const { impactLight } = useHaptics({ decorative: true });
 
   const handleClick = () => {
     if (isFlashing) return;
     setIsFlashing(true);
-    impactMedium();
+    impactLight();
     setTimeout(() => {
       setIsFlashing(false);
     }, 2500);
