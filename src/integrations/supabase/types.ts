@@ -370,6 +370,192 @@ export type Database = {
           },
         ]
       }
+      tesla_charging_sessions: {
+        Row: {
+          avg_intensity_gco2: number | null
+          carbon_saved_vs_avg_g: number | null
+          carbon_used_g: number | null
+          created_at: string
+          end_battery_pct: number | null
+          ended_at: string | null
+          energy_added_kwh: number
+          id: string
+          start_battery_pct: number | null
+          started_at: string
+          user_id: string
+          vehicle_id: string
+        }
+        Insert: {
+          avg_intensity_gco2?: number | null
+          carbon_saved_vs_avg_g?: number | null
+          carbon_used_g?: number | null
+          created_at?: string
+          end_battery_pct?: number | null
+          ended_at?: string | null
+          energy_added_kwh?: number
+          id?: string
+          start_battery_pct?: number | null
+          started_at: string
+          user_id: string
+          vehicle_id: string
+        }
+        Update: {
+          avg_intensity_gco2?: number | null
+          carbon_saved_vs_avg_g?: number | null
+          carbon_used_g?: number | null
+          created_at?: string
+          end_battery_pct?: number | null
+          ended_at?: string | null
+          energy_added_kwh?: number
+          id?: string
+          start_battery_pct?: number | null
+          started_at?: string
+          user_id?: string
+          vehicle_id?: string
+        }
+        Relationships: []
+      }
+      tesla_credentials: {
+        Row: {
+          access_token: string
+          created_at: string
+          id: string
+          refresh_token: string
+          token_expires_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          created_at?: string
+          id?: string
+          refresh_token: string
+          token_expires_at: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          id?: string
+          refresh_token?: string
+          token_expires_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tesla_energy_data: {
+        Row: {
+          battery_charge_kwh: number
+          battery_discharge_kwh: number
+          carbon_offset_g: number | null
+          created_at: string
+          grid_export_kwh: number
+          grid_import_kwh: number
+          id: string
+          intensity_gco2_kwh: number | null
+          site_id: string
+          solar_generation_kwh: number
+          timestamp: string
+          user_id: string
+        }
+        Insert: {
+          battery_charge_kwh?: number
+          battery_discharge_kwh?: number
+          carbon_offset_g?: number | null
+          created_at?: string
+          grid_export_kwh?: number
+          grid_import_kwh?: number
+          id?: string
+          intensity_gco2_kwh?: number | null
+          site_id: string
+          solar_generation_kwh?: number
+          timestamp: string
+          user_id: string
+        }
+        Update: {
+          battery_charge_kwh?: number
+          battery_discharge_kwh?: number
+          carbon_offset_g?: number | null
+          created_at?: string
+          grid_export_kwh?: number
+          grid_import_kwh?: number
+          id?: string
+          intensity_gco2_kwh?: number | null
+          site_id?: string
+          solar_generation_kwh?: number
+          timestamp?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tesla_energy_sites: {
+        Row: {
+          battery_capacity_kwh: number | null
+          created_at: string
+          id: string
+          site_id: string
+          site_name: string | null
+          solar_capacity_kw: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          battery_capacity_kwh?: number | null
+          created_at?: string
+          id?: string
+          site_id: string
+          site_name?: string | null
+          solar_capacity_kw?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          battery_capacity_kwh?: number | null
+          created_at?: string
+          id?: string
+          site_id?: string
+          site_name?: string | null
+          solar_capacity_kw?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tesla_vehicles: {
+        Row: {
+          battery_capacity_kwh: number | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+          vehicle_id: string
+          vin: string | null
+        }
+        Insert: {
+          battery_capacity_kwh?: number | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+          vehicle_id: string
+          vin?: string | null
+        }
+        Update: {
+          battery_capacity_kwh?: number | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+          vehicle_id?: string
+          vin?: string | null
+        }
+        Relationships: []
+      }
       user_preferences: {
         Row: {
           created_at: string
@@ -423,6 +609,7 @@ export type Database = {
         }[]
       }
       get_scheduler_secret: { Args: never; Returns: string }
+      has_tesla_linked: { Args: never; Returns: boolean }
       user_owns_mpan: { Args: { check_mpan: string }; Returns: boolean }
     }
     Enums: {
