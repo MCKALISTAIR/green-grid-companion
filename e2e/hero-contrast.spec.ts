@@ -1,17 +1,21 @@
 import fs from 'node:fs';
 import { test, expect, type Locator, type Page } from '@playwright/test';
 import { installMocks, seedStorage } from '../scripts/layout/mock-api.mjs';
+import { pinClocks, restoreNodeClock } from './support/pinClocks';
 
 /**
  * Design review of #185 (23 Oct 2026, incl. BH-107): pixel-measured hero contrast.
  *
  * Replaces the token-based check: for every weather by time of day at 390x844 and
- * 320x568 it hides each hero element, screenshots the pixels actually rendered
+ * 320x568 and 382x618 it hides each hero element, screenshots the pixels actually rendered
  * behind its box (sky, clouds, fog, scrims), and compares the element's computed
- * colour against them. The 5th-percentile ratio is asserted, which ignores the
- * odd anti-aliased edge of a neighbouring element brushing the box.
+ * colour against them. The 5th-percentile ratio is asserted for the original
+ * checks, which ignores the odd anti-aliased edge of a neighbouring element
+ * brushing the box. New metadata checks pass `percentile = 0`, so every sampled
+ * backdrop pixel must pass: these include the small units, quip and timestamp.
  *
- *   hero number, band label, error title ("NESO ISN'T ANSWERING"): >= 4.5:1
+ *   hero number, units, band label, quip, renewable, timestamp and error title
+ *   ("NESO ISN'T ANSWERING"): >= 4.5:1
  *   warning icon (non-text graphic): >= 3:1
  *
  * PR-2b: the reading tests also run at the very high band (340 g, NESO "very
@@ -22,6 +26,7 @@ import { installMocks, seedStorage } from '../scripts/layout/mock-api.mjs';
  * to a directory to log the table (JSONL) and save 390/320 shots there.
  */
 test.use({ serviceWorkers: 'block' });
+test.afterEach(() => restoreNodeClock());
 
 const OUT = process.env.HERO_CONTRAST_OUT;
 
@@ -48,6 +53,7 @@ const WEATHERS = [
 ] as const;
 
 const VIEWPORTS = [
+  [382, 618],
   [390, 844],
   [320, 568],
 ] as const;
@@ -62,15 +68,15 @@ const READINGS = {
 const TEXT_MIN = 4.5;
 const ICON_MIN = 3;
 
-/** 5th-percentile contrast of `colour` (may carry alpha) against the pixels behind `el`. */
-async function measure(page: Page, el: Locator, colour: string) {
+/** Chosen percentile contrast of `colour` (may carry alpha) against the pixels behind `el`. */
+async function measure(page: Page, el: Locator, colour: string, percentile = 0.05) {
   const box = (await el.boundingBox())!;
   await el.evaluate((n) => ((n as HTMLElement).style.visibility = 'hidden'));
   const png = await page.screenshot({ clip: box, animations: 'disabled' });
   await el.evaluate((n) => ((n as HTMLElement).style.visibility = ''));
   const blank = await page.context().newPage();
   const p5 = await blank.evaluate(
-    async ({ b64, colour }) => {
+    async ({ b64, colour, percentile }) => {
       const img = new Image();
       img.src = `data:image/png;base64,${b64}`;
       await img.decode();
@@ -96,9 +102,9 @@ async function measure(page: Page, el: Locator, colour: string) {
         ratios.push((Math.max(lf, lb) + 0.05) / (Math.min(lf, lb) + 0.05));
       }
       ratios.sort((a, b) => a - b);
-      return ratios[Math.floor(ratios.length * 0.05)];
+      return ratios[Math.floor(ratios.length * percentile)];
     },
-    { b64: png.toString('base64'), colour },
+    { b64: png.toString('base64'), colour, percentile },
   );
   await blank.close();
   return Math.round(p5 * 100) / 100;
@@ -117,14 +123,15 @@ async function open(
   mode: 'ok' | 'error',
   reading: { intensity: number; index: string } = { intensity: 0, index: 'very low' },
 ) {
-  await page.clock.install({ time: new Date(iso) });
+  await pinClocks(page, iso);
   await page.setViewportSize({ width: vw, height: vh });
   const isDay = t === 'night' || t === 'dusk' ? 0 : 1;
   await installMocks(context, { mode, ...reading, weather: { ...weather, is_day: isDay } });
   await context.addInitScript(seedStorage());
+  await context.addInitScript(`localStorage.setItem('gridgreen-scene-preference', 'countryside')`);
   await page.goto('/');
   // BH-113: the page clock is installed before anything else (Node's Date.now is
-  // never pinned), so past instants apply. Prove the scene is at the intended time.
+  // pinned afterwards by pinClocks), so past instants apply. Prove the scene is at the intended time.
   await expect(page.getByRole('region', { name: /Animated landscape/ })).toHaveAttribute(
     'data-time-of-day',
     t,
@@ -163,6 +170,18 @@ for (const [vw, vh] of VIEWPORTS) {
           await expect(digits).toHaveCount(1);
           const number = await measure(page, digits, await colourOf(digits));
           const label = await measure(page, band, await colourOf(band));
+          const units = page.getByTestId('hero-number').getByText('gCO₂', { exact: true });
+          const perKwh = page.getByTestId('hero-number').getByText('/kWh', { exact: true });
+          const quip = page.getByTestId('hero-quip');
+          const renewable = page.getByTestId('hero-meta').locator('p');
+          const timestamp = page.getByTestId('hero-meta').locator('div.flex.items-center').last();
+          // Small text has no large-text allowance. Measure the actual worst
+          // rendered backdrop pixel, not a static fill or a forgiving percentile.
+          const unitRatio = await measure(page, units, await colourOf(units), 0);
+          const perKwhRatio = await measure(page, perKwh, await colourOf(perKwh), 0);
+          const quipRatio = await measure(page, quip, await colourOf(quip), 0);
+          const renewableRatio = await measure(page, renewable, await colourOf(renewable), 0);
+          const timestampRatio = await measure(page, timestamp, await colourOf(timestamp), 0);
           if (
             OUT &&
             (wn === 'storm' || wn === 'snow' || wn === 'overcast' || level !== 'very low')
@@ -179,9 +198,33 @@ for (const [vw, vh] of VIEWPORTS) {
             cloudGap = Math.round(bankBox.y - (text.y + text.height));
             expect(cloudGap, `${vw} ${t} ${wn} cloud gap`).toBeGreaterThanOrEqual(33);
           }
-          log({ vw, t, wn, level, state: 'reading', tone, number, label, cloudGap });
+          log({
+            vw,
+            t,
+            wn,
+            level,
+            state: 'reading',
+            tone,
+            number,
+            label,
+            units: unitRatio,
+            perKwh: perKwhRatio,
+            quip: quipRatio,
+            renewable: renewableRatio,
+            timestamp: timestampRatio,
+            cloudGap,
+          });
           expect(number, `${vw} ${t} ${wn} number`).toBeGreaterThanOrEqual(TEXT_MIN);
           expect(label, `${vw} ${t} ${wn} band label`).toBeGreaterThanOrEqual(TEXT_MIN);
+          for (const [name, ratio] of Object.entries({
+            units: unitRatio,
+            perKwh: perKwhRatio,
+            quip: quipRatio,
+            renewable: renewableRatio,
+            timestamp: timestampRatio,
+          })) {
+            expect(ratio, `${vw} ${t} ${wn} ${name}`).toBeGreaterThanOrEqual(TEXT_MIN);
+          }
           if (t === 'dusk' || t === 'night') expect(tone).toBe('light');
         });
       }
