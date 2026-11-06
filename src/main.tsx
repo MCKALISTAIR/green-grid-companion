@@ -18,24 +18,55 @@ initMonitoring({
 import { logger } from './lib/logger';
 import { hydrateAppStorage } from './lib/appStorage';
 import { installExternalLinkHandler } from './lib/openExternal';
-import { captureOAuthRedirect, completeOAuthRedirect } from './lib/oauthRedirect';
+import { captureOAuthRedirect, completeOAuthRedirect, stripOAuthParams } from './lib/oauthRedirect';
+import { consumeOAuthStart } from './lib/oauthIntent';
 import { supabase } from './integrations/supabase/client';
-import { nativeHandoffUrl } from './lib/nativeAuth';
+import { installStaleChunkReload } from './lib/staleChunkReload';
+import { installAnonMigration } from './lib/anonMigration';
+import { toast } from 'sonner';
+import { shouldBlockFraming } from './lib/frameGuard';
 
 // BH-119: read Google/Apple sign-in tokens from the URL before anything can
 // navigate (the "no postcode -> /onboarding" redirect used to drop them).
-// BH-119 (iOS): a broker return meant for the app (?app=ios) that opened in the
-// browser instead of as a universal link. Hand it to GridSense:// and don't keep
-// the session on the web.
-const nativeHandoff = typeof window !== 'undefined' ? nativeHandoffUrl(window.location.href) : null;
-if (nativeHandoff) {
-  window.history.replaceState(null, '', '/auth/callback');
-  window.location.replace(nativeHandoff);
-}
+// The native app uses only its HTTPS universal link with state and PKCE; there
+// is deliberately no custom-scheme token forwarding here or in nativeAuth.ts.
 const oauthReturn =
-  typeof window !== 'undefined' && !nativeHandoff
-    ? captureOAuthRedirect(window.location.href)
-    : null;
+  typeof window !== 'undefined' ? captureOAuthRedirect(window.location.href) : null;
+// BH-145/146: take tokens out of the address bar straight away, before
+// supabase-js, the router or Sentry can see them.
+if (oauthReturn) {
+  try {
+    window.history.replaceState(window.history.state, '', stripOAuthParams(window.location.href));
+  } catch {
+    // completeOAuthRedirect strips again later
+  }
+}
+
+// BH-131: an open tab whose old chunks were removed by a deploy reloads once.
+if (typeof window !== 'undefined') {
+  installStaleChunkReload({
+    target: window,
+    storage: sessionStorage,
+    reload: () => window.location.reload(),
+  });
+}
+
+// BH-129: move anonymous Octopus data to the account after any sign-in,
+// including a web OAuth return that lands outside Settings.
+installAnonMigration({
+  onAuthStateChange: (cb) => supabase.auth.onAuthStateChange(cb),
+  invoke: (previousUserId, previousUserToken) =>
+    supabase.functions.invoke('octopus-energy', {
+      body: { action: 'migrate-data', previousUserId, previousUserToken },
+    }),
+  storage: localStorage,
+  onMigrated: ({ credentials, meters = 0, footprint_records = 0 }) => {
+    if (credentials || meters > 0) {
+      toast.success(`Restored ${meters} meter(s) and ${footprint_records} records`);
+    }
+  },
+  onError: (error) => logger.warn('Data migration failed', { error: String(error) }),
+});
 
 // Native: external links open in SFSafariViewController, not Safari (BH-51).
 installExternalLinkHandler();
@@ -58,8 +89,18 @@ void Promise.allSettled([
     location: window.location,
     history: window.history,
     warn: (message, context) => logger.warn(message, context),
+    consumeIntent: () => consumeOAuthStart(),
   }),
 ]).finally(() => {
+  // BH-151: never render the app inside someone else's frame on production.
+  if (shouldBlockFraming(window)) {
+    try {
+      window.top!.location.href = window.location.href;
+    } catch {
+      // Sandboxed frame: just stay blank.
+    }
+    return;
+  }
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <App />

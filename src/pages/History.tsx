@@ -9,6 +9,7 @@ import {
 } from '@/lib/carbonApi';
 import { useCarbonData } from '@/hooks/useCarbonData';
 import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
+import { OctopusStaleNotice } from '@/components/OctopusStaleNotice';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 import {
@@ -96,7 +97,7 @@ export default function HistoryPage() {
     isError: isRegionError,
     error: regionError,
   } = useCarbonData(postcode);
-  const { footprint, isLinked } = useOctopusEnergy();
+  const { footprint, isLinked, status: octopusStatus } = useOctopusEnergy();
 
   const [timeRange, setTimeRange] = useState<'24h' | '7d'>('7d');
   const [date, setDate] = useState<Date | undefined>(undefined); // If defined, we are in Time Machine mode
@@ -242,8 +243,8 @@ export default function HistoryPage() {
           </div>
           <EmptyState
             icon={BarChart3}
-            title="No Historical Data"
-            description="We couldn't find any historical carbon intensity data for this region."
+            title="Nothing here yet"
+            description="No history came back for this region on this day. Try another day."
           />
         </div>
       </div>
@@ -263,7 +264,7 @@ export default function HistoryPage() {
         <motion.div variants={itemVariants}>
           <PageHeader
             title={date ? 'Time Machine' : 'Grid History'}
-            description={date ? `Archives for ${format(date, 'MMMM do, yyyy')}` : undefined}
+            description={date ? `The grid on ${format(date, 'd MMMM yyyy')}` : undefined}
             actions={
               <div className="flex items-center gap-2">
                 <Popover>
@@ -304,8 +305,8 @@ export default function HistoryPage() {
                     variant="ghost"
                     size="icon"
                     onClick={() => setDate(undefined)}
-                    title="Return to Present"
-                    aria-label="Return to present"
+                    title="Back to today"
+                    aria-label="Back to today"
                   >
                     <RotateCcw className="h-4 w-4" aria-hidden="true" />
                   </Button>
@@ -320,7 +321,7 @@ export default function HistoryPage() {
           {!postcode ? (
             <motion.div key="no-postcode" variants={itemVariants}>
               <Card className="sheet-surface p-6 text-center">
-                <p>Please enter a postcode in Settings to see regional history.</p>
+                <p>Add a postcode in Settings to see your region&apos;s history.</p>
               </Card>
             </motion.div>
           ) : showHistorySkeleton ? (
@@ -382,10 +383,9 @@ export default function HistoryPage() {
                       <div className="text-sm space-y-1">
                         {isLinked && (
                           <p className="text-muted-foreground leading-relaxed pt-1">
-                            Yellow <span className="font-medium text-foreground">usage bars</span>{' '}
-                            are your metered kWh. When bars stack under a dirty intensity spike,
-                            that usage hurts your Green Score — shift those loads into cleaner hours
-                            to improve it.
+                            Yellow <span className="font-medium text-foreground">bars</span> are
+                            your metered kWh. Usage under a dirty spike pulls your Green Score down,
+                            so moving those loads to cleaner hours lifts it.
                           </p>
                         )}
                       </div>
@@ -466,20 +466,26 @@ export default function HistoryPage() {
               )}
 
               {/* Stats Cards */}
+              {isLinked && (
+                <OctopusStaleNotice
+                  variant="history"
+                  latestConsumption={octopusStatus?.latest_consumption}
+                />
+              )}
               <motion.div variants={itemVariants} className="grid grid-cols-2 gap-4">
                 <motion.div
                   className="h-full"
                   whileHover={{ y: -3, scale: 1.01 }}
                   transition={{ type: 'spring' as const, stiffness: 450, damping: 22 }}
                 >
-                  <Card className="sheet-surface p-4 border-primary/20 bg-primary/5 h-full">
+                  <Card className="sheet-surface p-4 border-primary/20 bg-primary/5 h-full min-h-[8.5rem]">
                     <div className="text-muted-foreground text-xs uppercase font-bold tracking-wider">
                       Average
                     </div>
-                    <div className="text-2xl font-bold mt-1">
-                      {avgIntensity}{' '}
-                      <span className="text-sm font-normal text-muted-foreground">gCO2/kWh</span>
+                    <div className="text-2xl font-bold mt-1 leading-tight whitespace-nowrap">
+                      {avgIntensity}
                     </div>
+                    <div className="text-xs text-muted-foreground whitespace-nowrap">gCO₂/kWh</div>
                     <div className="text-xs text-muted-foreground mt-1">
                       {timeRange === '7d' ? '7 days' : '24h'}
                     </div>
@@ -491,7 +497,7 @@ export default function HistoryPage() {
                     whileHover={{ y: -3, scale: 1.01 }}
                     transition={{ type: 'spring' as const, stiffness: 450, damping: 22 }}
                   >
-                    <Card className="sheet-surface p-4 border-muted h-full">
+                    <Card className="sheet-surface p-4 border-muted h-full min-h-[8.5rem]">
                       <div className="text-muted-foreground text-xs uppercase font-bold tracking-wider">
                         Footprint
                       </div>
@@ -517,7 +523,7 @@ export default function HistoryPage() {
                     whileHover={{ y: -3, scale: 1.01 }}
                     transition={{ type: 'spring' as const, stiffness: 450, damping: 22 }}
                   >
-                    <Card className="sheet-surface p-4 border-muted h-full">
+                    <Card className="sheet-surface p-4 border-muted h-full min-h-[8.5rem]">
                       <div className="text-muted-foreground text-xs uppercase font-bold tracking-wider">
                         Trend
                       </div>
@@ -532,7 +538,7 @@ export default function HistoryPage() {
                         <span
                           data-testid="history-trend-value"
                           data-trend={trend}
-                          className={`text-sm font-bold ${
+                          className={`text-2xl font-bold leading-tight whitespace-nowrap ${
                             trend === 'improving'
                               ? 'text-green-600'
                               : trend === 'worsening'
@@ -540,8 +546,11 @@ export default function HistoryPage() {
                                 : 'text-foreground'
                           }`}
                         >
-                          {Math.abs(endVal - startVal)} gCO2/kWh
+                          {Math.abs(endVal - startVal)}
                         </span>
+                      </div>
+                      <div className="text-xs text-muted-foreground whitespace-nowrap">
+                        gCO₂/kWh
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">
                         {historyTrendCopy(trend, timeRange)}
@@ -557,7 +566,7 @@ export default function HistoryPage() {
                   <CardHeader className="p-0 pb-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
-                        <CardTitle>{timeRange === '24h' ? '24 Hour' : '7 Day'} View</CardTitle>
+                        <CardTitle>{timeRange === '24h' ? '24-hour view' : '7-day view'}</CardTitle>
                         <CardDescription>
                           <div className="flex items-center gap-3 text-xs mt-1 flex-wrap">
                             <span className="flex items-center gap-1">

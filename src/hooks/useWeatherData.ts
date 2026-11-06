@@ -136,7 +136,7 @@ export function useWeatherData(postcode?: string) {
         // the dashboard and scene keep rendering deterministically.
         logger.warn('Could not resolve postcode, using default weather location');
         setCoords(DEFAULT_COORDS);
-        setCoordsError('Location unavailable, using London weather');
+        setCoordsError('No location, so showing London weather');
         return;
       }
 
@@ -184,7 +184,7 @@ export function useWeatherData(postcode?: string) {
         setCoords(newCoords);
       } catch (error) {
         logger.debug('Could not get location for weather, using default', { error });
-        setCoordsError('Location unavailable, using London weather');
+        setCoordsError('No location, so showing London weather');
         setCoords(DEFAULT_COORDS);
       }
     }

@@ -7,6 +7,9 @@ interface OffshoreWindProps {
   weatherKnown?: boolean; // Unknown weather → shared idle speed
 }
 
+/** Distant offshore turbines (scene x), outside the hero text column. */
+export const OFFSHORE_WIND_X = [70, 304, 362] as const;
+
 export function OffshoreWind({
   count = 3,
   windSpeed = 10,
@@ -27,7 +30,7 @@ export function OffshoreWind({
     >
       {/* Offshore turbines spread across horizon */}
       {Array.from({ length: count }).map((_, i) => {
-        const x = 80 + i * 100; // Spread across background
+        const x = OFFSHORE_WIND_X[i % OFFSHORE_WIND_X.length]; // Outside the hero column
         const scale = 0.25 + i * 0.05; // Slight size variation for depth
 
         return (

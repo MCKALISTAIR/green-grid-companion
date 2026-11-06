@@ -29,6 +29,12 @@ export const SYNC_LOOKBACK_CAP_DAYS = 30;
 export const SYNC_OVERLAP_MS = 2 * DAY_MS;
 /** NESO /intensity/{from}/{to} allows at most 14 days; stay well under it. */
 export const NESO_WINDOW_DAYS = 7;
+/**
+ * BH-127: if the newest stored reading is older than this and Octopus sends
+ * nothing newer, the meter has stalled (meter exchange, no data from the DCC,
+ * wrong serial). That is a failed sync, not a success: last_sync_at must not move.
+ */
+export const STALL_AFTER_MS = 2 * DAY_MS;
 /** Octopus pages are 25,000 rows; 30 days is ~1,440. This only stops a runaway `next` loop. */
 export const OCTOPUS_MAX_PAGES = 10;
 export const DB_CHUNK_SIZE = 1000;
@@ -67,6 +73,17 @@ export interface OctopusStore {
     error: DbError;
   }>;
   markSynced(userId: string, mpan: string, atIso: string): Promise<{ error: DbError }>;
+  /**
+   * BH-127: record that Octopus rejected the key (401/403) for this meter, so
+   * get-status can show "Octopus rejected your key". Cleared by markSynced and
+   * by save-credentials.
+   */
+  markSyncError(
+    userId: string,
+    mpan: string,
+    error: string,
+    atIso: string,
+  ): Promise<{ error: DbError }>;
 }
 
 // ---------------------------------------------------------------------------
@@ -344,6 +361,9 @@ export interface MeterSyncResult {
  * succeeded. A NESO/footprint failure is reported but doesn't block it,
  * because the readings themselves did sync; the next calculate run fills in.
  */
+/** BH-127: Octopus errors that mean the stored key was rejected. */
+export const KEY_REJECTED_ERRORS = new Set(['octopus_http_401', 'octopus_http_403']);
+
 export async function syncMeter(
   deps: { fetch: FetchLike; store: OctopusStore; now?: () => Date },
   opts: {
@@ -381,7 +401,13 @@ export async function syncMeter(
   });
   base.http_status = fetched.http_status;
   base.readings_fetched = fetched.readings.length;
-  if (!fetched.ok) return { ...base, error: fetched.error };
+  if (!fetched.ok) {
+    if (fetched.error && KEY_REJECTED_ERRORS.has(fetched.error)) {
+      // Best effort: a failed write here must not hide the 401 from the caller.
+      await deps.store.markSyncError(opts.userId, opts.mpan, fetched.error, now.toISOString());
+    }
+    return { ...base, error: fetched.error };
+  }
 
   const rows: ConsumptionRow[] = fetched.readings.map((r) => ({
     interval_start: halfHourKeyToIso(halfHourKey(r.interval_start)!),
@@ -416,6 +442,20 @@ export async function syncMeter(
   if (fp.error) base.footprint_error = fp.error;
 
   if (storeError) return { ...base, error: storeError };
+
+  // BH-127: Octopus answered 200 but sent nothing newer than what we already
+  // hold, and that is over 48h old. Report it so the stall shows up in the
+  // cron result and logs, and leave last_sync_at alone so it stays truthful.
+  const latestKey = halfHourKey(latest.value);
+  if (latestKey !== null && now.getTime() - latestKey * HALF_HOUR_MS > STALL_AFTER_MS) {
+    const newestFetched = rows.reduce(
+      (m, r) => Math.max(m, halfHourKey(r.interval_start) ?? -Infinity),
+      -Infinity,
+    );
+    if (newestFetched <= latestKey) {
+      return { ...base, error: 'no_new_readings' };
+    }
+  }
 
   const marked = await deps.store.markSynced(opts.userId, opts.mpan, now.toISOString());
   if (marked.error) return { ...base, error: `last_sync_update: ${errText(marked.error)}` };
@@ -554,7 +594,15 @@ export function supabaseOctopusStore(supabase: AnyClient): OctopusStore {
     async markSynced(userId, mpan, atIso) {
       const { error } = await supabase
         .from('octopus_meters')
-        .update({ last_sync_at: atIso })
+        .update({ last_sync_at: atIso, last_sync_error: null, last_sync_error_at: null })
+        .eq('mpan', mpan)
+        .eq('user_id', userId);
+      return { error };
+    },
+    async markSyncError(userId, mpan, syncError, atIso) {
+      const { error } = await supabase
+        .from('octopus_meters')
+        .update({ last_sync_error: syncError, last_sync_error_at: atIso })
         .eq('mpan', mpan)
         .eq('user_id', userId);
       return { error };

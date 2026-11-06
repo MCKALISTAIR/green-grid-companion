@@ -18,6 +18,8 @@ import { ErrorState } from '@/components/ErrorState';
 import { useGridDemand } from '@/hooks/useGridDemand';
 import { SceneWaveDivider } from '@/components/scene/SceneWaveDivider';
 import { EnergyFactBubble } from '@/components/scene/EnergyFactBubble';
+import { GardenStageUpPill } from '@/components/home/GardenStageUpPill';
+import { useSceneType } from '@/hooks/useSceneType';
 import { LocationMismatchPrompt } from '@/components/LocationMismatchPrompt';
 import { YearWrapped } from '@/components/YearWrapped';
 import { getRenewablesPercentage } from '@/lib/generationUtils';
@@ -112,6 +114,7 @@ const Index = () => {
     offGridArea: offGrid,
     isError,
     hasReading,
+    isActualReading,
     error,
     refetch,
     getNextUpdate,
@@ -142,7 +145,13 @@ const Index = () => {
 
   const { frequency: gridFrequency } = useGridDemand();
   const renewablesPct = getRenewablesPercentage(generationMix);
-  const sceneGrowth = useSceneGrowth(intensity, generationMix);
+  // No garden in the city scene, so no stage-up pill there (Design, 30 Oct 2026).
+  const { sceneType } = useSceneType();
+  const sceneGrowth = useSceneGrowth(
+    intensity,
+    // BH-143: GB without a postcode; wait for the region id when there is one.
+    postcode ? regionId : null,
+  );
 
   const cleanliness = useMemo(() => {
     const band = index || 'moderate';
@@ -208,7 +217,7 @@ const Index = () => {
         });
       } else {
         toast.info('Checked for updates', {
-          description: 'Nothing new from NESO yet. Try again in a few minutes.',
+          description: 'Nothing new from NESO yet. Try again soon.',
         });
       }
     }
@@ -261,9 +270,10 @@ const Index = () => {
         <PullToRefresh onRefresh={handleRefresh} disabled={isLoading}>
           {/* Shared app-content inset lives inside home-feed to clear the dock without a sky-coloured gap. */}
           <main className="home-shell flex flex-col animate-in fade-in duration-700 lg:min-h-[100dvh] lg:pb-0">
-            <h1 className="sr-only">Carbon Intensity Dashboard</h1>
+            <h1 className="sr-only">Home</h1>
 
             <IntensityHeroOverlay
+              growthStage={sceneGrowth.stage}
               postcode={postcode}
               setPostcode={setPostcode}
               region={region}
@@ -272,6 +282,7 @@ const Index = () => {
               intensity={intensity}
               previousIntensity={previousIntensity}
               index={index}
+              isActualReading={isActualReading}
               generationMix={generationMix}
               isLoading={isLoading}
               isBackgroundFetching={isBackgroundFetching}
@@ -298,6 +309,13 @@ const Index = () => {
               >
                 <SceneWaveDivider cleanliness={cleanliness} />
               </div>
+
+              {/* Absolutely positioned over the handle row: no layout shift on show/hide. */}
+              <GardenStageUpPill
+                growthStage={sceneGrowth.stage}
+                gardenDays={sceneGrowth.gardenDays}
+                enabled={sceneType !== 'city'}
+              />
 
               <div className="flex justify-center pt-0.5 pb-1 lg:hidden" aria-hidden>
                 <div className="h-1 w-10 rounded-full bg-muted-foreground/25" />
@@ -331,10 +349,10 @@ const Index = () => {
                 <div className="mx-2 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-lg flex items-start gap-3 text-sm text-amber-800 dark:text-amber-200 animate-in fade-in">
                   <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-500" />
                   <div>
-                    <p className="font-semibold">Regional data degraded</p>
+                    <p className="font-semibold">Can&apos;t get your local figures</p>
                     <p>
-                      We're currently unable to fetch data for {postcode} and are showing National
-                      Grid averages instead.
+                      We can&apos;t get figures for {postcode} right now, so we&apos;re showing the
+                      GB average instead.
                     </p>
                   </div>
                 </div>
@@ -416,8 +434,6 @@ const Index = () => {
                             lastUpdated={lastUpdated}
                             glowClass={glowClass}
                             showWeatherInInsights={prefs.showWeatherInInsights}
-                            gardenDays={sceneGrowth.gardenDays}
-                            growthStage={sceneGrowth.stage}
                             regionId={regionId ?? null}
                             regionName={region}
                           />

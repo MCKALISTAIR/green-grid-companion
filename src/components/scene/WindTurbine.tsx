@@ -74,7 +74,7 @@ export function WindTurbine({ scale = 1, speed = 4, onClick }: WindTurbineProps)
       onClick={handleClick}
       role="button"
       tabIndex={0}
-      aria-label="Wind Turbine - Click to boost speed"
+      aria-label="Wind turbine. Tap to speed it up"
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           handleClick();

@@ -64,24 +64,23 @@ export default function Help() {
                     <strong>What is GridSense?</strong>
                   </p>
                   <p>
-                    GridSense shows you real-time carbon intensity data for the UK electricity grid,
-                    helping you use energy when it's greenest.
+                    GridSense shows carbon intensity data for the GB electricity grid, updated every
+                    half hour, so you can use power when it&apos;s cleanest.
                   </p>
 
                   <p className="pt-2">
                     <strong>How do I change my region?</strong>
                   </p>
                   <p>
-                    Tap the region name at the top of the intensity card on the home screen. You can
-                    search by postcode, town name, or use your current location.
+                    Tap the region name at the top of the intensity card on Home. You can search by
+                    postcode, town name, or use your current location.
                   </p>
 
                   <p className="pt-2">
                     <strong>What do the numbers mean?</strong>
                   </p>
                   <p>
-                    The main number shows grams of CO₂ per kilowatt-hour (gCO₂/kWh). Lower numbers
-                    mean cleaner, greener energy.
+                    The main number is grams of CO₂ per kilowatt-hour (gCO₂/kWh). Lower is cleaner.
                   </p>
                 </div>
               </AccordionContent>
@@ -101,19 +100,19 @@ export default function Help() {
                   </p>
                   <ul className="list-disc pl-5 space-y-1">
                     <li>
-                      <strong>Very Low</strong>: Best time to use energy
+                      <strong>Very Low</strong>: A great time for big loads
                     </li>
                     <li>
-                      <strong>Low</strong>: Good time to use energy
+                      <strong>Low</strong>: A good time for big loads
                     </li>
                     <li>
                       <strong>Moderate</strong>: Average carbon intensity
                     </li>
                     <li>
-                      <strong>High</strong>: Try to defer usage if possible
+                      <strong>High</strong>: Worth waiting if you can
                     </li>
                     <li>
-                      <strong>Very High</strong>: Avoid heavy usage
+                      <strong>Very High</strong>: Hold off if you can
                     </li>
                   </ul>
                   <p className="text-muted-foreground">
@@ -125,10 +124,7 @@ export default function Help() {
                   <p className="pt-2">
                     <strong>How often does data update?</strong>
                   </p>
-                  <p>
-                    Data updates every 30 minutes from NESO. Pull down on the home screen to
-                    manually refresh.
-                  </p>
+                  <p>NESO updates the data every 30 minutes. Pull down on Home to refresh.</p>
 
                   <p className="pt-2">
                     <strong>Where does the data come from?</strong>
@@ -139,8 +135,8 @@ export default function Help() {
                     <strong>Why do regions differ?</strong>
                   </p>
                   <p>
-                    The UK grid is divided into regions with different generation mixes. Windy
-                    Scotland often has lower intensity than areas relying on gas power.
+                    GB&apos;s grid is split into regions with different generation mixes. Windy
+                    Scotland often has lower intensity than areas leaning on gas.
                   </p>
                 </div>
               </AccordionContent>
@@ -159,8 +155,7 @@ export default function Help() {
                     <strong>Navigation:</strong>
                   </p>
                   <p>
-                    Swipe or tap the bottom tabs to access Power Planner, History, Leaderboard, and
-                    Settings.
+                    Swipe or tap the tabs at the bottom to get to Plan, History, Rank and Settings.
                   </p>
                 </div>
               </AccordionContent>
@@ -179,16 +174,16 @@ export default function Help() {
                     <strong>How do I set up alerts?</strong>
                   </p>
                   <p>
-                    Go to Settings → Notifications. Enable low intensity alerts to get notified when
-                    the grid is clean, or high intensity warnings when it's dirty.
+                    Go to Settings → Notifications. Turn on low intensity alerts for a nudge when
+                    the grid&apos;s clean, or high intensity alerts for a warning when it&apos;s
+                    dirty.
                   </p>
 
                   <p className="pt-2">
                     <strong>What are daily forecasts?</strong>
                   </p>
                   <p>
-                    Get a summary of the day's carbon intensity forecast delivered at your chosen
-                    time each morning.
+                    A summary of the day&apos;s forecast, sent each morning at a time you choose.
                   </p>
 
                   <p className="pt-2">
@@ -196,8 +191,8 @@ export default function Help() {
                   </p>
                   <p>
                     On iOS: Settings → GridSense → Notifications. On web: allow notifications in the
-                    browser for this site, then refresh. Also ensure the alerts are enabled within
-                    the app.
+                    browser for this site, then refresh. And check the alerts are switched on in the
+                    app.
                   </p>
                 </div>
               </AccordionContent>
@@ -216,17 +211,21 @@ export default function Help() {
                     <strong>Live readings</strong>
                   </p>
                   <p>
-                    Carbon intensity comes from NESO. We show NESO's measured figure when it has
-                    published one, otherwise its forecast. Forecasts can change.
+                    Carbon intensity comes from NESO. For a region, the live number is always
+                    NESO&apos;s forecast, a modelled estimate. For Great Britain as a whole, we show
+                    NESO&apos;s after-the-fact figure once it&apos;s published, otherwise its
+                    forecast. That figure is also an estimate, worked out from metered power
+                    stations plus NESO&apos;s estimate of small-scale solar and wind. Forecasts can
+                    change.
                   </p>
 
                   <p className="pt-2">
                     <strong>What does "Estimate" mean?</strong>
                   </p>
                   <p>
-                    NESO doesn't publish measured figures for regions, so past regional readings are
-                    worked out by GridSense from the fuel mix. They're marked "Estimate" and aren't
-                    NESO figures.
+                    NESO doesn&apos;t publish after-the-fact figures for regions, so past regional
+                    readings are worked out by GridSense from the fuel mix. They're marked
+                    "Estimate" and aren't NESO figures.
                   </p>
 
                   <p className="pt-2">
@@ -262,18 +261,17 @@ export default function Help() {
                     <strong>How does it work?</strong>
                   </p>
                   <p>
-                    The Power Planner shows you the best and worst times to use energy based on the
-                    24-hour forecast. Green periods are ideal for charging devices or running
-                    appliances.
+                    The Power Planner shows the best and worst times to use power, from the
+                    forecast. Green periods are good for charging or running appliances.
                   </p>
 
                   <p className="pt-2">
                     <strong>Planning strategies:</strong>
                   </p>
                   <ul className="list-disc pl-5 space-y-1">
-                    <li>Schedule dishwasher, washing machine for green periods</li>
+                    <li>Run the dishwasher and washing machine in green periods</li>
                     <li>Charge EVs and devices overnight when intensity is low</li>
-                    <li>Delay heavy usage during red "avoid" periods</li>
+                    <li>Hold off big loads in the red, dirtiest times</li>
                   </ul>
                 </div>
               </AccordionContent>
@@ -300,8 +298,7 @@ export default function Help() {
                     <strong>Managing saved locations:</strong>
                   </p>
                   <p>
-                    In Settings, you'll find a "Saved Locations" section where you can view, edit,
-                    or delete saved locations.
+                    In Settings, open &quot;Manage Locations&quot; to rename or delete saved places.
                   </p>
                 </div>
               </AccordionContent>
@@ -319,16 +316,13 @@ export default function Help() {
                   <p>
                     <strong>Data not updating:</strong>
                   </p>
-                  <p>
-                    Pull down to refresh manually. If issues persist, check your internet
-                    connection.
-                  </p>
+                  <p>Pull down to refresh. Still stuck? Check your internet connection.</p>
 
                   <p className="pt-2">
                     <strong>Scene not loading:</strong>
                   </p>
                   <p>
-                    Try restarting the app. The animated scene requires good performance and may be
+                    Try restarting the app. The animated scene is quite demanding, so it may be
                     simplified on older devices.
                   </p>
 
@@ -381,8 +375,12 @@ export default function Help() {
                     <strong>What data do you collect?</strong>
                   </p>
                   <p>
-                    Your preferences are stored locally on your device. Location data is used solely
-                    to fetch regional carbon intensity and is never shared.
+                    We use your location to find your grid region and local weather. We round it to
+                    about 1 km before it leaves your device, and only keep the first half of your
+                    postcode. Lookups go to postcodes.io and OpenStreetMap (region and place names),
+                    Open-Meteo through our server (weather) and NESO&apos;s Carbon Intensity API
+                    (postcode area only). If you sign in, your saved places sync to your account; if
+                    you turn on alerts, we store your postcode area to send them.
                   </p>
 
                   <p className="pt-2">

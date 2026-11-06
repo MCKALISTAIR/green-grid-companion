@@ -40,7 +40,7 @@ export const ENERGY_FACTS: EnergyFact[] = [
   },
   {
     id: 'clean_snark_2',
-    text: 'Basically breathing pure oxygen. Go charge everything.',
+    text: "The grid's squeaky clean. Go charge everything.",
     category: 'clean_energy',
     tone: 'snarky',
     condition: (c) => c.intensity < 50,
@@ -54,14 +54,14 @@ export const ENERGY_FACTS: EnergyFact[] = [
   },
   {
     id: 'clean_friendly_1',
-    text: 'Great news! The grid is running on ultra-low carbon energy.',
+    text: "Good news. The grid's running really clean right now.",
     category: 'clean_energy',
     tone: 'friendly',
     condition: (c) => c.intensity < 50,
   },
   {
     id: 'clean_friendly_2',
-    text: "It's a perfect time to run high-energy appliances.",
+    text: 'A great time to run the big appliances.',
     category: 'clean_energy',
     tone: 'friendly',
     condition: (c) => c.intensity < 50,
@@ -84,14 +84,14 @@ export const ENERGY_FACTS: EnergyFact[] = [
   },
   {
     id: 'dirty_friendly_1',
-    text: 'Carbon intensity is high right now. Try to save energy if you can.',
+    text: 'The grid is running dirtier than usual right now. Hold off on big loads if you can.',
     category: 'dirty_energy',
     tone: 'friendly',
     condition: (c) => c.intensity > 200,
   },
   {
     id: 'dirty_friendly_2',
-    text: 'Consider delaying your dishwasher run until the grid cleans up.',
+    text: 'Maybe hold the dishwasher until the grid cleans up a bit.',
     category: 'dirty_energy',
     tone: 'friendly',
     condition: (c) => c.intensity > 200,
@@ -121,7 +121,7 @@ export const ENERGY_FACTS: EnergyFact[] = [
   },
   {
     id: 'windy_friendly_2',
-    text: 'Wind farms generate significant power during gusty weather like this.',
+    text: 'Gusty days like this are when wind farms earn their keep.',
     category: 'windy',
     tone: 'friendly',
     condition: (c) => c.windSpeed > 15,
@@ -167,16 +167,7 @@ export const ENERGY_FACTS: EnergyFact[] = [
   },
   {
     id: 'general_friendly_3',
-    text: 'Shifting usage to off-peak times helps balance the grid.',
-    category: 'general',
-    tone: 'friendly',
-    condition: () => true,
-  },
-  {
-    id: 'general_friendly_5',
-    text: 'In 2020, Britain went a record 67 days, 22 hours and 55 minutes without coal power.',
-    source:
-      'https://www.nationalgrideso.com/news/record-breaking-2020-becomes-greenest-year-britains-electricity ; https://www.independent.co.uk/climate-change/news/coal-free-power-uk-record-time-2020-how-long-renewable-energy-a9570891.html',
+    text: 'Moving big loads to quieter times helps balance the grid.',
     category: 'general',
     tone: 'friendly',
     condition: () => true,
@@ -255,7 +246,7 @@ export const ENERGY_FACTS: EnergyFact[] = [
   // --- HOME ENERGY EFFICIENCY ---
   {
     id: 'efficiency_snark_1',
-    text: 'Your old lightbulbs are basically tiny space heaters that happen to glow. Upgrade already.',
+    text: 'Old bulbs are basically tiny space heaters that happen to glow. LEDs do the job for less.',
     category: 'general',
     tone: 'snarky',
     condition: () => true,
@@ -264,14 +255,14 @@ export const ENERGY_FACTS: EnergyFact[] = [
   // --- BATTERY STORAGE & GRID BALANCING ---
   {
     id: 'battery_friendly_2',
-    text: 'Home battery systems let you store cheap overnight electricity for daytime use.',
+    text: 'A home battery can store cheap overnight power to use in the day.',
     category: 'general',
     tone: 'friendly',
     condition: () => true,
   },
   {
     id: 'battery_snark_1',
-    text: 'Your EV is basically a giant battery on wheels. Why not use it to power your kettle?',
+    text: "Your EV is basically a giant battery on wheels. Fill it up when the grid's clean.",
     category: 'general',
     tone: 'snarky',
     condition: () => true,
@@ -321,14 +312,14 @@ export const ENERGY_FACTS: EnergyFact[] = [
   // --- DOMESTIC SOLAR PANELS ---
   {
     id: 'solar_domestic_snark_1',
-    text: 'Your roof is just sitting there. Doing nothing. Put some panels on it already.',
+    text: 'Got a sunny roof? Solar panels could put it to work.',
     category: 'general',
     tone: 'snarky',
     condition: () => true,
   },
   {
     id: 'solar_domestic_snark_2',
-    text: 'Solar panels work in the UK? Shocking. Almost like they need light, not heat.',
+    text: 'Solar panels work in GB? Shocking. Almost like they need light, not heat.',
     category: 'general',
     tone: 'snarky',
     condition: () => true,
@@ -339,7 +330,7 @@ export const ENERGY_FACTS: EnergyFact[] = [
   // --- GRID INTERCONNECTORS ---
   {
     id: 'interconnector_2',
-    text: 'The North Sea Link to Norway brings renewable hydro power to the UK via a 720km cable.',
+    text: 'The North Sea Link to Norway brings renewable hydro power to GB via a 720km cable.',
     source: 'https://www.northsealink.com/north-sea-link/overview',
     category: 'general',
     tone: 'friendly',
@@ -347,7 +338,7 @@ export const ENERGY_FACTS: EnergyFact[] = [
   },
   {
     id: 'interconnector_3',
-    text: 'UK interconnectors help balance the grid - importing when we need it, exporting our surplus wind.',
+    text: "Interconnectors help balance the grid: importing when we're short, exporting spare wind.",
     category: 'general',
     tone: 'friendly',
     condition: () => true,
@@ -383,8 +374,6 @@ export const ENERGY_FACTS: EnergyFact[] = [
     tone: 'snarky',
     condition: () => true,
   },
-
-  // Note: coal_free_current fact will be added dynamically by useEnergyFacts hook
 ];
 
 export function getRandomFact(
@@ -400,33 +389,6 @@ export function getRandomFact(
 
   // 2. Filter by condition
   eligible = eligible.filter((f) => !f.condition || f.condition(context));
-
-  // Dynamic insertion of active coal-free streak if eligible under friendly tone
-  if (tonePref === 'friendly' || tonePref === 'mixed') {
-    try {
-      const stored =
-        typeof window !== 'undefined' ? localStorage.getItem('coal-free-streak') : null;
-      if (stored) {
-        const streakData = JSON.parse(stored);
-        if (streakData && streakData.streakStarted) {
-          const start = new Date(streakData.streakStarted);
-          const current = new Date();
-          const diffMs = current.getTime() - start.getTime();
-          const diffHours = diffMs / (1000 * 60 * 60);
-          if (diffHours >= 24) {
-            eligible.push({
-              id: 'coal_free_current',
-              text: 'The UK is running coal-free!',
-              category: 'general',
-              tone: 'friendly',
-            });
-          }
-        }
-      }
-    } catch {
-      // fail-silent
-    }
-  }
 
   // 3. Prevent duplicate consecutive selections
   if (lastFactId && eligible.length > 1) {

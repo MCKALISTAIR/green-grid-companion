@@ -8,18 +8,32 @@ import { useEffect, useId, useRef, useState } from 'react';
 import {
   CLOUD_BANK_COLOURS,
   CLOUD_BANK_DAY_BELOW_TEXT,
-  MOOD,
   SUN_COLOURS,
-  type MoodBand,
   type SunTone,
   UNKNOWN_WEATHER_PALETTE,
   unknownWeatherTone,
 } from '@/lib/artPalette';
 import { bankRim, irregularBankEdge } from './bankEdge';
+import { SUN_DISC_HAZE, SUN_DISC_OPACITY, SUN_HALO_FACTOR, type HazeBand } from '@/lib/sceneHaze';
 
-export function SceneSun({ r = 22, tone = 'day' }: { r?: number; tone?: SunTone }) {
+export function SceneSun({
+  r = 22,
+  tone = 'day',
+  haze = 'none',
+}: {
+  r?: number;
+  tone?: SunTone;
+  /** PR-2b: haze dims the halo (x0.80 / 0.65 / 0.50) and warms the disc at high and above. */
+  haze?: HazeBand;
+}) {
   const id = useId().replace(/:/g, '');
   const [c0, c1] = SUN_COLOURS[tone];
+  // The disc's light top warms under high and very high haze, by day only (dawn
+  // and sunset discs are already warmer). The lower stop is unchanged, so the
+  // disc is never brown and never darker than the day disc.
+  const discTop = tone === 'day' ? (SUN_DISC_HAZE[haze] ?? c0) : c0;
+  const halo = SUN_HALO_FACTOR[haze];
+  const discOpacity = SUN_DISC_OPACITY[haze];
   const s = r * 3;
   return (
     <svg
@@ -36,23 +50,27 @@ export function SceneSun({ r = 22, tone = 'day' }: { r?: number; tone?: SunTone 
           <stop offset="1" stopColor={c0} stopOpacity="0" />
         </radialGradient>
         <linearGradient id={`${id}d`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor={c0} />
+          <stop offset="0" stopColor={discTop} />
           <stop offset="1" stopColor={c1} />
         </linearGradient>
       </defs>
-      <g className="art-breathe">
-        <circle r={r * 3} fill={`url(#${id}h)`} />
-        <circle r={r * 1.55} fill={c0} opacity=".18" />
+      {halo > 0 && (
+        <g className="art-breathe" opacity={halo === 1 ? undefined : halo} data-sun-halo={halo}>
+          <circle r={r * 3} fill={`url(#${id}h)`} />
+          <circle r={r * 1.55} fill={c0} opacity=".18" />
+        </g>
+      )}
+      <g opacity={discOpacity === 1 ? undefined : discOpacity} data-sun-opacity={discOpacity}>
+        <circle r={r} fill={`url(#${id}d)`} data-sun-disc={discTop} />
+        <path
+          d={`M${-r * 0.72} ${-r * 0.5} A${r} ${r} 0 0 1 ${r * 0.3} ${-r * 0.95}`}
+          stroke="#fff"
+          strokeOpacity=".7"
+          strokeWidth="2"
+          fill="none"
+          strokeLinecap="round"
+        />
       </g>
-      <circle r={r} fill={`url(#${id}d)`} />
-      <path
-        d={`M${-r * 0.72} ${-r * 0.5} A${r} ${r} 0 0 1 ${r * 0.3} ${-r * 0.95}`}
-        stroke="#fff"
-        strokeOpacity=".7"
-        strokeWidth="2"
-        fill="none"
-        strokeLinecap="round"
-      />
     </svg>
   );
 }
@@ -169,8 +187,8 @@ export function CloudBank({ night = false, topPx }: { night?: boolean; topPx?: n
     const top = Math.round(topPx);
     const day = CLOUD_BANK_DAY_BELOW_TEXT;
     const c = night
-      ? { back, front, base: front, rim: undefined }
-      : { back: day.back, front: day.front, base: day.base, rim: day.rim };
+      ? { back, front, base: front, mid: front, rim: undefined }
+      : { back: day.back, front: day.front, base: day.base, mid: day.mid, rim: day.rim };
     return (
       <div
         aria-hidden
@@ -202,13 +220,15 @@ export function CloudBank({ night = false, topPx }: { night?: boolean; topPx?: n
           />
         ) : (
           // By day the front lobes and the body are one surface (no seam where the
-          // lobes end): a gradient anchored to the scene's bottom, the horizon,
-          // where the intensity mood haze is strongest, so the bank still steps
-          // darker there. Its top is cut to the front lobes' scalloped edge.
+          // lobes end): a gradient anchored to the scene's bottom, the horizon, so
+          // the bank steps darker there; a slightly lighter mid-body (PR-2b, which
+          // removed the fake outage haze that used to lift it) and the top lobes
+          // back at the front tone, so no part is lighter than the sky. Its top is
+          // cut to the front lobes' scalloped edge.
           <div
             className="absolute inset-0"
             style={{
-              background: `linear-gradient(to top, ${c.base} 0px, ${c.base} 110px, ${c.front} 270px)`,
+              background: `linear-gradient(to top, ${c.base} 0px, ${c.base} 60px, ${c.mid} 120px, ${c.mid} 170px, ${c.front} 220px)`,
               ...FRONT_LOBES_MASK,
             }}
             data-bank-body
@@ -341,44 +361,15 @@ export function AuroraRibbon({ opacity = 0.38 }: { opacity?: number }) {
     >
       <path
         d={`M-10 ${y} C${w * 0.25} ${y - 40} ${w * 0.45} ${y + 20} ${w * 0.7} ${y - 30} S${w + 10} ${y - 10} ${w + 10} ${y - 24} V${y + 30} C${w * 0.6} ${y + 6} ${w * 0.3} ${y + 40} -10 ${y + 26}Z`}
-        fill="#5eead4"
+        fill="#5fd93a"
       />
       <path
         d={`M-10 ${y + 12} C${w * 0.3} ${y - 20} ${w * 0.5} ${y + 30} ${w + 10} ${y - 4} V${y + 18} C${w * 0.5} ${y + 40} ${w * 0.2} ${y + 18} -10 ${y + 30}Z`}
-        fill="#a7f3d0"
-        opacity=".7"
+        fill="#b5f58f"
+        opacity=".75"
       />
     </svg>
   );
-}
-
-/**
- * Intensity mood (replaces the sepia/teal SceneColorGrade): a horizon haze plus a
- * saturation change, by band only. Zero adds a mint glow. No smoke, no yellow cast.
- */
-export function IntensityMood({ band }: { band: MoodBand }) {
-  const m = MOOD[band];
-  return (
-    <div
-      className="absolute inset-0 z-[22] pointer-events-none art-fade"
-      aria-hidden="true"
-      data-art="mood"
-      data-mood={band}
-      style={{
-        backdropFilter: m.sat === 1 ? undefined : `saturate(${m.sat})`,
-        WebkitBackdropFilter: m.sat === 1 ? undefined : `saturate(${m.sat})`,
-        background:
-          m.a > 0
-            ? `linear-gradient(to bottom, transparent 30%, ${hexA(m.haze, m.a)} 78%, ${hexA(m.haze, m.a * 1.1)} 100%)`
-            : 'transparent',
-      }}
-    />
-  );
-}
-
-function hexA(hex: string, a: number) {
-  const n = parseInt(hex.slice(1), 16);
-  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${Math.min(1, a).toFixed(3)})`;
 }
 
 function useWidth<T extends HTMLElement>(fallback: number) {

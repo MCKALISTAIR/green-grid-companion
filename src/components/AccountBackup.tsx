@@ -1,5 +1,5 @@
 import { appStorage } from '@/lib/appStorage';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,12 +16,14 @@ import {
   Download,
   Lock,
 } from 'lucide-react';
+import { markOAuthStart, clearOAuthStart } from '@/lib/oauthIntent';
 import { lovable } from '@/integrations/lovable/index';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { User } from '@supabase/supabase-js';
 import { Capacitor } from '@capacitor/core';
 import { getAppleAuthorizationForDeletion } from '@/lib/appleRevocation';
+import { ANON_PROOF_KEY, ANON_USER_ID_KEY, rememberAnonUserId } from '@/lib/anonMigration';
 import { nativeSignIn } from '@/lib/nativeAuth';
 import {
   AlertDialog,
@@ -35,7 +37,6 @@ import {
 } from '@/components/ui/alert-dialog';
 
 // Storage key for previous anonymous user ID
-const ANON_USER_ID_KEY = 'octopus-anon-user-id';
 
 interface AccountBackupProps {
   isSyncing?: boolean;
@@ -59,7 +60,6 @@ export function AccountBackup({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [switchTarget, setSwitchTarget] = useState<'google' | 'apple' | null>(null);
-  const migrationAttemptedRef = useRef(false);
 
   const defaultFormatLastSync = (date: Date | null) => {
     if (!date) return 'Not yet synced';
@@ -86,40 +86,11 @@ export function AccountBackup({
       const previousUser = user;
       setUser(session?.user ?? null);
 
-      // Handle sign-in event - attempt data migration
-      if (event === 'SIGNED_IN' && session?.user && !migrationAttemptedRef.current) {
-        migrationAttemptedRef.current = true;
+      // Sign-in data migration runs from main.tsx (BH-129, lib/anonMigration).
 
-        // Check if there's a stored anonymous user ID to migrate from
-        const storedAnonId = localStorage.getItem(ANON_USER_ID_KEY);
-
-        if (storedAnonId && storedAnonId !== session.user.id) {
-          // Attempt to migrate data from the anonymous session
-          try {
-            const { data, error } = await supabase.functions.invoke('octopus-energy', {
-              body: { action: 'migrate-data', previousUserId: storedAnonId },
-            });
-
-            if (!error && data?.migrated) {
-              const { credentials, meters, footprint_records } = data.migrated;
-              if (credentials || meters > 0) {
-                toast.success(
-                  `Restored your Octopus data: ${meters} meter(s), ${footprint_records} footprint records`,
-                );
-              }
-            }
-          } catch (err) {
-            console.error('Data migration failed:', err);
-          }
-
-          // Clear the stored anon ID after migration attempt
-          localStorage.removeItem(ANON_USER_ID_KEY);
-        }
-      }
-
-      // Store anonymous user ID when signing out
+      // Store the user id on sign-out only if it was an anonymous user (BH-130).
       if (event === 'SIGNED_OUT' && previousUser?.id) {
-        localStorage.setItem(ANON_USER_ID_KEY, previousUser.id);
+        rememberAnonUserId(previousUser, localStorage);
       }
     });
 
@@ -134,29 +105,31 @@ export function AccountBackup({
       data: { session: currentSession },
     } = await supabase.auth.getSession();
     if (currentSession?.user?.id) {
-      localStorage.setItem(ANON_USER_ID_KEY, currentSession.user.id);
+      rememberAnonUserId(currentSession.user, localStorage, currentSession.access_token);
     }
 
     try {
       const isLocalhost =
         window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
-      // BH-119: native iOS can't use the web broker return. Apple uses the native
-      // sheet; Google opens in the system browser and returns via appUrlOpen.
+      // Keep the web broker's separately generated state and local intent marker.
+      // Native Google uses Supabase PKCE through the system browser instead;
+      // Apple uses the native identity-token flow (no browser return).
+      if (!Capacitor.isNativePlatform()) markOAuthStart();
       const { error } = Capacitor.isNativePlatform()
         ? await nativeSignIn(provider, { auth: supabase.auth })
         : await lovable.auth.signInWithOAuth(provider, {
-            // Localhost can't be used as OAuth redirect — use the preview URL instead
             redirect_uri: isLocalhost
               ? 'https://gridsense-app.lovable.app'
               : window.location.origin,
           });
 
       if (error) {
+        clearOAuthStart();
         toast.error(`Sign in failed: ${error.message}`);
       }
     } catch {
-      toast.error('Sign in failed. Please try again.');
+      toast.error("Couldn't sign you in. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -164,12 +137,11 @@ export function AccountBackup({
 
   const handleSignOut = async () => {
     setLoading(true);
-    migrationAttemptedRef.current = false; // Reset for next sign-in
     try {
       await supabase.auth.signOut();
-      toast.success('Signed out successfully');
+      toast.success("You're signed out");
     } catch {
-      toast.error('Sign out failed');
+      toast.error("Couldn't sign you out");
     } finally {
       setLoading(false);
     }
@@ -188,7 +160,7 @@ export function AccountBackup({
       });
 
       if (error) {
-        toast.error('Account deletion failed. Please try again.');
+        toast.error("Couldn't delete your account. Try again.");
         console.error('Delete account error:', error);
         return;
       }
@@ -200,7 +172,7 @@ export function AccountBackup({
       // Sign out locally (server account is already deleted)
       await supabase.auth.signOut({ scope: 'local' });
 
-      toast.success('Your account and all data have been permanently deleted.');
+      toast.success('Account and all data deleted for good.');
       if (usesApple && data?.apple_revocation !== 'revoked') {
         toast.info(
           'To finish, remove GridSense in your iPhone Settings: [your name] > Sign-In & Security > Sign in with Apple.',
@@ -209,7 +181,7 @@ export function AccountBackup({
       setShowDeleteDialog(false);
     } catch (err) {
       console.error('Delete account error:', err);
-      toast.error('Account deletion failed. Please try again.');
+      toast.error("Couldn't delete your account. Try again.");
     } finally {
       setIsDeleting(false);
       setDeleteConfirmText('');
@@ -222,7 +194,7 @@ export function AccountBackup({
       const { data, error } = await supabase.functions.invoke('export-data');
 
       if (error) {
-        toast.error('Data export failed. Please try again.');
+        toast.error("Couldn't export your data. Try again.");
         console.error('Export error:', error);
         return;
       }
@@ -238,10 +210,10 @@ export function AccountBackup({
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      toast.success('Your data export has been downloaded.');
+      toast.success("Your data's downloaded.");
     } catch (err) {
       console.error('Export error:', err);
-      toast.error('Data export failed. Please try again.');
+      toast.error("Couldn't export your data. Try again.");
     } finally {
       setIsExporting(false);
     }
@@ -258,9 +230,10 @@ export function AccountBackup({
     setLoading(true);
 
     try {
-      // Store current user ID for data migration
-      localStorage.setItem(ANON_USER_ID_KEY, user.id);
-      migrationAttemptedRef.current = false;
+      // BH-130: Octopus data can't move between two Google/Apple accounts (the
+      // server only migrates from anonymous users), so don't queue a migration.
+      localStorage.removeItem(ANON_USER_ID_KEY);
+      localStorage.removeItem(ANON_PROOF_KEY);
 
       // Sign out first
       await supabase.auth.signOut();
@@ -269,6 +242,7 @@ export function AccountBackup({
       const isLocalhost =
         window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
+      if (!Capacitor.isNativePlatform()) markOAuthStart();
       const { error } = Capacitor.isNativePlatform()
         ? await nativeSignIn(switchTarget, { auth: supabase.auth })
         : await lovable.auth.signInWithOAuth(switchTarget, {
@@ -278,13 +252,11 @@ export function AccountBackup({
           });
 
       if (error) {
+        clearOAuthStart();
         toast.error(`Switch failed: ${error.message}`);
-        localStorage.removeItem(ANON_USER_ID_KEY);
       }
-      // On redirect, the onAuthStateChange SIGNED_IN handler will trigger migration
     } catch {
-      toast.error('Provider switch failed. Please try again.');
-      localStorage.removeItem(ANON_USER_ID_KEY);
+      toast.error("Couldn't switch accounts. Please try again.");
     } finally {
       setLoading(false);
       setSwitchTarget(null);
@@ -483,9 +455,9 @@ export function AccountBackup({
             <AlertDialogHeader>
               <AlertDialogTitle>Switch to {alternateProviderName}?</AlertDialogTitle>
               <AlertDialogDescription>
-                Your energy data (Octopus meters, consumption history, and carbon footprint) will be
-                transferred to your new {alternateProviderName} account. You'll be signed out and
-                redirected to sign in with {alternateProviderName}.
+                We&apos;ll sign you out so you can sign in with {alternateProviderName}. Your
+                Octopus link, usage history and carbon footprint stay with this account and
+                won&apos;t move across. You&apos;ll need to link Octopus again after you switch.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -517,9 +489,9 @@ export function AccountBackup({
                     <li>Octopus Energy credentials and meter data</li>
                     <li>Energy consumption and carbon footprint history</li>
                     <li>Saved locations and preferences</li>
-                    <li>Your authentication account</li>
+                    <li>Your sign-in account</li>
                   </ul>
-                  <p className="font-medium">This action cannot be undone.</p>
+                  <p className="font-medium">You can&apos;t undo this.</p>
                   <div className="pt-2">
                     <label className="text-sm text-muted-foreground">
                       Type <span className="font-mono font-bold">DELETE</span> to confirm:
@@ -543,7 +515,7 @@ export function AccountBackup({
                 disabled={deleteConfirmText !== 'DELETE' || isDeleting}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
-                {isDeleting ? 'Deleting...' : 'Permanently Delete Account'}
+                {isDeleting ? 'Deleting...' : 'Delete permanently'}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -566,7 +538,7 @@ export function AccountBackup({
 
       <p className="flex items-center gap-2 text-sm text-muted-foreground">
         <Lock className="w-4 h-4 shrink-0" aria-hidden="true" />
-        Octopus data is encrypted. Sign in to keep it.
+        Your Octopus key is stored encrypted. Sign in to keep your Octopus data across devices.
       </p>
 
       <div className="space-y-2">

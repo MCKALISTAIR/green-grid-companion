@@ -5,7 +5,7 @@
 import { NI_ALL_ISLAND_GRID } from '@/lib/voice/errorStatesCopy';
 
 export const ONBOARDING_COPY = {
-  title: 'How clean is your power right now?',
+  title: 'How clean is your power now?',
   body: "Tell us roughly where you are and you'll see your local number straight away.",
   useLocation: 'Use my location',
   finding: 'Finding you…',
@@ -29,7 +29,7 @@ export const ONBOARDING_COPY = {
 
 /** Asked after the first useful moment, never on first launch. Plain in both tones. */
 export const NOTIFICATION_NUDGE_COPY = {
-  title: "Want a nudge when your grid's clean?",
+  title: "A nudge when it's clean?",
   body: "We'll let you know when the forecast drops under your clean alert. You can change it in Settings.",
   yes: 'Yes please',
   no: 'Not now',

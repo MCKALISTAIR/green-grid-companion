@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import type { HazeBand } from '@/lib/sceneHaze';
 import { motion } from 'framer-motion';
 import { turbineRotationSeconds } from '@/lib/turbineSpeed';
 
@@ -497,30 +498,21 @@ export function SeagullFlock({
   );
 }
 
-/** Horizon pollution for dirty coastal — distant stack + oil sheen (silhouette test). */
-export function CoastalHorizonPollution({
-  cleanliness,
-  isNight,
-}: {
-  cleanliness: number;
-  isNight: boolean;
-}) {
-  if (cleanliness >= 0.45) return null;
-  const intensity = Math.min(1, (0.45 - cleanliness) / 0.45);
+/**
+ * Horizon pollution for dirty coastal: distant stack + oil sheen (silhouette test).
+ * PR-2b: gated on the NESO band (high and above), never the cleanliness formula;
+ * the ochre horizon band is gone, SceneHaze draws the haze.
+ */
+export function CoastalHorizonPollution({ band, isNight }: { band: HazeBand; isNight: boolean }) {
+  if (band !== 'high' && band !== 'very high') return null;
+  const veryHigh = band === 'very high';
+  const intensity = veryHigh ? 1 : 0.6;
   const stackColor = isNight ? 'rgba(210,190,150,0.9)' : 'rgba(55,45,35,0.92)';
   const sheenA = isNight ? 'rgba(80,60,20,0.45)' : 'rgba(40,90,50,0.35)';
   const sheenB = isNight ? 'rgba(100,40,20,0.3)' : 'rgba(90,40,20,0.28)';
 
   return (
     <g aria-hidden="true">
-      {/* Ochre horizon haze — painted above the sea fill */}
-      <rect
-        x={0}
-        y={68}
-        width={400}
-        height={22}
-        fill={`rgba(${isNight ? '90,55,25' : '160,110,45'},${0.22 + intensity * 0.4})`}
-      />
       {/* Distant industrial stacks — sit over open water, not under the right beach/cliff */}
       <g opacity={0.8 + intensity * 0.2}>
         <rect x={218} y={68} width={4} height={24} fill={stackColor} />
@@ -535,7 +527,7 @@ export function CoastalHorizonPollution({
           animate={{ cy: [62, 54, 62], opacity: [0.55, 0.25, 0.55] }}
           transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' as const }}
         />
-        {cleanliness < 0.25 && (
+        {veryHigh && (
           <>
             <rect x={232} y={74} width={3.5} height={18} fill={stackColor} />
             <rect x={230} y={72} width={7.5} height={2.5} fill={stackColor} />
@@ -574,7 +566,7 @@ export function CoastalHorizonPollution({
         transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' as const, delay: 1 }}
       />
       {/* Dark tanker silhouette when very dirty */}
-      {cleanliness < 0.25 && (
+      {veryHigh && (
         <g transform="translate(155, 93)" opacity={0.92}>
           <path d="M-22,5 L-18,0 L26,0 L22,5 Z" fill={isNight ? '#0a0f18' : '#0f172a'} />
           <rect x={-6} y={-6} width={14} height={6} rx={0.5} fill="#1e293b" />

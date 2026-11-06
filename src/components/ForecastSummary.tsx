@@ -13,6 +13,27 @@ interface ForecastSummaryProps {
   regionName?: string;
 }
 
+/**
+ * 9px column labels are too narrow at 320 for the full words (Design X13), so the
+ * short label is shown and the full word is read out instead.
+ */
+function ColumnLabel({
+  short,
+  full,
+  className,
+}: {
+  short: string;
+  full: string;
+  className?: string;
+}) {
+  return (
+    <span className={className}>
+      <span aria-hidden>{short}</span>
+      <span className="sr-only">{full}</span>
+    </span>
+  );
+}
+
 /** Missing values render as an en dash with a spoken "no data", never 0. */
 function Value({ value, className }: { value: number | null; className?: string }) {
   if (value === null) {
@@ -107,105 +128,127 @@ export function ForecastSummary({
                     No data yet
                   </p>
                 ) : day.hasActuals ? (
-                  <div className="grid grid-cols-3 gap-2">
-                    {/* Lowest Comparison */}
-                    <div className="flex flex-col items-center gap-1">
-                      <motion.div
-                        variants={iconLowVariants}
-                        className="p-1.5 rounded-full bg-intensity-very-low/10 mb-1"
-                      >
-                        <TrendingDown className="w-4 h-4 text-intensity-very-low-text" />
-                      </motion.div>
-                      <div className="grid grid-cols-2 gap-x-2 text-center w-full px-1">
-                        <div className="flex flex-col">
-                          <Value
-                            value={day.min}
-                            className="text-xs font-semibold text-muted-foreground"
-                          />
-                          <span className="text-[9px] text-muted-foreground uppercase scale-90">
-                            Pred
-                          </span>
+                  <div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {/* Lowest Comparison */}
+                      <div className="flex flex-col items-center gap-1">
+                        <motion.div
+                          variants={iconLowVariants}
+                          className="p-1.5 rounded-full bg-intensity-very-low/10 mb-1"
+                        >
+                          <TrendingDown className="w-4 h-4 text-intensity-very-low-text" />
+                        </motion.div>
+                        <div className="grid grid-cols-2 gap-x-2 text-center w-full px-1">
+                          <div className="flex flex-col">
+                            <Value
+                              value={day.min}
+                              className="text-xs font-semibold text-muted-foreground"
+                            />
+                            <ColumnLabel
+                              short="Pred"
+                              full="Forecast"
+                              className="text-[9px] text-muted-foreground uppercase scale-90"
+                            />
+                          </div>
+                          <div className="flex flex-col border-l border-border/30">
+                            <Value
+                              value={day.minActual}
+                              className="text-xs font-bold text-foreground"
+                            />
+                            <ColumnLabel
+                              short={day.actualsEstimated ? 'Est' : 'Act'}
+                              full={day.actualsEstimated ? 'GridSense estimate' : 'Actual'}
+                              className="text-[9px] text-primary uppercase scale-90"
+                            />
+                          </div>
                         </div>
-                        <div className="flex flex-col border-l border-border/30">
-                          <Value
-                            value={day.minActual}
-                            className="text-xs font-bold text-foreground"
-                          />
-                          <span className="text-[9px] text-primary uppercase scale-90">
-                            {day.actualsEstimated ? 'Est' : 'Act'}
-                          </span>
-                        </div>
+                        <span className="text-[10px] text-muted-foreground uppercase font-medium mt-1">
+                          Low
+                        </span>
                       </div>
-                      <span className="text-[10px] text-muted-foreground uppercase font-medium mt-1">
-                        Low
-                      </span>
-                    </div>
 
-                    {/* Average Comparison */}
-                    <div className="flex flex-col items-center gap-1 border-l border-r border-border/30 px-1">
-                      <motion.div
-                        variants={iconAvgVariants}
-                        className="p-1.5 rounded-full bg-intensity-moderate/10 mb-1"
-                      >
-                        <Activity className="w-4 h-4 text-intensity-moderate-text" />
-                      </motion.div>
-                      <div className="grid grid-cols-2 gap-x-2 text-center w-full px-1">
-                        <div className="flex flex-col">
-                          <Value
-                            value={day.avg}
-                            className="text-xs font-semibold text-muted-foreground"
-                          />
-                          <span className="text-[9px] text-muted-foreground uppercase scale-90">
-                            Pred
-                          </span>
+                      {/* Average Comparison */}
+                      <div className="flex flex-col items-center gap-1 border-l border-r border-border/30 px-1">
+                        <motion.div
+                          variants={iconAvgVariants}
+                          className="p-1.5 rounded-full bg-intensity-moderate/10 mb-1"
+                        >
+                          <Activity className="w-4 h-4 text-intensity-moderate-text" />
+                        </motion.div>
+                        <div className="grid grid-cols-2 gap-x-2 text-center w-full px-1">
+                          <div className="flex flex-col">
+                            <Value
+                              value={day.avg}
+                              className="text-xs font-semibold text-muted-foreground"
+                            />
+                            <ColumnLabel
+                              short="Pred"
+                              full="Forecast"
+                              className="text-[9px] text-muted-foreground uppercase scale-90"
+                            />
+                          </div>
+                          <div className="flex flex-col border-l border-border/30">
+                            <Value
+                              value={day.avgActual}
+                              className="text-xs font-bold text-foreground"
+                            />
+                            <ColumnLabel
+                              short={day.actualsEstimated ? 'Est' : 'Act'}
+                              full={day.actualsEstimated ? 'GridSense estimate' : 'Actual'}
+                              className="text-[9px] text-primary uppercase scale-90"
+                            />
+                          </div>
                         </div>
-                        <div className="flex flex-col border-l border-border/30">
-                          <Value
-                            value={day.avgActual}
-                            className="text-xs font-bold text-foreground"
-                          />
-                          <span className="text-[9px] text-primary uppercase scale-90">
-                            {day.actualsEstimated ? 'Est' : 'Act'}
-                          </span>
-                        </div>
+                        <span className="text-[10px] text-muted-foreground uppercase font-medium mt-1">
+                          Avg
+                        </span>
                       </div>
-                      <span className="text-[10px] text-muted-foreground uppercase font-medium mt-1">
-                        Avg
-                      </span>
-                    </div>
 
-                    {/* Highest Comparison */}
-                    <div className="flex flex-col items-center gap-1">
-                      <motion.div
-                        variants={iconHighVariants}
-                        className="p-1.5 rounded-full bg-intensity-very-high/10 mb-1"
-                      >
-                        <TrendingUp className="w-4 h-4 text-intensity-very-high-text" />
-                      </motion.div>
-                      <div className="grid grid-cols-2 gap-x-2 text-center w-full px-1">
-                        <div className="flex flex-col">
-                          <Value
-                            value={day.max}
-                            className="text-xs font-semibold text-muted-foreground"
-                          />
-                          <span className="text-[9px] text-muted-foreground uppercase scale-90">
-                            Pred
-                          </span>
+                      {/* Highest Comparison */}
+                      <div className="flex flex-col items-center gap-1">
+                        <motion.div
+                          variants={iconHighVariants}
+                          className="p-1.5 rounded-full bg-intensity-very-high/10 mb-1"
+                        >
+                          <TrendingUp className="w-4 h-4 text-intensity-very-high-text" />
+                        </motion.div>
+                        <div className="grid grid-cols-2 gap-x-2 text-center w-full px-1">
+                          <div className="flex flex-col">
+                            <Value
+                              value={day.max}
+                              className="text-xs font-semibold text-muted-foreground"
+                            />
+                            <ColumnLabel
+                              short="Pred"
+                              full="Forecast"
+                              className="text-[9px] text-muted-foreground uppercase scale-90"
+                            />
+                          </div>
+                          <div className="flex flex-col border-l border-border/30">
+                            <Value
+                              value={day.maxActual}
+                              className="text-xs font-bold text-foreground"
+                            />
+                            <ColumnLabel
+                              short={day.actualsEstimated ? 'Est' : 'Act'}
+                              full={day.actualsEstimated ? 'GridSense estimate' : 'Actual'}
+                              className="text-[9px] text-primary uppercase scale-90"
+                            />
+                          </div>
                         </div>
-                        <div className="flex flex-col border-l border-border/30">
-                          <Value
-                            value={day.maxActual}
-                            className="text-xs font-bold text-foreground"
-                          />
-                          <span className="text-[9px] text-primary uppercase scale-90">
-                            {day.actualsEstimated ? 'Est' : 'Act'}
-                          </span>
-                        </div>
+                        <span className="text-[10px] text-muted-foreground uppercase font-medium mt-1">
+                          High
+                        </span>
                       </div>
-                      <span className="text-[10px] text-muted-foreground uppercase font-medium mt-1">
-                        High
-                      </span>
                     </div>
+                    {day.actualsEstimated && (
+                      <p
+                        className="mt-2 text-center text-[10px] text-muted-foreground"
+                        data-testid="forecast-est-legend"
+                      >
+                        Est = our estimate
+                      </p>
+                    )}
                   </div>
                 ) : (
                   <div className="grid grid-cols-3 gap-2 text-center">
@@ -254,8 +297,8 @@ export function ForecastSummary({
 
       {showZeroNote && (
         <p className="px-1 text-xs text-muted-foreground" data-testid="forecast-zero-note">
-          NESO's regional forecast for {displayRegion} is 0 when local power is almost all wind and
-          nuclear. Apps showing a higher number are usually using the GB-wide figure.
+          NESO&apos;s forecast for {displayRegion} is 0 when local power is almost all wind and
+          nuclear. Other apps often show the GB-wide figure, which is higher.
         </p>
       )}
     </div>

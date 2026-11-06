@@ -70,42 +70,46 @@ function buildAction(
   inBestWindow: boolean,
   minutesUntil: number,
   nowAction?: NowOrWaitAction,
+  laterLower = false,
 ): string {
   if (isPast) {
-    return 'Past hour. Useful for comparing forecast with actual.';
+    return 'Past half hour. Handy for checking forecast vs actual.';
   }
   // The current hour must agree with the now-or-wait card above the chart.
   if (isCurrent && nowAction === 'wait') {
     return 'Cleaner hours are coming. Wait if you can.';
   }
   if (isCurrent && nowAction === 'use_now' && (band === 'high' || band === 'very high')) {
-    return "Dirty hour, but it won't get much cleaner soon.";
+    return "Dirty half hour, but it won't get much cleaner soon.";
   }
   if (isCurrent && nowAction === 'use_now' && band === 'moderate') {
-    return "Middling hour, but it won't get much cleaner soon.";
+    return "Middling half hour, but it won't get much cleaner soon.";
   }
   if (inBestWindow) {
+    if (isCurrent && !laterLower) {
+      return 'This half hour is as clean as it gets. Good time to run a load.';
+    }
     return isCurrent
-      ? 'Best window is open. Good time to run a load.'
-      : 'Inside a best window. Plan a load for this slot.';
+      ? 'Part of a good window. A later slot is cleaner.'
+      : 'In a best window. A good slot to plan a load.';
   }
   if (band === 'very low' || band === 'low') {
     return isCurrent
-      ? 'Grid is clean. Use energy freely.'
+      ? "Grid's clean this half hour. Go for big loads."
       : vsNowCleaner
-        ? 'Cleaner than now. A solid shift target.'
-        : 'Still a clean hour on the grid.';
+        ? 'Cleaner than now. Worth moving a load here.'
+        : 'Still a clean half hour on the grid.';
   }
   if (band === 'high' || band === 'very high') {
-    if (isCurrent) return 'Dirty hour. Wait if you can.';
+    if (isCurrent) return 'Dirty half hour. Wait if you can.';
     if (minutesUntil > 0 && minutesUntil < 18 * 60) {
-      return 'Avoid starting big loads in this slot.';
+      return 'Best not to start big loads in this half hour.';
     }
-    return 'Heavy carbon hour. Shift if you can.';
+    return 'High-carbon half hour. Move it if you can.';
   }
   return isCurrent
-    ? 'Mid-pack hour. Check the chart for a greener window.'
-    : 'Moderate hour. Look for a greener neighbour.';
+    ? 'Middling half hour. Check the chart for a cleaner one.'
+    : 'Moderate half hour. Check the slots either side.';
 }
 
 /**
@@ -152,6 +156,8 @@ export function getForecastHourInsight(
       inBestWindow,
       minutesUntil,
       nowAction,
+      // True when any later slot is forecast lower than this one.
+      forecast.slice(selectedIndex + 1).some((f) => f.intensity.forecast < value),
     ),
     inBestWindow,
     washClass: WASH[band] ?? WASH.moderate,

@@ -15,7 +15,7 @@ describe('ForecastSummary (48-Hour Overview)', () => {
     render(<ForecastSummary forecast={SS} regionId={2} regionName="South Scotland" />);
     expect(screen.getAllByTestId('forecast-day-card')).toHaveLength(2);
     expect(screen.getByTestId('forecast-zero-note')).toHaveTextContent(
-      "NESO's regional forecast for South Scotland is 0",
+      "NESO's forecast for South Scotland is 0",
     );
   });
 

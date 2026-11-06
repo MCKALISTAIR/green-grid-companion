@@ -1,12 +1,13 @@
 import { appStorage } from '@/lib/appStorage';
 import { useCallback, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { driver } from 'driver.js';
+import { driver, type Driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
 import { buildProductTourSteps } from '@/data/product-tour';
 import { readTone } from '@/lib/tone';
 import { isNationalMode } from '@/lib/postcode';
 import { requestOverlay, type OverlayHandle } from '@/lib/overlayQueue';
+import { planTourPopover } from '@/lib/tourPlacement';
 
 // Wait for page elements to render and settle before starting the tour
 const TOUR_START_DELAY_MS = 1000;
@@ -35,13 +36,72 @@ function buildViewportAwareSteps() {
   });
 }
 
+const STAGE_PADDING = 12;
+const POPOVER_OFFSET = 16;
+const COLLISION_PADDING = 12;
+
+/** The element that actually scrolls the target (the page, or a scrolling parent). */
+function scrollParent(el: Element): Element {
+  for (let p = el.parentElement; p; p = p.parentElement) {
+    const oy = getComputedStyle(p).overflowY;
+    if ((oy === 'auto' || oy === 'scroll') && p.scrollHeight > p.clientHeight) return p;
+  }
+  return document.scrollingElement ?? document.documentElement;
+}
+
+/**
+ * Put the tip above or below its card, never over it (see lib/tourPlacement.ts).
+ * driver.js repositions the tip on every scroll/resize, so this runs after it.
+ */
+function placeTip(d: Driver, allowScroll: boolean) {
+  const el = d.getActiveElement();
+  const wrapper = d.getState('popover')?.wrapper;
+  if (!el || !wrapper || el.id === 'driver-dummy-element') return;
+  const nav = document.getElementById('bottom-nav');
+  const navRect = nav && nav.offsetParent !== null ? nav.getBoundingClientRect() : null;
+  const tipRect = wrapper.getBoundingClientRect();
+  const side = d.getActiveStep()?.popover?.side === 'bottom' ? 'bottom' : 'top';
+  const plan = planTourPopover({
+    target: el.getBoundingClientRect(),
+    tip: { width: tipRect.width, height: tipRect.height },
+    viewport: { width: window.innerWidth, height: window.innerHeight },
+    navTop: navRect && navRect.height > 0 ? navRect.top : window.innerHeight,
+    preferred: side,
+    gap: POPOVER_OFFSET,
+    stagePadding: STAGE_PADDING,
+    collisionPadding: COLLISION_PADDING,
+    allowScroll,
+  });
+  if (plan.scrollBy !== 0) {
+    scrollParent(el).scrollBy({ top: plan.scrollBy, behavior: 'instant' as ScrollBehavior });
+    d.refresh(); // moves the highlight; the scroll listener re-places the tip
+  }
+  Object.assign(wrapper.style, {
+    top: `${plan.top}px`,
+    left: `${plan.left}px`,
+    right: 'auto',
+    bottom: 'auto',
+  });
+  // The arrow can't follow a clamped tip, and the tip now always clears the card.
+  const arrow = d.getState('popover')?.arrow;
+  if (arrow) arrow.style.display = 'none';
+}
+
 function createTourDriver(onDone: () => void) {
-  return driver({
+  // Runs after driver.js's own scroll/resize repaint (which is one frame deep).
+  let frame = 0;
+  const replace = () => {
+    cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(() => {
+      frame = requestAnimationFrame(() => d.isActive() && placeTip(d, false));
+    });
+  };
+  const d: Driver = driver({
     showProgress: false,
     animate: true,
-    stagePadding: 12,
+    stagePadding: STAGE_PADDING,
     stageRadius: 16,
-    popoverOffset: 16,
+    popoverOffset: POPOVER_OFFSET,
     allowClose: true,
     // "previous" is reused as "Skip tips"; there's nothing to go back to in a 2-tip tour.
     showButtons: ['previous', 'next'],
@@ -58,20 +118,29 @@ function createTourDriver(onDone: () => void) {
         popover.previousButton.classList.remove('driver-popover-btn-disabled');
       }
     },
+    onHighlighted: (_el, _step, { driver: dr }) => {
+      placeTip(dr, true);
+      window.addEventListener('scroll', replace, true);
+      window.addEventListener('resize', replace);
+    },
     onPrevClick: (_el, _step, { driver: d }) => {
       d.destroy();
     },
     onDestroyed: () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', replace, true);
+      window.removeEventListener('resize', replace);
       appStorage.setItem('product_tour_seen', 'true');
       onDone();
     },
   });
+  return d;
 }
 
 export function useProductTour() {
   const navigate = useNavigate();
   const location = useLocation();
-  const driverObj = useRef<ReturnType<typeof driver> | null>(null);
+  const driverObj = useRef<Driver | null>(null);
   const lastIsMobile = useRef<boolean | null>(null);
   // The tips take a turn in the shared overlay queue (after the privacy choice).
   const turn = useRef<OverlayHandle | null>(null);

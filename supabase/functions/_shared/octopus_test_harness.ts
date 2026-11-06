@@ -64,6 +64,7 @@ export function makeStore(o: FakeStoreOptions = {}) {
     consumption: [] as ConsumptionRow[][],
     footprint: [] as FootprintRow[][],
     marked: [] as Array<{ userId: string; mpan: string; at: string }>,
+    syncErrors: [] as Array<{ userId: string; mpan: string; error: string; at: string }>,
   };
   const err = (m: string) => ({ message: m });
   const store: OctopusStore = {
@@ -86,6 +87,10 @@ export function makeStore(o: FakeStoreOptions = {}) {
     markSynced: (userId, mpan, at) => {
       calls.marked.push({ userId, mpan, at });
       return Promise.resolve({ error: o.markError ? err('mark boom') : null });
+    },
+    markSyncError: (userId, mpan, error, at) => {
+      calls.syncErrors.push({ userId, mpan, error, at });
+      return Promise.resolve({ error: null });
     },
   };
   return { store, calls };

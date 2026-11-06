@@ -32,7 +32,7 @@ describe('tone', () => {
   it('outage follows the tone setting', () => {
     localStorage.setItem(TONE_STORAGE_KEY, 'plain');
     const { unmount } = render(<OutageCard onRetry={() => {}} />);
-    expect(screen.getByText(/This is on their side, not your phone\./)).toBeInTheDocument();
+    expect(screen.getByText(/It's on their side, not your phone\./)).toBeInTheDocument();
     unmount();
     localStorage.setItem(TONE_STORAGE_KEY, 'cheeky');
     render(<OutageCard onRetry={() => {}} />);

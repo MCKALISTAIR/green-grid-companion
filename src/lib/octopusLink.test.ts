@@ -92,6 +92,13 @@ describe('parseGetMetersAnswer (get-meters 200 answers)', () => {
     ['meters: []', { meters: [] }, 'no_meter', undefined, undefined],
     ['other error', { error: 'Something odd', meters: [] }, 'unknown', undefined, undefined],
     ['null body', null, 'no_meter', undefined, undefined],
+    [
+      'meter linked to another account (BH-152)',
+      { error: 'x', code: 'meter_already_linked', meters: [] },
+      'meter_taken',
+      undefined,
+      undefined,
+    ],
   ];
   it.each(cases)('%s', (_name, body, reason, field) => {
     const r = parseGetMetersAnswer(body);
@@ -255,10 +262,17 @@ describe('success copy (brief 3.5)', () => {
 });
 
 describe('voice rules', () => {
-  it('no em dashes, US spellings or stated referral amounts in the linking copy', () => {
+  it('no em dashes or US spellings in the linking copy', () => {
     const src = readFileSync(resolve(__dirname, 'voice/octopusLinkCopy.ts'), 'utf8');
     expect(src).not.toContain('\u2014');
-    expect(src).not.toMatch(/personaliz|color|center\b|£/i);
+    expect(src).not.toMatch(/personaliz|color|center\b/i);
+  });
+  it('states the £50 referral credit only in the referral link (copy pass X21)', () => {
+    const src = readFileSync(resolve(__dirname, 'voice/octopusLinkCopy.ts'), 'utf8');
+    expect(COPY.OCTOPUS_ENTRY_COPY.referralLink).toBe(
+      'Join with our referral link and get £50 credit.',
+    );
+    expect(src.match(/£/g)).toHaveLength(1);
   });
 });
 
@@ -277,6 +291,22 @@ describe('Design review fixes on #194 (23 Oct 2026)', () => {
     expect(COPY.OCTOPUS_SHEET_COPY.privacy).not.toMatch(/phone/);
     expect(COPY.OCTOPUS_BANNER_COPY.noSession).toBe(
       "We couldn't start a secure connection. Check your connection and try again.",
+    );
+  });
+});
+
+describe('meter_taken banner (BH-152)', () => {
+  it('shows the meter-taken copy', async () => {
+    const { bannerMessage } = await import('./octopusLink');
+    const { OCTOPUS_BANNER_COPY } = await import('@/lib/voice/octopusLinkCopy');
+    expect(bannerMessage({ ok: false, reason: 'meter_taken' })).toBe(
+      OCTOPUS_BANNER_COPY.meterTaken,
+    );
+  });
+
+  it('pins the signed-off second line', () => {
+    expect(COPY.OCTOPUS_BANNER_COPY.meterTaken).toBe(
+      'That meter is already linked to another GridSense account. Unlink it in that account first, then try again.',
     );
   });
 });

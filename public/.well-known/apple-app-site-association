@@ -2,19 +2,22 @@
   "applinks": {
     "details": [
       {
-        "appIDs": [
-          "UW7848QP79.com.greengrid.companion"
-        ],
+        "appIDs": ["UW7848QP79.com.greengrid.companion"],
         "components": [
           {
             "/": "/auth/callback",
-            "?": {
-              "app": "ios"
-            },
-            "comment": "Native sign-in return (BH-119)"
+            "?": { "app": "ios" },
+            "comment": "Native iOS sign-in return (BH-119)"
+          },
+          {
+            "/": "/auth/callback",
+            "comment": "Existing web/native callback coverage from BH-145"
           }
         ]
       }
     ]
+  },
+  "webcredentials": {
+    "apps": ["UW7848QP79.com.greengrid.companion"]
   }
 }

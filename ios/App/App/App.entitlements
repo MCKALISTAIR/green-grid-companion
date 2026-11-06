@@ -5,17 +5,17 @@
 	<!-- Push Notifications. Xcode/export switches this to "production" for App Store/TestFlight builds. -->
 	<key>aps-environment</key>
 	<string>development</string>
+	<!-- BH-145/BH-119: HTTPS-only sign-in returns plus shared web credentials.
+	     Requires the Associated Domains capability on the App ID and a live AASA. -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:getgridsense.com</string>
+		<string>webcredentials:getgridsense.com</string>
+	</array>
 	<!-- Sign in with Apple -->
 	<key>com.apple.developer.applesignin</key>
 	<array>
 		<string>Default</string>
-	</array>
-	<!-- Universal link for the native Google sign-in return (BH-119). Needs the
-	     Associated Domains capability on the App ID and the AASA file live at
-	     https://getgridsense.com/.well-known/apple-app-site-association. -->
-	<key>com.apple.developer.associated-domains</key>
-	<array>
-		<string>applinks:getgridsense.com</string>
 	</array>
 	<!-- App Group shared with GridSenseWidget (value set by GS_APP_GROUP_ID build setting) -->
 	<key>com.apple.security.application-groups</key>

@@ -36,6 +36,7 @@ export default defineConfig(({ mode }) => {
   return {
     define: fallbackEnv,
     build: {
+      chunkSizeWarningLimit: 800,
       rollupOptions: {
         output: {
           manualChunks(id) {
@@ -92,7 +93,7 @@ export default defineConfig(({ mode }) => {
             globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
             // Share-card image is for crawlers only; don't precache it on devices.
             globIgnores: ['**/og-image.png'],
-            navigateFallbackDenylist: [/^\/~oauth/],
+            navigateFallbackDenylist: [/^\/~oauth/, /^\/\.well-known\//],
             cleanupOutdatedCaches: true,
             clientsClaim: true,
             skipWaiting: true,

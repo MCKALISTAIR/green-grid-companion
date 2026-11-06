@@ -23,7 +23,7 @@ export const OCTOPUS_ENTRY_COPY = {
   primary: 'Link my Octopus account',
   under: "You'll need two things from your Octopus account. We'll show you where.",
   referralLead: 'Not with Octopus yet?',
-  referralLink: 'Join through our referral link.',
+  referralLink: 'Join with our referral link and get £50 credit.',
 } as const;
 
 /** 3.2 Linking sheet. */
@@ -82,6 +82,8 @@ export const OCTOPUS_BANNER_COPY = {
   octopusDown: "Octopus isn't answering just now. Try again in a bit.",
   noMeter:
     "Your details work, but Octopus didn't list an electricity meter on that account. GridSense needs one to show your usage.",
+  meterTaken:
+    'That meter is already linked to another GridSense account. Unlink it in that account first, then try again.',
   checkAgain: 'Check again',
   rateLimited: (minutes: number) =>
     `That's a lot of tries. Give it ${minutes} minutes, then try again.`,
@@ -127,6 +129,25 @@ export const OCTOPUS_LINKED_CARD_COPY = {
   badge: 'Linked',
   line: 'Tracking your footprint from your meter.',
   lastSynced: (ago: string) => `Last synced ${ago}`,
+} as const;
+
+/** BH-127: how fresh the meter data is, and what to do when it has stalled. */
+export const OCTOPUS_FRESHNESS_COPY = {
+  newestReading: (ago: string) => `Newest reading ${ago}`,
+  staleTitle: 'Your meter data has stopped updating',
+  staleBody: (date: string) =>
+    `The newest reading we have from Octopus is from ${date}. Tap Sync Now to try again. If it's still stuck, unlink Octopus and link it again with a new API key.`,
+  historyNote: (date: string) =>
+    `Your smart meter data stops at ${date}, so your footprint doesn't include anything after that.`,
+} as const;
+
+/** BH-127: Octopus answered 401/403 to the stored key. */
+export const OCTOPUS_KEY_REJECTED_COPY = {
+  title: 'Octopus stopped accepting your key',
+  badge: 'Needs relink',
+  body: "Octopus didn't accept the API key we have for you, so your meter data has stopped updating. Relink with a new key from your Octopus account page.",
+  since: (ago: string) => `Last tried ${ago}`,
+  relink: 'Relink Octopus',
 } as const;
 
 /** 3.6 MPAN popover. */

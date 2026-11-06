@@ -1,10 +1,14 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import type { SceneVisualConfig } from '@/lib/sceneConfig';
 import { turbineRotationSeconds } from '@/lib/turbineSpeed';
-import type { TurbineSlot } from '@/lib/turbineLayout';
-import { SimpleFactory } from '../SimpleFactory';
+import {
+  scenePointToPx,
+  TURBINE_FOOT_PX,
+  TURBINE_SINK_PX,
+  type TurbineSlot,
+} from '@/lib/turbineLayout';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { WindTurbine } from '../WindTurbine';
-import { SmokeParticle } from '../SmokeParticle';
 import { NuclearCoolingTower } from '../NuclearCoolingTower';
 import { OffshoreWind } from '../OffshoreWind';
 import { TidalWaves } from '../TidalWaves';
@@ -50,48 +54,16 @@ export function SceneGenerationOverlay({
         aria-hidden="true"
       />
 
-      {/* Wind Turbines - dynamically positioned across the scene */}
-      <AnimatePresence>
-        {!isCity &&
-          !isCoastal &&
-          sceneConfig.showRenewables &&
-          turbineLayout.map((slot, i) => {
-            // Wind speed drives rotation; unknown weather → one idle speed for all
-            const seconds = turbineRotationSeconds({
-              kind: 'countryside',
-              windSpeed: sceneConfig.windSpeed ?? 0,
-              weatherKnown: sceneConfig.weatherKnown,
-              index: i,
-              layer: slot.layer,
-            });
-            const isOverdrive = turbineOverdrive === i;
-            // Opacity based on depth layer
-            const layerOpacity = slot.layer === 'back' ? 0.5 : slot.layer === 'mid' ? 0.75 : 1;
-
-            return (
-              <motion.div
-                key={`turbine-${slot.left}-${slot.bottom}`}
-                className="absolute"
-                style={{
-                  left: `${slot.left}%`,
-                  bottom: `${slot.bottom}%`,
-                  zIndex: slot.z,
-                  opacity: layerOpacity,
-                }}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: layerOpacity, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
-                transition={{ duration: 0.6, delay: i * 0.1 }}
-              >
-                <WindTurbine
-                  scale={slot.scale}
-                  speed={isOverdrive ? 0.2 : seconds}
-                  onClick={() => handleTurbineClick(i)}
-                />
-              </motion.div>
-            );
-          })}
-      </AnimatePresence>
+      {/* Wind Turbines: each mast foot is pinned to its hill's ridge in scene units */}
+      {!isCity && !isCoastal && sceneConfig.showRenewables && (
+        <TurbineField
+          turbineLayout={turbineLayout}
+          turbineOverdrive={turbineOverdrive}
+          handleTurbineClick={handleTurbineClick}
+          windSpeed={sceneConfig.windSpeed ?? 0}
+          weatherKnown={sceneConfig.weatherKnown}
+        />
+      )}
 
       {/* Solar panels — countryside only; city has rooftop panels in CityLandscape */}
       <AnimatePresence>
@@ -107,7 +79,7 @@ export function SceneGenerationOverlay({
               <div
                 key={i}
                 className="relative w-7 h-5 bg-gen-solar/80 rounded-sm transform -skew-x-12 shadow-md overflow-hidden"
-                style={{ opacity: 0.7 + sceneConfig.cleanliness * 0.3 }}
+                style={{ opacity: Math.max(0.35, Math.min(1, sceneConfig.solarBrightness)) }}
               >
                 <motion.div
                   className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"
@@ -129,52 +101,9 @@ export function SceneGenerationOverlay({
         )}
       </AnimatePresence>
 
-      {/* Factories for dirty energy */}
-      <AnimatePresence>
-        {sceneConfig.showFactories && !isCity && !isCoastal && (
-          <motion.div
-            className="absolute bottom-14 left-6 flex gap-6"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.6 }}
-          >
-            <div className="relative">
-              <SimpleFactory
-                className="w-18 h-18 text-secondary"
-                style={{ width: '4.5rem', height: '4.5rem' }}
-                isNight={isNight}
-              />
-              {sceneConfig.showSmoke && (
-                <>
-                  <SmokeParticle delay={0} x={35} />
-                  <SmokeParticle delay={0.8} x={40} />
-                  <SmokeParticle delay={1.6} x={45} />
-                  <SmokeParticle delay={0.4} x={60} />
-                  <SmokeParticle delay={1.2} x={65} />
-                </>
-              )}
-            </div>
-            {sceneConfig.cleanliness < 0.3 && (
-              <motion.div
-                className="relative"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-              >
-                <SimpleFactory className="w-14 h-14 text-secondary/90" isNight={isNight} />
-                {sceneConfig.showSmoke && (
-                  <>
-                    <SmokeParticle delay={0.3} x={35} />
-                    <SmokeParticle delay={1.1} x={45} />
-                    <SmokeParticle delay={0.7} x={55} />
-                  </>
-                )}
-              </motion.div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* PR-2b: the white-box factories are gone. The one gas plant is drawn in the
+          countryside back-hill layer (GasPlant), with smoke only from its stacks at
+          NESO moderate and above. */}
 
       {/* BH-102 (Design): no Lucide leaf, flame or droplet icons in the scene. They read
           as UI chrome, not world. Cleanliness shows through the world itself (sky, smoke,
@@ -191,12 +120,16 @@ export function SceneGenerationOverlay({
               aria-hidden="true"
             >
               <NuclearCoolingTower
-                x={280}
+                x={NUCLEAR_TOWER_X[0]}
                 steamIntensity={nuclearPercentage / 100}
                 isNight={isNight}
               />
               {nuclearPercentage > 15 && (
-                <NuclearCoolingTower x={240} steamIntensity={0.5} isNight={isNight} />
+                <NuclearCoolingTower
+                  x={NUCLEAR_TOWER_X[1]}
+                  steamIntensity={0.5}
+                  isNight={isNight}
+                />
               )}
             </svg>
           </div>
@@ -239,5 +172,95 @@ export function SceneGenerationOverlay({
         )}
       </AnimatePresence>
     </>
+  );
+}
+
+/** Nuclear cooling towers (scene x): east of the hero text column. */
+export const NUCLEAR_TOWER_X = [302, 346] as const;
+
+interface TurbineFieldProps {
+  turbineLayout: TurbineSlot[];
+  turbineOverdrive: number | null;
+  handleTurbineClick: (i: number) => void;
+  windSpeed: number;
+  weatherKnown: boolean | undefined;
+}
+
+/**
+ * Turbines are HTML (tap bubbles, sparks), but the hills are SVG drawn with
+ * xMidYMax meet. Percent offsets drift off the ridge whenever the scene is
+ * wider or taller than 400:120, so measure the box and map scene units to px.
+ */
+function TurbineField({
+  turbineLayout,
+  turbineOverdrive,
+  handleTurbineClick,
+  windSpeed,
+  weatherKnown,
+}: TurbineFieldProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [size, setSize] = useState<{ w: number; h: number } | null>(null);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    // jsdom and a first paint before layout report 0; fall back to the native 400x120 box.
+    const read = () => setSize({ w: el.clientWidth || 400, h: el.clientHeight || 120 });
+    read();
+    if (typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(read);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  return (
+    <div ref={ref} className="absolute inset-0 pointer-events-none" data-art="turbine-field">
+      <AnimatePresence>
+        {size &&
+          size.w > 0 &&
+          turbineLayout.map((slot, i) => {
+            // Wind speed drives rotation; unknown weather → one idle speed for all
+            const seconds = turbineRotationSeconds({
+              kind: 'countryside',
+              windSpeed,
+              weatherKnown: !!weatherKnown,
+              index: i,
+              layer: slot.layer,
+            });
+            const isOverdrive = turbineOverdrive === i;
+            // Opacity based on depth layer
+            const layerOpacity = slot.layer === 'back' ? 0.5 : slot.layer === 'mid' ? 0.75 : 1;
+            const at = scenePointToPx(slot.x, slot.groundY, size.w, size.h);
+
+            return (
+              <motion.div
+                key={`turbine-${slot.layer}-${slot.x}`}
+                data-turbine-x={slot.x}
+                className="absolute pointer-events-auto"
+                style={{
+                  left: at.left,
+                  bottom: at.bottom - (TURBINE_FOOT_PX + TURBINE_SINK_PX) * slot.scale,
+                  width: 48,
+                  height: 96,
+                  marginLeft: -24,
+                  zIndex: slot.z,
+                  opacity: layerOpacity,
+                }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: layerOpacity, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                transition={{ duration: 0.6, delay: i * 0.1 }}
+              >
+                <div style={{ transformOrigin: '50% 100%', transform: `scale(${slot.scale})` }}>
+                  <WindTurbine
+                    speed={isOverdrive ? 0.2 : seconds}
+                    onClick={() => handleTurbineClick(i)}
+                  />
+                </div>
+              </motion.div>
+            );
+          })}
+      </AnimatePresence>
+    </div>
   );
 }

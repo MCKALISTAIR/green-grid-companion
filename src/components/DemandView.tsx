@@ -65,9 +65,9 @@ export function DemandView() {
       <div className="flex flex-col items-center justify-center px-6 py-10 space-y-4 animate-in fade-in text-center">
         <AlertTriangle className="w-8 h-8 text-muted-foreground" />
         <div className="space-y-1 max-w-sm">
-          <p className="font-medium">Unable to load grid data</p>
+          <p className="font-medium">Couldn&apos;t load grid data</p>
           <p className="text-sm text-muted-foreground">
-            Current grid data is temporarily unavailable.
+            The grid data isn&apos;t available right now.
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={() => refetch()}>
@@ -222,7 +222,7 @@ export function DemandView() {
                   <div className="mt-2">
                     <p className="text-sm text-muted-foreground">Live frequency unavailable</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Real-time data temporarily inaccessible
+                      Can&apos;t get the live reading right now.
                     </p>
                   </div>
                 )}
@@ -352,10 +352,9 @@ export function DemandView() {
                             <PopoverContent className="w-[240px] p-3 text-xs bg-card border-border z-50">
                               <p className="font-semibold mb-1">Renewable, not zero carbon</p>
                               <p>
-                                Biomass is officially classified as a renewable energy source by
-                                grid standards since the organic matter burned can be replenished.
-                                However, it still involves burning fuel (combustion), which releases
-                                direct carbon emissions at the point of generation.
+                                Biomass counts as renewable under grid rules, because the plants
+                                burned can be regrown. But it&apos;s still burning fuel, so it
+                                releases carbon at the power station.
                               </p>
                             </PopoverContent>
                           </Popover>

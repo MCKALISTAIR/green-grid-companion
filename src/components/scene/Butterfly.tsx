@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface ButterflyProps {
   startX: number;
@@ -6,6 +7,9 @@ interface ButterflyProps {
 }
 
 export function Butterfly({ startX, delay = 0 }: ButterflyProps) {
+  // Reduce Motion: no butterflies. They only exist as an endless flight path and wing flap.
+  const reduce = useReducedMotion();
+  if (reduce) return null;
   return (
     <motion.svg
       className="absolute w-6 h-6"

@@ -3,8 +3,10 @@ import type { TimeOfDay } from '@/hooks/useTimeOfDay';
 import type { SceneVisualConfig } from '@/lib/sceneConfig';
 import { LandscapeBack, LandscapeMid, LandscapeFront } from '../Landscape';
 import { ValleyMist } from '../ValleyMist';
-import { Sheep } from '../Sheep';
+import { Sheep, SHEEP_SPOTS } from '../Sheep';
 import { SCENE_SILHOUETTE_ASPECT } from '@/lib/sceneScaleBible';
+import type { HazeBand } from '@/lib/sceneHaze';
+import { GasPlant } from '../GasPlant';
 
 export interface CountrysideSceneLayersProps {
   shouldReduceMotion: boolean;
@@ -21,6 +23,8 @@ export interface CountrysideSceneLayersProps {
   nuclearPercentage: number;
   hydroPercentage: number;
   isRaining: boolean;
+  /** PR-2b: NESO haze band; the gas plant smokes at moderate and above. */
+  hazeBand?: HazeBand;
 }
 
 export function CountrysideSceneLayers({
@@ -34,6 +38,7 @@ export function CountrysideSceneLayers({
   skipIntro,
   windSpeed,
   timeOfDay,
+  hazeBand = 'none',
 }: CountrysideSceneLayersProps) {
   return (
     <>
@@ -58,6 +63,9 @@ export function CountrysideSceneLayers({
             windSpeed={windSpeed}
             timeOfDay={timeOfDay}
           />
+          {/* PR-2b: the gas plant on the back hill, always present; smoke only at
+              moderate and above (Design brief Q5). */}
+          <GasPlant band={hazeBand} isNight={isNight} />
         </svg>
       </motion.div>
 
@@ -82,28 +90,34 @@ export function CountrysideSceneLayers({
             windSpeed={windSpeed}
             timeOfDay={timeOfDay}
           />
+          {/* Flock of sheep (#239 Design review): drawn in the mid-hill SVG so
+              their feet stay on the mid ridge at every size, instead of an HTML
+              percentage layer that drifted into the sky. Same band gate. */}
+          <AnimatePresence>
+            {sceneConfig.cleanliness > 0.4 && !synthwaveMode && (
+              <motion.g
+                data-art="flock"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                {SHEEP_SPOTS.map((spot, i) => (
+                  <Sheep
+                    key={spot.x}
+                    x={spot.x}
+                    y={spot.y}
+                    isNight={isNight}
+                    delay={[0.5, 1.2, 2.0][i]}
+                  />
+                ))}
+              </motion.g>
+            )}
+          </AnimatePresence>
         </svg>
       </motion.div>
 
       {/* Countryside: Valley Mist */}
-      <ValleyMist cleanliness={sceneConfig.cleanliness} timeOfDay={timeOfDay} isNight={isNight} />
-
-      {/* Countryside: Flock of Sheep */}
-      <AnimatePresence>
-        {sceneConfig.cleanliness > 0.4 && !synthwaveMode && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={{ y: shouldReduceMotion ? 0 : midY }}
-            className="z-10 absolute inset-0 pointer-events-none"
-          >
-            <Sheep x={22} y={28} scale={0.55} isNight={isNight} delay={0.5} />
-            <Sheep x={48} y={32} scale={0.5} isNight={isNight} delay={1.2} />
-            <Sheep x={72} y={26} scale={0.55} isNight={isNight} delay={2.0} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <ValleyMist timeOfDay={timeOfDay} isNight={isNight} />
 
       {/* Countryside: Foreground Landscape Layer (Front Hill) */}
       <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-20 overflow-hidden">

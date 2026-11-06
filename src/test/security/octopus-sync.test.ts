@@ -73,6 +73,36 @@ describe('Octopus sync pipeline (BH-91)', () => {
     expect(calls.marked).toHaveLength(0);
   });
 
+  it('BH-127: Octopus 401 records last_sync_error for the meter', async () => {
+    const { fetchFn } = makeFetch({ octopusStatus: 401 });
+    const { store, calls } = makeStore();
+    const now = new Date('2026-10-30T06:00:00Z');
+    await syncMeter({ fetch: fetchFn, store, now: () => now }, meter);
+    expect(calls.syncErrors).toEqual([
+      { userId: 'u1', mpan: MPAN, error: 'octopus_http_401', at: now.toISOString() },
+    ]);
+  });
+
+  it('BH-127: Octopus 403 also records a rejected key', async () => {
+    const { fetchFn } = makeFetch({ octopusStatus: 403 });
+    const { store, calls } = makeStore();
+    await syncMeter({ fetch: fetchFn, store }, meter);
+    expect(calls.syncErrors.map((e) => e.error)).toEqual(['octopus_http_403']);
+  });
+
+  it('BH-127: Octopus 500 and successful syncs do not record a rejected key', async () => {
+    const { fetchFn } = makeFetch({ octopusStatus: 500 });
+    const { store, calls } = makeStore();
+    await syncMeter({ fetch: fetchFn, store }, meter);
+    expect(calls.syncErrors).toHaveLength(0);
+    const t = Date.UTC(2026, 9, 20);
+    const ok = makeFetch({ pages: [octopusReadings(t, t + 2 * HH)] });
+    const s2 = makeStore();
+    await syncMeter({ fetch: ok.fetchFn, store: s2.store, now: () => new Date(t + DAY) }, meter);
+    expect(s2.calls.syncErrors).toHaveLength(0);
+    expect(s2.calls.marked).toHaveLength(1);
+  });
+
   it('counts credentials-unavailable as an error', () => {
     const s = summarise([credentialsUnavailableResult(MPAN, 'credentials_unavailable')]);
     expect(s).toMatchObject({ success: false, meters_ok: 0, errors: 1 });

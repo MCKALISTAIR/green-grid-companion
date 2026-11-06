@@ -10,10 +10,8 @@ import { GreenerNightsCard } from '@/components/GreenerNightsCard';
 import { ComponentErrorBoundary } from '@/components/ComponentErrorBoundary';
 import { StaleDataBadge } from '@/components/StaleDataBadge';
 import { NowOrWaitDecision } from '@/components/home/NowOrWaitDecision';
-import { GardenStageUpLine } from '@/components/home/GardenStageUpLine';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import type { ForecastData, GenerationMix } from '@/lib/carbonApi';
-import type { SceneGrowthStage } from '@/hooks/useSceneGrowth';
 import { cn } from '@/lib/utils';
 
 interface IntensityDashboardProps {
@@ -24,9 +22,6 @@ interface IntensityDashboardProps {
   lastUpdated: string | null | undefined;
   glowClass: string;
   showWeatherInInsights: boolean;
-  /** Garden day count for stage-up copy only (never persistent chrome). */
-  gardenDays?: number;
-  growthStage?: SceneGrowthStage;
   /** NESO region id for the day-detail sheet (null/0 = GB national). */
   regionId?: number | null;
   regionName?: string;
@@ -45,8 +40,6 @@ export function IntensityDashboard({
   lastUpdated,
   glowClass,
   showWeatherInInsights,
-  gardenDays = 0,
-  growthStage = 0,
   regionId = null,
   regionName = '',
 }: IntensityDashboardProps) {
@@ -55,8 +48,6 @@ export function IntensityDashboard({
   return (
     <div className="space-y-5">
       <NowOrWaitDecision intensity={intensity} forecast={forecast} lastUpdated={lastUpdated} />
-
-      <GardenStageUpLine growthStage={growthStage} gardenDays={gardenDays} />
 
       <section className={cn('sheet-surface px-3 py-3', glowClass)} data-tour="generation-mix">
         <ComponentErrorBoundary name="Generation Mix">

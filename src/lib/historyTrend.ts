@@ -26,5 +26,5 @@ export function historyTrendCopy(trend: HistoryTrend, range: '24h' | '7d'): stri
     return range === '7d'
       ? 'About the same as the start of the week'
       : 'About the same as the start of the day';
-  return trend === 'improving' ? 'Currently lower than start' : 'Currently higher than start';
+  return trend === 'improving' ? 'Lower than at the start' : 'Higher than at the start';
 }

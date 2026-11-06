@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { getConditionParts } from '@/lib/conditionLabels';
 import { useQuery } from '@tanstack/react-query';
 import { getAllRegions, getIntensityColor } from '@/lib/carbonApi';
 import { UKMap } from '@/components/UKMap';
@@ -20,6 +21,9 @@ import { pageTransition, stateTransition } from '@/lib/motion';
 
 export default function MapPage() {
   const [showMap, setShowMap] = useState(true);
+  // Only animate the map open when the user taps the toggle; on first load it must
+  // appear at full height or the list below slides down (CLS ~0.3 on phones).
+  const [mapToggled, setMapToggled] = useState(false);
   const [selectedRegionId, setSelectedRegionId] = useState<number | null>(null);
 
   const {
@@ -33,6 +37,9 @@ export default function MapPage() {
     queryFn: ({ signal }) => getAllRegions(signal),
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 30, // 30 minutes
+    // BH-136: Rank isn't on the half-hour timer, so while it's open (and
+    // visible) check every 5 min; a new half hour shows within 5 min of NESO.
+    refetchInterval: 1000 * 60 * 5,
   });
 
   const sortedRegions = regions
@@ -45,7 +52,7 @@ export default function MapPage() {
     return (
       <div className="page-shell page-shell--fit">
         <div className="page-shell-inner">
-          <PageHeader title="Leaderboard" className="mb-4" />
+          <PageHeader title="Rank" className="mb-4" />
           <ErrorState
             title={errorInfo.title}
             description={errorInfo.description}
@@ -66,12 +73,15 @@ export default function MapPage() {
       >
         <div className="page-shell-inner space-y-4">
           <PageHeader
-            title="Leaderboard"
+            title="Rank"
             actions={
               <Button
                 variant={showMap ? 'default' : 'outline'}
                 size="icon"
-                onClick={() => setShowMap(!showMap)}
+                onClick={() => {
+                  setMapToggled(true);
+                  setShowMap(!showMap);
+                }}
                 className="rounded-full min-h-11 min-w-11 h-11 w-11 shadow-sm"
                 aria-label={showMap ? 'Hide map' : 'Show map'}
                 aria-pressed={showMap}
@@ -95,6 +105,17 @@ export default function MapPage() {
                 transition={stateTransition}
                 className="space-y-3"
               >
+                {/* Same box as the map frame + UKMap and the note line, so the list
+                    doesn't jump down when regions load (CLS 0.1-0.3 before). */}
+                {showMap && (
+                  <div className="-mx-1 px-2">
+                    <Skeleton
+                      data-testid="rank-map-skeleton"
+                      className="w-full aspect-[0.61] mx-auto mt-4 mb-12 rounded-3xl"
+                    />
+                  </div>
+                )}
+                <Skeleton className="h-4 w-3/4" />
                 {[1, 2, 3, 4, 5, 6].map((i) => (
                   <Card key={i} className="sheet-surface p-4 flex items-center justify-between">
                     <div className="space-y-1.5 flex-1">
@@ -137,11 +158,12 @@ export default function MapPage() {
                 <AnimatePresence initial={false}>
                   {showMap && sortedRegions.length > 0 && (
                     <motion.div
-                      initial={{ height: 0, opacity: 0 }}
+                      initial={mapToggled ? { height: 0, opacity: 0 } : false}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
                       transition={pageTransition}
-                      className="overflow-hidden"
+                      className="overflow-hidden -mx-1 px-2"
+                      data-testid="rank-map-frame"
                     >
                       <UKMap
                         regions={regions || []}
@@ -158,6 +180,9 @@ export default function MapPage() {
                   )}
                 </AnimatePresence>
 
+                <p data-testid="rank-estimate-note" className="text-xs text-muted-foreground">
+                  NESO forecasts for this half hour. Regional figures are modelled estimates.
+                </p>
                 <div className="grid gap-3">
                   {sortedRegions.map((region, idx) => (
                     <div
@@ -193,8 +218,11 @@ export default function MapPage() {
                             <div
                               className={`text-[10px] inline-flex items-center px-1.5 py-0.5 rounded-full mt-0.5 ${getIntensityColor(region.intensity.index)} bg-opacity-20`}
                             >
-                              <span className="capitalize font-medium text-foreground">
-                                {region.intensity.index}
+                              <span
+                                data-testid="rank-band-pill"
+                                className="font-medium text-[#0f1a24]"
+                              >
+                                {getConditionParts(region.intensity.index, 'plain').band}
                               </span>
                             </div>
                           </div>

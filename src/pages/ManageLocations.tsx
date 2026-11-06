@@ -90,11 +90,11 @@ export default function ManageLocations() {
       <div className="page-shell-inner space-y-6">
         {/* Header */}
         <div className="flex items-center gap-3">
-          <Link to="/settings">
-            <Button variant="ghost" size="icon" className="shrink-0" aria-label="Back to settings">
+          <Button asChild variant="ghost" size="icon" className="h-11 w-11 shrink-0">
+            <Link to="/settings" aria-label="Back to settings">
               <ArrowLeft className="w-5 h-5" aria-hidden="true" />
-            </Button>
-          </Link>
+            </Link>
+          </Button>
           <div>
             <h1 className="text-2xl font-bold">Manage Locations</h1>
             <p className="text-muted-foreground text-sm">Edit names and delete saved locations</p>
@@ -120,7 +120,7 @@ export default function ManageLocations() {
               <MapPin className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
               <p className="font-medium text-foreground">No saved locations yet</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Save locations from the home screen to see them here.
+                Save places from Home to see them here.
               </p>
             </div>
           ) : (
@@ -271,8 +271,8 @@ export default function ManageLocations() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Locations</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete {selectedIds.size} location
-              {selectedIds.size > 1 ? 's' : ''}? This action cannot be undone.
+              Delete {selectedIds.size} location
+              {selectedIds.size > 1 ? 's' : ''}? You can&apos;t undo this.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -292,9 +292,7 @@ export default function ManageLocations() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Clear Recent Searches</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to clear all recent location searches?
-            </AlertDialogDescription>
+            <AlertDialogDescription>Clear all your recent searches?</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>

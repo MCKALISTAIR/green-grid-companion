@@ -5,6 +5,7 @@ import type { SceneVisualConfig } from '@/lib/sceneConfig';
 import { WeatherEffects } from '../WeatherEffects';
 import { AuroraRibbon, SceneSun } from '../art/WeatherArt';
 import { Stars } from '../Stars';
+import { STAR_HAZE_FACTOR } from '@/lib/sceneHaze';
 import { Moon } from '../Moon';
 import { SunRay } from '../SunRay';
 
@@ -26,7 +27,16 @@ export interface SceneSkyLayerProps {
   onSunTap: () => void;
   /** BH-90: where unknown-weather clouds may start (hero text bottom + 34). */
   cloudTopPx?: number;
+  /** BH-117: city scenes draw the cloud bank behind the skyline instead (SceneCloudBankLayer). */
+  bankBehindSkyline?: boolean;
 }
+
+/**
+ * The sunset sun sits low, level with the hero's gCO2 unit and info icon. At
+ * 15% from the right its 46px disc covered both on phones, so it now hugs the
+ * right edge (#c: measured clear of both at 320, 390 and 720 wide).
+ */
+export const SUNSET_SUN_RIGHT = '2%';
 
 export function SceneSkyLayer({
   skyY,
@@ -42,6 +52,7 @@ export function SceneSkyLayer({
   handleMoonDoubleClick,
   onSunTap,
   cloudTopPx,
+  bankBehindSkyline = false,
 }: SceneSkyLayerProps) {
   return (
     <motion.div
@@ -56,19 +67,25 @@ export function SceneSkyLayer({
         showWind={sceneConfig.showWind}
         weatherKnown={sceneConfig.weatherKnown}
         cloudTopPx={cloudTopPx}
+        omitBank={bankBehindSkyline}
       />
 
-      {/* Aurora for magically clean nights (Phase 1: cleanliness > 0.85) */}
+      {/* Scene audit item 3: a green aurora on very low nights only (keyed to the
+          label's band, never grams), so it never reads as smog. */}
       <AnimatePresence>
-        {isNight && sceneConfig.cleanliness > 0.85 && weather.cloudCover < 60 && (
-          <AuroraRibbon
-            opacity={0.2 + 0.18 * Math.min(1, (sceneConfig.cleanliness - 0.85) / 0.15)}
-          />
+        {isNight && sceneConfig.band === 'very low' && weather.cloudCover < 60 && (
+          <AuroraRibbon opacity={0.5} />
         )}
       </AnimatePresence>
 
       <AnimatePresence>
-        {sceneConfig.showStars && <Stars count={40} visibility={sceneConfig.starVisibility} />}
+        {/* PR-2b: haze thins the stars by band (-30% / -60% / hidden at very high). */}
+        {sceneConfig.showStars && (
+          <Stars
+            count={Math.round(40 * STAR_HAZE_FACTOR[sceneConfig.hazeBand])}
+            visibility={sceneConfig.starVisibility}
+          />
+        )}
       </AnimatePresence>
 
       <AnimatePresence>
@@ -114,7 +131,8 @@ export function SceneSkyLayer({
                       ? '12%'
                       : '8%'
               }, calc(max(env(safe-area-inset-top), 24px) + 4.25rem))`,
-              right: timeOfDay === 'sunset' ? '15%' : timeOfDay === 'morning' ? '20%' : '8%',
+              right:
+                timeOfDay === 'sunset' ? SUNSET_SUN_RIGHT : timeOfDay === 'morning' ? '20%' : '8%',
               left: 'auto',
               // BH-96 (brief Q1): no CSS filter on the sun; its colour comes from the art.
             }}
@@ -149,6 +167,7 @@ export function SceneSkyLayer({
                 <SceneSun
                   r={timeOfDay === 'midday' ? 20 : 23}
                   tone={timeOfDay === 'sunset' ? 'sunset' : timeOfDay === 'dawn' ? 'dawn' : 'day'}
+                  haze={synthwaveMode ? 'none' : sceneConfig.hazeBand}
                 />
                 {sunReactionKey > 0 && !shouldReduceMotion && (
                   <motion.span

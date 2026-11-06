@@ -13,7 +13,7 @@ export interface ErrorInfo {
  * Context information for better error messages
  */
 export interface ErrorContext {
-  feature?: 'octopus' | 'tesla' | 'notifications' | 'location' | 'data' | 'auth';
+  feature?: 'octopus' | 'notifications' | 'location' | 'data' | 'auth';
   action?: 'save' | 'fetch' | 'sync' | 'link' | 'disconnect' | 'calculate';
 }
 
@@ -61,30 +61,27 @@ export function parseEdgeFunctionError(error: unknown, context?: ErrorContext): 
   // Handle specific HTTP status codes
   if (lowerMessage.includes('401') || lowerMessage.includes('unauthorized')) {
     if (context?.feature === 'octopus') {
-      return 'Invalid Octopus Energy credentials. Please check your API key and account number.';
+      return "Octopus didn't accept those details. Check your API key and account number.";
     }
-    if (context?.feature === 'tesla') {
-      return 'Tesla authentication expired. Please reconnect your account.';
-    }
-    return 'Authentication failed. Please sign in again.';
+    return "Couldn't confirm it's you. Please sign in again.";
   }
 
   if (lowerMessage.includes('403') || lowerMessage.includes('forbidden')) {
     if (context?.feature === 'octopus') {
-      return 'Access denied. Check your Octopus Energy API permissions.';
+      return 'Octopus refused access. Check your API key.';
     }
     return "You don't have permission to access this.";
   }
 
   if (lowerMessage.includes('404') || lowerMessage.includes('not found')) {
     if (context?.feature === 'octopus' && context?.action === 'link') {
-      return 'No meters found. Check your account number is correct.';
+      return 'No meters on that account. Check the account number.';
     }
-    return 'The requested data could not be found.';
+    return "We couldn't find that data.";
   }
 
   if (lowerMessage.includes('429') || lowerMessage.includes('rate limit')) {
-    return 'Too many requests. Please wait a moment and try again.';
+    return "That's a lot of tries. Wait a moment, then try again.";
   }
 
   if (
@@ -93,21 +90,18 @@ export function parseEdgeFunctionError(error: unknown, context?: ErrorContext): 
     lowerMessage.includes('503')
   ) {
     if (context?.feature === 'octopus') {
-      return 'Octopus Energy service is temporarily unavailable. Please try again in a few minutes.';
+      return "Octopus isn't answering just now. Try again in a few minutes.";
     }
-    if (context?.feature === 'tesla') {
-      return 'Tesla service is temporarily unavailable. Please try again in a few minutes.';
-    }
-    return 'The service is temporarily unavailable. Please try again later.';
+    return "This service isn't answering right now. Try again later.";
   }
 
   if (lowerMessage.includes('timeout') || lowerMessage.includes('timed out')) {
-    return 'Request timed out. Please check your connection and try again.';
+    return 'That took too long. Check your connection and try again.';
   }
 
   // Network errors
   if (lowerMessage.includes('network') || lowerMessage.includes('fetch failed')) {
-    return 'Connection failed. Please check your internet connection.';
+    return "Couldn't connect. Check your internet connection.";
   }
 
   // If we have a specific, readable error message, return it
@@ -138,42 +132,30 @@ function getContextualErrorMessage(context?: ErrorContext, _error?: unknown): st
     case 'octopus':
       switch (action) {
         case 'save':
-          return 'Failed to save Octopus Energy credentials. Check they are correct and try again.';
+          return "Couldn't save your Octopus details. Check them and try again.";
         case 'link':
-          return 'Failed to link your meter. Verify your account details and try again.';
+          return "Couldn't link your meter. Check your account details and try again.";
         case 'sync':
-          return 'Failed to sync consumption data. Please try again.';
+          return "Couldn't sync your usage. Please try again.";
         case 'disconnect':
-          return 'Failed to disconnect. Please try again.';
+          return "Couldn't disconnect. Please try again.";
         case 'calculate':
-          return 'Failed to calculate carbon footprint. Please try again.';
+          return "Couldn't work out your footprint. Please try again.";
         default:
-          return 'Failed to connect to Octopus Energy. Please check your credentials.';
-      }
-
-    case 'tesla':
-      switch (action) {
-        case 'link':
-          return 'Failed to connect Tesla account. Please try again.';
-        case 'sync':
-          return 'Failed to sync Tesla data. Please try again.';
-        case 'disconnect':
-          return 'Failed to disconnect Tesla account. Please try again.';
-        default:
-          return 'Tesla connection failed. Please try again.';
+          return "Couldn't connect to Octopus. Check your API key and account number.";
       }
 
     case 'notifications':
-      return 'Failed to update notification settings. Please try again.';
+      return "Couldn't update your notification settings. Please try again.";
 
     case 'location':
-      return 'Failed to update location. Please try again.';
+      return "Couldn't update your location. Please try again.";
 
     case 'data':
-      return 'Failed to load data. Please check your connection and try again.';
+      return "Couldn't load data. Check your connection and try again.";
 
     case 'auth':
-      return 'Authentication failed. Please sign in again.';
+      return "Couldn't confirm it's you. Please sign in again.";
 
     default:
       return 'Something went wrong. Please try again.';

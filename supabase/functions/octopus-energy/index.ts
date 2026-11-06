@@ -1,10 +1,17 @@
+import { verifyAnonOwnership } from '../_shared/migration-proof.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // Hack to make VS Code happy with Deno globals in a Node workspace
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const Deno: any;
 
+import { redactIdentifiers, safeErrorResponse } from '../_shared/safe-error.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+import {
+  METER_CLAIMED_MESSAGE,
+  mpansOwnedByOthers,
+  rateLimitUnavailable,
+} from '../_shared/meter-ownership.ts';
 import {
   calculateMeterFootprint,
   credentialsUnavailableResult,
@@ -84,9 +91,10 @@ async function checkRateLimit(
   });
 
   if (error) {
-    console.error('Rate limit check failed:', error);
-    // Fail open if DB is down to not block users, but log error
-    return { allowed: true };
+    // BH-152: fail closed. A limiter we cannot check must not wave
+    // credential and sync calls through.
+    console.error('Rate limit check failed:', error?.message);
+    return rateLimitUnavailable();
   }
 
   // Supabase RPC returns the JSON object directly
@@ -358,7 +366,8 @@ Deno.serve(async (req: Request) => {
                 readings: 0,
                 footprints_written: 0,
                 intensity_status: 0,
-                error: `exception: ${err instanceof Error ? err.message : String(err)}`,
+                // Logged above; the response carries a code, not the raw error text.
+                error: 'exception',
               });
             }
             for (const r of userResults) {
@@ -576,6 +585,14 @@ Deno.serve(async (req: Request) => {
         });
       }
 
+      // BH-127: a new key replaces the one Octopus rejected, so clear the
+      // "key rejected" state. The next sync sets it again if this key fails too.
+      const { error: clearErr } = await supabase
+        .from('octopus_meters')
+        .update({ last_sync_error: null, last_sync_error_at: null })
+        .eq('user_id', userId);
+      if (clearErr) console.warn('Could not clear last_sync_error after relink');
+
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -606,16 +623,20 @@ Deno.serve(async (req: Request) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      const { data: prevUserData, error: prevUserErr } =
-        await supabase.auth.admin.getUserById(previousUserId);
-      if (prevUserErr || !prevUserData?.user || prevUserData.user.is_anonymous !== true) {
+      // BH-147: the caller must prove they held that anonymous session (its
+      // access token), not just know its id. verifyAnonOwnership also checks
+      // the account is anonymous, so Google/Apple accounts can't be claimed.
+      const proof = await verifyAnonOwnership(previousUserId, payload.previousUserToken, (token) =>
+        supabase.auth.getUser(token),
+      );
+      if (!proof.ok) {
         logSecurityEvent({
           type: 'SUSPICIOUS_ACTIVITY',
           severity: 'MEDIUM',
           details: {
             user_id: userId.substring(0, 8) + '...',
             ip: clientIP,
-            message: 'migrate-data refused: previous user is not an anonymous account',
+            message: `migrate-data refused: ${proof.reason}`,
           },
           timestamp: new Date().toISOString(),
         });
@@ -837,15 +858,16 @@ Deno.serve(async (req: Request) => {
 
       // Fetch account details to get meter information
       const accountUrl = `https://api.octopus.energy/v1/accounts/${OCTOPUS_ACCOUNT_NUMBER}/`;
-      console.log(`Fetching account from: ${accountUrl}`);
+      console.log(`[${requestId}] Fetching Octopus account details`);
 
       const response = await fetch(accountUrl, {
         headers: { Authorization: authHeaderOctopus },
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`Octopus API error: ${response.status} - ${errorText}`);
+        // BH-150: never log the raw body; it can echo the account number.
+        await response.body?.cancel();
+        console.error(`[${requestId}] Octopus account API error: ${response.status}`);
         const userMessage =
           response.status === 404
             ? 'Account not found. Please check your account number is correct (e.g. A-12345678).'
@@ -902,6 +924,43 @@ Deno.serve(async (req: Request) => {
 
       // Store meters in database linked to user
       if (meters.length > 0) {
+        // BH-152: never take a meter (and its history) from another user.
+        const { data: existing, error: ownerErr } = await supabase
+          .from('octopus_meters')
+          .select('mpan, user_id')
+          .in(
+            'mpan',
+            meters.map((m) => m.mpan),
+          );
+        if (ownerErr) {
+          console.error(`[${requestId}] meter ownership check failed:`, ownerErr.message);
+          return new Response(
+            JSON.stringify({
+              error: 'Could not save your meters. Please try again.',
+              code: 'meter_check_failed',
+            }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+          );
+        }
+        const taken = mpansOwnedByOthers(existing ?? [], userId);
+        if (taken.length > 0) {
+          logSecurityEvent({
+            type: 'SUSPICIOUS_ACTIVITY',
+            severity: 'MEDIUM',
+            details: { reason: 'meter_already_linked', count: taken.length },
+            timestamp: new Date().toISOString(),
+          });
+          return new Response(
+            // 200 like the other get-meters refusals, so the app reads the code.
+            JSON.stringify({
+              error: METER_CLAIMED_MESSAGE,
+              code: 'meter_already_linked',
+              meters: [],
+            }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+          );
+        }
+
         const { error } = await supabase.from('octopus_meters').upsert(
           meters.map((meter) => ({
             user_id: userId,
@@ -915,7 +974,7 @@ Deno.serve(async (req: Request) => {
         );
 
         if (error) {
-          console.error(`Error storing meters for user ${userId}:`, error);
+          console.error(`[${requestId}] Error storing meters:`, error?.message);
         }
       }
 
@@ -1012,11 +1071,16 @@ Deno.serve(async (req: Request) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'Unknown error';
-        return new Response(JSON.stringify({ error: message }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return safeErrorResponse(
+          {
+            code: 'sync_failed',
+            error: 'sync-consumption failed',
+            status: 400,
+            context: 'sync-consumption',
+            details: { user: userId.substring(0, 8) },
+          },
+          error,
+        );
       }
     }
 
@@ -1027,11 +1091,16 @@ Deno.serve(async (req: Request) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'Unknown error';
-        return new Response(JSON.stringify({ error: message }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return safeErrorResponse(
+          {
+            code: 'footprint_calculation_failed',
+            error: 'calculate-footprint failed',
+            status: 400,
+            context: 'calculate-footprint',
+            details: { user: userId.substring(0, 8) },
+          },
+          error,
+        );
       }
     }
 
@@ -1059,11 +1128,16 @@ Deno.serve(async (req: Request) => {
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
         );
       } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'Unknown error';
-        return new Response(JSON.stringify({ error: message }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return safeErrorResponse(
+          {
+            code: 'full_sync_failed',
+            error: 'full-sync failed',
+            status: 400,
+            context: 'full-sync',
+            details: { user: userId.substring(0, 8) },
+          },
+          error,
+        );
       }
     }
 
@@ -1221,7 +1295,7 @@ Deno.serve(async (req: Request) => {
         });
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
-        console.error('Greenness forecast error:', message);
+        console.error('Greenness forecast error:', redactIdentifiers(message));
         // Return empty array for graceful degradation
         return new Response(JSON.stringify({ forecast: [] }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -1472,10 +1546,13 @@ Deno.serve(async (req: Request) => {
         );
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
-        console.error('Intelligent dispatch error:', message);
-        return new Response(JSON.stringify({ planned: [], completed: [], error: message }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        console.error('Intelligent dispatch error:', redactIdentifiers(message));
+        return new Response(
+          JSON.stringify({ planned: [], completed: [], error: 'dispatch_fetch_failed' }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          },
+        );
       }
     }
 
@@ -1582,11 +1659,14 @@ Deno.serve(async (req: Request) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error: unknown) {
-    console.error('Octopus Energy function error:', error);
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return safeErrorResponse(
+      {
+        code: 'internal_error',
+        error: 'Something went wrong',
+        status: 500,
+        context: 'octopus-energy',
+      },
+      error,
+    );
   }
 });

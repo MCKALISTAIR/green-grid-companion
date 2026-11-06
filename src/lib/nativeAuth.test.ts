@@ -1,190 +1,234 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import {
+  NATIVE_PKCE_VERIFIER_KEY,
   NATIVE_REDIRECT_URI,
   NATIVE_STATE_KEY,
-  buildNativeBrokerUrl,
   completeNativeCallback,
-  nativeHandoffUrl,
   parseNativeAuthCallback,
   sha256Hex,
+  type NativeStorage,
   signInWithAppleNative,
   startNativeBrowserSignIn,
   type NativeAuthDeps,
 } from './nativeAuth';
 
-const TOKENS = 'access_token=AT&refresh_token=RT&expires_in=3600&token_type=bearer';
+const NOW = 1_700_000_000_000;
+const STATE = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+const CALLBACK = `${NATIVE_REDIRECT_URI}&state=${STATE}&code=CODE`;
+const VALID_INTENT = JSON.stringify({ state: STATE, startedAt: NOW });
 
 function memStorage(init: Record<string, string> = {}) {
-  const m = new Map(Object.entries(init));
+  const map = new Map(Object.entries(init));
   return {
-    getItem: (k: string) => m.get(k) ?? null,
-    setItem: (k: string, v: string) => void m.set(k, v),
-    removeItem: (k: string) => void m.delete(k),
-    m,
+    getItem: vi.fn((key: string) => map.get(key) ?? null),
+    setItem: vi.fn((key: string, value: string) => void map.set(key, value)),
+    removeItem: vi.fn((key: string) => void map.delete(key)),
+    map,
   };
 }
 
-function deps(over: Partial<NativeAuthDeps> = {}) {
-  const base = {
+function savedValue(storage: NativeStorage | undefined, key: string): string | undefined {
+  return (storage as ReturnType<typeof memStorage> | undefined)?.map.get(key);
+}
+
+function makeDeps(overrides: Partial<NativeAuthDeps> = {}) {
+  const d: NativeAuthDeps = {
     auth: {
-      signInWithIdToken: vi.fn(
-        async (_c: { provider: 'apple'; token: string; nonce?: string }) => ({
-          error: null as { message: string } | null,
-        }),
-      ),
-      setSession: vi.fn(async (_t: { access_token: string; refresh_token: string }) => ({
-        error: null as { message: string } | null,
+      signInWithIdToken: vi.fn(async () => ({ error: null })),
+      signInWithOAuth: vi.fn(async (c) => ({
+        data: {
+          url: `https://klwezcjmlrdwvvzisdtd.supabase.co/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(c.options.redirectTo)}&code_challenge=hash&code_challenge_method=s256&state=${c.options.queryParams.state}`,
+        },
+        error: null,
       })),
+      exchangeCodeForSession: vi.fn(async () => ({ error: null })),
     },
-    closeBrowser: vi.fn(async () => {}),
-    openBrowser: vi.fn(async (_url: string) => {}),
     storage: memStorage(),
+    now: () => NOW,
+    openBrowser: vi.fn(async () => {}),
+    closeBrowser: vi.fn(async () => {}),
   };
-  return Object.assign(base, over) as typeof base & NativeAuthDeps;
+  return Object.assign(d, overrides);
 }
 
-describe('buildNativeBrokerUrl', () => {
-  it('uses the domain broker and an allowed https return, never the custom scheme', () => {
-    const url = new URL(buildNativeBrokerUrl('google', 'abc'));
-    expect(url.origin + url.pathname).toBe('https://getgridsense.com/~oauth/initiate');
-    expect(url.searchParams.get('provider')).toBe('google');
-    expect(url.searchParams.get('state')).toBe('abc');
-    expect(url.searchParams.get('redirect_uri')).toBe(NATIVE_REDIRECT_URI);
-    expect(NATIVE_REDIRECT_URI).toBe('https://getgridsense.com/auth/callback?app=ios');
-  });
-});
+function validStorage() {
+  return memStorage({ [NATIVE_STATE_KEY]: VALID_INTENT, [NATIVE_PKCE_VERIFIER_KEY]: 'verifier' });
+}
 
-describe('parseNativeAuthCallback', () => {
-  it('reads tokens from the universal link hash', () => {
-    expect(parseNativeAuthCallback(`${NATIVE_REDIRECT_URI}#${TOKENS}&state=s1`, 's1')).toEqual({
-      kind: 'tokens',
-      tokens: { access_token: 'AT', refresh_token: 'RT' },
+describe('native browser start', () => {
+  it('requires Supabase PKCE, saved state and the exact HTTPS redirect before opening', async () => {
+    const d = makeDeps();
+    const opened = vi.spyOn(d, 'openBrowser');
+    await expect(startNativeBrowserSignIn('google', d)).resolves.toEqual({
+      error: null,
+      redirected: true,
     });
-  });
-  it('reads tokens from the GridSense:// handoff (either case)', () => {
-    for (const scheme of ['GridSense', 'gridsense']) {
-      expect(parseNativeAuthCallback(`${scheme}://auth/callback?app=ios#${TOKENS}`).kind).toBe(
-        'tokens',
-      );
-    }
-  });
-  it('reads tokens from the query', () => {
-    expect(parseNativeAuthCallback(`GridSense://auth/callback?${TOKENS}`).kind).toBe('tokens');
-  });
-  it('rejects a state mismatch', () => {
-    expect(parseNativeAuthCallback(`${NATIVE_REDIRECT_URI}#${TOKENS}&state=evil`, 's1').kind).toBe(
-      'error',
+    const authCall = vi.mocked(d.auth.signInWithOAuth).mock.calls[0][0];
+    const savedIntent = JSON.parse(savedValue(d.storage, NATIVE_STATE_KEY)!);
+    expect(savedIntent).toEqual({ state: expect.stringMatching(/^[a-f0-9]{64}$/), startedAt: NOW });
+    expect(authCall).toEqual({
+      provider: 'google',
+      options: {
+        redirectTo: NATIVE_REDIRECT_URI,
+        skipBrowserRedirect: true,
+        queryParams: { state: savedIntent.state },
+      },
+    });
+    const url = new URL(opened.mock.calls[0][0]);
+    expect(url.origin + url.pathname).toBe(
+      'https://klwezcjmlrdwvvzisdtd.supabase.co/auth/v1/authorize',
     );
+    expect(url.searchParams.get('code_challenge')).toBe('hash');
+    expect(url.searchParams.get('code_challenge_method')).toBe('s256');
+    expect(url.searchParams.get('state')).toBe(savedIntent.state);
   });
-  it('passes the broker error through', () => {
+
+  it.each([null, 'https://evil.example/auth/v1/authorize', `${NATIVE_REDIRECT_URI}&state=x`])(
+    'never opens an invalid authorization URL: %s',
+    async (url) => {
+      const d = makeDeps();
+      vi.mocked(d.auth.signInWithOAuth).mockResolvedValue({ data: { url }, error: null });
+      expect((await startNativeBrowserSignIn('google', d)).redirected).toBe(false);
+      expect(d.openBrowser).not.toHaveBeenCalled();
+      expect(savedValue(d.storage, NATIVE_STATE_KEY)).toBeUndefined();
+    },
+  );
+});
+
+describe('native callback validation', () => {
+  it('only accepts a code on the exact HTTPS callback with matching saved state', () => {
+    expect(parseNativeAuthCallback(CALLBACK, STATE)).toEqual({ kind: 'code', code: 'CODE' });
+    expect(parseNativeAuthCallback(CALLBACK, null).kind).toBe('error');
+    expect(parseNativeAuthCallback(CALLBACK, 'other').kind).toBe('error');
     expect(
-      parseNativeAuthCallback(`${NATIVE_REDIRECT_URI}#error=access_denied&error_description=Nope`),
-    ).toEqual({ kind: 'error', message: 'Nope' });
+      parseNativeAuthCallback(`https://evil.example/auth/callback?state=${STATE}&code=CODE`, STATE)
+        .kind,
+    ).toBe('not-auth');
   });
-  it('errors when the refresh token is missing', () => {
-    expect(parseNativeAuthCallback(`${NATIVE_REDIRECT_URI}#access_token=AT`).kind).toBe('error');
-  });
-  it('ignores links that are not sign-in returns', () => {
-    for (const href of [
-      'GridSense://settings',
-      'https://getgridsense.com/',
-      'https://evil.example/auth/callback#access_token=a&refresh_token=b',
-      'not a url',
-    ]) {
-      expect(parseNativeAuthCallback(href).kind).toBe('not-auth');
-    }
-  });
-});
 
-describe('nativeHandoffUrl', () => {
-  it('forwards an app=ios return to the custom scheme, keeping hash and query', () => {
-    expect(nativeHandoffUrl(`${NATIVE_REDIRECT_URI}#${TOKENS}`)).toBe(
-      `GridSense://auth/callback?app=ios#${TOKENS}`,
-    );
-    expect(nativeHandoffUrl(`${NATIVE_REDIRECT_URI}#error=access_denied`)).toContain('error=');
-  });
-  it('leaves web sign-in returns and plain pages alone', () => {
-    expect(nativeHandoffUrl(`https://getgridsense.com/#${TOKENS}`)).toBeNull();
-    expect(nativeHandoffUrl(`https://getgridsense.com/auth/callback#${TOKENS}`)).toBeNull();
-    expect(nativeHandoffUrl(NATIVE_REDIRECT_URI)).toBeNull();
-  });
-});
+  it.each(['GridSense', 'gridsense'])(
+    'drops %s auth token handoffs even in a pending sign-in',
+    async (scheme) => {
+      const storage = validStorage();
+      const d = makeDeps({ storage });
+      expect(
+        await completeNativeCallback(
+          `${scheme}://auth/callback?app=ios#access_token=A&refresh_token=R`,
+          d,
+        ),
+      ).toBe('not-auth');
+      expect(d.auth.exchangeCodeForSession).not.toHaveBeenCalled();
+      expect(savedValue(d.storage, NATIVE_STATE_KEY)).toBe(VALID_INTENT);
+    },
+  );
 
-describe('completeNativeCallback', () => {
-  it('stores the session, clears state and closes the browser', async () => {
-    const d = deps({ storage: memStorage({ [NATIVE_STATE_KEY]: 's1' }) });
-    const out = await completeNativeCallback(`${NATIVE_REDIRECT_URI}#${TOKENS}&state=s1`, d);
-    expect(out).toBe('signed-in');
-    expect(d.auth.setSession).toHaveBeenCalledWith({ access_token: 'AT', refresh_token: 'RT' });
+  it('exchanges once with matching state and a saved PKCE verifier, closing the browser', async () => {
+    const d = makeDeps({ storage: validStorage() });
+    expect(await completeNativeCallback(CALLBACK, d)).toBe('signed-in');
+    expect(d.auth.exchangeCodeForSession).toHaveBeenCalledExactlyOnceWith('CODE');
     expect(d.closeBrowser).toHaveBeenCalled();
-    expect(d.storage.getItem(NATIVE_STATE_KEY)).toBeNull();
+    expect(savedValue(d.storage, NATIVE_STATE_KEY)).toBeUndefined();
+    expect(d.auth.exchangeCodeForSession).toHaveBeenCalledOnce();
   });
-  it('does not store a session on a state mismatch', async () => {
-    const onError = vi.fn();
-    const d = deps({ storage: memStorage({ [NATIVE_STATE_KEY]: 's1' }) });
-    const out = await completeNativeCallback(
-      `${NATIVE_REDIRECT_URI}#${TOKENS}&state=other`,
-      d,
-      onError,
-    );
-    expect(out).toBe('failed');
-    expect(d.auth.setSession).not.toHaveBeenCalled();
-    expect(onError).toHaveBeenCalled();
+
+  it.each([
+    ['missing state', { [NATIVE_PKCE_VERIFIER_KEY]: 'verifier' }],
+    [
+      'mismatched state',
+      {
+        [NATIVE_STATE_KEY]: VALID_INTENT.replace(
+          STATE,
+          'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+        ),
+        [NATIVE_PKCE_VERIFIER_KEY]: 'verifier',
+      },
+    ],
+    ['missing PKCE verifier', { [NATIVE_STATE_KEY]: VALID_INTENT }],
+    [
+      'expired state',
+      {
+        [NATIVE_STATE_KEY]: JSON.stringify({ state: STATE, startedAt: NOW - 600_001 }),
+        [NATIVE_PKCE_VERIFIER_KEY]: 'verifier',
+      },
+    ],
+    [
+      'future state',
+      {
+        [NATIVE_STATE_KEY]: JSON.stringify({ state: STATE, startedAt: NOW + 1 }),
+        [NATIVE_PKCE_VERIFIER_KEY]: 'verifier',
+      },
+    ],
+    ['malformed state', { [NATIVE_STATE_KEY]: 'not-json', [NATIVE_PKCE_VERIFIER_KEY]: 'verifier' }],
+  ])('refuses code exchange with %s', async (_name, entries) => {
+    const d = makeDeps({ storage: memStorage(entries) });
+    expect(await completeNativeCallback(CALLBACK, d)).toBe('failed');
+    expect(d.auth.exchangeCodeForSession).not.toHaveBeenCalled();
   });
-  it('reports a setSession failure', async () => {
-    const d = deps();
-    d.auth.setSession.mockResolvedValueOnce({ error: { message: 'bad' } });
-    expect(await completeNativeCallback(`GridSense://auth/callback#${TOKENS}`, d)).toBe('failed');
+
+  it('refuses implicit tokens on the HTTPS return', async () => {
+    const d = makeDeps({ storage: validStorage() });
+    expect(
+      await completeNativeCallback(
+        `${NATIVE_REDIRECT_URI}&state=${STATE}#access_token=A&refresh_token=R`,
+        d,
+      ),
+    ).toBe('failed');
+    expect(
+      await completeNativeCallback(
+        `${NATIVE_REDIRECT_URI}&state=${STATE}&access_token=A&refresh_token=R`,
+        d,
+      ),
+    ).toBe('failed');
+    expect(d.auth.exchangeCodeForSession).not.toHaveBeenCalled();
   });
-  it('ignores other deep links without closing anything', async () => {
-    const d = deps();
-    expect(await completeNativeCallback('GridSense://region/scotland', d)).toBe('not-auth');
-    expect(d.closeBrowser).not.toHaveBeenCalled();
-  });
-  it('still signs in when the browser is already closed', async () => {
-    const d = deps({ closeBrowser: vi.fn(async () => Promise.reject(new Error('closed'))) });
-    expect(await completeNativeCallback(`GridSense://auth/callback#${TOKENS}`, d)).toBe(
-      'signed-in',
-    );
+
+  it('handles an already closed browser and a rejected exchange', async () => {
+    const d = makeDeps({
+      storage: validStorage(),
+      closeBrowser: vi.fn().mockRejectedValue(new Error('closed')),
+    });
+    vi.mocked(d.auth.exchangeCodeForSession).mockResolvedValue({ error: { message: 'bad_code' } });
+    expect(await completeNativeCallback(CALLBACK, d)).toBe('failed');
+    expect(d.auth.exchangeCodeForSession).toHaveBeenCalledOnce();
   });
 });
 
-describe('startNativeBrowserSignIn', () => {
-  it('saves state and opens the broker in the system browser', async () => {
-    const d = deps();
-    const res = await startNativeBrowserSignIn('google', d);
-    expect(res).toEqual({ error: null, redirected: true });
-    const opened = new URL(d.openBrowser.mock.calls[0][0] as string);
-    expect(opened.searchParams.get('state')).toBe(d.storage.getItem(NATIVE_STATE_KEY));
-  });
-});
-
-describe('signInWithAppleNative', () => {
-  it('sends Apple the hashed nonce and Supabase the raw one', async () => {
-    let sentNonce = '';
-    const d = deps({
-      appleAuthorize: vi.fn(async (o) => {
-        sentNonce = o.nonce ?? '';
-        return { response: { identityToken: 'ID_TOKEN' } };
+describe('native Apple and iOS association', () => {
+  it('preserves the hashed Apple nonce and exchanges its identity token', async () => {
+    let hashed = '';
+    const d = makeDeps({
+      appleAuthorize: vi.fn(async (options) => {
+        hashed = options.nonce!;
+        expect(options.clientId).toBe('com.greengrid.companion');
+        return { response: { identityToken: 'id-token' } };
       }),
     });
     expect(await signInWithAppleNative(d)).toEqual({ error: null });
-    const call = d.auth.signInWithIdToken.mock.calls[0][0] as { nonce: string; token: string };
-    expect(call.token).toBe('ID_TOKEN');
-    expect(await sha256Hex(call.nonce)).toBe(sentNonce);
+    const authCall = vi.mocked(d.auth.signInWithIdToken).mock.calls[0][0];
+    expect(authCall).toEqual({ provider: 'apple', token: 'id-token', nonce: expect.any(String) });
+    expect(await sha256Hex(authCall.nonce!)).toBe(hashed);
   });
-  it('fails cleanly when the user cancels or no token comes back', async () => {
-    const cancelled = deps({
-      appleAuthorize: vi.fn(async () => Promise.reject(new Error('1001'))),
-    });
-    expect((await signInWithAppleNative(cancelled)).error).toBeInstanceOf(Error);
-    const empty = deps({ appleAuthorize: vi.fn(async () => ({ response: {} })) });
-    expect((await signInWithAppleNative(empty)).error?.message).toMatch(/identity token/);
-    expect(empty.auth.signInWithIdToken).not.toHaveBeenCalled();
+
+  it('keeps both live AASA auth callback paths and webcredentials', () => {
+    const aasa = JSON.parse(readFileSync('public/.well-known/apple-app-site-association', 'utf8'));
+    expect(aasa.applinks.details[0].appIDs).toEqual(['UW7848QP79.com.greengrid.companion']);
+    expect(aasa.applinks.details[0].components).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ '/': '/auth/callback', '?': { app: 'ios' } }),
+        expect.objectContaining({ '/': '/auth/callback' }),
+      ]),
+    );
+    expect(aasa.webcredentials.apps).toEqual(['UW7848QP79.com.greengrid.companion']);
   });
-  it('surfaces a Supabase rejection', async () => {
-    const d = deps({ appleAuthorize: vi.fn(async () => ({ response: { identityToken: 't' } })) });
-    d.auth.signInWithIdToken.mockResolvedValueOnce({ error: { message: 'audience' } });
-    expect((await signInWithAppleNative(d)).error?.message).toBe('audience');
+
+  it('keeps one associated-domain entitlement containing both applinks and webcredentials', () => {
+    const entitlements = readFileSync('ios/App/App/App.entitlements', 'utf8');
+    expect(
+      entitlements.match(/<key>com\.apple\.developer\.associated-domains<\/key>/g),
+    ).toHaveLength(1);
+    expect(entitlements).toContain('<string>applinks:getgridsense.com</string>');
+    expect(entitlements).toContain('<string>webcredentials:getgridsense.com</string>');
+    expect(entitlements).toContain('<key>com.apple.developer.applesignin</key>');
   });
 });

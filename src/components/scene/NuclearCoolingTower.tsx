@@ -53,7 +53,7 @@ export function NuclearCoolingTower({
       onClick={handleClick}
       role="button"
       tabIndex={0}
-      aria-label="Nuclear Cooling Tower - Click to release steam"
+      aria-label="Nuclear cooling tower. Tap to let off steam"
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           handleClick();

@@ -9,11 +9,11 @@ import { useWeatherData, WeatherData } from '@/hooks/useWeatherData';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useSceneDirector } from '@/hooks/useSceneDirector';
 import { useCleanlinessBand } from '@/hooks/useCleanlinessBand';
-import { useSceneGrowth } from '@/hooks/useSceneGrowth';
-import { IntensityMood } from './scene/art/WeatherArt';
-import { getMoodBand } from '@/lib/artPalette';
+import type { SceneGrowthStage } from '@/hooks/useSceneGrowth';
+import { SceneHaze } from './scene/art/SceneHaze';
+import { nesoBand } from '@/lib/nesoBand';
+import { getHazeBand, getSkyBlend, HAZE_SKY_BLEND_COLOR } from '@/lib/sceneHaze';
 import { StateTransitionFX } from './scene/StateTransitionFX';
-import { SceneHeroSpotlight, SceneAtmosphericDepth } from './scene/SceneComposition';
 import { SceneTemporalLife } from './scene/SceneTemporalLife';
 import { GenerationMix } from '@/lib/carbonApi';
 import { buildSceneConfig } from '@/lib/sceneConfig';
@@ -24,6 +24,7 @@ import { buildTurbineLayout } from '@/lib/turbineLayout';
 import { useSceneType, SceneType } from '@/hooks/useSceneType';
 import {
   SceneSkyLayer,
+  SceneCloudBankLayer,
   SceneAmbientLife,
   CoastalSceneLayers,
   CitySceneLayers,
@@ -41,6 +42,8 @@ interface IntensitySceneProps {
   intensity: number;
   index: string;
   generationMix?: GenerationMix[];
+  /** BH-143: garden stage from useSceneGrowth on the page; sparse when omitted. */
+  growthStage?: SceneGrowthStage;
   isVintage?: boolean;
   className?: string;
   sceneTypeOverride?: SceneType;
@@ -76,6 +79,7 @@ export function IntensityScene({
   intensity: propIntensity,
   index: propIndex,
   generationMix = [],
+  growthStage = 0,
   isVintage = false,
   className,
   sceneTypeOverride,
@@ -161,22 +165,21 @@ export function IntensityScene({
   const intensity = typeof rawIntensity === 'number' && !isNaN(rawIntensity) ? rawIntensity : 150;
 
   const rawIndex =
-    isDirectorMode && overrides.intensity !== undefined
-      ? overrides.intensity < 50
-        ? 'very low'
-        : overrides.intensity < 150
-          ? 'low'
-          : overrides.intensity < 250
-            ? 'moderate'
-            : overrides.intensity < 350
-              ? 'high'
-              : 'very high'
-      : propIndex;
+    isDirectorMode && overrides.intensity !== undefined ? nesoBand(overrides.intensity) : propIndex;
   const index = rawIndex || 'moderate';
+  // PR-2b: haze and smoke follow the NESO band only, and need a real reading
+  // (or a Director override). No data means no haze and no smoke.
+  const hasBandReading = hasLiveReading || (isDirectorMode && overrides.intensity !== undefined);
+  const hazeBand = hasBandReading ? getHazeBand(rawIndex, intensity) : 'none';
 
   // Cleanliness band + transition flourish trigger
-  const { band: cleanlinessBand, transition: bandTransition } = useCleanlinessBand(intensity);
-  const sceneGrowth = useSceneGrowth(intensity, generationMix);
+  const { band: cleanlinessBand, transition: bandTransition } = useCleanlinessBand(
+    intensity,
+    undefined,
+    rawIndex,
+  );
+  // BH-143: the page owns garden growth (low-carbon days in the last 14).
+  const sceneGrowth = { stage: growthStage };
 
   const sunPosition = realSunPosition;
 
@@ -303,6 +306,7 @@ export function IntensityScene({
   };
 
   const biomassPercentage = getGenerationPercentage('biomass');
+  const solarShare = generationMix?.length ? getGenerationPercentage('solar') : undefined;
 
   const sceneConfig = useMemo(
     () =>
@@ -315,9 +319,23 @@ export function IntensityScene({
         isNight,
         sceneType,
         weatherKnown,
+        hazeBand,
+        solarShare,
       }),
-    [intensity, index, timeOfDay, weather, synthwaveMode, isNight, sceneType, weatherKnown],
+    [
+      intensity,
+      index,
+      timeOfDay,
+      weather,
+      synthwaveMode,
+      isNight,
+      sceneType,
+      weatherKnown,
+      hazeBand,
+      solarShare,
+    ],
   );
+  const skyBlend = synthwaveMode || isNight ? 0 : getSkyBlend(hazeBand, timeOfDay);
 
   return (
     <motion.div
@@ -330,10 +348,10 @@ export function IntensityScene({
         height: 'clamp(min(280px, 45dvh), min(55dvh, 75vw), min(620px, 70dvh))',
         ...style,
       }}
-      animate={{
-        background: sceneConfig.skyGradient,
-        filter: sceneConfig.sceneFilter,
-      }}
+      // PR-2b round 4: with a sky blend (day, high and very high) the sky and its
+      // grey blend sit here, outside the scene filter, so the set colour lands.
+      // Otherwise the sky is drawn on the filtered layer below, as before.
+      animate={{ background: skyBlend > 0 ? sceneConfig.skyGradient : 'transparent' }}
       transition={{ duration: 2, ease: 'easeInOut' as const }}
       // region (not img): scene contains focusable tap targets (moon, cooling tower,
       // fact bubble...); role="img" forbids that
@@ -344,193 +362,229 @@ export function IntensityScene({
       data-time-of-day={timeOfDay}
       data-scene-night={isNight ? 'on' : 'off'}
     >
-      {isVintage && (
+      {/* PR-2b round 3: by day at high and very high the whole sky blends toward
+          grey, under all scene art and outside the scene filter, so the land
+          never changes and the set colour lands. */}
+      {skyBlend > 0 && (
         <div
-          className="absolute inset-0 z-50 pointer-events-none opacity-20 mix-blend-overlay"
-          style={{
-            backgroundImage:
-              "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E\")",
-          }}
+          className="absolute inset-0 pointer-events-none"
+          aria-hidden="true"
+          data-art="sky-blend"
+          data-sky-blend={skyBlend}
+          style={{ backgroundColor: HAZE_SKY_BLEND_COLOR, opacity: skyBlend }}
         />
       )}
 
-      {/* Wrapper to shift scenery up and protect it from being cut off by the bottom wave/cards.
-          Compact (Demand): lift + scale so bottom-aligned silhouettes clear the sheet overlap. */}
-      <div
-        className={
-          compact
-            ? 'absolute inset-0 bottom-0 origin-bottom scale-[1.45] -translate-y-[22%] pointer-events-none'
-            : 'absolute inset-0 bottom-[40px] pointer-events-none'
-        }
+      <motion.div
+        className="absolute inset-0"
+        data-art="scene-filtered"
+        animate={{
+          background: skyBlend > 0 ? 'transparent' : sceneConfig.skyGradient,
+          filter: sceneConfig.sceneFilter,
+        }}
+        transition={{ duration: 2, ease: 'easeInOut' as const }}
       >
-        {/* Sky/Celestial Parallax Group */}
-        <SceneSkyLayer
-          skyY={skyY}
-          shouldReduceMotion={shouldReduceMotion}
-          weather={weather}
-          isNight={isNight}
-          propIntensity={propIntensity}
-          sceneConfig={sceneConfig}
-          sunPosition={sunPosition}
-          timeOfDay={timeOfDay}
-          synthwaveMode={synthwaveMode}
-          sunReactionKey={sunReactionKey}
-          handleMoonDoubleClick={handleMoonDoubleClick}
-          onSunTap={handleSunTap}
-          cloudTopPx={cloudTopPx}
-        />
+        {isVintage && (
+          <div
+            className="absolute inset-0 z-50 pointer-events-none opacity-20 mix-blend-overlay"
+            style={{
+              backgroundImage:
+                "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E\")",
+            }}
+          />
+        )}
 
-        <SceneAtmosphericDepth cleanliness={sceneConfig.cleanliness} isNight={isNight} />
-        {/* The halo's screen blend reads as a sun behind the cloud, so it stays
-            off while the weather is unknown (BH-90). */}
-        {sceneConfig.weatherKnown && (
-          <SceneHeroSpotlight
-            band={cleanlinessBand}
+        {/* Wrapper to shift scenery up and protect it from being cut off by the bottom wave/cards.
+          Compact (Demand): lift + scale so bottom-aligned silhouettes clear the sheet overlap. */}
+        <div
+          className={
+            compact
+              ? 'absolute inset-0 bottom-0 origin-bottom scale-[1.45] -translate-y-[22%] pointer-events-none'
+              : 'absolute inset-0 bottom-[40px] pointer-events-none'
+          }
+        >
+          {/* Sky/Celestial Parallax Group */}
+          <SceneSkyLayer
+            skyY={skyY}
+            shouldReduceMotion={shouldReduceMotion}
+            weather={weather}
+            isNight={isNight}
+            propIntensity={propIntensity}
+            sceneConfig={sceneConfig}
+            sunPosition={sunPosition}
+            timeOfDay={timeOfDay}
+            synthwaveMode={synthwaveMode}
+            sunReactionKey={sunReactionKey}
+            handleMoonDoubleClick={handleMoonDoubleClick}
+            onSunTap={handleSunTap}
+            cloudTopPx={cloudTopPx}
+            bankBehindSkyline={isCity}
+          />
+
+          {/* PR-2b: one horizon-weighted haze by NESO band replaces IntensityMood, the
+            depth band and the hero spotlight glow (retired: it read as a pale
+            smudge behind the hero text on grey days). */}
+          <SceneHaze
+            band={sceneConfig.hazeBand}
+            sceneType={sceneType}
+            timeOfDay={timeOfDay}
+            isFoggy={sceneConfig.weatherKnown && weather.isFoggy}
+            synthwaveMode={synthwaveMode}
+          />
+          <StateTransitionFX transition={bandTransition} />
+
+          <SceneAmbientLife
+            sceneConfig={sceneConfig}
+            shouldReduceMotion={shouldReduceMotion}
+            birdConfig={birdConfig}
+            birdBand={birdBand}
+            fireflyConfig={fireflyConfig}
+          />
+
+          {/* BH-117: city skylines (castle, London landmarks, neutral skyline) stand in
+            front of the cloud bank, so in city scenes it is drawn here, just
+            before CitySceneLayers, instead of inside the sky layer. */}
+          {isCity && (
+            <SceneCloudBankLayer
+              skyY={skyY}
+              shouldReduceMotion={shouldReduceMotion}
+              weather={weather}
+              isNight={isNight}
+              timeOfDay={timeOfDay}
+              weatherKnown={sceneConfig.weatherKnown}
+              cloudTopPx={cloudTopPx}
+            />
+          )}
+
+          {/* ===== LANDSCAPE LAYERS ===== */}
+          {isCoastal ? (
+            <CoastalSceneLayers
+              shouldReduceMotion={shouldReduceMotion}
+              backY={backY}
+              midY={midY}
+              sceneConfig={sceneConfig}
+              isNight={isNight}
+              synthwaveMode={synthwaveMode}
+              isSnowing={weather.isSnowing}
+              skipIntro={hasSeenScene}
+              windSpeed={weather.windSpeed}
+              timeOfDay={timeOfDay}
+              windPercentage={windPercentage}
+              hydroPercentage={hydroPercentage}
+              marinePercentage={marinePercentage}
+            />
+          ) : isCity ? (
+            <CitySceneLayers
+              shouldReduceMotion={shouldReduceMotion}
+              backY={backY}
+              midY={midY}
+              sceneConfig={sceneConfig}
+              isNight={isNight}
+              synthwaveMode={synthwaveMode}
+              isSnowing={weather.isSnowing}
+              skipIntro={hasSeenScene}
+              windSpeed={weather.windSpeed}
+              timeOfDay={timeOfDay}
+              cleanlinessBand={cleanlinessBand}
+              intensity={intensity}
+              cityVariant={cityVariant}
+              nesoIndex={
+                hasLiveReading || (isDirectorMode && overrides.intensity !== undefined)
+                  ? rawIndex || undefined
+                  : undefined
+              }
+              weatherState={cityWeatherState(weatherKnown, weather)}
+            />
+          ) : (
+            <CountrysideSceneLayers
+              shouldReduceMotion={shouldReduceMotion}
+              backY={backY}
+              midY={midY}
+              sceneConfig={sceneConfig}
+              isNight={isNight}
+              synthwaveMode={synthwaveMode}
+              isSnowing={weather.isSnowing}
+              skipIntro={hasSeenScene}
+              windSpeed={weather.windSpeed}
+              timeOfDay={timeOfDay}
+              windPercentage={windPercentage}
+              nuclearPercentage={nuclearPercentage}
+              hydroPercentage={hydroPercentage}
+              isRaining={isRaining}
+              hazeBand={sceneConfig.hazeBand}
+            />
+          )}
+
+          <SceneGenerationOverlay
+            sceneConfig={sceneConfig}
             isCity={isCity}
             isCoastal={isCoastal}
             isNight={isNight}
-          />
-        )}
-        <IntensityMood
-          band={getMoodBand(hasLiveReading ? intensity : Math.max(1, intensity), index)}
-        />
-        <StateTransitionFX transition={bandTransition} />
-
-        <SceneAmbientLife
-          sceneConfig={sceneConfig}
-          shouldReduceMotion={shouldReduceMotion}
-          birdConfig={birdConfig}
-          birdBand={birdBand}
-          fireflyConfig={fireflyConfig}
-        />
-
-        {/* ===== LANDSCAPE LAYERS ===== */}
-        {isCoastal ? (
-          <CoastalSceneLayers
-            shouldReduceMotion={shouldReduceMotion}
-            backY={backY}
-            midY={midY}
-            sceneConfig={sceneConfig}
-            isNight={isNight}
-            synthwaveMode={synthwaveMode}
-            isSnowing={weather.isSnowing}
-            skipIntro={hasSeenScene}
-            windSpeed={weather.windSpeed}
-            timeOfDay={timeOfDay}
+            turbineLayout={turbineLayout}
+            turbineOverdrive={turbineOverdrive}
+            handleTurbineClick={handleTurbineClick}
+            nuclearPercentage={nuclearPercentage}
             windPercentage={windPercentage}
             hydroPercentage={hydroPercentage}
             marinePercentage={marinePercentage}
-          />
-        ) : isCity ? (
-          <CitySceneLayers
-            shouldReduceMotion={shouldReduceMotion}
-            backY={backY}
-            midY={midY}
-            sceneConfig={sceneConfig}
-            isNight={isNight}
-            synthwaveMode={synthwaveMode}
-            isSnowing={weather.isSnowing}
-            skipIntro={hasSeenScene}
             windSpeed={weather.windSpeed}
-            timeOfDay={timeOfDay}
-            cleanlinessBand={cleanlinessBand}
+          />
+
+          <SceneMilestoneFX
             intensity={intensity}
-            cityVariant={cityVariant}
-            nesoIndex={
-              hasLiveReading || (isDirectorMode && overrides.intensity !== undefined)
-                ? rawIndex || undefined
-                : undefined
-            }
-            weatherState={cityWeatherState(weatherKnown, weather)}
+            hasLiveReading={hasLiveReading || (isDirectorMode && overrides.intensity !== undefined)}
+            weather={weather}
+            sceneConfig={sceneConfig}
           />
-        ) : (
-          <CountrysideSceneLayers
+
+          <SceneEcosystemLayer
+            sceneConfig={sceneConfig}
+            isCity={isCity}
+            isCoastal={isCoastal}
+            isNight={isNight}
+            isDawnOrDusk={isDawnOrDusk}
             shouldReduceMotion={shouldReduceMotion}
             backY={backY}
             midY={midY}
-            sceneConfig={sceneConfig}
-            isNight={isNight}
-            synthwaveMode={synthwaveMode}
-            isSnowing={weather.isSnowing}
-            skipIntro={hasSeenScene}
-            windSpeed={weather.windSpeed}
-            timeOfDay={timeOfDay}
-            windPercentage={windPercentage}
-            nuclearPercentage={nuclearPercentage}
-            hydroPercentage={hydroPercentage}
-            isRaining={isRaining}
+            showFox={showFox}
+            onFoxClick={() => unlock('fox_spotter')}
+            growthStage={sceneGrowth.stage}
           />
-        )}
 
-        <SceneGenerationOverlay
-          sceneConfig={sceneConfig}
-          isCity={isCity}
-          isCoastal={isCoastal}
-          isNight={isNight}
-          turbineLayout={turbineLayout}
-          turbineOverdrive={turbineOverdrive}
-          handleTurbineClick={handleTurbineClick}
-          nuclearPercentage={nuclearPercentage}
-          windPercentage={windPercentage}
-          hydroPercentage={hydroPercentage}
-          marinePercentage={marinePercentage}
-          windSpeed={weather.windSpeed}
-        />
+          <SceneTemporalLife
+            stage={sceneGrowth.stage}
+            isCity={isCity}
+            isCoastal={isCoastal}
+            isDaytime={sceneConfig.isDaytime}
+            isNight={isNight}
+          />
 
-        <SceneMilestoneFX
-          intensity={intensity}
-          hasLiveReading={hasLiveReading || (isDirectorMode && overrides.intensity !== undefined)}
-          weather={weather}
-          sceneConfig={sceneConfig}
-        />
+          <SceneAdvancedLayer
+            sceneConfig={sceneConfig}
+            isCity={isCity}
+            isCoastal={isCoastal}
+            isNight={isNight}
+            isRaining={isRaining}
+            windSpeed={weather.windSpeed}
+            hydroPercentage={hydroPercentage}
+            biomassPercentage={biomassPercentage}
+            showMeteorShower={showMeteorShower}
+          />
 
-        <SceneEcosystemLayer
-          sceneConfig={sceneConfig}
-          isCity={isCity}
-          isCoastal={isCoastal}
-          isNight={isNight}
-          isDawnOrDusk={isDawnOrDusk}
-          shouldReduceMotion={shouldReduceMotion}
-          backY={backY}
-          midY={midY}
-          showFox={showFox}
-          onFoxClick={() => unlock('fox_spotter')}
-          growthStage={sceneGrowth.stage}
-        />
+          <SceneWinterLayer weather={weather} sceneConfig={sceneConfig} />
 
-        <SceneTemporalLife
-          stage={sceneGrowth.stage}
-          isCity={isCity}
-          isCoastal={isCoastal}
-          isDaytime={sceneConfig.isDaytime}
-          isNight={isNight}
-        />
+          <SceneRandomEvents activeEvent={activeEvent} onComplete={() => setActiveEvent('none')} />
+        </div>
 
-        <SceneAdvancedLayer
-          sceneConfig={sceneConfig}
-          isCity={isCity}
-          isCoastal={isCoastal}
-          isNight={isNight}
-          isRaining={isRaining}
-          windSpeed={weather.windSpeed}
-          hydroPercentage={hydroPercentage}
-          biomassPercentage={biomassPercentage}
-          showMeteorShower={showMeteorShower}
-        />
-
-        <SceneWinterLayer weather={weather} sceneConfig={sceneConfig} />
-
-        <SceneRandomEvents activeEvent={activeEvent} onComplete={() => setActiveEvent('none')} />
-      </div>
-
-      {/* Fill the bottom-[40px] safety gap with ground colour so sky/grade
+        {/* Fill the bottom-[40px] safety gap with ground colour so sky/grade
           doesn't show as a discordant purple/teal bar under the landscape. */}
-      <div
-        className="absolute bottom-0 left-0 right-0 h-10 pointer-events-none z-[45]"
-        style={{ backgroundColor: sceneConfig.groundColor }}
-        data-land="ground"
-        aria-hidden="true"
-      />
+        <div
+          className="absolute bottom-0 left-0 right-0 h-10 pointer-events-none z-[45]"
+          style={{ backgroundColor: sceneConfig.groundColor }}
+          data-land="ground"
+          aria-hidden="true"
+        />
+      </motion.div>
     </motion.div>
   );
 }

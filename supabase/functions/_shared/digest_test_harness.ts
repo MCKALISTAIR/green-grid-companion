@@ -30,8 +30,14 @@ function applyFilters(rows: Row[], params: URLSearchParams): Row[] {
   return out;
 }
 
+/**
+ * `load` must be a literal `() => import('./index.ts')` in the caller so Deno
+ * resolves the module statically: a computed specifier needs --allow-read,
+ * which the CI command (--allow-env --allow-net=127.0.0.1) doesn't grant (BH-76).
+ * Each scope test runs once per module, so no cache-busting is needed.
+ */
 export async function runDigest(
-  modulePath: string,
+  load: () => Promise<unknown>,
   tables: Record<string, Row[]>,
   forecast: Row[],
 ): Promise<{ status: number; json: Record<string, unknown>; pushes: string[]; queries: string[] }> {
@@ -77,7 +83,7 @@ export async function runDigest(
     return { finished: Promise.resolve(), shutdown() {} };
   };
   try {
-    await import(`${modulePath}?t=${crypto.randomUUID()}`);
+    await load();
     const res = await handler!(
       new Request('http://fn.test', { method: 'POST', headers: { 'x-cron-secret': SECRET } }),
     );

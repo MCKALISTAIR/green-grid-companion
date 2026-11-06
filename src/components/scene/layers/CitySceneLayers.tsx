@@ -11,14 +11,13 @@ import {
   Pigeon,
   ConstructionCrane,
   LondonEye,
-  SmogBand,
-  DistantStack,
   BatteryStorageContainer,
   TubeFlash,
 } from '../CityElements';
 import { ValleyMist } from '../ValleyMist';
 import { EdinburghCastle } from '../EdinburghCastle';
 import { isLandmarkHeroLit, type CityWeatherState } from '@/lib/cityLandmarkPalette';
+import { CityGasPlant } from '../GasPlant';
 
 export interface CitySceneLayersProps {
   shouldReduceMotion: boolean;
@@ -69,8 +68,6 @@ export function CitySceneLayers({
   const isLondon = cityVariant === 'london';
   const hero = getCityHeroEmphasis(cleanlinessBand);
   const landmarkHero = isLandmarkHeroLit(nesoIndex, cleanlinessBand);
-  const showStack =
-    sceneConfig.cleanliness < 0.2 || hero.hero === 'distant-stack' || hero.hero === 'smog';
 
   return (
     <>
@@ -114,8 +111,6 @@ export function CitySceneLayers({
           preserveAspectRatio={SCENE_SILHOUETTE_ASPECT}
           aria-hidden="true"
         >
-          <SmogBand cleanliness={sceneConfig.cleanliness} isNight={isNight} />
-          {showStack && <DistantStack isNight={isNight} />}
           <CityLandscapeBack
             cleanliness={sceneConfig.cleanliness}
             isNight={isNight}
@@ -158,10 +153,16 @@ export function CitySceneLayers({
             landmarkHero={landmarkHero}
             weatherState={weatherState}
           />
+          {/* Scene audit item 4: a small gas plant, always present, with the
+              same band-driven smoke as the countryside plant. It stands in front
+              of the mid skyline and behind the front buildings (behind the mid
+              skyline it was hidden or washed out by the haze), clear of the London crane. It replaces the faint
+              high-only distant stack. */}
+          <CityGasPlant band={sceneConfig.hazeBand} isNight={isNight} />
         </svg>
       </motion.div>
 
-      <ValleyMist cleanliness={sceneConfig.cleanliness} timeOfDay={timeOfDay} isNight={isNight} />
+      <ValleyMist timeOfDay={timeOfDay} isNight={isNight} />
 
       {/* City: Foreground buildings + road + BESS (+ London Eye for London only) */}
       <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-20 overflow-hidden">
@@ -234,19 +235,23 @@ export function CitySceneLayers({
       </div>
 
       <AnimatePresence>
-        {hero.pigeonCount > 0 && sceneConfig.isDaytime && sceneConfig.cleanliness > 0.4 && (
-          <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-[23] overflow-hidden">
-            <svg
-              viewBox="0 0 400 150"
-              className="w-full h-full"
-              preserveAspectRatio={SCENE_SILHOUETTE_ASPECT}
-              aria-hidden="true"
-            >
-              <Pigeon x={180} y={136} delay={0} />
-              {hero.pigeonCount > 1 && <Pigeon x={60} y={135} delay={1.5} />}
-            </svg>
-          </div>
-        )}
+        {/* Reduce Motion: no pigeons, like the Tube flash. They wander, peck and fly off forever. */}
+        {!shouldReduceMotion &&
+          hero.pigeonCount > 0 &&
+          sceneConfig.isDaytime &&
+          sceneConfig.cleanliness > 0.4 && (
+            <div className="absolute bottom-0 left-0 right-0 h-[100%] pointer-events-none z-[23] overflow-hidden">
+              <svg
+                viewBox="0 0 400 150"
+                className="w-full h-full"
+                preserveAspectRatio={SCENE_SILHOUETTE_ASPECT}
+                aria-hidden="true"
+              >
+                <Pigeon x={180} y={136} delay={0} />
+                {hero.pigeonCount > 1 && <Pigeon x={60} y={135} delay={1.5} />}
+              </svg>
+            </div>
+          )}
       </AnimatePresence>
 
       <AnimatePresence>

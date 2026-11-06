@@ -1,8 +1,10 @@
+import { bandFor, type NesoBand } from '@/lib/nesoBand';
 import type { TimeOfDay } from '@/hooks/useTimeOfDay';
 import type { WeatherData } from '@/hooks/useWeatherData';
 import type { SceneType } from '@/hooks/useSceneType';
 import { getSkyGradient } from '@/lib/sceneUtils';
 import { unknownWeatherSkyGradient } from '@/lib/artPalette';
+import { STAR_HAZE_FACTOR, showsSmoke, type HazeBand } from '@/lib/sceneHaze';
 
 /** Wind state threshold, km/h (Open-Meteo default unit). Alistair, 15 Oct 2026. */
 export const WIND_STATE_KMH = 25;
@@ -20,9 +22,13 @@ export interface SceneVisualConfig {
   skyGradient: string;
   groundColor: string;
   showRenewables: boolean;
+  /** PR-2b: the gas plant is always present as a building (Design brief Q5). */
   showFactories: boolean;
   showBirds: boolean;
+  /** PR-2b: gas-plant smoke, NESO band moderate and above only. */
   showSmoke: boolean;
+  /** PR-2b: carbon haze band from the NESO index ('none' at very low, low and no data). */
+  hazeBand: HazeBand;
   /** Wind state (art pass v1 §9): Open-Meteo wind_speed_10m >= WIND_STATE_KMH. */
   showWind: boolean;
   showSunRays: boolean;
@@ -34,8 +40,9 @@ export interface SceneVisualConfig {
   isGoldenHour: boolean;
   isDaytime: boolean;
   isDarkPeriod: boolean;
+  /** The label's NESO band (bandFor), for band-keyed props such as the aurora. */
+  band: NesoBand;
   turbineCount: number;
-  factoryOpacity: number;
   solarBrightness: number;
   birdCount: number;
   starVisibility: number;
@@ -56,6 +63,30 @@ interface BuildSceneConfigInput {
   sceneType?: SceneType;
   /** False while the weather is unknown; turbines idle and the hero halo is hidden. */
   weatherKnown?: boolean;
+  /** PR-2b: haze band from the NESO index (see getHazeBand). Defaults to none. */
+  hazeBand?: HazeBand;
+  /** Share of the mix from solar (%). Drives panel brightness; undefined = unknown. */
+  solarShare?: number;
+}
+
+/**
+ * Scene audit item 2: props key to the NESO band (the label's band), never to raw
+ * grams. Each band maps to one fixed "cleanliness" step, so every gate that reads
+ * cleanliness (birds, butterflies, fireflies, garden, boats...) changes only at
+ * a band edge.
+ */
+export const BAND_CLEANLINESS: Record<NesoBand, number> = {
+  'very low': 1,
+  low: 0.75,
+  moderate: 0.5,
+  high: 0.3,
+  'very high': 0.1,
+};
+
+/** Solar panel brightness from the solar share of the mix (0.35 at 0%, 1 at 20%+). */
+export function solarShareBrightness(solarShare: number | undefined): number {
+  if (typeof solarShare !== 'number' || !Number.isFinite(solarShare)) return 0.7;
+  return 0.35 + 0.65 * Math.max(0, Math.min(1, solarShare / 20));
 }
 
 export function buildSceneConfig({
@@ -67,8 +98,10 @@ export function buildSceneConfig({
   isNight,
   sceneType = 'countryside',
   weatherKnown = true,
+  hazeBand = 'none',
+  solarShare,
 }: BuildSceneConfigInput): SceneVisualConfig {
-  const cleanliness = Math.max(0, Math.min(1, 1 - (intensity - 50) / 300));
+  const cleanliness = BAND_CLEANLINESS[bandFor(intensity, index)];
   const weatherReducesBirds = weather.isRaining || weather.isSnowing || weather.isThunderstorm;
   const weatherReducesButterflies =
     weather.isRaining || weather.isSnowing || weather.isFoggy || weather.isThunderstorm;
@@ -138,6 +171,7 @@ export function buildSceneConfig({
   };
 
   return {
+    band: bandFor(intensity, index),
     cleanliness,
     skyGradient: synthwaveMode
       ? 'linear-gradient(180deg, #2b1055 0%, #7597de 100%)'
@@ -146,11 +180,14 @@ export function buildSceneConfig({
         : // BH-90: no weather, so a soft overcast sky that keeps the time of day.
           unknownWeatherSkyGradient(timeOfDay),
     groundColor: getGroundColor(),
-    showRenewables: cleanliness > 0.25,
-    showFactories: cleanliness < 0.85,
+    // Turbines and panels are real kit on the grid at every band; how many
+    // turbines comes from the wind share (buildTurbineLayout), not from carbon.
+    showRenewables: true,
+    showFactories: true,
     // BH-90: no birds when the weather is unknown (they read as stray marks).
     showBirds: weatherKnown && cleanliness > 0.6 && isDaytime && !weatherReducesBirds,
-    showSmoke: cleanliness < 0.5,
+    showSmoke: showsSmoke(hazeBand),
+    hazeBand,
     // Intensity never invents weather (art pass v1 §9); rain comes only from weather.isRaining.
     showWind: !synthwaveMode && weather.windSpeed >= WIND_STATE_KMH,
     showSunRays:
@@ -158,8 +195,11 @@ export function buildSceneConfig({
       (timeOfDay === 'morning' || timeOfDay === 'midday' || timeOfDay === 'afternoon') &&
       weather.cloudCover < 60 &&
       !weather.isRaining,
+    // PR-2b: haze thins the stars by band (-30% / -60% / hidden), never cleanliness.
     showStars:
-      (isDarkPeriod || timeOfDay === 'dawn') && cleanliness > 0.3 && weather.cloudCover < 70,
+      (isDarkPeriod || timeOfDay === 'dawn') &&
+      STAR_HAZE_FACTOR[hazeBand] > 0 &&
+      weather.cloudCover < 70,
     showMoon: isDarkPeriod && weather.cloudCover < 80,
     showSun,
     // BH-90: likewise butterflies (they also imply fine weather).
@@ -173,14 +213,13 @@ export function buildSceneConfig({
     isDaytime,
     isDarkPeriod,
     turbineCount: Math.max(1, Math.floor(cleanliness * 4)),
-    factoryOpacity: Math.max(0, 1 - cleanliness),
     solarBrightness:
-      cleanliness *
+      solarShareBrightness(solarShare) *
       (weather.cloudCover < 50 ? 1 : 0.6) *
       (isDaytime ? 1 : isGoldenHour ? 0.6 : 0.2),
     birdCount: Math.floor(cleanliness * 4) + 1,
+    // Haze thins the star count (SceneSkyLayer), not their brightness.
     starVisibility:
-      cleanliness *
       (1 - weather.cloudCover / 100) *
       (timeOfDay === 'night' ? 1 : timeOfDay === 'dusk' ? 0.6 : 0.3),
     windSpeed: weather.windSpeed,

@@ -25,8 +25,32 @@ const COORD_SEGMENT = /\/-?\d{1,3}\.\d{3,}(?=[/?#\s"']|$)/g;
 // A full UK postcode anywhere (with a space, %20, + or nothing between halves).
 const FULL_POSTCODE = /\b[A-Z]{1,2}\d[A-Z\d]?(?:\s|%20|\+)*\d[A-Z]{2}\b/gi;
 
-export function redactLocation(text: string): string {
+// BH-146: sign-in tokens, OAuth codes and other secrets in URLs or text.
+// Covers ?k=v / #k=v / &k=v, "k":"v" (JSON) and k: v forms.
+const SECRET_KEYS =
+  'access_token|refresh_token|provider_token|provider_refresh_token|id_token|token|code|code_verifier|client_secret|secret|api_?key|apikey|password|authorization';
+const SECRET_PARAM = new RegExp(`((?:^|[?&#;])(?:${SECRET_KEYS})=)[^&#\\s"']*`, 'gi');
+const SECRET_JSON = new RegExp(`("(?:${SECRET_KEYS})"\\s*:\\s*")[^"]*`, 'gi');
+// JWTs (Supabase access tokens) and Octopus API keys wherever they appear.
+const JWT = /\beyJ[\w-]{5,}\.[\w-]{5,}\.[\w-]*/g;
+const OCTOPUS_KEY = /\bsk_(?:live|test)_[A-Za-z0-9]+/g;
+const BEARER = /(\bBearer\s+)[^\s"',]+/gi;
+/** Object keys whose values are always secret, whatever they contain. */
+const SECRET_KEY_NAME =
+  /^(?:access_token|refresh_token|provider_token|provider_refresh_token|id_token|code_verifier|client_secret|secret|api_?key|apikey|password|authorization)$/i;
+
+export function redactSecrets(text: string): string {
   return text
+    .replace(SECRET_PARAM, `$1${REDACTED}`)
+    .replace(SECRET_JSON, `$1${REDACTED}`)
+    .replace(BEARER, `$1${REDACTED}`)
+    .replace(JWT, REDACTED)
+    .replace(OCTOPUS_KEY, REDACTED);
+}
+
+/** Location (postcodes, coordinates) and secrets (tokens, keys) removed. */
+export function redactLocation(text: string): string {
+  return redactSecrets(text)
     .replace(LOCATION_PARAM, `$1${REDACTED}`)
     .replace(POSTCODE_PATH, `$1${REDACTED}`)
     .replace(COORD_PAIR, REDACTED)
@@ -36,15 +60,26 @@ export function redactLocation(text: string): string {
 
 const MAX_DEPTH = 8;
 
-/** Returns a deep copy with every string passed through redactLocation. */
-export function redactDeep<T>(value: T, depth = 0): T {
-  if (typeof value === 'string') return redactLocation(value) as unknown as T;
+function deepMap<T>(value: T, fn: (s: string) => string, depth: number): T {
+  if (typeof value === 'string') return fn(value) as unknown as T;
   if (depth > MAX_DEPTH || value === null || typeof value !== 'object') return value;
-  if (Array.isArray(value)) return value.map((v) => redactDeep(v, depth + 1)) as unknown as T;
+  if (value instanceof Error)
+    return { name: value.name, message: fn(value.message) } as unknown as T;
+  if (Array.isArray(value)) return value.map((v) => deepMap(v, fn, depth + 1)) as unknown as T;
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(value as Record<string, unknown>))
-    out[k] = redactDeep(v, depth + 1);
+    out[k] = SECRET_KEY_NAME.test(k) && v != null ? REDACTED : deepMap(v, fn, depth + 1);
   return out as T;
+}
+
+/** Returns a deep copy with every string passed through redactLocation. */
+export function redactDeep<T>(value: T, depth = 0): T {
+  return deepMap(value, redactLocation, depth);
+}
+
+/** Deep copy with tokens and keys removed (location kept), for console logs. */
+export function redactSecretsDeep<T>(value: T): T {
+  return deepMap(value, redactSecrets, 0);
 }
 
 export function scrubBreadcrumb(crumb: Breadcrumb): Breadcrumb {
