@@ -274,27 +274,6 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Find best time of day
-      const hourlyUsage: Record<number, { count: number; avgIntensity: number }> = {};
-      for (const record of (footprint || []) as FootprintRecord[]) {
-        const hour = londonHour(new Date(record.interval_start));
-        if (!hourlyUsage[hour]) {
-          hourlyUsage[hour] = { count: 0, avgIntensity: 0 };
-        }
-        hourlyUsage[hour].count++;
-        hourlyUsage[hour].avgIntensity += record.intensity_gco2_kwh;
-      }
-
-      let bestHour = 0;
-      let bestAvg = Infinity;
-      for (const [hour, data] of Object.entries(hourlyUsage)) {
-        const avg = data.avgIntensity / data.count;
-        if (avg < bestAvg) {
-          bestAvg = avg;
-          bestHour = parseInt(hour);
-        }
-      }
-
       // Calculate month-over-month comparison (we'd need previous month data for this)
       // For now, we'll just provide the current month stats
 

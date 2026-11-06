@@ -203,11 +203,6 @@ interface OctopusMeterPoint {
   meters: { serial_number: string }[];
 }
 
-interface OctopusProperty {
-  electricity_meter_points?: OctopusMeterPoint[];
-  gas_meter_points?: OctopusMeterPoint[];
-}
-
 interface FootprintRecord {
   interval_start: string;
   interval_end: string;

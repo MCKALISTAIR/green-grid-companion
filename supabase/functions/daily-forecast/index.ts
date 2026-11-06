@@ -34,17 +34,6 @@ interface PushSubscription {
   is_sandbox: boolean;
 }
 
-function getIntensityEmoji(index: string): string {
-  const emojis: Record<string, string> = {
-    'very low': '🌿',
-    low: '🍃',
-    moderate: '☁️',
-    high: '🏭',
-    'very high': '💨',
-  };
-  return emojis[index] || '⚡';
-}
-
 /**
  * Calculates the UK timezone offset (0 for GMT, 1 for BST)
  * BST runs from the last Sunday in March at 1:00 UTC to the last Sunday in October at 1:00 UTC
@@ -198,8 +187,6 @@ Deno.serve(async (req) => {
 
     // Generate notification for each subscription
     for (const sub of dueSubscriptions) {
-      const emoji = avgIntensity < 100 ? '🌿' : avgIntensity < 200 ? '☁️' : '🏭';
-
       // Find the best consecutive green window (contiguous slots at or below best intensity + 20g tolerance)
       let bestWindowStart = bestTime?.from || '';
       let bestWindowEnd = bestTime?.to || '';

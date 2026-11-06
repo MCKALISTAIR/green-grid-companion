@@ -212,39 +212,11 @@ Deno.serve(async (req) => {
       const avgIntensity = footprint?.length ? Math.round(totalIntensity / footprint.length) : 0;
       const totalCarbonKg = totalCarbonG / 1000;
 
-      // Find best usage times from historical data
-      const hourlyUsage: Record<number, { count: number; avgIntensity: number }> = {};
-      for (const record of (footprint || []) as FootprintRecord[]) {
-        const hour = new Date(record.interval_start).getUTCHours();
-        if (!hourlyUsage[hour]) {
-          hourlyUsage[hour] = { count: 0, avgIntensity: 0 };
-        }
-        hourlyUsage[hour].count++;
-        hourlyUsage[hour].avgIntensity += record.intensity_gco2_kwh;
-      }
-
-      // Find the hour with lowest average intensity
-      let bestHour = 0;
-      let bestAvg = Infinity;
-      for (const [hour, data] of Object.entries(hourlyUsage)) {
-        const avg = data.avgIntensity / data.count;
-        if (avg < bestAvg) {
-          bestAvg = avg;
-          bestHour = parseInt(hour);
-        }
-      }
-
-      // Calculate green energy percentage
-      const greenCount = (byIndex['very low']?.count || 0) + (byIndex['low']?.count || 0);
-      const totalCount = footprint?.length || 1;
-      const greenPercentage = Math.round((greenCount / totalCount) * 100);
-
       return {
         totalCarbonKg,
         totalKwh,
         avgIntensity,
         greenPercentage,
-        bestHour,
       };
     };
 
@@ -252,8 +224,7 @@ Deno.serve(async (req) => {
     for (const sub of dueSubscriptions) {
       const subFootprint = rowsForSubscriber(sub, byUser, (footprint || []) as FootprintRecord[]);
       const bestTimeToday = await bestTimeFor(sub.postcode);
-      const { totalCarbonKg, totalKwh, avgIntensity, greenPercentage, bestHour } =
-        computeStats(subFootprint);
+      const { totalCarbonKg, totalKwh, avgIntensity, greenPercentage } = computeStats(subFootprint);
       const emoji = getIntensityEmoji(avgIntensity);
 
       let body: string;
