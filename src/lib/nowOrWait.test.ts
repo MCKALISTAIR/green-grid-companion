@@ -36,6 +36,10 @@ function allCopy(d: ReturnType<typeof getNowOrWaitDecision>): string {
 }
 
 describe('planLoad', () => {
+  it('does not count six one-minute intervals as a three-hour load', () => {
+    const forecast = forecastFrom(flat(6, 100)).map(row => ({ ...row, to: new Date(Date.parse(row.from) + 60_000).toISOString() }));
+    expect(planLoad({ forecast, now: NOW }).action).toBe('check_forecast');
+  });
   it('waits when a later 3-hour stretch is meaningfully cleaner', () => {
     // Now 210 for 3h, then 126 for 4h, then back up.
     const fc = forecastFrom([...flat(6, 210), ...flat(8, 126), ...flat(34, 220)]);

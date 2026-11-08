@@ -8,3 +8,4 @@
 - Charging savings require continuous usable intensity coverage and overlap weighting; historical cached figures are not evidence of coverage.
 - Fossil-free annual claims require complete explicit UK-day evidence, including clock-change slot counts.
 - Daily outlook windows use a shared pure continuity check so gaps and overlapping slots cannot inflate their duration.
+- Planner normalizes custom durations to its half-hour engine before optimization and savings so one duration drives both.

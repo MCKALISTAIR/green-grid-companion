@@ -157,7 +157,7 @@ Deno.serve(async (req) => {
 
     const avgIntensity =
       todayForecasts.length > 0 ? Math.round(totalIntensity / todayForecasts.length) : 0;
-    const greenHours = Math.round(greenSlots / 2);
+    const greenHours = greenSlots / 2;
 
     // Find best/worst from FUTURE slots only
     let bestTime: ForecastData | null = null;
@@ -212,7 +212,7 @@ Deno.serve(async (req) => {
 
       const bestStartFmt = formatUKTime(bestWindowStart);
       const bestEndFmt = formatUKTime(bestWindowEnd);
-      const bestDurationH = Math.round(
+      const bestDurationH = (
         (new Date(bestWindowEnd).getTime() - new Date(bestWindowStart).getTime()) /
           (1000 * 60 * 60),
       );
