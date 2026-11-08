@@ -212,10 +212,9 @@ Deno.serve(async (req) => {
 
       const bestStartFmt = formatUKTime(bestWindowStart);
       const bestEndFmt = formatUKTime(bestWindowEnd);
-      const bestDurationH = (
+      const bestDurationH =
         (new Date(bestWindowEnd).getTime() - new Date(bestWindowStart).getTime()) /
-          (1000 * 60 * 60),
-      );
+          (1000 * 60 * 60);
       const bestLabel = bestTime && isTomorrowSlot(bestWindowStart) ? ', tomorrow' : '';
       const worstFmt = worstTime ? formatUKTime(worstTime.from) : 'N/A';
       const worstLabel = worstTime && isTomorrowSlot(worstTime.from) ? ' (tomorrow)' : '';

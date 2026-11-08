@@ -297,7 +297,7 @@ export function FootprintView() {
 
   // Intensity breakdown for bar chart
   const intensityBreakdown = useMemo(() => {
-    if (!footprint?.summary?.by_intensity_index) return [];
+    if (!selectedPeriod) return [];
 
     const order = ['very low', 'low', 'moderate', 'high', 'very high'];
     return order
@@ -308,7 +308,7 @@ export function FootprintView() {
         carbon: Number((selectedPeriod.summary.by_intensity_index[idx].carbon_g / 1000).toFixed(2)),
         index: idx,
       }));
-  }, [footprint]);
+  }, [selectedPeriod]);
 
   // Wait for Octopus status before painting the unlinked CTA (avoids mid-load flash).
   if (statusLoading && !isLinked) {
