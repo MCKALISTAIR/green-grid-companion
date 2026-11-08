@@ -7,3 +7,4 @@
 - Footprint selection and aggregation use pure UK-calendar helpers so chart buckets and summary comparisons cover identical records.
 - Charging savings require continuous usable intensity coverage and overlap weighting; historical cached figures are not evidence of coverage.
 - Fossil-free annual claims require complete explicit UK-day evidence, including clock-change slot counts.
+- Daily outlook windows use a shared pure continuity check so gaps and overlapping slots cannot inflate their duration.

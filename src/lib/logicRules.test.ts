@@ -6,6 +6,7 @@ import { footprintPeriod, footprintBuckets } from './footprintPeriod';
 import { fuelFreeDays, evidencedFuelHistory } from './fuelHistory';
 import { londonDayBounds } from './londonTime';
 import type { ForecastData } from './carbonApi';
+import { greenWindow, usableForecast } from '../../supabase/functions/_shared/forecast-window';
 
 describe('approved rule boundaries', () => {
   it('refreshes at 12:01:30 when opened at 12:00:30', () => {
@@ -75,5 +76,17 @@ describe('streak evidence', () => {
   });
   it('empty history never proves 30+ days', () => {
     expect(evidencedFuelHistory([], 'gas', new Date('2026-10-01Z'), new Date('2026-10-31Z'))).toEqual({ lastSeen: null, exceededLookback: false });
+  });
+});
+
+describe('daily outlook continuity', () => {
+  const row = (hour: string, value: number) => ({ from: `2026-11-08T${hour}:00Z`, to: new Date(Date.parse(`2026-11-08T${hour}:00Z`) + 1800_000).toISOString(), intensity: { forecast: value } });
+  it('uses the approved 20g tolerance but stops at gaps', () => {
+    const a = row('12:00', 10), b = row('12:30', 30), c = row('13:30', 0);
+    expect(greenWindow([c, b, a], a)).toEqual({ from: a.from, to: b.to });
+  });
+  it('rejects duplicate or missing-value slots', () => {
+    const a = row('12:00', 10);
+    expect(usableForecast([a, { ...a }, row('13:00', NaN)])).toEqual([]);
   });
 });
