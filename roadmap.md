@@ -1,5 +1,10 @@
 # Visual QA polish
 
+# SEO findings
+
+- [ ] Verify existing Planner/Rank H1s and correct sequential section headings.
+- [ ] Make canonical and Open Graph addresses follow the current route; verify direct entry and navigation without publishing.
+
 # Logic consistency audit
 
 - [x] Revalidate the earlier audit and distinguish proven bugs from differing definitions.
