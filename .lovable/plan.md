@@ -1,23 +1,30 @@
-# Octopus sync investigation: findings (read-only, nothing changed)
+# Logic and consistency audit (read-only)
 
-## 1. octopus-energy logs
-- Function log tool: "No logs found for edge function 'octopus-energy'."
-- Log store holds only ~3 minutes of call history (oldest 07:13:02 UTC, newest 07:15:44 UTC today). Nothing from 06:00 or 06:30, and nothing earlier in the 7 days.
-- So none of the requested lines can be quoted ("Found N users with active meters", "Synced N readings", "[FOOTPRINT] Skipped", etc.): they are not available.
-- The scheduler's own response record only goes back to about 06:00 UTC today. Rows at the cron times:
-  - 06:00:00 UTC, id 1414: no response. `Timeout of 5000 ms reached. Total time: 5000.246000 ms (DNS time: 5.824000 ms, TCP/SSL handshake time: 55.118000 ms, HTTP Request/Response time: 4939.171000 ms)`
-  - 06:30:00 UTC, id 1417: HTTP 200, `{"success":true,"users_synced":1,"errors":0}`
-  - The other 06:00/06:30 rows are check-carbon-intensity and daily-forecast responses.
-- Unconfirmed: these rows don't record which job sent them. Most likely 1414 is the 06:00 sync-all-users call and 1417 is the 06:30 calculate-all-footprints call, but that is inferred. The 5s timeout is on the scheduler side. The function may still have finished after it, but no function logs exist to say whether it did.
-- No user IDs or MPANs appeared in anything retrieved.
+A structured pass to find places where the app contradicts itself: wrong numbers, rules applied differently in different places, or states that don't line up. No code changes in this pass. The output is a findings report you can triage.
 
-## 2. OCTOPUS_ secrets (names only)
-- OCTOPUS_ACCOUNT_NUMBER: set
-- OCTOPUS_API_KEY: set
-- OCTOPUS_CREDENTIALS_KEY: set
+## 1. Pin down the rules
+- Collect the rules the app is meant to follow from project memory, AGENTS.md and the docs: intensity bands, the 35-minute "stale" mark, refresh at :01:30 and :31:30, the 230 g/kWh benchmark, the 0-100 alert threshold, 20 g forecast tolerance, the 0.5% trend arrow, the 30-day streak and the Europe/London date bounds.
+- Turn these into one checklist of "expected values".
 
-## 3. Last deploy of octopus-energy
-- No deploy timestamp is visible from here. It was not deployed in this thread's recent turns.
+## 2. Find each rule wherever it's used
+- Search the app and the server functions for every place each rule is computed or hard-coded.
+- Flag duplicates that disagree, e.g. a band edge or benchmark written differently in the Home view, Plan, History, alerts and reports.
 
-## Optional next step (needs your approval, read-only)
-- After tomorrow's 06:00 and 06:30 UTC runs, pull the function logs straight away, before they expire, and quote the lines you asked for.
+## 3. Cross-check the screens against each other
+For the same postcode and time (EC1, BA1, PL1), compare:
+- Home intensity and band vs Plan's "best time" vs History for the same half-hour vs the Rank map.
+- Footprint totals vs the monthly/weekly report maths vs Year Wrapped.
+- The alert the server would send vs what the app shows at that moment.
+
+## 4. Edge cases
+- Clock changes (BST/GMT), midnight and month boundaries, the half-hour in progress.
+- Empty, offline, stale and error data; signed out vs signed in; data carried over after sign-in.
+- Outside-GB postcodes (GY/JE/IM/BT), a linked Octopus account with no new readings, export meters.
+
+## 5. Automated checks
+- Run the existing unit tests and list rules with no test.
+- Propose (don't write yet) small tests, one per rule, with concrete expected values.
+- Read-only database checks: orphaned rows, duplicate half-hours, footprints with no matching readings.
+
+## Output
+A report sorted by severity (wrong number shown to users > rules out of sync > edge-case gaps). Each finding gives where, what's expected, what happens, and a one-line fix. Fixes happen only after you approve them.
