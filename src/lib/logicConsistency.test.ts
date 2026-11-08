@@ -2,8 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { getBestWorstWindows } from './forecastWindows';
 import { processYearData } from './yearWrappedUtils';
 import { mpansByUser } from '../../supabase/functions/_shared/digest-scope';
+import type { ForecastData } from './carbonApi';
 
-const slot = (i: number, value = 0) => ({
+const slot = (i: number, value = 0): ForecastData => ({
   from: new Date(Date.UTC(2090, 0, 1, 0, i * 30)).toISOString(),
   to: new Date(Date.UTC(2090, 0, 1, 0, (i + 1) * 30)).toISOString(),
   intensity: { forecast: value, actual: value, index: 'very low' },

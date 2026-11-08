@@ -393,7 +393,7 @@ export function useNotifications() {
     key: K,
     value: NotificationPrefs[K],
   ) => {
-    setPrefs((prev) => ({ ...prev, [key]: value }));
+    setPrefs((prev) => normalizePrefs({ ...prev, [key]: value }));
   };
 
   const scheduleGreenAlerts = useCallback(
