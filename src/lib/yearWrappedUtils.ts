@@ -1,4 +1,5 @@
-import { format } from 'date-fns';
+import { londonDateKey, formatLondonTime } from './londonTime';
+import { fuelFreeDays } from './fuelHistory';
 import { ForecastData } from '@/lib/carbonApi';
 
 export interface FuelFreePeriod {
@@ -84,31 +85,18 @@ export function processYearData(data: ForecastData[], year: number): YearWrapped
     { intensitySum: number; count: number; min: number; max: number }
   > = new Map();
 
-  // Track longest fuel-free streaks
-  let currentCoalStreak = 0;
-  let longestCoalStreak = 0;
-  let coalStreakStart: string | null = null;
-  let longestCoalStart: string | null = null;
-  let longestCoalEnd: string | null = null;
-
-  let currentGasStreak = 0;
-  let longestGasStreak = 0;
-  let gasStreakStart: string | null = null;
-  let longestGasStart: string | null = null;
-  let longestGasEnd: string | null = null;
-
   // Process each data point
-  for (const point of data) {
+  for (const point of data.filter(p => londonDateKey(new Date(p.from)).startsWith(`${year}-`)).sort((a, b) => Date.parse(a.from) - Date.parse(b.from))) {
     const dateTime = new Date(point.from);
-    const dateStr = format(dateTime, 'yyyy-MM-dd');
-    const timeStr = format(dateTime, 'HH:mm');
-    const monthStr = format(dateTime, 'MMMM');
+    const dateStr = londonDateKey(dateTime);
+    const timeStr = formatLondonTime(dateTime);
+    const monthStr = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', month: 'long' }).format(dateTime);
 
     const intensity = point.intensity.actual ?? point.intensity.forecast;
     const mix = point.generationmix || [];
 
     // Intensity tracking
-    if (intensity > 0) {
+    if (typeof intensity === 'number' && Number.isFinite(intensity) && intensity >= 0) {
       totalIntensity += intensity;
       intensityCount++;
 
@@ -136,14 +124,14 @@ export function processYearData(data: ForecastData[], year: number): YearWrapped
 
     // Generation mix tracking
     if (mix.length > 0) {
-      const coalPerc = mix.find((m) => m.fuel === 'coal')?.perc || 0;
-      const gasPerc = mix.find((m) => m.fuel === 'gas')?.perc || 0;
+      const coalPerc = mix.find((m) => m.fuel === 'coal')?.perc;
+      const gasPerc = mix.find((m) => m.fuel === 'gas')?.perc;
       const windPerc = mix.find((m) => m.fuel === 'wind')?.perc || 0;
       const solarPerc = mix.find((m) => m.fuel === 'solar')?.perc || 0;
       const hydroPerc = mix.find((m) => m.fuel === 'hydro')?.perc || 0;
 
       const renewableShare = windPerc + solarPerc + hydroPerc;
-      const fossilShare = coalPerc + gasPerc;
+      const fossilShare = (coalPerc ?? 0) + (gasPerc ?? 0);
 
       totalRenewable += renewableShare;
       renewableCount++;
@@ -167,50 +155,11 @@ export function processYearData(data: ForecastData[], year: number): YearWrapped
       dayData.renewableSum += renewableShare;
       dayData.fossilSum += fossilShare;
       dayData.count++;
-      if (coalPerc > 0) dayData.coalFree = false;
-      if (gasPerc > 0) dayData.gasFree = false;
+      if (coalPerc !== 0) dayData.coalFree = false;
+      if (gasPerc !== 0) dayData.gasFree = false;
       dailyData.set(dateStr, dayData);
 
-      // Coal streak tracking
-      if (coalPerc === 0) {
-        if (currentCoalStreak === 0) coalStreakStart = dateStr;
-        currentCoalStreak++;
-      } else {
-        if (currentCoalStreak > longestCoalStreak) {
-          longestCoalStreak = currentCoalStreak;
-          longestCoalStart = coalStreakStart;
-          longestCoalEnd = dateStr;
-        }
-        currentCoalStreak = 0;
-        coalStreakStart = null;
-      }
-
-      // Gas streak tracking (less likely to be 0, but track anyway)
-      if (gasPerc === 0) {
-        if (currentGasStreak === 0) gasStreakStart = dateStr;
-        currentGasStreak++;
-      } else {
-        if (currentGasStreak > longestGasStreak) {
-          longestGasStreak = currentGasStreak;
-          longestGasStart = gasStreakStart;
-          longestGasEnd = dateStr;
-        }
-        currentGasStreak = 0;
-        gasStreakStart = null;
-      }
     }
-  }
-
-  // Finalize ongoing streaks
-  if (currentCoalStreak > longestCoalStreak) {
-    longestCoalStreak = currentCoalStreak;
-    longestCoalStart = coalStreakStart;
-    longestCoalEnd = format(new Date(), 'yyyy-MM-dd');
-  }
-  if (currentGasStreak > longestGasStreak) {
-    longestGasStreak = currentGasStreak;
-    longestGasStart = gasStreakStart;
-    longestGasEnd = format(new Date(), 'yyyy-MM-dd');
   }
 
   // Find greenest and dirtiest days
@@ -225,8 +174,7 @@ export function processYearData(data: ForecastData[], year: number): YearWrapped
       dirtestDay = { date: dateStr, fossilShare: avgFossil };
     }
 
-    if (dayData.coalFree) coalFreeDays++;
-    if (dayData.gasFree) gasFreeDays++;
+
   });
 
   // Process monthly breakdown
@@ -255,36 +203,16 @@ export function processYearData(data: ForecastData[], year: number): YearWrapped
     }
   });
 
-  // Convert coal streak from half-hour periods to days (48 periods per day)
-  const coalStreakDays = Math.floor(longestCoalStreak / 48);
-  const gasStreakDays = Math.floor(longestGasStreak / 48);
-
+  const yearRows = data.filter(p => londonDateKey(new Date(p.from)).startsWith(`${year}-`));
+  const coal = fuelFreeDays(yearRows, 'coal');
+  const gas = fuelFreeDays(yearRows, 'gas');
   return {
     year,
-    totalDataPoints: data.length,
-
-    longestCoalFree:
-      longestCoalStart && coalStreakDays > 0
-        ? {
-            fuel: 'coal',
-            startDate: longestCoalStart,
-            endDate: longestCoalEnd || longestCoalStart,
-            days: coalStreakDays,
-          }
-        : null,
-
-    longestGasFree:
-      longestGasStart && gasStreakDays > 0
-        ? {
-            fuel: 'gas',
-            startDate: longestGasStart,
-            endDate: longestGasEnd || longestGasStart,
-            days: gasStreakDays,
-          }
-        : null,
-
-    coalFreeDays,
-    gasFreeDays,
+    totalDataPoints: yearRows.length,
+    longestCoalFree: coal.longest,
+    longestGasFree: gas.longest,
+    coalFreeDays: coal.days,
+    gasFreeDays: gas.days,
 
     peakWind,
     peakSolar,
