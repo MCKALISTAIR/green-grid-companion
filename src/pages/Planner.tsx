@@ -437,7 +437,7 @@ export default function Planner() {
                 transition={{ duration: 0.24, ease: easeOutExpo }}
               >
                 <Card className="sheet-surface p-6 space-y-2 border-primary/20 bg-primary/5 text-center">
-                  <h3 className="text-lg font-medium text-muted-foreground">Best time to run</h3>
+                  <h2 className="text-lg font-medium text-muted-foreground">Best time to run</h2>
                   <p className="text-3xl font-bold text-foreground">
                     {isAnyTimePlan(plan) ? 'Any time' : 'Now'}
                   </p>
@@ -467,7 +467,7 @@ export default function Planner() {
               >
                 <Card className="sheet-surface p-6 space-y-4 border-primary/20 bg-primary/5">
                   <div className="text-center space-y-1">
-                    <h3 className="text-lg font-medium text-muted-foreground">Best time to run</h3>
+                    <h2 className="text-lg font-medium text-muted-foreground">Best time to run</h2>
                     <p className="text-3xl font-bold text-foreground">
                       {formatLondonTimeWithDay(parseISO(bestSlot.startTime))}
                     </p>
