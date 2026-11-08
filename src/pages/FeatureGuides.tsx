@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -24,11 +24,12 @@ export default function FeatureGuides() {
 
         <div className="grid gap-3">
           {FEATURE_GUIDES.map((guide) => (
-            <Card
+            <Link
               key={guide.id}
-              className="p-4 cursor-pointer hover:bg-accent transition-colors"
-              onClick={() => navigate(`/guides/${guide.id}`)}
+              to={`/guides/${guide.id}`}
+              className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
+            <Card className="p-4 hover:bg-accent transition-colors">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-primary/10 rounded-full shrink-0">
                   <guide.icon className="w-5 h-5 text-primary" />
@@ -40,15 +41,16 @@ export default function FeatureGuides() {
                 <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
               </div>
             </Card>
+            </Link>
           ))}
         </div>
 
         <div className="pt-4 text-center text-sm text-muted-foreground">
           <p>
             Need quick answers? Check out{' '}
-            <Button variant="link" onClick={() => navigate('/help')} className="h-auto p-0">
+            <Link to="/help" className="font-medium text-primary underline-offset-4 hover:underline">
               Help & Tips
-            </Button>
+            </Link>
           </p>
         </div>
       </div>
