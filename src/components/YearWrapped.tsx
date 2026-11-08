@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { londonDateKey } from '@/lib/londonTime';
 import { ResponsiveDialog, ResponsiveDialogContent } from '@/components/ui/responsive-dialog';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -37,7 +38,7 @@ const SLIDES: SlideType[] = ['intro', 'renewables', 'intensity', 'highlights', '
 export function YearWrapped({
   open,
   onOpenChange,
-  year = new Date().getFullYear() - 1,
+  year = Number(londonDateKey(new Date()).slice(0, 4)) - 1,
 }: YearWrappedProps) {
   const { data, isLoading, progress, error, fetchYearData } = useYearWrapped();
   const [currentSlide, setCurrentSlide] = useState(0);
