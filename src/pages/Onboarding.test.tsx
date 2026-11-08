@@ -29,7 +29,7 @@ function renderOnboarding() {
   );
 }
 
-const field = () => screen.getByPlaceholderText('Postcode, like SW1A or SW1A 1AA');
+const field = () => screen.getByPlaceholderText('Postcode, like SW1A 1AA');
 const submit = () => fireEvent.click(screen.getByRole('button', { name: 'Show my number' }));
 
 describe('first launch', () => {

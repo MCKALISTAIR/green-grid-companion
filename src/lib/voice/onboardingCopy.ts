@@ -9,7 +9,7 @@ export const ONBOARDING_COPY = {
   body: "Tell us roughly where you are and you'll see your local number straight away.",
   useLocation: 'Use my location',
   finding: 'Finding you…',
-  placeholder: 'Postcode, like SW1A or SW1A 1AA',
+  placeholder: 'Postcode, like SW1A 1AA',
   submitLabel: 'Show my number',
   keepNote: 'We only keep the first half of your postcode.',
   skip: 'Just show me the GB average',
