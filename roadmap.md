@@ -1,5 +1,13 @@
 # Visual QA polish
 
+# Logic consistency audit
+
+- [x] Revalidate the earlier audit and distinguish proven bugs from differing definitions.
+- [x] Record zero-floor savings and 0–100 limits for both alert types.
+- [ ] Review the scoped correction plan before implementation.
+- [ ] Implement confirmed accounting, coverage, timing and selected-period defects with regression tests.
+- [ ] Verify corrected flows; report anything blocked by real-data availability. No deployment or live-data repairs without separate approval.
+
 - [x] Correct Settings tour hand-off to Home/Intensity and safe-area toasts.
 - [x] Fix scene hit areas, HUD contrast and wide haze.
 - [x] Fix demand card wrapping and information buttons.
