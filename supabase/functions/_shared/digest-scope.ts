@@ -6,6 +6,8 @@
 export interface MeterLink {
   user_id: string;
   mpan: string;
+  meter_type?: string;
+  is_active?: boolean;
 }
 
 export interface ScopedSubscription {
@@ -16,8 +18,9 @@ export function mpansByUser(meters: MeterLink[] | null | undefined): Map<string,
   const out = new Map<string, Set<string>>();
   for (const m of meters ?? []) {
     if (!m?.user_id || !m?.mpan) continue;
+    if (m.meter_type === 'export' || m.is_active === false) continue;
     if (!out.has(m.user_id)) out.set(m.user_id, new Set());
-    out.get(m.user_id)!.add(m.mpan);
+    out.get(m.user_id)?.add(m.mpan);
   }
   return out;
 }

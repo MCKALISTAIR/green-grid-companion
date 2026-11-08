@@ -9,6 +9,7 @@ import {
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
 import { ensureAuthSession } from '@/lib/auth-utils';
+import { normalizeAlertThreshold } from '../../supabase/functions/_shared/alert-threshold';
 
 export interface PushNotificationPrefs {
   lowIntensityEnabled: boolean;
@@ -47,7 +48,7 @@ const DEFAULT_PREFS: PushNotificationPrefs = {
   lowIntensityEnabled: false,
   lowIntensityThreshold: 100,
   highIntensityEnabled: false,
-  highIntensityThreshold: 200,
+  highIntensityThreshold: 100,
   dailyForecastEnabled: false,
   dailyForecastTime: '07:00',
   weeklyDigestEnabled: false,
@@ -92,9 +93,9 @@ export function usePushNotifications(postcode: string) {
       if (result.data) {
         setPrefs({
           lowIntensityEnabled: result.data.low_intensity_enabled,
-          lowIntensityThreshold: result.data.low_intensity_threshold,
+          lowIntensityThreshold: normalizeAlertThreshold(result.data.low_intensity_threshold),
           highIntensityEnabled: result.data.high_intensity_enabled ?? false,
-          highIntensityThreshold: result.data.high_intensity_threshold ?? 200,
+          highIntensityThreshold: normalizeAlertThreshold(result.data.high_intensity_threshold),
           dailyForecastEnabled: result.data.daily_forecast_enabled,
           dailyForecastTime: result.data.daily_forecast_time,
           weeklyDigestEnabled: result.data.weekly_digest_enabled,
@@ -217,6 +218,7 @@ export function usePushNotifications(postcode: string) {
   // Save preferences via edge function (secure server-side access)
   const savePreferences = useCallback(
     async (newPrefs: PushNotificationPrefs, tokenOverride?: string) => {
+      newPrefs = { ...newPrefs, lowIntensityThreshold: normalizeAlertThreshold(newPrefs.lowIntensityThreshold), highIntensityThreshold: normalizeAlertThreshold(newPrefs.highIntensityThreshold) };
       const token = tokenOverride || deviceToken;
 
       if (!token || !postcode) {

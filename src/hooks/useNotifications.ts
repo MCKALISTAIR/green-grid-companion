@@ -1,4 +1,5 @@
 import { appStorage } from '@/lib/appStorage';
+import { normalizeAlertThreshold } from '../../supabase/functions/_shared/alert-threshold';
 import { LocalNotifications, ScheduleOptions } from '@capacitor/local-notifications';
 import { BackgroundFetch } from '@transistorsoft/capacitor-background-fetch';
 import { ForecastData, getRegionalIntensity } from '@/lib/carbonApi';
@@ -55,7 +56,7 @@ const DEFAULT_PREFS: NotificationPrefs = {
   lowIntensityEnabled: false,
   lowIntensityThreshold: 100,
   highIntensityEnabled: false,
-  highIntensityThreshold: 250,
+  highIntensityThreshold: 100,
   dailyForecastEnabled: false,
   dailyForecastTime: '09:00',
   useBackgroundFetch: false,
@@ -67,8 +68,8 @@ const DEFAULT_PREFS: NotificationPrefs = {
 };
 
 const PREFS_KEY = 'gridgreen-notification-prefs';
-const HIGH_INTENSITY_MIN = 50;
-const HIGH_INTENSITY_MAX = 400;
+const HIGH_INTENSITY_MIN = 0;
+const HIGH_INTENSITY_MAX = 100;
 
 function normalizePrefs(raw: Partial<NotificationPrefs>): NotificationPrefs {
   const merged = { ...DEFAULT_PREFS, ...raw };
@@ -77,10 +78,8 @@ function normalizePrefs(raw: Partial<NotificationPrefs>): NotificationPrefs {
     merged.weeklyDigestEnabled = false;
     merged.monthlyReportEnabled = false;
   }
-  merged.highIntensityThreshold = Math.min(
-    HIGH_INTENSITY_MAX,
-    Math.max(HIGH_INTENSITY_MIN, merged.highIntensityThreshold),
-  );
+  merged.highIntensityThreshold = normalizeAlertThreshold(merged.highIntensityThreshold);
+  merged.lowIntensityThreshold = normalizeAlertThreshold(merged.lowIntensityThreshold);
   return merged;
 }
 

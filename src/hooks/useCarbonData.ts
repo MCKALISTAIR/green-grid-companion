@@ -22,19 +22,12 @@ import {
 import { logger } from '@/lib/logger';
 import { offGridArea } from '@/lib/postcode';
 import { regionNameForPostcode } from '@/lib/regionMatch';
+import { nextCarbonRefreshDelay, latestCarbonRefreshTarget } from '@/lib/carbonRefresh';
 
 // Calculate ms until next half-hour boundary (:00 or :30)
 // NESO updates at these times, so we align our refreshes
 const getMsUntilNextHalfHour = (): number => {
-  const now = new Date();
-  const minutes = now.getMinutes();
-  const seconds = now.getSeconds();
-  const ms = now.getMilliseconds();
-
-  // Calculate minutes until next :00 or :30
-  const minutesToNext = minutes < 30 ? 30 - minutes : 60 - minutes;
-  // Convert to ms, add 90 second buffer for API processing delay
-  return (minutesToNext * 60 - seconds) * 1000 - ms + 90000;
+  return nextCarbonRefreshDelay();
 };
 
 // Global singleton for smart refetch — ensures only one timer exists
@@ -91,7 +84,7 @@ function useSmartRefetch(refetchFn: () => Promise<void>, enabled: boolean) {
       // refetch if we crossed a :00/:30 boundary, and re-arm the timer.
       const onReturn = () => {
         if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
-        if (halfHourStart(Date.now()) > halfHourStart(globalLastRefetchAt)) {
+        if (latestCarbonRefreshTarget(Date.now()) > globalLastRefetchAt) {
           globalLastRefetchAt = Date.now();
           globalRefetchFn?.().catch((e) => logger.warn('Return refetch failed', e));
         }

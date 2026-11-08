@@ -215,7 +215,7 @@ export function NotificationSettings({ onClose: _onClose }: NotificationSettings
               onValueChange={([value]) => setLocalThreshold(value)}
               onValueCommit={([value]) => updatePreference('lowIntensityThreshold', value)}
               min={0}
-              max={200}
+              max={100}
               step={1}
               className="w-full"
             />
@@ -288,9 +288,9 @@ export function NotificationSettings({ onClose: _onClose }: NotificationSettings
               value={[localHighThreshold]}
               onValueChange={([value]) => setLocalHighThreshold(value)}
               onValueCommit={([value]) => updatePreference('highIntensityThreshold', value)}
-              min={highIntensityBounds?.min ?? 50}
-              max={highIntensityBounds?.max ?? 400}
-              step={5}
+              min={highIntensityBounds?.min ?? 0}
+              max={highIntensityBounds?.max ?? 100}
+              step={1}
               className="w-full"
             />
             <p className="text-[11px] text-muted-foreground leading-relaxed">

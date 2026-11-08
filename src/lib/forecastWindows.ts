@@ -47,17 +47,24 @@ export function getBestWorstWindows(forecast: ForecastData[]): ForecastWindow | 
   if (forecast.length < OPTIMAL_WINDOW_SLOTS) return null;
 
   const now = new Date();
-  const futureForecast = forecast.filter((f) => new Date(f.to) > now);
+  const futureForecast = forecast.filter((f) => new Date(f.from) >= now)
+    .sort((a, b) => Date.parse(a.from) - Date.parse(b.from));
   if (futureForecast.length < OPTIMAL_WINDOW_SLOTS) return null;
 
   let minSum = Infinity;
   let minStartIndex = 0;
-  let maxSum = 0;
+  let maxSum = -Infinity;
   let maxStartIndex = 0;
 
   for (let i = 0; i <= futureForecast.length - OPTIMAL_WINDOW_SLOTS; i++) {
-    const sum = futureForecast
-      .slice(i, i + OPTIMAL_WINDOW_SLOTS)
+    const window = futureForecast.slice(i, i + OPTIMAL_WINDOW_SLOTS);
+    if (!window.every((slot, j) =>
+      Number.isFinite(slot.intensity.forecast) && slot.intensity.forecast >= 0 &&
+      Date.parse(slot.to) - Date.parse(slot.from) === 30 * 60_000 &&
+      (j === 0 || slot.from === window[j - 1].to) &&
+      !futureForecast.some((other, k) => k !== i + j && Date.parse(other.from) < Date.parse(slot.to) && Date.parse(other.to) > Date.parse(slot.from))
+    )) continue;
+    const sum = window
       .reduce((acc, f) => acc + f.intensity.forecast, 0);
     if (sum < minSum) {
       minSum = sum;
@@ -69,6 +76,7 @@ export function getBestWorstWindows(forecast: ForecastData[]): ForecastWindow | 
     }
   }
 
+  if (!Number.isFinite(minSum)) return null;
   return {
     bestStart: parseISO(futureForecast[minStartIndex].from),
     bestEnd: parseISO(futureForecast[minStartIndex + OPTIMAL_WINDOW_SLOTS - 1].to),
