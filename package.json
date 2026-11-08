@@ -89,7 +89,7 @@
     "react-helmet-async": "^3.0.0",
     "react-hook-form": "^7.91.0",
     "react-resizable-panels": "^2.1.9",
-    "react-router-dom": "^6.30.6",
+    "react-router-dom": "^7.18.5",
     "recharts": "^2.15.4",
     "sonner": "^1.7.4",
     "tailwind-merge": "^2.6.1",
@@ -133,5 +133,9 @@
     "typescript-eslint": "^8.72.1",
     "vite": "^5.4.21",
     "vitest": "^3.2.7"
+  },
+  "overrides": {
+    "glob": "^14.0.4",
+    "minimatch": "^11.0.5"
   }
 }
