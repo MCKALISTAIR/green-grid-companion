@@ -13,6 +13,7 @@ import {
   claimSubscriptionsForPeriod,
   type NotificationLogClient,
 } from '../_shared/notification-periods.ts';
+import { greenWindow, usableForecast } from '../_shared/forecast-window.ts';
 import { londonWallClock, selectDueSubscriptions } from '../_shared/daily-forecast-schedule.ts';
 
 interface ForecastData {
@@ -131,7 +132,7 @@ Deno.serve(async (req) => {
     }
 
     const todayData = await todayRes.json();
-    const todayForecasts: ForecastData[] = todayData.data || [];
+    const todayForecasts: ForecastData[] = usableForecast(todayData.data || []);
 
     let tomorrowForecasts: ForecastData[] = [];
     if (tomorrowRes.ok) {
@@ -141,7 +142,7 @@ Deno.serve(async (req) => {
 
     // All forecasts for stats, but only future slots for best/worst windows
     const allForecasts = [...todayForecasts, ...tomorrowForecasts];
-    const futureForecasts = allForecasts.filter((f) => new Date(f.to) > now);
+    const futureForecasts = usableForecast(allForecasts).filter((f) => new Date(f.to) > now);
 
     // Calculate today's overall stats (for context)
     let totalIntensity = 0;
@@ -203,24 +204,10 @@ Deno.serve(async (req) => {
       // Find the best consecutive green window (contiguous slots at or below best intensity + 20g tolerance)
       let bestWindowStart = bestTime?.from || '';
       let bestWindowEnd = bestTime?.to || '';
-      if (bestTime && futureForecasts.length > 0) {
-        const threshold = bestTime.intensity.forecast + 20;
-        const bestIdx = futureForecasts.indexOf(bestTime);
-        let startIdx = bestIdx;
-        let endIdx = bestIdx;
-        // Expand backward while adjacent and within threshold
-        while (startIdx > 0 && futureForecasts[startIdx - 1].intensity.forecast <= threshold) {
-          startIdx--;
-        }
-        // Expand forward while adjacent and within threshold
-        while (
-          endIdx < futureForecasts.length - 1 &&
-          futureForecasts[endIdx + 1].intensity.forecast <= threshold
-        ) {
-          endIdx++;
-        }
-        bestWindowStart = futureForecasts[startIdx].from;
-        bestWindowEnd = futureForecasts[endIdx].to;
+      if (bestTime) {
+        const window = greenWindow(futureForecasts, bestTime);
+        bestWindowStart = window?.from ?? bestWindowStart;
+        bestWindowEnd = window?.to ?? bestWindowEnd;
       }
 
       const bestStartFmt = formatUKTime(bestWindowStart);
