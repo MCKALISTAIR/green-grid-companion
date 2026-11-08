@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -408,12 +408,8 @@ export default function Help() {
         >
           <p>
             Still need help? Check out our detailed{' '}
-            <Button
-              variant="link"
-              onClick={() => navigate('/feature-guides')}
-              className="h-auto p-0 hover:scale-105 transition-transform duration-200"
-            >
-              Feature Guides
+            <Button asChild variant="link" className="h-auto p-0 hover:scale-105 transition-transform duration-200">
+              <Link to="/feature-guides">Feature Guides</Link>
             </Button>
           </p>
         </motion.div>
