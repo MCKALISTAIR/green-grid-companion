@@ -2,8 +2,8 @@
 
 # SEO findings
 
-- [ ] Verify existing Planner/Rank H1s and correct sequential section headings.
-- [ ] Make canonical and Open Graph addresses follow the current route; verify direct entry and navigation without publishing.
+- [x] Verify existing Planner/Rank H1s and correct sequential section headings.
+- [x] Make canonical and Open Graph addresses follow the current route; verify direct entry without publishing (Planner, Rank and a guide; four regression tests passed).
 
 # Logic consistency audit
 
