@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
+import { londonParts } from '../_shared/london-month.ts';
 import { sendPushNotifications } from '../_shared/push.ts';
 import {
   type MeterLink,
@@ -170,7 +171,7 @@ Deno.serve(async (req) => {
     // BH-26: only read rows for the due subscribers' own meters.
     const userIds = subscriberUserIds(dueSubscriptions);
     const { data: meters, error: metersError } = userIds.length
-      ? await supabase.from('octopus_meters').select('user_id, mpan').in('user_id', userIds)
+      ? await supabase.from('octopus_meters').select('user_id, mpan, meter_type, is_active').in('user_id', userIds)
       : { data: [], error: null };
     if (metersError) console.error('Error fetching meters:', metersError);
     const byUser = mpansByUser((meters || []) as MeterLink[]);
@@ -215,7 +216,7 @@ Deno.serve(async (req) => {
       // Find best usage times from historical data
       const hourlyUsage: Record<number, { count: number; avgIntensity: number }> = {};
       for (const record of (footprint || []) as FootprintRecord[]) {
-        const hour = new Date(record.interval_start).getUTCHours();
+        const hour = londonParts(new Date(record.interval_start)).hour;
         if (!hourlyUsage[hour]) {
           hourlyUsage[hour] = { count: 0, avgIntensity: 0 };
         }

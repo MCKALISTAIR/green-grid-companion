@@ -48,7 +48,7 @@ import { formatLondonTime, formatLondonTimeWithDay } from '@/lib/londonTime';
 import { PullToRefresh } from '@/components/PullToRefresh';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SlowLoadingNotice } from '@/components/SlowLoadingNotice';
-import { plannerLiveIntensity } from '@/lib/plannerLive';
+import { plannerLiveIntensity, plannerDuration } from '@/lib/plannerLive';
 
 import { toast } from 'sonner';
 import { Bell } from 'lucide-react';
@@ -120,8 +120,8 @@ export default function Planner() {
         name: savedCustom.name,
         icon: PenLine,
         power: savedCustom.power,
-        duration: savedCustom.duration,
-        label: savedCustom.label || `Custom (${savedCustom.duration}h)`,
+        duration: plannerDuration(savedCustom.duration),
+        label: `Custom (${plannerDuration(savedCustom.duration)}h)`,
       });
     }
 
@@ -139,15 +139,15 @@ export default function Planner() {
         name: saved.name,
         icon: PenLine,
         power: saved.power,
-        duration: saved.duration,
-        label: saved.label || `Custom (${saved.duration}h)`,
+        duration: plannerDuration(saved.duration),
+        label: `Custom (${plannerDuration(saved.duration)}h)`,
       };
       setSelectedAppliance(customAppliance);
     }
   }, [settings.customAppliance]);
 
   const handleCustomSubmit = () => {
-    const duration = Math.max(0.5, parseFloat(customEvent.duration) || 1);
+    const duration = plannerDuration(customEvent.duration);
     const power = parseFloat(customEvent.power) || 1.0;
     const name = customEvent.name || 'My appliance';
 
@@ -161,7 +161,7 @@ export default function Planner() {
     };
 
     // Save to settings (which syncs to localStorage and Supabase)
-    updateSetting('customEvent', customEvent);
+    updateSetting('customEvent', { ...customEvent, duration: String(duration) });
     updateSetting('customAppliance', {
       name: customAppliance.name,
       power: customAppliance.power,

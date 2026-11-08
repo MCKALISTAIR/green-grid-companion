@@ -1,4 +1,5 @@
 import { appStorage } from '@/lib/appStorage';
+import { evidencedFuelHistory } from '@/lib/fuelHistory';
 import { useEffect, useState, useCallback } from 'react';
 import { MixItem } from '@/lib/generationUtils';
 import { GenerationMix } from '@/lib/carbonApi';
@@ -75,20 +76,7 @@ async function fetchLastSeenFromHistory(
     const json = await response.json();
     const data = json.data || [];
 
-    // Iterate backwards through history to find when fuel was last used
-    for (let i = data.length - 1; i >= 0; i--) {
-      const entry = data[i];
-      const mix: GenerationMix[] = entry.generationmix || [];
-      const fuelEntry = mix.find((m) => m.fuel.toLowerCase() === fuel);
-
-      if (fuelEntry && fuelEntry.perc > 0) {
-        // Found when it was last used
-        return { lastSeen: entry.to || entry.from, exceededLookback: false };
-      }
-    }
-
-    // If we didn't find it in 30 days, it's been at least 30 days
-    return { lastSeen: from.toISOString(), exceededLookback: true };
+    return evidencedFuelHistory(data, fuel, from, to);
   } catch (error) {
     console.warn('Error fetching historical generation:', error);
     return { lastSeen: null, exceededLookback: false };
@@ -137,7 +125,8 @@ export function useFuelStreaks(mix: MixItem[]) {
 
       for (const fuel of FOSSIL_FUELS) {
         const mixItem = mix.find((m) => m.fuel.toLowerCase() === fuel);
-        const currentPerc = mixItem?.perc || 0;
+        if (!mixItem || !Number.isFinite(mixItem.perc) || mixItem.perc < 0) continue;
+        const currentPerc = mixItem.perc;
 
         // Initialize if missing
         if (!streakData[fuel]) {
@@ -172,33 +161,16 @@ export function useFuelStreaks(mix: MixItem[]) {
           let lastSeenTime: Date | null = null;
           let isVerified = streakData[fuel].verifiedHistorically;
 
-          // Check if we have cached lastSeen
-          if (lastSeenData[fuel]) {
-            lastSeenTime = new Date(lastSeenData[fuel]!);
-            isVerified = true;
-          } else if (!streakData[fuel].verifiedHistorically) {
-            // Need to fetch historical data
-            const result = await fetchLastSeenFromHistory(fuel);
-
-            if (result.lastSeen) {
-              lastSeenTime = new Date(result.lastSeen);
-              lastSeenData[fuel] = JSON.stringify({
-                timestamp: result.lastSeen,
-                exceededLookback: result.exceededLookback,
-              });
-              streakData[fuel].lastSeen = result.lastSeen;
-              streakData[fuel].streakStarted = result.lastSeen;
-              isVerified = true;
-
-              // Store if we exceeded lookback for display purposes
-              if (result.exceededLookback) {
-                streakData[fuel].exceededLookback = true;
-              }
-            }
-
-            streakData[fuel].verifiedHistorically = true;
-          } else if (streakData[fuel].lastSeen) {
-            lastSeenTime = new Date(streakData[fuel].lastSeen!);
+          // A cached observation cannot prove continuous coverage since that observation.
+          const result = await fetchLastSeenFromHistory(fuel);
+          isVerified = result.lastSeen !== null;
+          streakData[fuel].verifiedHistorically = isVerified;
+          streakData[fuel].exceededLookback = result.exceededLookback;
+          if (result.lastSeen) {
+            lastSeenTime = new Date(result.lastSeen);
+            streakData[fuel].lastSeen = result.lastSeen;
+            streakData[fuel].streakStarted = result.lastSeen;
+            lastSeenData[fuel] = result.lastSeen;
           }
 
           // Calculate streak duration

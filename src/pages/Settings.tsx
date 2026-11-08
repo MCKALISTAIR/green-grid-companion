@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { londonDateKey } from '@/lib/londonTime';
 import { motion } from 'framer-motion';
 import { NotificationSettings } from '@/components/NotificationSettings';
 import { OctopusIntegration } from '@/components/OctopusIntegration';
@@ -158,7 +159,7 @@ export default function Settings() {
       <YearWrapped
         open={showYearWrapped}
         onOpenChange={setShowYearWrapped}
-        year={new Date().getFullYear()}
+        year={Number(londonDateKey(new Date()).slice(0, 4))}
       />
     </div>
   );

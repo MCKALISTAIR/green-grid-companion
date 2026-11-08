@@ -117,7 +117,7 @@ function toSlots(forecast: ForecastData[]): Slot[] {
     const from = Date.parse(f.from);
     const to = Date.parse(f.to);
     const value = f.intensity?.forecast;
-    if (!Number.isFinite(from) || !Number.isFinite(to) || to <= from) continue;
+    if (!Number.isFinite(from) || !Number.isFinite(to) || to - from !== 1800_000) continue;
     if (!isUsableNumber(value)) continue;
     out.push({ from, to, value });
   }

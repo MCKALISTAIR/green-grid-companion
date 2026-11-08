@@ -4,9 +4,11 @@
 
 - [x] Revalidate the earlier audit and distinguish proven bugs from differing definitions.
 - [x] Record zero-floor savings and 0–100 limits for both alert types.
-- [ ] Review the scoped correction plan before implementation.
-- [ ] Implement confirmed accounting, coverage, timing and selected-period defects with regression tests.
-- [ ] Verify corrected flows; report anything blocked by real-data availability. No deployment or live-data repairs without separate approval.
+- [x] Apply the requested confirmed corrections without changing the design or live data.
+- [x] Implement accounting, coverage, timing and selected-period corrections with regression tests; full suite passes.
+- [x] Check signed-in Settings and Plan; no deployment or live-data repairs performed.
+- [ ] Verify linked Footprint and actual report/charging delivery end-to-end: blocked by unavailable linked meter readings and separate deployment approval.
+- [ ] Diagnose the historical July sync cutoff: blocked by unavailable incident logs; do not call Octopus with a user's key.
 
 - [x] Correct Settings tour hand-off to Home/Intensity and safe-area toasts.
 - [x] Fix scene hit areas, HUD contrast and wide haze.
