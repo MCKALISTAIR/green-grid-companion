@@ -1,7 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
 import {
-  londonHour,
   londonMonthBounds,
   londonParts,
   londonWeekOfMonth,
@@ -171,7 +170,10 @@ Deno.serve(async (req) => {
     // BH-26: only read rows for the due subscribers' own meters.
     const userIds = subscriberUserIds(dueSubscriptions);
     const { data: meters, error: metersError } = userIds.length
-      ? await supabase.from('octopus_meters').select('user_id, mpan, meter_type, is_active').in('user_id', userIds)
+      ? await supabase
+          .from('octopus_meters')
+          .select('user_id, mpan, meter_type, is_active')
+          .in('user_id', userIds)
       : { data: [], error: null };
     if (metersError) console.error('Error fetching meters:', metersError);
     const byUser = mpansByUser((meters || []) as MeterLink[]);
@@ -271,27 +273,6 @@ Deno.serve(async (req) => {
         }
         if (!worstWeek || week.avgIntensity > worstWeek.avgIntensity) {
           worstWeek = week;
-        }
-      }
-
-      // Find best time of day
-      const hourlyUsage: Record<number, { count: number; avgIntensity: number }> = {};
-      for (const record of (footprint || []) as FootprintRecord[]) {
-        const hour = londonHour(new Date(record.interval_start));
-        if (!hourlyUsage[hour]) {
-          hourlyUsage[hour] = { count: 0, avgIntensity: 0 };
-        }
-        hourlyUsage[hour].count++;
-        hourlyUsage[hour].avgIntensity += record.intensity_gco2_kwh;
-      }
-
-      let bestHour = 0;
-      let bestAvg = Infinity;
-      for (const [hour, data] of Object.entries(hourlyUsage)) {
-        const avg = data.avgIntensity / data.count;
-        if (avg < bestAvg) {
-          bestAvg = avg;
-          bestHour = parseInt(hour);
         }
       }
 

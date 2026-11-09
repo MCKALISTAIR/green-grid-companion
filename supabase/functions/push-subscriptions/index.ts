@@ -177,7 +177,9 @@ Deno.serve(async (req) => {
           !validAlertThreshold(body.high_intensity_threshold)
         ) {
           return new Response(
-            JSON.stringify({ error: 'High intensity threshold must be an integer between 0 and 100' }),
+            JSON.stringify({
+              error: 'High intensity threshold must be an integer between 0 and 100',
+            }),
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
           );
         }

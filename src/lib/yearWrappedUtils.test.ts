@@ -78,7 +78,13 @@ describe('processYearData', () => {
 
     // A complete evidenced UK day, not 50 copies of the same observation.
     for (let i = 0; i < 48; i++) {
-      data.push(createMockData(new Date(Date.parse(coalFreePeriod.from) + i * 1800_000).toISOString(), 100, [{ fuel: 'coal', perc: 0 }]));
+      data.push(
+        createMockData(
+          new Date(Date.parse(coalFreePeriod.from) + i * 1800_000).toISOString(),
+          100,
+          [{ fuel: 'coal', perc: 0 }],
+        ),
+      );
     }
     // 1 period of coal
     data.push(coalPeriod);

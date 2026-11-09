@@ -23,6 +23,8 @@ import {
 } from '@/components/ui/drawer';
 import { hapticSelectionChanged } from '@/lib/haptics';
 import { cn } from '@/lib/utils';
+import { useIsSheetLayout } from '@/hooks/useIsSheetLayout';
+import { TALL_DETENTS } from '@/lib/responsiveDialogConstants';
 
 /**
  * Dialog on desktop (≥768), vaul bottom sheet on phones (motion spec §2.3).
@@ -37,24 +39,6 @@ import { cn } from '@/lib/utils';
  * Not for destructive confirms (keep AlertDialog) or the consent sheet
  * (non-modal, never drag-dismissable; see ConsentSheet).
  */
-
-const MOBILE_QUERY = '(max-width: 767px)';
-
-function subscribe(cb: () => void) {
-  const mql = window.matchMedia?.(MOBILE_QUERY);
-  mql?.addEventListener('change', cb);
-  return () => mql?.removeEventListener('change', cb);
-}
-
-export function useIsSheetLayout(): boolean {
-  return React.useSyncExternalStore(
-    subscribe,
-    () => !!window.matchMedia?.(MOBILE_QUERY).matches,
-    () => false,
-  );
-}
-
-export const TALL_DETENTS = [0.55, 0.92];
 
 const Ctx = React.createContext<{ sheet: boolean; tall?: boolean }>({ sheet: false });
 

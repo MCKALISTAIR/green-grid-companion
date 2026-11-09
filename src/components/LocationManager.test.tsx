@@ -3,6 +3,9 @@ import { LocationManager } from './LocationManager';
 import { useSavedLocations } from '@/hooks/useSavedLocations';
 
 vi.mock('@/hooks/useSavedLocations');
+vi.mock('@/hooks/useIsSheetLayout', () => ({
+  useIsSheetLayout: () => true,
+}));
 vi.mock('@/components/ui/responsive-dialog', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/components/ui/responsive-dialog')>()),
   ResponsiveDialog: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -23,7 +26,6 @@ vi.mock('@/components/ui/responsive-dialog', async (importOriginal) => ({
   ResponsiveDialogFooter: () => null,
   ResponsiveDialogHeader: () => null,
   ResponsiveDialogTitle: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  useIsSheetLayout: () => true,
 }));
 
 class ResizeObserverStub {

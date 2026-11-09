@@ -218,7 +218,11 @@ export function usePushNotifications(postcode: string) {
   // Save preferences via edge function (secure server-side access)
   const savePreferences = useCallback(
     async (newPrefs: PushNotificationPrefs, tokenOverride?: string) => {
-      newPrefs = { ...newPrefs, lowIntensityThreshold: normalizeAlertThreshold(newPrefs.lowIntensityThreshold), highIntensityThreshold: normalizeAlertThreshold(newPrefs.highIntensityThreshold) };
+      newPrefs = {
+        ...newPrefs,
+        lowIntensityThreshold: normalizeAlertThreshold(newPrefs.lowIntensityThreshold),
+        highIntensityThreshold: normalizeAlertThreshold(newPrefs.highIntensityThreshold),
+      };
       const token = tokenOverride || deviceToken;
 
       if (!token || !postcode) {

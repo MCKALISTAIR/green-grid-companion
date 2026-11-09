@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { render, screen, act, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { OfflineIndicator, BACK_ONLINE_MS, resetOfflineWarningForTests } from './OfflineIndicator';
+import { OfflineIndicator } from './OfflineIndicator';
+import { BACK_ONLINE_MS, resetOfflineWarningForTests } from '@/lib/offlineIndicatorState';
 import { setHeroStatusSlot } from '@/lib/heroStatusSlot';
 
 const notification = vi.fn();

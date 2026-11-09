@@ -1389,21 +1389,21 @@ function NeutralCityBack(props: CityLandscapeProps & { cityVariant: CityVariant 
             isNight={props.isNight}
           />
         ) : (
-        <Building
-          key={i}
-          x={b.x}
-          width={b.width}
-          height={toBuilding(b.u)}
-          fill={fill}
-          windowLit={palette.windowLit}
-          windowDark={palette.windowDark}
-          isNight={props.isNight}
-          cleanliness={props.cleanliness}
-          delay={i * 0.03}
-          skipIntro={props.skipIntro}
-          windowsFlicker={flicker}
-          antenna={false}
-        />
+          <Building
+            key={i}
+            x={b.x}
+            width={b.width}
+            height={toBuilding(b.u)}
+            fill={fill}
+            windowLit={palette.windowLit}
+            windowDark={palette.windowDark}
+            isNight={props.isNight}
+            cleanliness={props.cleanliness}
+            delay={i * 0.03}
+            skipIntro={props.skipIntro}
+            windowsFlicker={flicker}
+            antenna={false}
+          />
         ),
       )}
       {!isEdinburgh && (
@@ -1462,21 +1462,21 @@ function NeutralCityMid(props: CityLandscapeProps & { cityVariant: CityVariant }
             isNight={props.isNight}
           />
         ) : (
-        <Building
-          key={i}
-          x={b.x}
-          width={b.width}
-          height={toBuilding(b.u)}
-          fill={fill}
-          windowLit={palette.windowLit}
-          windowDark={palette.windowDark}
-          isNight={props.isNight}
-          cleanliness={props.cleanliness}
-          delay={0.2 + i * 0.03}
-          skipIntro={props.skipIntro}
-          windowsFlicker={props.timeOfDay === 'dusk' || props.timeOfDay === 'night'}
-          antenna={false}
-        />
+          <Building
+            key={i}
+            x={b.x}
+            width={b.width}
+            height={toBuilding(b.u)}
+            fill={fill}
+            windowLit={palette.windowLit}
+            windowDark={palette.windowDark}
+            isNight={props.isNight}
+            cleanliness={props.cleanliness}
+            delay={0.2 + i * 0.03}
+            skipIntro={props.skipIntro}
+            windowsFlicker={props.timeOfDay === 'dusk' || props.timeOfDay === 'night'}
+            antenna={false}
+          />
         ),
       )}
       <g data-city-art="church-spire" data-landmark-hero={heroLit ? 'lit' : 'off'}>
@@ -1588,7 +1588,13 @@ function EdinburghTenement({
         points={`${x + stepW},${top} ${x + stepW + roof * 0.6},${top - roof} ${x + w - roof * 0.6},${top - roof} ${x + w},${top}`}
         fill={fill}
       />
-      <rect x={x + stepW} y={top - roof} width={w - stepW - roof * 0.6} height={0.7} fill="rgba(0,0,0,0.18)" />
+      <rect
+        x={x + stepW}
+        y={top - roof}
+        width={w - stepW - roof * 0.6}
+        height={0.7}
+        fill="rgba(0,0,0,0.18)"
+      />
       {[0, 1, 2].map((k) => (
         <rect
           key={k}

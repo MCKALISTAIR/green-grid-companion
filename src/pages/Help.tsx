@@ -408,7 +408,11 @@ export default function Help() {
         >
           <p>
             Still need help? Check out our detailed{' '}
-            <Button asChild variant="link" className="h-auto p-0 hover:scale-105 transition-transform duration-200">
+            <Button
+              asChild
+              variant="link"
+              className="h-auto p-0 hover:scale-105 transition-transform duration-200"
+            >
               <Link to="/feature-guides">Feature Guides</Link>
             </Button>
           </p>

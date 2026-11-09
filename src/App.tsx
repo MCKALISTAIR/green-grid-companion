@@ -187,24 +187,24 @@ function AppContent() {
 
 const App = () => (
   <HelmetProvider>
-  <PersistQueryClientProvider
-    client={queryClient}
-    persistOptions={{ persister, maxAge: 1000 * 60 * 60 * 24, buster: QUERY_CACHE_BUSTER }}
-  >
-    <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
-      <TooltipProvider>
-        <ErrorBoundary>
-          <LocationProvider>
-            <SceneDirectorProvider>
-              <AchievementManager />
-              <DirectorPanel />
-              <AppContent />
-            </SceneDirectorProvider>
-          </LocationProvider>
-        </ErrorBoundary>
-      </TooltipProvider>
-    </ThemeProvider>
-  </PersistQueryClientProvider>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{ persister, maxAge: 1000 * 60 * 60 * 24, buster: QUERY_CACHE_BUSTER }}
+    >
+      <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+        <TooltipProvider>
+          <ErrorBoundary>
+            <LocationProvider>
+              <SceneDirectorProvider>
+                <AchievementManager />
+                <DirectorPanel />
+                <AppContent />
+              </SceneDirectorProvider>
+            </LocationProvider>
+          </ErrorBoundary>
+        </TooltipProvider>
+      </ThemeProvider>
+    </PersistQueryClientProvider>
   </HelmetProvider>
 );
 

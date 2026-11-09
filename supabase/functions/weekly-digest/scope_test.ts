@@ -23,4 +23,6 @@ Deno.test('weekly-digest: each subscriber only sees their own meter (BH-26)', as
   assert(bob?.includes('from 90.0kWh'), `bob got: ${bob}`);
   assert(!pushes.some((p) => p.includes('100.0kWh')), 'no cross-user total');
   assert(anon && !anon.includes('kWh'), `anon must not get usage numbers: ${anon}`);
+  assert(alice?.includes('100% green energy'), `alice green % missing: ${alice}`);
+  assert(bob?.includes('0% green energy'), `bob green % missing: ${bob}`);
 });

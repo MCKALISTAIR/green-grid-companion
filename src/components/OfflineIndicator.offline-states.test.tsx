@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { render, screen, act, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { OfflineIndicator, resetOfflineWarningForTests } from './OfflineIndicator';
+import { OfflineIndicator } from './OfflineIndicator';
+import { resetOfflineWarningForTests } from '@/lib/offlineIndicatorState';
 import { setHeroStatusSlot } from '@/lib/heroStatusSlot';
 import { OfflineEmptyState } from '@/components/errors/OfflineEmptyState';
 

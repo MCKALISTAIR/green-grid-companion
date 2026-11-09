@@ -3,7 +3,13 @@ export const ALERT_THRESHOLD_MAX = 100;
 export const DEFAULT_ALERT_THRESHOLD = 100;
 
 export function validAlertThreshold(value: unknown): value is number {
-  return typeof value === 'number' && Number.isFinite(value) && Number.isInteger(value) && value >= 0 && value <= 100;
+  return (
+    typeof value === 'number' &&
+    Number.isFinite(value) &&
+    Number.isInteger(value) &&
+    value >= 0 &&
+    value <= 100
+  );
 }
 
 export function normalizeAlertThreshold(value: unknown): number {

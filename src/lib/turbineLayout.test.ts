@@ -49,7 +49,7 @@ describe('hero band is clear of scene props (#242 Design review)', () => {
   });
 
   it('matches the sheep safe zone', async () => {
-    const { HERO_SAFE_X } = await import('@/components/scene/Sheep');
+    const { HERO_SAFE_X } = await import('@/lib/sheepLayout');
     expect(TURBINE_HERO_SAFE_X).toEqual(HERO_SAFE_X);
   });
 
@@ -58,7 +58,7 @@ describe('hero band is clear of scene props (#242 Design review)', () => {
     const { BIOMASS_STACK_X } = await import('@/components/scene/layers/SceneAdvancedLayer');
     const { NUCLEAR_TOWER_X } = await import('@/components/scene/layers/SceneGenerationOverlay');
     const { OFFSHORE_WIND_X } = await import('@/components/scene/OffshoreWind');
-    const { SHEEP_SPOTS } = await import('@/components/scene/Sheep');
+    const { SHEEP_SPOTS } = await import('@/lib/sheepLayout');
     const g = gasPlantGeometry();
     // [name, left edge, right edge] in scene x.
     const props: [string, number, number][] = [
