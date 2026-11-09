@@ -214,7 +214,7 @@ export default function MapPage() {
                             {idx + 1}
                           </div>
                           <div>
-                            <h3 className="font-semibold text-sm">{region.shortname}</h3>
+                            <h2 className="font-semibold text-sm">{region.shortname}</h2>
                             <div
                               className={`text-[10px] inline-flex items-center px-1.5 py-0.5 rounded-full mt-0.5 ${getIntensityColor(region.intensity.index)} bg-opacity-20`}
                             >

@@ -48,9 +48,23 @@ summary=$(echo "$out" | tail -n 1)
 echo "passed | failed: $summary"
 [[ "$summary" =~ \|\ 0$ ]] || exit 1
 
-# Optional schema-order check: TEST_TESLAS_ABSENT=1 simulates the separate
-# Tesla-removal PR landing first, then stops before historical Tesla replays.
-# The default run exercises the full current migration chain below.
+# Tesla storage retirement: the drop migration is safe to reapply and preserves
+# unrelated account and Octopus fixtures in this throwaway database.
+# Local-only; never run this harness against a live Supabase project.
+TESLA_REMOVAL="$HERE/tesla_removal_tests.sql"
+if [[ -f "$TESLA_REMOVAL" ]]; then
+  if ! out=$($PSQL -q -v ON_ERROR_STOP=1 -d "$DB" -At -F ' | ' -f "$TESLA_REMOVAL" 2>&1); then
+    echo "tesla_removal_tests.sql errored:"; echo "$out"; exit 1
+  fi
+  echo "$out" | grep -E '^(PASS|FAIL) ' || true
+  summary=$(echo "$out" | tail -n 1)
+  echo "Tesla removal passed | failed: $summary"
+  [[ "$summary" =~ \|\ 0$ ]] || exit 1
+fi
+
+# Optional schema-order check: TEST_TESLAS_ABSENT=1 simulates a future cleanup
+# change landing after Tesla retirement, then stops before historical Tesla
+# replays. It must not alter or incompletely replay the combined branch's tests.
 if [[ "${TEST_TESLAS_ABSENT:-}" == "1" ]]; then
   TESLA_COMPAT="$HERE/anonymous_cleanup_without_tesla_tests.sql"
   if ! out=$($PSQL -q -v ON_ERROR_STOP=1 -d "$DB" -At -F ' | ' -f "$TESLA_COMPAT" 2>&1); then
@@ -65,7 +79,10 @@ if [[ "${TEST_TESLAS_ABSENT:-}" == "1" ]]; then
 fi
 
 ANONYMOUS_CLEANUP="$HERE/anonymous_cleanup_tests.sql"
-if [[ -f "$ANONYMOUS_CLEANUP" ]]; then
+# The complete legacy Tesla fixture applies only before the retirement migration.
+# Check both files so an unrelated pre-existing drop migration cannot accidentally
+# bypass the entire anonymous-cleanup suite.
+if [[ -f "$ANONYMOUS_CLEANUP" && ! -f "$REPO/supabase/migrations/20261106150000_remove_tesla_tables.sql" ]]; then
   if ! out=$($PSQL -q -v ON_ERROR_STOP=1 -d "$DB" -At -F ' | ' -f "$ANONYMOUS_CLEANUP" 2>&1); then
     echo "anonymous_cleanup_tests.sql errored:"; echo "$out"; exit 1
   fi
@@ -78,7 +95,7 @@ fi
 # Re-run checks for migrations that must be safe to apply twice.
 ANON_TIDY="$REPO/supabase/migrations/20261010170000_anon_access_tidy.sql"
 if [[ -f "$ANON_TIDY" ]]; then
-  if ! out=$($PSQL -q -v ON_ERROR_STOP=1 -d "$DB" -f - < "$ANON_TIDY" 2>&1); then
+  if ! out=$($PSQL -q -v ON_ERROR_STOP=1 -d "$DB" -f - < <("$HERE/filter_legacy_anon_tidy.py" "$ANON_TIDY") 2>&1); then
     echo "FAIL re-applying $(basename "$ANON_TIDY")"; echo "$out"; exit 1
   fi
   echo "PASS | anon_access_tidy is safe to re-apply"
@@ -89,7 +106,7 @@ ALTER TABLE public.octopus_credentials DROP CONSTRAINT octopus_credentials_no_pl
 UPDATE public.octopus_credentials SET api_key = 'sk_legacy' WHERE user_id = '22222222-2222-2222-2222-222222222222';
 SQL
   ); then echo "FAIL preparing plaintext variant"; echo "$out"; exit 1; fi
-  if ! out=$($PSQL -v ON_ERROR_STOP=1 -d "$DB" -f - < "$ANON_TIDY" 2>&1); then
+  if ! out=$($PSQL -v ON_ERROR_STOP=1 -d "$DB" -f - < <("$HERE/filter_legacy_anon_tidy.py" "$ANON_TIDY") 2>&1); then
     echo "FAIL anon_access_tidy with a plaintext key left"; echo "$out"; exit 1
   fi
   has=$($PSQL -At -d "$DB" -c "SELECT count(*) FROM pg_constraint WHERE conname = 'octopus_credentials_no_plaintext'")

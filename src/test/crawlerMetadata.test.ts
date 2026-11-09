@@ -9,14 +9,15 @@ function attribute(tag: string, name: string) {
 }
 
 describe('crawler metadata', () => {
-  it('uses the public GridSense origin for the canonical page and both share images', () => {
+  it('leaves page addresses to each route and uses the public origin for share images', () => {
     const canonical = html.match(/<link\s+rel="canonical"[^>]*>/)?.[0];
     const ogUrl = html.match(/<meta\s+property="og:url"[^>]*>/)?.[0];
     const ogImage = html.match(/<meta\s+property="og:image"[^>]*>/)?.[0];
     const twitterImage = html.match(/<meta\s+name="twitter:image"[^>]*>/)?.[0];
 
-    expect(attribute(canonical ?? '', 'href')).toBe('https://getgridsense.com/');
-    expect(attribute(ogUrl ?? '', 'content')).toBe('https://getgridsense.com/');
+    // Each route sets its own canonical/og:url, so the static head must not claim the homepage.
+    expect(canonical).toBeUndefined();
+    expect(ogUrl).toBeUndefined();
     expect(attribute(ogImage ?? '', 'content')).toBe('https://getgridsense.com/og-image.png');
     expect(attribute(twitterImage ?? '', 'content')).toBe('https://getgridsense.com/og-image.png');
   });

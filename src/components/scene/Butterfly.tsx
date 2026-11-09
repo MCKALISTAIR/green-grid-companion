@@ -16,10 +16,12 @@ export function Butterfly({ startX, delay = 0 }: ButterflyProps) {
       data-ambient="butterfly"
       viewBox="0 0 24 24"
       aria-hidden="true"
-      initial={{ x: `${startX}%`, y: '60%', opacity: 0 }}
+      // left/top percentages are relative to the scene; x/y transform percentages
+      // would be relative to the 24px butterfly and pin it in the top-left corner.
+      initial={{ left: `${startX}%`, top: '60%', opacity: 0 }}
       animate={{
-        x: [`${startX}%`, `${startX + 30}%`, `${startX + 15}%`, `${startX + 40}%`],
-        y: ['60%', '40%', '50%', '35%'],
+        left: [`${startX}%`, `${startX + 30}%`, `${startX + 15}%`, `${startX + 40}%`],
+        top: ['60%', '40%', '50%', '35%'],
         opacity: [0, 1, 1, 0],
       }}
       transition={{

@@ -1,10 +1,10 @@
--- Run after the normal full-migration suite, then exit before legacy Tesla replays.
+-- Run from this test directory after the full-migration suite, then exit before legacy Tesla replays.
 -- Uses a separate throwaway database: no production object is touched.
 \set ON_ERROR_STOP 1
 \pset footer off
 CREATE TEMP TABLE if_tesla_results (name text, ok boolean, detail text);
 -- Compatibility when the independent Tesla-retirement migration lands first.
-DROP TABLE public.tesla_charging_sessions, public.tesla_credentials, public.tesla_energy_data, public.tesla_energy_sites, public.tesla_vehicles;
+DROP TABLE IF EXISTS public.tesla_charging_sessions, public.tesla_credentials, public.tesla_energy_data, public.tesla_energy_sites, public.tesla_vehicles;
 
 
 \ir ../../migrations/20261106150000_cleanup_anonymous_accounts.sql

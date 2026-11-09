@@ -8,6 +8,10 @@
  * These are approximations for educational/motivational purposes.
  */
 
+/** Official publication for the DESNZ/DEFRA 2025 conversion factors. */
+export const DESNZ_2025_SOURCE_URL =
+  'https://www.gov.uk/government/publications/greenhouse-gas-reporting-conversion-factors-2025';
+
 /** DESNZ 2025 conversion factor, average petrol car (kg CO2e per mile). */
 export const PETROL_CAR_KG_CO2E_PER_MILE = 0.26187;
 /** Miles driven per kg CO2e (1 / 0.26187, about 3.82). */

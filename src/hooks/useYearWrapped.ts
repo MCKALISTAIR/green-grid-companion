@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { getNationalHistoryAndForecast, ForecastData } from '@/lib/carbonApi';
-import { startOfYear, endOfYear, subDays, min } from 'date-fns';
+import { londonMidnight } from '@/lib/londonTime';
 import { processYearData, YearWrappedData } from '@/lib/yearWrappedUtils';
 
 // The Carbon Intensity API only allows 30-day queries, so we need to chunk
@@ -19,17 +19,17 @@ export function useYearWrapped() {
     setData(null);
 
     try {
-      const yearStart = startOfYear(new Date(year, 0, 1));
-      const yearEnd = min([endOfYear(new Date(year, 0, 1)), new Date()]);
+      const yearStart = londonMidnight(`${year}-01-01`);
+      const yearEnd = new Date(Math.min(londonMidnight(`${year + 1}-01-01`).getTime(), Date.now()));
 
       // Break the year into chunks we can query
       const chunks: { from: Date; to: Date }[] = [];
       let currentStart = yearStart;
 
       while (currentStart < yearEnd) {
-        const chunkEnd = min([subDays(currentStart, -MAX_QUERY_DAYS), yearEnd]);
+        const chunkEnd = new Date(Math.min(currentStart.getTime() + MAX_QUERY_DAYS * 86400_000, yearEnd.getTime()));
         chunks.push({ from: currentStart, to: chunkEnd });
-        currentStart = new Date(chunkEnd.getTime() + 1);
+        currentStart = chunkEnd;
       }
 
       const allData: ForecastData[] = [];
@@ -77,7 +77,9 @@ export function useYearWrapped() {
       }
 
       // Process the data
-      const result = processYearData(allData, year);
+      // Adjacent API chunks can return their shared boundary slot twice.
+      const unique = [...new Map(allData.map(row => [row.from, row])).values()];
+      const result = processYearData(unique, year);
       setData(result);
     } catch (err) {
       console.error('Error fetching year wrapped data:', err);

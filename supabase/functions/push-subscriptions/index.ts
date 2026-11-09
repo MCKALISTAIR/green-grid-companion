@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 import { corsHeaders } from '../_shared/cors.ts';
+import { validAlertThreshold } from '../_shared/alert-threshold.ts';
 import { normalizeSubscriptionPostcode } from '../_shared/subscription-postcode.ts';
 import { pushDeliveryFor } from '../_shared/push-config.ts';
 import { requireUser } from '../_shared/require-user.ts';
@@ -162,10 +163,10 @@ Deno.serve(async (req) => {
         // Validate threshold range
         if (
           body.low_intensity_threshold !== undefined &&
-          (body.low_intensity_threshold < 0 || body.low_intensity_threshold > 500)
+          !validAlertThreshold(body.low_intensity_threshold)
         ) {
           return new Response(
-            JSON.stringify({ error: 'Intensity threshold must be between 0 and 500' }),
+            JSON.stringify({ error: 'Intensity threshold must be an integer between 0 and 100' }),
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
           );
         }
@@ -173,10 +174,10 @@ Deno.serve(async (req) => {
         // Validate high intensity threshold range
         if (
           body.high_intensity_threshold !== undefined &&
-          (body.high_intensity_threshold < 0 || body.high_intensity_threshold > 500)
+          !validAlertThreshold(body.high_intensity_threshold)
         ) {
           return new Response(
-            JSON.stringify({ error: 'High intensity threshold must be between 0 and 500' }),
+            JSON.stringify({ error: 'High intensity threshold must be an integer between 0 and 100' }),
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
           );
         }
@@ -247,7 +248,7 @@ Deno.serve(async (req) => {
               low_intensity_enabled: body.low_intensity_enabled ?? false,
               low_intensity_threshold: body.low_intensity_threshold ?? 100,
               high_intensity_enabled: body.high_intensity_enabled ?? false,
-              high_intensity_threshold: body.high_intensity_threshold ?? 200,
+              high_intensity_threshold: body.high_intensity_threshold ?? 100,
               daily_forecast_enabled: body.daily_forecast_enabled ?? false,
               daily_forecast_time: body.daily_forecast_time ?? '07:00',
               weekly_digest_enabled: body.weekly_digest_enabled ?? false,

@@ -760,7 +760,8 @@ function CityRoad({ fill, skipIntro }: { fill: string; skipIntro?: boolean }) {
         />
       ))}
       {/* Pavement/sidewalk */}
-      <rect x={0} y={133} width={400} height={4} fill="rgba(255,255,255,0.05)" />
+      <rect x={0} y={133} width={400} height={4} fill={fill} />
+      <rect x={0} y={133} width={400} height={4} fill="rgba(255,255,255,0.12)" />
     </motion.g>
   );
 }
@@ -980,7 +981,7 @@ function LondonCityFront(props: CityLandscapeProps) {
       {/* Clip definition to stop buildings at sidewalk */}
       <defs>
         <clipPath id={`${id}-foreground-building-clip`}>
-          <rect x={0} y={0} width={400} height={133} />
+          <rect x={0} y={0} width={400} height={NEUTRAL_GROUND_Y} />
         </clipPath>
         <linearGradient id={`${id}-gradCityNear`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={palette.skylineNearHighlight} />
@@ -1377,8 +1378,17 @@ function NeutralCityBack(props: CityLandscapeProps & { cityVariant: CityVariant 
           <stop offset="100%" stopColor={palette.skylineFarShadow} />
         </linearGradient>
       </defs>
-      <NeutralFarCrane x={322} fill={palette.skylineFarShadow} />
-      {blocks.map((b, i) => (
+      {!isEdinburgh && <NeutralFarCrane x={322} fill={palette.skylineFarShadow} />}
+      {blocks.map((b, i) =>
+        isEdinburgh ? (
+          <EdinburghTenement
+            key={i}
+            block={b}
+            fill={fill}
+            palette={palette}
+            isNight={props.isNight}
+          />
+        ) : (
         <Building
           key={i}
           x={b.x}
@@ -1394,7 +1404,8 @@ function NeutralCityBack(props: CityLandscapeProps & { cityVariant: CityVariant 
           windowsFlicker={flicker}
           antenna={false}
         />
-      ))}
+        ),
+      )}
       {!isEdinburgh && (
         <NeutralTower
           block={NEUTRAL_TOWER}
@@ -1441,7 +1452,16 @@ function NeutralCityMid(props: CityLandscapeProps & { cityVariant: CityVariant }
           <stop offset="100%" stopColor={palette.skylineMidShadow} />
         </linearGradient>
       </defs>
-      {blocks.map((b, i) => (
+      {blocks.map((b, i) =>
+        isEdinburgh ? (
+          <EdinburghTenement
+            key={i}
+            block={b}
+            fill={fill}
+            palette={palette}
+            isNight={props.isNight}
+          />
+        ) : (
         <Building
           key={i}
           x={b.x}
@@ -1457,7 +1477,8 @@ function NeutralCityMid(props: CityLandscapeProps & { cityVariant: CityVariant }
           windowsFlicker={props.timeOfDay === 'dusk' || props.timeOfDay === 'night'}
           antenna={false}
         />
-      ))}
+        ),
+      )}
       <g data-city-art="church-spire" data-landmark-hero={heroLit ? 'lit' : 'off'}>
         <NeutralChurchSpire
           x={isEdinburgh ? EDINBURGH_SPIRE_X : NEUTRAL_SPIRE_X}
@@ -1488,7 +1509,7 @@ function NeutralCityFront(props: CityLandscapeProps & { cityVariant: CityVariant
     <>
       <defs>
         <clipPath id={`${id}-foreground-building-clip`}>
-          <rect x={0} y={0} width={400} height={133} />
+          <rect x={0} y={0} width={400} height={NEUTRAL_GROUND_Y} />
         </clipPath>
         <linearGradient id={`${id}-gradCityNear`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={palette.skylineNearHighlight} />
@@ -1499,16 +1520,27 @@ function NeutralCityFront(props: CityLandscapeProps & { cityVariant: CityVariant
         clipPath={`url(#${id}-foreground-building-clip)`}
         data-city-art={`${props.cityVariant}-front`}
       >
-        {runs.map((r) => (
-          <TerraceRun
-            key={r.x}
-            run={r}
-            fill={`url(#${id}-gradCityNear)`}
-            palette={palette}
-            isNight={props.isNight}
-          />
-        ))}
+        {runs.map((r) =>
+          isEdinburgh ? (
+            <TenementRun
+              key={r.x}
+              run={r}
+              fill={`url(#${id}-gradCityNear)`}
+              palette={palette}
+              isNight={props.isNight}
+            />
+          ) : (
+            <TerraceRun
+              key={r.x}
+              run={r}
+              fill={`url(#${id}-gradCityNear)`}
+              palette={palette}
+              isNight={props.isNight}
+            />
+          ),
+        )}
       </g>
+      {isEdinburgh && <PrincesStreetGardens isNight={props.isNight} />}
       <CityRoad fill={palette.road} skipIntro={props.skipIntro} />
       {props.cleanliness > 0.5 && (
         <g>
@@ -1525,9 +1557,117 @@ function NeutralCityFront(props: CityLandscapeProps & { cityVariant: CityVariant
   );
 }
 
+/**
+ * Old Town / New Town stone tenement: pitched slate roof, crow-stepped gable
+ * on one end, chimney stacks along the ridge, small tall sash windows.
+ */
+function EdinburghTenement({
+  block,
+  fill,
+  palette,
+  isNight,
+}: {
+  block: Block;
+  fill: string;
+  palette: ReturnType<typeof useCityPalette>;
+  isNight: boolean;
+}) {
+  const h = toBuilding(block.u);
+  const top = 150 - h;
+  const { x, width: w } = block;
+  const roof = Math.min(6, Math.max(3, w * 0.18));
+  const stepW = Math.min(4, w / 5);
+  const stacks = Math.max(1, Math.floor(w / 12));
+  const rows = Math.max(1, Math.floor((h - 14) / 7));
+  const cols = Math.max(1, Math.floor((w - 4) / 6));
+  return (
+    <g data-city-art="edinburgh-tenement">
+      <rect x={x} y={top} width={w} height={h} fill={fill} />
+      {/* Slate roof, crow-stepped gable on the left */}
+      <polygon
+        points={`${x + stepW},${top} ${x + stepW + roof * 0.6},${top - roof} ${x + w - roof * 0.6},${top - roof} ${x + w},${top}`}
+        fill={fill}
+      />
+      <rect x={x + stepW} y={top - roof} width={w - stepW - roof * 0.6} height={0.7} fill="rgba(0,0,0,0.18)" />
+      {[0, 1, 2].map((k) => (
+        <rect
+          key={k}
+          x={x + (k * stepW) / 3}
+          y={top - roof * ((k + 1) / 3) - 0.6}
+          width={stepW - (k * stepW) / 3 + 0.4}
+          height={roof * ((k + 1) / 3) + 0.6}
+          fill={fill}
+        />
+      ))}
+      {Array.from({ length: stacks }).map((_, k) => {
+        const cx = x + stepW + ((w - stepW) * (k + 1)) / (stacks + 1) - 1.5;
+        return (
+          <g key={k}>
+            <rect x={cx} y={top - roof - 3.2} width={3} height={3.4} fill={fill} />
+            <rect x={cx + 0.3} y={top - roof - 4} width={0.9} height={0.9} fill={fill} />
+            <rect x={cx + 1.8} y={top - roof - 4} width={0.9} height={0.9} fill={fill} />
+          </g>
+        );
+      })}
+      {Array.from({ length: rows }).map((_, r) =>
+        Array.from({ length: cols }).map((_, c) => {
+          const seed = (x * 7 + r * 11 + c * 5) % 10;
+          const on = isNight && seed < 4;
+          return (
+            <rect
+              key={`${r}-${c}`}
+              x={x + 2.5 + c * 6}
+              y={top + 3 + r * 7}
+              width={1.8}
+              height={3.4}
+              fill={on ? palette.windowLit : palette.windowDark}
+              opacity={on ? 0.8 : 0.3}
+            />
+          );
+        }),
+      )}
+    </g>
+  );
+}
+
+/** Stone tenement terrace for Edinburgh's front row: taller, stepped gables, paired stacks. */
+function TenementRun({
+  run,
+  fill,
+  palette,
+  isNight,
+}: {
+  run: Run;
+  fill: string;
+  palette: ReturnType<typeof useCityPalette>;
+  isNight: boolean;
+}) {
+  return (
+    <EdinburghTenement
+      block={{ x: run.x, width: run.houses * HOUSE_W, u: run.u }}
+      fill={fill}
+      palette={palette}
+      isNight={isNight}
+    />
+  );
+}
+
+/** Princes Street Gardens: a grassy bank that grounds Castle Rock in the garden gap. */
+function PrincesStreetGardens({ isNight }: { isNight: boolean }) {
+  const g = NEUTRAL_GROUND_Y;
+  return (
+    <path
+      data-city-art="princes-street-gardens"
+      d={`M104,${g} C120,${g - 6} 140,${g - 8} 160,${g - 7} C176,${g - 6} 186,${g - 4} 194,${g} Z`}
+      fill={isNight ? '#173126' : '#3f7a4a'}
+      opacity={0.95}
+    />
+  );
+}
+
 /** Street trees in the terrace gaps (same UrbanTree art, scales 0.6-0.8). */
 function NeutralStreetTree({ x, scale, isNight }: { x: number; scale: number; isNight: boolean }) {
-  return <UrbanTree x={x} y={133} scale={scale} isNight={isNight} />;
+  return <UrbanTree x={x} y={137} scale={scale} isNight={isNight} />;
 }
 
 // Urban tree (small, trimmed)

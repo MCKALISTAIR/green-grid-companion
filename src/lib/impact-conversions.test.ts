@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   getImpactEquivalents,
+  DESNZ_2025_SOURCE_URL,
   MILES_PER_KG_CO2E,
   PETROL_CAR_KG_CO2E_PER_MILE,
 } from './impact-conversions';
@@ -8,6 +9,9 @@ import {
 describe('getImpactEquivalents', () => {
   it('uses the DESNZ 2025 average petrol car factor (0.26187 kg CO2e/mile)', () => {
     expect(PETROL_CAR_KG_CO2E_PER_MILE).toBe(0.26187);
+    expect(DESNZ_2025_SOURCE_URL).toBe(
+      'https://www.gov.uk/government/publications/greenhouse-gas-reporting-conversion-factors-2025',
+    );
     expect(MILES_PER_KG_CO2E).toBe(1 / 0.26187);
     expect(MILES_PER_KG_CO2E).toBeCloseTo(3.82, 2);
   });

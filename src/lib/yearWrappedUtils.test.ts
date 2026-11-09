@@ -9,7 +9,7 @@ const createMockData = (
   mix: { fuel: string; perc: number }[],
 ): ForecastData => ({
   from: date,
-  to: date, // not used in logic
+  to: new Date(Date.parse(date) + 1800_000).toISOString(),
   intensity: {
     forecast: intensity,
     actual: intensity,
@@ -76,16 +76,16 @@ describe('processYearData', () => {
 
     const data: ForecastData[] = [];
 
-    // 50 periods of coal free (just over 1 day)
-    for (let i = 0; i < 50; i++) {
-      data.push(coalFreePeriod);
+    // A complete evidenced UK day, not 50 copies of the same observation.
+    for (let i = 0; i < 48; i++) {
+      data.push(createMockData(new Date(Date.parse(coalFreePeriod.from) + i * 1800_000).toISOString(), 100, [{ fuel: 'coal', perc: 0 }]));
     }
     // 1 period of coal
     data.push(coalPeriod);
 
     const result = processYearData(data, 2023);
 
-    expect(result.longestCoalFree?.days).toBe(1); // floor(50 / 48) = 1
+    expect(result.longestCoalFree?.days).toBe(1);
     expect(result.coalFreeDays).toBeGreaterThan(0);
   });
 

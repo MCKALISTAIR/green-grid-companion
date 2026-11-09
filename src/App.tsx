@@ -25,6 +25,8 @@ import { SplashScreen } from '@/components/SplashScreen';
 import { DeepLinkHandler } from '@/components/DeepLinkHandler';
 import { CookieConsent } from '@/components/CookieConsent';
 import { LocationProvider } from '@/contexts/LocationContext';
+import { HelmetProvider } from 'react-helmet-async';
+import { RouteMetadata } from '@/components/RouteMetadata';
 
 // Primary tabs are eager so dock/side-nav switches never suspend mid-slide.
 import Index from './pages/Index';
@@ -142,6 +144,7 @@ function AppContent() {
       {/* Position/offset live in ui/sonner.tsx: bottom above the dock on phones, top on desktop. */}
       <Sonner />
       <BrowserRouter>
+        <RouteMetadata />
         <ComponentErrorBoundary name="Status Bar Manager">
           <StatusBarManager />
         </ComponentErrorBoundary>
@@ -183,6 +186,7 @@ function AppContent() {
 }
 
 const App = () => (
+  <HelmetProvider>
   <PersistQueryClientProvider
     client={queryClient}
     persistOptions={{ persister, maxAge: 1000 * 60 * 60 * 24, buster: QUERY_CACHE_BUSTER }}
@@ -201,6 +205,7 @@ const App = () => (
       </TooltipProvider>
     </ThemeProvider>
   </PersistQueryClientProvider>
+  </HelmetProvider>
 );
 
 export default App;

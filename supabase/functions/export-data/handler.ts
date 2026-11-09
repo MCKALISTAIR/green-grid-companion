@@ -54,11 +54,6 @@ export async function handleExportData(req: Request, depsIn?: Deps): Promise<Res
       consumptionResult,
       footprintResult,
       dispatchesResult,
-      teslaCredentialsResult,
-      teslaVehiclesResult,
-      teslaChargingResult,
-      teslaEnergyDataResult,
-      teslaEnergySitesResult,
       preferencesResult,
       pushSubscriptionsResult,
     ] = await Promise.all([
@@ -85,23 +80,6 @@ export async function handleExportData(req: Request, depsIn?: Deps): Promise<Res
         .select('*')
         .eq('user_id', userId)
         .order('start_time', { ascending: false }),
-      // Exclude sensitive tokens - only export metadata
-      adminClient
-        .from('tesla_credentials')
-        .select('created_at, updated_at, token_expires_at')
-        .eq('user_id', userId),
-      adminClient.from('tesla_vehicles').select('*').eq('user_id', userId),
-      adminClient
-        .from('tesla_charging_sessions')
-        .select('*')
-        .eq('user_id', userId)
-        .order('started_at', { ascending: false }),
-      adminClient
-        .from('tesla_energy_data')
-        .select('*')
-        .eq('user_id', userId)
-        .order('timestamp', { ascending: false }),
-      adminClient.from('tesla_energy_sites').select('*').eq('user_id', userId),
       adminClient.from('user_preferences').select('*').eq('user_id', userId),
       adminClient
         .from('push_subscriptions')
@@ -115,7 +93,7 @@ export async function handleExportData(req: Request, depsIn?: Deps): Promise<Res
         exported_at: new Date().toISOString(),
         user_id: userId,
         email: user.email,
-        format_version: '1.0',
+        format_version: '1.1',
         description:
           'Copy of your personal data under the UK GDPR (Articles 15 and 20: right of access and right to data portability) and the Data Protection Act 2018',
       },
@@ -137,18 +115,6 @@ export async function handleExportData(req: Request, depsIn?: Deps): Promise<Res
         carbon_footprint: footprintResult.data || [],
         intelligent_dispatches: dispatchesResult.data || [],
       },
-      tesla: {
-        credentials:
-          teslaCredentialsResult.data?.map((c: Record<string, unknown>) => ({
-            created_at: c.created_at,
-            updated_at: c.updated_at,
-            token_expires_at: c.token_expires_at,
-          })) || [],
-        vehicles: teslaVehiclesResult.data || [],
-        charging_sessions: teslaChargingResult.data || [],
-        energy_data: teslaEnergyDataResult.data || [],
-        energy_sites: teslaEnergySitesResult.data || [],
-      },
       preferences: preferencesResult.data?.[0] || null,
       // Push notification settings for devices linked to this account. The device
       // token itself is a delivery credential, so only its last 6 characters are shown.
@@ -166,10 +132,6 @@ export async function handleExportData(req: Request, depsIn?: Deps): Promise<Res
       (consumptionResult.data?.length || 0) +
       (footprintResult.data?.length || 0) +
       (dispatchesResult.data?.length || 0) +
-      (teslaVehiclesResult.data?.length || 0) +
-      (teslaChargingResult.data?.length || 0) +
-      (teslaEnergyDataResult.data?.length || 0) +
-      (teslaEnergySitesResult.data?.length || 0) +
       (pushSubscriptionsResult.data?.length || 0);
 
     console.log(

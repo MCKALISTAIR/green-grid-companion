@@ -1,6 +1,5 @@
 -- Policy/privilege assertions for 20261003120000_security_hardening.sql
 -- and 20261010170000_anon_access_tidy.sql
--- and 20261011090000_tesla_credentials_token_privacy.sql
 \set ON_ERROR_STOP 1
 \pset footer off
 SET client_min_messages = warning;
@@ -106,7 +105,6 @@ INSERT INTO public.carbon_footprint (interval_start, interval_end, consumption_k
   ('2026-10-01 00:00Z', '2026-10-01 00:30Z', 0.7, 100, 70, 'low', 'M-2');
 INSERT INTO public.octopus_intelligent_dispatches (user_id, mpan, dispatch_type, start_time, end_time) VALUES
   ('11111111-1111-1111-1111-111111111111', 'M-1', 'completed', '2026-10-01 01:00Z', '2026-10-01 02:00Z');
-INSERT INTO public.tesla_vehicles (user_id, vehicle_id) VALUES ('11111111-1111-1111-1111-111111111111', 'V1'), ('22222222-2222-2222-2222-222222222222', 'V2');
 INSERT INTO public.user_preferences (user_id) VALUES ('22222222-2222-2222-2222-222222222222');
 
 -- 6a. The real hole: claiming someone else's MPAN to read their history
@@ -126,12 +124,10 @@ SELECT pg_temp.check('anon cannot read meters', 'anon', NULL, $q$SELECT count(*)
 SELECT pg_temp.check('anon cannot read consumption', 'anon', NULL, $q$SELECT count(*)::text FROM public.octopus_consumption$q$, 'ERR:permission denied%');
 SELECT pg_temp.check('anon cannot read dispatches', 'anon', NULL, $q$SELECT count(*)::text FROM public.octopus_intelligent_dispatches$q$, 'ERR:permission denied%');
 SELECT pg_temp.check('anon cannot read push_subscriptions', 'anon', NULL, $q$SELECT count(*)::text FROM public.push_subscriptions$q$, 'ERR:permission denied%');
-SELECT pg_temp.check('anon cannot read tesla_vehicles', 'anon', NULL, $q$SELECT count(*)::text FROM public.tesla_vehicles$q$, 'ERR:permission denied%');
 SELECT pg_temp.check('anon cannot call user_owns_mpan', 'anon', NULL, $q$SELECT public.user_owns_mpan('M-1')::text$q$, 'ERR:permission denied%');
-SELECT pg_temp.check('anon cannot call has_tesla_linked', 'anon', NULL, $q$SELECT public.has_tesla_linked()::text$q$, 'ERR:permission denied%');
 INSERT INTO results SELECT 'no public-role policies left on tidied tables', count(*) = 0, string_agg(tablename || '.' || policyname, ', ')
   FROM pg_policies WHERE schemaname = 'public' AND 'public' = ANY(roles)
-   AND tablename IN ('octopus_meters','octopus_consumption','carbon_footprint','octopus_intelligent_dispatches','tesla_charging_sessions','tesla_energy_data','tesla_energy_sites','tesla_vehicles','user_preferences');
+   AND tablename IN ('octopus_meters','octopus_consumption','carbon_footprint','octopus_intelligent_dispatches','user_preferences');
 INSERT INTO results SELECT 'duplicate meter policies removed', count(*) = 1, string_agg(policyname, ', ') FROM pg_policies WHERE schemaname = 'public' AND tablename = 'octopus_meters';
 
 -- 6c. Every query the app makes as a signed-in (incl. anonymous) user still works
@@ -145,12 +141,6 @@ SELECT pg_temp.check('app: cannot write another users preferences', 'authenticat
 -- ChargingHistory: select completed dispatches
 SELECT pg_temp.check('app: select own completed dispatches', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$SELECT count(*)::text FROM (SELECT id, dispatch_type, start_time, end_time, charge_kwh, source, location, created_at, avg_intensity_gco2, carbon_used_g, carbon_saved_g FROM public.octopus_intelligent_dispatches WHERE dispatch_type = 'completed' ORDER BY start_time DESC LIMIT 100) d$q$, 'OK:1');
 SELECT pg_temp.check('app: other users see no dispatches', 'authenticated', '22222222-2222-2222-2222-222222222222', $q$SELECT count(*)::text FROM public.octopus_intelligent_dispatches$q$, 'OK:0');
--- tesla-energy disconnect (user-scoped client): delete own vehicles / sites / credentials
-SELECT pg_temp.check('tesla disconnect: delete own vehicles', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$WITH d AS (DELETE FROM public.tesla_vehicles WHERE user_id = '11111111-1111-1111-1111-111111111111' RETURNING 1) SELECT count(*)::text FROM d$q$, 'OK:1');
-SELECT pg_temp.check('tesla disconnect: cannot delete others vehicles', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$WITH d AS (DELETE FROM public.tesla_vehicles RETURNING 1) SELECT count(*)::text FROM d$q$, 'OK:0');
-SELECT pg_temp.check('tesla disconnect: delete own energy sites', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$WITH d AS (DELETE FROM public.tesla_energy_sites WHERE user_id = '11111111-1111-1111-1111-111111111111' RETURNING 1) SELECT count(*)::text FROM d$q$, 'OK:0');
-SELECT pg_temp.check('tesla disconnect: delete own tesla credentials', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$WITH d AS (DELETE FROM public.tesla_credentials WHERE user_id = '11111111-1111-1111-1111-111111111111' RETURNING 1) SELECT count(*)::text FROM d$q$, 'OK:0');
-SELECT pg_temp.check('app: has_tesla_linked works when signed in', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$SELECT public.has_tesla_linked()::text$q$, 'OK:false');
 SELECT pg_temp.check('app: push subscriptions own-row select', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$SELECT count(*)::text FROM public.push_subscriptions$q$, 'OK:0');
 
 -- 6d. No plaintext Octopus keys
@@ -158,21 +148,6 @@ INSERT INTO results SELECT 'no-plaintext constraint added (0 plaintext keys at m
 SELECT pg_temp.check('service_role cannot store a plaintext key', 'service_role', NULL, $q$UPDATE public.octopus_credentials SET api_key = 'sk_live_x' WHERE user_id = '11111111-1111-1111-1111-111111111111' RETURNING user_id::text$q$, 'ERR:%octopus_credentials_no_plaintext%');
 SELECT pg_temp.check('service_role can still store an encrypted key', 'service_role', NULL, $q$INSERT INTO public.octopus_credentials (user_id, account_number, api_key, api_key_encrypted, api_key_hint) VALUES ('11111111-1111-1111-1111-111111111111','A-11111111',NULL,'v1.eee.fff','EEEE') ON CONFLICT (user_id) DO UPDATE SET api_key = excluded.api_key, api_key_encrypted = excluded.api_key_encrypted RETURNING api_key_hint$q$, 'OK:AAAA');
 
--- 7. tesla_credentials tokens (20261011090000_tesla_credentials_token_privacy.sql)
-INSERT INTO public.tesla_credentials (user_id, access_token, refresh_token, token_expires_at) VALUES
-  ('11111111-1111-1111-1111-111111111111', 'tesla_access_1', 'tesla_refresh_1', now() + interval '1 hour'),
-  ('22222222-2222-2222-2222-222222222222', 'tesla_access_2', 'tesla_refresh_2', now() + interval '1 hour');
-SELECT pg_temp.check('anon cannot read tesla_credentials', 'anon', NULL, $q$SELECT count(*)::text FROM public.tesla_credentials$q$, 'ERR:permission denied%');
-SELECT pg_temp.check('user cannot read own tesla access_token', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$SELECT access_token FROM public.tesla_credentials LIMIT 1$q$, 'ERR:permission denied%');
-SELECT pg_temp.check('user cannot read own tesla refresh_token', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$SELECT refresh_token FROM public.tesla_credentials LIMIT 1$q$, 'ERR:permission denied%');
-SELECT pg_temp.check('user cannot select * from tesla_credentials', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$SELECT count(*)::text FROM (SELECT * FROM public.tesla_credentials) s$q$, 'ERR:permission denied%');
-SELECT pg_temp.check('user sees only own tesla row (safe columns)', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$SELECT string_agg(user_id::text, ',') FROM public.tesla_credentials WHERE token_expires_at > now()$q$, 'OK:11111111-1111-1111-1111-111111111111');
-SELECT pg_temp.check('user cannot insert tesla tokens', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$INSERT INTO public.tesla_credentials (user_id, access_token, refresh_token, token_expires_at) VALUES ('11111111-1111-1111-1111-111111111111','a','b',now()) RETURNING user_id::text$q$, 'ERR:permission denied%');
-SELECT pg_temp.check('user cannot update tesla tokens', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$UPDATE public.tesla_credentials SET access_token = 'x' RETURNING user_id::text$q$, 'ERR:permission denied%');
-SELECT pg_temp.check('app: has_tesla_linked true with a live token', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$SELECT public.has_tesla_linked()::text$q$, 'OK:true');
-SELECT pg_temp.check('service_role can read tesla tokens', 'service_role', NULL, $q$SELECT access_token FROM public.tesla_credentials WHERE user_id = '22222222-2222-2222-2222-222222222222'$q$, 'OK:tesla_access_2');
-SELECT pg_temp.check('tesla unlink: user cannot delete others tesla credentials', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$WITH d AS (DELETE FROM public.tesla_credentials WHERE user_id = '22222222-2222-2222-2222-222222222222' RETURNING 1) SELECT count(*)::text FROM d$q$, 'OK:0');
-SELECT pg_temp.check('tesla unlink: user deletes own tesla credentials', 'authenticated', '11111111-1111-1111-1111-111111111111', $q$WITH d AS (DELETE FROM public.tesla_credentials WHERE user_id = '11111111-1111-1111-1111-111111111111' RETURNING 1) SELECT count(*)::text FROM d$q$, 'OK:1');
 
 SELECT CASE WHEN ok THEN 'PASS' ELSE 'FAIL' END AS result, name, CASE WHEN ok THEN '' ELSE detail END AS detail FROM results;
 SELECT count(*) FILTER (WHERE ok) AS passed, count(*) FILTER (WHERE NOT ok) AS failed FROM results;
