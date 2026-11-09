@@ -85,7 +85,7 @@ describe('CitySceneLayers city variant', () => {
     const found = art(container);
     expect(found).not.toContain('far-crane');
     expect(found).toContain('princes-street-gardens');
-    expect(container.querySelector('[data-scene-gas-plant], [data-gas-plant]')).toBeNull();
+    expect(container.querySelector('[data-art="city-gas-plant"]')).toBeNull();
     expect(found.some((a) => a.includes('gas'))).toBe(false);
   });
 
