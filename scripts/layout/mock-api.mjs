@@ -247,10 +247,10 @@ export async function installMocks(context, scenarioIn = {}) {
 }
 
 /** localStorage seed: onboarding done, no tour/splash/notification ask (#52), consent declined, South Scotland postcode. */
-export function seedStorage({ postcode = 'EH1 1YZ', theme = 'light' } = {}) {
+export function seedStorage({ postcode = 'EH1 1YZ', theme = 'light', skipSplash = true } = {}) {
   return `(() => {
     if (sessionStorage.getItem('__seeded')) return; sessionStorage.setItem('__seeded', '1');
-    const s = { 'onboarding_complete': 'true', 'product_tour_seen': 'true', 'skip_splash': 'true',
+    const s = { 'onboarding_complete': 'true', 'product_tour_seen': 'true', 'skip_splash': String(skipSplash),
       'gridsense-notification-nudge': 'no', 'cookie-consent': 'declined', 'cookie-consent-version': '2', 'gridgreen-postcode': ${JSON.stringify(postcode)},
       'vite-ui-theme': ${JSON.stringify(theme)} };
     for (const [k, v] of Object.entries(s)) localStorage.setItem(k, v);

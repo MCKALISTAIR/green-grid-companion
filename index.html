@@ -97,16 +97,9 @@
         );
       }
 
-      /* Inline splash: painted before any JS loads (React replaces #root's
-         children on first render). Without it, slow 2G showed 8s+ of white. */
-      .gs-splash {
-        position: fixed;
-        inset: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 14px;
+      /* Static first screen: useful with or without JavaScript. React replaces it
+       with the live app, so no made-up live reading is ever shown here. */
+      body {
         background: #f1f7f9;
         color: #0f172a;
         font-family:
@@ -114,40 +107,164 @@
           -apple-system,
           'Segoe UI',
           sans-serif;
+        -webkit-font-smoothing: antialiased;
       }
-      .gs-splash img {
-        width: 72px;
-        height: 72px;
-        border-radius: 18px;
+      .gs-first-screen {
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        padding: max(24px, env(safe-area-inset-top)) 20px max(32px, env(safe-area-inset-bottom));
+        background:
+          radial-gradient(circle at 85% 10%, rgb(16 185 129 / 0.11), transparent 45%),
+          linear-gradient(160deg, #f1f7f9, #e7f4ee);
       }
-      .gs-splash p {
-        margin: 0;
-        font-size: 15px;
+      .gs-first-screen-card {
+        width: 100%;
+        max-width: 520px;
+        padding: 28px;
+        border: 1px solid rgb(15 23 42 / 0.09);
+        border-radius: 24px;
+        background: #ffffff;
+        box-shadow: 0 20px 60px -30px rgb(15 23 42 / 0.3);
+      }
+      .gs-first-screen-brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 20px;
+      }
+      .gs-first-screen-brand img {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+      }
+      .gs-first-screen-brand span {
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+      .gs-first-screen-eyebrow {
+        margin: 0 0 10px;
+        color: #047857;
+        font-size: 13px;
         font-weight: 600;
-        letter-spacing: 0.02em;
-        opacity: 0.8;
+        letter-spacing: 0.01em;
+        text-transform: none;
       }
-      .gs-splash .gs-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: #10b981;
-        animation: gs-pulse 1.2s ease-in-out infinite;
+      .gs-first-screen h1 {
+        max-width: 430px;
+        margin: 0;
+        font-size: clamp(28px, 8vw, 40px);
+        line-height: 1.1;
+        letter-spacing: -0.035em;
       }
-      @keyframes gs-pulse {
-        50% {
-          opacity: 0.25;
+      .gs-first-screen-description {
+        margin: 18px 0 0;
+        color: #334155;
+        font-size: 16px;
+        line-height: 1.6;
+      }
+      .gs-first-screen-preview {
+        width: 100%;
+        height: auto;
+        display: block;
+        margin: 16px 0;
+        border: 1px solid rgb(15 23 42 / 0.1);
+        border-radius: 12px;
+      }
+      .gs-first-screen-cta {
+        display: flex;
+        min-height: 48px;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 20px;
+        border-radius: 12px;
+        background: #047857;
+        color: #ffffff;
+        font-weight: 700;
+        text-decoration: none;
+      }
+      .gs-first-screen-source {
+        margin: 20px 0 0;
+        color: #475569;
+        font-size: 12px;
+        line-height: 1.6;
+        text-align: center;
+      }
+      .gs-first-screen-links {
+        margin: 6px 0 0;
+        color: #475569;
+        font-size: 12px;
+        line-height: 1.6;
+        text-align: center;
+        white-space: nowrap;
+      }
+      .gs-first-screen-source a,
+      .gs-first-screen-links a {
+        color: inherit;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+        white-space: nowrap;
+      }
+      @media (max-height: 650px) {
+        .gs-first-screen {
+          align-items: flex-start;
+          padding-top: max(16px, env(safe-area-inset-top));
+          padding-bottom: max(16px, env(safe-area-inset-bottom));
         }
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .gs-splash .gs-dot {
-          animation: none;
+        .gs-first-screen-card {
+          padding: 20px;
+        }
+        .gs-first-screen-brand {
+          margin-bottom: 16px;
+        }
+        .gs-first-screen-brand img {
+          width: 48px;
+          height: 48px;
+        }
+        .gs-first-screen-eyebrow {
+          margin-bottom: 8px;
+        }
+        .gs-first-screen h1 {
+          font-size: 28px;
+        }
+        .gs-first-screen-description {
+          margin-top: 12px;
+          line-height: 1.45;
+        }
+        .gs-first-screen-preview {
+          display: none;
+        }
+        .gs-first-screen-cta {
+          margin-top: 18px;
+        }
+        .gs-first-screen-source {
+          margin-top: 14px;
+        }
+        .gs-first-screen-links {
+          margin-top: 4px;
         }
       }
       @media (prefers-color-scheme: dark) {
-        .gs-splash {
+        body,
+        .gs-first-screen {
           background: #0f172a;
           color: #e2e8f0;
+        }
+        .gs-first-screen-card {
+          border-color: rgb(226 232 240 / 0.12);
+          background: #172033;
+        }
+        .gs-first-screen-eyebrow {
+          color: #6ee7b7;
+        }
+        .gs-first-screen-description,
+        .gs-first-screen-source,
+        .gs-first-screen-links {
+          color: #cbd5e1;
         }
       }
     </style>
@@ -155,11 +272,34 @@
 
   <body>
     <div id="root">
-      <div class="gs-splash" role="status" aria-label="Loading GridSense">
-        <img src="/icon-192.png" alt="" width="72" height="72" />
-        <p>GridSense</p>
-        <span class="gs-dot" aria-hidden="true"></span>
-      </div>
+      <main class="gs-first-screen">
+        <div class="gs-first-screen-card">
+          <div class="gs-first-screen-brand">
+            <img src="/icon-192.png" alt="" width="56" height="56" />
+            <span>GridSense</span>
+          </div>
+          <p class="gs-first-screen-eyebrow">Great Britain's electricity, at a glance</p>
+          <h1>Know when your electricity is cleanest.</h1>
+          <p class="gs-first-screen-description">
+            Track GB carbon intensity and find the cleanest times to use electricity. Get a local
+            forecast, then plan your dishwasher, washing machine or EV charge around it.
+          </p>
+          <img
+            class="gs-first-screen-preview"
+            src="/og-image.png"
+            alt="GB carbon intensity: know when your electricity is cleanest, and plan around it."
+            width="1200"
+            height="630"
+          />
+          <a class="gs-first-screen-cta" href="/">See today's intensity</a>
+          <p class="gs-first-screen-source">Uses forecast and estimated data from NESO.</p>
+          <p class="gs-first-screen-links">
+            <a href="/help">How it works</a>
+            ·
+            <a href="/privacy">Privacy</a>
+          </p>
+        </div>
+      </main>
     </div>
 
     <script>

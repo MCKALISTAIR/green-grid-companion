@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { SplashScreen as CapacitorSplashScreen } from '@capacitor/splash-screen';
 import { onFirstContent } from '@/lib/firstContent';
+import { Capacitor } from '@capacitor/core';
 
 interface SplashScreenProps {
   onComplete?: () => void;
@@ -12,25 +13,32 @@ export const SPLASH_CAP_MS = 1200;
 export const SPLASH_FADE_MS = 200;
 
 /**
- * Web splash. No minimum display time: the native splash hands straight to this,
- * and it crossfades out as soon as the home screen has a number to show (fresh or
- * cached), or after SPLASH_CAP_MS at the latest. Same markup/styles as the inline
- * splash in index.html (`.gs-splash`), so the JS taking over is not a visible jump.
+ * The useful static introduction lives in index.html, not a second splash. On web,
+ * leave the product information in place over the app's loading states (onboarding
+ * or a home loading skeleton). It is a static shell, not a fake gauge or a skeleton.
+ * Native keeps the old first-content web splash after its custom native launch screen hides.
  */
 export function SplashScreen({ onComplete }: SplashScreenProps) {
+  const isNative = Capacitor.isNativePlatform();
   const [fading, setFading] = useState(false);
-  const [gone, setGone] = useState(false);
+  const [gone, setGone] = useState(!isNative);
 
   useEffect(() => {
-    CapacitorSplashScreen.hide().catch(() => {
+    void CapacitorSplashScreen.hide().catch(() => {
       /* web or already hidden */
     });
 
+    // Onboarding has its own branded introduction and is already mounted behind the static shell.
+    if (!isNative && localStorage.getItem('onboarding_complete') !== 'true') {
+      onComplete?.();
+      return;
+    }
+
     let doneTimer: ReturnType<typeof setTimeout> | undefined;
-    let started = false;
+    let done = false;
     const finish = () => {
-      if (started) return;
-      started = true;
+      if (done) return;
+      done = true;
       setFading(true);
       doneTimer = setTimeout(() => {
         setGone(true);
