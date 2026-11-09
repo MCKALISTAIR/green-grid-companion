@@ -12,6 +12,9 @@ describe('static first screen', () => {
       'Track GB carbon intensity and find the cleanest times to use electricity.',
     );
     expect(root).toContain('href="/"');
+    expect(root).toContain("See today's intensity");
+    expect(root).toContain('How it works');
+    expect(root).toContain("Great Britain's electricity, at a glance");
     expect(root).toContain('href="/privacy"');
     expect(root).toContain('src="/og-image.png"');
   });

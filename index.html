@@ -149,10 +149,10 @@
       .gs-first-screen-eyebrow {
         margin: 0 0 10px;
         color: #047857;
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        text-transform: none;
       }
       .gs-first-screen h1 {
         max-width: 430px;
@@ -194,10 +194,20 @@
         line-height: 1.6;
         text-align: center;
       }
-      .gs-first-screen-source a {
+      .gs-first-screen-links {
+        margin: 6px 0 0;
+        color: #475569;
+        font-size: 12px;
+        line-height: 1.6;
+        text-align: center;
+        white-space: nowrap;
+      }
+      .gs-first-screen-source a,
+      .gs-first-screen-links a {
         color: inherit;
         text-decoration: underline;
         text-underline-offset: 2px;
+        white-space: nowrap;
       }
       @media (max-height: 650px) {
         .gs-first-screen {
@@ -234,6 +244,9 @@
         .gs-first-screen-source {
           margin-top: 14px;
         }
+        .gs-first-screen-links {
+          margin-top: 4px;
+        }
       }
       @media (prefers-color-scheme: dark) {
         body,
@@ -249,7 +262,8 @@
           color: #6ee7b7;
         }
         .gs-first-screen-description,
-        .gs-first-screen-source {
+        .gs-first-screen-source,
+        .gs-first-screen-links {
           color: #cbd5e1;
         }
       }
@@ -277,10 +291,11 @@
             width="1200"
             height="630"
           />
-          <a class="gs-first-screen-cta" href="/">See the GB average</a>
-          <p class="gs-first-screen-source">
-            Uses forecast and estimated data from NESO.
-            <a href="/help">How it works</a> ·
+          <a class="gs-first-screen-cta" href="/">See today's intensity</a>
+          <p class="gs-first-screen-source">Uses forecast and estimated data from NESO.</p>
+          <p class="gs-first-screen-links">
+            <a href="/help">How it works</a>
+            ·
             <a href="/privacy">Privacy</a>
           </p>
         </div>
