@@ -28,6 +28,8 @@ import { shouldBlockFraming } from './lib/frameGuard';
 
 // BH-119: read Google/Apple sign-in tokens from the URL before anything can
 // navigate (the "no postcode -> /onboarding" redirect used to drop them).
+// The native app uses only its HTTPS universal link with state and PKCE; there
+// is deliberately no custom-scheme token forwarding here or in nativeAuth.ts.
 const oauthReturn =
   typeof window !== 'undefined' ? captureOAuthRedirect(window.location.href) : null;
 // BH-145/146: take tokens out of the address bar straight away, before

@@ -7,8 +7,9 @@ import { captureOAuthRedirect, completeOAuthRedirect } from '@/lib/oauthRedirect
 import { consumeOAuthStart } from '@/lib/oauthIntent';
 
 /**
- * Native sign-in return (DeepLinkHandler routes GridSense://auth/callback and
- * https://getgridsense.com/auth/callback here, tokens in the hash).
+ * Existing protected web sign-in return. Native Apple/Google sign-in is
+ * completed through nativeAuth.ts, and its HTTPS universal link never reaches
+ * this implicit-token path on the website.
  *
  * BH-145: tokens are only used if this device started a sign-in in the last
  * few minutes (oauthIntent.ts). Tokens in the query string are never used.

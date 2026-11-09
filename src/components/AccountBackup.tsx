@@ -22,9 +22,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { User } from '@supabase/supabase-js';
 import { Capacitor } from '@capacitor/core';
-import { nativeAuthRedirectUri } from '@/config';
 import { getAppleAuthorizationForDeletion } from '@/lib/appleRevocation';
 import { ANON_PROOF_KEY, ANON_USER_ID_KEY, rememberAnonUserId } from '@/lib/anonMigration';
+import { nativeSignIn } from '@/lib/nativeAuth';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -111,21 +111,18 @@ export function AccountBackup({
     try {
       const isLocalhost =
         window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      let redirectUri: string;
 
-      if (Capacitor.isNativePlatform()) {
-        redirectUri = nativeAuthRedirectUri();
-      } else if (isLocalhost) {
-        // Localhost can't be used as OAuth redirect — use the preview URL instead
-        redirectUri = 'https://gridsense-app.lovable.app';
-      } else {
-        redirectUri = window.location.origin;
-      }
-
-      markOAuthStart();
-      const { error } = await lovable.auth.signInWithOAuth(provider, {
-        redirect_uri: redirectUri,
-      });
+      // Keep the web broker's separately generated state and local intent marker.
+      // Native Google uses Supabase PKCE through the system browser instead;
+      // Apple uses the native identity-token flow (no browser return).
+      if (!Capacitor.isNativePlatform()) markOAuthStart();
+      const { error } = Capacitor.isNativePlatform()
+        ? await nativeSignIn(provider, { auth: supabase.auth })
+        : await lovable.auth.signInWithOAuth(provider, {
+            redirect_uri: isLocalhost
+              ? 'https://gridsense-app.lovable.app'
+              : window.location.origin,
+          });
 
       if (error) {
         clearOAuthStart();
@@ -244,20 +241,15 @@ export function AccountBackup({
       // Sign in with the new provider
       const isLocalhost =
         window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      let redirectUri: string;
 
-      if (Capacitor.isNativePlatform()) {
-        redirectUri = nativeAuthRedirectUri();
-      } else if (isLocalhost) {
-        redirectUri = 'https://gridsense-app.lovable.app';
-      } else {
-        redirectUri = window.location.origin;
-      }
-
-      markOAuthStart();
-      const { error } = await lovable.auth.signInWithOAuth(switchTarget, {
-        redirect_uri: redirectUri,
-      });
+      if (!Capacitor.isNativePlatform()) markOAuthStart();
+      const { error } = Capacitor.isNativePlatform()
+        ? await nativeSignIn(switchTarget, { auth: supabase.auth })
+        : await lovable.auth.signInWithOAuth(switchTarget, {
+            redirect_uri: isLocalhost
+              ? 'https://gridsense-app.lovable.app'
+              : window.location.origin,
+          });
 
       if (error) {
         clearOAuthStart();

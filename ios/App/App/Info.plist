@@ -63,15 +63,6 @@
     <array>
         <dict>
             <key>CFBundleURLName</key>
-            <string>com.greengrid.companion</string>
-            <key>CFBundleURLSchemes</key>
-            <array>
-                <string>GridSense</string>
-                <string>gridsense</string>
-            </array>
-        </dict>
-        <dict>
-            <key>CFBundleURLName</key>
             <string>Google Sign-In</string>
             <key>CFBundleURLSchemes</key>
             <array>
