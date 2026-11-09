@@ -225,7 +225,7 @@ export function LocationManager({
               role="combobox"
               aria-expanded={open}
               aria-label="Select location"
-              className="w-auto max-w-[220px] justify-between bg-card/80 backdrop-blur-sm border-border/50 shadow-md h-10"
+              className="w-auto max-w-[220px] justify-between bg-card border-border shadow-sm h-10"
             >
               <div className="flex items-center gap-2 truncate">
                 {savedLocation ? (
@@ -249,7 +249,7 @@ export function LocationManager({
           )}
         </PickerTrigger>
         <PickerContent
-          className="w-[320px] p-0 bg-card border-border backdrop-blur-xl"
+          className="w-[320px] p-0 bg-card border-border"
           {...(sheet ? { sheetClassName: 'bg-background' } : {})}
         >
           {sheet && (

@@ -1,5 +1,20 @@
 # Visual QA polish
 
+# SEO findings
+
+- [x] Verify existing Planner/Rank H1s and correct sequential section headings.
+- [x] Make canonical and Open Graph addresses follow the current route; verify direct entry without publishing (Planner, Rank and a guide; four regression tests passed).
+
+# Logic consistency audit
+
+- [x] Revalidate the earlier audit and distinguish proven bugs from differing definitions.
+- [x] Record zero-floor savings and 0–100 limits for both alert types.
+- [x] Apply the requested confirmed corrections without changing the design or live data.
+- [x] Implement accounting, coverage, timing and selected-period corrections with regression tests; full suite passes.
+- [x] Check signed-in Settings and Plan; no deployment or live-data repairs performed.
+- [ ] Verify linked Footprint and actual report/charging delivery end-to-end: blocked by unavailable linked meter readings and separate deployment approval.
+- [ ] Diagnose the historical July sync cutoff: blocked by unavailable incident logs; do not call Octopus with a user's key.
+
 - [x] Correct Settings tour hand-off to Home/Intensity and safe-area toasts.
 - [x] Fix scene hit areas, HUD contrast and wide haze.
 - [x] Fix demand card wrapping and information buttons.

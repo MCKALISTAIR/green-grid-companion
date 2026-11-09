@@ -1,4 +1,5 @@
 import { verifyAnonOwnership } from '../_shared/migration-proof.ts';
+import { dispatchCarbon } from '../_shared/dispatch-carbon.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // Hack to make VS Code happy with Deno globals in a Node workspace
@@ -1422,7 +1423,7 @@ Deno.serve(async (req: Request) => {
           if (existing) {
             avgIntensity = existing.avg;
             carbonUsedG = existing.used;
-            carbonSavedG = existing.saved;
+            carbonSavedG = existing.saved === null ? null : Math.max(0, existing.saved);
           } else if (chargeKwh > 0) {
             // Only fetch intensity for dispatches we haven't calculated yet
             try {
@@ -1435,18 +1436,11 @@ Deno.serve(async (req: Request) => {
                 const intensityJson = await intensityRes.json();
                 const intervals = intensityJson.data || [];
 
-                if (intervals.length > 0) {
-                  const totalIntensity = intervals.reduce(
-                    (
-                      sum: number,
-                      i: { intensity?: { actual?: number | null; forecast?: number | null } },
-                    ) => sum + (i.intensity?.actual ?? i.intensity?.forecast ?? 0),
-                    0,
-                  );
-                  avgIntensity = Math.round(totalIntensity / intervals.length);
-                  carbonUsedG = Math.round(chargeKwh * avgIntensity * 100) / 100;
-                  carbonSavedG =
-                    Math.round((chargeKwh * UK_AVG_INTENSITY - carbonUsedG) * 100) / 100;
+                const metrics = dispatchCarbon(intervals, startTime.getTime(), endTime.getTime(), chargeKwh);
+                if (metrics) {
+                  avgIntensity = metrics.avg;
+                  carbonUsedG = metrics.used;
+                  carbonSavedG = metrics.saved;
                 }
               }
             } catch (err) {

@@ -176,8 +176,10 @@ export const ResponsiveDialogContent = React.forwardRef<
   return (
     <DrawerContent
       ref={ref}
-      // vaul positions snap points against a full-height sheet.
-      className={cn(kept, tall && 'h-[96dvh]', sheetClassName)}
+      // Fit the top detent above the off-screen base. Vaul translates
+      // the paper by (1 - snap) * viewport height: removing that inset from both
+      // edges keeps the bottom reachable at 92% (BH-121).
+      className={cn(kept, tall && 'top-[8dvh] bottom-[8dvh] h-auto', sheetClassName)}
       data-testid="responsive-sheet"
       {...(props as React.ComponentPropsWithoutRef<typeof DrawerContent>)}
       // Focus the sheet itself, not its first input: no keyboard popping over a

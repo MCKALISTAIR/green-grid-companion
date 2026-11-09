@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 import { TurbineSpinner } from '@/components/ui/turbine-spinner';
 import { formatDistanceToNow } from 'date-fns';
-import { getImpactEquivalents } from '@/lib/impact-conversions';
+import { DESNZ_2025_SOURCE_URL, getImpactEquivalents } from '@/lib/impact-conversions';
 import { useSettings } from '@/hooks/useSettings';
 import { getAverageDailyKwh, getHouseTypeLabel } from '@/lib/energy-standards';
 import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
@@ -50,7 +50,9 @@ import {
   Bar,
   Cell,
 } from 'recharts';
-import { format, parseISO, startOfDay, getHours } from 'date-fns';
+import { format, parseISO } from 'date-fns';
+import { footprintPeriod, footprintBuckets } from '@/lib/footprintPeriod';
+import { formatLondonTime } from '@/lib/londonTime';
 import { ComponentErrorBoundary } from '@/components/ComponentErrorBoundary';
 import { EstimateDisclaimer } from '@/components/attribution/EstimateDisclaimer';
 import { GreenScoreExplainerContent } from '@/components/GreenScoreExplainer';
@@ -122,99 +124,30 @@ export function FootprintView() {
     if (selectedDate) return selectedDate;
     // Default to most recent available data date
     if (availableDates?.maxDate) {
-      return startOfDay(parseISO(availableDates.maxDate));
+      return parseISO(availableDates.maxDate);
     }
     // Fallback to today
     return new Date();
   }, [selectedDate, availableDates]);
 
-  // Aggregate data based on time range and selected date
-  const dailyData = useMemo(() => {
-    if (!footprint?.records?.length) return [];
-
-    // Filter records based on selected date and time range
-    let filteredRecords = footprint.records;
-
-    if (timeRange === 'day') {
-      // Show only data for the selected day
-      const dayStart = startOfDay(effectiveDate);
-      const dayEnd = new Date(dayStart);
-      dayEnd.setDate(dayEnd.getDate() + 1);
-
-      filteredRecords = footprint.records.filter((record) => {
-        const recordDate = parseISO(record.interval_start);
-        return recordDate >= dayStart && recordDate < dayEnd;
-      });
-    } else if (timeRange === 'week') {
-      // Show 7 days starting from selected date
-      const weekStart = startOfDay(effectiveDate);
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekEnd.getDate() + 7);
-
-      filteredRecords = footprint.records.filter((record) => {
-        const recordDate = parseISO(record.interval_start);
-        return recordDate >= weekStart && recordDate < weekEnd;
-      });
-    }
-    // For month and year, use all available data (no filtering needed)
-
-    const aggregated: Record<string, { carbon_kg: number; kwh: number; date: Date }> = {};
-
-    for (const record of filteredRecords) {
-      let key: string;
-      let date: Date;
-
-      // Aggregation strategy
-      if (timeRange === 'day') {
-        // Keep hourly data
-        date = parseISO(record.interval_start);
-        // Key by hour
-        key = format(date, 'yyyy-MM-dd HH:00');
-      } else if (timeRange === 'year') {
-        // Aggregate by month
-        date = startOfDay(parseISO(record.interval_start));
-        // Set to 1st of month for grouping
-        date.setDate(1);
-        key = format(date, 'yyyy-MM');
-      } else {
-        // Default: Aggregate by day (Week/Month views)
-        date = startOfDay(parseISO(record.interval_start));
-        key = date.toISOString();
-      }
-
-      if (!aggregated[key]) {
-        aggregated[key] = { carbon_kg: 0, kwh: 0, date };
-      }
-      aggregated[key].carbon_kg += Number(record.carbon_g) / 1000;
-      aggregated[key].kwh += Number(record.consumption_kwh);
-    }
-
-    return Object.values(aggregated)
-      .sort((a, b) => a.date.getTime() - b.date.getTime())
-      .map((d) => {
-        let dateParams = '';
-        if (timeRange === 'day') dateParams = 'HH:mm';
-        else if (timeRange === 'year') dateParams = 'MMM';
-        else dateParams = 'MMM d';
-
-        return {
-          date: format(d.date, dateParams),
-          fullDate: d.date, // Keep full date for sorting/logic if needed
-          carbon_kg: Number(d.carbon_kg.toFixed(2)),
-          kwh: Number(d.kwh.toFixed(2)),
-        };
-      });
-  }, [footprint, timeRange, effectiveDate]);
+  const selectedPeriod = useMemo(
+    () => footprint ? footprintPeriod(footprint, timeRange, effectiveDate) : null,
+    [footprint, timeRange, effectiveDate],
+  );
+  const dailyData = useMemo(
+    () => footprintBuckets(selectedPeriod?.records ?? [], timeRange),
+    [selectedPeriod, timeRange],
+  );
 
   // Calculate insights
   const insights = useMemo(() => {
-    if (!footprint?.summary) return null;
+    if (!selectedPeriod) return null;
 
-    const { by_intensity_index, total_kwh, total_carbon_kg } = footprint.summary;
-    const hasExport = footprint.summary.has_export_meter ?? false;
-    const exportKwh = footprint.summary.export_kwh ?? 0;
-    const exportCarbonKg = footprint.summary.export_carbon_kg ?? 0;
-    const netCarbonKg = footprint.summary.net_carbon_kg ?? total_carbon_kg;
+    const { by_intensity_index, total_kwh, total_carbon_kg } = selectedPeriod.summary;
+    const hasExport = selectedPeriod.summary.has_export_meter ?? false;
+    const exportKwh = selectedPeriod.summary.export_kwh ?? 0;
+    const exportCarbonKg = selectedPeriod.summary.export_carbon_kg ?? 0;
+    const netCarbonKg = selectedPeriod.summary.net_carbon_kg ?? total_carbon_kg;
 
     // Calculate green vs dirty usage
     const greenKwh =
@@ -226,11 +159,11 @@ export function FootprintView() {
       total_kwh > 0 ? ((by_intensity_index['very low']?.kwh || 0) / total_kwh) * 100 : 0;
 
     // Average intensity
-    const avgIntensity = footprint.summary.avg_intensity;
+    const avgIntensity = selectedPeriod.summary.avg_intensity;
 
-    // Potential savings (if all usage was at "very low" ~50g)
+    // Potential savings compared with low-carbon usage at 50g
     const optimalCarbon = (total_kwh * 50) / 1000;
-    const potentialSavings = total_carbon_kg - optimalCarbon;
+    const potentialSavings = Math.max(0, total_carbon_kg - optimalCarbon);
 
     // Actual Savings (compared to average intensity for the period)
     const averageUserCarbon = (total_kwh * avgIntensity) / 1000;
@@ -241,16 +174,7 @@ export function FootprintView() {
     // Household Comparison
     const benchmarkDaily = getAverageDailyKwh(houseType, customAnnualKwh);
     // Calculate actual days in the period based on filtered data
-    const actualDays =
-      dailyData.length > 0
-        ? dailyData.length
-        : timeRange === 'day'
-          ? 1
-          : timeRange === 'week'
-            ? 7
-            : timeRange === 'month'
-              ? 31
-              : 365;
+    const actualDays = selectedPeriod.coveredDays;
     const benchmarkTotal = benchmarkDaily * actualDays;
     const comparisonDiff = total_kwh - benchmarkTotal;
     const comparisonPercent = benchmarkTotal > 0 ? (comparisonDiff / benchmarkTotal) * 100 : 0;
@@ -265,8 +189,8 @@ export function FootprintView() {
 
     // Time of day analysis - More granular periods
     const hourlyUsage: Record<string, number> = {};
-    for (const record of footprint.records || []) {
-      const hour = getHours(parseISO(record.interval_start));
+    for (const record of selectedPeriod.records) {
+      const hour = Number(formatLondonTime(parseISO(record.interval_start)).slice(0, 2));
       const period =
         hour >= 22 || hour < 2
           ? 'late evening'
@@ -301,14 +225,14 @@ export function FootprintView() {
       totalKwh: total_kwh,
       bestPeriod,
       peakPeriod,
-      recordCount: footprint.records?.length || 0,
+      recordCount: selectedPeriod.records.length,
       // Export/net
       hasExport,
       exportKwh,
       exportCarbonKg,
       netCarbonKg,
     };
-  }, [footprint, dailyData, customAnnualKwh, houseType, timeRange]);
+  }, [selectedPeriod, dailyData, customAnnualKwh, houseType]);
 
   // Check and unlock achievements based on insights
   useMemo(() => {
@@ -373,18 +297,18 @@ export function FootprintView() {
 
   // Intensity breakdown for bar chart
   const intensityBreakdown = useMemo(() => {
-    if (!footprint?.summary?.by_intensity_index) return [];
+    if (!selectedPeriod) return [];
 
     const order = ['very low', 'low', 'moderate', 'high', 'very high'];
     return order
-      .filter((idx) => footprint.summary.by_intensity_index[idx])
+      .filter((idx) => selectedPeriod.summary.by_intensity_index[idx])
       .map((idx) => ({
         name: idx.charAt(0).toUpperCase() + idx.slice(1),
-        kwh: Number(footprint.summary.by_intensity_index[idx].kwh.toFixed(1)),
-        carbon: Number((footprint.summary.by_intensity_index[idx].carbon_g / 1000).toFixed(2)),
+        kwh: Number(selectedPeriod.summary.by_intensity_index[idx].kwh.toFixed(1)),
+        carbon: Number((selectedPeriod.summary.by_intensity_index[idx].carbon_g / 1000).toFixed(2)),
         index: idx,
       }));
-  }, [footprint]);
+  }, [selectedPeriod]);
 
   // Wait for Octopus status before painting the unlinked CTA (avoids mid-load flash).
   if (statusLoading && !isLinked) {
@@ -946,7 +870,11 @@ export function FootprintView() {
                   {/* Miles Driven */}
                   <Popover>
                     <PopoverTrigger asChild>
-                      <div className="p-3 bg-muted/30 rounded-lg flex flex-col items-center text-center gap-2 border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors">
+                      <button
+                        type="button"
+                        className="p-3 bg-muted/30 rounded-lg flex flex-col items-center text-center gap-2 border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors"
+                        aria-label="About the petrol car mileage comparison"
+                      >
                         <Car className="w-5 h-5 text-primary" />
                         <div>
                           <p className="text-lg font-bold font-mono tabular-nums text-foreground">
@@ -956,7 +884,7 @@ export function FootprintView() {
                             Miles Driven
                           </p>
                         </div>
-                      </div>
+                      </button>
                     </PopoverTrigger>
                     <PopoverContent className="w-60 p-3 text-xs">
                       <p>
@@ -964,7 +892,10 @@ export function FootprintView() {
                         <strong>{insights.impact.milesDriven} miles</strong>.
                       </p>
                       <p className="text-[10px] text-muted-foreground mt-1 text-right">
-                        Source: DESNZ 2025 (0.26 kg CO₂e/mile)
+                        Source:{' '}
+                        <a href={DESNZ_2025_SOURCE_URL} target="_blank" rel="noopener noreferrer">
+                          DESNZ/DEFRA 2025, average petrol car: 0.26187 kg CO₂e/mile
+                        </a>
                       </p>
                     </PopoverContent>
                   </Popover>
@@ -972,7 +903,11 @@ export function FootprintView() {
                   {/* Smartphones */}
                   <Popover>
                     <PopoverTrigger asChild>
-                      <div className="p-3 bg-muted/30 rounded-lg flex flex-col items-center text-center gap-2 border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors">
+                      <button
+                        type="button"
+                        className="p-3 bg-muted/30 rounded-lg flex flex-col items-center text-center gap-2 border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors"
+                        aria-label="About the phone-charge comparison"
+                      >
                         <Smartphone className="w-5 h-5 text-primary" />
                         <div>
                           <p className="text-lg font-bold font-mono tabular-nums text-foreground">
@@ -982,7 +917,7 @@ export function FootprintView() {
                             Phone Charges
                           </p>
                         </div>
-                      </div>
+                      </button>
                     </PopoverTrigger>
                     <PopoverContent className="w-60 p-3 text-xs">
                       <p>
@@ -995,7 +930,11 @@ export function FootprintView() {
                   {/* Kettles (spans the row now the trees tile is gone: C2-02) */}
                   <Popover>
                     <PopoverTrigger asChild>
-                      <div className="col-span-2 p-3 bg-muted/30 rounded-lg flex flex-col items-center text-center gap-2 border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors">
+                      <button
+                        type="button"
+                        className="col-span-2 p-3 bg-muted/30 rounded-lg flex flex-col items-center text-center gap-2 border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors"
+                        aria-label="About the kettle comparison"
+                      >
                         <Coffee className="w-5 h-5 text-primary" />
                         <div>
                           <p className="text-lg font-bold font-mono tabular-nums text-foreground">
@@ -1005,7 +944,7 @@ export function FootprintView() {
                             Kettles Boiled
                           </p>
                         </div>
-                      </div>
+                      </button>
                     </PopoverTrigger>
                     <PopoverContent className="w-60 p-3 text-xs">
                       <p>

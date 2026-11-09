@@ -354,6 +354,7 @@ export async function backfillMeter(
       latestReadingStart: () => forbidden('latestReadingStart'),
       upsertConsumption: () => forbidden('octopus_consumption write'),
       markSynced: () => forbidden('octopus_meters.last_sync_at write'),
+      markSyncError: () => forbidden('octopus_meters.last_sync_error write'),
       recentConsumption: () => Promise.resolve({ data: w.readings, error: null }),
       upsertFootprint: async (rows) => {
         windowRows += rows.length;

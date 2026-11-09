@@ -49,3 +49,13 @@ Deno.test(
     assert(userFilters.every((v) => v === USER.id));
   },
 );
+
+Deno.test('delete-account: never queries retired Tesla tables', async () => {
+  const admin = fakeAdmin({ octopus_meters: [{ mpan: '123' }] });
+  const res = await handleDeleteAccount(post('Bearer good-token'), {
+    getUser: fakeGetUser(),
+    admin: () => admin.client,
+  });
+  assertEquals(res.status, 200);
+  assert(admin.queries.every((query) => !query.table.startsWith('tesla_')));
+});

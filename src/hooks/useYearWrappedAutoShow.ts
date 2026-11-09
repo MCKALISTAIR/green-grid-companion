@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
+import { londonDateKey } from '@/lib/londonTime';
 
 // Check if Year Wrapped should auto-show (December, once per year)
 function shouldShowYearWrapped(): { shouldShow: boolean; year: number } {
   const now = new Date();
-  const currentMonth = now.getMonth(); // 0-indexed, December = 11
-  const currentYear = now.getFullYear();
+  const key = londonDateKey(now);
+  const currentMonth = Number(key.slice(5, 7)) - 1;
+  const currentYear = Number(key.slice(0, 4));
 
   // Only show in December
   if (currentMonth !== 11) {
@@ -24,7 +26,7 @@ function markYearWrappedShown(year: number) {
 
 export function useYearWrappedAutoShow() {
   const [showYearWrapped, setShowYearWrapped] = useState(false);
-  const [wrappedYear, setWrappedYear] = useState(new Date().getFullYear());
+  const [wrappedYear, setWrappedYear] = useState(Number(londonDateKey(new Date()).slice(0, 4)));
 
   // Auto-show Year Wrapped in December (once per year)
   useEffect(() => {

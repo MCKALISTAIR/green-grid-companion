@@ -200,6 +200,12 @@ const Onboarding = () => {
             )}
           </Button>
 
+          <div className="flex items-center gap-3 text-xs text-white/60" aria-hidden="true">
+            <span className="h-px flex-1 bg-white/15" />
+            or enter a postcode
+            <span className="h-px flex-1 bg-white/15" />
+          </div>
+
           <div id="onboarding-postcode-notice" aria-live="polite" className="empty:hidden">
             {notice?.kind === 'outside' && (
               <div className="space-y-2 text-left">
@@ -298,37 +304,29 @@ const Onboarding = () => {
             </Button>
           </form>
 
-          <p className="text-xs text-white/65 text-center">
-            {c.keepNote}{' '}
-            <a
-              href="/privacy"
-              className="inline-block min-h-11 min-w-11 py-2 text-center underline hover:text-white/95 transition-colors"
-            >
-              Privacy Policy
-            </a>
-          </p>
+          <p className="-mt-2 text-xs text-white/65 text-center">{c.keepNote}</p>
 
           <button
             type="button"
             onClick={showNational}
-            className="w-full min-h-11 text-sm font-medium text-white/80 underline-offset-4 hover:underline hover:text-white transition-colors"
+            className="w-full min-h-11 rounded-md text-sm font-medium text-white/80 underline underline-offset-4 decoration-white/30 hover:decoration-white hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             {c.skip}
           </button>
         </CardContent>
-        <CardFooter className="justify-center py-3 bg-white/5 border-t border-white/5 text-xs text-white/60 text-center">
-          <p>
+        <CardFooter className="justify-center py-4 bg-white/5 border-t border-white/5 text-xs text-white/60 text-center">
+          <p className="leading-relaxed">
             By continuing you agree to the{' '}
             <a
               href="/terms"
-              className="inline-block min-h-11 min-w-11 py-2 text-center underline hover:text-white/95 transition-colors"
+              className="relative underline underline-offset-2 hover:text-white/95 transition-colors after:absolute after:-inset-x-2 after:-inset-y-3 after:content-['']"
             >
               Terms
             </a>{' '}
             and have read the{' '}
             <a
               href="/privacy"
-              className="inline-block min-h-11 min-w-11 py-2 text-center underline hover:text-white/95 transition-colors"
+              className="relative underline underline-offset-2 hover:text-white/95 transition-colors after:absolute after:-inset-x-2 after:-inset-y-3 after:content-['']"
             >
               Privacy Policy
             </a>

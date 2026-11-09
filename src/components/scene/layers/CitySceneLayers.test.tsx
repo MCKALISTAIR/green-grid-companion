@@ -71,13 +71,23 @@ describe('CitySceneLayers city variant', () => {
         expect.arrayContaining([`${variant}-back`, `${variant}-mid`, `${variant}-front`]),
       );
       expect(found).toContain('church-spire');
-      expect(found.filter((a) => a === 'terrace').length).toBeGreaterThanOrEqual(4);
-      expect(found).toContain('far-crane');
+      const terrace = variant === 'edinburgh' ? 'edinburgh-tenement' : 'terrace';
+      expect(found.filter((a) => a === terrace).length).toBeGreaterThanOrEqual(4);
+      if (variant === 'generic') expect(found).toContain('far-crane');
       // Banned shapes (brief §11.1): no Eye, no dome, no clock tower, no glass towers.
       expect(container.querySelector('[data-city-landmark="dome"]')).toBeNull();
       expect(container.innerHTML).not.toMatch(/london-eye|clock-tower|glass-tower/);
     },
   );
+
+  it('Edinburgh has no gas plant or crane, and grounds the castle with gardens', () => {
+    const { container } = renderCity('edinburgh');
+    const found = art(container);
+    expect(found).not.toContain('far-crane');
+    expect(found).toContain('princes-street-gardens');
+    expect(container.querySelector('[data-art="city-gas-plant"]')).toBeNull();
+    expect(found.some((a) => a.includes('gas'))).toBe(false);
+  });
 
   it('Edinburgh puts the castle in its own far layer behind the back row, without the tower', () => {
     const { container } = renderCity('edinburgh');

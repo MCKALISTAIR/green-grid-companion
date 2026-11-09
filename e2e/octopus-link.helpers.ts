@@ -1,5 +1,5 @@
 import type { BrowserContext, Page, Route } from '@playwright/test';
-import { installMocks, seedStorage } from '../scripts/layout/mock-api.mjs';
+import { installMocks } from '../scripts/layout/mock-api.mjs';
 
 // PR-O1 Octopus linking: every request is mocked. Octopus is never called and
 // no real key is used; the edge function is answered by `body.action`.
@@ -28,6 +28,7 @@ export interface OctopusScenario {
   /** get-status answer; defaults to following what the mocked server has stored. */
   status?: () => unknown;
   getMeters: () => Answer;
+  seededStorage?: Record<string, unknown>;
   save?: () => Answer;
   fullSync?: () => Answer;
   calls: { action: string; body: Record<string, unknown> }[];
@@ -87,7 +88,28 @@ export async function setup(
   { theme = 'light' }: { theme?: 'light' | 'dark' } = {},
 ) {
   await installMocks(context, { intensity: 120, index: 'moderate' });
-  await context.addInitScript(seedStorage({ theme }));
+  await context.addInitScript(
+    (storage: { theme: string; extra?: Record<string, unknown> }) => {
+      const { theme } = storage;
+      if (sessionStorage.getItem('__seeded')) return;
+      sessionStorage.setItem('__seeded', '1');
+      const s = {
+        onboarding_complete: 'true',
+        product_tour_seen: 'true',
+        skip_splash: 'true',
+        'gridsense-notification-nudge': 'no',
+        'cookie-consent': 'declined',
+        'cookie-consent-version': '2',
+        'gridgreen-postcode': 'EH1 1YZ',
+        'vite-ui-theme': theme,
+      };
+      const fixtureStorage = { ...s, ...storage.extra };
+      for (const [k, v] of Object.entries(fixtureStorage)) {
+        localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v));
+      }
+    },
+    { theme, extra: sc.seededStorage },
+  );
   await context.addInitScript(
     ([k, v]) => {
       if (!localStorage.getItem(k)) localStorage.setItem(k, v);
