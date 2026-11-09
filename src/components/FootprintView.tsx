@@ -131,7 +131,7 @@ export function FootprintView() {
   }, [selectedDate, availableDates]);
 
   const selectedPeriod = useMemo(
-    () => footprint ? footprintPeriod(footprint, timeRange, effectiveDate) : null,
+    () => (footprint ? footprintPeriod(footprint, timeRange, effectiveDate) : null),
     [footprint, timeRange, effectiveDate],
   );
   const dailyData = useMemo(

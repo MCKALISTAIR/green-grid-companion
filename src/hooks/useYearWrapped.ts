@@ -27,7 +27,9 @@ export function useYearWrapped() {
       let currentStart = yearStart;
 
       while (currentStart < yearEnd) {
-        const chunkEnd = new Date(Math.min(currentStart.getTime() + MAX_QUERY_DAYS * 86400_000, yearEnd.getTime()));
+        const chunkEnd = new Date(
+          Math.min(currentStart.getTime() + MAX_QUERY_DAYS * 86400_000, yearEnd.getTime()),
+        );
         chunks.push({ from: currentStart, to: chunkEnd });
         currentStart = chunkEnd;
       }
@@ -78,7 +80,7 @@ export function useYearWrapped() {
 
       // Process the data
       // Adjacent API chunks can return their shared boundary slot twice.
-      const unique = [...new Map(allData.map(row => [row.from, row])).values()];
+      const unique = [...new Map(allData.map((row) => [row.from, row])).values()];
       const result = processYearData(unique, year);
       setData(result);
     } catch (err) {

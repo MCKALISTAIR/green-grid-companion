@@ -1,5 +1,11 @@
 import type { FootprintData, FootprintRecord } from '@/hooks/useOctopusEnergy';
-import { londonDateKey, londonMidnight, nextDateKey, formatLondonSlotTime, formatLondonDayShortMonth } from './londonTime';
+import {
+  londonDateKey,
+  londonMidnight,
+  nextDateKey,
+  formatLondonSlotTime,
+  formatLondonDayShortMonth,
+} from './londonTime';
 
 export type FootprintRange = 'day' | 'week' | 'month' | 'year';
 
@@ -19,14 +25,17 @@ export function footprintPeriod(data: FootprintData, range: FootprintRange, sele
   }
   const start = londonMidnight(fromKey).getTime();
   const end = londonMidnight(endKey).getTime();
-  const select = (rows: FootprintRecord[]) => rows.filter(r => {
-    const t = Date.parse(r.interval_start);
-    return t >= start && t < end;
-  });
+  const select = (rows: FootprintRecord[]) =>
+    rows.filter((r) => {
+      const t = Date.parse(r.interval_start);
+      return t >= start && t < end;
+    });
   const records = select(data.records);
   const exports = select(data.export_records ?? []);
   const byIndex: FootprintData['summary']['by_intensity_index'] = {};
-  let kwh = 0, carbon = 0, intensity = 0;
+  let kwh = 0,
+    carbon = 0,
+    intensity = 0;
   const days = new Set<string>();
   for (const r of records) {
     kwh += Number(r.consumption_kwh);
@@ -41,14 +50,18 @@ export function footprintPeriod(data: FootprintData, range: FootprintRange, sele
   }
   const exportCarbon = exports.reduce((sum, r) => sum + Number(r.carbon_g), 0) / 1000;
   return {
-    records, coveredDays: days.size,
+    records,
+    coveredDays: days.size,
     summary: {
-      total_kwh: kwh, total_carbon_kg: carbon / 1000,
+      total_kwh: kwh,
+      total_carbon_kg: carbon / 1000,
       avg_intensity: records.length ? Math.round(intensity / records.length) : 0,
-      by_intensity_index: byIndex, period_days: days.size,
+      by_intensity_index: byIndex,
+      period_days: days.size,
       has_export_meter: data.summary.has_export_meter,
       export_kwh: exports.reduce((sum, r) => sum + Number(r.consumption_kwh), 0),
-      export_carbon_kg: exportCarbon, net_carbon_kg: carbon / 1000 - exportCarbon,
+      export_carbon_kg: exportCarbon,
+      net_carbon_kg: carbon / 1000 - exportCarbon,
     },
   };
 }
@@ -60,16 +73,27 @@ export function footprintBuckets(records: FootprintRecord[], range: FootprintRan
     const day = londonDateKey(at);
     const hour = new Date(Math.floor(at.getTime() / 3600_000) * 3600_000);
     const key = range === 'day' ? hour.toISOString() : range === 'year' ? day.slice(0, 7) : day;
-    const date = range === 'day' ? hour : londonMidnight(range === 'year' ? `${day.slice(0, 7)}-01` : day);
+    const date =
+      range === 'day' ? hour : londonMidnight(range === 'year' ? `${day.slice(0, 7)}-01` : day);
     const b = buckets.get(key) ?? { date, carbon: 0, kwh: 0 };
     b.carbon += Number(r.carbon_g) / 1000;
     b.kwh += Number(r.consumption_kwh);
     buckets.set(key, b);
   }
-  return [...buckets.values()].sort((a, b) => a.date.getTime() - b.date.getTime()).map(b => ({
-    date: range === 'day' ? formatLondonSlotTime(b.date) : range === 'year'
-      ? new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', month: 'short' }).format(b.date)
-      : formatLondonDayShortMonth(b.date),
-    fullDate: b.date, carbon_kg: Number(b.carbon.toFixed(2)), kwh: Number(b.kwh.toFixed(2)),
-  }));
+  return [...buckets.values()]
+    .sort((a, b) => a.date.getTime() - b.date.getTime())
+    .map((b) => ({
+      date:
+        range === 'day'
+          ? formatLondonSlotTime(b.date)
+          : range === 'year'
+            ? new Intl.DateTimeFormat('en-GB', {
+                timeZone: 'Europe/London',
+                month: 'short',
+              }).format(b.date)
+            : formatLondonDayShortMonth(b.date),
+      fullDate: b.date,
+      carbon_kg: Number(b.carbon.toFixed(2)),
+      kwh: Number(b.kwh.toFixed(2)),
+    }));
 }

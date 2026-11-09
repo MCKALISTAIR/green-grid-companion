@@ -29,18 +29,20 @@ export default function FeatureGuides() {
               to={`/guides/${guide.id}`}
               className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-            <Card className="p-4 hover:bg-accent transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-full shrink-0">
-                  <guide.icon className="w-5 h-5 text-primary" />
+              <Card className="p-4 hover:bg-accent transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary/10 rounded-full shrink-0">
+                    <guide.icon className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium">{guide.title}</h3>
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {guide.description}
+                    </p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-medium">{guide.title}</h3>
-                  <p className="text-sm text-muted-foreground line-clamp-2">{guide.description}</p>
-                </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
-              </div>
-            </Card>
+              </Card>
             </Link>
           ))}
         </div>
@@ -48,7 +50,10 @@ export default function FeatureGuides() {
         <div className="pt-4 text-center text-sm text-muted-foreground">
           <p>
             Need quick answers? Check out{' '}
-            <Link to="/help" className="font-medium text-primary underline-offset-4 hover:underline">
+            <Link
+              to="/help"
+              className="font-medium text-primary underline-offset-4 hover:underline"
+            >
               Help & Tips
             </Link>
           </p>

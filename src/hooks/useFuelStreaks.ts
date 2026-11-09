@@ -2,7 +2,6 @@ import { appStorage } from '@/lib/appStorage';
 import { evidencedFuelHistory } from '@/lib/fuelHistory';
 import { useEffect, useState, useCallback } from 'react';
 import { MixItem } from '@/lib/generationUtils';
-import { GenerationMix } from '@/lib/carbonApi';
 
 const STORAGE_KEY = 'fuel-streaks-v3';
 const RECORDS_KEY = 'fuel-streak-records-v2';

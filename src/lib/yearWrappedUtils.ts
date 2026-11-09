@@ -53,8 +53,6 @@ export interface YearWrappedData {
 
 export function processYearData(data: ForecastData[], year: number): YearWrappedData {
   // Initialize tracking variables
-  let coalFreeDays = 0;
-  let gasFreeDays = 0;
   let totalIntensity = 0;
   let intensityCount = 0;
   let totalRenewable = 0;
@@ -86,11 +84,16 @@ export function processYearData(data: ForecastData[], year: number): YearWrapped
   > = new Map();
 
   // Process each data point
-  for (const point of data.filter(p => londonDateKey(new Date(p.from)).startsWith(`${year}-`)).sort((a, b) => Date.parse(a.from) - Date.parse(b.from))) {
+  for (const point of data
+    .filter((p) => londonDateKey(new Date(p.from)).startsWith(`${year}-`))
+    .sort((a, b) => Date.parse(a.from) - Date.parse(b.from))) {
     const dateTime = new Date(point.from);
     const dateStr = londonDateKey(dateTime);
     const timeStr = formatLondonTime(dateTime);
-    const monthStr = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', month: 'long' }).format(dateTime);
+    const monthStr = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Europe/London',
+      month: 'long',
+    }).format(dateTime);
 
     const intensity = point.intensity.actual ?? point.intensity.forecast;
     const mix = point.generationmix || [];
@@ -158,7 +161,6 @@ export function processYearData(data: ForecastData[], year: number): YearWrapped
       if (coalPerc !== 0) dayData.coalFree = false;
       if (gasPerc !== 0) dayData.gasFree = false;
       dailyData.set(dateStr, dayData);
-
     }
   }
 
@@ -173,8 +175,6 @@ export function processYearData(data: ForecastData[], year: number): YearWrapped
     if (!dirtestDay || avgFossil > dirtestDay.fossilShare) {
       dirtestDay = { date: dateStr, fossilShare: avgFossil };
     }
-
-
   });
 
   // Process monthly breakdown
@@ -203,7 +203,7 @@ export function processYearData(data: ForecastData[], year: number): YearWrapped
     }
   });
 
-  const yearRows = data.filter(p => londonDateKey(new Date(p.from)).startsWith(`${year}-`));
+  const yearRows = data.filter((p) => londonDateKey(new Date(p.from)).startsWith(`${year}-`));
   const coal = fuelFreeDays(yearRows, 'coal');
   const gas = fuelFreeDays(yearRows, 'gas');
   return {

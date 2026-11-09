@@ -1381,9 +1381,8 @@ Deno.serve(async (req: Request) => {
           });
         }
 
-        // Fetch carbon intensity for completed dispatches to calculate savings
-        // UK average grid intensity ~230 gCO2/kWh as baseline
-        const UK_AVG_INTENSITY = 230;
+        // Fetch carbon intensity for completed dispatches to calculate savings.
+        // Baseline UK average grid intensity is about 230 gCO2/kWh when needed.
 
         // Get existing dispatches that already have carbon data to avoid re-fetching
         const existingStartTimes = completedDispatches.map((d) => d.start || d.startDt);
@@ -1436,7 +1435,12 @@ Deno.serve(async (req: Request) => {
                 const intensityJson = await intensityRes.json();
                 const intervals = intensityJson.data || [];
 
-                const metrics = dispatchCarbon(intervals, startTime.getTime(), endTime.getTime(), chargeKwh);
+                const metrics = dispatchCarbon(
+                  intervals,
+                  startTime.getTime(),
+                  endTime.getTime(),
+                  chargeKwh,
+                );
                 if (metrics) {
                   avgIntensity = metrics.avg;
                   carbonUsedG = metrics.used;
