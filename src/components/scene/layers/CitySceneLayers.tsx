@@ -158,7 +158,9 @@ export function CitySceneLayers({
               of the mid skyline and behind the front buildings (behind the mid
               skyline it was hidden or washed out by the haze), clear of the London crane. It replaces the faint
               high-only distant stack. */}
-          <CityGasPlant band={sceneConfig.hazeBand} isNight={isNight} />
+          {cityVariant !== 'edinburgh' && (
+            <CityGasPlant band={sceneConfig.hazeBand} isNight={isNight} />
+          )}
         </svg>
       </motion.div>
 
