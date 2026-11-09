@@ -212,6 +212,11 @@ Deno.serve(async (req) => {
       const avgIntensity = footprint?.length ? Math.round(totalIntensity / footprint.length) : 0;
       const totalCarbonKg = totalCarbonG / 1000;
 
+      // Calculate green energy percentage (very low + low intensity slots).
+      const greenCount = (byIndex['very low']?.count || 0) + (byIndex['low']?.count || 0);
+      const totalCount = footprint?.length || 1;
+      const greenPercentage = Math.round((greenCount / totalCount) * 100);
+
       return {
         totalCarbonKg,
         totalKwh,
