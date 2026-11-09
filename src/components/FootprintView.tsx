@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 import { TurbineSpinner } from '@/components/ui/turbine-spinner';
 import { formatDistanceToNow } from 'date-fns';
-import { getImpactEquivalents } from '@/lib/impact-conversions';
+import { DESNZ_2025_SOURCE_URL, getImpactEquivalents } from '@/lib/impact-conversions';
 import { useSettings } from '@/hooks/useSettings';
 import { getAverageDailyKwh, getHouseTypeLabel } from '@/lib/energy-standards';
 import { useOctopusEnergy } from '@/hooks/useOctopusEnergy';
@@ -870,7 +870,11 @@ export function FootprintView() {
                   {/* Miles Driven */}
                   <Popover>
                     <PopoverTrigger asChild>
-                      <div className="p-3 bg-muted/30 rounded-lg flex flex-col items-center text-center gap-2 border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors">
+                      <button
+                        type="button"
+                        className="p-3 bg-muted/30 rounded-lg flex flex-col items-center text-center gap-2 border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors"
+                        aria-label="About the petrol car mileage comparison"
+                      >
                         <Car className="w-5 h-5 text-primary" />
                         <div>
                           <p className="text-lg font-bold font-mono tabular-nums text-foreground">
@@ -880,7 +884,7 @@ export function FootprintView() {
                             Miles Driven
                           </p>
                         </div>
-                      </div>
+                      </button>
                     </PopoverTrigger>
                     <PopoverContent className="w-60 p-3 text-xs">
                       <p>
@@ -888,7 +892,10 @@ export function FootprintView() {
                         <strong>{insights.impact.milesDriven} miles</strong>.
                       </p>
                       <p className="text-[10px] text-muted-foreground mt-1 text-right">
-                        Source: DESNZ 2025 (0.26 kg CO₂e/mile)
+                        Source:{' '}
+                        <a href={DESNZ_2025_SOURCE_URL} target="_blank" rel="noopener noreferrer">
+                          DESNZ/DEFRA 2025, average petrol car: 0.26187 kg CO₂e/mile
+                        </a>
                       </p>
                     </PopoverContent>
                   </Popover>
@@ -896,7 +903,11 @@ export function FootprintView() {
                   {/* Smartphones */}
                   <Popover>
                     <PopoverTrigger asChild>
-                      <div className="p-3 bg-muted/30 rounded-lg flex flex-col items-center text-center gap-2 border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors">
+                      <button
+                        type="button"
+                        className="p-3 bg-muted/30 rounded-lg flex flex-col items-center text-center gap-2 border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors"
+                        aria-label="About the phone-charge comparison"
+                      >
                         <Smartphone className="w-5 h-5 text-primary" />
                         <div>
                           <p className="text-lg font-bold font-mono tabular-nums text-foreground">
@@ -906,7 +917,7 @@ export function FootprintView() {
                             Phone Charges
                           </p>
                         </div>
-                      </div>
+                      </button>
                     </PopoverTrigger>
                     <PopoverContent className="w-60 p-3 text-xs">
                       <p>
@@ -919,7 +930,11 @@ export function FootprintView() {
                   {/* Kettles (spans the row now the trees tile is gone: C2-02) */}
                   <Popover>
                     <PopoverTrigger asChild>
-                      <div className="col-span-2 p-3 bg-muted/30 rounded-lg flex flex-col items-center text-center gap-2 border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors">
+                      <button
+                        type="button"
+                        className="col-span-2 p-3 bg-muted/30 rounded-lg flex flex-col items-center text-center gap-2 border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors"
+                        aria-label="About the kettle comparison"
+                      >
                         <Coffee className="w-5 h-5 text-primary" />
                         <div>
                           <p className="text-lg font-bold font-mono tabular-nums text-foreground">
@@ -929,7 +944,7 @@ export function FootprintView() {
                             Kettles Boiled
                           </p>
                         </div>
-                      </div>
+                      </button>
                     </PopoverTrigger>
                     <PopoverContent className="w-60 p-3 text-xs">
                       <p>
