@@ -679,40 +679,6 @@ export function LondonEye({
   );
 }
 
-// 🏭 Distant stack on the far horizon — only when grid is very dirty
-export function DistantStack({ x = 365, isNight }: { x?: number; isNight: boolean }) {
-  // Lift stack contrast at night so it reads against dark sky.
-  const stackColor = isNight ? 'rgba(190,170,140,0.85)' : 'rgba(120,130,140,0.6)';
-  const baseY = 95;
-  const { width, height } = CITY_SCALE.distantStack;
-  return (
-    <motion.g
-      aria-hidden="true"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 1.2 }}
-    >
-      {/* Thin chimney */}
-      <rect x={x} y={baseY - height} width={width} height={height} fill={stackColor} />
-      <rect x={x - 1} y={baseY - height - 2} width={width + 2} height={2} fill={stackColor} />
-      {/* Wispy steam plume */}
-      <motion.ellipse
-        initial={false}
-        cx={x + 1}
-        cy={baseY - height - 6}
-        rx={3}
-        ry={2}
-        fill={isNight ? 'rgba(180,180,180,0.3)' : 'rgba(220,220,220,0.5)'}
-        animate={{
-          cy: [baseY - height - 6, baseY - height - 14, baseY - height - 6],
-          opacity: [0.5, 0.2, 0.5],
-        }}
-        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' as const }}
-      />
-    </motion.g>
-  );
-}
-
 // 🔋 Grid-scale battery storage container (BESS) — navy/charcoal with green decal
 export function BatteryStorageContainer({
   x = 320,

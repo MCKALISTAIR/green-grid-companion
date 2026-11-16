@@ -1,24 +1,5 @@
-import { useEffect, useState, useSyncExternalStore } from 'react';
-import { overlayQueue, type OverlayKind, type OverlayQueueState } from '@/lib/overlayQueue';
-
-/** Live queue state plus the imperative API (requestOverlay / release / setConsentPending). */
-export function useOverlayQueue(): OverlayQueueState & {
-  requestOverlay: typeof overlayQueue.request;
-  release: typeof overlayQueue.release;
-  setConsentPending: typeof overlayQueue.setConsentPending;
-} {
-  const state = useSyncExternalStore(
-    overlayQueue.subscribe,
-    overlayQueue.getState,
-    overlayQueue.getState,
-  );
-  return {
-    ...state,
-    requestOverlay: overlayQueue.request,
-    release: overlayQueue.release,
-    setConsentPending: overlayQueue.setConsentPending,
-  };
-}
+import { useEffect, useState } from 'react';
+import { overlayQueue, type OverlayKind } from '@/lib/overlayQueue';
 
 /**
  * Declarative turn for a component overlay: while `wanted` is true it waits in
