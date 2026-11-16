@@ -432,7 +432,7 @@ npx playwright test e2e/scene-vrt.spec.ts
   - `energyFacts.ts`: 60+ contextual energy insights with smart filtering.
   - `energy-standards.ts`: UK house types and consumption data.
   - `impact-conversions.ts`: Real-world CO₂ equivalency conversions.
-- `src/hooks`: Custom React hooks (useCarbonData, useOctopusEnergy, useCoalFreeStreak, useSettings, useEnergyFacts, useNotifications).
+- `src/hooks`: Custom React hooks (useCarbonData, useOctopusEnergy, useSettings, useEnergyFacts, useNotifications).
 - `ios/App/GridSenseWidget`: Native Swift code for the iOS Widget.
 
 ## 📄 License
