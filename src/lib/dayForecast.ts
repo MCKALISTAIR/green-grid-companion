@@ -70,23 +70,7 @@ export function londonDayBounds(dateKey: string): DayBounds {
   return { start, end, slotCount: Math.round((end - start) / SLOT_MS) };
 }
 
-/** Tick instants at the given London hours (default 00, 06, 12, 18). */
-export function londonDayTicks(dateKey: string, hours: number[] = [0, 6, 12, 18]): number[] {
-  return hours.map((h) => londonWallTimeToInstant(dateKey, h));
-}
-
 const weekdayFmt = new Intl.DateTimeFormat('en-GB', { timeZone: LONDON_TZ, weekday: 'long' });
-const dayMonthFmt = new Intl.DateTimeFormat('en-GB', {
-  timeZone: LONDON_TZ,
-  day: 'numeric',
-  month: 'short',
-});
-
-/** "Sunday 11 Oct" for a London date key. */
-export function formatDayTitle(dateKey: string): string {
-  const noon = londonWallTimeToInstant(dateKey, 12);
-  return `${weekdayFmt.format(noon)} ${dayMonthFmt.format(noon)}`;
-}
 
 /** "Today", "Tomorrow", "Yesterday" or the weekday, relative to `now` in London. */
 export function relativeDayLabel(dateKey: string, now: Date = new Date()): string {

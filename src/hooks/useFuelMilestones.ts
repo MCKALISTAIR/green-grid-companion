@@ -112,17 +112,3 @@ export function useFuelMilestones(mix: MixItem[]) {
 
   return { milestones };
 }
-
-// Get a message for the milestone
-export function getMilestoneMessage(milestone: FuelMilestone): string {
-  const fuelName = milestone.fuel.charAt(0).toUpperCase() + milestone.fuel.slice(1);
-  const periodWeeks = Math.floor(milestone.periodDays / 7);
-  const periodText =
-    periodWeeks > 4 ? `${Math.floor(periodWeeks / 4)} months` : `${periodWeeks} weeks`;
-
-  if (milestone.type === 'low') {
-    return `${fuelName} at ${milestone.currentPerc.toFixed(1)}%, its lowest share in ${periodText}`;
-  }
-
-  return `${fuelName} at ${milestone.currentPerc.toFixed(1)}%, its highest share in ${periodText}! 🎉`;
-}
