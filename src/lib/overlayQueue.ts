@@ -12,7 +12,7 @@
  * yet (for example during its slide-in delay). Tips resume after the choice.
  *
  * Public API (also used by onboarding): `requestOverlay(kind, id?)`,
- * `useOverlayQueue()` / `useOverlayTurn()` in src/hooks/useOverlayQueue.ts.
+ * `useOverlayTurn()` in src/hooks/useOverlayQueue.ts.
  */
 
 export type OverlayKind = 'consent' | 'location' | 'tips' | 'other';
