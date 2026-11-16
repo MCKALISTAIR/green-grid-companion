@@ -248,19 +248,3 @@ export function getErrorInfo(error: unknown): ErrorInfo {
     steps: ['If it keeps happening, close and reopen GridSense'],
   };
 }
-
-/**
- * Check if error is a network-related issue
- */
-export function isNetworkError(error: unknown): boolean {
-  if (!navigator.onLine) return true;
-
-  const errorMessage = error instanceof Error ? error.message : String(error);
-  const lowerMessage = errorMessage.toLowerCase();
-
-  return (
-    lowerMessage.includes('network') ||
-    lowerMessage.includes('fetch') ||
-    lowerMessage.includes('timeout')
-  );
-}

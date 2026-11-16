@@ -42,10 +42,3 @@ export function getImpactEquivalents(kgCO2: number): ImpactEquivalents {
     kettlesBoiled: Math.floor(safeKg * 55),
   };
 }
-
-export function getImpactColor(kgCO2: number): string {
-  if (kgCO2 > 10) return 'text-emerald-500'; // Excellent
-  if (kgCO2 > 5) return 'text-green-500'; // Good
-  if (kgCO2 > 1) return 'text-teal-500'; // Okay
-  return 'text-muted-foreground'; // Small
-}
